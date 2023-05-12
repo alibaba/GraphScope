@@ -32,8 +32,6 @@ jobs:
         alias bash=$(brew --prefix)/bin/bash
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
-        # This will install vineyard by homebrew
-        # But we need to install vineyard to /opt/vineyard, so install it from source again.
 
         # Not sure when the first installation would fail, saying that the lock of python3.10 is taken
         # However the second trial would success.
@@ -89,7 +87,7 @@ jobs:
         # e.g. 0.15.0 -> 0.15.0a20220808
         time=$(date "+%Y%m%d")
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
-        if [ "${{ GITHUB.REF }}" == "refs/heads/main" ];
+        if [[ "${{ GITHUB.REF }}" == "refs/heads/main" ]];
         then
           echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION;
         fi
@@ -140,8 +138,6 @@ jobs:
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
 
-        # Not sure when the first installation would fail, saying that the lock of python3.10 is taken
-        # However the second trial would success.
         ./gs install-deps dev || true
         ./gs install-deps dev
 
@@ -180,7 +176,9 @@ jobs:
         # 0.15.0 -> 0.15.0a20220808
         time=$(date "+%Y%m%d")
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
-        if [ "${{ GITHUB.REF }}" == "refs/heads/main" ];then echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION; fi
+        if [[ "${{ GITHUB.REF }}" == "refs/heads/main" ]]; then
+          echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION;
+        fi
 
         # build graphscope client wheel
         cd ${GITHUB_WORKSPACE}/k8s/internal

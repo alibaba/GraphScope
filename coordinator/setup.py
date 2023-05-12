@@ -61,7 +61,7 @@ INSTALL_PREFIX = os.environ.get("INSTALL_PREFIX", "/opt/graphscope")
 
 
 # copy any files contains in ${INSTALL_PREFIX} into site-packages/graphscope.runtime
-def _get_extra_data():
+def _get_extra_data():  # noqa: C901
     # Copy
     #   1) ${INSTALL_PREFIX}
     #   2) headers of arrow/glog/gflags/google/openmpi/vineyard
@@ -79,12 +79,11 @@ def _get_extra_data():
     def __unknown_platform(action, platform):
         raise RuntimeError(f"Unknown platform '{platform}' to {action}")
 
-    def __get_homebrew_prefix(package):
-        return (
-            subprocess.check_output([shutil.which("brew"), "--prefix", package])
-            .decode("utf-8", errors="ignore")
-            .strip("\n")
-        )
+    def __get_homebrew_prefix(package=None):
+        cmd = [shutil.which("brew"), "--prefix"]
+        if package is not None:
+            cmd.append(package)
+        return subprocess.check_output(cmd).decode("utf-8", errors="ignore").strip("\n")
 
     def __get_openmpi_prefix():
         if platform.system() == "Linux":
@@ -161,9 +160,14 @@ def _get_extra_data():
             data["/usr/include/msgpack"] = os.path.join(RUNTIME_ROOT, "include")
             data["/usr/include/msgpack.hpp"] = os.path.join(RUNTIME_ROOT, "include")
         elif platform.system() == "Darwin":
-            data["/usr/local/include/rapidjson"] = os.path.join(RUNTIME_ROOT, "include")
-            data["/usr/local/include/msgpack"] = os.path.join(RUNTIME_ROOT, "include")
-            data["/usr/local/include/msgpack.hpp"] = os.path.join(
+            homebrew_prefix = __get_homebrew_prefix()
+            data[f"{homebrew_prefix}/include/rapidjson"] = os.path.join(
+                RUNTIME_ROOT, "include"
+            )
+            data[f"{homebrew_prefix}/include/msgpack"] = os.path.join(
+                RUNTIME_ROOT, "include"
+            )
+            data[f"{homebrew_prefix}/include/msgpack.hpp"] = os.path.join(
                 RUNTIME_ROOT, "include"
             )
     elif name == "gs-apps":

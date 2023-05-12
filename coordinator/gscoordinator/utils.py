@@ -64,6 +64,12 @@ try:
 except KeyError:
     WORKSPACE = os.path.join(get_tempdir(), "gs")
 
+# make sure we have permission to create instance workspace
+try:
+    os.makedirs(os.path.join(WORKSPACE, ".ignore"), exist_ok=True)
+except:  # noqa: E722, pylint: disable=bare-except
+    WORKSPACE = os.path.expanduser("~/.graphscope/gs")
+
 # COORDINATOR_HOME
 #   1) get from gscoordinator python module, if failed,
 #   2) infer from current directory
