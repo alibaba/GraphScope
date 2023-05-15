@@ -38,14 +38,18 @@ jobs:
         # Due to an observation of changing hostname in github runners,
         # append 127.0.0.1 to etc/hosts to avoid DNS lookup.
         r=`cat /etc/hosts | grep $(hostname) || true`
-        if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
+        if [[ -z "${r}" ]]; then
+          export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts';
+        fi
         cat /etc/hosts
 
         # change the version for nightly release
         # 0.15.0 -> 0.15.0a20220808
         time=$(date "+%Y%m%d")
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
-        if [ "${{ GITHUB.REF }}" == "refs/heads/main" ];then echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION; fi
+        if [[ "${{ GITHUB.REF }}" == "refs/heads/main" ]]; then
+          echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION;
+        fi
 
         cd ${GITHUB_WORKSPACE}/k8s/internal
         # build graphscope wheels

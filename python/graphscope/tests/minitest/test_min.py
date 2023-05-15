@@ -219,8 +219,9 @@ def test_demo_with_default_session(ogbn_small_script):
     sub_graph = sub_graph.add_column(ret1, {"kcore": "r"})
     sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
 
-    # waiting for graphlearn support python3.10
-    if sys.version_info[1] >= 10:
+    try:
+        import tensorflow
+    except ImportError:
         return
 
     # GLE on ogbn_mag_small graph
