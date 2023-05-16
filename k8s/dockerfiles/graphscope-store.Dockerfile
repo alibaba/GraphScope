@@ -21,10 +21,10 @@ RUN cd /home/graphscope/graphscope \
 
 FROM ubuntu:22.04
 
-RUN sudo apt-get update -y && \
-    sudo apt-get install -y default-jdk && \
-    sudo apt-get clean -y && \
-    sudo rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && \
+    apt-get install -y sudo default-jdk && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV GRAPHSCOPE_HOME=/usr/local
 ENV JAVA_HOME=/usr/lib/jvm/default-java
