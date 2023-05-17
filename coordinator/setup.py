@@ -49,13 +49,6 @@ repo_root = os.path.dirname(os.path.abspath(__file__))
 version = get_version(os.path.join(repo_root, "..", "VERSION"))
 
 
-GRAPHSCOPE_REQUIRED_PACKAGES = [
-    f"gs-coordinator == {version}",
-    f"gs-engine == {version}",
-    f"gs-include == {version}",
-    f"gs-apps == {version}",
-]
-
 GRAPHSCOPE_HOME = os.environ.get("GRAPHSCOPE_HOME", "/usr/local")
 INSTALL_PREFIX = os.environ.get("INSTALL_PREFIX", "/opt/graphscope")
 
@@ -327,9 +320,16 @@ def parsed_reqs():
         with open(
             os.path.join(repo_root, "requirements.txt"), "r", encoding="utf-8"
         ) as fp:
-            return fp.read().splitlines()
+            pkgs = fp.read().splitlines()
+            pkgs.append(f"graphscope_client == {version}")
+            return pkgs
     elif name == "graphscope":
-        return GRAPHSCOPE_REQUIRED_PACKAGES
+        return [
+            f"gs-coordinator == {version}",
+            f"gs-engine == {version}",
+            f"gs-include == {version}",
+            f"gs-apps == {version}",
+        ]
     else:
         return []
 
