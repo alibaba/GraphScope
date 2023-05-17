@@ -7,18 +7,21 @@
 <meta property="og:url" content="overview/graph_analytics_workloads.html" />
 <meta property="og:site_name" content="GraphScope" />
 <meta property="og:description" content="What is Graph Analytics: A graph is a data structure composed of vertices (or nodes) connected by edges. Graphs can represent many real-world data, such as social networks, transportation networks,..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
 <meta property="og:image" content="/_images/social_previews/summary_overview_graph_analytics_workloads_3798a10b.png" />
 <meta property="og:image:alt" content="What is Graph Analytics: A graph is a data structure composed of vertices (or nodes) connected by edges. Graphs can represent many real-world data, such as s..." />
 <meta name="description" content="What is Graph Analytics: A graph is a data structure composed of vertices (or nodes) connected by edges. Graphs can represent many real-world data, such as social networks, transportation networks,..." />
+<meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Graph Interactive Workloads" href="graph_interactive_workloads.html" /><link rel="prev" title="Getting Started" href="getting_started.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
+    <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
         <title>Graph Analytics Workloads - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     <link rel="stylesheet" type="text/css" href="../_static/css/brands.min.css" />
@@ -67,6 +70,7 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<!-- Baidu analytics -->
 <script>
   var _hmt = _hmt || [];
   (function() {
@@ -77,12 +81,27 @@
   })();
 </script>
 
+<!-- MathJax rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script
+  type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
 </head>
   <body>
     
-  <script>
-    document.body.dataset.theme = "light";
-  </script>
+<script>
+  document.body.dataset.theme = "light";
+</script>
 
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -201,21 +220,23 @@
 <div id="searchbox"></div><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../graphscope_positioning.html">The Product Positioning of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introducing GraphScope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Graph Analytics Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_interactive_workloads.html">Graph Interactive Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_learning_workloads.html">Graph Learning Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="design_of_graphscope.html">Design of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="positioning.html">Positioning of GraphScope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Installation &amp; Deployment</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_local.html">Deploy GraphScope on Local</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on Self-managed K8s</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/install_on_local.html">Install GraphScope on Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on K8s cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_existing_vineyard_cluster.html">Use an existing vineyard cluster with multiple GraphScope sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Analytical Engine</span></p>
 <ul>
@@ -239,7 +260,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_networkx_operations.html">Tutorial: Graph Operations with NetowrkX APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_networkx_algorithms.html">Tutorial: Graph Algorithms with NetowrkX APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_pie.html">Tutorial: Develop your Algorithm in C++ with PIE Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop your Algorithm in C++ with FLASH Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop Your Algorithms in C++ with FLASH Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_python.html">Tutorial: Develop algorithms in Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_java.html">Tutorial: Develop your Algorithm in Java with PIE Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_run_giraph_apps.html">Tutorial: Run Giraph Applications on GraphScope</a></li>
@@ -251,29 +272,42 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Interactive Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started_gie.html">Getting Started for GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../design_of_gie.html">Design of GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tutorial_ldbc_gremlin.html">Tutorial: LDBC Gremlin</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/design_of_gie.html">Design of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started_gle.html">Getting Started for GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../design_of_gle.html">Design of GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/design_of_gle.html">Design of GLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/graph_sampling.html">Graph Sampling</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../learning_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../learning_engine/tutorial_node_classification_k8s.html">Tutorial: Training a Node Classification Model on K8s Cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/dev_and_test.html">Dev and Test</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Storage Engine</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../storage_engine/getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../storage_engine/grin.html">GRIN: Unified Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../storage_engine/groot.html">Groot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/grin.html">GRIN: Graph Retrieval INterface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/groot.html">Groot: Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/vineyard.html">In-memory immutable graphs on Vineyard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/graphar.html">GraphAr: Standard Graph Data File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/gart.html">GART: Bridging the Gap between Relational OLTP and Graph Workloads</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">troubleshooting &amp; utilities</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find Logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find logs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/monitoring.html">Monitoring</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/error_codes.html">Error Codes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/bulk_loader.html">Bulk Loader</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul>
@@ -281,11 +315,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../development/code_style_guide.html">Code Style Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/how_to_test.html">How to Test</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/how_to_contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html">Debugging on local deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html#debugging-on-kubernetes-deployment">Debugging on Kubernetes deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html#commands-for-debugging">Commands for Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_install_in_offline_mode.html">Install GraphScope in offline mode</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -297,13 +335,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -349,18 +387,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -395,7 +433,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -508,11 +546,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../zh/installation.html">安装</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../zh/getting_started.html">快速上手</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../zh/deployment.html">部署</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
@@ -568,6 +606,15 @@
             
           
 
+        
+      
+        
+
+          
+            
+              <dd><a href="../../v0.21.0/index.html">v0.21.0</a></dd>
+            
+          
         
       
         
@@ -888,25 +935,24 @@
 <a class="reference internal image-reference" href="../_images/graph_examples.png"><img alt="Examples of graphs" src="../_images/graph_examples.png" style="width: 80%;" /></a>
 <p class="caption"><span class="caption-text">Examples of graphs.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
 </div>
-<p>Broadly speaking, any kind of computation over graph data can be regarded as graph analytics. The goal of graph analytics is to discover and exploit the structure of graphs, which can provide insights into the relationships and connections between the different elements in graphs. We find that computation patterns of different graph analytics vary a lot: some only involve a small number of vertices/edges, while others access a large fraction of (even all) vertices/edges of a graph. In GraphScope, we call the former as <em>graph traversal</em>, while use the term <em>graph analytics</em> to refer to the latter, unless otherwise specified.</p>
-<p>Currently, there exist diverse types of graph analytics algorithms, which usually iteratively access a large fraction of (even all) vertices/edges of a graph to explore underlying insights hidden in graph data. Typical graph analytics algorithms include general analytics algorithms (e.g., PageRank, the shortest path, and maximum flow), community detection algorithms (e.g., maximum clique/bi-clique, connected components, Louvain and label propagation), graph mining algorithms (e.g., frequent structure mining and graph pattern discovery). Next, we give several typical examples to show how graph analytics algorithms work.</p>
-<p>The <a class="reference external" href="https://en.wikipedia.org/wiki/PageRank">PageRank</a> algorithm can measure the importance of each vertex in a graph, by iteratively counting the number and importance of its neighbors to a vertex to determine a rough estimate of how important the vertex is. Specifically, the computation of PageRank consists of multiple iterations, each vertex in a graph is assigned a value indicating its importance at first. In each iteration, each vertex sums the values of its neighbors pointing to it, and updates its own value.</p>
+<p>In general, any computation on graph data can be considered graph analytics. The objective of graph analytics is to uncover and utilize the structure of graphs, providing insights into the relationships and connections between different elements in graphs. Computation patterns in graph analytics can vary significantly: some involve only a small number of vertices/edges, while others access a large portion or even all vertices/edges of a graph. In GraphScope, we refer to the former as <em>graph traversal</em> and the latter as <em>graph analytics</em>, unless specified otherwise.</p>
+<p>There are various types of graph analytics algorithms, which typically iterate over a large portion or all vertices/edges of a graph to discover hidden insights within the graph data. Common graph analytics algorithms include general analytics algorithms (e.g., PageRank, shortest path, and maximum flow), community detection algorithms (e.g., maximum clique/bi-clique, connected components, Louvain, and label propagation), and graph mining algorithms (e.g., frequent structure mining and graph pattern discovery). Below, we provide several examples to illustrate how graph analytics algorithms operate.</p>
+<p>The <a class="reference external" href="https://en.wikipedia.org/wiki/PageRank">PageRank</a> algorithm measures the importance of each vertex in a graph by iteratively counting the number and importance of its neighbors. This helps determine a rough estimate of a vertex’s importance. Specifically, the PageRank computation consists of multiple iterations, with each vertex initially assigned a value indicating its importance. During each iteration, vertices sum the values of their neighbors pointing to them and update their own values accordingly.</p>
 <div class="figure align-default" id="id2">
 <a class="reference internal image-reference" href="../_images/pagerank.png"><img alt="PageRank algorithm" src="../_images/pagerank.png" style="width: 40%;" /></a>
 <p class="caption"><span class="caption-text">PageRank algorithm (<a class="reference external" href="https://snap-stanford.github.io/cs224w-notes/network-methods/pagerank">https://snap-stanford.github.io/cs224w-notes/network-methods/pagerank</a>).</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
 </div>
-<p><a class="reference external" href="https://en.wikipedia.org/wiki/Shortest_path_problem">The shortest path problem</a> aims to find a path between two vertices such that the sum of the weights of its constituent edges is minimized, and several well-known algorithms (e.g., Dijkstra’s algorithm and Bellman–Ford algorithm) have been proposed to solve this problem. Taking Dijkstra’s algorithm as an example, it selects a single vertex as the “source” vertex and attempts to find shortest paths from the source to all other vertices in the graph. The computation of Dijkstra’s algorithm also contains multiple iterations, and in each iteration, a vertex, whose shortest path to the source has been obtained, is selected, and updates the shortest path value of its neighbors, as shown in the following <a class="reference external" href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">figure</a>.</p>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/Shortest_path_problem">The shortest path problem</a> aims to find the most efficient path between two vertices by minimizing the sum of the weights of its constituent edges. Several well-known algorithms, such as Dijkstra’s algorithm and Bellman–Ford algorithm, have been proposed to solve this problem. For instance, Dijkstra’s algorithm selects a single vertex as the “source” vertex and attempts to find the shortest paths from the source to all other vertices in the graph. The computation of Dijkstra’s algorithm involves multiple iterations. In each iteration, a vertex with a known shortest path to the source is selected, and the shortest path values of its neighbors are updated, as demonstrated in the following <a class="reference external" href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">figure</a>.</p>
 <div class="figure align-default" id="id3">
 <a class="reference internal image-reference" href="../_images/sssp.gif"><img alt="Dijkstra's algorithm" src="../_images/sssp.gif" style="width: 40%;" /></a>
 <p class="caption"><span class="caption-text">Dijkstra’s algorithm (<a class="reference external" href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">https://en.wikipedia.org/wiki/Dijkstra’s_algorithm</a>).</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
 </div>
-<p><a class="reference external" href="https://en.wikipedia.org/wiki/Community_structure">The community detection algorithms</a> (e.g., Louvain) are to find groups of vertices that are, in some sense, more similar to each other than to the other vertices, based on the observation that vertices of a graph can be grouped into (potentially overlapping) sets of vertices such that each set of vertices is densely connected internally. Basically, in community detection algorithms, each vertex repeatedly sends its label to its neighbors, and each vertex updates its own label according to some rules after receiving labels of its neighbors. After multiple iterations, vertices which are densely connected internally have the same/similar label.</p>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/Community_structure">Community detection algorithms</a> (e.g., Louvain) aim to identify groups of vertices that are more densely connected internally than with other vertices in the graph. These algorithms work by having each vertex repeatedly send its label to its neighbors and update its own label based on specific rules after receiving labels from its neighbors. After multiple iterations, vertices that are densely connected internally will have the same or similar labels.</p>
 <div class="figure align-default" id="id4">
 <a class="reference internal image-reference" href="../_images/comm_detection.png"><img alt="Community detection algorithm" src="../_images/comm_detection.png" style="width: 40%;" /></a>
 <p class="caption"><span class="caption-text">Community detection algorithm (<a class="reference external" href="https://towardsdatascience.com/community-detection-algorithms-9bd8951e7dae">https://towardsdatascience.com/community-detection-algorithms-9bd8951e7dae</a>).</span><a class="headerlink" href="#id4" title="Permalink to this image">#</a></p>
 </div>
-<p>From the above examples, we can see that the graph analytics algorithms can analyze the properties of a set of vertices/edges in the graph.
-In real applications, many problems can be modeled as graph analytics problems. As shown in the following figure, Google Search treats all websites as well as links among websites as a graph, and then the PageRank algorithm can be applied to find the most important websites on the Internet. The road map of a city can also be modeled as a graph, and the shortest path algorithm can help path planning in logistics and delivery services. If we consider all users on a social media as a graph, community detection techniques (e.g., Louvain) are useful to discover users with common interests and keep them tightly connected.</p>
+<p>The examples above demonstrate how graph analytics algorithms analyze properties of vertices and edges within a graph. In real-world applications, many problems can be modeled as graph analytics problems. For instance, Google Search represents websites and their interconnections as a graph, applying the PageRank algorithm to identify the most important websites on the Internet. Similarly, a city’s road map can be modeled as a graph, with the shortest path algorithm assisting in path planning for logistics and delivery services. By considering social media users as a graph, community detection techniques (e.g., Louvain) can help discover users with shared interests and maintain strong connections between them.</p>
 <div class="figure align-default" id="id5">
 <a class="reference internal image-reference" href="../_images/analytics_examples.png"><img alt="Applications of graph analytics" src="../_images/analytics_examples.png" style="width: 80%;" /></a>
 <p class="caption"><span class="caption-text">Applications of graph analytics.</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
@@ -914,33 +960,32 @@ In real applications, many problems can be modeled as graph analytics problems. 
 </div>
 <div class="section" id="challenges-of-graph-analytics-on-large-graphs">
 <h2>Challenges of Graph Analytics on Large Graphs<a class="headerlink" href="#challenges-of-graph-analytics-on-large-graphs" title="Permalink to this heading">#</a></h2>
-<p>Based on our experience, the graph data we need to process and the frameworks (systems) used to process graph data face the following challenges:</p>
+<p>Based on our experience, processing graph data and utilizing frameworks (systems) for graph data processing present the following challenges:</p>
 <ul>
-<li><p><strong>Supporting large-scale and complex graph data</strong></p>
-<p>We have observed that vast majority of real-world graph data is large-scale, heterogeneous, attributed. For example, nowadays e-commerce graphs often contain billions of vertices and tens of billions of edges, with various types and rich attributes. How to represent and store such graph data is nontrivial.</p>
+<li><p><strong>Handling large-scale and complex graph data</strong></p>
+<p>The majority of real-world graph data is large-scale, heterogeneous, and attributed. For instance, modern e-commerce graphs often contain billions of vertices and tens of billions of edges, with various types and rich attributes. Representing and storing such graph data is a nontrivial task.</p>
 </li>
-<li><p><strong>Various programming models/languages</strong></p>
-<p>Currently, many graph processing systems have been developed to handle graph analytics algorithms. These systems are implemented with different programming models (e.g., vertex-centric model and PIE model) and programming languages (e.g., C++, Java and Python). As a result, users usually suffer from high learning curves.</p>
+<li><p><strong>Diverse programming models/languages</strong></p>
+<p>Numerous graph processing systems have been developed to manage graph analytics algorithms. These systems employ different programming models (e.g., vertex-centric model and PIE model) and programming languages (e.g., C++, Java, and Python). Consequently, users often face steep learning curves.</p>
 </li>
-<li><p><strong>Requirement for high performance</strong></p>
-<p>The scale and efficiency of processing large graphs is still limited. Although current systems have largely benefited from years of work in optimizations for each individual system, they still suffer from efficiency and/or scale problems. Offering superior performance when facing large-scale graph data is highly desired.</p>
+<li><p><strong>Demand for high performance</strong></p>
+<p>The efficiency and scalability of processing large graphs remain limited. While current systems have significantly benefited from years of optimization work, they still encounter efficiency and/or scalability issues. Achieving superior performance when dealing with large-scale graph data is highly sought after.</p>
 </li>
 </ul>
 </div>
 <div class="section" id="what-can-graphscope-do">
 <h2>What can GraphScope Do<a class="headerlink" href="#what-can-graphscope-do" title="Permalink to this heading">#</a></h2>
-<p>In GraphScope, Graph Analytics Engine (GAE) is responsible for handling graph analytics algorithms. It addresses the abovementioned challenges in the following ways:</p>
+<p>In GraphScope, the Graph Analytics Engine (GAE) tackles the aforementioned challenges by managing graph analytics algorithms in the following manner:</p>
 <ul>
-<li><p><strong>Managing graph data in a distributed way</strong></p>
-<p>In GraphScope, graph data is represented as property graph model. To support large-scale graph, GraphScope automatically partitions the whole graph into several subgraphs (fragments) distributed into multiple machines in a cluster. Meanwhile, GraphScope provides user-friendly interfaces for loading graphs to allow users to manage graph data easily. More detials about how to manage large-scale graphs can refer to <a class="reference external" href="https://graphscope.io/docs/latest/graph_formats.html">this</a>.</p>
+<li><p><strong>Distributed graph data management</strong></p>
+<p>GraphScope represents graph data as a property graph model and automatically partitions large-scale graphs into subgraphs (fragments) distributed across multiple machines in a cluster. It also provides user-friendly interfaces for loading graphs, making graph data management easier. For more details on managing large-scale graphs, refer to <a class="reference external" href="https://graphscope.io/docs/latest/graph_formats.html">this</a>.</p>
 </li>
-<li><p><strong>Supporting various programming models/languages</strong></p>
-<p>On the programming model side, GraphScope supports both the vertex-centric model (Pregel) and PIE (PEval-IncEval-Assemble) programming model. Both programming models have been widely applied in existing graph processing systems, and readers can refer to our introduction to <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html">Pregel</a> and <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/programming_model_pie.html">PIE</a> models for more details.</p>
-<p>On the programming language side, GraphScope provides  SDKs for multiple languages, and users can choose to write their own algorithms in C++, Java or Python. Users can develop their own algorithms with different programming languages.</p>
-<p>Please check out <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/customized_algorithms.html">our turorials on how to develop customized algorithms</a> for more details.</p>
+<li><p><strong>Various programming models/languages support</strong></p>
+<p>GraphScope supports both the vertex-centric model (Pregel) and PIE (PEval-IncEval-Assemble) programming model. These models are widely used in existing graph processing systems. For more information, refer to our introductions to <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html">Pregel</a> and <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/programming_model_pie.html">PIE</a> models.</p>
+<p>GraphScope provides SDKs for multiple languages, allowing users to write custom algorithms in C++, Java, or Python. For more details on developing customized algorithms, check out <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/customized_algorithms.html">our tutorials</a>.</p>
 </li>
-<li><p><strong>High-performance runtime</strong></p>
-<p>GAE achieves high performance through a highly optimized analytical runtime. Many optimization techniques, such as pull/push dynamic switching, cache-efficient memory layout, and pipelining were employed in the runtime. We have performed a comparison with state-of-the-art graph processing systems on LDBC Graph Analytics Benchmark, and the <a class="reference external" href="https://graphscope.io/docs/latest/performance_and_benchmark.html">results</a> show GraphScope outperforms other graph systems.</p>
+<li><p><strong>Optimized high-performance runtime</strong></p>
+<p>GAE achieves high performance through an optimized analytical runtime, employing techniques such as pull/push dynamic switching, cache-efficient memory layout, and pipelining. We have compared GraphScope with state-of-the-art graph processing systems on the LDBC Graph Analytics Benchmark, and the <a class="reference external" href="https://graphscope.io/docs/latest/performance_and_benchmark.html">results</a> show that GraphScope outperforms other graph systems.</p>
 </li>
 </ul>
 </div>

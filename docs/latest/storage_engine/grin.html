@@ -2,21 +2,26 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="GRIN: Unified Interface" />
+    <meta name="color-scheme" content="light dark"><meta property="og:title" content="GRIN: Graph Retrieval INterface" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="storage_engine/grin.html" />
 <meta property="og:site_name" content="GraphScope" />
-<meta property="og:image" content="/_images/social_previews/summary_storage_engine_grin_82a882b4.png" />
-<meta property="og:image:alt" content="" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Groot" href="groot.html" /><link rel="prev" title="Getting Started" href="getting_started.html" />
+<meta property="og:description" content="GRIN is a proposed standard graph retrieval interface in GraphScope. Its goal is to provide a common way for graph computing engines to retrieve graph data stored in different storage engines withi..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="/_images/social_previews/summary_storage_engine_grin_6423df34.png" />
+<meta property="og:image:alt" content="GRIN is a proposed standard graph retrieval interface in GraphScope. Its goal is to provide a common way for graph computing engines to retrieve graph data s..." />
+<meta name="description" content="GRIN is a proposed standard graph retrieval interface in GraphScope. Its goal is to provide a common way for graph computing engines to retrieve graph data stored in different storage engines withi..." />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Groot: Persistent Graph Store" href="groot.html" /><link rel="prev" title="Getting Started" href="getting_started.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
-        <title>GRIN: Unified Interface - GraphScope documentation</title>
+    <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
+        <title>GRIN: Graph Retrieval INterface - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     <link rel="stylesheet" type="text/css" href="../_static/css/brands.min.css" />
@@ -65,6 +70,7 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<!-- Baidu analytics -->
 <script>
   var _hmt = _hmt || [];
   (function() {
@@ -75,12 +81,27 @@
   })();
 </script>
 
+<!-- MathJax rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script
+  type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
 </head>
   <body>
     
-  <script>
-    document.body.dataset.theme = "light";
-  </script>
+<script>
+  document.body.dataset.theme = "light";
+</script>
 
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -175,7 +196,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -199,21 +220,23 @@
 <div id="searchbox"></div><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../graphscope_positioning.html">The Product Positioning of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/intro.html">Introducing GraphScope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/graph_analytics_workloads.html">Graph Analytics Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/graph_interactive_workloads.html">Graph Interactive Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/graph_learning_workloads.html">Graph Learning Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/design_of_graphscope.html">Design of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/positioning.html">Positioning of GraphScope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Installation &amp; Deployment</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_local.html">Deploy GraphScope on Local</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on Self-managed K8s</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/install_on_local.html">Install GraphScope on Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on K8s cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_existing_vineyard_cluster.html">Use an existing vineyard cluster with multiple GraphScope sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Analytical Engine</span></p>
 <ul>
@@ -237,7 +260,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_networkx_operations.html">Tutorial: Graph Operations with NetowrkX APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_networkx_algorithms.html">Tutorial: Graph Algorithms with NetowrkX APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_pie.html">Tutorial: Develop your Algorithm in C++ with PIE Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop your Algorithm in C++ with FLASH Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop Your Algorithms in C++ with FLASH Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_python.html">Tutorial: Develop algorithms in Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_java.html">Tutorial: Develop your Algorithm in Java with PIE Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_run_giraph_apps.html">Tutorial: Run Giraph Applications on GraphScope</a></li>
@@ -249,29 +272,42 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Interactive Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started_gie.html">Getting Started for GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../design_of_gie.html">Design of GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tutorial_ldbc_gremlin.html">Tutorial: LDBC Gremlin</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/design_of_gie.html">Design of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started_gle.html">Getting Started for GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../design_of_gle.html">Design of GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/design_of_gle.html">Design of GLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/graph_sampling.html">Graph Sampling</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../learning_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../learning_engine/tutorial_node_classification_k8s.html">Tutorial: Training a Node Classification Model on K8s Cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/dev_and_test.html">Dev and Test</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Storage Engine</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">GRIN: Unified Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="groot.html">Groot</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">GRIN: Graph Retrieval INterface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="groot.html">Groot: Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vineyard.html">In-memory immutable graphs on Vineyard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graphar.html">GraphAr: Standard Graph Data File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gart.html">GART: Bridging the Gap between Relational OLTP and Graph Workloads</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">troubleshooting &amp; utilities</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find Logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find logs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/monitoring.html">Monitoring</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/error_codes.html">Error Codes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/bulk_loader.html">Bulk Loader</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul>
@@ -279,11 +315,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../development/code_style_guide.html">Code Style Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/how_to_test.html">How to Test</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/how_to_contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html">Debugging on local deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html#debugging-on-kubernetes-deployment">Debugging on Kubernetes deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html#commands-for-debugging">Commands for Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_install_in_offline_mode.html">Install GraphScope in offline mode</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -295,13 +335,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -347,18 +387,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -393,7 +433,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -506,11 +546,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../zh/installation.html">安装</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../zh/getting_started.html">快速上手</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../zh/deployment.html">部署</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
@@ -566,6 +606,15 @@
             
           
 
+        
+      
+        
+
+          
+            
+              <dd><a href="../../v0.21.0/index.html">v0.21.0</a></dd>
+            
+          
         
       
         
@@ -871,14 +920,401 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="grin-unified-interface">
-<h1>GRIN: Unified Interface<a class="headerlink" href="#grin-unified-interface" title="Permalink to this heading">#</a></h1>
+          <div class="tex2jax_ignore mathjax_ignore section" id="grin-graph-retrieval-interface">
+<h1>GRIN: Graph Retrieval INterface<a class="headerlink" href="#grin-graph-retrieval-interface" title="Permalink to this heading">#</a></h1>
+<p>GRIN is a proposed standard graph retrieval interface in GraphScope. Its goal is to provide a common way for graph computing engines to retrieve graph data stored in different storage engines within GraphScope, and to simplify the integration of these engines with each other.</p>
+<p>GRIN is defined in C, making it portable to systems written in different programming languages, such as C++, Rust, and Java. It provides a set of common operations and data structure handlers that can be used to access graph data, regardless of the underlying storage engine.</p>
+<ul class="simple">
+<li><p>Traversal: navigating the graph structure to explore relationships between vertices</p></li>
+<li><p>Retrieval: retrieving the data and properties of vertices and edges</p></li>
+<li><p>Filter: filtering data structures based on partitioning or property conditions</p></li>
+</ul>
+<p>The latest version of headers can be found in <a class="reference external" href="https://github.com/GraphScope/GRIN">GRIN</a>.
+A Vineyard implementation for both computing and storage can be found in <a class="reference external" href="https://github.com/v6d-io/v6d/tree/dev/grin/modules/graph/grin">Vineyard</a>.</p>
+<div class="section" id="motivations">
+<h2>Motivations<a class="headerlink" href="#motivations" title="Permalink to this heading">#</a></h2>
+<p>The motivations behind GRIN are driven by the need for a common standard for accessing graph data for the computing engines of GraphScope. There are several factors that have contributed to this need:</p>
+<ol class="arabic simple">
+<li><p>Complexity of integrating multiple graph computing engines and storage engines: GraphScope consists of numerous graph computing engines and storage engines, each with its own data model, query language, and API. This can make it challenging to integrate these engines with one another, as each engine requires a separate integration effort.</p></li>
+<li><p>Need for interoperability and collaboration: To fully realize GraphScope’s potential, greater interoperability and collaboration between different components are necessary. A common standard for accessing graph data could help accelerate GraphScope’s development and make it more accessible to a broader range of users.</p></li>
+<li><p>Growing demand for large-scale graph processing: As the volume of data being generated increases, there is a growing demand for graph processing systems that can efficiently analyze large-scale graph data. A common standard for accessing graph data could help accelerate the development of new features for engines in GraphScope.</p></li>
+</ol>
+<p>By defining the GRIN interfaces in C, it can be easily integrated with various programming languages, including Java, Python, and Rust, using foreign function interfaces (FFIs) that enable these languages to call C functions. Moreover, GRIN becomes a language-agnostic standard that can be utilized across different programming environments without requiring each environment to have its own implementation of the standard. This greatly simplifies the development and maintenance of graph computing systems relying on GRIN, as it allows developers to use their preferred programming languages and tools while still being able to access and process graph data using a common standard.</p>
+</div>
+<div class="section" id="unified-graph-retrieval">
+<h2>Unified Graph Retrieval<a class="headerlink" href="#unified-graph-retrieval" title="Permalink to this heading">#</a></h2>
+<p>As previously mentioned, GRIN offers computing engines a consistent method for accessing graphs stored in various storage engines through a set of common operations for graph traversal, data retrieval, and conditional filtering. These operations are defined as C functions, and their return values and parameters are typically handlers for graph concepts, such as vertices and edges.</p>
+<p>Here is an example showing how to handle a graph query using GRIN APIs. The data types with the prefix <code class="docutils literal notranslate"><span class="pre">GRIN_</span></code> are handlers, while the functions with the prefix <code class="docutils literal notranslate"><span class="pre">grin_</span></code> are the APIs in GRIN. Moreover, macros that start with <code class="docutils literal notranslate"><span class="pre">GRIN_</span></code> are provided by GRIN to reflect storage features. Each storage engine that implements GRIN APIs can set up these macros based on their own features, such as graph partition strategies and list retrieval styles. The storage provider for this example is Vineyard.</p>
+<p>The example demonstrates how to synchronize property values of vertices associated with a specific edge type. The input parameters are <code class="docutils literal notranslate"><span class="pre">partitioned_graph</span></code>, the local <code class="docutils literal notranslate"><span class="pre">partition</span></code>, <code class="docutils literal notranslate"><span class="pre">edge_type_name</span></code> (e.g., likes), and <code class="docutils literal notranslate"><span class="pre">vertex_property_name</span></code> (e.g., features). The task is to find all the destination vertices of “boundary edges” with a type named “likes”, and the vertices must have a property named “features”. Here, a boundary edge is an edge whose source vertex is a master vertex, and the destination is a mirror vertex, given the context of the “edge-cut” partition strategy that the underlying storage uses. For each of these vertices, we send the value of the “features” property to its master partition.</p>
+<div class="highlight-CPP notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">sync_property</span><span class="p">(</span><span class="n">GRIN_PARTITIONED_GRAPH</span><span class="w"> </span><span class="n">partitioned_graph</span><span class="p">,</span><span class="w"> </span><span class="n">GRIN_PARTITION</span><span class="w"> </span><span class="n">partition</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">edge_type_name</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">vertex_property_name</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">GRIN_GRAPH</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_local_graph_from_partition</span><span class="p">(</span><span class="n">partitioned_graph</span><span class="p">,</span><span class="w"> </span><span class="n">partition</span><span class="p">);</span><span class="w">  </span><span class="c1">// get local graph of partition</span>
+
+<span class="w">        </span><span class="n">GRIN_EDGE_TYPE</span><span class="w"> </span><span class="n">etype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_edge_type_by_name</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">edge_type_name</span><span class="p">);</span><span class="w">  </span><span class="c1">// get edge type from name</span>
+<span class="w">        </span><span class="n">GRIN_VERTEX_TYPE_LIST</span><span class="w"> </span><span class="n">src_vtypes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_src_types_from_edge_type</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">etype</span><span class="p">);</span><span class="w">  </span><span class="c1">// get related source vertex type list</span>
+<span class="w">        </span><span class="n">GRIN_VERTEX_TYPE_LIST</span><span class="w"> </span><span class="n">dst_vtypes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_dst_types_from_edge_type</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">etype</span><span class="p">);</span><span class="w">  </span><span class="c1">// get related destination vertex type list</span>
+
+<span class="w">        </span><span class="kt">size_t</span><span class="w"> </span><span class="n">src_vtypes_num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_type_list_size</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">src_vtypes</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">size_t</span><span class="w"> </span><span class="n">dst_vtypes_num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_type_list_size</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">dst_vtypes</span><span class="p">);</span>
+<span class="w">        </span><span class="n">assert</span><span class="p">(</span><span class="n">src_vtypes_num</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">dst_vtypes_num</span><span class="p">);</span><span class="w">  </span><span class="c1">// the src &amp; dst vertex type lists must be aligned</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">src_vtypes_num</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">  </span><span class="c1">// iterate all pairs of src &amp; dst vertex type</span>
+<span class="w">            </span><span class="n">GRIN_VERTEX_TYPE</span><span class="w"> </span><span class="n">src_vtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_type_from_list</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">src_vtypes</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">);</span><span class="w">  </span><span class="c1">// get src type</span>
+<span class="w">            </span><span class="n">GRIN_VERTEX_TYPE</span><span class="w"> </span><span class="n">dst_vtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_type_from_list</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">dst_vtypes</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">);</span><span class="w">  </span><span class="c1">// get dst type</span>
+
+<span class="w">            </span><span class="n">GRIN_VERTEX_PROPERTY</span><span class="w"> </span><span class="n">dst_vp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_property_by_name</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">dst_vtype</span><span class="p">,</span><span class="w"> </span><span class="n">vertex_property_name</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the property called &quot;features&quot; under dst type</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">dst_vp</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">GRIN_NULL_VERTEX_PROPERTY</span><span class="p">)</span><span class="w"> </span><span class="k">continue</span><span class="p">;</span><span class="w">  </span><span class="c1">// select out the pairs whose dst type does NOT have such a property called &quot;features&quot;</span>
+<span class="w">            </span>
+<span class="w">            </span><span class="n">GRIN_VERTEX_PROPERTY_TABLE</span><span class="w"> </span><span class="n">dst_vpt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_property_table_by_type</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">dst_vtype</span><span class="p">);</span><span class="w">  </span><span class="c1">// prepare property table of dst vertex type for later use</span>
+<span class="w">            </span><span class="n">GRIN_DATATYPE</span><span class="w"> </span><span class="n">dst_vp_dt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_property_data_type</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">dst_vp</span><span class="p">);</span><span class="w"> </span><span class="c1">// prepare property type for later use</span>
+
+<span class="w">            </span><span class="n">GRIN_VERTEX_LIST</span><span class="w"> </span><span class="n">__src_vl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_list</span><span class="p">(</span><span class="n">g</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the vertex list</span>
+<span class="w">            </span><span class="n">GRIN_VERTEX_LIST</span><span class="w"> </span><span class="n">_src_vl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_select_type_for_vertex_list</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">src_vtype</span><span class="p">,</span><span class="w"> </span><span class="n">__src_vl</span><span class="p">);</span><span class="w">  </span><span class="c1">// select the vertex of source type</span>
+<span class="w">            </span><span class="n">GRIN_VERTEX_LIST</span><span class="w"> </span><span class="n">src_vl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_select_master_for_vertex_list</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">_src_vl</span><span class="p">);</span><span class="w">  </span><span class="c1">// select master vertices under source type</span>
+<span class="w">            </span>
+<span class="w">            </span><span class="kt">size_t</span><span class="w"> </span><span class="n">src_vl_num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_list_size</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">src_vl</span><span class="p">);</span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">src_vl_num</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// iterate the src vertex</span>
+<span class="w">                </span><span class="n">GRIN_VERTEX</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_from_list</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">src_vl</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span>
+
+<span class="w">            </span><span class="cp">#ifdef GRIN_TRAIT_SELECT_EDGE_TYPE_FOR_ADJACENT_LIST</span>
+<span class="w">                </span><span class="n">GRIN_ADJACENT_LIST</span><span class="w"> </span><span class="n">_adj_list</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_adjacent_list</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">GRIN_DIRECTION</span><span class="o">::</span><span class="n">OUT</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the outgoing adjacent list of v</span>
+<span class="w">                </span><span class="n">GRIN_ADJACENT_LIST</span><span class="w"> </span><span class="n">adj_list</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_select_edge_type_for_adjacent_list</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">etype</span><span class="p">,</span><span class="w"> </span><span class="n">_adj_list</span><span class="p">);</span><span class="w">  </span><span class="c1">// select edges under etype</span>
+<span class="w">            </span><span class="cp">#else</span>
+<span class="w">                </span><span class="n">GRIN_ADJACENT_LIST</span><span class="w"> </span><span class="n">adj_lsit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_adjacent_list</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">GRIN_DIRECTION</span><span class="o">::</span><span class="n">OUT</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the outgoing adjacent list of v</span>
+<span class="w">            </span><span class="cp">#endif</span>
+
+<span class="w">                </span><span class="kt">size_t</span><span class="w"> </span><span class="n">al_sz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_adjacent_list_size</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">adj_list</span><span class="p">);</span>
+<span class="w">                </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">al_sz</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">k</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="cp">#ifndef GRIN_TRAIT_SELECT_EDGE_TYPE_FOR_ADJACENT_LIST</span>
+<span class="w">                    </span><span class="n">GRIN_EDGE</span><span class="w"> </span><span class="n">edge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_edge_from_adjacent_list</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">adj_list</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">);</span>
+<span class="w">                    </span><span class="n">GRIN_EDGE_TYPE</span><span class="w"> </span><span class="n">edge_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_edge_type</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">edge</span><span class="p">);</span>
+<span class="w">                    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">grin_equal_edge_type</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">edge_type</span><span class="p">,</span><span class="w"> </span><span class="n">etype</span><span class="p">))</span><span class="w"> </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">            </span><span class="cp">#endif</span>
+<span class="w">                    </span><span class="n">GRIN_VERTEX</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_neighbor_from_adjacent_list</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">adj_list</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the dst vertex u</span>
+<span class="w">                    </span><span class="k">const</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_value_from_vertex_property_table</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">dst_vpt</span><span class="p">,</span><span class="w"> </span><span class="n">u</span><span class="p">,</span><span class="w"> </span><span class="n">dst_vp</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the property value of &quot;features&quot; of u</span>
+
+<span class="w">                    </span><span class="n">GRIN_VERTEX_REF</span><span class="w"> </span><span class="n">uref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_ref_for_vertex</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">u</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the reference of u that can be recoginized by other partitions</span>
+<span class="w">                    </span><span class="n">GRIN_PARTITION</span><span class="w"> </span><span class="n">u_master_partition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_master_partition_from_vertex_ref</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">uref</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the master partition for u</span>
+
+<span class="w">                    </span><span class="n">send_value</span><span class="p">(</span><span class="n">u_master_partition</span><span class="p">,</span><span class="w"> </span><span class="n">uref</span><span class="p">,</span><span class="w"> </span><span class="n">dst_vp_dt</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span><span class="w">  </span><span class="c1">// the value must be casted to the correct type based on dst_vp_dt before sending</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">vineyard</span><span class="o">::</span><span class="n">Client</span><span class="o">&amp;</span><span class="w"> </span><span class="n">client</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">grape</span><span class="o">::</span><span class="n">CommSpec</span><span class="o">&amp;</span><span class="w"> </span><span class="n">comm_spec</span><span class="p">,</span>
+<span class="w">             </span><span class="n">vineyard</span><span class="o">::</span><span class="n">ObjectID</span><span class="w"> </span><span class="n">fragment_group_id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">LOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Loaded graph to vineyard: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">fragment_group_id</span><span class="p">;</span>
+
+<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">pg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_partitioned_graph_by_object_id</span><span class="p">(</span><span class="n">client</span><span class="p">,</span><span class="w"> </span><span class="n">fragment_group_id</span><span class="p">);</span>
+<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">local_partitions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_local_partition_list</span><span class="p">(</span><span class="n">pg</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">size_t</span><span class="w"> </span><span class="n">pnum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_partition_list_size</span><span class="p">(</span><span class="n">local_partitions</span><span class="p">);</span>
+<span class="w">        </span><span class="n">assert</span><span class="p">(</span><span class="n">pnum</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">// we only sync the first partition as example</span>
+<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">partition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_partition_from_list</span><span class="p">(</span><span class="n">local_partitions</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">        </span><span class="n">sync_property</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span><span class="w"> </span><span class="n">partition</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;likes&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;features&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="grin-concepts">
+<h2>GRIN Concepts<a class="headerlink" href="#grin-concepts" title="Permalink to this heading">#</a></h2>
+<p>This section explains the key concepts in GRIN to help users understand GRIN APIs more easily.</p>
+<div class="section" id="predefined-macros">
+<h3>Predefined Macros<a class="headerlink" href="#predefined-macros" title="Permalink to this heading">#</a></h3>
+<p>GRIN provides a set of predefined C macros for storage engines to describe their features. When a storage engine implements the GRIN APIs, it should first set up the macros to present its features such as partition strategies and enabled indices.</p>
+<p>The benefit is two-fold:</p>
+<ol class="arabic simple">
+<li><p>On the computing engine side, developers can implement their methods using alternative logic and GRIN APIs when some features are claimed or disclaimed by different storage engines. This makes the code switch based on storage feature claims happens in the compiling stage rather than in runtime. Thus, it extends the versatility of methods implemented by GRINs without sacrificing efficiency.</p></li>
+<li><p>On the storage engine side, the predefined macros can filter out a large number of unnecessary APIs to avoid developers implementing them with boilerplate or inefficient code, since the design of storage engines may differ enormously from each other.</p></li>
+</ol>
+<p>What follows is an example of predefined macros regarding the locally completeness of vertex properties.</p>
+<ul class="simple">
+<li><p>Four macros are provided:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GRIN_ASSUME_ALL_VERTEX_PROPERTY_LOCAL_COMPLETE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GRIN_ASSUME_MASTER_VERTEX_PROPERTY_LOCAL_COMPLETE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GRIN_ASSUME_BY_TYPE_ALL_VERTEX_PROPERTY_LOCAL_COMPLETE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GRIN_ASSUME_BY_TYPE_MASTER_VERTEX_PROPERTY_LOCAL_COMPLETE</span></code></p></li>
+</ol>
+</li>
+<li><p>Some assumptions may dominate others, which means that some assumptions apply in a wider range than others. Therefore, storage providers should be careful when setting these assumptions. Here, 1 dominates the others, which means that 2 to 4 are undefined when 1 is defined. Additionally, 2 dominates 4, and 3 dominates 4.</p></li>
+<li><p>GRIN provides different APIs under different assumptions. Suppose only 3 is defined; it means that vertices of certain types have all the properties locally complete, regardless of whether the vertex is master or mirror. In this case, GRIN provides an API to return these locally complete vertex types.</p></li>
+<li><p>In the case that none of these four macros is defined, GRIN will provide a per-vertex API to tell whether the vertex property is locally complete.</p></li>
+</ul>
+</div>
+<div class="section" id="partition-strategy">
+<h3>Partition Strategy<a class="headerlink" href="#partition-strategy" title="Permalink to this heading">#</a></h3>
+<p>GRIN provides two types (i.e., edge-cut and vertex-cut) of predefined partition strategies. Each strategy can be seen as a set of granular predefined macros based on the common understanding of the partition strategy. For storages using hybrid partition strategy, developers can set up the granular macros one after another.</p>
+<div class="section" id="edge-cut-partition-strategy">
+<h4>Edge-cut Partition Strategy<a class="headerlink" href="#edge-cut-partition-strategy" title="Permalink to this heading">#</a></h4>
+<ul class="simple">
+<li><p>Vertex data is locally complete for master vertices.</p></li>
+<li><p>Edge data is locally complete for all edges.</p></li>
+<li><p>Neighbors are locally complete for master vertices.</p></li>
+<li><p>Vertex properties are locally complete for master vertices.</p></li>
+<li><p>Edge properties are locally complete for all edges.</p></li>
+</ul>
+</div>
+<div class="section" id="vertex-cut-partition-strategy">
+<h4>Vertex-cut Partition Strategy<a class="headerlink" href="#vertex-cut-partition-strategy" title="Permalink to this heading">#</a></h4>
+<ul class="simple">
+<li><p>Vertex data is locally complete for all vertices.</p></li>
+<li><p>Edge data is locally complete for all edges.</p></li>
+<li><p>Mirror partition list is available for master vertices to broadcast messages.</p></li>
+<li><p>Vertex properties are locally complete for all vertices.</p></li>
+<li><p>Edge properties are locally complete for all edges.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="property-graph-model">
+<h3>Property Graph Model<a class="headerlink" href="#property-graph-model" title="Permalink to this heading">#</a></h3>
+<p>GRIN makes the following assumptions for its property graph model.</p>
+<ul class="simple">
+<li><p>Vertices have types, as do edges.</p></li>
+<li><p>The relationship between edge types and pairs of vertex types is many-to-many.</p></li>
+<li><p>Properties are bound to vertex and edge types, but some properties may have the same name.</p></li>
+<li><p>Labels can be assigned to vertices and edges (<strong>NOT</strong> their types) primarily for query filtering, and labels have no properties.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="implementation-guideline">
+<h2>Implementation Guideline<a class="headerlink" href="#implementation-guideline" title="Permalink to this heading">#</a></h2>
+<div class="section" id="for-computing-engine">
+<h3>For computing engine<a class="headerlink" href="#for-computing-engine" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Get GRIN APIs from <a class="reference external" href="https://github.com/GraphScope/GRIN">GRIN</a></p></li>
+<li><p>Implement a wrapper class (normally <code class="docutils literal notranslate"><span class="pre">grin_fragment</span></code> or <code class="docutils literal notranslate"><span class="pre">grin_graph</span></code>) using GRIN APIs.</p></li>
+<li><p>When you find some function is hard or inefficient to implement, discuss with GRIN designers.</p></li>
+<li><p>Write or modify apps using the wrapper class (e.g., <code class="docutils literal notranslate"><span class="pre">grin_fragment</span></code>).</p></li>
+<li><p>Find a storage implementation to set up an end-to-end test.</p></li>
+</ul>
+</div>
+<div class="section" id="for-storage-engine">
+<h3>For storage engine<a class="headerlink" href="#for-storage-engine" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Make a grin folder in your system, and navigate into the grin folder.</p></li>
+<li><p>Add GRIN as a submodule and copy the <code class="docutils literal notranslate"><span class="pre">predefine.template</span></code> out as the <code class="docutils literal notranslate"><span class="pre">predefine.h</span></code></p></li>
+</ul>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">    $ </span>git<span class="w"> </span>submodule<span class="w"> </span>add<span class="w"> </span>https://github.com/GraphScope/GRIN.git<span class="w"> </span>include
+
+<span class="gp">    $ </span>cp<span class="w"> </span>include/predefine.template<span class="w"> </span>predefine.h
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Modify the StorageSpecific part in the <code class="docutils literal notranslate"><span class="pre">predefine.h</span></code> based on the features of the storage.</p></li>
+<li><p>Implement the headers as much as possible in another folder (e.g., src) under grin.
+If you find the time complexity of some function is <strong>NOT</strong> sub-linear to the graph size,
+discuss with GRIN designers.</p></li>
+<li><p>Write a storage-specific method to get a graph handler from your storage.</p></li>
+<li><p>Run a graph traversal test.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="design-details">
+<h2>Design Details<a class="headerlink" href="#design-details" title="Permalink to this heading">#</a></h2>
+<div class="section" id="handler">
+<h3>Handler<a class="headerlink" href="#handler" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>GRIN provides a series of handlers for graph concepts, such as vertex, edge and graph itself.</p></li>
+<li><p>Since almost everything in GRIN are handlers except of only a few string names, the type for a graph concept and its handler is always mixed-used in GRIN.</p></li>
+<li><p>For example, GRIN uses the type Vertex to represent the type of a vertex handler, instead of using VertexHandler for clean code.</p></li>
+</ul>
+</div>
+<div class="section" id="edge">
+<h3>Edge<a class="headerlink" href="#edge" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>For any directed edge <code class="docutils literal notranslate"><span class="pre">(u,</span> <span class="pre">v)</span></code> where the direction goes from <code class="docutils literal notranslate"><span class="pre">u</span></code> to <code class="docutils literal notranslate"><span class="pre">v</span></code>, <code class="docutils literal notranslate"><span class="pre">u</span></code> is the source vertex, whereas <code class="docutils literal notranslate"><span class="pre">v</span></code> is the destination vertex.</p></li>
+</ul>
+</div>
+<div class="section" id="list">
+<h3>List<a class="headerlink" href="#list" title="Permalink to this heading">#</a></h3>
+<p>GRIN provides two alternative approaches, namely array-style retrieval and iterator, for list retrieval of <code class="docutils literal notranslate"><span class="pre">GRIN_VERTEX_LIST</span></code>, <code class="docutils literal notranslate"><span class="pre">GRIN_EDGE_LIST</span></code>, and <code class="docutils literal notranslate"><span class="pre">GRIN_ADJACENT_LIST</span></code>.</p>
+<p>For other schema-level lists like <code class="docutils literal notranslate"><span class="pre">GRIN_VERTEX_TYPE_LIST</span></code> or <code class="docutils literal notranslate"><span class="pre">GRIN_PARTITION_LIST</span></code>, GRIN generally assume the array-style list retrieval, and does <strong>NOT</strong> provide a <code class="docutils literal notranslate"><span class="pre">GRIN_ENABLE_</span></code> macro for these lists.</p>
+<div class="section" id="array-style-retrieval">
+<h4>Array-style Retrieval<a class="headerlink" href="#array-style-retrieval" title="Permalink to this heading">#</a></h4>
+<ul>
+<li><p>The array-style retrieval of a list handler is available to the user only if the storage can provide the size of the list, and an element retrieval API by position (i.e., index of array). Otherwise, the storage should provide a list iterator, see next section.</p></li>
+<li><p>Usually the array-style retrieval is controlled by the macros ended with <code class="docutils literal notranslate"><span class="pre">_LIST_ARRAY</span></code></p></li>
+<li><p>A vertex list array-style retrieval example</p>
+<div class="highlight-CPP notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="cm">/* grin/topology/vertexlist.h */</span>
+
+<span class="w">    </span><span class="n">GRIN_VERTEX_LIST</span><span class="w"> </span><span class="nf">grin_get_vertex_list</span><span class="p">(</span><span class="n">GRIN_GRAPH</span><span class="w"> </span><span class="n">g</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the vertexlist of a graph</span>
+
+<span class="cp">#ifdef GRIN_ENABLE_VERTEX_LIST_ARRAY</span>
+<span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="nf">grin_get_vertex_list_size</span><span class="p">(</span><span class="n">GRIN_GRAPH</span><span class="w"> </span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">GRIN_VERTEX_LIST</span><span class="w"> </span><span class="n">vl</span><span class="p">);</span><span class="w">  </span><span class="c1">// implement the API to return the size of vertexlist</span>
+
+<span class="w">    </span><span class="n">GRIN_VERTEX</span><span class="w"> </span><span class="nf">grin_get_vertex_from_list</span><span class="p">(</span><span class="n">GRIN_GRAPH</span><span class="w"> </span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">GRIN_VERTEX_LIST</span><span class="w"> </span><span class="n">vl</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">idx</span><span class="p">);</span><span class="w">  </span><span class="c1">// implement the API to return the element of vertexlist by position</span>
+<span class="cp">#endif</span>
+
+<span class="w">    </span><span class="cm">/* run.cc */</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">vertexlist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_list</span><span class="p">(</span><span class="n">g</span><span class="p">);</span><span class="w"> </span><span class="c1">// with a graph (handler) g</span>
+<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">sz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_list_size</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">vertexlist</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">sz</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_from_list</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">vertexlist</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="list-iterator">
+<h4>List Iterator<a class="headerlink" href="#list-iterator" title="Permalink to this heading">#</a></h4>
+<ul>
+<li><p>A list iterator handler is provided to caller if the list size is unknown or for sequential scan efficiency.</p></li>
+<li><p>Usually the iterators are enabled by macros ended with <code class="docutils literal notranslate"><span class="pre">_LIST_ITERATOR</span></code></p></li>
+<li><p>A vertex list iterator example</p>
+<div class="highlight-CPP notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="cm">/* grin/topology/vertexlist.h */</span>
+
+<span class="cp">#ifdef GRIN_ENABLE_VERTEX_LIST_ITERATOR</span>
+<span class="w">    </span><span class="n">GRIN_VERTEX_LIST_ITERATOR</span><span class="w"> </span><span class="nf">grin_get_vertex_list_begin</span><span class="p">(</span><span class="n">GRIN_GRAPH</span><span class="w"> </span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">GRIN_VERTEX_LIST</span><span class="w"> </span><span class="n">vl</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the begin iterator of the vertexlist</span>
+
+<span class="w">    </span><span class="n">GRIN_VERTEX_LIST_ITERATOR</span><span class="w"> </span><span class="nf">grin_get_next_vertex_list_iter</span><span class="p">(</span><span class="n">GRIN_GRAPH</span><span class="w"> </span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">GRIN_VERTEX_LIST_ITERATOR</span><span class="w"> </span><span class="n">vli</span><span class="p">);</span><span class="w">  </span><span class="c1">// get next iterator</span>
+
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="nf">grin_is_vertex_list_end</span><span class="p">(</span><span class="n">GRIN_GRAPH</span><span class="w"> </span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">GRIN_VERTEX_LIST_ITERATOR</span><span class="w"> </span><span class="n">vli</span><span class="p">);</span><span class="w"> </span><span class="c1">// check if reaches the end</span>
+
+<span class="w">    </span><span class="n">GRIN_VERTEX</span><span class="w"> </span><span class="nf">grin_get_vertex_from_iter</span><span class="p">(</span><span class="n">GRIN_GRAPH</span><span class="w"> </span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">GRIN_VERTEX_LIST_ITERATOR</span><span class="w"> </span><span class="n">vli</span><span class="p">);</span><span class="w"> </span><span class="c1">// get the vertex from the iterator</span>
+<span class="cp">#endif</span>
+
+<span class="w">    </span><span class="cm">/* run.cc */</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">iter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_list_begin</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">vl</span><span class="p">);</span><span class="w"> </span><span class="c1">// with a graph (handler) g and vertexlist vl</span>
+
+<span class="w">        </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">grin_is_vertex_list_end</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">iter</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_from_iter</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">iter</span><span class="p">);</span>
+<span class="w">            </span><span class="n">iter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_next_vertex_list_iter</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">iter</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="property">
+<h3>Property<a class="headerlink" href="#property" title="Permalink to this heading">#</a></h3>
+<ul>
+<li><p>Properties are bound to vertex and edge types. It means even some properties may have the same name, as long as they are bound to different vertex or edge types, GRIN will provide distinct handlers for these properties. This is
+because, although properties with the same name usually provide the same semantic in the graph, they may have
+different data types in the underlying storage for efficiency concerns (e.g., short date and long date).</p></li>
+<li><p>To avoid the incompatibility with storage engines, we made the design choice to bind properties under vertex and edge types. Meanwhile, GRIN provides an API to get all the property handlers with the (same) given property name.</p>
+<div class="highlight-CPP notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="cm">/* grin/property/type.h */</span>
+
+<span class="w">    </span><span class="n">GRIN_VERTEX_TYPE</span><span class="w"> </span><span class="nf">grin_get_vertex_type_by_name</span><span class="p">(</span><span class="n">GRIN_GRAPH</span><span class="w"> </span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">name</span><span class="p">);</span>
+
+
+<span class="w">    </span><span class="cm">/* grin/property/property.h */</span>
+
+<span class="w">    </span><span class="n">GRIN_VERTEX_PROPERTY</span><span class="w"> </span><span class="nf">grin_get_vertex_property_by_name</span><span class="p">(</span><span class="n">GRIN_GRAPH</span><span class="w"> </span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">GRIN_VERTEX_TYPE</span><span class="w"> </span><span class="n">vtype</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">name</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">GRIN_VERTEX_PROPERTY_LIST</span><span class="w"> </span><span class="nf">grin_get_vertex_properties_by_name</span><span class="p">(</span><span class="n">GRIN_GRAPH</span><span class="w"> </span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">name</span><span class="p">);</span>
+
+
+<span class="w">    </span><span class="cm">/* run.cc */</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">vtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_type_by_name</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Person&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the vertex type of Person</span>
+<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">vprop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_property_by_name</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">vtype</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Name&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// get the Name property bound to Person</span>
+
+<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">vpl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_properties_by_name</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Name&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// get all the properties called Name under all the vertex types (e.g., Person, Company) in g</span>
+<span class="w">    </span><span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="label">
+<h3>Label<a class="headerlink" href="#label" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>GRIN does <strong>NOT</strong> distinguish label on vertices and edges, that means a vertex and an edge may have a same label.</p></li>
+<li><p>However the storage can tell GRIN whether labels are enabled in vertices or edges seperatedly with macros of <code class="docutils literal notranslate"><span class="pre">WITH_VERTEX_LABEL</span></code> and <code class="docutils literal notranslate"><span class="pre">WITH_EDGE_LABEL</span></code> respectively.</p></li>
+</ul>
+</div>
+<div class="section" id="order">
+<h3>Order<a class="headerlink" href="#order" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>GRIN provides sorted vertex list assumptions.</p></li>
+<li><p>GRIN also assumes that if a vertex list sorted, then there is complete ordering for the vertices from the list.</p></li>
+<li><p>Sorted vertex list faciliates computations like vertex list join and data structures like vertex array which uses vertex as the index of the array.</p></li>
+</ul>
+</div>
+<div class="section" id="reference">
+<h3>Reference<a class="headerlink" href="#reference" title="Permalink to this heading">#</a></h3>
+<ul>
+<li><p>GRIN introduces the reference concept in partitioned graph. It stands for the reference of an instance that can
+be recognized in partitions other than the current partition where the instance is accessed.</p></li>
+<li><p>For example, a <code class="docutils literal notranslate"><span class="pre">GRIN_VERTEX_REF</span></code> is a reference of a <code class="docutils literal notranslate"><span class="pre">GRIN_VERTEX</span></code> that can be recognized in other partitions.</p>
+<div class="highlight-CPP notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="cm">/* grin/partition/partition.h */</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="n">GRIN_VERTEX_REF</span><span class="w"> </span><span class="nf">grin_get_vertex_ref_for_vertex</span><span class="p">(</span><span class="n">GRIN_GRAPH</span><span class="p">,</span><span class="w"> </span><span class="n">GRIN_VERTEX</span><span class="p">);</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="nf">grin_serialize_vertex_ref</span><span class="p">(</span><span class="n">GRIN_GRAPH</span><span class="p">,</span><span class="w"> </span><span class="n">GRIN_VERTEX_REF</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">GRIN_VERTEX_REF</span><span class="w"> </span><span class="nf">grin_deserialize_to_vertex_ref</span><span class="p">(</span><span class="n">GRIN_GRAPH</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">GRIN_VERTEX</span><span class="w"> </span><span class="nf">grin_get_vertex_from_vertex_ref</span><span class="p">(</span><span class="n">GRIN_GRAPH</span><span class="p">,</span><span class="w"> </span><span class="n">GRIN_VERTEX_REF</span><span class="p">);</span>
+
+
+<span class="w">    </span><span class="cm">/* run.cc in machine 1 */</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">vref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_ref_for_vertex</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">);</span><span class="w">  </span><span class="c1">// get v&#39;s vertex ref which can be recgonized in machine 2</span>
+
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_serialize_vertex_ref</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">vref</span><span class="p">);</span><span class="w">  </span><span class="c1">// serialize into a message</span>
+
+<span class="w">        </span><span class="c1">// send the message to machine 2...</span>
+<span class="w">    </span><span class="p">}</span>
+
+
+<span class="w">    </span><span class="cm">/* run.cc in machine 2 */</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// recieve the message from machine 1...</span>
+
+<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">vref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_deserialize_to_vertex_ref</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">);</span><span class="w">  </span><span class="c1">// deserialize back to vertex ref</span>
+
+<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grin_get_vertex_from_vertex_ref</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">vref</span><span class="p">);</span><span class="w">  </span><span class="c1">// cast to vertex if g can recognize the vertex ref</span>
+<span class="w">    </span><span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="master-and-mirror">
+<h3>Master and Mirror<a class="headerlink" href="#master-and-mirror" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Master &amp; mirror vertices are the concept borrowed from vertexcut partition strategy. When a vertex is recognized in
+serveral partitions, GRIN refers one of them as the master vertex while others as mirrors. This is primarily for data
+aggregation purpose to share a common centural node for every one.</p></li>
+<li><p>While in edgecut partition, the concept becomes inner &amp; outer vertices. GRIN uses master &amp; mirror vertices to represent inner &amp; outer vertices respectively to unify these concepts.</p></li>
+</ul>
+</div>
+<div class="section" id="local-complete">
+<h3>Local Complete<a class="headerlink" href="#local-complete" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>The concept of local complete is with repect to whether a graph component adhere to a vertex or an edge is locally complete within the partition.</p></li>
+<li><p>Take vertex and properties as example. GRIN considers the vertex is “property local complete” if it can get all the properties of the vertex locally in the partition.</p></li>
+<li><p>There are concepts like “edge property local complete”, “vertex neighbor local complete” and so on.</p></li>
+<li><p>GRIN does <strong>NOT</strong> assume any local complete on master vertices. Since in some extremely cases, master vertices
+may <strong>NOT</strong> contain all the data or properties locally.</p></li>
+<li><p>GRIN currently provides vertex-level/edge-level local complete judgement APIs, while the introduction of type-level judgement APIs is open for discussion.</p></li>
+</ul>
+</div>
+<div class="section" id="natural-id-trait">
+<h3>Natural ID Trait<a class="headerlink" href="#natural-id-trait" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Concepts represent the schema of the graph, such as vertex type and properties bound to a certain edge type, are usually numbered naturally from <code class="docutils literal notranslate"><span class="pre">0</span></code> to its <code class="docutils literal notranslate"><span class="pre">num</span> <span class="pre">-</span> <span class="pre">1</span></code> in many storage engines. To facilitate further optimizations
+in the upper computing engines, GRIN provides the natural number ID trait. A storage can provide such a trait if
+it also uses the natural numbering for graph schema concepts.</p></li>
+</ul>
+</div>
+</div>
 </div>
 
         </article>
@@ -891,7 +1327,7 @@
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Groot</div>
+                <div class="title">Groot: Persistent Graph Store</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -927,8 +1363,60 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">GRIN: Graph Retrieval INterface</a><ul>
+<li><a class="reference internal" href="#motivations">Motivations</a></li>
+<li><a class="reference internal" href="#unified-graph-retrieval">Unified Graph Retrieval</a></li>
+<li><a class="reference internal" href="#grin-concepts">GRIN Concepts</a><ul>
+<li><a class="reference internal" href="#predefined-macros">Predefined Macros</a></li>
+<li><a class="reference internal" href="#partition-strategy">Partition Strategy</a><ul>
+<li><a class="reference internal" href="#edge-cut-partition-strategy">Edge-cut Partition Strategy</a></li>
+<li><a class="reference internal" href="#vertex-cut-partition-strategy">Vertex-cut Partition Strategy</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#property-graph-model">Property Graph Model</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#implementation-guideline">Implementation Guideline</a><ul>
+<li><a class="reference internal" href="#for-computing-engine">For computing engine</a></li>
+<li><a class="reference internal" href="#for-storage-engine">For storage engine</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#design-details">Design Details</a><ul>
+<li><a class="reference internal" href="#handler">Handler</a></li>
+<li><a class="reference internal" href="#edge">Edge</a></li>
+<li><a class="reference internal" href="#list">List</a><ul>
+<li><a class="reference internal" href="#array-style-retrieval">Array-style Retrieval</a></li>
+<li><a class="reference internal" href="#list-iterator">List Iterator</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#property">Property</a></li>
+<li><a class="reference internal" href="#label">Label</a></li>
+<li><a class="reference internal" href="#order">Order</a></li>
+<li><a class="reference internal" href="#reference">Reference</a></li>
+<li><a class="reference internal" href="#master-and-mirror">Master and Mirror</a></li>
+<li><a class="reference internal" href="#local-complete">Local Complete</a></li>
+<li><a class="reference internal" href="#natural-id-trait">Natural ID Trait</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

@@ -1,7 +1,7 @@
 Frequently Asked Questions
 ==========================
 
-If you don't find an answer to your question here, feel free to file a `Issues`_ or post it to `Discussions`_.
+If you don't find an answer to your question here, feel free to file an `Issues`_ or post it to `Discussions`_.
 
 1. What are the minimum resources and system requirements required to run GraphScope?
 
@@ -79,6 +79,14 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
 
     - compile ``scipy`` failed: You can follow `this <https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1>`_ to build scipy from source or try ``pip3 install --pre -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy`` to workaround this problem.
 
+      If you encounter errors like `ERROR: Dependency "OpenBLAS" not found, tried pkgconfig, framework and cmake` during installing scipy on MacOS, try:
+
+      .. code:: bash
+
+         export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$(brew --prefix openblas)
+
+      and run `pip3 install scipy` to install scipy again.
+
 11. How to resolve the ``Permission denied`` error when allocating PV on NFS volumes?
 
     - ENV: Use helm to install graphscope-store, NFS to supply PV.
@@ -99,7 +107,7 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
 
     It will take a few minutes for pulling image during the first time for launching GraphScope instance. Thus, the ``Timeout Exception`` may caused by a poor network connection.
     You can increase the value of ``timeout_seconds`` parameter as your expectation by ``graphscope.set_option(timeout_seconds=600))``.
-    
+
 13. Failed to run GraphScope (either in single machine or in docker container) due to failed connection to building blocks like etcd?
 
     It may be caused by that your machine is in an enterprise network, which requires proxy configurations to access network properly. This may lead to wrong address resolution and port occupancy. You can try to add addresses like ``hostname -i`` and ``0.0.0.0`` to your environment variable ``no_proxy`` or ``NO_PROXY`` (be aware of `the prefix/suffix policy of no_proxy <https://unix.stackexchange.com/questions/23452/set-a-network-range-in-the-no-proxy-environment-variable>`_)

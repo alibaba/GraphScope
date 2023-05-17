@@ -4,60 +4,57 @@ This document describes how to build and test GraphScope Analytical Engine from 
 
 ## Dev Environment
 
-To build analytcial engine from source code, you need to prepare a development environment with many dependencies and 
-build toolchains. You have two options to prepare the development environment, install all tools and dependencies 
-on your local machine, or build it in our provided docker image.
-
-### Install deps on local 
-
-To install all dependencies on your local, use the GraphScope command-line utility `gs` with the subcommand 
-`install-deps` like this
+Here we would use a prebuilt docker image with necessary dependencies installed.
 
 ```bash
-./gs install-deps dev
-
-# for more usage, try
-# ./gs install-deps -h
+docker run --name dev -it --shm-size=4096m registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest
 ```
 
-### Dev on docker container
-
-We provided a docker image `graphscope-dev` with all tools and dependices included.
-
-```bash
-# Use a mirror in HK aliyun to speed up the download if in need.
-# export REGISTRY=registry.cn-hongkong.aliyuncs.com/
-# TODO(yuansi): make it works
-
-docker run --rm -it --shm-size=4096m REGISTRY/graphscope/graphscope-dev:latest
-```
-Since we are going to build GraphScope within the container, here we assign `shm-size` of 4G, which refers to the amount of shared memory
- allocated to a docker container. More options about `docker` command can be found [here](https://docs.docker.com/engine/reference/commandline/cli/).
-
+Please refer to [Dev Environment](../development/dev_guide.md#dev-environment) to find more options to get a dev environment.
 
 ## Build Analytical Engine
 
-With `gs` command-line utility, you can build all targets for GraphScope with a single command.
+With `gs` command-line utility, you can build analytical engine of GraphScope with a single command.
 
 ```bash
-./gs build analytical
+# Clone a repo if needed
+# git clone https://github.com/alibaba/graphscope
+# cd graphscope
+./gs make analytical
 ```
 
-You may found the built artifacts in....
+You may found the built artifacts in `analytical_engine/build/grape_engine`.
 
+Together with the `grape_engine` are shared libraries, or there may have a bunch of test binaries if you choose to build the tests.
 
-TODO(yuansi): give a description about the artifacts...
-
-if you need to build the analytical engine with Java support, e.g., if you need to run Giraph/GraphX apps 
-on your built engine, or need to write your own applicalitions in Java, you may want to 
-build the engine with a option `enable_java`
+You could install it to a location by
 
 ```bash
-./gs build analytcial --enable_java
+./gs make analytcial-install --install-prefix /usr/local
 ```
+
+````{note}
+More in-depth view:
+
+These options are repeated items that would be directed forwared as `cmake` options.
+The `CMakeLists.txt` of analytical engine is in `analytical_engine/CMakeLists.txt`.
+
+Take a look at this file if you want to investigate more of the analytical engine.
+````
 
 ## How to Test
 
-Test with the new artifacts.
+You could easily test with the new artifacts with a single command:
 
+Here we set the working directory to local repo.
+```bash
+export GRAPHSCOPE_HOME=`pwd`
+# Here the `pwd` is the root path of GraphScope repository
+```
+See more about `GRAPHSCOPE_HOME` in [run tests](../development/how_to_test.md#run-tests)
 
+```bash
+./gs test analytical
+```
+
+It would download the test dataset to the `/tmp/gstest` (if not exists) and run multiple algorithms against various graphs, and compare the result with the ground truth.

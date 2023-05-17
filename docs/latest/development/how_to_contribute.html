@@ -6,19 +6,22 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="development/how_to_contribute.html" />
 <meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="TBF(This document is intended to help you get started contributing to GraphScope project.)" />
-<meta property="og:image" content="/_images/social_previews/summary_development_how_to_contribute_838043d0.png" />
-<meta property="og:image:alt" content="TBF(This document is intended to help you get started contributing to GraphScope project.)" />
-<meta name="description" content="TBF(This document is intended to help you get started contributing to GraphScope project.)" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Python API Reference" href="../reference/python_index.html" /><link rel="prev" title="How to Test" href="how_to_test.html" />
+<meta property="og:description" content="Thanks for your interest in the GraphScope project. GraphScope is an open-source project focused on large-scale graph computation with a friendly community of developers eager to help new contribut..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="/_images/social_previews/summary_development_how_to_contribute_f9e4b61a.png" />
+<meta property="og:image:alt" content="Thanks for your interest in the GraphScope project. GraphScope is an open-source project focused on large-scale graph computation with a friendly community o..." />
+<meta name="description" content="Thanks for your interest in the GraphScope project. GraphScope is an open-source project focused on large-scale graph computation with a friendly community of developers eager to help new contribut..." />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Debugging on local deployment" href="how_to_debugging.html" /><link rel="prev" title="How to Test" href="how_to_test.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
+    <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
         <title>How to Contribute - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     <link rel="stylesheet" type="text/css" href="../_static/css/brands.min.css" />
@@ -67,6 +70,7 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<!-- Baidu analytics -->
 <script>
   var _hmt = _hmt || [];
   (function() {
@@ -77,12 +81,27 @@
   })();
 </script>
 
+<!-- MathJax rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script
+  type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
 </head>
   <body>
     
-  <script>
-    document.body.dataset.theme = "light";
-  </script>
+<script>
+  document.body.dataset.theme = "light";
+</script>
 
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -177,7 +196,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -201,21 +220,23 @@
 <div id="searchbox"></div><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../graphscope_positioning.html">The Product Positioning of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/intro.html">Introducing GraphScope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/graph_analytics_workloads.html">Graph Analytics Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/graph_interactive_workloads.html">Graph Interactive Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/graph_learning_workloads.html">Graph Learning Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/design_of_graphscope.html">Design of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/positioning.html">Positioning of GraphScope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Installation &amp; Deployment</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_local.html">Deploy GraphScope on Local</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on Self-managed K8s</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/install_on_local.html">Install GraphScope on Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on K8s cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_existing_vineyard_cluster.html">Use an existing vineyard cluster with multiple GraphScope sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Analytical Engine</span></p>
 <ul>
@@ -239,7 +260,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_networkx_operations.html">Tutorial: Graph Operations with NetowrkX APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_networkx_algorithms.html">Tutorial: Graph Algorithms with NetowrkX APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_pie.html">Tutorial: Develop your Algorithm in C++ with PIE Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop your Algorithm in C++ with FLASH Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop Your Algorithms in C++ with FLASH Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_python.html">Tutorial: Develop algorithms in Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_java.html">Tutorial: Develop your Algorithm in Java with PIE Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_run_giraph_apps.html">Tutorial: Run Giraph Applications on GraphScope</a></li>
@@ -251,29 +272,42 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Interactive Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started_gie.html">Getting Started for GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../design_of_gie.html">Design of GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tutorial_ldbc_gremlin.html">Tutorial: LDBC Gremlin</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/design_of_gie.html">Design of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started_gle.html">Getting Started for GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../design_of_gle.html">Design of GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/design_of_gle.html">Design of GLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/graph_sampling.html">Graph Sampling</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../learning_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../learning_engine/tutorial_node_classification_k8s.html">Tutorial: Training a Node Classification Model on K8s Cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/dev_and_test.html">Dev and Test</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Storage Engine</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../storage_engine/getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../storage_engine/grin.html">GRIN: Unified Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../storage_engine/groot.html">Groot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/grin.html">GRIN: Graph Retrieval INterface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/groot.html">Groot: Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/vineyard.html">In-memory immutable graphs on Vineyard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/graphar.html">GraphAr: Standard Graph Data File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/gart.html">GART: Bridging the Gap between Relational OLTP and Graph Workloads</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">troubleshooting &amp; utilities</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find Logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find logs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/monitoring.html">Monitoring</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/error_codes.html">Error Codes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/bulk_loader.html">Bulk Loader</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul class="current">
@@ -281,11 +315,15 @@
 <li class="toctree-l1"><a class="reference internal" href="code_style_guide.html">Code Style Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how_to_test.html">How to Test</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_debugging.html">Debugging on local deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_debugging.html#debugging-on-kubernetes-deployment">Debugging on Kubernetes deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_debugging.html#commands-for-debugging">Commands for Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_install_in_offline_mode.html">Install GraphScope in offline mode</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -297,13 +335,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -349,18 +387,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -395,7 +433,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -508,11 +546,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../zh/installation.html">安装</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../zh/getting_started.html">快速上手</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../zh/deployment.html">部署</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
@@ -568,6 +606,15 @@
             
           
 
+        
+      
+        
+
+          
+            
+              <dd><a href="../../v0.21.0/index.html">v0.21.0</a></dd>
+            
+          
         
       
         
@@ -873,7 +920,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -881,8 +928,157 @@
         <article role="main">
           <div class="tex2jax_ignore mathjax_ignore section" id="how-to-contribute">
 <h1>How to Contribute<a class="headerlink" href="#how-to-contribute" title="Permalink to this heading">#</a></h1>
-<p>TBF
-(This document is intended to help you get started contributing to GraphScope project.)</p>
+<p><strong>Thanks for your interest in the GraphScope project.</strong></p>
+<p>GraphScope is an open-source project focused on large-scale graph computation with a friendly community of developers eager to help new contributors.
+We welcome contributions of all types, from code improvements to documentation.</p>
+<div class="section" id="code-of-conduct">
+<h2>Code of Conduct<a class="headerlink" href="#code-of-conduct" title="Permalink to this heading">#</a></h2>
+<p>Before contributing to or engaging with our community, please read our <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/CODE_OF_CONDUCT.md">Code of Conduct</a>.</p>
+</div>
+<div class="section" id="community">
+<h2>Community<a class="headerlink" href="#community" title="Permalink to this heading">#</a></h2>
+<p>A good first step to getting involved in the GraphScope project is to participate in our discussions and join us in our different communication channels.
+Here are several ways to connect with us:</p>
+<div class="section" id="github-discussion">
+<h3>GitHub Discussion<a class="headerlink" href="#github-discussion" title="Permalink to this heading">#</a></h3>
+<p>We use <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions">GitHub Discussion</a> to ask and answer questions. Feel free to ask any questions you may have about GraphScope or issues you’ve encountered with your own code.</p>
+</div>
+<div class="section" id="slack">
+<h3>Slack<a class="headerlink" href="#slack" title="Permalink to this heading">#</a></h3>
+<p>Join in the <a class="reference external" href="http://slack.graphscope.io">Slack channel</a> for discussion.</p>
+</div>
+</div>
+<div class="section" id="reporting-bugs">
+<h2>Reporting Bugs<a class="headerlink" href="#reporting-bugs" title="Permalink to this heading">#</a></h2>
+<p>If you find a bug in GraphScope, first test against the <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main">latest version of GraphScope</a>
+to ensure your issue hasn’t already been fixed. If not, search our <a class="reference external" href="https://github.com/alibaba/GraphScope/issues">issues list</a>
+on GitHub to see if a similar issue has already been opened.</p>
+<p>If you confirm that the bug hasn’t already been reported <a class="reference external" href="https://github.com/alibaba/GraphScope/issues/new?assignees=&amp;amp;labels=&amp;amp;template=bug_report.md&amp;amp;title=%5BBUG%5D+">file a bug issue</a>
+before writing any code. When submitting an issue, please include a clear and concise description of the problem,
+relevant code or error messages, and steps to reproduce the issue.</p>
+</div>
+<div class="section" id="requesting-features">
+<h2>Requesting Features<a class="headerlink" href="#requesting-features" title="Permalink to this heading">#</a></h2>
+<p>If you find yourself wishing for a feature that doesn’t exist in GraphScope, please open <a class="reference external" href="https://github.com/alibaba/GraphScope/issues/new?assignees=&amp;amp;labels=&amp;amp;template=feature_request.md&amp;amp;title=">a feature request issue</a>
+on GitHub to describe the feature, why it’s needed, and how it should work. Other users may share similar needs,
+and many of GraphScope’s features were added because users saw a need.</p>
+</div>
+<div class="section" id="improving-documentation">
+<h2>Improving Documentation<a class="headerlink" href="#improving-documentation" title="Permalink to this heading">#</a></h2>
+<p>A great way to contribute to the project is by improving documentation. If you find any incomplete or inaccurate documentation,
+please share your knowledge with the community.</p>
+<p>Documentation improvements are also a great way to gain some experience with our submission and review process, discussed below, without requiring a lot of local development environment setup.
+In fact, many documentation-only changes can be made directly in the <a class="reference external" href="https://graphscope.io/docs/">GraphScope document pages</a> by clicking the “Edit On Github” button. This will handle making a fork and a pull request for you.</p>
+<p>TBF: add a link to how to helping with documentation
+TBF: add a link to how to build the documentation</p>
+</div>
+<div class="section" id="contributing-code-and-documentation-changes">
+<h2>Contributing Code and Documentation Changes<a class="headerlink" href="#contributing-code-and-documentation-changes" title="Permalink to this heading">#</a></h2>
+<p>If you would like to contribute a new feature or a bug fix to GraphScope, please first discuss your idea on a GitHub issue.
+If there isn’t an issue for it, create one. There may be someone already working on it, or it may have particular complexities
+that you should be aware of before starting to code. There are often several ways to fix a problem, so it’s important to find
+the right approach before spending time on a PR that can’t be merged.</p>
+<div class="section" id="install-pre-commit">
+<h3>Install pre-commit<a class="headerlink" href="#install-pre-commit" title="Permalink to this heading">#</a></h3>
+<p>GraphScope use <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code>_ to ensure no secrets are accidentally committed
+into the Git repository. Before contributing, install <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> by typing:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>pre-commit
+</pre></div>
+</div>
+<p>Configure the necessary pre-commit hooks with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pre-commit<span class="w"> </span>install<span class="w">  </span>--install-hooks
+</pre></div>
+</div>
+</div>
+<div class="section" id="minor-fixes">
+<h3>Minor Fixes<a class="headerlink" href="#minor-fixes" title="Permalink to this heading">#</a></h3>
+<p>For minor changes that affect documentation, you don’t need to open a GitHub issue. Instead,
+add the prefix “[MINOR]” to the title of your PR if it meets the following guidelines:</p>
+<ul class="simple">
+<li><p>Grammar, usage and spelling fixes that affect no more than 2 files</p></li>
+<li><p>Documentation updates affecting no more than 2 files and not more
+than 500 words.</p></li>
+</ul>
+</div>
+<div class="section" id="fork-and-create-a-branch">
+<h3>Fork and Create a Branch<a class="headerlink" href="#fork-and-create-a-branch" title="Permalink to this heading">#</a></h3>
+<p>Fork the main GraphScope code and clone it to your local machine. See
+<a class="reference external" href="https://help.github.com/articles/fork-a-repo">GitHub help page</a> for help.</p>
+<p>Create a branch with a descriptive name.</p>
+<p>A good branch name would be (where issue #42 is the ticket you’re working on):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span><span class="m">42</span>-add-chinese-translations
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-the-test-suite-running">
+<h3>Get the Test Suite Running<a class="headerlink" href="#get-the-test-suite-running" title="Permalink to this heading">#</a></h3>
+<p>See <a class="reference internal" href="how_to_test.html"><span class="std std-doc">our how-to guide on testing</span></a> for help.</p>
+</div>
+<div class="section" id="implement-your-fix-or-feature">
+<h3>Implement Your Fix or Feature<a class="headerlink" href="#implement-your-fix-or-feature" title="Permalink to this heading">#</a></h3>
+<p>At this point, you’re ready to make the changes. Feel free to ask for help because everyone is a beginner at first!</p>
+</div>
+<div class="section" id="get-the-code-format-and-style-right">
+<h3>Get the Code Format and Style Right<a class="headerlink" href="#get-the-code-format-and-style-right" title="Permalink to this heading">#</a></h3>
+<p>Your patch should follow the same conventions and pass the same code quality checks as the rest of the project.
+Follow <a class="reference internal" href="code_style_guide.html"><span class="std std-doc">our code style guide</span></a> to attain the proper code format and style.</p>
+</div>
+<div class="section" id="submitting-your-changes">
+<h3>Submitting Your Changes<a class="headerlink" href="#submitting-your-changes" title="Permalink to this heading">#</a></h3>
+<p>See <a class="reference internal" href="how_to_submit_pr.html"><span class="std std-doc">our guide on how to submit a pull request</span></a>.</p>
+</div>
+<div class="section" id="discussing-and-keeping-your-pull-request-updated">
+<h3>Discussing and Keeping Your Pull Request Updated<a class="headerlink" href="#discussing-and-keeping-your-pull-request-updated" title="Permalink to this heading">#</a></h3>
+<p>You will probably receive feedback or requests for changes to your pull request.
+This is big part of the submission process and is necessary to evaluate your changes correctly,
+so don’t be discouraged!</p>
+<p>If a maintainer asks you to “rebase” your pull request, it means that a lot of code has changed and
+you need to update your branch so it’s easier to merge. To learn more about rebasing in Git, refer to the recommended workflow:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>checkout<span class="w"> </span><span class="m">42</span>-add-chinese-translations
+$<span class="w"> </span>git<span class="w"> </span>pull<span class="w"> </span>--rebase<span class="w"> </span>upstream<span class="w"> </span>main
+$<span class="w"> </span>git<span class="w"> </span>push<span class="w"> </span>--force-with-lease<span class="w"> </span><span class="m">42</span>-add-chinese-translations
+</pre></div>
+</div>
+<p>Feel free to comment in the pull request to ping reviewers if you’re awaiting a response.
+If you encounter unfamiliar words or acronyms, refer to this <a class="reference external" href="https://chromium.googlesource.com/chromiumos/docs/+/HEAD/glossary.md">glossary</a>.</p>
+</div>
+<div class="section" id="merging-a-pr-maintainers-only">
+<h3>Merging a PR (maintainers only)<a class="headerlink" href="#merging-a-pr-maintainers-only" title="Permalink to this heading">#</a></h3>
+<p>A pull request can only be merged into main by a maintainer if:</p>
+<ul class="simple">
+<li><p>It is passing CI.</p></li>
+<li><p>At least two maintainers have approved it. If a maintainer opened the PR, only one extra approval is needed.</p></li>
+<li><p>There are no requested changes.</p></li>
+<li><p>It is up to date with current main.</p></li>
+</ul>
+</div>
+<div class="section" id="shipping-a-release-maintainers-only">
+<h3>Shipping a Release (maintainers only)<a class="headerlink" href="#shipping-a-release-maintainers-only" title="Permalink to this heading">#</a></h3>
+<p>TODO(dongze): TBF</p>
+</div>
+</div>
+<div class="section" id="how-to-review-pull-requests">
+<h2>How to Review Pull Requests<a class="headerlink" href="#how-to-review-pull-requests" title="Permalink to this heading">#</a></h2>
+<p>We welcome contributions from the community and encourage everyone to review pull requests. When reviewing a pull request, please consider the following:</p>
+<ul class="simple">
+<li><p>Does the code follow our [Code of Conduct][1]?</p></li>
+<li><p>Does the code solve the problem described in the issue or feature request?</p></li>
+<li><p>Are there any potential side effects or edge cases that need to be considered?</p></li>
+<li><p>Are there any tests included to ensure the code works as expected?</p></li>
+</ul>
+<p>If you have any questions or concerns about a pull request, please comment on the pull request or reach out to the contributor directly.</p>
+</div>
+<div class="section" id="continuous-integration-testing">
+<h2>Continuous integration testing<a class="headerlink" href="#continuous-integration-testing" title="Permalink to this heading">#</a></h2>
+<p>All pull requests that contain changes to code must be run through
+continuous integration (CI) testing at <a class="reference external" href="https://github.com/alibaba/GarphScope/actions">Github Actions</a></p>
+<p>The pull request change will trigger a CI testing run. Ideally, the code change
+will pass (“be green”) on all platform configurations supported by GraphScope.
+This means that all tests pass and there are no linting errors. In reality,
+however, it is not uncommon for the CI infrastructure itself to fail on specific
+platforms (“be red”). It is vital to visually inspect the results of all failed (“red”) tests
+to determine whether the failure was caused by the changes in the pull request.</p>
+</div>
 </div>
 
         </article>
@@ -890,12 +1086,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../reference/python_index.html">
+          <a class="next-page" href="how_to_debugging.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Python API Reference</div>
+                <div class="title">Debugging on local deployment</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -931,8 +1127,50 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">How to Contribute</a><ul>
+<li><a class="reference internal" href="#code-of-conduct">Code of Conduct</a></li>
+<li><a class="reference internal" href="#community">Community</a><ul>
+<li><a class="reference internal" href="#github-discussion">GitHub Discussion</a></li>
+<li><a class="reference internal" href="#slack">Slack</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#reporting-bugs">Reporting Bugs</a></li>
+<li><a class="reference internal" href="#requesting-features">Requesting Features</a></li>
+<li><a class="reference internal" href="#improving-documentation">Improving Documentation</a></li>
+<li><a class="reference internal" href="#contributing-code-and-documentation-changes">Contributing Code and Documentation Changes</a><ul>
+<li><a class="reference internal" href="#install-pre-commit">Install pre-commit</a></li>
+<li><a class="reference internal" href="#minor-fixes">Minor Fixes</a></li>
+<li><a class="reference internal" href="#fork-and-create-a-branch">Fork and Create a Branch</a></li>
+<li><a class="reference internal" href="#get-the-test-suite-running">Get the Test Suite Running</a></li>
+<li><a class="reference internal" href="#implement-your-fix-or-feature">Implement Your Fix or Feature</a></li>
+<li><a class="reference internal" href="#get-the-code-format-and-style-right">Get the Code Format and Style Right</a></li>
+<li><a class="reference internal" href="#submitting-your-changes">Submitting Your Changes</a></li>
+<li><a class="reference internal" href="#discussing-and-keeping-your-pull-request-updated">Discussing and Keeping Your Pull Request Updated</a></li>
+<li><a class="reference internal" href="#merging-a-pr-maintainers-only">Merging a PR (maintainers only)</a></li>
+<li><a class="reference internal" href="#shipping-a-release-maintainers-only">Shipping a Release (maintainers only)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#how-to-review-pull-requests">How to Review Pull Requests</a></li>
+<li><a class="reference internal" href="#continuous-integration-testing">Continuous integration testing</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

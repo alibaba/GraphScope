@@ -6,19 +6,22 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/programming_model_pie.html" />
 <meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="Although the vertex-centric programming model can express various graph analytics algorithms, existing sequential (single-machine) graph algorithms have to be modified to comply with the “think lik..." />
-<meta property="og:image" content="/_images/social_previews/summary_analytical_engine_programming_model_pie_fd168dd2.png" />
-<meta property="og:image:alt" content="Although the vertex-centric programming model can express various graph analytics algorithms, existing sequential (single-machine) graph algorithms have to b..." />
-<meta name="description" content="Although the vertex-centric programming model can express various graph analytics algorithms, existing sequential (single-machine) graph algorithms have to be modified to comply with the “think lik..." />
+<meta property="og:description" content="Although the vertex-centric programming model can express various graph analytics algorithms, existing sequential (single-machine) graph algorithms need to be modified to adhere to the “think like ..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="/_images/social_previews/summary_analytical_engine_programming_model_pie_fe1cb0d5.png" />
+<meta property="og:image:alt" content="Although the vertex-centric programming model can express various graph analytics algorithms, existing sequential (single-machine) graph algorithms need to b..." />
+<meta name="description" content="Although the vertex-centric programming model can express various graph analytics algorithms, existing sequential (single-machine) graph algorithms need to be modified to adhere to the “think like ..." />
+<meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Ingress: Incrementalize Graph Algorithms" href="ingress.html" /><link rel="prev" title="Vertex-Centric Model" href="vertex_centric_models.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
+    <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
         <title>Programming Model: PIE - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     <link rel="stylesheet" type="text/css" href="../_static/css/brands.min.css" />
@@ -67,6 +70,7 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<!-- Baidu analytics -->
 <script>
   var _hmt = _hmt || [];
   (function() {
@@ -77,12 +81,27 @@
   })();
 </script>
 
+<!-- MathJax rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script
+  type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
 </head>
   <body>
     
-  <script>
-    document.body.dataset.theme = "light";
-  </script>
+<script>
+  document.body.dataset.theme = "light";
+</script>
 
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -201,21 +220,23 @@
 <div id="searchbox"></div><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../graphscope_positioning.html">The Product Positioning of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/intro.html">Introducing GraphScope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/graph_analytics_workloads.html">Graph Analytics Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/graph_interactive_workloads.html">Graph Interactive Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/graph_learning_workloads.html">Graph Learning Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/design_of_graphscope.html">Design of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/positioning.html">Positioning of GraphScope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Installation &amp; Deployment</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_local.html">Deploy GraphScope on Local</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on Self-managed K8s</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/install_on_local.html">Install GraphScope on Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on K8s cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_existing_vineyard_cluster.html">Use an existing vineyard cluster with multiple GraphScope sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Analytical Engine</span></p>
 <ul class="current">
@@ -239,7 +260,7 @@
 <li class="toctree-l2"><a class="reference internal" href="tutorial_networkx_operations.html">Tutorial: Graph Operations with NetowrkX APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial_networkx_algorithms.html">Tutorial: Graph Algorithms with NetowrkX APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial_dev_algo_cpp_pie.html">Tutorial: Develop your Algorithm in C++ with PIE Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial_dev_algo_cpp_flash.html">Tutorial: Develop your Algorithm in C++ with FLASH Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_dev_algo_cpp_flash.html">Tutorial: Develop Your Algorithms in C++ with FLASH Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial_dev_algo_python.html">Tutorial: Develop algorithms in Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial_dev_algo_java.html">Tutorial: Develop your Algorithm in Java with PIE Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial_run_giraph_apps.html">Tutorial: Run Giraph Applications on GraphScope</a></li>
@@ -251,29 +272,42 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Interactive Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started_gie.html">Getting Started for GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../design_of_gie.html">Design of GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tutorial_ldbc_gremlin.html">Tutorial: LDBC Gremlin</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/design_of_gie.html">Design of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started_gle.html">Getting Started for GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../design_of_gle.html">Design of GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/design_of_gle.html">Design of GLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/graph_sampling.html">Graph Sampling</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../learning_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../learning_engine/tutorial_node_classification_k8s.html">Tutorial: Training a Node Classification Model on K8s Cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/dev_and_test.html">Dev and Test</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Storage Engine</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../storage_engine/getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../storage_engine/grin.html">GRIN: Unified Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../storage_engine/groot.html">Groot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/grin.html">GRIN: Graph Retrieval INterface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/groot.html">Groot: Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/vineyard.html">In-memory immutable graphs on Vineyard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/graphar.html">GraphAr: Standard Graph Data File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/gart.html">GART: Bridging the Gap between Relational OLTP and Graph Workloads</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">troubleshooting &amp; utilities</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find Logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find logs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/monitoring.html">Monitoring</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/error_codes.html">Error Codes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/bulk_loader.html">Bulk Loader</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul>
@@ -281,11 +315,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../development/code_style_guide.html">Code Style Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/how_to_test.html">How to Test</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/how_to_contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html">Debugging on local deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html#debugging-on-kubernetes-deployment">Debugging on Kubernetes deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html#commands-for-debugging">Commands for Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_install_in_offline_mode.html">Install GraphScope in offline mode</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -297,13 +335,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -349,18 +387,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -395,7 +433,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -508,11 +546,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../zh/installation.html">安装</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../zh/getting_started.html">快速上手</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../zh/deployment.html">部署</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
@@ -568,6 +606,15 @@
             
           
 
+        
+      
+        
+
+          
+            
+              <dd><a href="../../v0.21.0/index.html">v0.21.0</a></dd>
+            
+          
         
       
         
@@ -881,10 +928,10 @@
         <article role="main">
           <div class="tex2jax_ignore mathjax_ignore section" id="programming-model-pie">
 <h1>Programming Model: PIE<a class="headerlink" href="#programming-model-pie" title="Permalink to this heading">#</a></h1>
-<p>Although the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html">vertex-centric programming model</a> can express various graph analytics algorithms, existing sequential (single-machine) graph algorithms have to be modified to comply with the “think like a vertex” principle, making parallel graph computation a privilege for experienced users only. In addition, the performance of graph algorithms with vertex-centric model is sub-optimal in many cases: each vertex only has information about its 1-hop neighbors, and thus information is propagated through the graph slowly, one hop at a time. As a result, it may take many computation iterations to propagate a piece of information from a source to a destination.</p>
+<p>Although the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html">vertex-centric programming model</a> can express various graph analytics algorithms, existing sequential (single-machine) graph algorithms need to be modified to adhere to the “think like a vertex” principle. This makes parallel graph computation a privilege for experienced users only. Additionally, the performance of graph algorithms using the vertex-centric model is sub-optimal in many cases. Each vertex has information about only its 1-hop neighbors, causing information propagation through the graph to be slow and occur one hop at a time. Consequently, it may take multiple computation iterations to propagate a piece of information from a source to a destination.</p>
 <div class="section" id="what-is-the-pie-model">
 <h2>What is the PIE Model?<a class="headerlink" href="#what-is-the-pie-model" title="Permalink to this heading">#</a></h2>
-<p>To address the abovementioned problems, we proposed a new programming model PIE (PEval-IncEval-Assemble) in a <a class="reference external" href="https://dl.acm.org/doi/10.1145/3035918.3035942">SIGMOD paper</a> published in 2017. Different from the vertex-centric, the PIE model can automatically parallelize existing sequential graph algorithms, with only some small changes. This makes parallel graph computations accessible to users who know conventional graph algorithms covered in college textbooks, and there is no need to recast existing graph algorithms into a new model.</p>
+<p>To address the abovementioned problems, we proposed a new programming model PIE (PEval-IncEval-Assemble) in a <a class="reference external" href="https://dl.acm.org/doi/10.1145/3035918.3035942">SIGMOD paper</a> published in 2017. Unlike the vertex-centric model, the PIE model can automatically parallelize existing sequential graph algorithms with only minor modifications. This makes parallel graph computations accessible to users familiar with conventional graph algorithms taught in college textbooks, eliminating the need to recast existing graph algorithms into a new model.</p>
 <p>Specifically, in the PIE model, users only need to provide three functions,</p>
 <ul class="simple">
 <li><p>(1) <em>PEval</em>, a sequential (single-machine) function for given a query, computes the answer on a local partition;</p></li>
@@ -899,45 +946,75 @@
 <div class="section" id="workflow-of-pie">
 <h2>Workflow of PIE<a class="headerlink" href="#workflow-of-pie" title="Permalink to this heading">#</a></h2>
 <p>The PIE model works on a graph <em>G</em> and each worker maintains a partition of <em>G</em>. Given a query, each worker first executes <em>PEval</em> against its local partition, to compute partial answers in parallel. Then each worker may exchange partial results with other workers via synchronous message passing. Upon receiving messages, each worker incrementally computes <em>IncEval</em>. The incremental step iterates until no further messages can be generated. At this point, <em>Assemble</em> pulls partial answers and assembles the final result. In this way, the PIE model parallelizes existing sequential graph algorithms, without revising their logic and workflow.</p>
-<p>In this model, users do not need to know the details of the distributed setting while processing big graphs in a cluster, and the PIE model auto-parallelizes the graph analytics tasks across
-a cluster of workers, based on a fixpoint computation. Under a monotonic condition, it guarantees to
-converge with correct answers as long as the three sequential algorithms provided are correct.</p>
-<p>The following pseudo-code shows how SSSP is expressed in the PIE model, where the Dijkstra’s algorithm is directly used for the computation of parallel SSSP.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">dijkstra</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">):</span>
-    <span class="n">heap</span> <span class="o">=</span> <span class="n">VertexHeap</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">updates</span><span class="p">:</span>
-	<span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">updates</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-	<span class="n">heap</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-        
-    <span class="n">updates</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-    
-    <span class="k">while</span> <span class="ow">not</span> <span class="n">heap</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-	<span class="n">u</span> <span class="o">=</span> <span class="n">heap</span><span class="o">.</span><span class="n">top</span><span class="p">()</span><span class="o">.</span><span class="n">vid</span>
-	<span class="n">distu</span> <span class="o">=</span> <span class="n">heap</span><span class="o">.</span><span class="n">top</span><span class="p">()</span><span class="o">.</span><span class="n">val</span>
-	<span class="n">heap</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-	<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">get_outgoing_edges</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
-	    <span class="n">v</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">get_neighbor</span><span class="p">()</span>
-	    <span class="n">distv</span> <span class="o">=</span> <span class="n">distu</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">data</span><span class="p">()</span>
-	    <span class="k">if</span> <span class="n">vals</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">distv</span><span class="p">:</span>
-		<span class="n">vals</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">distv</span>
-		    <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">is_inner_vertex</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
-			<span class="n">heap</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">distv</span><span class="p">)</span>
-			<span class="n">updates</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">distv</span>       
-	<span class="k">return</span> <span class="n">updates</span>
+<p>In this model, users need not be familiar with the intricacies of processing large graphs in a distributed setting. The PIE model automatically parallelizes graph analytics tasks across a cluster of workers based on a fixpoint computation. Under a monotonic condition, it guarantees convergence with accurate answers as long as the three provided sequential algorithms are correct.</p>
+<p>The following code shows how SSSP is expressed with the PIE model in GAE. Note that we only show the major computation logic here.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">PEval</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">fragment_t</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frag</span><span class="p">,</span><span class="w"> </span><span class="n">context_t</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ctx</span><span class="p">,</span>
+<span class="w">             </span><span class="n">message_manager_t</span><span class="o">&amp;</span><span class="w"> </span><span class="n">messages</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">vertex_t</span><span class="w"> </span><span class="n">source</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">bool</span><span class="w"> </span><span class="n">native_source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frag</span><span class="p">.</span><span class="n">GetInnerVertex</span><span class="p">(</span><span class="n">ctx</span><span class="p">.</span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="n">source</span><span class="p">);</span>
 
-<span class="k">def</span> <span class="nf">PEval</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vertices</span><span class="p">:</span>
-        <span class="n">updates</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">MAX_INT</span>
-    <span class="n">updates</span><span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">dijkstra</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">)</span>
-    
-<span class="k">def</span> <span class="nf">IncEval</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">):</span>
-    <span class="n">dijkstra</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">native_source</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">ctx</span><span class="p">.</span><span class="n">partial_result</span><span class="p">[</span><span class="n">source</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">      </span><span class="k">auto</span><span class="w"> </span><span class="n">es</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frag</span><span class="p">.</span><span class="n">GetOutgoingAdjList</span><span class="p">(</span><span class="n">source</span><span class="p">);</span>
+<span class="w">      </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">es</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">vertex_t</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">get_neighbor</span><span class="p">();</span>
+<span class="w">        </span><span class="n">ctx</span><span class="p">.</span><span class="n">partial_result</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="w"> </span><span class="o">=</span>
+<span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">ctx</span><span class="p">.</span><span class="n">partial_result</span><span class="p">[</span><span class="n">v</span><span class="p">],</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">get_data</span><span class="p">()));</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">frag</span><span class="p">.</span><span class="n">IsOuterVertex</span><span class="p">(</span><span class="n">v</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="c1">// put the message to the channel.</span>
+<span class="w">          </span><span class="n">messages</span><span class="p">.</span><span class="n">Channels</span><span class="p">()[</span><span class="mi">0</span><span class="p">].</span><span class="n">SyncStateOnOuterVertex</span><span class="o">&lt;</span><span class="n">fragment_t</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">              </span><span class="n">frag</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span><span class="p">.</span><span class="n">partial_result</span><span class="p">[</span><span class="n">v</span><span class="p">]);</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="n">ctx</span><span class="p">.</span><span class="n">next_modified</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="n">v</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">IncEval</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">fragment_t</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frag</span><span class="p">,</span><span class="w"> </span><span class="n">context_t</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ctx</span><span class="p">,</span>
+<span class="w">               </span><span class="n">message_manager_t</span><span class="o">&amp;</span><span class="w"> </span><span class="n">messages</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">inner_vertices</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frag</span><span class="p">.</span><span class="n">InnerVertices</span><span class="p">();</span>
+<span class="w">  </span><span class="c1">// parallel process and reduce the received messages</span>
+<span class="w">  </span><span class="n">messages</span><span class="p">.</span><span class="n">ParallelProcess</span><span class="o">&lt;</span><span class="n">fragment_t</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">        </span><span class="n">thread_num</span><span class="p">(),</span><span class="w"> </span><span class="n">frag</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="n">ctx</span><span class="p">](</span><span class="kt">int</span><span class="w"> </span><span class="n">tid</span><span class="p">,</span><span class="w"> </span><span class="n">vertex_t</span><span class="w"> </span><span class="n">u</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">msg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ctx</span><span class="p">.</span><span class="n">partial_result</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">msg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">atomic_min</span><span class="p">(</span><span class="n">ctx</span><span class="p">.</span><span class="n">partial_result</span><span class="p">[</span><span class="n">u</span><span class="p">],</span><span class="w"> </span><span class="n">msg</span><span class="p">);</span>
+<span class="w">            </span><span class="n">ctx</span><span class="p">.</span><span class="n">curr_modified</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="n">u</span><span class="p">);</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">});</span>
+
+<span class="w">  </span><span class="c1">// incremental evaluation.		</span>
+<span class="w">  </span><span class="n">ForEach</span><span class="p">(</span><span class="n">ctx</span><span class="p">.</span><span class="n">curr_modified</span><span class="p">,</span><span class="w"> </span><span class="n">inner_vertices</span><span class="p">,</span>
+<span class="w">            </span><span class="p">[</span><span class="o">&amp;</span><span class="n">frag</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ctx</span><span class="p">](</span><span class="kt">int</span><span class="w"> </span><span class="n">tid</span><span class="p">,</span><span class="w"> </span><span class="n">vertex_t</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">              </span><span class="kt">double</span><span class="w"> </span><span class="n">distv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ctx</span><span class="p">.</span><span class="n">partial_result</span><span class="p">[</span><span class="n">v</span><span class="p">];</span>
+<span class="w">              </span><span class="k">auto</span><span class="w"> </span><span class="n">es</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frag</span><span class="p">.</span><span class="n">GetOutgoingAdjList</span><span class="p">(</span><span class="n">v</span><span class="p">);</span>
+<span class="w">              </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">es</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="n">vertex_t</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">get_neighbor</span><span class="p">();</span>
+<span class="w">                </span><span class="kt">double</span><span class="w"> </span><span class="n">ndistu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">distv</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">get_data</span><span class="p">();</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ndistu</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">ctx</span><span class="p">.</span><span class="n">partial_result</span><span class="p">[</span><span class="n">u</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                  </span><span class="n">atomic_min</span><span class="p">(</span><span class="n">ctx</span><span class="p">.</span><span class="n">partial_result</span><span class="p">[</span><span class="n">u</span><span class="p">],</span><span class="w"> </span><span class="n">ndistu</span><span class="p">);</span>
+<span class="w">                  </span><span class="n">ctx</span><span class="p">.</span><span class="n">next_modified</span><span class="p">.</span><span class="n">Insert</span><span class="p">(</span><span class="n">u</span><span class="p">);</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">              </span><span class="p">}</span>
+<span class="w">            </span><span class="p">});</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">outer_vertices</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frag</span><span class="p">.</span><span class="n">OuterVertices</span><span class="p">();</span>
+<span class="w">  </span><span class="n">ForEach</span><span class="p">(</span><span class="n">ctx</span><span class="p">.</span><span class="n">next_modified</span><span class="p">,</span><span class="w"> </span><span class="n">outer_vertices</span><span class="p">,</span>
+<span class="w">          </span><span class="p">[</span><span class="o">&amp;</span><span class="n">channels</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">frag</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ctx</span><span class="p">](</span><span class="kt">int</span><span class="w"> </span><span class="n">tid</span><span class="p">,</span><span class="w"> </span><span class="n">vertex_t</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">              </span><span class="n">channels</span><span class="p">[</span><span class="n">tid</span><span class="p">].</span><span class="n">SyncStateOnOuterVertex</span><span class="o">&lt;</span><span class="n">fragment_t</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">              </span><span class="n">frag</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">ctx</span><span class="p">.</span><span class="n">partial_result</span><span class="p">[</span><span class="n">v</span><span class="p">]);</span>
+<span class="w">           </span><span class="p">});</span>
+<span class="p">}</span>
 </pre></div>
 </div>
-<p>TODO(wanglei): Under the hook
-- MessageBuffer,
-- ParallelExecutor,</p>
+<p>In the above code, given a source vertex <code class="docutils literal notranslate"><span class="pre">source</span></code>, in the <code class="docutils literal notranslate"><span class="pre">PEval</span></code> function, we first execute the Dijkstra’s
+algorithm on the sub-graph (fragment) where the <code class="docutils literal notranslate"><span class="pre">source</span></code> resides in to obtain a partial result. After that, the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/key_concepts.html#synconoutervertex"><code class="docutils literal notranslate"><span class="pre">SyncStateOnOuterVertex</span></code> function</a> is invoked, where the partial result is sent to other fragments to trigger <code class="docutils literal notranslate"><span class="pre">IncEval</span></code> function.</p>
+<p>In the <code class="docutils literal notranslate"><span class="pre">IncEval</span></code> function, each fragment first receives messages through the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/key_concepts.html#messagemanager-and-messagestrategy">message manager</a>, then executes incremental evaluation based on received messages to update the partial result. If the partial result is updated, each fragment needs to execute the <code class="docutils literal notranslate"><span class="pre">SyncStateOnOuterVertex</span></code> function to synchronize the latest partial result of <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/key_concepts.html#outervertex">outer vertices</a> with other fragments to trigger next round of <code class="docutils literal notranslate"><span class="pre">IncEval</span></code>. Please checkout the following tutorials for more details about how to develop graph applications with the PIE model.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_cpp_pie.html">Tutorial: Develop your Algorithm in C++ with PIE Model</a></p></li>
+<li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_java.html">Tutorial: Develop your Algorithm in Java with PIE Model</a></p></li>
+<li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_python.html#writing-your-own-algorithms-in-pie">Tutorial: Develop algorithms in Python</a></p></li>
+</ul>
 </div>
 </div>
 

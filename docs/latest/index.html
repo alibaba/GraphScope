@@ -7,18 +7,21 @@
 <meta property="og:url" content="index.html" />
 <meta property="og:site_name" content="GraphScope" />
 <meta property="og:description" content="GraphScope is a unified distributed graph computing platform that provides a one-stop environment for performing diverse graph operations on a cluster of computers through a user-friendly Python in..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
 <meta property="og:image" content="/_images/social_previews/summary_index_531d202e.png" />
 <meta property="og:image:alt" content="GraphScope is a unified distributed graph computing platform that provides a one-stop environment for performing diverse graph operations on a cluster of com..." />
 <meta name="description" content="GraphScope is a unified distributed graph computing platform that provides a one-stop environment for performing diverse graph operations on a cluster of computers through a user-friendly Python in..." />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="The Product Positioning of GraphScope" href="graphscope_positioning.html" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Introducing GraphScope" href="overview/intro.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
+    <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
         <title>GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     <link rel="stylesheet" type="text/css" href="_static/css/brands.min.css" />
@@ -67,6 +70,7 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<!-- Baidu analytics -->
 <script>
   var _hmt = _hmt || [];
   (function() {
@@ -77,12 +81,27 @@
   })();
 </script>
 
+<!-- MathJax rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script
+  type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
 </head>
   <body>
     
-  <script>
-    document.body.dataset.theme = "light";
-  </script>
+<script>
+  document.body.dataset.theme = "light";
+</script>
 
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -201,21 +220,23 @@
 <div id="searchbox"></div><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="graphscope_positioning.html">The Product Positioning of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview/intro.html">Introducing GraphScope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview/graph_analytics_workloads.html">Graph Analytics Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview/graph_interactive_workloads.html">Graph Interactive Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview/graph_learning_workloads.html">Graph Learning Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview/design_of_graphscope.html">Design of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview/positioning.html">Positioning of GraphScope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview/glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Installation &amp; Deployment</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="deploy_graphscope_on_local.html">Deploy GraphScope on Local</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on Self-managed K8s</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment/install_on_local.html">Install GraphScope on Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on K8s cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment/deploy_graphscope_on_existing_vineyard_cluster.html">Use an existing vineyard cluster with multiple GraphScope sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment/deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Analytical Engine</span></p>
 <ul>
@@ -239,7 +260,7 @@
 <li class="toctree-l2"><a class="reference internal" href="analytical_engine/tutorial_networkx_operations.html">Tutorial: Graph Operations with NetowrkX APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytical_engine/tutorial_networkx_algorithms.html">Tutorial: Graph Algorithms with NetowrkX APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytical_engine/tutorial_dev_algo_cpp_pie.html">Tutorial: Develop your Algorithm in C++ with PIE Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop your Algorithm in C++ with FLASH Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop Your Algorithms in C++ with FLASH Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytical_engine/tutorial_dev_algo_python.html">Tutorial: Develop algorithms in Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytical_engine/tutorial_dev_algo_java.html">Tutorial: Develop your Algorithm in Java with PIE Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytical_engine/tutorial_run_giraph_apps.html">Tutorial: Run Giraph Applications on GraphScope</a></li>
@@ -251,29 +272,42 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Interactive Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="getting_started_gie.html">Getting Started for GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="design_of_gie.html">Design of GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="interactive_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/tutorial_ldbc_gremlin.html">Tutorial: LDBC Gremlin</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine/design_of_gie.html">Design of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="getting_started_gle.html">Getting Started for GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="design_of_gle.html">Design of GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine/design_of_gle.html">Design of GLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine/graph_sampling.html">Graph Sampling</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="learning_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine/tutorial_node_classification_k8s.html">Tutorial: Training a Node Classification Model on K8s Cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine/dev_and_test.html">Dev and Test</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Storage Engine</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="storage_engine/getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="storage_engine/grin.html">GRIN: Unified Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="storage_engine/groot.html">Groot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage_engine/grin.html">GRIN: Graph Retrieval INterface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage_engine/groot.html">Groot: Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage_engine/vineyard.html">In-memory immutable graphs on Vineyard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage_engine/graphar.html">GraphAr: Standard Graph Data File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage_engine/gart.html">GART: Bridging the Gap between Relational OLTP and Graph Workloads</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">troubleshooting &amp; utilities</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="utilities/how_to_find_logs.html">How to Find Logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities/how_to_find_logs.html">How to Find logs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities/monitoring.html">Monitoring</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities/error_codes.html">Error Codes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utilities/bulk_loader.html">Bulk Loader</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul>
@@ -281,11 +315,15 @@
 <li class="toctree-l1"><a class="reference internal" href="development/code_style_guide.html">Code Style Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/how_to_test.html">How to Test</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/how_to_contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/how_to_debugging.html">Debugging on local deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/how_to_debugging.html#debugging-on-kubernetes-deployment">Debugging on Kubernetes deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/how_to_debugging.html#commands-for-debugging">Commands for Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/how_to_install_in_offline_mode.html">Install GraphScope in offline mode</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -297,13 +335,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -349,18 +387,18 @@
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -395,7 +433,7 @@
 <li class="toctree-l4"><a class="reference internal" href="reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -508,11 +546,11 @@
 <li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="zh/installation.html">安装</a></li>
 <li class="toctree-l2"><a class="reference internal" href="zh/getting_started.html">快速上手</a></li>
 <li class="toctree-l2"><a class="reference internal" href="zh/deployment.html">部署</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
@@ -568,6 +606,15 @@
             
           
 
+        
+      
+        
+
+          
+            
+              <dd><a href="../v0.21.0/index.html">v0.21.0</a></dd>
+            
+          
         
       
         
@@ -893,17 +940,17 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="graphscope_positioning.html">The Product Positioning of GraphScope</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="graphscope_positioning.html#compare-with-graph-processing-systems">Compare with Graph Processing Systems</a></li>
-<li class="toctree-l2"><a class="reference internal" href="graphscope_positioning.html#compare-with-graph-databases">Compare with Graph Databases</a></li>
-<li class="toctree-l2"><a class="reference internal" href="graphscope_positioning.html#compare-with-graph-learning-systems">Compare with Graph Learning Systems</a></li>
-<li class="toctree-l2"><a class="reference internal" href="graphscope_positioning.html#handling-various-types-of-graph-workloads">Handling Various Types of Graph Workloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview/intro.html">Introducing GraphScope</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="overview/intro.html#what-is-graphscope">What is GraphScope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/intro.html#why-use-graphscope">Why use GraphScope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/intro.html#what-are-the-use-cases">What are the Use Cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/intro.html#what-are-the-limitations">What are the Limitations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/intro.html#what-are-the-next">What are the Next</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="overview/getting_started.html">Getting Started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="overview/getting_started.html#one-stop-graph-processing">One-stop Graph Processing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/getting_started.html#graph-interactive-query-quick-start">Graph Interactive Query Quick Start</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview/getting_started.html#graph-analytics-quick-start">Graph Analytics Quick Start</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/getting_started.html#graph-learning-quick-start">Graph Learning Quick Start</a></li>
 </ul>
 </li>
@@ -919,10 +966,11 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="overview/graph_learning_workloads.html">Graph Learning Workloads</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="overview/graph_learning_workloads.html#graph-neural-networks">Graph Neural Networks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview/graph_learning_workloads.html#graph-learning-models">Graph Learning Models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview/graph_learning_workloads.html#subgraph-sampling">Subgraph Sampling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview/graph_learning_workloads.html#developing-your-own-model">Developing Your Own Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/graph_learning_workloads.html#what-is-graph-neural-network">What is Graph Neural Network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/graph_learning_workloads.html#typical-gnn-models">Typical GNN Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/graph_learning_workloads.html#paradigm-of-model-training">Paradigm of Model Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/graph_learning_workloads.html#challenges-of-applying-gnns-on-large-graphs">Challenges of Applying GNNs on Large Graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/graph_learning_workloads.html#what-can-graphscope-do">What can GraphScope Do</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="overview/design_of_graphscope.html">Design of GraphScope</a><ul>
@@ -931,18 +979,28 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 <li class="toctree-l2"><a class="reference internal" href="overview/design_of_graphscope.html#disaggregated-design-for-diverse-graph-applications">Disaggregated Design for Diverse Graph Applications</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="overview/positioning.html">Positioning of GraphScope</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="overview/positioning.html#compare-with-graph-processing-systems">Compare with Graph Processing Systems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/positioning.html#compare-with-graph-databases">Compare with Graph Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/positioning.html#compare-with-graph-learning-systems">Compare with Graph Learning Systems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/positioning.html#handling-various-types-of-graph-workloads">Handling Various Types of Graph Workloads</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="overview/glossary.html">Glossary</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#flash">FLASH</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#grape">GRAPE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#gae">GAE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#gart">GART</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#grin">GRIN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#graphar">GraphAr</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#groot">Groot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#vineyard">vineyard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#gum">GUM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#maxgraph-deprecated">MaxGraph (deprecated)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#vineyard-or-v6d">Vineyard, or v6d</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#gaia">GAIA</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#gaia-ir">GAIA-IR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#ingress">Ingress</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#pegasus">Pegasus</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#pie-model">PIE-model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#gas-model">GAS-model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#flash">FLASH</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview/glossary.html#ingress">Ingress</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
@@ -951,10 +1009,41 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Installation &amp; Deployment</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="deploy_graphscope_on_local.html">Deploy GraphScope on Local</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on Self-managed K8s</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment/install_on_local.html">Install GraphScope on Local</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="deployment/install_on_local.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/install_on_local.html#install-from-packages">Install from packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/install_on_local.html#install-from-source">Install from source</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on K8s cluster</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_on_self_managed_k8s.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_on_self_managed_k8s.html#install-graphscope-client">Install GraphScope Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_on_self_managed_k8s.html#prepare-a-kubernetes-cluster">Prepare a Kubernetes cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_on_self_managed_k8s.html#deploying-graphscope">Deploying GraphScope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_on_self_managed_k8s.html#cleaning-up">Cleaning Up</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="deployment/deploy_graphscope_on_existing_vineyard_cluster.html">Use an existing vineyard cluster with multiple GraphScope sessions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_on_existing_vineyard_cluster.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_on_existing_vineyard_cluster.html#install-graphscope-client">Install GraphScope Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_on_existing_vineyard_cluster.html#prepare-a-kubernetes-cluster">Prepare a Kubernetes cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_on_existing_vineyard_cluster.html#deploy-a-vineyard-cluster">Deploy a Vineyard Cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_on_existing_vineyard_cluster.html#load-the-dataset-to-the-kubernetes-cluster">Load the dataset to the Kubernetes cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_on_existing_vineyard_cluster.html#load-a-graph-to-the-existing-vineyard-cluster">Load a graph to the existing vineyard cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_on_existing_vineyard_cluster.html#connect-to-the-existing-vineyard-cluster-with-another-graphscope-session">Connect to the existing vineyard cluster with another GraphScope session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_on_existing_vineyard_cluster.html#cleaning-up">Cleaning up</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="deployment/deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_with_helm.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_with_helm.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_with_helm.html#connect-to-graphscope">Connect to GraphScope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_with_helm.html#uninstall-the-release">Uninstall the release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_with_helm.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment/deploy_graphscope_with_helm.html#offline-installation">Offline Installation</a></li>
+</ul>
+</li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
@@ -962,11 +1051,16 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="analytical_engine/getting_started.html">Getting Started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="analytical_engine/getting_started.html#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="analytical_engine/getting_started.html#running-graphscope-analaytical-engine-on-local">Running GraphScope Analaytical Engine on Local</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytical_engine/getting_started.html#running-graphscope-analytical-engine-on-local">Running GraphScope Analytical Engine on Local</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytical_engine/getting_started.html#whats-the-next">What’s the Next</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="analytical_engine/deployment.html">Deployment for GAE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analytical_engine/deployment.html">Deployment for GAE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analytical_engine/deployment.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytical_engine/deployment.html#deployment-gae-only">Deployment GAE only</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytical_engine/deployment.html#uninstall-deployment">Uninstall deployment</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="analytical_engine/design_of_gae.html">Design of Analytical Engine</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="analytical_engine/overview_and_architecture.html">Overview and Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="analytical_engine/key_concepts.html">Key Concepts</a></li>
@@ -993,40 +1087,128 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Graph Interactive Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="getting_started_gie.html">Getting Started for GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="design_of_gie.html">Design of GIE</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="design_of_gie.html#the-motivations">The Motivations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="design_of_gie.html#the-architecture">The Architecture</a></li>
-<li class="toctree-l2"><a class="reference internal" href="design_of_gie.html#query-processing">Query Processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine/getting_started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/getting_started.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/getting_started.html#running-graphscope-interactive-engine-on-local">Running GraphScope Interactive Engine on Local</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/getting_started.html#whats-the-next">What’s the Next</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine/deployment.html">Standalone Deployment for GIE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/deployment.html#the-k8s-cluster">The K8s Cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/deployment.html#deploy-your-first-gie-service">Deploy Your First GIE Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/deployment.html#remove-the-gie-service">Remove the GIE Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/deployment.html#using-your-own-data">Using Your Own Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/deployment.html#deploy-on-a-cluster">Deploy on a Cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/deployment.html#other-useful-configurations">Other Useful Configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine/guide_and_examples.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine/design_of_gie.html">Design of GIE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/design_of_gie.html#the-motivations">The Motivations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/design_of_gie.html#the-architecture">The Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/design_of_gie.html#query-processing">Query Processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/supported_gremlin_steps.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/supported_gremlin_steps.html#standard-steps">Standard Steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/supported_gremlin_steps.html#syntactic-sugars">Syntactic Sugars</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/supported_gremlin_steps.html#limitations">Limitations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/faq.html#whats-the-difference-between-inner-id-and-property-id">What’s the difference between Inner ID and Property ID ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/faq.html#how-to-use-path-expand-in-gie-gremlin">How to use path expand in GIE Gremlin ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/faq.html#how-to-filter-data-in-gie-gremlin-like-sql">How to filter data in GIE Gremlin like SQL ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/faq.html#how-to-aggregate-data-in-gie-gremlin-like-sql">How to aggregate data in GIE Gremlin like SQL?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/faq.html#how-to-optimize-gremlin-queries-for-performance-in-gie">How to optimize Gremlin queries for performance in GIE?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine/faq.html#how-to-use-subgraph-in-gie-gremlin">How to use subgraph in GIE Gremlin ?</a></li>
+</ul>
+</li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="getting_started_gle.html">Getting Started for GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="design_of_gle.html">Design of GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine/getting_started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine/getting_started.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine/getting_started.html#running-graphscope-learning-engine-on-local">Running GraphScope Learning Engine on Local</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine/getting_started.html#whats-the-next">What’s the Next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine/design_of_gle.html">Design of GLE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine/design_of_gle.html#model-paradigms">Model Paradigms</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine/graph_sampling.html">Graph Sampling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine/graph_sampling.html#graph-traversal">Graph Traversal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine/graph_sampling.html#neighborhood-sampling">Neighborhood Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine/graph_sampling.html#subgraph-sampling">Subgraph Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine/graph_sampling.html#negative-sampling">Negative Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine/graph_sampling.html#gsl">GSL</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine/guide_and_examples.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine/dev_and_test.html">Dev and Test</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine/dev_and_test.html#dev-environment">Dev Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine/dev_and_test.html#build-learning-engine">Build Learning Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine/dev_and_test.html#how-to-test">How to Test</a></li>
+</ul>
+</li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Storage Engine</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="storage_engine/getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="storage_engine/grin.html">GRIN: Unified Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="storage_engine/groot.html">Groot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage_engine/grin.html">GRIN: Graph Retrieval INterface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/grin.html#motivations">Motivations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/grin.html#unified-graph-retrieval">Unified Graph Retrieval</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/grin.html#grin-concepts">GRIN Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/grin.html#implementation-guideline">Implementation Guideline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/grin.html#design-details">Design Details</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="storage_engine/groot.html">Groot: Persistent Graph Store</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/groot.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/groot.html#known-limitation">Known Limitation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/groot.html#deploy-groot">Deploy Groot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/groot.html#data-import">Data Import</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/groot.html#uninstalling-and-restarting">Uninstalling and Restarting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/groot.html#developing-guide">Developing Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="storage_engine/vineyard.html">In-memory immutable graphs on Vineyard</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/vineyard.html#graphs-in-vineyard">Graphs in Vineyard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/vineyard.html#loading-graphs-to-vineyard">Loading Graphs to Vineyard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/vineyard.html#using-loaded-graphs">Using Loaded Graphs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="storage_engine/graphar.html">GraphAr: Standard Graph Data File Format</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/graphar.html#the-graphar-file-format">The GraphAr File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/graphar.html#graphar-in-graphscope">GraphAr in GraphScope</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="storage_engine/gart.html">GART: Bridging the Gap between Relational OLTP and Graph Workloads</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/gart.html#architecture-and-workflow">Architecture and Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/gart.html#defining-graph-mapping-in-gart">Defining Graph Mapping in GART</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/gart.html#loading-logs-to-gart-storage">Loading Logs to GART Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="storage_engine/gart.html#using-loaded-graphs-from-graphscope">Using Loaded Graphs from GraphScope</a></li>
+</ul>
+</li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">troubleshooting &amp; utilities</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="utilities/how_to_find_logs.html">How to Find Logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities/how_to_find_logs.html">How to Find logs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="utilities/how_to_find_logs.html#find-logs-in-k8s">Find logs in k8s</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities/how_to_find_logs.html#find-logs-for-groot">Find logs for Groot</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="utilities/monitoring.html">Monitoring</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities/error_codes.html">Error Codes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utilities/bulk_loader.html">Bulk Loader</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
@@ -1047,8 +1229,35 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 <li class="toctree-l2"><a class="reference internal" href="development/code_style_guide.html#style-linter-and-checker">Style Linter and Checker</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="development/how_to_test.html">How to Test</a></li>
-<li class="toctree-l1"><a class="reference internal" href="development/how_to_contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/how_to_test.html">How to Test</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_test.html#test-graphscope-on-local">Test GraphScope on local</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_test.html#test-graphscope-on-kubernetes-cluster">Test GraphScope on Kubernetes cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="development/how_to_contribute.html">How to Contribute</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_contribute.html#code-of-conduct">Code of Conduct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_contribute.html#community">Community</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_contribute.html#reporting-bugs">Reporting Bugs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_contribute.html#requesting-features">Requesting Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_contribute.html#improving-documentation">Improving Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_contribute.html#contributing-code-and-documentation-changes">Contributing Code and Documentation Changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_contribute.html#how-to-review-pull-requests">How to Review Pull Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_contribute.html#continuous-integration-testing">Continuous integration testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="development/how_to_debugging.html">Debugging on local deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/how_to_debugging.html#debugging-on-kubernetes-deployment">Debugging on Kubernetes deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/how_to_debugging.html#commands-for-debugging">Commands for Debugging</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_debugging.html#debugging-techniques">Debugging Techniques</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="development/how_to_install_in_offline_mode.html">Install GraphScope in offline mode</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_install_in_offline_mode.html#install-from-wheels">Install from wheels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_install_in_offline_mode.html#install-from-source">Install from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_install_in_offline_mode.html#install-basic-packages-and-gcc-g-python">Install basic packages and gcc-g++, python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/how_to_install_in_offline_mode.html#install-third-party-dependencies-and-graphscope-analytical-engine">Install third-party dependencies and GraphScope Analytical Engine</a></li>
+</ul>
+</li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
@@ -1095,12 +1304,12 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="graphscope_positioning.html">
+          <a class="next-page" href="overview/intro.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">The Product Positioning of GraphScope</div>
+                <div class="title">Introducing GraphScope</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

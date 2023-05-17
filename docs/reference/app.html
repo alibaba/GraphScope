@@ -1,61 +1,49 @@
-<!doctype html>
-<html class="no-js" lang="en">
-  <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Analytical App" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="reference/app.html" />
-<meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="AppAssets: JavaApp: App object: Functions: BuiltIn apps:" />
-<meta property="og:image" content="/_images/social_previews/summary_reference_app_6e77e7ce.png" />
-<meta property="og:image:alt" content="AppAssets: JavaApp: App object: Functions: BuiltIn apps:" />
-<meta name="description" content="AppAssets: JavaApp: App object: Functions: BuiltIn apps:" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="graphscope.framework.app.load_app" href="generated/graphscope.framework.app.load_app.html" /><link rel="prev" title="Graph" href="graph.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
-        <title>Analytical App - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/brands.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/regular.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/solid.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/fontawesome.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/theme-toggle.css" />
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Analytical App &mdash; GraphScope  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
     
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="graphscope.framework.app.load_app" href="generated/graphscope.framework.app.load_app.html" />
+    <link rel="prev" title="Graph" href="graph.html" />
 
-<style>
-  body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
-  
-  }
-  @media not print {
-    body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  
-    }
-    @media (prefers-color-scheme: dark) {
-      body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  
-      }
-    }
-  }
-</style>
-
-
+ 
 
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
@@ -77,831 +65,191 @@
   })();
 </script>
 
+
 </head>
-  <body>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
     
-  <script>
-    document.body.dataset.theme = "light";
-  </script>
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
 
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> GraphScope
+          
 
-<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
-  <symbol id="svg-toc" viewBox="0 0 24 24">
-    <title>Contents</title>
-    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
-      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
-    </svg>
-  </symbol>
-  <symbol id="svg-menu" viewBox="0 0 24 24">
-    <title>Menu</title>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
-      <line x1="3" y1="12" x2="21" y2="12"></line>
-      <line x1="3" y1="6" x2="21" y2="6"></line>
-      <line x1="3" y1="18" x2="21" y2="18"></line>
-    </svg>
-  </symbol>
-  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
-    <title>Expand</title>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
-      <polyline points="9 18 15 12 9 6"></polyline>
-    </svg>
-  </symbol>
-  <symbol id="svg-sun" viewBox="0 0 24 24">
-    <title>Light mode</title>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
-      <circle cx="12" cy="12" r="5"></circle>
-      <line x1="12" y1="1" x2="12" y2="3"></line>
-      <line x1="12" y1="21" x2="12" y2="23"></line>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-      <line x1="1" y1="12" x2="3" y2="12"></line>
-      <line x1="21" y1="12" x2="23" y2="12"></line>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-    </svg>
-  </symbol>
-  <symbol id="svg-moon" viewBox="0 0 24 24">
-    <title>Dark mode</title>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
-    </svg>
-  </symbol>
-  <symbol id="svg-sun-half" viewBox="0 0 24 24">
-    <title>Auto light/dark mode</title>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M13 12h5" />
-      <path d="M13 15h4" />
-      <path d="M13 18h1" />
-      <path d="M13 9h4" />
-      <path d="M13 6h1" />
-    </svg>
-  </symbol>
-</svg>
+          
+          </a>
 
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
-<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
-<label class="overlay sidebar-overlay" for="__navigation">
-  <div class="visually-hidden">Hide navigation sidebar</div>
-</label>
-<label class="overlay toc-overlay" for="__toc">
-  <div class="visually-hidden">Hide table of contents sidebar</div>
-</label>
+          
+            
+            
+              <div class="version">
+                stable
+              </div>
+            
+          
 
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
 
+          
+        </div>
 
-<div class="page">
-  <header class="mobile-header">
-    <div class="header-left">
-      <label class="nav-overlay-icon" for="__navigation">
-        <div class="visually-hidden">Toggle site navigation sidebar</div>
-        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
-      </label>
-    </div>
-    <div class="header-center">
-      <a href="../index.html"><div class="brand">GraphScope  documentation</div></a>
-    </div>
-    <div class="header-right">
-      <div class="theme-toggle-container theme-toggle-header">
-        <button class="theme-toggle">
-          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
-          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
-          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
-        </button>
-      </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
-        <div class="visually-hidden">Toggle table of contents sidebar</div>
-        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
-      </label>
-    </div>
-  </header>
-  <aside class="sidebar-drawer">
-    <div class="sidebar-container">
+        
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
-  
-  <div class="sidebar-logo-container">
-    <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
-  </div>
-  
-  
-</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
-  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
-  <input type="hidden" name="check_keywords" value="yes">
-  <input type="hidden" name="area" value="default">
-</form>
-<div id="searchbox"></div><div class="sidebar-tree">
-  <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../graphscope_positioning.html">The Product Positioning of GraphScope</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/graph_analytics_workloads.html">Graph Analytics Workloads</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/graph_interactive_workloads.html">Graph Interactive Workloads</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/graph_learning_workloads.html">Graph Learning Workloads</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/design_of_graphscope.html">Design of GraphScope</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../persistent_graph_store.html">Persistent Graph Store</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Installation &amp; Deployment</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_local.html">Deploy GraphScope on Local</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on Self-managed K8s</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Graph Analytical Engine</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../analytical_engine/getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../analytical_engine/deployment.html">Deployment for GAE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/overview_and_architecture.html">Overview and Architecture</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/key_concepts.html">Key Concepts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/vertex_centric_models.html">Vertex-Centric Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/programming_model_pie.html">Programming Model: PIE</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/ingress.html">Ingress: Incrementalize Graph Algorithms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/flash.html">Programming Model: FLASH</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/networkx_compatibility.html">NetworkX Compatibility</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/builtin_algorithms.html">Built-in Algorithms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/customized_algorithms.html">Customized Algorithms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/performance_tuning.html">Performance Tuning</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../analytical_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_run_builtin_algo.html">Tutorial: Running Builtin Algorithms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_networkx_operations.html">Tutorial: Graph Operations with NetowrkX APIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_run_builtin_algo.html">Tutorial: Running Builtin Algorithms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_pie.html">Tutorial: Develop your Algorithm in C++ with PIE Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop your Algorithm in C++ with FLASH Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_python.html">Tutorial: Develop algorithms in Python</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_java.html">Tutorial: Develop your Algorithm in Java with PIE Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_run_giraph_apps.html">Tutorial: Run Giraph Applications on GraphScope</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_run_graphx_apps.html">Tutorial: Run GraphX Applications on GraphScope</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../analytical_engine/dev_and_test.html">Dev and Test</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../analytical_engine/faqs.html">FAQs</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Graph Interactive Engine</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started_gie.html">Getting Started for GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../design_of_gie.html">Design of GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started_gle.html">Getting Started for GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../design_of_gle.html">Design of GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Storage Engine</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../storage_engine/getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../storage_engine/grin.html">GRIN: Unified Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../storage_engine/groot.html">Groot</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">troubleshooting &amp; utilities</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find Logs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/monitoring.html">Monitoring</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/error_codes.html">Error Codes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/bulk_loader.html">Bulk Loader</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../development/dev_guide.html">Development Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../development/code_style_guide.html">Code Style Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../development/how_to_test.html">How to Test</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../development/how_to_contribute.html">How to Contribute</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<p class="caption"><span class="caption-text">Reference</span></p>
 <ul class="current">
-<li class="toctree-l1 current has-children"><a class="reference internal" href="python_index.html">Python API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2 has-children"><a class="reference internal" href="session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.session.html">graphscope.session</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.set_option.html">graphscope.set_option</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.get_option.html">graphscope.get_option</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.g.html">graphscope.g</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.gremlin.html">graphscope.gremlin</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.graphlearn.html">graphscope.graphlearn</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="python_index.html">Python API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="session.html">Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">Graph</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Analytical App</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#appassets">AppAssets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#javaapp">JavaApp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#app-object">App object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#functions">Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="graph.html">Graph</a></li>
-<li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">Analytical App</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#builtin-apps">BuiltIn apps</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.operation.Operation.signature.html">graphscope.framework.operation.Operation.signature</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.operation.Operation.eval.html">graphscope.framework.operation.Operation.eval</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.operation.Operation.evaluated.html">graphscope.framework.operation.Operation.evaluated</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.create_app.html">graphscope.framework.dag_utils.create_app</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.bind_app.html">graphscope.framework.dag_utils.bind_app</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.run_app.html">graphscope.framework.dag_utils.run_app</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.create_graph.html">graphscope.framework.dag_utils.create_graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.create_loader.html">graphscope.framework.dag_utils.create_loader</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.add_labels_to_graph.html">graphscope.framework.dag_utils.add_labels_to_graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.dynamic_to_arrow.html">graphscope.framework.dag_utils.dynamic_to_arrow</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.arrow_to_dynamic.html">graphscope.framework.dag_utils.arrow_to_dynamic</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.modify_edges.html">graphscope.framework.dag_utils.modify_edges</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.modify_vertices.html">graphscope.framework.dag_utils.modify_vertices</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.report_graph.html">graphscope.framework.dag_utils.report_graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.project_arrow_property_graph.html">graphscope.framework.dag_utils.project_arrow_property_graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.project_to_simple.html">graphscope.framework.dag_utils.project_to_simple</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.copy_graph.html">graphscope.framework.dag_utils.copy_graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.to_directed.html">graphscope.framework.dag_utils.to_directed</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.to_undirected.html">graphscope.framework.dag_utils.to_undirected</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.create_graph_view.html">graphscope.framework.dag_utils.create_graph_view</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.clear_graph.html">graphscope.framework.dag_utils.clear_graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.clear_edges.html">graphscope.framework.dag_utils.clear_edges</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.create_subgraph.html">graphscope.framework.dag_utils.create_subgraph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.create_unload_op.html">graphscope.framework.dag_utils.create_unload_op</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.unload_app.html">graphscope.framework.dag_utils.unload_app</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.unload_graph.html">graphscope.framework.dag_utils.unload_graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.unload_context.html">graphscope.framework.dag_utils.unload_context</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.context_to_numpy.html">graphscope.framework.dag_utils.context_to_numpy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.context_to_dataframe.html">graphscope.framework.dag_utils.context_to_dataframe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.to_vineyard_tensor.html">graphscope.framework.dag_utils.to_vineyard_tensor</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.to_vineyard_dataframe.html">graphscope.framework.dag_utils.to_vineyard_dataframe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.to_data_sink.html">graphscope.framework.dag_utils.to_data_sink</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.output.html">graphscope.framework.dag_utils.output</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.get_context_data.html">graphscope.framework.dag_utils.get_context_data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.add_column.html">graphscope.framework.dag_utils.add_column</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.graph_to_numpy.html">graphscope.framework.dag_utils.graph_to_numpy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.graph_to_dataframe.html">graphscope.framework.dag_utils.graph_to_dataframe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.gremlin_query.html">graphscope.framework.dag_utils.gremlin_query</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.declare.html">graphscope.declare</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="operation.html">Operation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cython_sdk.html">Cython SDK API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="networkx/graphs.html">Graph types</a></li>
-<li class="toctree-l3"><a class="reference internal" href="networkx/transformation.html">Graph Transformation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.info.html">graphscope.nx.classes.function.info</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.create_empty_copy.html">graphscope.nx.classes.function.create_empty_copy</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.is_directed.html">graphscope.nx.classes.function.is_directed</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.to_directed.html">graphscope.nx.classes.function.to_directed</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.to_undirected.html">graphscope.nx.classes.function.to_undirected</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.is_empty.html">graphscope.nx.classes.function.is_empty</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.add_star.html">graphscope.nx.classes.function.add_star</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.add_path.html">graphscope.nx.classes.function.add_path</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.add_cycle.html">graphscope.nx.classes.function.add_cycle</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.subgraph.html">graphscope.nx.classes.function.subgraph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.induced_subgraph.html">graphscope.nx.classes.function.induced_subgraph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.edge_subgraph.html">graphscope.nx.classes.function.edge_subgraph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.nodes.html">graphscope.nx.classes.function.nodes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.number_of_nodes.html">graphscope.nx.classes.function.number_of_nodes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.neighbors.html">graphscope.nx.classes.function.neighbors</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.all_neighbors.html">graphscope.nx.classes.function.all_neighbors</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.non_neighbors.html">graphscope.nx.classes.function.non_neighbors</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.common_neighbors.html">graphscope.nx.classes.function.common_neighbors</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.edges.html">graphscope.nx.classes.function.edges</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.number_of_edges.html">graphscope.nx.classes.function.number_of_edges</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.non_edges.html">graphscope.nx.classes.function.non_edges</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.selfloop_edges.html">graphscope.nx.classes.function.selfloop_edges</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.number_of_selfloops.html">graphscope.nx.classes.function.number_of_selfloops</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.nodes_with_selfloops.html">graphscope.nx.classes.function.nodes_with_selfloops</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.is_weighted.html">graphscope.nx.classes.function.is_weighted</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.is_negatively_weighted.html">graphscope.nx.classes.function.is_negatively_weighted</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.freeze.html">graphscope.nx.classes.function.freeze</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
-</ul>
-</li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.barbell_graph.html">graphscope.nx.generators.classic.barbell_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.binomial_tree.html">graphscope.nx.generators.classic.binomial_tree</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.complete_graph.html">graphscope.nx.generators.classic.complete_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.complete_multipartite_graph.html">graphscope.nx.generators.classic.complete_multipartite_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.circular_ladder_graph.html">graphscope.nx.generators.classic.circular_ladder_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.circulant_graph.html">graphscope.nx.generators.classic.circulant_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.cycle_graph.html">graphscope.nx.generators.classic.cycle_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.dorogovtsev_goltsev_mendes_graph.html">graphscope.nx.generators.classic.dorogovtsev_goltsev_mendes_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.empty_graph.html">graphscope.nx.generators.classic.empty_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.path_graph.html">graphscope.nx.generators.classic.path_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.star_graph.html">graphscope.nx.generators.classic.star_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.full_rary_tree.html">graphscope.nx.generators.classic.full_rary_tree</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.ladder_graph.html">graphscope.nx.generators.classic.ladder_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.lollipop_graph.html">graphscope.nx.generators.classic.lollipop_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.null_graph.html">graphscope.nx.generators.classic.null_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.trivial_graph.html">graphscope.nx.generators.classic.trivial_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.turan_graph.html">graphscope.nx.generators.classic.turan_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.wheel_graph.html">graphscope.nx.generators.classic.wheel_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.expanders.margulis_gabber_galil_graph.html">graphscope.nx.generators.expanders.margulis_gabber_galil_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.expanders.chordal_cycle_graph.html">graphscope.nx.generators.expanders.chordal_cycle_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.expanders.paley_graph.html">graphscope.nx.generators.expanders.paley_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.make_small_graph.html">graphscope.nx.generators.small.make_small_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.LCF_graph.html">graphscope.nx.generators.small.LCF_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.bull_graph.html">graphscope.nx.generators.small.bull_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.chvatal_graph.html">graphscope.nx.generators.small.chvatal_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.cubical_graph.html">graphscope.nx.generators.small.cubical_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.desargues_graph.html">graphscope.nx.generators.small.desargues_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.diamond_graph.html">graphscope.nx.generators.small.diamond_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.dodecahedral_graph.html">graphscope.nx.generators.small.dodecahedral_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.frucht_graph.html">graphscope.nx.generators.small.frucht_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.heawood_graph.html">graphscope.nx.generators.small.heawood_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.house_graph.html">graphscope.nx.generators.small.house_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.house_x_graph.html">graphscope.nx.generators.small.house_x_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.icosahedral_graph.html">graphscope.nx.generators.small.icosahedral_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.krackhardt_kite_graph.html">graphscope.nx.generators.small.krackhardt_kite_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.moebius_kantor_graph.html">graphscope.nx.generators.small.moebius_kantor_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.octahedral_graph.html">graphscope.nx.generators.small.octahedral_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.pappus_graph.html">graphscope.nx.generators.small.pappus_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.petersen_graph.html">graphscope.nx.generators.small.petersen_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.sedgewick_maze_graph.html">graphscope.nx.generators.small.sedgewick_maze_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.tetrahedral_graph.html">graphscope.nx.generators.small.tetrahedral_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.truncated_cube_graph.html">graphscope.nx.generators.small.truncated_cube_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.truncated_tetrahedron_graph.html">graphscope.nx.generators.small.truncated_tetrahedron_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.small.tutte_graph.html">graphscope.nx.generators.small.tutte_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.duplication.duplication_divergence_graph.html">graphscope.nx.generators.duplication.duplication_divergence_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.duplication.partial_duplication_graph.html">graphscope.nx.generators.duplication.partial_duplication_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.degree_seq.configuration_model.html">graphscope.nx.generators.degree_seq.configuration_model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.degree_seq.directed_configuration_model.html">graphscope.nx.generators.degree_seq.directed_configuration_model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.degree_seq.expected_degree_graph.html">graphscope.nx.generators.degree_seq.expected_degree_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.degree_seq.havel_hakimi_graph.html">graphscope.nx.generators.degree_seq.havel_hakimi_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph.html">graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.degree_seq.degree_sequence_tree.html">graphscope.nx.generators.degree_seq.degree_sequence_tree</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.degree_seq.random_degree_sequence_graph.html">graphscope.nx.generators.degree_seq.random_degree_sequence_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.directed.gn_graph.html">graphscope.nx.generators.directed.gn_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.directed.gnr_graph.html">graphscope.nx.generators.directed.gnr_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.directed.gnc_graph.html">graphscope.nx.generators.directed.gnc_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.directed.random_k_out_graph.html">graphscope.nx.generators.directed.random_k_out_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.directed.scale_free_graph.html">graphscope.nx.generators.directed.scale_free_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.geometric.random_geometric_graph.html">graphscope.nx.generators.geometric.random_geometric_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.geometric.soft_random_geometric_graph.html">graphscope.nx.generators.geometric.soft_random_geometric_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.geometric.geographical_threshold_graph.html">graphscope.nx.generators.geometric.geographical_threshold_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.geometric.waxman_graph.html">graphscope.nx.generators.geometric.waxman_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.geometric.thresholded_random_geometric_graph.html">graphscope.nx.generators.geometric.thresholded_random_geometric_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.ego.ego_graph.html">graphscope.nx.generators.ego.ego_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/networkx.generators.stochastic.stochastic_graph.html">networkx.generators.stochastic.stochastic_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/networkx.generators.internet_as_graphs.random_internet_as_graph.html">networkx.generators.internet_as_graphs.random_internet_as_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.intersection.uniform_random_intersection_graph.html">graphscope.nx.generators.intersection.uniform_random_intersection_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.intersection.k_random_intersection_graph.html">graphscope.nx.generators.intersection.k_random_intersection_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.intersection.general_random_intersection_graph.html">graphscope.nx.generators.intersection.general_random_intersection_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.social.karate_club_graph.html">graphscope.nx.generators.social.karate_club_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.social.davis_southern_women_graph.html">graphscope.nx.generators.social.davis_southern_women_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.social.florentine_families_graph.html">graphscope.nx.generators.social.florentine_families_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.social.les_miserables_graph.html">graphscope.nx.generators.social.les_miserables_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.community.caveman_graph.html">graphscope.nx.generators.community.caveman_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.community.connected_caveman_graph.html">graphscope.nx.generators.community.connected_caveman_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.community.gaussian_random_partition_graph.html">graphscope.nx.generators.community.gaussian_random_partition_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.community.LFR_benchmark_graph.html">graphscope.nx.generators.community.LFR_benchmark_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.community.planted_partition_graph.html">graphscope.nx.generators.community.planted_partition_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.community.random_partition_graph.html">graphscope.nx.generators.community.random_partition_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.community.relaxed_caveman_graph.html">graphscope.nx.generators.community.relaxed_caveman_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.community.ring_of_cliques.html">graphscope.nx.generators.community.ring_of_cliques</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.community.stochastic_block_model.html">graphscope.nx.generators.community.stochastic_block_model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.community.windmill_graph.html">graphscope.nx.generators.community.windmill_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.spectral_graph_forge.spectral_graph_forge.html">graphscope.nx.generators.spectral_graph_forge.spectral_graph_forge</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.trees.random_tree.html">graphscope.nx.generators.trees.random_tree</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.trees.prefix_tree.html">graphscope.nx.generators.trees.prefix_tree</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.nonisomorphic_trees.nonisomorphic_trees.html">graphscope.nx.generators.nonisomorphic_trees.nonisomorphic_trees</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.nonisomorphic_trees.number_of_nonisomorphic_trees.html">graphscope.nx.generators.nonisomorphic_trees.number_of_nonisomorphic_trees</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.triads.triad_graph.html">graphscope.nx.generators.triads.triad_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree.html">graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.joint_degree_seq.joint_degree_graph.html">graphscope.nx.generators.joint_degree_seq.joint_degree_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree.html">graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph.html">graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.mycielski.mycielskian.html">graphscope.nx.generators.mycielski.mycielskian</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.mycielski.mycielski_graph.html">graphscope.nx.generators.mycielski.mycielski_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.harary_graph.hnm_harary_graph.html">graphscope.nx.generators.harary_graph.hnm_harary_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.harary_graph.hkn_harary_graph.html">graphscope.nx.generators.harary_graph.hkn_harary_graph</a></li>
-<li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.sudoku.sudoku_graph.html">graphscope.nx.generators.sudoku.sudoku_graph</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="networkx/io.html">Reading graphs</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="networkx/index.html">NetworkX-style API</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="analytical_engine_index.html">Analytical Engine API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
-<ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../zh/installation.html">安装</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../zh/getting_started.html">快速上手</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../zh/deployment.html">部署</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
-<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
-<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
-<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/04_loading_graphs.ipynb">载入图数据</a></li>
-<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/05_builtin_analytical_algorithms.ipynb">内置的图分析算法</a></li>
-<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/06_writing_your_own_algorithms.ipynb">编写自定义图分析算法</a></li>
-<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/07_interactive_query_with_gremlin.ipynb">使用查询语言 Gremlin 进行交互式查询</a></li>
-<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/08_unsupervised_learning_with_graphsage.ipynb">使用 GraphSage 进行无监督图学习</a></li>
-<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/09_unsupervised_learning_with_bipartite_graphsage.ipynb">基于 BipartiteGraphSage 的二部图无监督学习</a></li>
-<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/10_supervised_learning_with_gcn.ipynb">使用 GCN 进行有监督图学习</a></li>
-<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/11_revisit_classification_on_citation_network_on_k8s.ipynb">基于 Kubernetes 环境再探论文引用网络中的节点分类任务</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../zh/loading_graph.html">载图</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../zh/graph_transformation.html">图的变换操作</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../zh/analytics_engine.html">图分析引擎</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../zh/interactive_engine.html">图交互式分析引擎</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../zh/learning_engine.html">图学习引擎</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../zh/frequently_asked_questions.html">常见问题</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../zh/developer_guide.html">开发者指南</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../zh/index.html#id1">索引</a></li>
-</ul>
 
-</div>
-
-<div class="rst-versions rst-versions-ver" data-toggle="rst-versions" role="note" aria-label="versions">
-  <span class="rst-current-version" data-toggle="rst-current-version">
-    <span class="fa fa-book"> Read the Docs</span>
-    v: stable
-    <span class="fa fa-caret-down"></span>
-  </span>
-  <div class="rst-other-versions">
-    <dl>
-      <dt>Versions</dt>
       
-        
-
-          
-            
-              <dd><a href="../latest/index.html">latest</a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../index.html">stable</a></dd>
-            
-          
-
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.20.0/index.html">v0.20.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.19.0/index.html">v0.19.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.18.0/index.html">v0.18.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.17.0/index.html">v0.17.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.16.0/index.html">v0.16.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.15.0/index.html">v0.15.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.14.0/index.html">v0.14.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.13.0/index.html">v0.13.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.12.0/index.html">v0.12.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.11.0/index.html">v0.11.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.10.1/index.html">v0.10.1</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.10.0/index.html">v0.10.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.9.1/index.html">v0.9.1</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.9.0/index.html">v0.9.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.8.0/index.html">v0.8.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.7.0/index.html">v0.7.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.6.1/index.html">v0.6.1</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.6.0/index.html">v0.6.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.5.0/index.html">v0.5.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.4.1/index.html">v0.4.1</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.4.0/index.html">v0.4.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.3.0/index.html">v0.3.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.2.1/index.html">v0.2.1</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.2.0/index.html">v0.2.0</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.1.1/index.html">v0.1.1</a></dd>
-            
-          
-        
-      
-        
-
-          
-            
-              <dd><a href="../v0.1.0/index.html">v0.1.0</a></dd>
-            
-          
-        
-      
-      
-    </dl>
+    
   </div>
-</div>
 
-<div class="rst-versions rst-versions-lang shift-up" role="note" aria-label="versions">
-  <div class="rst-other-versions">
-    <dl>
-      <dt>Languages</dt>
-      <dd><a href="../index.html">en</a></dd>
-      <dd><a href="../zh/index.html">zh_CN</a></dd>
-    </dl>
-
-    <hr />
-    <small>
-      <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
-    </small>
-  </div>
-</div>
-</div>
       </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
       
-    </div>
-  </aside>
-  <div class="main">
-    <div class="content">
-      <div class="article-container">
-        <a href="#" class="back-to-top muted-link">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
-          </svg>
-          <span>Back to top</span>
-        </a>
-        <div class="content-icon-container">
-          <div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/reference/app.rst" title="Edit this page">
-    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
-      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
-    </svg>
-    <span class="visually-hidden">Edit this page</span>
-  </a>
-</div><div class="theme-toggle-container theme-toggle-content">
-            <button class="theme-toggle">
-              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
-              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
-              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
-            </button>
-          </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
-            <div class="visually-hidden">Toggle table of contents sidebar</div>
-            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
-          </label>
-        </div>
-        <article role="main">
-          <div class="section" id="analytical-app">
-<span id="app"></span><h1>Analytical App<a class="headerlink" href="#analytical-app" title="Permalink to this heading">#</a></h1>
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="python_index.html">Python API Reference</a> &raquo;</li>
+        
+      <li>Analytical App</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/reference/app.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="analytical-app">
+<span id="app"></span><h1>Analytical App<a class="headerlink" href="#analytical-app" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="appassets">
-<h2>AppAssets<a class="headerlink" href="#appassets" title="Permalink to this heading">#</a></h2>
+<h2>AppAssets<a class="headerlink" href="#appassets" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.framework.app.AppAssets">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">AppAssets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmake_extra_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">AppAssets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmake_extra_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class represents an app asset node in a DAG that holds the bytes of the gar resource.</p>
 <p>Assets includes an algorithm name, and gar (for user defined algorithm),
 a context type (one of ‘tensor’, ‘vertex_data’, ‘vertex_property’,
 ‘labeled_vertex_data’, ‘dynamic_vertex_data’, ‘labeled_vertex_property’),
-and its type (one of <cite>cpp_pie</cite>, <cite>cpp_pregel</cite>, <cite>cython_pie</cite>, <cite>cython_pregel</cite>),</p>
+and its type (one of <cite>cpp_pie</cite>, <cite>cython_pie</cite>, <cite>cython_pregel</cite>),</p>
 <p>The instance of this class can be passed to init <a class="reference internal" href="#graphscope.framework.app.AppDAGNode" title="graphscope.framework.app.AppDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.app.AppDAGNode</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmake_extra_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmake_extra_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Init assets of the algorithm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>algo</strong> (<em>str</em>) – Represent specific algo inside resource.</p></li>
 <li><p><strong>context</strong> (<em>str</em>) – Type of context that hold the calculation results.</p></li>
-<li><p><strong>None.</strong> (<em>It will get from gar if param is None. Defaults to</em>) – </p></li>
+<li><p><strong>will get from gar if param is None. Defaults to None.</strong> (<em>It</em>) – </p></li>
 <li><p><strong>gar</strong> (<em>bytes</em><em> or </em><em>BytesIO</em><em>, </em><em>optional</em>) – The bytes that encodes the application’s source code.
 Defaults to None.</p></li>
 </ul>
@@ -911,7 +259,7 @@ Defaults to None.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.algo">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">algo</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.algo" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">algo</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.algo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Algorithm name, e.g. sssp, pagerank.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -925,7 +273,7 @@ Defaults to None.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.context_type">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">context_type</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.context_type" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">context_type</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.context_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Context type, e.g. vertex_property, labeled_vertex_data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -939,7 +287,7 @@ Defaults to None.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.gar">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gar</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.gar" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">gar</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.gar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gar resource.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -953,7 +301,7 @@ Defaults to None.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.is_compatible">
-<span class="sig-name descname"><span class="pre">is_compatible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets.is_compatible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets.is_compatible" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_compatible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets.is_compatible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets.is_compatible" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine if this algorithm can run on this type of graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -976,7 +324,7 @@ Defaults to None.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.signature">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.signature" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.signature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a signature of the app assets by its algo name (and gar resources).</p>
 <p>Used to uniquely identify a app assets.</p>
 <dl class="field-list simple">
@@ -991,8 +339,8 @@ Defaults to None.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.type">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">type</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.type" title="Permalink to this definition">#</a></dt>
-<dd><p>Algorithm type, one of <cite>cpp_pie</cite>, <cite>cpp_pregel</cite>, <cite>cython_pie</cite>, <cite>java_pie</cite> or <cite>cython_pregel</cite>.</p>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">type</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Algorithm type, one of <cite>cpp_pie</cite>, <cite>cython_pie</cite>, <cite>java_pie</cite> or <cite>cython_pregel</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Algorithm type of this asset.</p>
@@ -1007,10 +355,10 @@ Defaults to None.</p></li>
 
 </div>
 <div class="section" id="javaapp">
-<h2>JavaApp<a class="headerlink" href="#javaapp" title="Permalink to this heading">#</a></h2>
+<h2>JavaApp<a class="headerlink" href="#javaapp" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.analytical.app.JavaApp">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.analytical.app.</span></span><span class="sig-name descname"><span class="pre">JavaApp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full_jar_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">java_app_class</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.analytical.app.</span></span><span class="sig-name descname"><span class="pre">JavaApp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full_jar_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">java_app_class</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class represents a java app assert node in a DAG that holds the jar file.</p>
 <p>It holds neccessary resouces to run a java app, including java class path, the gar
 file which consists jar and configuration yaml, and the specified java class.
@@ -1021,13 +369,13 @@ session is created.</p>
 <p>To run your app, provide <cite>JavaApp</cite> with a property or projected graph and your querying args.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.analytical.app.JavaApp.__call__">
-<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp.__call__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">graphscope.framework.graph.Graph</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate an App and do queries over it.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.analytical.app.JavaApp.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full_jar_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">java_app_class</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full_jar_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">java_app_class</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Init JavaApp with the full path of your <cite>jar</cite> file and the fully-qualified name of your
 app class.</p>
 <dl class="field-list simple">
@@ -1042,7 +390,7 @@ app class.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.analytical.app.JavaApp.is_compatible">
-<span class="sig-name descname"><span class="pre">is_compatible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp.is_compatible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp.is_compatible" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_compatible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp.is_compatible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp.is_compatible" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine if this algorithm can run on this type of graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1065,7 +413,7 @@ app class.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.analytical.app.JavaApp.signature">
-<span class="sig-name descname"><span class="pre">signature</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp.signature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp.signature" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">signature</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp.signature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp.signature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a signature of the app assets by its algo name (and gar resources).</p>
 <p>Used to uniquely identify a app assets.</p>
 <dl class="field-list simple">
@@ -1082,41 +430,42 @@ app class.</p>
 
 </div>
 <div class="section" id="app-object">
-<h2>App object<a class="headerlink" href="#app-object" title="Permalink to this heading">#</a></h2>
+<h2>App object<a class="headerlink" href="#app-object" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.framework.app.AppDAGNode">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">AppDAGNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_assets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#graphscope.framework.app.AppAssets" title="graphscope.framework.app.AppAssets"><span class="pre">AppAssets</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppDAGNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppDAGNode" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">AppDAGNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_assets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#graphscope.framework.app.AppAssets" title="graphscope.framework.app.AppAssets"><span class="pre">graphscope.framework.app.AppAssets</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppDAGNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppDAGNode" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class represents a app node in a DAG.</p>
 <p>In GraphScope, an app node binding a concrete graph node that query executed on.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.framework.app.App">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">App</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.App" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">App</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.App" title="Permalink to this definition">¶</a></dt>
 <dd><p>An application that can run on graphs and produce results.</p>
 <p>Analytical engine will build the app dynamic library when instantiate a app instance.
 And the dynamic library will be reused if subsequent app’s signature matches one of
 previous ones.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.app.App.__del__">
-<span class="sig-name descname"><span class="pre">__del__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App.__del__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.App.__del__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__del__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App.__del__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.App.__del__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Unload app. Both on engine side and python side. Set the key to None.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.app.App.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.App.__init__" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.App.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.framework.app.App.key">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">key</span></span><a class="headerlink" href="#graphscope.framework.app.App.key" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">key</span></span><a class="headerlink" href="#graphscope.framework.app.App.key" title="Permalink to this definition">¶</a></dt>
 <dd><p>A unique identifier of App.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.framework.app.App.signature">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#graphscope.framework.app.App.signature" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#graphscope.framework.app.App.signature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Signature is computed by all critical components of the App.</p>
 </dd></dl>
 
@@ -1124,26 +473,24 @@ previous ones.</p>
 
 </div>
 <div class="section" id="functions">
-<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">#</a></h2>
-<div class="table-wrapper autosummary longtable docutils container">
-<table class="autosummary longtable docutils align-default">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.framework.app.load_app.html#graphscope.framework.app.load_app" title="graphscope.framework.app.load_app"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.framework.app.load_app</span></code></a>([gar, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.framework.app.load_app.html#graphscope.framework.app.load_app" title="graphscope.framework.app.load_app"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.framework.app.load_app</span></code></a>([gar, …])</p></td>
 <td><p>Load an app from gar.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-</div>
 <div class="section" id="builtin-apps">
-<h2>BuiltIn apps<a class="headerlink" href="#builtin-apps" title="Permalink to this heading">#</a></h2>
+<h2>BuiltIn apps<a class="headerlink" href="#builtin-apps" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.attribute_assortativity_coefficient">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">attribute_assortativity_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/attribute_assortativity.html#attribute_assortativity_coefficient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.attribute_assortativity_coefficient" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">attribute_assortativity_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/attribute_assortativity.html#attribute_assortativity_coefficient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.attribute_assortativity_coefficient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute assortativity for node attributes.</p>
 <p>Assortativity measures the similarity of connections in the graph with
 respect to the given attribute.</p>
@@ -1181,7 +528,7 @@ of the specified attribute.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.numeric_assortativity_coefficient">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">numeric_assortativity_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/attribute_assortativity.html#numeric_assortativity_coefficient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.numeric_assortativity_coefficient" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">numeric_assortativity_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/attribute_assortativity.html#numeric_assortativity_coefficient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.numeric_assortativity_coefficient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute assortativity for numerical node attributes.</p>
 <p>Assortativity measures the similarity of connections
 in the graph with respect to the given numeric attribute.</p>
@@ -1223,17 +570,15 @@ Physical Review E, 67 026126, 2003</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.average_degree_connectivity">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">average_degree_connectivity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'in+out'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'in+out'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/average_degree_connectivity.html#average_degree_connectivity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.average_degree_connectivity" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">average_degree_connectivity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'in+out'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'in+out'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/average_degree_connectivity.html#average_degree_connectivity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.average_degree_connectivity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the average degree connectivity of graph.</p>
 <blockquote>
 <div><p>The average degree connectivity is the average nearest neighbor degree of
 nodes with degree k. For weighted graphs, an analogous measure can
 be computed using the weighted average neighbors degree defined in
 <a href="#id11"><span class="problematic" id="id4">[1]_</span></a>, for a node <cite>i</cite>, as</p>
-<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[k_{nn,i}^{w} =\]</div>
-</div>
 </div></blockquote>
 <p>rac{1}{s_i} sum_{j in N(i)} w_{ij} k_j</p>
 <blockquote>
@@ -1280,13 +625,11 @@ PNAS 101 (11): 3747–3752 (2004).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.average_shortest_path_length">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">average_shortest_path_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/average_shortest_path_length.html#average_shortest_path_length"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.average_shortest_path_length" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">average_shortest_path_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/average_shortest_path_length.html#average_shortest_path_length"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.average_shortest_path_length" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the average shortest path length.</p>
 <p>The average shortest path length is</p>
-<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[a =\sum_{s,t \in V} \frac{d(s, t)}{n(n-1)}\]</div>
-</div>
 <p>where <cite>V</cite> is the set of nodes in <cite>G</cite>, <cite>d(s, t)</cite> is the shortest path from <cite>s</cite> to <cite>t</cite>,
 and <cite>n</cite> is the number of nodes in <cite>G</cite>.</p>
 <dl class="field-list simple">
@@ -1318,7 +661,7 @@ Defaults to None.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.bfs">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">bfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/bfs.html#bfs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.bfs" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">bfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/bfs.html#bfs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.bfs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Breadth first search from the src on projected simple graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1351,7 +694,7 @@ on the <cite>oid_type</cite> is <cite>int64_t</cite> or <cite>string</cite> of t
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.avg_clustering">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">avg_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/clustering.html#avg_clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.avg_clustering" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">avg_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/clustering.html#avg_clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.avg_clustering" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the average clustering coefficient for the directed graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1387,7 +730,7 @@ on the <cite>oid_type</cite> is <cite>int64_t</cite> or <cite>string</cite> of t
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.clustering">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/clustering.html#clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.clustering" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/clustering.html#clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.clustering" title="Permalink to this definition">¶</a></dt>
 <dd><p>Local clustering coefficient of a node in a Graph is the fraction
 of pairs of the node’s neighbors that are adjacent to each other.</p>
 <dl class="field-list simple">
@@ -1419,7 +762,7 @@ of pairs of the node’s neighbors that are adjacent to each other.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.degree_assortativity_coefficient">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">degree_assortativity_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'out'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'in'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/degree_assortativity_coefficient.html#degree_assortativity_coefficient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.degree_assortativity_coefficient" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">degree_assortativity_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'out'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'in'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/degree_assortativity_coefficient.html#degree_assortativity_coefficient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.degree_assortativity_coefficient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute degree assortativity of graph.</p>
 <p>Assortativity measures the similarity of connections
 in the graph with respect to the node degree.</p>
@@ -1467,7 +810,7 @@ Edge direction and the structure of networks, PNAS 107, 10815-20 (2010).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.degree_centrality">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">degree_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centrality_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'both'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/degree_centrality.html#degree_centrality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.degree_centrality" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">degree_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centrality_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'both'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/degree_centrality.html#degree_centrality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.degree_centrality" title="Permalink to this definition">¶</a></dt>
 <dd><p>The degree centrality values are normalized by dividing
 by the maximum possible degree in a simple graph n-1 where
 n is the number of nodes in G.</p>
@@ -1501,7 +844,7 @@ Defaults to “both”.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.eigenvector_centrality">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">eigenvector_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/eigenvector_centrality.html#eigenvector_centrality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.eigenvector_centrality" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">eigenvector_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/eigenvector_centrality.html#eigenvector_centrality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.eigenvector_centrality" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the eigenvector centrality for the <cite>graph</cite>.
 See more about eigenvector centrality here:
 <a class="reference external" href="https://networkx.org/documentation/networkx-1.10/reference/generated/networkx.algorithms.centrality.eigenvector_centrality.html">https://networkx.org/documentation/networkx-1.10/reference/generated/networkx.algorithms.centrality.eigenvector_centrality.html</a></p>
@@ -1538,7 +881,7 @@ Defaults to None.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.hits">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">hits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/hits.html#hits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.hits" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">hits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/hits.html#hits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.hits" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute HITS on <cite>graph</cite>.</p>
 <p>Hyperlink-Induced Topic Search (HITS; also known as hubs and authorities)
 is a link analysis algorithm that rates Web pages. See more here:
@@ -1574,7 +917,7 @@ is a link analysis algorithm that rates Web pages. See more here:
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.is_simple_path">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">is_simple_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/is_simple_path.html#is_simple_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.is_simple_path" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">is_simple_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/is_simple_path.html#is_simple_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.is_simple_path" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True if and only if <cite>nodes</cite> form a simple path in <cite>G</cite>.</p>
 <p>A <em>simple path</em> in a graph is a nonempty sequence of nodes in which
 no node appears more than once in the sequence, and each adjacent
@@ -1629,7 +972,7 @@ like the following:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.k_core">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">k_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/k_core.html#k_core"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.k_core" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">k_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/k_core.html#k_core"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.k_core" title="Permalink to this definition">¶</a></dt>
 <dd><p>K-cores of the graph are connected components that are left after
 all vertices of degree less than <cite>k</cite> have been removed.</p>
 <dl class="field-list simple">
@@ -1666,7 +1009,7 @@ all vertices of degree less than <cite>k</cite> have been removed.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.k_shell">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">k_shell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/k_shell.html#k_shell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.k_shell" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">k_shell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/k_shell.html#k_shell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.k_shell" title="Permalink to this definition">¶</a></dt>
 <dd><p>The k-shell is the subgraph induced by nodes with core number k.
 That is, nodes in the k-core that are not in the (k+1)-core.</p>
 <dl class="field-list simple">
@@ -1703,7 +1046,7 @@ That is, nodes in the k-core that are not in the (k+1)-core.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.katz_centrality">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">katz_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/katz_centrality.html#katz_centrality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.katz_centrality" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">katz_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/katz_centrality.html#katz_centrality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.katz_centrality" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the Katz centrality.</p>
 <p>See more details for Katz centrality here:
 <a class="reference external" href="https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality_numpy.html">https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality_numpy.html</a></p>
@@ -1741,7 +1084,7 @@ That is, nodes in the k-core that are not in the (k+1)-core.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.louvain">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">louvain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_tries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/louvain.html#louvain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.louvain" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">louvain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_tries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/louvain.html#louvain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.louvain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute best partition on the <cite>graph</cite> by louvain.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1784,7 +1127,7 @@ an InvalidArgumentError.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.cdlp">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">cdlp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.cdlp" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">cdlp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.cdlp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate Community Detection with Label Propagation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1815,7 +1158,7 @@ an InvalidArgumentError.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.lpa">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">lpa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/lpa.html#lpa"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.lpa" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">lpa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/lpa.html#lpa"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.lpa" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate Community Detection with Label Propagation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1846,7 +1189,7 @@ an InvalidArgumentError.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.lpa_u2i">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">lpa_u2i</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/lpa.html#lpa_u2i"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.lpa_u2i" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">lpa_u2i</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/lpa.html#lpa_u2i"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.lpa_u2i" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate (multi-) label propagation on a property graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1874,7 +1217,7 @@ an InvalidArgumentError.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.pagerank">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">pagerank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/pagerank.html#pagerank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.pagerank" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">pagerank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/pagerank.html#pagerank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.pagerank" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evalute PageRank on a graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1906,7 +1249,7 @@ an InvalidArgumentError.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.pagerank_nx">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">pagerank_nx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/pagerank.html#pagerank_nx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.pagerank_nx" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">pagerank_nx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/pagerank.html#pagerank_nx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.pagerank_nx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate pagerank on a graph using algorithm exactly follows the implemented in NetworkX library.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1939,7 +1282,7 @@ an InvalidArgumentError.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.sssp">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">sssp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/sssp.html#sssp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.sssp" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">sssp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/sssp.html#sssp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.sssp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute single source shortest path length on the <cite>graph</cite>.</p>
 <p>Note that the <cite>sssp</cite> algorithm requires an numerical property on the edge.</p>
 <dl class="field-list simple">
@@ -1977,7 +1320,7 @@ evaluated in eager mode.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.triangles">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">triangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/triangles.html#triangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.triangles" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">triangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/triangles.html#triangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.triangles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate triangle counting of the graph G.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2005,7 +1348,7 @@ evaluated in eager mode.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.voterank">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">voterank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_of_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/voterank.html#voterank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.voterank" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">voterank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_of_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/voterank.html#voterank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.voterank" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evalute VoteRank on a graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2037,7 +1380,7 @@ evaluated in eager mode.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.wcc">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">wcc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/wcc.html#wcc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.wcc" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">wcc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/wcc.html#wcc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.wcc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate weakly connected components on the <cite>graph</cite>.
 This is an optimized version of WCC.
 Note this cannot be compiled against a property graph that has multiple labels.</p>
@@ -2068,151 +1411,391 @@ Note this cannot be compiled against a property graph that has multiple labels.<
 </div>
 </div>
 
-        </article>
-      </div>
-      <footer>
-        
-        <div class="related-pages">
-          <a class="next-page" href="generated/graphscope.framework.app.load_app.html">
-              <div class="page-info">
-                <div class="context">
-                  <span>Next</span>
-                </div>
-                <div class="title">graphscope.framework.app.load_app</div>
-              </div>
-              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
-            </a>
-          <a class="prev-page" href="graph.html">
-              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
-              <div class="page-info">
-                <div class="context">
-                  <span>Previous</span>
-                </div>
-                
-                <div class="title">Graph</div>
-                
-              </div>
-            </a>
-        </div>
-        <div class="bottom-of-page">
-          <div class="left-details">
-            <div class="copyright">
-                Copyright &#169; 2020-2023, DAMO Academy, Alibaba Inc.
-            </div>
-            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
-            
-            <a href="https://github.com/pradyunsg/furo">Furo</a>
-            
-          </div>
-          <div class="right-details">
-            <div class="icons">
-              <a class="muted-link fa fa-solid fa-github fa-2x" href="https://github.com/alibaba/GraphScope" aria-label="GitHub"></a>
-              
-            </div>
-          </div>
-        </div>
-        
-      </footer>
-    </div>
-    <aside class="toc-drawer">
-      
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">Analytical App</a><ul>
-<li><a class="reference internal" href="#appassets">AppAssets</a><ul>
-<li><a class="reference internal" href="#graphscope.framework.app.AppAssets"><code class="docutils literal notranslate"><span class="pre">AppAssets</span></code></a><ul>
-<li><a class="reference internal" href="#graphscope.framework.app.AppAssets.__init__"><code class="docutils literal notranslate"><span class="pre">AppAssets.__init__()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.framework.app.AppAssets.algo"><code class="docutils literal notranslate"><span class="pre">AppAssets.algo</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.framework.app.AppAssets.context_type"><code class="docutils literal notranslate"><span class="pre">AppAssets.context_type</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.framework.app.AppAssets.gar"><code class="docutils literal notranslate"><span class="pre">AppAssets.gar</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.framework.app.AppAssets.is_compatible"><code class="docutils literal notranslate"><span class="pre">AppAssets.is_compatible()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.framework.app.AppAssets.signature"><code class="docutils literal notranslate"><span class="pre">AppAssets.signature</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.framework.app.AppAssets.type"><code class="docutils literal notranslate"><span class="pre">AppAssets.type</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#javaapp">JavaApp</a><ul>
-<li><a class="reference internal" href="#graphscope.analytical.app.JavaApp"><code class="docutils literal notranslate"><span class="pre">JavaApp</span></code></a><ul>
-<li><a class="reference internal" href="#graphscope.analytical.app.JavaApp.__call__"><code class="docutils literal notranslate"><span class="pre">JavaApp.__call__()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.analytical.app.JavaApp.__init__"><code class="docutils literal notranslate"><span class="pre">JavaApp.__init__()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.analytical.app.JavaApp.is_compatible"><code class="docutils literal notranslate"><span class="pre">JavaApp.is_compatible()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.analytical.app.JavaApp.signature"><code class="docutils literal notranslate"><span class="pre">JavaApp.signature()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#app-object">App object</a><ul>
-<li><a class="reference internal" href="#graphscope.framework.app.AppDAGNode"><code class="docutils literal notranslate"><span class="pre">AppDAGNode</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.framework.app.App"><code class="docutils literal notranslate"><span class="pre">App</span></code></a><ul>
-<li><a class="reference internal" href="#graphscope.framework.app.App.__del__"><code class="docutils literal notranslate"><span class="pre">App.__del__()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.framework.app.App.__init__"><code class="docutils literal notranslate"><span class="pre">App.__init__()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.framework.app.App.key"><code class="docutils literal notranslate"><span class="pre">App.key</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.framework.app.App.signature"><code class="docutils literal notranslate"><span class="pre">App.signature</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#functions">Functions</a></li>
-<li><a class="reference internal" href="#builtin-apps">BuiltIn apps</a><ul>
-<li><a class="reference internal" href="#graphscope.attribute_assortativity_coefficient"><code class="docutils literal notranslate"><span class="pre">attribute_assortativity_coefficient()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.numeric_assortativity_coefficient"><code class="docutils literal notranslate"><span class="pre">numeric_assortativity_coefficient()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.average_degree_connectivity"><code class="docutils literal notranslate"><span class="pre">average_degree_connectivity()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.average_shortest_path_length"><code class="docutils literal notranslate"><span class="pre">average_shortest_path_length()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.bfs"><code class="docutils literal notranslate"><span class="pre">bfs()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.avg_clustering"><code class="docutils literal notranslate"><span class="pre">avg_clustering()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.clustering"><code class="docutils literal notranslate"><span class="pre">clustering()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.degree_assortativity_coefficient"><code class="docutils literal notranslate"><span class="pre">degree_assortativity_coefficient()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.degree_centrality"><code class="docutils literal notranslate"><span class="pre">degree_centrality()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.eigenvector_centrality"><code class="docutils literal notranslate"><span class="pre">eigenvector_centrality()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.hits"><code class="docutils literal notranslate"><span class="pre">hits()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.is_simple_path"><code class="docutils literal notranslate"><span class="pre">is_simple_path()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.k_core"><code class="docutils literal notranslate"><span class="pre">k_core()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.k_shell"><code class="docutils literal notranslate"><span class="pre">k_shell()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.katz_centrality"><code class="docutils literal notranslate"><span class="pre">katz_centrality()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.louvain"><code class="docutils literal notranslate"><span class="pre">louvain()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.cdlp"><code class="docutils literal notranslate"><span class="pre">cdlp()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.lpa"><code class="docutils literal notranslate"><span class="pre">lpa()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.lpa_u2i"><code class="docutils literal notranslate"><span class="pre">lpa_u2i()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.pagerank"><code class="docutils literal notranslate"><span class="pre">pagerank()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.pagerank_nx"><code class="docutils literal notranslate"><span class="pre">pagerank_nx()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.sssp"><code class="docutils literal notranslate"><span class="pre">sssp()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.triangles"><code class="docutils literal notranslate"><span class="pre">triangles()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.voterank"><code class="docutils literal notranslate"><span class="pre">voterank()</span></code></a></li>
-<li><a class="reference internal" href="#graphscope.wcc"><code class="docutils literal notranslate"><span class="pre">wcc()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
 
+           </div>
+           
           </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="generated/graphscope.framework.app.load_app.html" class="btn btn-neutral float-right" title="graphscope.framework.app.load_app" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="graph.html" class="btn btn-neutral float-left" title="Graph" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020-2023, DAMO Academy, Alibaba Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      
-      
-    </aside>
+
+    </section>
+
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
-    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script src="../_static/js/readthedocs.js"></script>
-    <script src="../_static/js/readthedocs-doc-embed.js"></script>
-    </body>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+  
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: stable
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.20.0/index.html">v0.20.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.19.0/index.html">v0.19.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.18.0/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../index.html">en</a></dd>
+        <dd><a href="../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
 </html>

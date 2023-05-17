@@ -17,7 +17,7 @@
 -docencoding
 'UTF-8'
 -doctitle
-'Grape Java SDK 0.20.0 API'
+'Grape Java SDK 0.22.0 API'
 -group
 'GraphScope' 'com.alibaba.graphscope*'
 -linkoffline
@@ -25,4 +25,4 @@
 -use
 -version
 -windowtitle
-'Grape Java SDK 0.20.0 API'
+'Grape Java SDK 0.22.0 API'

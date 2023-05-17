@@ -2,21 +2,26 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Groot" />
+    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Groot: Persistent Graph Store" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="storage_engine/groot.html" />
 <meta property="og:site_name" content="GraphScope" />
-<meta property="og:image" content="/_images/social_previews/summary_storage_engine_groot_c94ca660.png" />
-<meta property="og:image:alt" content="" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="How to Find Logs" href="../utilities/how_to_find_logs.html" /><link rel="prev" title="GRIN: Unified Interface" href="grin.html" />
+<meta property="og:description" content="Overview: In addition to Vineyard, the in-memory columnar graph store supported in GraphScope, we also have a disk-based, row-oriented, multi-versioned, persistent graph store. While Vineyard focus..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="/_images/social_previews/summary_storage_engine_groot_c534e51d.png" />
+<meta property="og:image:alt" content="Overview: In addition to Vineyard, the in-memory columnar graph store supported in GraphScope, we also have a disk-based, row-oriented, multi-versioned, pers..." />
+<meta name="description" content="Overview: In addition to Vineyard, the in-memory columnar graph store supported in GraphScope, we also have a disk-based, row-oriented, multi-versioned, persistent graph store. While Vineyard focus..." />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="In-memory immutable graphs on Vineyard" href="vineyard.html" /><link rel="prev" title="GRIN: Graph Retrieval INterface" href="grin.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
-        <title>Groot - GraphScope documentation</title>
+    <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
+        <title>Groot: Persistent Graph Store - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     <link rel="stylesheet" type="text/css" href="../_static/css/brands.min.css" />
@@ -65,6 +70,7 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<!-- Baidu analytics -->
 <script>
   var _hmt = _hmt || [];
   (function() {
@@ -75,12 +81,27 @@
   })();
 </script>
 
+<!-- MathJax rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script
+  type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
 </head>
   <body>
     
-  <script>
-    document.body.dataset.theme = "light";
-  </script>
+<script>
+  document.body.dataset.theme = "light";
+</script>
 
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -175,7 +196,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -199,21 +220,23 @@
 <div id="searchbox"></div><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../graphscope_positioning.html">The Product Positioning of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/intro.html">Introducing GraphScope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/graph_analytics_workloads.html">Graph Analytics Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/graph_interactive_workloads.html">Graph Interactive Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/graph_learning_workloads.html">Graph Learning Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/design_of_graphscope.html">Design of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/positioning.html">Positioning of GraphScope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Installation &amp; Deployment</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_local.html">Deploy GraphScope on Local</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on Self-managed K8s</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/install_on_local.html">Install GraphScope on Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on K8s cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_existing_vineyard_cluster.html">Use an existing vineyard cluster with multiple GraphScope sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Analytical Engine</span></p>
 <ul>
@@ -237,7 +260,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_networkx_operations.html">Tutorial: Graph Operations with NetowrkX APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_networkx_algorithms.html">Tutorial: Graph Algorithms with NetowrkX APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_pie.html">Tutorial: Develop your Algorithm in C++ with PIE Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop your Algorithm in C++ with FLASH Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop Your Algorithms in C++ with FLASH Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_python.html">Tutorial: Develop algorithms in Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_java.html">Tutorial: Develop your Algorithm in Java with PIE Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_run_giraph_apps.html">Tutorial: Run Giraph Applications on GraphScope</a></li>
@@ -249,29 +272,42 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Interactive Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started_gie.html">Getting Started for GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../design_of_gie.html">Design of GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tutorial_ldbc_gremlin.html">Tutorial: LDBC Gremlin</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/design_of_gie.html">Design of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started_gle.html">Getting Started for GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../design_of_gle.html">Design of GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/design_of_gle.html">Design of GLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/graph_sampling.html">Graph Sampling</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../learning_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../learning_engine/tutorial_node_classification_k8s.html">Tutorial: Training a Node Classification Model on K8s Cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/dev_and_test.html">Dev and Test</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Storage Engine</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="grin.html">GRIN: Unified Interface</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Groot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grin.html">GRIN: Graph Retrieval INterface</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Groot: Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vineyard.html">In-memory immutable graphs on Vineyard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graphar.html">GraphAr: Standard Graph Data File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gart.html">GART: Bridging the Gap between Relational OLTP and Graph Workloads</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">troubleshooting &amp; utilities</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find Logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find logs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/monitoring.html">Monitoring</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/error_codes.html">Error Codes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/bulk_loader.html">Bulk Loader</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul>
@@ -279,11 +315,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../development/code_style_guide.html">Code Style Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/how_to_test.html">How to Test</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/how_to_contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html">Debugging on local deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html#debugging-on-kubernetes-deployment">Debugging on Kubernetes deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html#commands-for-debugging">Commands for Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_install_in_offline_mode.html">Install GraphScope in offline mode</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -295,13 +335,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -347,18 +387,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -393,7 +433,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -506,11 +546,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../zh/installation.html">安装</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../zh/getting_started.html">快速上手</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../zh/deployment.html">部署</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
@@ -566,6 +606,15 @@
             
           
 
+        
+      
+        
+
+          
+            
+              <dd><a href="../../v0.21.0/index.html">v0.21.0</a></dd>
+            
+          
         
       
         
@@ -871,14 +920,670 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="groot">
-<h1>Groot<a class="headerlink" href="#groot" title="Permalink to this heading">#</a></h1>
+          <div class="tex2jax_ignore mathjax_ignore section" id="groot-persistent-graph-store">
+<h1>Groot: Persistent Graph Store<a class="headerlink" href="#groot-persistent-graph-store" title="Permalink to this heading">#</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">#</a></h2>
+<p>In addition to Vineyard, the in-memory columnar graph store supported in GraphScope, we also have a disk-based, row-oriented, multi-versioned, persistent graph store. While Vineyard focuses on great support for in-memory whole graph analytics workloads, the persistent graph store is geared towards better supporting continuous graph data management services that frequently update the graph and answer traversal queries.</p>
+<p>The store is a distributed graph store built on top of the popular RocksDB key-value store. It adopts a row-oriented design to support frequent small updates to the graph. Each row is tagged with a snapshot ID as its version. A query reads the most recent version of rows relative to the snapshot ID when it starts and is hence not blocked by writes. For writes, we take a compromise between consistency and higher throughput. In our design, writes in the same session can be grouped and executed atomically as a unit, and the persistent store assigns a snapshot ID (which is a low-resolution timestamp of the current time) to each group and executes groups of writes by the order of their snapshot IDs and by a deterministic (though arbitrary) order for groups of writes that occur in the same snapshot ID. It provides high write throughput while still maintaining some degree of order and isolation, although it provides less consistency than strict snapshot isolation common in databases. We hope our design choice provides an interesting trade-off for practical usage.</p>
+</div>
+<div class="section" id="known-limitation">
+<h2>Known Limitation<a class="headerlink" href="#known-limitation" title="Permalink to this heading">#</a></h2>
+<p>Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going foward we hope to evolve them into an integrated hybrid graph store suitable for all kinds of workloads.</p>
+</div>
+<div class="section" id="deploy-groot">
+<h2>Deploy Groot<a class="headerlink" href="#deploy-groot" title="Permalink to this heading">#</a></h2>
+<p>We use <a class="reference external" href="https://helm.sh">Helm</a> to deploy Groot on <a class="reference external" href="http://kubernetes.io">Kubernetes</a> Cluster.</p>
+<div class="section" id="prerequisites">
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Kubernetes 1.21+</p></li>
+<li><p>Helm 3.2.0+</p></li>
+</ul>
+<p>If you don’t have a Kubernetes cluster, you can create a local one by using Docker Desktop, Minikube, or Kind.</p>
+<p>If you don’t have a Kubernetes cluster, you can create a local one <a class="reference external" href="https://docs.docker.com/desktop/kubernetes/">Docker Desktop</a>, <a class="reference external" href="https://minikube.sigs.k8s.io/docs/start/">minikube</a> or <a class="reference external" href="https://kind.sigs.k8s.io/">kind</a>.</p>
+<p>Refer to <a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html"><span class="std std-doc">deploy graphscope on self managed k8s cluster</span></a> for more details guide.</p>
+</div>
+<div class="section" id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h3>
+<div class="section" id="install-from-artifacthub">
+<h4>Install from ArtifactHub<a class="headerlink" href="#install-from-artifacthub" title="Permalink to this heading">#</a></h4>
+<p>The latest stable version of <a class="reference external" href="https://artifacthub.io/packages/helm/graphscope/graphscope-store">Groot</a> can be installed from ArtifactHub by using the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>repo<span class="w"> </span>add<span class="w"> </span>graphscope<span class="w"> </span>https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
+helm<span class="w"> </span>repo<span class="w"> </span>update
+helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> </span>graphscope/graphscope-store
+</pre></div>
+</div>
+</div>
+<div class="section" id="installing-from-a-local-directory">
+<h4>Installing from a local directory<a class="headerlink" href="#installing-from-a-local-directory" title="Permalink to this heading">#</a></h4>
+<p>If you want to apply the latest updates or modify some files, you can clone the <a class="reference external" href="https://github.com/alibaba/GraphScope">GraphScope</a> repository and install Groot from a local directory by using the following commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>GraphScope/charts/graphscope-store
+helm<span class="w"> </span>dependency<span class="w"> </span>update<span class="w">  </span><span class="c1"># fetch the dependency charts</span>
+helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> </span>.
+</pre></div>
+</div>
+<p>The above commands will deploy Groot with the default configuration. The configurable items during installation can be found in the <code class="docutils literal notranslate"><span class="pre">Common</span> <span class="pre">Configurations</span></code> section.</p>
+<p>It may take some time for the Groot service to be available because the image needs to be pulled for the first time. You can check if the service is available by using the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span><span class="nb">test</span><span class="w"> </span>demo
+</pre></div>
+</div>
+<p>Helm will print the following statement on the console, which you could copy and execute to get the connection address.</p>
+<p>You can also check the deployment status and get the connection address by using the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>status<span class="w"> </span>demo
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="common-configurations">
+<h3>Common Configurations<a class="headerlink" href="#common-configurations" title="Permalink to this heading">#</a></h3>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Default value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>image.registry</p></td>
+<td><p>Image registry</p></td>
+<td><p><a class="reference external" href="http://registry.cn-hongkong.aliyuncs.com">registry.cn-hongkong.aliyuncs.com</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>image.repository</p></td>
+<td><p>Image repository</p></td>
+<td><p>graphscope/graphscope-store</p></td>
+</tr>
+<tr class="row-even"><td><p>image.tag</p></td>
+<td><p>Image tag, default to the version of the Chart</p></td>
+<td><p>“”</p></td>
+</tr>
+<tr class="row-odd"><td><p>auth.username</p></td>
+<td><p>Username. If empty, then there’s no authentication</p></td>
+<td><p>“”</p></td>
+</tr>
+<tr class="row-even"><td><p>auth.password</p></td>
+<td><p>Password</p></td>
+<td><p>“”</p></td>
+</tr>
+<tr class="row-odd"><td><p>store.replicaCount</p></td>
+<td><p>Number of Store Pod</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-even"><td><p>frontend.replicaCount</p></td>
+<td><p>Number of Frontend</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>ingestor.replicaCount</p></td>
+<td><p>Number of Ingestor Pod</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-even"><td><p>frontend.service.type</p></td>
+<td><p>Kubernetes Service type of frontend</p></td>
+<td><p>NodePort</p></td>
+</tr>
+<tr class="row-odd"><td><p>dataset.modern</p></td>
+<td><p>Load <a class="reference external" href="https://tinkerpop.apache.org/docs/current/tutorials/getting-started/">modern graph</a> dataset at the start</p></td>
+<td><p>false</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>If Groot is launched with the default configuration, then two Store Pods, one Frontend Pod, one Ingestor Pod, and one Coordinator Pod will be started. The number of Coordinator nodes is fixed to 1.</p>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">--set</span> <span class="pre">key=value[,key=value]</span></code> command to set the parameters for <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">install</span></code>, for example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> </span>graphscope/graphscope-store<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--set<span class="w"> </span>auth.username<span class="o">=</span>admin,auth.password<span class="o">=</span><span class="m">123456</span>
+</pre></div>
+</div>
+<p>The aforementioned command configures the username and password required for connecting to the cluster.</p>
+<p>In situations where a multitude of parameters need to be set, utilizing the <code class="docutils literal notranslate"><span class="pre">--set</span></code> option can become difficult to manage. In such cases, one can specify the parameters using a YAML file, as exemplified below:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> </span>graphscope/graphscope-store<span class="w"> </span>-f<span class="w"> </span>settings.yaml
+</pre></div>
+</div>
+<p>A sample configuration for <code class="docutils literal notranslate"><span class="pre">settings.yaml</span></code> is like the following:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># cat settings.yaml</span>
+<span class="nn">---</span>
+<span class="nt">image</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">latest</span>
+<span class="nt">auth</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">admin</span>
+<span class="w">  </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">123456</span>
+</pre></div>
+</div>
+<p>It will specify the image tag to be pulled as latest while setting the username and password.</p>
+</div>
+<div class="section" id="connecting-to-groot">
+<h3>Connecting to Groot<a class="headerlink" href="#connecting-to-groot" title="Permalink to this heading">#</a></h3>
+<p>Upon installing Groot, an empty graph is created by default. We can execute connections, define graph models, load data, and perform queries using the <a class="reference external" href="https://tinkerpop.apache.org/gremlin.html">Gremlin Query Language</a>.</p>
+<div class="section" id="connection">
+<h4>Connection<a class="headerlink" href="#connection" title="Permalink to this heading">#</a></h4>
+<p>In the previous step, upon executing the command to obtain connection information as printed by Helm, the said information is set to environment variables. The following statement can be used to obtain and connect to Groot:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="n">node_ip</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;NODE_IP&quot;</span><span class="p">]</span>
+<span class="n">grpc_port</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;GRPC_PORT&quot;</span><span class="p">]</span>
+<span class="n">gremlin_port</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;GREMLIN_PORT&quot;</span><span class="p">]</span>
+<span class="n">grpc_endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_ip</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">grpc_port</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="n">gremlin_endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_ip</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">gremlin_port</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="n">conn</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">conn</span><span class="p">(</span><span class="n">grpc_endpoint</span><span class="p">,</span> <span class="n">gremlin_endpoint</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In case a username and password were configured during the installation process, they will need to be provided when establishing a connection.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">conn</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">conn</span><span class="p">(</span><span class="n">grpc_endpoint</span><span class="p">,</span> <span class="n">gremlin_endpoint</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="s2">&quot;admin&quot;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;123456&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="building-and-modifying-graph-models">
+<h4>Building and Modifying Graph Models<a class="headerlink" href="#building-and-modifying-graph-models" title="Permalink to this heading">#</a></h4>
+<p>The graph object can be obtained through the <code class="docutils literal notranslate"><span class="pre">conn</span></code> object.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Create schema</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-built-in-datasets">
+<h4>Using Built-in Datasets<a class="headerlink" href="#using-built-in-datasets" title="Permalink to this heading">#</a></h4>
+<p>If <code class="docutils literal notranslate"><span class="pre">dataset.modern=true</span></code> is set during installation, Groot will load a simple example dataset for quick start.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Not supported at this moment</p>
+</div>
+</div>
+<div class="section" id="customizing-models-and-datasets">
+<h4>Customizing Models and Datasets<a class="headerlink" href="#customizing-models-and-datasets" title="Permalink to this heading">#</a></h4>
+<p>Users can also customize models and load their own datasets.</p>
+<p>Common statements used to define graph models are as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">schema</span><span class="o">.</span><span class="n">add_vertex_label</span><span class="p">(</span><span class="s1">&#39;v_label_name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">add_primary_key</span><span class="p">(</span><span class="s1">&#39;pk_name&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s1">&#39;prop_name_1&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s1">&#39;prop_name_2&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">)</span>
+<span class="n">schema</span><span class="o">.</span><span class="n">add_edge_label</span><span class="p">(</span><span class="s1">&#39;e_label_name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="s1">&#39;src_label&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">destination</span><span class="p">(</span><span class="s1">&#39;dst_label&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s1">&#39;prop_name_3&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">)</span>
+<span class="n">schema</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">)</span>
+<span class="n">schema</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="s1">&#39;src_label&#39;</span><span class="p">,</span> <span class="s1">&#39;dst_label&#39;</span><span class="p">)</span>
+<span class="n">schema</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>A graph model defines several labels, each with a label name and several properties (<code class="docutils literal notranslate"><span class="pre">.property()</span></code>).</p>
+<p>Among them, point labels can define primary keys (<code class="docutils literal notranslate"><span class="pre">.add_primary_key()</span></code>), and edge labels need to define the source label (<code class="docutils literal notranslate"><span class="pre">.source()</span></code>) and destination label (<code class="docutils literal notranslate"><span class="pre">.destination()</span></code>). <code class="docutils literal notranslate"><span class="pre">.drop()</span></code> is used to delete a label. <code class="docutils literal notranslate"><span class="pre">.update()</span></code> submits a transaction to apply changes.</p>
+<p>Here is an example of a simple model that defines the relationship between people who know each other, with the labels <code class="docutils literal notranslate"><span class="pre">person</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">knows</span></code> &lt;- <code class="docutils literal notranslate"><span class="pre">person</span></code>. The model includes:</p>
+<p><code class="docutils literal notranslate"><span class="pre">person</span></code> label, which includes a primary key named <code class="docutils literal notranslate"><span class="pre">id</span></code> of type <code class="docutils literal notranslate"><span class="pre">long</span></code>, and a property named name of type <code class="docutils literal notranslate"><span class="pre">str</span></code>.
+<code class="docutils literal notranslate"><span class="pre">knows</span></code> label, which includes a primary key named <code class="docutils literal notranslate"><span class="pre">date</span></code> of type <code class="docutils literal notranslate"><span class="pre">str</span></code>, with the source and destination labels both being person.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">schema</span><span class="o">.</span><span class="n">add_vertex_label</span><span class="p">(</span><span class="s2">&quot;person&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_primary_key</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;long&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_property</span><span class="p">(</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;str&quot;</span>
+    <span class="p">)</span>
+<span class="n">schema</span><span class="o">.</span><span class="n">add_edge_label</span><span class="p">(</span><span class="s2">&quot;knows&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="s2">&quot;person&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">destination</span><span class="p">(</span><span class="s2">&quot;person&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_property</span><span class="p">(</span>
+        <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;str&quot;</span>
+    <span class="p">)</span>
+<span class="n">schema</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="querying-data">
+<h3>Querying Data<a class="headerlink" href="#querying-data" title="Permalink to this heading">#</a></h3>
+<div class="section" id="python">
+<h4>Python<a class="headerlink" href="#python" title="Permalink to this heading">#</a></h4>
+<p>Using the connection information obtained earlier, we can perform Gremlin queries in Python.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">gremlin</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">toList</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Alternatively, we can directly retrieve the Gremlin IP address and port from the connection information and use the <code class="docutils literal notranslate"><span class="pre">gremlinpython</span></code> library for querying.</p>
+<ol class="arabic simple">
+<li><p>Install the <code class="docutils literal notranslate"><span class="pre">gremlinpython</span></code> package</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>gremlinpython<span class="w"> </span>‑‑user
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Copy the following code and set the <code class="docutils literal notranslate"><span class="pre">endpoint</span></code> to the connection information obtained earlier:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">gremlin_python.driver.client</span> <span class="kn">import</span> <span class="n">Client</span>
+
+<span class="n">endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;NODE_IP&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;GREMLIN_PORT&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="n">graph_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ws://</span><span class="si">{</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">/gremlin&quot;</span>
+<span class="n">username</span> <span class="o">=</span> <span class="s2">&quot;&lt;username&gt;&quot;</span>
+<span class="n">password</span> <span class="o">=</span> <span class="s2">&quot;&lt;password&gt;&quot;</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span>
+    <span class="n">graph_url</span><span class="p">,</span>
+    <span class="s2">&quot;g&quot;</span><span class="p">,</span>
+    <span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">,</span>  <span class="c1"># If auth enabled</span>
+    <span class="n">password</span><span class="o">=</span><span class="n">password</span><span class="p">,</span>  <span class="c1"># If auth enabled</span>
+    <span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="s2">&quot;g.V().limit(2)&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
+<span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="java">
+<h4>Java<a class="headerlink" href="#java" title="Permalink to this heading">#</a></h4>
+<ol class="arabic simple">
+<li><p>Create a directory structure as follows, where pom.xml and Main.java are files</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>gremlin
+├── pom.xml
+└── src
+    ├── main
+        ├── java
+            └── org
+                └── example
+                    └── Main.java
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Configure <code class="docutils literal notranslate"><span class="pre">pom.xml</span></code> as follows:</p></li>
+</ol>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="nt">&lt;project</span><span class="w"> </span><span class="na">xmlns=</span><span class="s">&quot;http://maven.apache.org/POM/4.0.0&quot;</span>
+<span class="w">         </span><span class="na">xmlns:xsi=</span><span class="s">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span>
+<span class="w">         </span><span class="na">xsi:schemaLocation=</span><span class="s">&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nt">&lt;modelVersion&gt;</span>4.0.0<span class="nt">&lt;/modelVersion&gt;</span>
+
+<span class="w">    </span><span class="nt">&lt;groupId&gt;</span>org.example<span class="nt">&lt;/groupId&gt;</span>
+<span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>gremlin<span class="nt">&lt;/artifactId&gt;</span>
+<span class="w">    </span><span class="nt">&lt;version&gt;</span>1.0-SNAPSHOT<span class="nt">&lt;/version&gt;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="nt">&lt;packaging&gt;</span>jar<span class="nt">&lt;/packaging&gt;</span>
+<span class="w">    </span><span class="nt">&lt;name&gt;</span>GremlinExample<span class="nt">&lt;/name&gt;</span>
+<span class="w">    </span><span class="nt">&lt;url&gt;</span>https://maven.apache.org<span class="nt">&lt;/url&gt;</span>
+<span class="w">    </span><span class="nt">&lt;dependencies&gt;</span>
+<span class="w">        </span><span class="nt">&lt;dependency&gt;</span>
+<span class="w">            </span><span class="nt">&lt;groupId&gt;</span>org.apache.tinkerpop<span class="nt">&lt;/groupId&gt;</span>
+<span class="w">            </span><span class="nt">&lt;artifactId&gt;</span>gremlin-driver<span class="nt">&lt;/artifactId&gt;</span>
+<span class="w">            </span><span class="nt">&lt;version&gt;</span>3.6.1<span class="nt">&lt;/version&gt;</span>
+<span class="w">        </span><span class="nt">&lt;/dependency&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/dependencies&gt;</span>
+<span class="w">    </span><span class="nt">&lt;build&gt;</span>
+<span class="w">        </span><span class="nt">&lt;plugins&gt;</span>
+<span class="w">            </span><span class="nt">&lt;plugin&gt;</span>
+<span class="w">                </span><span class="nt">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
+<span class="w">                </span><span class="nt">&lt;artifactId&gt;</span>maven-compiler-plugin<span class="nt">&lt;/artifactId&gt;</span>
+<span class="w">                </span><span class="nt">&lt;version&gt;</span>3.10.1<span class="nt">&lt;/version&gt;</span>
+<span class="w">                </span><span class="nt">&lt;configuration&gt;</span>
+<span class="w">                    </span><span class="nt">&lt;source&gt;</span>8<span class="nt">&lt;/source&gt;</span>
+<span class="w">                    </span><span class="nt">&lt;target&gt;</span>8<span class="nt">&lt;/target&gt;</span>
+<span class="w">                </span><span class="nt">&lt;/configuration&gt;</span>
+<span class="w">            </span><span class="nt">&lt;/plugin&gt;</span>
+<span class="w">            </span><span class="nt">&lt;plugin&gt;</span>
+<span class="w">                </span><span class="nt">&lt;groupId&gt;</span>org.codehaus.mojo<span class="nt">&lt;/groupId&gt;</span>
+<span class="w">                </span><span class="nt">&lt;artifactId&gt;</span>exec-maven-plugin<span class="nt">&lt;/artifactId&gt;</span>
+<span class="w">                </span><span class="nt">&lt;version&gt;</span>3.1.0<span class="nt">&lt;/version&gt;</span>
+<span class="w">                </span><span class="nt">&lt;configuration&gt;</span>
+<span class="w">                    </span><span class="nt">&lt;executable&gt;</span>java<span class="nt">&lt;/executable&gt;</span>
+<span class="w">                    </span><span class="nt">&lt;arguments&gt;</span>
+<span class="w">                        </span><span class="nt">&lt;argument&gt;</span>-classpath<span class="nt">&lt;/argument&gt;</span>
+<span class="w">                        </span><span class="nt">&lt;classpath/&gt;</span>
+<span class="w">                        </span><span class="nt">&lt;argument&gt;</span>org.example.Main<span class="nt">&lt;/argument&gt;</span>
+<span class="w">                    </span><span class="nt">&lt;/arguments&gt;</span>
+<span class="w">                    </span><span class="nt">&lt;mainClass&gt;</span>org.example.Main<span class="nt">&lt;/mainClass&gt;</span>
+<span class="w">                    </span><span class="nt">&lt;complianceLevel&gt;</span>1.11<span class="nt">&lt;/complianceLevel&gt;</span>
+<span class="w">                    </span><span class="nt">&lt;killAfter&gt;</span>-1<span class="nt">&lt;/killAfter&gt;</span>
+<span class="w">                </span><span class="nt">&lt;/configuration&gt;</span>
+<span class="w">            </span><span class="nt">&lt;/plugin&gt;</span>
+<span class="w">        </span><span class="nt">&lt;/plugins&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/build&gt;</span>
+<span class="nt">&lt;/project&gt;</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Configure <code class="docutils literal notranslate"><span class="pre">Main.java</span></code> as follows:</p></li>
+</ol>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">package</span><span class="w"> </span><span class="nn">org.example</span><span class="p">;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.apache.tinkerpop.gremlin.driver.*</span><span class="p">;</span>
+
+<span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">Main</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">Cluster</span><span class="p">.</span><span class="na">Builder</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Cluster</span><span class="p">.</span><span class="na">build</span><span class="p">();</span>
+<span class="w">        </span><span class="n">builder</span><span class="p">.</span><span class="na">addContactPoint</span><span class="p">(</span><span class="s">&quot;127.0.0.1&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">builder</span><span class="p">.</span><span class="na">port</span><span class="p">(</span><span class="mi">8182</span><span class="p">);</span>
+<span class="w">        </span><span class="n">builder</span><span class="p">.</span><span class="na">credentials</span><span class="p">(</span><span class="s">&quot;username&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;password&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">Cluster</span><span class="w"> </span><span class="n">cluster</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="na">create</span><span class="p">();</span>
+
+<span class="w">        </span><span class="n">Client</span><span class="w"> </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cluster</span><span class="p">.</span><span class="na">connect</span><span class="p">();</span>
+<span class="w">        </span><span class="n">ResultSet</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">submit</span><span class="p">(</span><span class="s">&quot;g.V().limit(3).valueMap()&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">Result</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">results</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="na">getObject</span><span class="p">());</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">client</span><span class="p">.</span><span class="na">close</span><span class="p">();</span>
+<span class="w">        </span><span class="n">cluster</span><span class="p">.</span><span class="na">close</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>Execute the program</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mvn<span class="w"> </span>compile<span class="w"> </span>exec:exec
+</pre></div>
+</div>
+</div>
+<div class="section" id="node-js">
+<h4>Node.js<a class="headerlink" href="#node-js" title="Permalink to this heading">#</a></h4>
+<ol class="arabic simple">
+<li><p>Install package <code class="docutils literal notranslate"><span class="pre">gremlin</span></code> for javascript</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>npm<span class="w"> </span>install<span class="w"> </span>gremlin
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Execute these codes</p></li>
+</ol>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">gremlin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;gremlin&#39;</span><span class="p">);</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">DriverRemoteConnection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">gremlin</span><span class="p">.</span><span class="nx">driver</span><span class="p">.</span><span class="nx">DriverRemoteConnection</span><span class="p">;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">Graph</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">gremlin</span><span class="p">.</span><span class="nx">structure</span><span class="p">.</span><span class="nx">Graph</span><span class="p">;</span>
+
+<span class="nx">graph_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`ws://{gremlin_endpoint}/gremlin`</span>
+<span class="nx">remoteConn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DriverRemoteConnection</span><span class="p">(</span><span class="nx">graph_url</span><span class="p">,{});</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">graph</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Graph</span><span class="p">();</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">graph</span><span class="p">.</span><span class="nx">traversal</span><span class="p">().</span><span class="nx">withRemote</span><span class="p">(</span><span class="nx">remoteConn</span><span class="p">);</span>
+
+<span class="nx">g</span><span class="p">.</span><span class="nx">V</span><span class="p">().</span><span class="nx">limit</span><span class="p">(</span><span class="mf">2</span><span class="p">).</span><span class="nx">count</span><span class="p">().</span><span class="nx">next</span><span class="p">().</span>
+<span class="w">    </span><span class="nx">then</span><span class="p">(</span><span class="nx">data</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+<span class="w">        </span><span class="nx">remoteConn</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="nx">error</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;ERROR&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">);</span>
+<span class="w">        </span><span class="nx">remoteConn</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+<span class="w">    </span><span class="p">});</span>
+</pre></div>
+</div>
+<p>Now since we have only defined the schema, and there is no data yet, the query result would be empty. So the next step is to load data.</p>
+</div>
+</div>
+</div>
+<div class="section" id="data-import">
+<h2>Data Import<a class="headerlink" href="#data-import" title="Permalink to this heading">#</a></h2>
+<p>There are two methods for importing data. One method is to batch import data from external storage (such as HDFS) using an offline import tool, and the other is to perform real-time writing using statements provided by the SDK.</p>
+<p>Note: Offline import will *<em>overwrite</em> the full data of the imported label.</p>
+<div class="section" id="offline-import">
+<h3>Offline Import<a class="headerlink" href="#offline-import" title="Permalink to this heading">#</a></h3>
+<div class="section" id="prerequisite">
+<h4>Prerequisite<a class="headerlink" href="#prerequisite" title="Permalink to this heading">#</a></h4>
+<ul class="simple">
+<li><p>Hadoop Cluster</p></li>
+<li><p>Data import tool <a class="reference external" href="https://github.com/alibaba/GraphScope/releases/download/v0.20.0/data_load.tar.gz">data_load.tar.gz</a></p></li>
+</ul>
+<p>Extract data_load.tar.gz, where <code class="docutils literal notranslate"><span class="pre">data_load/bin/load_tool.sh</span></code> is the tool that will be used below.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tar<span class="w"> </span>xzvf<span class="w"> </span>data_load.tar.gz
+</pre></div>
+</div>
+</div>
+<div class="section" id="data-format">
+<h4>Data Format<a class="headerlink" href="#data-format" title="Permalink to this heading">#</a></h4>
+<p>Source data needs to be stored in HDFS in a certain format. Each file includes data related to a type of vertex or edge label.</p>
+<p>The following is an example of the data related to the <code class="docutils literal notranslate"><span class="pre">person</span></code> vertex label and the <code class="docutils literal notranslate"><span class="pre">knows</span></code> edge label, which contains the <code class="docutils literal notranslate"><span class="pre">person</span></code>-&gt;<code class="docutils literal notranslate"><span class="pre">knows</span></code>&lt;-<code class="docutils literal notranslate"><span class="pre">person</span></code> relationship.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">person.csv</span></code></p></li>
+</ul>
+<div class="highlight-csv notranslate"><div class="highlight"><pre><span></span>id|name
+1000|Alice
+1001|Bob
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">person_knows_person.csv</span></code></p></li>
+</ul>
+<div class="highlight-csv notranslate"><div class="highlight"><pre><span></span>person_id|person_id_1|date
+1000|1001|20210611151923
+</pre></div>
+</div>
+<p>The first line of the data file is a header that describes the key of each field. The header is not required. If there is no header in the data file, you need to set skip.header to true in the data building process (For details, see params description in “Building a partitioned graph”).</p>
+<p>The rest lines are the data records. Each line represents one record. Data fields are seperated by a custom seperator (“|” in the example above). In the vertex data file person.csv, id field and name field are the primary-key and the property of the vertex type person respectively. In the edge data file person_knows_person.csv, person_id field is the primary-key of the source vertex, person_id_1 field is the primary-key of the destination vertex, date is the property of the edge type knows.</p>
+<p>All the data fields will be parsed according to the data-type defined in the graph schema. If the input data field cannot be parsed correctly, data building process would be failed with corresponding errors.</p>
+</div>
+<div class="section" id="loading-process">
+<h4>Loading Process<a class="headerlink" href="#loading-process" title="Permalink to this heading">#</a></h4>
+<p>The loading process contains three steps:</p>
+<ol class="arabic simple">
+<li><p>A partitioned graph is built from the source files and stored in the same HDFS using a MapReduce job</p></li>
+<li><p>The graph partitions are loaded into the store servers (in parallel)</p></li>
+<li><p>Commit to the online service so that data is ready for serving queries</p></li>
+</ol>
+<div class="section" id="build-building-a-partitioned-graph">
+<h5>Build: Building a partitioned graph<a class="headerlink" href="#build-building-a-partitioned-graph" title="Permalink to this heading">#</a></h5>
+<p>Build data by running the hadoop map-reduce job with following command.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./data_load/bin/load_tool.sh<span class="w"> </span>hadoop-build<span class="w"> </span>&lt;path/to/config/file&gt;
+</pre></div>
+</div>
+<p>The config file should follow a format that is recognized by Java <code class="docutils literal notranslate"><span class="pre">java.util.Properties</span></code> class.</p>
+<p>Here is an example:</p>
+<div class="highlight-properties notranslate"><div class="highlight"><pre><span></span><span class="na">split.size</span><span class="o">=</span><span class="s">256</span>
+<span class="na">separator</span><span class="o">=</span><span class="se">\\</span><span class="s">|</span>
+<span class="na">input.path</span><span class="o">=</span><span class="s">/tmp/ldbc_sample</span>
+<span class="na">output.path</span><span class="o">=</span><span class="s">/tmp/data_output</span>
+<span class="na">graph.endpoint</span><span class="o">=</span><span class="s">&lt;ip&gt;:&lt;grpc_port&gt;</span>
+<span class="na">column.mapping.config</span><span class="o">=</span><span class="s">{&quot;person_0_0.csv&quot;:{&quot;label&quot;:&quot;person&quot;,&quot;propertiesColMap&quot;:{&quot;0&quot;:&quot;id&quot;,&quot;1&quot;:&quot;name&quot;}},&quot;person_knows_person_0_0.csv&quot;:{&quot;label&quot;:&quot;knows&quot;,&quot;srcLabel&quot;:&quot;person&quot;,&quot;dstLabel&quot;:&quot;person&quot;,&quot;srcPkColMap&quot;:{&quot;0&quot;:&quot;id&quot;},&quot;dstPkColMap&quot;:{&quot;1&quot;:&quot;id&quot;},&quot;propertiesColMap&quot;:{&quot;2&quot;:&quot;date&quot;}}}</span>
+<span class="na">skip.header</span><span class="o">=</span><span class="s">true</span>
+</pre></div>
+</div>
+<p>Details of the parameters are listed below:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Config key</strong></p></th>
+<th class="head"><p><strong>Required</strong></p></th>
+<th class="head"><p><strong>Default</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>split.size</p></td>
+<td><p>false</p></td>
+<td><p>256</p></td>
+<td><p>Hadoop map-reduce input data split size in MB</p></td>
+</tr>
+<tr class="row-odd"><td><p>separator</p></td>
+<td><p>false</p></td>
+<td><p>\|</p></td>
+<td><p>Seperator used to parse each field in a line</p></td>
+</tr>
+<tr class="row-even"><td><p>input.path</p></td>
+<td><p>true</p></td>
+<td><p>N/A</p></td>
+<td><p>Input HDFS dir</p></td>
+</tr>
+<tr class="row-odd"><td><p>output.path</p></td>
+<td><p>true</p></td>
+<td><p>N/A</p></td>
+<td><p>Output HDFS dir</p></td>
+</tr>
+<tr class="row-even"><td><p>graph.endpoint</p></td>
+<td><p>true</p></td>
+<td><p>N/A</p></td>
+<td><p>GRPC endpoint of groot. You can find the  endpoint in previous section, or use <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">status</span> <span class="pre">demo</span></code>to get it.</p></td>
+</tr>
+<tr class="row-odd"><td><p>column.mapping.config</p></td>
+<td><p>true</p></td>
+<td><p>N/A</p></td>
+<td><p>Mapping info for each input file in JSON format. Each key in the first level should be a fileName that can be found in the input.path, and the corresponding value defines the mapping info. For a vertex type, the mapping info should includes 1) label of the vertex type, 2) propertiesColMap that describes the mapping from input field to graph property in the format of { columnIdx: “propertyName” }. For an edge type, the mapping info should includes 1) label of the edge type, 2) srcLabel of the source vertex type, 3) dstLabel of the destination vertex type, 4) srcPkColMap that describes the mapping from input field to graph property of the primary keys in the source vertex type, 5) dstPkColMap that describes the mapping from input field to graph property of the primary keys in the destination vertex type, 6) propertiesColMap that describes the mapping from input field to graph property of the edge type</p></td>
+</tr>
+<tr class="row-even"><td><p>skip.header</p></td>
+<td><p>false</p></td>
+<td><p>true</p></td>
+<td><p>Whether to skip the first line of the input file</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>After data building completed, you can find the output files in the <code class="docutils literal notranslate"><span class="pre">output.path</span></code> of HDFS. The output files includes a meta file named <code class="docutils literal notranslate"><span class="pre">META</span></code>, an empty file named <code class="docutils literal notranslate"><span class="pre">_SUCCESS</span></code>, and some data files that one for each partition named in the pattern of <code class="docutils literal notranslate"><span class="pre">part-r-xxxxx.sst</span></code>. The layout of the output directory should look like:</p>
+<div class="highlight-properties notranslate"><div class="highlight"><pre><span></span><span class="na">/tmp/data_output</span>
+<span class="w">  </span><span class="na">|-</span><span class="w"> </span><span class="s">META</span>
+<span class="w">  </span><span class="na">|-</span><span class="w"> </span><span class="s">_SUCCESS</span>
+<span class="w">  </span><span class="na">|-</span><span class="w"> </span><span class="s">part-r-00000.sst</span>
+<span class="w">  </span><span class="na">|-</span><span class="w"> </span><span class="s">part-r-00001.sst</span>
+<span class="w">  </span><span class="na">|-</span><span class="w"> </span><span class="s">part-r-00002.sst</span>
+<span class="w">  </span><span class="na">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="ingest-loading-graph-partitions">
+<h5>Ingest: Loading graph partitions<a class="headerlink" href="#ingest-loading-graph-partitions" title="Permalink to this heading">#</a></h5>
+<p>Now ingest the offline built data into the graph storage:<br />NOTE: You need to make sure that the HDFS endpoint that can be accessed from the processes of the graph store.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./data_load/bin/load_tool.sh<span class="w"> </span>-c<span class="w"> </span>ingest<span class="w"> </span>-d<span class="w"> </span>hdfs://1.2.3.4:9000/tmp/data_output
+</pre></div>
+</div>
+<p>The offline built data can be ingested successfully only once, otherwise errors will occur.</p>
+</div>
+<div class="section" id="commit-commit-to-store-service">
+<h5>Commit: Commit to store service<a class="headerlink" href="#commit-commit-to-store-service" title="Permalink to this heading">#</a></h5>
+<p>After data ingested into graph storage, you need to commit data loading. The data will not be able to read until committed successfully.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./data_load/bin/load_tool.sh<span class="w"> </span>-c<span class="w"> </span>commit<span class="w"> </span>-d<span class="w"> </span>hdfs://1.2.3.4:9000/tmp/data_output
+</pre></div>
+</div>
+<p>Notice: The later committed data will overwrite the earlier committed data which have same vertex types or edge relations.</p>
+</div>
+</div>
+</div>
+<div class="section" id="realtime-write">
+<h3>Realtime Write<a class="headerlink" href="#realtime-write" title="Permalink to this heading">#</a></h3>
+<p>Groot graph have several methods for realtime write as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Inserts one vertex</span>
+<span class="k">def</span> <span class="nf">insert_vertex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex</span><span class="p">:</span> <span class="n">VertexRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
+
+<span class="c1"># Inserts a list of vertices</span>
+<span class="k">def</span> <span class="nf">insert_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
+
+<span class="c1"># Update one vertex to new properties</span>
+<span class="k">def</span> <span class="nf">update_vertex_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex</span><span class="p">:</span> <span class="n">VertexRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
+
+<span class="c1"># Delele one vertex</span>
+<span class="k">def</span> <span class="nf">delete_vertex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex_pk</span><span class="p">:</span> <span class="n">VertexRecordKey</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
+
+<span class="c1"># Delete a list of vertices</span>
+<span class="k">def</span> <span class="nf">delete_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex_pks</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
+
+<span class="c1"># Insert one edge</span>
+<span class="k">def</span> <span class="nf">insert_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">:</span> <span class="n">EdgeRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
+
+<span class="c1"># Insert a list of edges</span>
+<span class="k">def</span> <span class="nf">insert_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
+
+<span class="c1"># Update one edge to new properties</span>
+<span class="k">def</span> <span class="nf">update_edge_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">:</span> <span class="n">EdgeRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
+
+<span class="c1"># Delete one edge</span>
+<span class="k">def</span> <span class="nf">delete_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">:</span> <span class="n">EdgeRecordKey</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
+
+<span class="c1"># Delete a list of edges</span>
+<span class="k">def</span> <span class="nf">delete_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge_pks</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
+
+<span class="c1"># Make sure the snapshot is avaiable</span>
+<span class="k">def</span> <span class="nf">remote_flush</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">snapshot_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span> <span class="k">pass</span>
+</pre></div>
+</div>
+<p>We use two utility class called <code class="docutils literal notranslate"><span class="pre">VertexRecordKey</span></code> and <code class="docutils literal notranslate"><span class="pre">EdgeRecordKey</span></code> to denote the key to uniquely identify a record.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">VertexRecordKey</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Unique identifier of a vertex.</span>
+<span class="sd">    The primary key may be a dict, the key is the property name,</span>
+<span class="sd">    and the value is the data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">primary_key</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary_key</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">primary_key</span>
+
+<span class="k">class</span> <span class="nc">EdgeRecordKey</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Unique identifier of an edge.</span>
+<span class="sd">    The `eid` is required in Update and Delete, which is a</span>
+<span class="sd">    system generated unsigned integer. User need to get that eid</span>
+<span class="sd">    by other means such as gremlin query.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">src_vertex_key</span><span class="p">,</span> <span class="n">dst_vertex_key</span><span class="p">,</span> <span class="n">eid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">src_vertex_key</span><span class="p">:</span> <span class="n">VertexRecordKey</span> <span class="o">=</span> <span class="n">src_vertex_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dst_vertex_key</span><span class="p">:</span> <span class="n">VertexRecordKey</span> <span class="o">=</span> <span class="n">dst_vertex_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">eid</span>  <span class="c1"># Only required in update and delete operation</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="uninstalling-and-restarting">
+<h2>Uninstalling and Restarting<a class="headerlink" href="#uninstalling-and-restarting" title="Permalink to this heading">#</a></h2>
+<div class="section" id="uninstall-groot">
+<h3>Uninstall Groot<a class="headerlink" href="#uninstall-groot" title="Permalink to this heading">#</a></h3>
+<p>To uninstall/delete the <code class="docutils literal notranslate"><span class="pre">demo</span></code> Groot cluster deployment, use</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>delete<span class="w"> </span>demo
+</pre></div>
+</div>
+<p>The command removes all the Kubernetes components associated with the chart and deletes the release.</p>
+<p>If the cluster supports <a class="reference external" href="https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/">dynamic provisioning</a>, Groot will create a set of <a class="reference external" href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims">PersistentVolumeClaims (PVCs)</a> to claim <a class="reference external" href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">PersistentVolumes (PVs)</a> by default for storing metadata and graph data. The PVs will not be deleted by default when Groot is uninstalled. You can query the PVCs and PVs using the following commands.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>get<span class="w"> </span>pvc
+kubectl<span class="w"> </span>get<span class="w"> </span>pv
+<span class="c1"># To query only the PVC belonging to the demo deployment</span>
+kubectl<span class="w"> </span>get<span class="w"> </span>pvc<span class="w"> </span>-lapp.kubernetes.io/instance<span class="o">=</span>demo
+</pre></div>
+</div>
+</div>
+<div class="section" id="restart-groot">
+<h3>Restart Groot<a class="headerlink" href="#restart-groot" title="Permalink to this heading">#</a></h3>
+<p>To relaunch Groot on the original PV with the same command used for the initial installation. At this point, Groot can access the data from before the uninstallation, and all other operations are the same as before the uninstallation. This can facilitate seamless version updates, or when using cloud provider services, you can uninstall Groot on demand to release elastic computing resources and keep only the block storage to save costs.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Note that if the node count is configured during installation, it should be exactly the same when reinstalling.</span>
+helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> </span>graphscope/graphscope-store
+</pre></div>
+</div>
+</div>
+<div class="section" id="destroy-groot">
+<h3>Destroy Groot<a class="headerlink" href="#destroy-groot" title="Permalink to this heading">#</a></h3>
+<p>Destroying Groot means releasing all resources used by Groot, including StatefulSets, Services, PVCs, and PVs.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>delete<span class="w"> </span>demo
+kubectl<span class="w"> </span>delete<span class="w"> </span>pvc<span class="w"> </span>-lapp.kubernetes.io/instance<span class="o">=</span>demo
+
+<span class="c1"># If the PV was dynamically provisioned with a PVC, then there is no need to delete the PV explicitly as it will be deleted automatically with the PVC.</span>
+
+<span class="c1"># However, if the PV was manually created, then it must be explicitly deleted.</span>
+
+<span class="c1"># To delete a PV, you can use the kubectl delete command followed by the PV name:</span>
+<span class="c1"># kubectl delete pv ${PV_NAME}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="developing-guide">
+<h2>Developing Guide<a class="headerlink" href="#developing-guide" title="Permalink to this heading">#</a></h2>
+<div class="section" id="build-image">
+<h3>Build image<a class="headerlink" href="#build-image" title="Permalink to this heading">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>GraphScope/k8s
+make<span class="w"> </span>graphscope-store<span class="w"> </span><span class="nv">VERSION</span><span class="o">=</span>latest
+</pre></div>
+</div>
+<p>This would produce an image named <code class="docutils literal notranslate"><span class="pre">graphscope/graphscope-store:latest</span></code>.</p>
+</div>
+<div class="section" id="persistence">
+<h3>Persistence<a class="headerlink" href="#persistence" title="Permalink to this heading">#</a></h3>
+<p>Groot stores the graph data in <code class="docutils literal notranslate"><span class="pre">/var/lib/graphscope-store</span></code> directory in the Store Pod and the metadata in <code class="docutils literal notranslate"><span class="pre">/etc/groot/my.meta</span></code> directory in the Coordinator Pod.</p>
+</div>
+<div class="section" id="troubleshooting">
+<h3>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this heading">#</a></h3>
+<div class="section" id="viewing-logs">
+<h4>Viewing logs<a class="headerlink" href="#viewing-logs" title="Permalink to this heading">#</a></h4>
+<p>You can view the logs of each Pod using the command
+<code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">${POD_NAME}</span></code>.</p>
+<p>It is common to check the logs of Frontend and Store roles. When debugging, it is often necessary to check the logs of Coordinator and Ingestor as well. The logs of Frontend include the logs of the Compiler that generates the logical query plan, while the logs of Store include the logs of the query engine execution. For example,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>logs<span class="w"> </span>demo-graphscope-store-frontend-0
+kubectl<span class="w"> </span>logs<span class="w"> </span>demo-graphscope-store-store-0
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuring-logs">
+<h4>Configuring logs<a class="headerlink" href="#configuring-logs" title="Permalink to this heading">#</a></h4>
+<p>Groot uses <code class="docutils literal notranslate"><span class="pre">logback</span></code> as the logging library for the Java part, and <code class="docutils literal notranslate"><span class="pre">log4rs</span></code> as the logging library for the Rust part.</p>
+<p>Both of these logging libraries support automatic periodic reloading of configuration, which means that the logging configuration file can be changed and will take effect after a short time (up to 30 seconds).</p>
+<p>The location of the logging configuration file in the container is:</p>
+<ul class="simple">
+<li><p>configuration file of <code class="docutils literal notranslate"><span class="pre">logback</span></code> is in <code class="docutils literal notranslate"><span class="pre">/usr/local/groot/conf/logback.xml</span></code></p></li>
+<li><p>configuration file of <code class="docutils literal notranslate"><span class="pre">log4rs</span></code> is in <code class="docutils literal notranslate"><span class="pre">/usr/local/groot/conf/log4rs.yml</span></code></p></li>
+</ul>
+</div>
+</div>
+</div>
 </div>
 
         </article>
@@ -886,12 +1591,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../utilities/how_to_find_logs.html">
+          <a class="next-page" href="vineyard.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">How to Find Logs</div>
+                <div class="title">In-memory immutable graphs on Vineyard</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -902,7 +1607,7 @@
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">GRIN: Unified Interface</div>
+                <div class="title">GRIN: Graph Retrieval INterface</div>
                 
               </div>
             </a>
@@ -927,8 +1632,82 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Groot: Persistent Graph Store</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#known-limitation">Known Limitation</a></li>
+<li><a class="reference internal" href="#deploy-groot">Deploy Groot</a><ul>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#install-from-artifacthub">Install from ArtifactHub</a></li>
+<li><a class="reference internal" href="#installing-from-a-local-directory">Installing from a local directory</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#common-configurations">Common Configurations</a></li>
+<li><a class="reference internal" href="#connecting-to-groot">Connecting to Groot</a><ul>
+<li><a class="reference internal" href="#connection">Connection</a></li>
+<li><a class="reference internal" href="#building-and-modifying-graph-models">Building and Modifying Graph Models</a></li>
+<li><a class="reference internal" href="#using-built-in-datasets">Using Built-in Datasets</a></li>
+<li><a class="reference internal" href="#customizing-models-and-datasets">Customizing Models and Datasets</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#querying-data">Querying Data</a><ul>
+<li><a class="reference internal" href="#python">Python</a></li>
+<li><a class="reference internal" href="#java">Java</a></li>
+<li><a class="reference internal" href="#node-js">Node.js</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#data-import">Data Import</a><ul>
+<li><a class="reference internal" href="#offline-import">Offline Import</a><ul>
+<li><a class="reference internal" href="#prerequisite">Prerequisite</a></li>
+<li><a class="reference internal" href="#data-format">Data Format</a></li>
+<li><a class="reference internal" href="#loading-process">Loading Process</a><ul>
+<li><a class="reference internal" href="#build-building-a-partitioned-graph">Build: Building a partitioned graph</a></li>
+<li><a class="reference internal" href="#ingest-loading-graph-partitions">Ingest: Loading graph partitions</a></li>
+<li><a class="reference internal" href="#commit-commit-to-store-service">Commit: Commit to store service</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#realtime-write">Realtime Write</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#uninstalling-and-restarting">Uninstalling and Restarting</a><ul>
+<li><a class="reference internal" href="#uninstall-groot">Uninstall Groot</a></li>
+<li><a class="reference internal" href="#restart-groot">Restart Groot</a></li>
+<li><a class="reference internal" href="#destroy-groot">Destroy Groot</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#developing-guide">Developing Guide</a><ul>
+<li><a class="reference internal" href="#build-image">Build image</a></li>
+<li><a class="reference internal" href="#persistence">Persistence</a></li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#viewing-logs">Viewing logs</a></li>
+<li><a class="reference internal" href="#configuring-logs">Configuring logs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

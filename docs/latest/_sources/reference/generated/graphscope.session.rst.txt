@@ -25,6 +25,7 @@
       ~session.gremlin
       ~session.learning
       ~session.load_from
+      ~session.load_from_gar
       ~session.nx
       ~session.run
       ~session.run_fetches

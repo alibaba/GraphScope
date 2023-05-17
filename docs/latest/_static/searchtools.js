@@ -4,7 +4,7 @@
  *
  * Sphinx JavaScript utilities for the full-text search.
  *
- * :copyright: Copyright 2007-2022 by the Sphinx team, see AUTHORS.
+ * :copyright: Copyright 2007-2023 by the Sphinx team, see AUTHORS.
  * :license: BSD, see LICENSE for details.
  *
  */
@@ -57,7 +57,7 @@ const _removeChildren = (element) => {
 const _escapeRegExp = (string) =>
   string.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 
-const _displayItem = (item, searchTerms) => {
+const _displayItem = (item, searchTerms, hasNext) => {
   const docBuilder = DOCUMENTATION_OPTIONS.BUILDER;
   const docUrlRoot = DOCUMENTATION_OPTIONS.URL_ROOT;
   const docFileSuffix = DOCUMENTATION_OPTIONS.FILE_SUFFIX;
@@ -93,10 +93,14 @@ const _displayItem = (item, searchTerms) => {
     fetch(requestUrl)
       .then((responseData) => responseData.text())
       .then((data) => {
-        if (data)
+        if (data) {
           listItem.appendChild(
             Search.makeSearchSummary(data, searchTerms)
           );
+        }
+        if (!hasNext) {
+          SphinxHighlight.highlightSearchWords();
+        }
       });
   Search.output.appendChild(listItem);
 };
@@ -120,7 +124,8 @@ const _displayNextItem = (
   // results left, load the summary and display it
   // this is intended to be dynamic (don't sub resultsCount)
   if (results.length) {
-    _displayItem(results.pop(), searchTerms);
+    let item = results.pop();
+    _displayItem(item, searchTerms, results.length);
     setTimeout(
       () => _displayNextItem(results, resultCount, searchTerms),
       5

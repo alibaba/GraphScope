@@ -104,12 +104,6 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
 
     It may be caused by that your machine is in an enterprise network, which requires proxy configurations to access network properly. This may lead to wrong address resolution and port occupancy. You can try to add addresses like ``hostname -i`` and ``0.0.0.0`` to your environment variable ``no_proxy`` or ``NO_PROXY`` (be aware of `the prefix/suffix policy of no_proxy <https://unix.stackexchange.com/questions/23452/set-a-network-range-in-the-no-proxy-environment-variable>`_)
 
-14. How to print debug info in GAE Cython SDK Algorithms?
-
-    python3 print function is a convinent way to show useful debug info, use print with param flush=True then the stream is forcibly flushed.
-
-    More details please refer to `Python Documentation <https://docs.python.org/3.3/library/functions.html#print>`_.
-
 
 
 **I do have many other questions...**

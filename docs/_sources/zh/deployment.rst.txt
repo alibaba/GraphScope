@@ -106,12 +106,12 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 -----------------
 
 我们提供了一个可在本地安装GraphScope相关依赖的脚本，该脚本可以运行在 Ubuntu 20.04+ 或 MacOS 11.2+ 平台上, 主要的用法如下：
-你可以通过 `./gs -h` 获取更详细的帮助信息。
+你可以通过 `./scripts/install_deps.sh -h` 获取更详细的帮助信息。
 
 * 安装 GraphScope 开发相关依赖
 .. code:: shell
 
-    ./gs install_deps dev
+    ./scripts/install_deps.sh --dev
 
 * 本地部署 GraphScope
 .. code:: shell

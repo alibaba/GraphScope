@@ -4,7 +4,7 @@ This guide gives you a quick start to use GraphScope for graph analysis tasks on
 
 ## Installation
 
-We’ll start by installing GraphScope with a single-line command. 
+We’ll start by installing GraphScope with a single-line command.
 
 ```bash
 
@@ -22,9 +22,9 @@ python3 -m pip install graphscope --upgrade \
 ````
 
 
-## Running GraphScope Analaytical Engine on Local
+## Running GraphScope Analytical Engine on Local
 
-The `graphscope` package includes everything you need to analysis a graph on your local machine. 
+The `graphscope` package includes everything you need to analysis a graph on your local machine.
 Now you may import it in a Python session and start your job.
 
 ```python
@@ -34,11 +34,11 @@ from graphscope.dataset.modern_graph import load_modern_graph
 
 gs.set_option(show_log=True)
 
-# load the modern graph as example. 
-# TODO: refers to modern graph description.
+# load the modern graph as example.
+#(modern graph is an example property graph for Gremlin queries given by Apache at https://tinkerpop.apache.org/docs/current/tutorials/getting-started/)
 graph = load_modern_graph()
 
-# triggers label propagation algorithm(LPA) 
+# triggers label propagation algorithm(LPA)
 # on the modern graph(property graph) and print the result.
 ret = gs.lpa(graph)
 print(ret.to_dataframe(selector={'id': 'v.id', 'label': 'r'}))

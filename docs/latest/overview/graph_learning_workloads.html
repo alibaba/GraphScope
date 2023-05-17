@@ -6,19 +6,22 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="overview/graph_learning_workloads.html" />
 <meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="The learning engine in GraphScope (GLE) drives from Graph-Learn, a distributed framework designed for development and training of large-scale graph neural networks (GNNs). GLE provides a programmin..." />
-<meta property="og:image" content="/_images/social_previews/summary_overview_graph_learning_workloads_a5c83f7d.png" />
-<meta property="og:image:alt" content="The learning engine in GraphScope (GLE) drives from Graph-Learn, a distributed framework designed for development and training of large-scale graph neural ne..." />
-<meta name="description" content="The learning engine in GraphScope (GLE) drives from Graph-Learn, a distributed framework designed for development and training of large-scale graph neural networks (GNNs). GLE provides a programmin..." />
+<meta property="og:description" content="What is Graph Neural Network: Graph neural networks (GNNs) are a type of neural network designed to work with graph data structures, consisting of nodes and edges. GNNs learn to represent each node..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="/_images/social_previews/summary_overview_graph_learning_workloads_6b6c9235.png" />
+<meta property="og:image:alt" content="What is Graph Neural Network: Graph neural networks (GNNs) are a type of neural network designed to work with graph data structures, consisting of nodes and..." />
+<meta name="description" content="What is Graph Neural Network: Graph neural networks (GNNs) are a type of neural network designed to work with graph data structures, consisting of nodes and edges. GNNs learn to represent each node..." />
+<meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Design of GraphScope" href="design_of_graphscope.html" /><link rel="prev" title="Graph Interactive Workloads" href="graph_interactive_workloads.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
+    <!-- Generated with Sphinx 5.3.0 and Furo 2023.03.27 -->
         <title>Graph Learning Workloads - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     <link rel="stylesheet" type="text/css" href="../_static/css/brands.min.css" />
@@ -67,6 +70,7 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<!-- Baidu analytics -->
 <script>
   var _hmt = _hmt || [];
   (function() {
@@ -77,12 +81,27 @@
   })();
 </script>
 
+<!-- MathJax rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script
+  type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
 </head>
   <body>
     
-  <script>
-    document.body.dataset.theme = "light";
-  </script>
+<script>
+  document.body.dataset.theme = "light";
+</script>
 
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -201,21 +220,23 @@
 <div id="searchbox"></div><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../graphscope_positioning.html">The Product Positioning of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introducing GraphScope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_analytics_workloads.html">Graph Analytics Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_interactive_workloads.html">Graph Interactive Workloads</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Graph Learning Workloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="design_of_graphscope.html">Design of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="positioning.html">Positioning of GraphScope</a></li>
 <li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Installation &amp; Deployment</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_local.html">Deploy GraphScope on Local</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on Self-managed K8s</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/install_on_local.html">Install GraphScope on Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on K8s cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_existing_vineyard_cluster.html">Use an existing vineyard cluster with multiple GraphScope sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Analytical Engine</span></p>
 <ul>
@@ -239,7 +260,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_networkx_operations.html">Tutorial: Graph Operations with NetowrkX APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_networkx_algorithms.html">Tutorial: Graph Algorithms with NetowrkX APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_pie.html">Tutorial: Develop your Algorithm in C++ with PIE Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop your Algorithm in C++ with FLASH Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop Your Algorithms in C++ with FLASH Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_python.html">Tutorial: Develop algorithms in Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_dev_algo_java.html">Tutorial: Develop your Algorithm in Java with PIE Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../analytical_engine/tutorial_run_giraph_apps.html">Tutorial: Run Giraph Applications on GraphScope</a></li>
@@ -251,29 +272,42 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Interactive Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started_gie.html">Getting Started for GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../design_of_gie.html">Design of GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tutorial_ldbc_gremlin.html">Tutorial: LDBC Gremlin</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/design_of_gie.html">Design of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started_gle.html">Getting Started for GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../design_of_gle.html">Design of GLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/design_of_gle.html">Design of GLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/graph_sampling.html">Graph Sampling</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../learning_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../learning_engine/tutorial_node_classification_k8s.html">Tutorial: Training a Node Classification Model on K8s Cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine/dev_and_test.html">Dev and Test</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Storage Engine</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../storage_engine/getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../storage_engine/grin.html">GRIN: Unified Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../storage_engine/groot.html">Groot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/grin.html">GRIN: Graph Retrieval INterface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/groot.html">Groot: Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/vineyard.html">In-memory immutable graphs on Vineyard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/graphar.html">GraphAr: Standard Graph Data File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage_engine/gart.html">GART: Bridging the Gap between Relational OLTP and Graph Workloads</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">troubleshooting &amp; utilities</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find Logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find logs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/monitoring.html">Monitoring</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/error_codes.html">Error Codes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/bulk_loader.html">Bulk Loader</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul>
@@ -281,11 +315,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../development/code_style_guide.html">Code Style Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/how_to_test.html">How to Test</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/how_to_contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html">Debugging on local deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html#debugging-on-kubernetes-deployment">Debugging on Kubernetes deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_debugging.html#commands-for-debugging">Commands for Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/how_to_install_in_offline_mode.html">Install GraphScope in offline mode</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -297,13 +335,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -349,18 +387,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -395,7 +433,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -508,11 +546,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../zh/installation.html">安装</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../zh/getting_started.html">快速上手</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../zh/deployment.html">部署</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
@@ -568,6 +606,15 @@
             
           
 
+        
+      
+        
+
+          
+            
+              <dd><a href="../../v0.21.0/index.html">v0.21.0</a></dd>
+            
+          
         
       
         
@@ -881,7 +928,44 @@
         <article role="main">
           <div class="tex2jax_ignore mathjax_ignore section" id="graph-learning-workloads">
 <h1>Graph Learning Workloads<a class="headerlink" href="#graph-learning-workloads" title="Permalink to this heading">#</a></h1>
-<p>The learning engine in GraphScope (GLE) drives from
+<div class="section" id="what-is-graph-neural-network">
+<h2>What is Graph Neural Network<a class="headerlink" href="#what-is-graph-neural-network" title="Permalink to this heading">#</a></h2>
+<p>Graph neural networks (GNNs) are a type of neural network designed to work with
+graph data structures, consisting of nodes and edges. GNNs learn to represent
+each node in the graph by aggregating information from its neighboring nodes in
+multiple hops, which allows the model to capture complex relationships between
+nodes in the graph. This involves a process of message passing between nodes,
+where each node receives messages from its neighboring nodes and updates its
+representation based on the aggregated information. By iteratively performing
+this process, GNNs can learn to capture not only the local features of a node
+but also its global position in the graph, making them particularly useful for
+tasks such as node classification, link prediction, and graph classification.</p>
+<ul class="simple">
+<li><p>Node classification is a task (GNNs) where the goal is to predict the label
+of each node in a graph. In other words, given a graph with nodes and edges,
+the task is to assign a category or class to each node based on the features
+of the node and its connections to other nodes. This is an important task in
+many applications such as social network analysis and drug discovery.
+GNNs are particularly suited for node classification as
+they can capture the structural information and relationships between nodes
+in a graph, which can be used to improve the accuracy of the classification.</p></li>
+<li><p>Link prediction is a key task in GNNs that aims to predict the existence
+or likelihood of a link between two nodes in a graph. This task is important
+in various applications, such as recommendation systems and biology network analysis, where
+predicting the relationships between nodes can provide valuable insights.
+GNNs can effectively capture the structural information and features of the
+nodes to improve the accuracy of link prediction. The task is typically framed
+as a binary classification problem where the model predicts the probability
+of a link existing between two nodes.</p></li>
+<li><p>Graph classification is another GNN task that aims to classify an entire
+graph into one or more classes based on its structure and features. This task is
+used in various domains, such as bioinformatics, social network analysis, and
+chemical structure analysis. The task is typically framed as a multi-class
+classification problem where the model predicts the probability of the graph
+belonging to each class. GNNs have shown promising results in graph classification
+tasks and have outperformed traditional machine learning models.</p></li>
+</ul>
+<p>The learning engine in GraphScope (GLE) is driven by
 <a class="reference external" href="https://github.com/alibaba/graph-learn">Graph-Learn</a>,
 a distributed framework designed for development and training
 of large-scale graph neural networks (GNNs).
@@ -889,19 +973,42 @@ GLE provides a programming interface carefully designed for
 the development of graph neural network models,
 and has been widely applied in many scenarios within Alibaba,
 such as search recommendation, network security and knowledge graphs.</p>
-<p>Next, we will briefly rewind the basic concept of GNN,
-introduce the model paradigms of <strong>GLE</strong>,
-and walk through a quick-start tutorial on how to build
-a user-defined GNN model using <strong>GLE</strong>.</p>
-<div class="section" id="graph-neural-networks">
-<h2>Graph Neural Networks<a class="headerlink" href="#graph-neural-networks" title="Permalink to this heading">#</a></h2>
-<p>Let’s start by rewinding the the basic concept of GNN and the workflow of
-mini-batch GNNs training.</p>
-<p>Given a graph <span class="math notranslate nohighlight">\(G = (V,E)\)</span>, where each vertex is associated with a vector
+<!-- Next, we will briefly rewind the basic concept of GNN, 
+introduce the model paradigms of **GLE**, 
+and walk through a quick-start tutorial on how to build 
+a user-defined GNN model using **GLE**. -->
+</div>
+<div class="section" id="typical-gnn-models">
+<h2>Typical GNN Models<a class="headerlink" href="#typical-gnn-models" title="Permalink to this heading">#</a></h2>
+<p>First, let’s briefly rewind the concept of GNN.
+Given a graph <span class="math notranslate nohighlight">\(G = (V,E)\)</span>, where each vertex is associated with a vector
 of data as its feature. Graph Neural Networks(GNNs) learn a low-dimensional
 embedding for each target vertex by stacking multiple GNNs layers <span class="math notranslate nohighlight">\(L\)</span>.
 For each layer, every vertex updates its activation by aggregating features
 or hidden activations of its neighbors <span class="math notranslate nohighlight">\(N(v),v \in V\)</span>.</p>
+<p>There are several types of GNN models used for various tasks, such as
+node classification, link prediction, and graph classification. Here are some
+of the most common types of GNN models:</p>
+<ul class="simple">
+<li><p>Graph Convolutional Networks (GCN): GCN is a popular GNN model used for
+node classification and graph classification tasks. It applies a series of
+convolutional operations to the graph structure, allowing the model to
+learn representations of nodes and their neighborhoods.</p></li>
+<li><p>Graph Attention Networks (GAT): GAT is another popular GNN model that
+uses attention mechanisms to weigh the importance of neighboring nodes when
+computing node representations. It has been shown to outperform GCN on
+several benchmark datasets.</p></li>
+<li><p>GraphSAGE: GraphSAGE is a variant of GCN that uses a neighborhood aggregation
+strategy to generate node embeddings. It allows the model to capture high-order
+neighborhood information and scalable to large graphs.</p></li>
+</ul>
+<p>There are also many other types of GNN models, such as Graph Isomorphism
+Networks (GIN), Relational Graph Convolutional Network (R-GCN), and many more.
+The choice of GNN model depends on the specific task and the characteristics
+of the input graph data.</p>
+</div>
+<div class="section" id="paradigm-of-model-training">
+<h2>Paradigm of Model Training<a class="headerlink" href="#paradigm-of-model-training" title="Permalink to this heading">#</a></h2>
 <p>In general, there are two ways to train a GNN model: (1) whole graph
 training and (2) mini-batch training. Whole graph training is to compute
 based on the whole graph directly. The GCN and GAT are originally proposed
@@ -912,29 +1019,44 @@ solution for scaling GNN training on very large graphs. Neighbor sampling
 is used to generate mini-batches, allowing sampling-based GNN models to
 handle unseen vertices. GraphSAGE is a typical example of mini-batch
 training. The following figure illustrates the workflow of 2-hop GraphSAGE training.</p>
-<p><img alt="The workflow of 2-hop GraphSAGE training." src="overview/images/graphsage.png" /></p>
-<!-- The workflow of GraphSAGE training follows a vertex-centric computation 
-paradigm including the following steps: 
-   - Select a mini-batch of training vertices from the training set.
-   - Sample the multiple hops of fixed-size neighbors for each training vertex.
-   - Extract the features of the sub-graph consisting of the training vertices 
-      and their neighbors to generate the mini-batch training data.
-   - Aggregate and update features through topological relations of the training 
-      data, and execute the forward and backward propagation to update the model parameters. -->
-</div>
-<div class="section" id="graph-learning-models">
-<h2>Graph Learning Models<a class="headerlink" href="#graph-learning-models" title="Permalink to this heading">#</a></h2>
-<p><strong>GLE</strong> is designed for large-scale graph neural networks. It consists of an
-efficient graph engine, a set of user-friendly APIs, and a rich set of built-in GNN
-models. The graph engine stores the graph topology and attributes distributedly,
-and supports efficient graph sampling and query.
-GLE can work with popular tensor engines including TensorFlow and PyTorch.</p>
-<p><img alt="An overview of the algorithm framework in GLE." src="overview/images/gle_algo_framework.png" /></p>
+<p><img alt="The workflow of 2-hop GraphSAGE training." src="../_images/graphsage.png" /></p>
+<div class="section" id="steps-of-model-training">
+<h3>Steps of Model Training<a class="headerlink" href="#steps-of-model-training" title="Permalink to this heading">#</a></h3>
+<p>The process of training a GNN involves several steps, which are described below.</p>
+<ul class="simple">
+<li><p>Data Preparation: The first step in training a GNN is to prepare the input data.
+This involves creating a graph representation of the data, where nodes represent
+entities and edges represent the relationships between them. The graph can be
+represented using an adjacency matrix or an edge list. The features of the
+original graph data may be complex and cannot be directly accessed for model
+training. For example, the node features “id=123456, age=28, city=Beijing”
+and other plain texts need to be processed into continuous features by embedding lookup.
+The type, value space, and dimension of each feature after vectorization should
+be clearly described when adding vertex or edge data sources.</p></li>
+<li><p>Model Initialization: After the data is prepared, the next step is to
+initialize the GNN model. This involves selecting an appropriate architecture
+for the model and setting the initial values of the model parameters.</p></li>
+<li><p>Forward and Backward Pass: During the forward pass, the GNN model takes the
+input graph(sampled subgraphs in mini-batch training) and propagates
+information through the graph, updating the embedding
+of each node based on the embedding of its neighbors. The difference between
+the predicted output and the ground truth is measured by the loss
+function. In the backward pass, the gradients of the loss function with
+respect to the model parameters are computed, and are used to update the model
+parameters.</p></li>
+<li><p>Iteration: Step 3 is repeated iteratively until the model converges to a
+satisfactory level of performance. During each iteration, the model parameters
+are updated based on the gradients of the loss function, and the quality of the
+model prediction is evaluated using a validation set.</p></li>
+<li><p>Evaluation: After the model is trained, it is evaluated using a test set of
+data to measure its performance on unseen data. Various evaluation metrics such
+as accuracy, precision, recall, and F1 score can be used to assess the
+performance of the model.</p></li>
+</ul>
 </div>
 <div class="section" id="subgraph-sampling">
-<h2>Subgraph Sampling<a class="headerlink" href="#subgraph-sampling" title="Permalink to this heading">#</a></h2>
-<p>To build and train a model, <strong>GLE</strong> usually samples subgraphs as the training data,
-and performs batch training with it. In practical industrial applications, the size of
+<h3>Subgraph Sampling<a class="headerlink" href="#subgraph-sampling" title="Permalink to this heading">#</a></h3>
+<p>In practical industrial applications, the size of
 the graph is often relatively large and the features on the nodes and edges of the graph
 are complex (there may be both discrete and continuous features). Thus it is not possible
 to perform message passing/neighbor aggregation directly on the original graph. A feasible
@@ -948,167 +1070,66 @@ consisting of nodes, edges features and edge index (a two-dimensional array cons
 of row index and column index of edges), generally using full neighbor. The conv layer
 based on SubGraph generally uses the sparse NN operator. The examples of EgoGraph and
 SubGraph are shown in the following figure.</p>
-<p><img alt="The examples of EgoGraph." src="overview/images/ego_sub.png" /></p>
-<p>For models using EgoGraph sampling, the message aggregation path is determined by
-the potential relationship between the ego and its neighbors. For models using
-SubGraph sampling, the message passing path (forward computation path) can be
-determined directly by the <code class="docutils literal notranslate"><span class="pre">edge_index</span></code>.</p>
+<p><img alt="The examples of EgoGraph." src="../_images/ego_sub.png" /></p>
 </div>
-<div class="section" id="developing-your-own-model">
-<h2>Developing Your Own Model<a class="headerlink" href="#developing-your-own-model" title="Permalink to this heading">#</a></h2>
-<p>Next, we introduce how to use the basic APIs provided by <strong>GLE</strong> to cooperate
-with deep learning engines to build graph learning algorithms.
-We demonstrate the GraphSAGE model as an example. In the following example,
-the model implementation is based on TensorFlow.</p>
-<p>In general, it requires the following four steps to build a GNN model.</p>
+</div>
+<div class="section" id="challenges-of-applying-gnns-on-large-graphs">
+<h2>Challenges of Applying GNNs on Large Graphs<a class="headerlink" href="#challenges-of-applying-gnns-on-large-graphs" title="Permalink to this heading">#</a></h2>
+<p>Based on our experience, applying GNN to industrial-scale large graphs requires
+addressing the following challenges:</p>
 <ul class="simple">
-<li><p>Specifying the sampling query. Graph sampling broadly consists of several categories:
-<code class="docutils literal notranslate"><span class="pre">Traversal</span></code> sampling that obtains point or edge data of a batch from the graph;
-<code class="docutils literal notranslate"><span class="pre">Relational</span></code> sampling, which obtains the N-hop neighborhood of
-points or generate a subgraph composed of points for constructing training samples;
-and <code class="docutils literal notranslate"><span class="pre">Negative</span></code> sampling, which is generally used by unsupervised training to
-generate negative example samples. We abstract above sampling operations
-into a set of interfaces, called <a class="reference external" href="https://graph-learn.readthedocs.io/en/latest/en/gl/graph/gsl.html">GSL</a>.
-GSL supports heterogeneous attribute graphs, and the syntax is designed close
-to the <a class="reference external" href="https://tinkerpop.apache.org/gremlin.html">Gremlin</a> style for easy understanding.
-For example, for the heterogeneous graph  “users clicking on products”, the sampling
-query “randomly sample 64 users and sample 10 related products for each user by the
-weight of the edges” can be written as: <code class="docutils literal notranslate"><span class="pre">g.V(&quot;user&quot;).batch(64).outV(&quot;click&quot;).sample(10).by(&quot;edge_weight&quot;)</span></code></p></li>
-<li><p>Transforming outputs of the GSL query into the tensor format. The outputs of GSL is in the
-Numpy format, while the model based on TensorFlow or PyTorch needs that data are in the
-tensor format. Thus we need to convert the data format before training. In addition,
-the features of the original graph data may be complex and cannot be directly accessed
-for model training. For example, the node features “id=123456, age=28, city=Beijing”
-and other plain texts need to be processed into continuous features by embedding lookup.
-We need to describe clearly the type, value space, and dimension of each feature after
-vectorization when adding vertex or edge data sources. Based on these information,  <strong>GLE</strong>
-provides a convenient interface to convert the raw feature data into vector format.</p></li>
-<li><p>Model construction. <strong>GLE</strong> encapsulates EgoGraph/SubGraph based layers and models,
-which can be used to build a GNNs model after selecting a model paradigm that suits
-your needs. The GNNs model takes EgoGraph or BatchGraph (SubGraph of mini-batch) as
-input and outputs the embedding of the nodes.</p></li>
-<li><p>Design loss functions. The loss function should be designed according to the specific
-application scenario, which in general can be classified into two categories: <code class="docutils literal notranslate"><span class="pre">node</span> <span class="pre">classification</span></code>
-and <code class="docutils literal notranslate"><span class="pre">link</span> <span class="pre">prediction</span></code>. Take link prediction as an example, we need “embedding of source
-vertex, embedding of destination vertex, embedding of target vertex with negative sampling”
-as the training input, and output the loss, and then optimize the loss by iterating through
-the trainer. <strong>GLE</strong> encapsulates some common <a class="reference external" href="https://graph-learn.readthedocs.io/en/latest/en/gl/algo/tf/tf_loss.html">loss functions</a>.  Users can also customize the loss functions, optimizers and the training process.</p></li>
+<li><p>Data irregularity: One of the challenges of GNN is to handle various forms of
+unstructured data, such as sparse, directed, undirected, homogeneous, and
+heterogeneous data, as well as node and edge attributes. These data types may
+require different graph processing methods and algorithms.</p></li>
+<li><p>Scalability: In industrial scenarios, graph data is usually very large,
+containing a large number of nodes and edges. This leads to problems with
+computation and storage, as well as the problem of exponential data expansion
+through sampling.</p></li>
+<li><p>Computational complexity: GNN has a very high computational complexity because
+it requires the execution of multiple operators, including graph convolution,
+pooling, activation, etc. These operators require efficient algorithms and
+hardware support to enable GNN to run quickly on large-scale graphs.</p></li>
+<li><p>Dynamic graph: In industrial scenarios, the graph structure and
+attributes may undergo real-time changes, which may cause GNN models to fail to
+perceive and adapt to these changes in time.</p></li>
 </ul>
-<p>Next, we introduce how to implement a GraphSAGE model following the above steps.</p>
-<div class="section" id="sampling-output-transformation">
-<h3>Sampling &amp; Output Transformation<a class="headerlink" href="#sampling-output-transformation" title="Permalink to this heading">#</a></h3>
-<p>We use the Cora dataset for the node classification example. We provide a
-simple data conversion script <code class="docutils literal notranslate"><span class="pre">cora.py</span></code> to convert the original Cora data
-to the format required by <strong>GLE</strong>. The script generates following 5
-files: node_table, edge_table_with_self_loop, train_table, val_table and
-test_table. They are the node table, the edge table, and the nodes
-tables used to distinguish training, validation, and testing sets.
-The format transformation of the feature data is also performed in this script.</p>
-<p>Then, we can construct the graph using the following code snippet.
-The inputs of the <code class="docutils literal notranslate"><span class="pre">load_graph(args)</span></code> function are a set of user-defined
-arguments including the path of the source files, the types of the node and
-edge in the graph, etc.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">load_graph</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
-      <span class="n">dataset_folder</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">dataset_folder</span>
-      <span class="n">node_type</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">node_type</span>
-      <span class="n">edge_type</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">edge_type</span>
-      <span class="n">g</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>                                                           \
-            <span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">dataset_folder</span> <span class="o">+</span> <span class="s2">&quot;node_table&quot;</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="n">node_type</span><span class="p">,</span>
-                  <span class="n">decoder</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">labeled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                    <span class="n">attr_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;float&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">features_num</span><span class="p">,</span>
-                                    <span class="n">attr_delimiter</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">))</span>                       \
-            <span class="o">.</span><span class="n">edge</span><span class="p">(</span><span class="n">dataset_folder</span> <span class="o">+</span> <span class="s2">&quot;edge_table&quot;</span><span class="p">,</span>
-                  <span class="n">edge_type</span><span class="o">=</span><span class="p">(</span><span class="n">node_type</span><span class="p">,</span> <span class="n">node_type</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">),</span>
-                  <span class="n">decoder</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>           \
-            <span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">dataset_folder</span> <span class="o">+</span> <span class="s2">&quot;train_table&quot;</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="n">node_type</span><span class="p">,</span>
-                  <span class="n">decoder</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">mask</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Mask</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">)</span>       \
-            <span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">dataset_folder</span> <span class="o">+</span> <span class="s2">&quot;val_table&quot;</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="n">node_type</span><span class="p">,</span>
-                  <span class="n">decoder</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">mask</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Mask</span><span class="o">.</span><span class="n">VAL</span><span class="p">)</span>         \
-            <span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">dataset_folder</span> <span class="o">+</span> <span class="s2">&quot;test_table&quot;</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="n">node_type</span><span class="p">,</span>
-                  <span class="n">decoder</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">mask</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Mask</span><span class="o">.</span><span class="n">TEST</span><span class="p">)</span>
-      <span class="k">return</span> <span class="n">g</span>
-</pre></div>
+<p>Overall, the application of GNN in industrial scenarios has many challenges and
+requires research and optimization of algorithms, computation, storage, and
+data, etc., in order to better meet practical application needs.</p>
 </div>
-<p>Next, the graph is loaded into memory by calling <code class="docutils literal notranslate"><span class="pre">g.init()</span></code>. The
-logics of output transforming for EgoGraph are abstracted as class
-<a class="reference external" href="https://github.com/alibaba/graph-learn/blob/master/graphlearn/examples/tf/ego_data_loader.py">EgoDataLoader</a>, which will transform the outputs of subgraph sampling
-from the numpy format into the tensor format. For each model on EgoGraph,
-we further implement a specific dataloader that inherits <code class="docutils literal notranslate"><span class="pre">EgoDataLoader</span></code>.
-For the model in this tutorial, we use the class <a class="reference external" href="https://github.com/alibaba/graph-learn/blob/master/graphlearn/examples/tf/ego_sage/ego_sage_data_loader.py">EgoSAGESupervisedDataLoader</a>
-to specify sampling arguments such as the sampling strategy,
-number of hops and the number of sampled neighbours in each hop. For example,
-the following code prepares the training dataset.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="n">train_data</span> <span class="o">=</span> <span class="n">EgoSAGESupervisedDataLoader</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">g</span><span class="p">,</span> 
-                                             <span class="n">mask</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">Mask</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span> 
-                                             <span class="n">sampler</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> 
-                                             <span class="n">neg_sampler</span><span class="o">=</span><span class="s1">&#39;random&#39;</span>
-                                             <span class="n">batch_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">train_batch_size</span><span class="p">,</span> 
-                                             <span class="n">node_type</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">node_type</span><span class="p">,</span> 
-                                             <span class="n">edge_type</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">edge_type</span><span class="p">,</span>
-                                             <span class="n">nbrs_num</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">nbrs_num</span><span class="p">,</span> 
-                                             <span class="n">hops_num</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">hops_num</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The test dataset can be prepared by changing <code class="docutils literal notranslate"><span class="pre">gl.Mask.TRAIN</span></code> into <code class="docutils literal notranslate"><span class="pre">gl.Mask.TEST</span></code>.</p>
-</div>
-<div class="section" id="model">
-<h3>Model<a class="headerlink" href="#model" title="Permalink to this heading">#</a></h3>
-<p>We use the <code class="docutils literal notranslate"><span class="pre">EgoSAGEConv</span></code> to specify the aggregation process from neighbors
-of one k+1 hop to neighbors of k hop. For an <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> consisting of
-ego and K-hop neighbors, a full-graph messaging needs to perform EgoSAGEConv
-forward operations on all adjacent neighbor pairs in the EgoGraph.
-We use <code class="docutils literal notranslate"><span class="pre">EgoLayer</span></code> to denote the message-passing process of such a single
-EgoGraph that consists of multiple 1-hop neighbor aggregations’ conv.
-Check <a class="reference external" href="https://graph-learn.readthedocs.io/en/latest/en/gl/algo/tf/tf_model_layer.html">Model Layers</a>
-for more detailed descriptions on conv and layer.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="k">class</span> <span class="nc">EgoGraphSAGE</span><span class="p">(</span><span class="n">tfg</span><span class="o">.</span><span class="n">EgoGNN</span><span class="p">):</span>
-      <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                  <span class="n">dims</span><span class="p">,</span>
-                  <span class="n">agg_type</span><span class="o">=</span><span class="p">,</span>
-                  <span class="n">bn_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">act_func</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span>
-                  <span class="n">dropout</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
-
-        <span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
-          <span class="n">conv</span> <span class="o">=</span> <span class="n">tfg</span><span class="o">.</span><span class="n">EgoSAGEConv</span><span class="p">(</span><span class="s2">&quot;homo_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
-                                <span class="n">in_dim</span><span class="o">=</span><span class="n">dims</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                                <span class="n">out_dim</span><span class="o">=</span><span class="n">dims</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
-                                <span class="n">agg_type</span><span class="o">=</span><span class="n">agg_type</span><span class="p">)</span>
-          <span class="n">layer</span> <span class="o">=</span> <span class="n">tfg</span><span class="o">.</span><span class="n">EgoLayer</span><span class="p">([</span><span class="n">conv</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">i</span><span class="p">))</span>
-          <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
-
-        <span class="nb">super</span><span class="p">(</span><span class="n">EgoGraphSAGE</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="n">bn_func</span><span class="p">,</span> <span class="n">act_func</span><span class="p">,</span> <span class="n">dropout</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="loss-function-and-training-process">
-<h3>Loss Function and Training Process<a class="headerlink" href="#loss-function-and-training-process" title="Permalink to this heading">#</a></h3>
-<p>For the Cora node classification model, we can select the corresponding
-classification loss function in TensorFlow. In this example, we use
-<code class="docutils literal notranslate"><span class="pre">tf.nn.sparse_softmax_cross_entropy_with_logits</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">supervised_loss</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
-        <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">sparse_softmax_cross_entropy_with_logits</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">)</span>
-      <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Next, we use <code class="docutils literal notranslate"><span class="pre">LocalTFTrainer</span></code> to train on a single-machine.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="n">trainer</span> <span class="o">=</span> <span class="n">LocalTrainer</span><span class="p">()</span>
-    <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">train_data</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">epochs</span><span class="p">)</span>
-    <span class="n">trainer</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">test_data</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">test_acc</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>In the end, the the training process is finished by calling <code class="docutils literal notranslate"><span class="pre">g.close()</span></code></p>
-<p>The above example concludes some key steps to build a GraphSAGE model.
-Please refer to the
-<a class="reference external" href="https://github.com/alibaba/graph-learn/blob/master/graphlearn/examples/tf/ego_sage/train_supervised.py">ego_sage example</a>
-for the complete code. We have implemented a rich set of
-popular models, including GraphSage, Bipartite GraphSage,
-GAT, RGCN, Ultra GCN, SEAL, etc. These models can be used
-as a starting point for building similar models.</p>
-</div>
+<div class="section" id="what-can-graphscope-do">
+<h2>What can GraphScope Do<a class="headerlink" href="#what-can-graphscope-do" title="Permalink to this heading">#</a></h2>
+<p>In GraphScope, Graph Learning Engine (GLE) addresses the aforementioned
+challenges in the following ways:</p>
+<ul>
+<li><p><strong>Managing graph data in a distributed way</strong></p>
+<p>In GraphScope, graph data is represented as property graph model. To support
+large-scale graph, GraphScope automatically partitions the whole graph into
+several subgraphs (fragments) distributed into multiple machines in a cluster.
+Meanwhile, GraphScope provides user-friendly interfaces for loading graphs
+to allow users to manage graph data easily. More detials about how to manage
+large-scale graphs can refer to <a class="reference external" href="https://graphscope.io/docs/latest/graph_formats.html">this</a>.
+GLE performs graph-related computations, such as distributed graph sampling and feature
+collection, on this distributed graph storage.</p>
+</li>
+<li><p><strong>Built-in GNN models and PyG compatible</strong></p>
+<p>GLE comes with a rich set of built-in <a class="reference external" href="https://github.com/alibaba/graph-learn/tree/master/graphlearn/examples/tf">GNN models</a>, like GCN, GAT, GraphSAGE, and SEAL, and provides a set of paradigms and processes to ease the development of customized models. GLE is compatible with <a class="reference external" href="https://github.com/pyg-team/pytorch_geometric">PyG</a>, e.g., this <a class="reference external" href="https://github.com/alibaba/graph-learn/tree/master/graphlearn/examples/pytorch/gcn">example</a> shows that a PyG model can be trained using GLE with very minor modifications. Users can flexibly choose <a class="reference external" href="https://github.com/tensorflow/tensorflow">TensorFlow</a> or <a class="reference external" href="https://github.com/pytorch/pytorch">PyTorch</a> as the training backend.</p>
+  <!-- The following figure shows an overview of the algorithm framework in GLE. -->
+  <!-- ![An overview of the algorithm framework in GLE.](../images/gle_algo_framework.png) -->
+</li>
+<li><p><strong>Inference on dynamic graph</strong></p>
+<p>To support online inference on dynamic graphs, we propose Dynamic
+Graph Service (<a class="reference external" href="https://graph-learn.readthedocs.io/en/latest/en/dgs/intro.html">DGS</a>)
+in GLE to facilitate real-time sampling on dynamic graphs.
+The sampled subgraph can be fed into the serving modules
+(e.g., <a class="reference external" href="https://github.com/tensorflow/serving">TensorFlow Serving</a>) to
+obtain the inference results.
+This <a class="reference external" href="https://graph-learn.readthedocs.io/en/latest/en/dgs/tutorial.html#prepare-data">document</a>
+is organized to provide a detailed, step-by-step tutorial specifically
+demonstrating the use of GLE for offline training and online inference.</p>
+</li>
+</ul>
 </div>
 </div>
 
@@ -1171,15 +1192,15 @@ as a starting point for building similar models.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Graph Learning Workloads</a><ul>
-<li><a class="reference internal" href="#graph-neural-networks">Graph Neural Networks</a></li>
-<li><a class="reference internal" href="#graph-learning-models">Graph Learning Models</a></li>
+<li><a class="reference internal" href="#what-is-graph-neural-network">What is Graph Neural Network</a></li>
+<li><a class="reference internal" href="#typical-gnn-models">Typical GNN Models</a></li>
+<li><a class="reference internal" href="#paradigm-of-model-training">Paradigm of Model Training</a><ul>
+<li><a class="reference internal" href="#steps-of-model-training">Steps of Model Training</a></li>
 <li><a class="reference internal" href="#subgraph-sampling">Subgraph Sampling</a></li>
-<li><a class="reference internal" href="#developing-your-own-model">Developing Your Own Model</a><ul>
-<li><a class="reference internal" href="#sampling-output-transformation">Sampling &amp; Output Transformation</a></li>
-<li><a class="reference internal" href="#model">Model</a></li>
-<li><a class="reference internal" href="#loss-function-and-training-process">Loss Function and Training Process</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#challenges-of-applying-gnns-on-large-graphs">Challenges of Applying GNNs on Large Graphs</a></li>
+<li><a class="reference internal" href="#what-can-graphscope-do">What can GraphScope Do</a></li>
 </ul>
 </li>
 </ul>
