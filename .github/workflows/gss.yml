@@ -143,6 +143,23 @@ jobs:
         docker build -t ${{ env.GSS_IMAGE }}:${SHORT_SHA} \
                 -f .github/workflows/docker/graphscope-store.Dockerfile .
 
+    - name: Prepare the log directory
+      run: |
+        # create the helm installation log directory
+        mkdir -p ${{ github.workspace }}/helm-installation-logs
+
+        # create the demo fresh of helm installation log directory
+        mkdir -p ${{ github.workspace }}/demo-fresh-of-helm-installation-logs
+
+        # create the demo script of helm installation with pv log directory
+        mkdir -p ${{ github.workspace }}/demo-script-of-helm-installation-with-pv-logs
+
+        # create the helm test of helm installation with pv log directory
+        mkdir -p ${{ github.workspace }}/helm-test-of-helm-installation-with-pv-logs
+
+        # create the demo after restart of helm installation with pv log directory
+        mkdir -p ${{ github.workspace }}/demo-after-restart-of-helm-installation-with-pv-logs
+
     - name: Setup SSH
       run: |
         ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ''
@@ -151,7 +168,7 @@ jobs:
         echo "StrictHostKeyChecking no" >> ~/.ssh/config
         sudo /etc/init.d/ssh start
 
-    - name: Python Test with Helm Deployment
+    - name: Create the kubernetes cluster
       run: |
         # groot.tar.gz is needed for offline_load.sh
         # see .github/workflows/hadoop_scripts/offline_load.sh.template
@@ -165,6 +182,16 @@ jobs:
 
         minikube image load ${{ env.GSS_IMAGE }}:${SHORT_SHA}
 
+    - name: Start to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        SHOW_TIMESTAMPS: 'true'
+        OUTPUT_DIR: ${{ github.workspace }}/helm-installation-logs
+        NAMESPACES: "gs*,default"
+        MODE: start
+
+    - name: Install graphscope-store with helm
+      run: |
         # update helm dependency
         cd ${GITHUB_WORKSPACE}/charts/graphscope-store
         helm dependency update
@@ -173,23 +200,26 @@ jobs:
         cd ${GITHUB_WORKSPACE}/charts
         helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
         helm test ci --timeout 5m0s
-        mkdir -p ${{ github.workspace }}/helm-deployment-logs
-
-    - name: Export kubernetes logs
-      uses: dashanji/kubernetes-log-export-action@v3
-      if: ${{ failure() }}
-      env:
-        SHOW_TIMESTAMPS: 'true'
-        OUTPUT_DIR: ${{ github.workspace }}/helm-deployment-logs
-        # use wildcard here to match the namespaces that you want to export logs
-        NAMESPACES: default
 
     - name: upload the k8s logs to artifact
+      if: ${{ always() }}
       uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
       with:
-        name: helm-deployment-logs
-        path: ${{ github.workspace }}/helm-deployment-logs
+        name: helm-installation-logs
+        path: ${{ github.workspace }}/helm-installation-logs
+
+    - name: Stop to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        MODE: stop
+
+    - name: Start to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        SHOW_TIMESTAMPS: 'true'
+        OUTPUT_DIR: ${{ github.workspace }}/demo-fresh-of-helm-installation-logs
+        NAMESPACES: "gs*,default"
+        MODE: start
 
     - name: Test the helm deployment
       run: |
@@ -221,35 +251,99 @@ jobs:
         python3 -m pip install pytest-cov --user
         python3 setup.py build_proto
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_fresh
+
+    - name: upload the k8s logs to artifact
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: demo-fresh-of-helm-installation-logs
+        path: ${{ github.workspace }}/demo-fresh-of-helm-installation-logs
+
+    - name: Stop to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        MODE: stop
+
+    - name: Start to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        SHOW_TIMESTAMPS: 'true'
+        OUTPUT_DIR: ${{ github.workspace }}/demo-script-of-helm-installation-with-pv-logs
+        NAMESPACES: "gs*,default"
+        MODE: start
+
+    - name: restart helm and run demo with the PersistentVolume
+      run: |
         # restart helm and run demo with the PersistentVolume
         helm uninstall ci
         sleep 30
         cd ${GITHUB_WORKSPACE}/charts
         helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
-        mkdir -p ${{ github.workspace }}/helm-deployment-with-pv-logs
-
-    - name: Export kubernetes logs
-      uses: dashanji/kubernetes-log-export-action@v3
-      if: ${{ failure() }}
-      env:
-        SHOW_TIMESTAMPS: 'true'
-        OUTPUT_DIR: ${{ github.workspace }}/helm-deployment-logs
-        # use wildcard here to match the namespaces that you want to export logs
-        NAMESPACES: default
 
     - name: upload the k8s logs to artifact
+      if: ${{ always() }}
       uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
       with:
-        name: helm-deployment-logs
-        path: ${{ github.workspace }}/helm-deployment-logs
+        name: demo-script-of-helm-installation-with-pv-logs
+        path: ${{ github.workspace }}/demo-script-of-helm-installation-with-pv-logs
 
-    - name: Python Test with Helm Deployment and PersistentVolume
+    - name: Stop to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        MODE: stop
+
+    - name: Start to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        SHOW_TIMESTAMPS: 'true'
+        OUTPUT_DIR: ${{ github.workspace }}/helm-test-of-helm-installation-with-pv-logs
+        NAMESPACES: "gs*,default"
+        MODE: start
+
+    - name: Helm Test with Helm Deployment and PersistentVolume
       run: |
         # helm test and python test on the restarted store
         export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
         export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
         helm test ci --timeout 10m0s
+
+    - name: upload the k8s logs to artifact
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: helm-test-of-helm-installation-with-pv-logs
+        path: ${{ github.workspace }}/helm-test-of-helm-installation-with-pv-logs
+
+    - name: Stop to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        MODE: stop
+
+    - name: Start to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        SHOW_TIMESTAMPS: 'true'
+        OUTPUT_DIR: ${{ github.workspace }}/demo-after-restart-of-helm-installation-with-pv-logs
+        NAMESPACES: "gs*,default"
+        MODE: start
+
+    - name: Python Test with Helm Deployment and PersistentVolume
+      run: |
+        export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
+        export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)
+        export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_after_restart
+
+    - name: upload the k8s logs to artifact
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: demo-after-restart-of-helm-installation-with-pv-logs
+        path: ${{ github.workspace }}/demo-after-restart-of-helm-installation-with-pv-logs
+
+    - name: Stop to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        MODE: stop
