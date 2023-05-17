@@ -1,5 +1,4 @@
 etcd-distro>=3.5.1
-graphscope-client>=0.20.0
 grpcio>=1.49
 grpcio-tools>=1.49
 kubernetes>=24.2.0
