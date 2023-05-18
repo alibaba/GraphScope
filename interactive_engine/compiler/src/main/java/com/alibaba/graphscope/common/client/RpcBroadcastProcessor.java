@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.client;
 
+import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.CloseableIterator;
 import com.alibaba.pegasus.intf.ResultProcessor;
@@ -32,21 +33,17 @@ public class RpcBroadcastProcessor implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(RpcBroadcastProcessor.class);
 
     protected RpcClient rpcClient;
-    protected RpcChannelFetcher fetcher;
+    protected ChannelFetcher fetcher;
 
-    public RpcBroadcastProcessor(RpcChannelFetcher fetcher) {
+    public RpcBroadcastProcessor(ChannelFetcher fetcher) {
         this.fetcher = fetcher;
-        if (!fetcher.isDynamic()) {
-            this.rpcClient = new RpcClient(fetcher.fetch());
-        }
+        this.rpcClient = new RpcClient(fetcher.fetch());
     }
 
     public void broadcast(PegasusClient.JobRequest request, ResultProcessor processor) {
         CloseableIterator<PegasusClient.JobResponse> iterator = null;
         try {
-            if (fetcher.isDynamic()) {
-                this.rpcClient = new RpcClient(fetcher.fetch());
-            }
+            this.rpcClient = new RpcClient(fetcher.fetch());
             iterator = rpcClient.submit(request);
             // process response
             while (iterator.hasNext()) {

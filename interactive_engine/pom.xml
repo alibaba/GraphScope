@@ -145,6 +145,7 @@
     <exec.maven.version>3.0.0</exec.maven.version>
     <scala.maven.version>3.2.2</scala.maven.version>
     <cobertura.maven.version>2.7</cobertura.maven.version>
+    <noe4j.version>4.4.0</noe4j.version>
   </properties>
 
   <dependencyManagement>
@@ -536,6 +537,11 @@
         <groupId>org.apache.calcite</groupId>
         <artifactId>calcite-core</artifactId>
         <version>${calcite.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.neo4j</groupId>
+        <artifactId>neo4j</artifactId>
+        <version>${noe4j.version}</version>
       </dependency>
       <dependency>
         <groupId>org.immutables</groupId>

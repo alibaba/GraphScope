@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.result.processor;
 
-import com.alibaba.graphscope.common.client.ResultParser;
+import com.alibaba.graphscope.common.result.ResultParser;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 

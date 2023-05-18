@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.cypher.antlr4;
+package com.alibaba.graphscope.common.result;
 
-import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
-import com.alibaba.graphscope.cypher.antlr4.visitor.GraphBuilderVisitor;
+import com.alibaba.pegasus.service.protocol.PegasusClient;
 
-public abstract class Utils {
-    public static final GraphBuilder eval(String query) {
-        GraphBuilder graphBuilder = com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder();
-        return new GraphBuilderVisitor(graphBuilder).visit(new CypherAntlr4Parser().parse(query));
-    }
+import java.util.List;
+
+public interface ResultParser<T> {
+    List<T> parseFrom(PegasusClient.JobResponse response);
 }

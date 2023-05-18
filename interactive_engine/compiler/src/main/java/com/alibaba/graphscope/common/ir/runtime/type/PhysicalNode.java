@@ -25,17 +25,17 @@ import org.apache.calcite.rel.RelNode;
  * a wrapper of node (i.e. {@link com.sun.jna.Pointer} for FFI interfaces) in ir_core
  * @param <T>
  */
-public class LogicalNode<T> extends AbstractRelNode {
+public class PhysicalNode<T> extends AbstractRelNode {
     private final RelNode original;
     private final T node;
 
-    protected LogicalNode(RelOptCluster cluster, RelTraitSet traitSet, RelNode original, T node) {
+    protected PhysicalNode(RelOptCluster cluster, RelTraitSet traitSet, RelNode original, T node) {
         super(cluster, traitSet);
         this.original = original;
         this.node = node;
     }
 
-    public LogicalNode(RelNode original, T node) {
+    public PhysicalNode(RelNode original, T node) {
         this(original.getCluster(), RelTraitSet.createEmpty(), original, node);
     }
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.client;
+package com.alibaba.graphscope.common.client.channel;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
@@ -24,10 +24,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class HostsChannelFetcher implements RpcChannelFetcher {
+public class HostsRpcChannelFetcher implements ChannelFetcher<RpcChannel> {
     private Configs config;
 
-    public HostsChannelFetcher(Configs config) {
+    public HostsRpcChannelFetcher(Configs config) {
         this.config = config;
     }
 
@@ -43,10 +43,5 @@ public class HostsChannelFetcher implements RpcChannelFetcher {
                     rpcChannels.add(new RpcChannel(host[0], Integer.valueOf(host[1])));
                 });
         return rpcChannels;
-    }
-
-    @Override
-    public boolean isDynamic() {
-        return false;
     }
 }

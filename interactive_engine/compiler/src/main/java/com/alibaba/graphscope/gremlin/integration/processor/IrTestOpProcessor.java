@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.integration.processor;
 
-import com.alibaba.graphscope.common.client.RpcChannelFetcher;
+import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
@@ -25,7 +25,6 @@ import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.GremlinTestResultProcessor;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngine;
-
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
@@ -41,13 +40,12 @@ import org.apache.tinkerpop.gremlin.util.function.ThrowingConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.List;
-
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
+import java.util.Arrays;
+import java.util.List;
 
 public class IrTestOpProcessor extends IrStandardOpProcessor {
     private static final Logger logger = LoggerFactory.getLogger(TraversalOpProcessor.class);
@@ -58,7 +56,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
     public IrTestOpProcessor(
             Configs configs,
             IrMetaFetcher irMetaFetcher,
-            RpcChannelFetcher fetcher,
+            ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
             Graph graph,
             GraphTraversalSource g,

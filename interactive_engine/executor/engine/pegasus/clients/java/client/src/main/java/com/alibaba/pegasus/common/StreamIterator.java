@@ -52,9 +52,9 @@ public class StreamIterator<T> implements CloseableIterator<T> {
             } catch (InterruptedException ie) {
                 throw new RuntimeException(ie);
             }
-            if (head == PILL) {
-                return false;
-            }
+        }
+        if (head == PILL) {
+            return false;
         }
         return true;
     }

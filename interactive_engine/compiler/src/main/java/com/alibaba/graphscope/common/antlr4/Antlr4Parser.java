@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.client;
+package com.alibaba.graphscope.common.antlr4;
 
-import com.alibaba.pegasus.service.protocol.PegasusClient;
+import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.List;
-
-public interface ResultParser {
-    List<Object> parseFrom(PegasusClient.JobResponse response);
+public interface Antlr4Parser {
+    ParseTree parse(String statement);
 }

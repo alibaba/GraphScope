@@ -11,8 +11,8 @@
 
 package com.alibaba.graphscope.gremlin.service;
 
-import com.alibaba.graphscope.common.client.HostsChannelFetcher;
-import com.alibaba.graphscope.common.client.RpcChannelFetcher;
+import com.alibaba.graphscope.common.client.channel.HostsRpcChannelFetcher;
+import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FileLoadType;
 import com.alibaba.graphscope.common.config.GraphConfig;
@@ -28,7 +28,7 @@ public class GraphServiceMain {
     public static void main(String[] args) throws Exception {
         Configs configs = new Configs("conf/ir.compiler.properties", FileLoadType.RELATIVE_PATH);
         IrMetaFetcher irMetaFetcher = new ExperimentalMetaFetcher(configs);
-        RpcChannelFetcher fetcher = new HostsChannelFetcher(configs);
+        ChannelFetcher fetcher = new HostsRpcChannelFetcher(configs);
 
         IrGremlinServer server = new IrGremlinServer();
         String storeType = GraphConfig.GRAPH_STORE.get(configs);

@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.runtime.ffi;
 
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
@@ -29,52 +31,50 @@ import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
-import com.alibaba.graphscope.common.ir.runtime.type.LogicalNode;
-import com.alibaba.graphscope.common.ir.runtime.type.LogicalPlan;
+import com.alibaba.graphscope.common.ir.runtime.type.PhysicalNode;
+import com.alibaba.graphscope.common.ir.runtime.type.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
-import com.alibaba.graphscope.common.jna.type.*;
+import com.alibaba.graphscope.common.jna.type.FfiData;
+import com.alibaba.graphscope.common.jna.type.FfiPbPointer;
+import com.alibaba.graphscope.common.jna.type.FfiResult;
+import com.alibaba.graphscope.common.jna.type.ResultCode;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
-
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexVariable;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
 /**
  * build ffi logical plan in ir core by jna invocation
  */
-public class FfiLogicalPlan extends LogicalPlan<Pointer, byte[]> {
+public class FfiPhysicalPlan extends PhysicalPlan<Pointer, byte[]> {
     private static final IrCoreLibrary LIB = IrCoreLibrary.INSTANCE;
-
+    private final IrMeta irMeta;
+    private final Configs graphConfig;
     private final Pointer ptrPlan;
-
     private int lastIdx;
 
-    public FfiLogicalPlan(RelOptCluster cluster, IrMeta irMeta, List<RelHint> hints) {
-        super(cluster, hints);
+    public FfiPhysicalPlan(RelOptCluster cluster, IrMeta irMeta, Configs graphConfig) {
+        super(cluster);
+        this.graphConfig = graphConfig;
+        this.irMeta = irMeta;
         checkFfiResult(LIB.setSchema(irMeta.getSchemaJson()));
         this.ptrPlan = LIB.initLogicalPlan();
         this.lastIdx = -1;
     }
 
     @Override
-    public void appendNode(LogicalNode<Pointer> node) {
-        if (isReturnEmpty()) {
-            throw new IllegalArgumentException(
-                    "should not append any node to the logical pb if returnEmpty is set to true");
-        }
+    public void appendNode(PhysicalNode<Pointer> node) {
         IntByReference oprIdx = new IntByReference(this.lastIdx);
         RelNode original = node.getOriginal();
         if (original instanceof GraphLogicalSource) {
@@ -126,7 +126,6 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, byte[]> {
 
     @Override
     public String explain() {
-        if (isReturnEmpty()) return StringUtils.EMPTY;
         FfiResult res = LIB.printPlanAsJson(this.ptrPlan);
         if (res == null || res.code != ResultCode.Success) {
             throw new IllegalStateException("print plan in ir core fail, msg : %s" + res, null);
@@ -135,11 +134,10 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, byte[]> {
     }
 
     @Override
-    public byte[] toPhysical() {
-        if (isReturnEmpty()) return null;
+    public byte[] build() {
         appendSink(new IntByReference(this.lastIdx));
-        int servers = Integer.valueOf(hints.get(0).kvOptions.get("servers"));
-        int workers = Integer.valueOf(hints.get(0).kvOptions.get("workers"));
+        int servers = PegasusConfig.PEGASUS_HOSTS.get(graphConfig).split(",").length;
+        int workers = PegasusConfig.PEGASUS_WORKER_NUM.get(graphConfig);
         FfiData.ByValue ffiData = LIB.buildPhysicalPlan(ptrPlan, workers, servers);
         checkFfiResult(ffiData.error);
         byte[] bytes = ffiData.getBytes();
@@ -162,10 +160,10 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, byte[]> {
     }
 
     private boolean isColumnId() {
-        return Boolean.valueOf(hints.get(0).kvOptions.get("isColumnId"));
+        return this.irMeta.getSchema().isColumnId();
     }
 
-    private void appendMatch(LogicalNode<Pointer> node, IntByReference oprIdx) {
+    private void appendMatch(PhysicalNode<Pointer> node, IntByReference oprIdx) {
         // append dummy source
         Pointer ptrScan = LIB.initScanOperator(Utils.ffiScanOpt(GraphOpt.Source.VERTEX));
         checkFfiResult(LIB.appendScanOperator(ptrPlan, ptrScan, oprIdx.getValue(), oprIdx));

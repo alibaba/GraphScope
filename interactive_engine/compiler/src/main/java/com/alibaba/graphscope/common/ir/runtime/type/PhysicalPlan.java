@@ -16,49 +16,35 @@
 
 package com.alibaba.graphscope.common.ir.runtime.type;
 
+import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalPlan;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.AbstractRelNode;
-import org.apache.calcite.rel.hint.RelHint;
-
-import java.util.List;
 
 /**
- * define interfaces to build a logical plan, {@link com.alibaba.graphscope.common.ir.runtime.ffi.FfiLogicalPlan} is one of implementations
+ * define interfaces to build a physical plan, {@link FfiPhysicalPlan} is one of implementations
  * @param <T>
  * @param <R>
  */
-public abstract class LogicalPlan<T, R> extends AbstractRelNode implements AutoCloseable {
-    protected final List<RelHint> hints;
-    protected boolean returnEmpty;
-
-    protected LogicalPlan(RelOptCluster cluster, List<RelHint> hints) {
+public abstract class PhysicalPlan<T, R> extends AbstractRelNode implements AutoCloseable {
+    protected PhysicalPlan(RelOptCluster cluster) {
         super(cluster, RelTraitSet.createEmpty());
-        this.hints = hints;
     }
 
     /**
-     * append {@code LogicalNode} to the plan
+     * append {@code PhysicalNode} to the plan
      * @param node
      */
-    public abstract void appendNode(LogicalNode<T> node);
+    public abstract void appendNode(PhysicalNode<T> node);
 
     /**
-     * output logical plan
+     * print physical plan
      */
     public abstract String explain();
 
     /**
-     * convert logical plan to physical plan
+     * build physical plan
      * @return
      */
-    public abstract R toPhysical();
-
-    public void setReturnEmpty(boolean returnEmpty) {
-        this.returnEmpty = returnEmpty;
-    }
-
-    public boolean isReturnEmpty() {
-        return returnEmpty;
-    }
+    public abstract R build();
 }

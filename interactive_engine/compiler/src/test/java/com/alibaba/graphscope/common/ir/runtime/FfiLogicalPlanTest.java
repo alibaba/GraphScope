@@ -16,25 +16,22 @@
 
 package com.alibaba.graphscope.common.ir.runtime;
 
+import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.common.ir.rel.GraphRelShuttleWrapper;
-import com.alibaba.graphscope.common.ir.runtime.ffi.FfiLogicalPlan;
+import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalPlan;
 import com.alibaba.graphscope.common.ir.runtime.ffi.RelToFfiConverter;
-import com.alibaba.graphscope.common.ir.runtime.type.LogicalPlan;
+import com.alibaba.graphscope.common.ir.runtime.type.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.jna.type.FfiData;
 import com.alibaba.graphscope.common.utils.FileUtils;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.sun.jna.Pointer;
-
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.hint.RelHint;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.List;
 
 public class FfiLogicalPlanTest {
     // Match (x:person)-[:knows*1..3]->(:person {age: 10})
@@ -89,22 +86,18 @@ public class FfiLogicalPlanTest {
                     + " alias=[x], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 aggregate.explain().trim());
-        try (LogicalPlan<Pointer, FfiData.ByValue> ffiPlan =
-                new LogicalPlanConverter(
+        try (PhysicalPlan<Pointer, FfiData.ByValue> ffiPlan =
+                new PhysicalPlanConverter(
                                 new GraphRelShuttleWrapper(new RelToFfiConverter(true)),
-                                new FfiLogicalPlan(
-                                        builder.getCluster(), Utils.schemaMeta, getMockPlanHints()))
+                                new FfiPhysicalPlan(
+                                        builder.getCluster(), Utils.schemaMeta, getMockGraphConfig()))
                         .go(aggregate)) {
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("ffi_logical_plan.json"), ffiPlan.explain());
         }
     }
 
-    private List<RelHint> getMockPlanHints() {
-        return ImmutableList.of(
-                RelHint.builder("plan")
-                        .hintOption("servers", "1")
-                        .hintOption("workers", "1")
-                        .build());
+    private Configs getMockGraphConfig() {
+        return new Configs(ImmutableMap.of("servers", "1", "workers", "1"));
     }
 }
