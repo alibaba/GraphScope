@@ -1,4 +1,4 @@
-# GrpahScope for Data Scientists
+# GraphScope for Data Scientists
 
 A large number of real-world datasets can be naturally represented by graphs. Typical cases 
 are knowledge graphs, social networks, traffic networks and web graphs. Given the ever-growing amount of graph data available, graph computation, which tries to explore underlying insights hidden in graph data, has attracted increasing attention from data scientists.

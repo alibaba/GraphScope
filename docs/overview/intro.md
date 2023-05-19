@@ -10,7 +10,7 @@ GraphScope has several advantages:
 
 - **Performance:** GraphScope significantly outperforms other state-of-the-art systems, offering up to 2X or higher performance improvements. Moreover, it includes a collection of optimized built-in graph algorithms for immediate use.
 
-- **Compatibility**: It supports Gremlin and Cypher(coming soon) for quering graph, and NetworkX compatible APIs for graph analytcis.
+- **Compatibility**: It supports Gremlin and Cypher(coming soon) for querying graph, and NetworkX compatible APIs for graph analytic.
 
 - **PyData Integration:** GraphScope offers a user-friendly Python interface, allowing seamless integration with PyData frameworks and management of complex workflows involving multiple stages beyond graph processing.
 

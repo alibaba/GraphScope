@@ -88,7 +88,7 @@ class MyApp : public grape::ParallelAppBase<FRAG_T, MyAppContext<FRAG_T>>,
 };
 ```
 
-The `MyApp` class inherits from the `grape::ParallelAppBase`, which provides the basic functionality for implementing a parallel graph algorithm. It also inherits from the `grape::ParallelEngine` and `grape::Communicator` classes, which provide the communication and parallel processing capabilities. The MyApp class defines two static constexpr variables called `message_strategy` and `load_strategy`, these variables specify the message strategy and load strategy used in the computation. For more information please refer to the [libgrape-lite Doc](https://alibaba.github.io/libgrape-lite).
+The `MyApp` class inherits from the `grape::ParallelAppBase`, which provides the basic functionality for implementing a parallel graph algorithm. It also inherits from the `grape::ParallelEngine` and `grape::Communicator` classes, which provide the communication and parallel processing capabilities. The MyApp class defines two `static constexpr` variables called `message_strategy` and `load_strategy`, these variables specify the message strategy and load strategy used in the computation. For more information please refer to the [libgrape-lite Doc](https://alibaba.github.io/libgrape-lite).
 
 The `PEval` method is used to implement the partial evaluation phase of the computation. In current example, we initialize the communication channels and do nothing else, instead, we put the computing logic into `IncEval` method.
 
@@ -121,7 +121,7 @@ the codebase structure is as follows:
 └── .gs_conf.yaml ➝ configuration file 
 ```
 
-then, we package the algorithm by comand: ` zip -jr 'my_app.gar' '*.h' ''.gs_conf.yaml'`
+then, we package the algorithm by command: ` zip -jr 'my_app.gar' '*.h' ''.gs_conf.yaml'`
 
 ## Step 4: Run the .gar file on GraphScope
 

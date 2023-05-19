@@ -35,7 +35,6 @@ With `gs` command-line utility, you can build all targets for GraphScope with a 
 Run a bunch of test cases that involves 3 engines
 
 ````{note}
-TODO(siyuan): Make sure this works
 `gs` could let you easily switch from production mode and development mode, where
 
 - production mode means you have installed graphscope to somewhere and you want to use the executable located at there.
