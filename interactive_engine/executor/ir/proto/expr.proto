@@ -117,6 +117,13 @@ message VariableKeys {
   repeated Variable keys = 1;
 }
 
+// dynamic param
+message DynamicParam {
+  string name = 1;
+  int32 index = 2;
+  common.IrDataType data_type = 3;
+}
+
 // An operator of expression is one of Logical, Arithmetic, Const and Variable.
 message ExprOpr {
   enum Brace {
@@ -131,9 +138,11 @@ message ExprOpr {
     Brace brace = 6;
     VariableKeys vars = 7;
     VariableKeys var_map = 8;
+    // dynamic param in expression
+    DynamicParam param = 9;
   }
   // The data of type of ExprOpr
-  common.IrDataType node_type = 9;
+  common.IrDataType node_type = 10;
 }
 
 // An inner representation of an expression
