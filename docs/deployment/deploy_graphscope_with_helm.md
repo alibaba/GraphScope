@@ -78,7 +78,7 @@ g = sess.g()
 interactive = graphscope.gremlin(g)
 ```
 
-The param `addr` is an endpoint for connecting a pre-launched service. The `<ip>` and `<port>` is the connection informations you get from previous step.
+The param `addr` is an endpoint for connecting a pre-launched service. The `<ip>` and `<port>` is the connection information you get from previous step.
 
 Note that only one session can be connected to the service at the same time, but you can reconnect the same service after session close.
 
@@ -92,8 +92,8 @@ To remove the resources, use `helm uninstall`. See next section for details.
 ````
 
 ```python
-# sess1 = graphscope.session(addr='<ip>:<port>')
-sess1.close()
+# sess = graphscope.session(addr='<ip>:<port>')
+sess.close()
 sess2 = graphscope.session(addr='<ip>:<port>')
 ```
 
@@ -123,7 +123,7 @@ And you could see more details in the [homepage](https://artifacthub.io/packages
 
 
 ## Offline Installation
-While it's convenient to install graphscope by quering the remote repository, users may want to use it in some environment that doesn't have internet access.
+While it's convenient to install graphscope by querying the remote repository, users may want to use it in some environment that doesn't have internet access.
 Or user may want to make some customization of the charts before installation.
 
 To cater these needs, We provide two ways to install graphscope by helm without internet access.

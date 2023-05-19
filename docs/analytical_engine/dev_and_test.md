@@ -30,13 +30,12 @@ Together with the `grape_engine` are shared libraries, or there may have a bunch
 You could install it to a location by
 
 ```bash
-./gs make analytcial-install --install-prefix /usr/local
+./gs make analytical-install --install-prefix /usr/local
 ```
 
 ````{note}
 More in-depth view:
 
-These options are repeated items that would be directed forwared as `cmake` options.
 The `CMakeLists.txt` of analytical engine is in `analytical_engine/CMakeLists.txt`.
 
 Take a look at this file if you want to investigate more of the analytical engine.

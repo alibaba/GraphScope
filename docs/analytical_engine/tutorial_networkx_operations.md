@@ -75,7 +75,7 @@ or by adding any ebunch of edges. An ebunch is any iterable container of edge-tu
 
 ```python
 G.add_edges_from([(2, 3, {"weight": 3.1415})])
-list(G.edges.data())  # shows the edge arrtibutes
+list(G.edges.data())  # shows the edge attributes
 G.add_edges_from(H.edges)
 list(G.edges)
 ```
@@ -313,7 +313,7 @@ list(DG.predecessors(1))
 Some algorithms work only for directed graphs and others are not well defined for directed graphs. Indeed the tendency to lump directed and undirected graphs together is dangerous. If you want to treat a directed graph as undirected for some measurement you should probably convert it using `Graph.to_undirected()`
 
 ```python
-H = DG.to_undirected()  # return a "deepcopy" of undirected represetation of DG.
+H = DG.to_undirected()  # return a "deepcopy" of undirected representation of DG.
 list(H.edges)
 
 # or with
@@ -324,7 +324,7 @@ list(H.edges)
 Directed graph also supports to reverse edge using `DiGraph.reverse()`.
 
 ```python
-K = DG.reverse()  # retrun a "deepcopy" of reversed copy.
+K = DG.reverse()  # return a "deepcopy" of reversed copy.
 list(K.edges)
 
 # or with
