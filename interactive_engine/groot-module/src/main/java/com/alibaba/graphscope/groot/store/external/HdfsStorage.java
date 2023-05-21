@@ -20,11 +20,15 @@ public class HdfsStorage extends ExternalStorage {
     }
 
     @Override
-    public void downloadData(String srcPath, String dstPath) throws IOException {
+    public void downloadDataSimple(String srcPath, String dstPath) throws IOException {
         if (fs.exists(new Path(srcPath))) {
             fs.copyToLocalFile(new Path(srcPath), new Path(dstPath));
         } else {
             logger.warn("Path doesn't exists: " + srcPath);
         }
+    }
+
+    public void downloadData(String srcPath, String dstPath) throws IOException {
+        downloadDataSimple(srcPath, dstPath);
     }
 }

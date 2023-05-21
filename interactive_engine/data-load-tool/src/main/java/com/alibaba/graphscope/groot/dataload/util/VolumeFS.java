@@ -60,8 +60,12 @@ public class VolumeFS extends AbstractFileSystem {
         DataOutputStream outputStream = fs.create(new Path(dstFile));
         FileInputStream fileInputStream = new FileInputStream(srcFile);
         byte[] buffer = new byte[1024];
-        while (fileInputStream.read(buffer) != -1) {
-            outputStream.write(buffer);
+        while (true) {
+            int len = fileInputStream.read(buffer);
+            if (len == -1) {
+                break;
+            }
+            outputStream.write(buffer, 0, len);
         }
         outputStream.close();
     }

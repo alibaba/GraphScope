@@ -326,7 +326,6 @@ public class StoreService implements MetricsAgent {
                     }
                     logger.info("ingest data [{}] complete", path);
                 });
-        logger.info("ingest all data complete");
     }
 
     private void ingestDataInternal(

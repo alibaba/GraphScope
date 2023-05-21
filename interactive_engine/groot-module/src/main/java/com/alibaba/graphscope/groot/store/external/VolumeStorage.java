@@ -4,7 +4,7 @@ import com.aliyun.odps.Odps;
 import com.aliyun.odps.account.AliyunAccount;
 import com.aliyun.odps.tunnel.TunnelException;
 import com.aliyun.odps.tunnel.VolumeTunnel;
-import com.aliyun.oss.model.GetObjectRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,13 +30,14 @@ public class VolumeStorage extends ExternalStorage {
         odps.setEndpoint(endpoint);
         tunnel = new VolumeTunnel(odps);
 
-        projectName = config.get("odps.project.name");
+        projectName = config.get("odps.volume.project");
         volumeName = config.get("odps.volume.name");
         partSpec = config.get("odps.volume.partspec");
     }
 
-
+    @Override
     public void downloadDataSimple(String srcPath, String dstPath) throws IOException {
+        logger.info("Downloading " + srcPath + " to " + dstPath);
         String[] pathItems = srcPath.split("://");
         String fileName = pathItems[1];
         // Read data from the input stream and write it to the output stream.
@@ -54,38 +55,6 @@ public class VolumeStorage extends ExternalStorage {
             }
         } catch (TunnelException e) {
             throw new IOException(e);
-        }
-    }
-    @Override
-    public void downloadData(String srcPath, String dstPath) throws IOException {
-        logger.info("Downloading " + srcPath + " to " + dstPath);
-        // Check chk
-        String chkPath = srcPath.substring(0, srcPath.length() - ".sst".length()) + ".chk";
-        String chkLocalPath =
-                dstPath.substring(0, srcPath.length() - ".sst".length()) + ".chk";
-
-        downloadDataSimple(chkPath, chkLocalPath);
-        File chkFile = new File(chkLocalPath);
-        byte[] chkData = new byte[(int) chkFile.length()];
-        try {
-            FileInputStream fis = new FileInputStream(chkFile);
-            fis.read(chkData);
-            fis.close();
-        } catch (FileNotFoundException e) {
-            throw new IOException(e);
-        }
-        String[] chkArray = new String(chkData).split(",");
-        if ("0".equals(chkArray[0])) {
-            return;
-        }
-        String chkMD5Value = chkArray[1];
-        downloadDataSimple(srcPath, dstPath);
-        String sstMD5Value = getFileMD5(dstPath);
-        if (!chkMD5Value.equals(sstMD5Value)) {
-            throw new IOException("CheckSum failed for " + srcPath);
-        } else {
-            // The .chk file are now useless
-            chkFile.delete();
         }
     }
 }

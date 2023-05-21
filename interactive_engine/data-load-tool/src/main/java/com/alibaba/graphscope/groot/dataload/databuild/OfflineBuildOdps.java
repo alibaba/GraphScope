@@ -25,8 +25,6 @@ import com.alibaba.graphscope.sdkcommon.common.DataLoadTarget;
 import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
 import com.alibaba.graphscope.sdkcommon.util.UuidUtils;
 import com.aliyun.odps.Odps;
-import com.aliyun.odps.account.Account;
-import com.aliyun.odps.account.AliyunAccount;
 import com.aliyun.odps.data.TableInfo;
 import com.aliyun.odps.mapred.JobClient;
 import com.aliyun.odps.mapred.conf.JobConf;
@@ -43,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class OfflineBuildOdps {
@@ -184,6 +181,8 @@ public class OfflineBuildOdps {
         if (loadAfterBuild) {
             fullQualifiedDataPath = fullQualifiedDataPath + uniquePath;
             logger.info("start ingesting data from " + fullQualifiedDataPath);
+            System.out.println("Ingesting data with config:");
+            config.forEach((key, value) -> logger.info(key + "=" + value));
             client.ingestData(fullQualifiedDataPath, config);
 
             logger.info("start committing bulk load");

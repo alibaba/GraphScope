@@ -17,19 +17,15 @@ import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.GetObjectRequest;
 
-import org.apache.commons.codec.binary.Hex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
 public class OssStorage extends ExternalStorage {
-
+    private static final Logger logger = LoggerFactory.getLogger(OssStorage.class);
     private final OSS ossClient;
     private String bucket;
     private String rootPath;
@@ -43,41 +39,11 @@ public class OssStorage extends ExternalStorage {
         this.ossClient = new OSSClientBuilder().build(endpoint, accessID, accessKey);
     }
 
+    @Override
     public void downloadDataSimple(String srcPath, String dstPath) {
+        logger.info("Downloading " + srcPath + " to " + dstPath);
         String[] pathItems = srcPath.split("://");
         String objectFullName = Paths.get(rootPath, pathItems[1]).toString();
         ossClient.getObject(new GetObjectRequest(bucket, objectFullName), new File(dstPath));
-    }
-
-    @Override
-    public void downloadData(String srcPath, String dstPath) throws IOException {
-        // Check chk
-        String chkPath = srcPath.substring(0, srcPath.length() - ".sst".length()) + ".chk";
-        String chkLocalPath =
-                dstPath.substring(0, srcPath.length() - ".sst".length()) + ".chk";
-
-        downloadDataSimple(chkPath, chkLocalPath);
-        File chkFile = new File(chkLocalPath);
-        byte[] chkData = new byte[(int) chkFile.length()];
-        try {
-            FileInputStream fis = new FileInputStream(chkFile);
-            fis.read(chkData);
-            fis.close();
-        } catch (FileNotFoundException e) {
-            throw new IOException(e);
-        }
-        String[] chkArray = new String(chkData).split(",");
-        if ("0".equals(chkArray[0])) {
-            return;
-        }
-        String chkMD5Value = chkArray[1];
-        downloadDataSimple(srcPath, dstPath);
-        String sstMD5Value = getFileMD5(dstPath);
-        if (!chkMD5Value.equals(sstMD5Value)) {
-            throw new IOException("CheckSum failed for " + srcPath);
-        } else {
-            // The .chk file are now useless
-            chkFile.delete();
-        }
     }
 }

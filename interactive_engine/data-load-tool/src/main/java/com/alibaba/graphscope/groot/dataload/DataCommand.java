@@ -60,7 +60,7 @@ public abstract class DataCommand {
         } else if (dataSinkType.equalsIgnoreCase("VOLUME")) {
             throw new IOException(
                     "Volume only supports load.after.build mode, which is running build, ingest and"
-                        + " commit at the same driver.");
+                            + " commit at the same driver.");
         } else if (dataSinkType.equalsIgnoreCase("OSS")) {
             try (OSSFS fs = new OSSFS(properties)) {
                 dataRootPath = fs.getQualifiedPath();

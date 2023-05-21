@@ -13,7 +13,7 @@ public class Constants {
 
     public static final String SPLIT_SIZE = "split.size";
 
-    public static final String UNIQUE_PATH = "unique.path";  // generated automatically for each task
+    public static final String UNIQUE_PATH = "unique.path"; // generated automatically for each task
     public static final String USER_NAME = "auth.username";
     public static final String PASS_WORD = "auth.password";
 

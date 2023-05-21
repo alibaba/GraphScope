@@ -56,7 +56,7 @@ pub extern "C" fn openGraphStore(config_bytes: *const u8, len: usize) -> GraphHa
     INIT.call_once(|| {
         if let Some(config_file) = config.get_storage_option("log4rs.config") {
             log4rs::init_file(config_file, Default::default()).expect("init log4rs failed");
-            info!("log4rs inited, config file: {}", config_file);
+            info!("log4rs init, config file: {}", config_file);
         } else {
             println!("No valid log4rs.config, rust won't print logs");
         }
