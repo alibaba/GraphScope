@@ -56,20 +56,12 @@
       </modules>
     </profile>
     <profile>
-      <id>groot-intranet</id>
-      <properties></properties>
+      <id>groot-data-load</id>
       <modules>
-<!--        <module>assembly</module>-->
         <module>common</module>
-<!--        <module>executor</module>-->
         <module>data-load-tool</module>
-        <module>groot-module</module>
-        <module>groot-server</module>
-<!--        <module>lgraph</module>-->
         <module>sdk</module>
         <module>sdk-common</module>
-<!--        <module>executor/engine/pegasus/clients/java/client</module>-->
-<!--        <module>compiler</module>-->
       </modules>
     </profile>
   </profiles>
@@ -119,11 +111,12 @@
     <commons.io.version>2.11.0</commons.io.version>
     <calcite.version>1.32.0</calcite.version>
     <immutables.version>2.9.3</immutables.version>
-    <!-- OSS SDK requires httpclient version to be 4.4.1, related links: https://www.alibabacloud.com/help/zh/object-storage-service/latest/java-faq?spm=a2c63.p38356.0.0.69a63c6bXPt34F-->
-    <httpcomponents.version>4.5.13</httpcomponents.version>
     <kryo.version>4.0.2</kryo.version>
     <antlr4.version>4.9.1</antlr4.version>
+
     <aliyun.oss.version>3.16.3</aliyun.oss.version>
+    <!-- httpcomponents version should aligh with version of OSS SDK -->
+    <httpcomponents.version>4.5.13</httpcomponents.version>
 
     <odps.sdk.public.version>0.36.4-public</odps.sdk.public.version>
     <cupid.sdk.version>3.3.8-public</cupid.sdk.version>
