@@ -5,7 +5,8 @@
     A One-Stop Large-Scale Graph Computing System from Alibaba
 </p>
 
-[![GraphScope CI](https://github.com/alibaba/GraphScope/actions/workflows/local-ci.yml/badge.svg)](https://github.com/alibaba/GraphScope/actions/workflows/local-ci.yml)
+[![GraphScope CI](https://github.com/alibaba/GraphScope/actions/workflows/local-ci.yml/badge.svg)](https://github.com/alibaba/GraphScope/actions/workflows/local-ci.yml)[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Falibaba%2FGraphScope.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Falibaba%2FGraphScope?ref=badge_shield)
+
 [![Coverage](https://codecov.io/gh/alibaba/GraphScope/branch/main/graph/badge.svg)](https://codecov.io/gh/alibaba/GraphScope)
 [![Playground](https://shields.io/badge/JupyterLab-Try%20GraphScope%20Now!-F37626?logo=jupyter)](https://try.graphscope.app)
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/alibaba/GraphScope)
@@ -403,6 +404,9 @@ The latest version of online documentation can be found at https://graphscope.io
 
 GraphScope is released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). Please note that third-party libraries may not have the same license as GraphScope.
 
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Falibaba%2FGraphScope.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Falibaba%2FGraphScope?ref=badge_large)
 
 ## Publications
 
