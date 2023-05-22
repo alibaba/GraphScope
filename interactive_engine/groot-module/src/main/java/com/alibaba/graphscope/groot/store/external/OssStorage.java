@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.store.external;
 
+import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.GetObjectRequest;
@@ -31,11 +32,11 @@ public class OssStorage extends ExternalStorage {
     private String rootPath;
 
     public OssStorage(String path, Map<String, String> config) {
-        String endpoint = config.get("oss.endpoint");
-        String accessID = config.get("oss.access.id");
-        String accessKey = config.get("oss.access.key");
-        bucket = config.get("oss.bucket.name");
-        rootPath = config.get("oss.object.name");
+        String endpoint = config.get(DataLoadConfig.OSS_ENDPOINT);
+        String accessID = config.get(DataLoadConfig.OSS_ACCESS_ID);
+        String accessKey = config.get(DataLoadConfig.ODPS_ACCESS_KEY);
+        bucket = config.get(DataLoadConfig.OSS_BUCKET_NAME);
+        rootPath = config.get(DataLoadConfig.OSS_OBJECT_NAME);
         this.ossClient = new OSSClientBuilder().build(endpoint, accessID, accessKey);
     }
 

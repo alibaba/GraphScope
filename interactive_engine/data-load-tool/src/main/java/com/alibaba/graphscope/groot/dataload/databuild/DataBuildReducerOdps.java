@@ -15,8 +15,8 @@
  */
 package com.alibaba.graphscope.groot.dataload.databuild;
 
+import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.alibaba.graphscope.groot.dataload.util.AbstractFileSystem;
-import com.alibaba.graphscope.groot.dataload.util.Constants;
 import com.alibaba.graphscope.groot.dataload.util.FSFactory;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.mapred.ReducerBase;
@@ -41,17 +41,17 @@ public class DataBuildReducerOdps extends ReducerBase {
     private AbstractFileSystem fs = null;
     private String sstFileName = null;
     private String chkFileName = null;
-    private String metaFileName = Constants.META_FILE_NAME;
+    private String metaFileName = DataLoadConfig.META_FILE_NAME;
 
     @Override
     public void setup(TaskContext context) throws IOException {
 
-        metaData = context.getJobConf().get(Constants.META_INFO);
+        metaData = context.getJobConf().get(DataLoadConfig.META_INFO);
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, String> metaMap =
                 objectMapper.readValue(metaData, new TypeReference<Map<String, String>>() {});
 
-        this.uniquePath = metaMap.get(Constants.UNIQUE_PATH);
+        this.uniquePath = metaMap.get(DataLoadConfig.UNIQUE_PATH);
 
         this.taskId = context.getTaskID().toString();
         taskId = taskId.substring(taskId.length() - 5);

@@ -17,7 +17,7 @@ import com.alibaba.graphscope.compiler.api.schema.*;
 import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
 import com.alibaba.graphscope.compiler.api.schema.GraphElement;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
-import com.alibaba.graphscope.groot.dataload.util.Constants;
+import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.alibaba.graphscope.groot.dataload.util.OSSFS;
 import com.alibaba.graphscope.groot.dataload.util.VolumeFS;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
@@ -57,13 +57,14 @@ public class OfflineBuildOdps {
         }
         odps = SessionState.get().getOdps();
 
-        String columnMappingConfigStr = properties.getProperty(Constants.COLUMN_MAPPING_CONFIG);
-        String graphEndpoint = properties.getProperty(Constants.GRAPH_ENDPOINT);
-        String username = properties.getProperty(Constants.USER_NAME, "");
-        String password = properties.getProperty(Constants.PASS_WORD, "");
+        String columnMappingConfigStr =
+                properties.getProperty(DataLoadConfig.COLUMN_MAPPING_CONFIG);
+        String graphEndpoint = properties.getProperty(DataLoadConfig.GRAPH_ENDPOINT);
+        String username = properties.getProperty(DataLoadConfig.USER_NAME, "");
+        String password = properties.getProperty(DataLoadConfig.PASS_WORD, "");
 
         String uniquePath =
-                properties.getProperty(Constants.UNIQUE_PATH, UuidUtils.getBase64UUIDString());
+                properties.getProperty(DataLoadConfig.UNIQUE_PATH, UuidUtils.getBase64UUIDString());
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, FileColumnMapping> columnMappingConfig =
@@ -104,7 +105,7 @@ public class OfflineBuildOdps {
                     columnMappingInfos.put(getTableName(fileName), columnMappingInfo);
                     tableType.put(fileName, schema.getElement(columnMappingInfo.getLabelId()));
                 });
-        long splitSize = Long.parseLong(properties.getProperty(Constants.SPLIT_SIZE, "256"));
+        long splitSize = Long.parseLong(properties.getProperty(DataLoadConfig.SPLIT_SIZE, "256"));
 
         JobConf job = new JobConf();
         String mappings = objectMapper.writeValueAsString(columnMappingInfos);
@@ -135,7 +136,7 @@ public class OfflineBuildOdps {
         job.setMapOutputKeySchema(SchemaUtils.fromString("key:string"));
         job.setMapOutputValueSchema(SchemaUtils.fromString("value:string"));
 
-        String dataSinkType = properties.getProperty(Constants.DATA_SINK_TYPE, "VOLUME");
+        String dataSinkType = properties.getProperty(DataLoadConfig.DATA_SINK_TYPE, "VOLUME");
         Map<String, String> config;
         String fullQualifiedDataPath;
         if (dataSinkType.equalsIgnoreCase("VOLUME")) {
@@ -152,7 +153,7 @@ public class OfflineBuildOdps {
                 config = fs.getConfig();
                 fullQualifiedDataPath = fs.getQualifiedPath();
             }
-            String outputTable = properties.getProperty(Constants.OUTPUT_TABLE);
+            String outputTable = properties.getProperty(DataLoadConfig.OUTPUT_TABLE);
             OutputUtils.addTable(parseTableURL(outputTable), job);
         } else if (dataSinkType.equalsIgnoreCase("HDFS")) {
             throw new IOException("HDFS as a data sink is not supported in ODPS");
@@ -160,14 +161,14 @@ public class OfflineBuildOdps {
             throw new IOException("Unsupported data sink: " + dataSinkType);
         }
         Map<String, String> outputMeta = new HashMap<>();
-        outputMeta.put(Constants.GRAPH_ENDPOINT, graphEndpoint);
-        outputMeta.put(Constants.SCHEMA_JSON, schemaJson);
-        outputMeta.put(Constants.COLUMN_MAPPINGS, mappings);
-        outputMeta.put(Constants.UNIQUE_PATH, uniquePath);
-        outputMeta.put(Constants.DATA_SINK_TYPE, dataSinkType);
+        outputMeta.put(DataLoadConfig.GRAPH_ENDPOINT, graphEndpoint);
+        outputMeta.put(DataLoadConfig.SCHEMA_JSON, schemaJson);
+        outputMeta.put(DataLoadConfig.COLUMN_MAPPINGS, mappings);
+        outputMeta.put(DataLoadConfig.UNIQUE_PATH, uniquePath);
+        outputMeta.put(DataLoadConfig.DATA_SINK_TYPE, dataSinkType);
 
-        job.set(Constants.META_INFO, objectMapper.writeValueAsString(outputMeta));
-        job.set(Constants.DATA_SINK_TYPE, dataSinkType);
+        job.set(DataLoadConfig.META_INFO, objectMapper.writeValueAsString(outputMeta));
+        job.set(DataLoadConfig.DATA_SINK_TYPE, dataSinkType);
         try {
             JobClient.runJob(job);
         } catch (Exception e) {
@@ -176,7 +177,7 @@ public class OfflineBuildOdps {
 
         boolean loadAfterBuild =
                 properties
-                        .getProperty(Constants.LOAD_AFTER_BUILD, "false")
+                        .getProperty(DataLoadConfig.LOAD_AFTER_BUILD, "false")
                         .equalsIgnoreCase("true");
         if (loadAfterBuild) {
             fullQualifiedDataPath = fullQualifiedDataPath + uniquePath;

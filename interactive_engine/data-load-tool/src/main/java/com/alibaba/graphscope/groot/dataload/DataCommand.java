@@ -1,8 +1,8 @@
 package com.alibaba.graphscope.groot.dataload;
 
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
+import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.alibaba.graphscope.groot.dataload.databuild.ColumnMappingInfo;
-import com.alibaba.graphscope.groot.dataload.util.Constants;
 import com.alibaba.graphscope.groot.dataload.util.OSSFS;
 import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -43,12 +43,12 @@ public abstract class DataCommand {
         try (InputStream is = new FileInputStream(this.configPath)) {
             properties.load(is);
         }
-        username = properties.getProperty(Constants.USER_NAME);
-        password = properties.getProperty(Constants.PASS_WORD);
-        graphEndpoint = properties.getProperty(Constants.GRAPH_ENDPOINT);
-        String outputPath = properties.getProperty(Constants.OUTPUT_PATH);
-        String metaFilePath = new Path(outputPath, Constants.META_FILE_NAME).toString();
-        String dataSinkType = properties.getProperty(Constants.DATA_SINK_TYPE, "HDFS");
+        username = properties.getProperty(DataLoadConfig.USER_NAME);
+        password = properties.getProperty(DataLoadConfig.PASS_WORD);
+        graphEndpoint = properties.getProperty(DataLoadConfig.GRAPH_ENDPOINT);
+        String outputPath = properties.getProperty(DataLoadConfig.OUTPUT_PATH);
+        String metaFilePath = new Path(outputPath, DataLoadConfig.META_FILE_NAME).toString();
+        String dataSinkType = properties.getProperty(DataLoadConfig.DATA_SINK_TYPE, "HDFS");
 
         if (dataSinkType.equalsIgnoreCase("HDFS")) {
             FileSystem fs = new Path(this.configPath).getFileSystem(new Configuration());
@@ -79,7 +79,7 @@ public abstract class DataCommand {
                 objectMapper.readValue(
                         metaMap.get("mappings"),
                         new TypeReference<Map<String, ColumnMappingInfo>>() {});
-        this.uniquePath = metaMap.get(Constants.UNIQUE_PATH);
+        this.uniquePath = metaMap.get(DataLoadConfig.UNIQUE_PATH);
         dataRootPath = Paths.get(dataRootPath, uniquePath).toString();
     }
 

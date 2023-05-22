@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.groot.dataload.util;
 
+import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.aliyun.odps.mapred.TaskContext;
 import com.aliyun.odps.mapred.conf.JobConf;
 import com.aliyun.oss.*;
@@ -44,11 +45,11 @@ public class OSSFS extends AbstractFileSystem {
     }
 
     public OSSFS(JobConf jobConf) throws IOException {
-        this.ossAccessID = jobConf.get(Constants.OSS_ACCESS_ID);
-        this.ossAccessKey = jobConf.get(Constants.OSS_ACCESS_KEY);
-        this.endpoint = jobConf.get(Constants.OSS_ENDPOINT);
-        this.bucket = jobConf.get(Constants.OSS_BUCKET_NAME);
-        this.object = jobConf.get(Constants.OSS_OBJECT_NAME);
+        this.ossAccessID = jobConf.get(DataLoadConfig.OSS_ACCESS_ID);
+        this.ossAccessKey = jobConf.get(DataLoadConfig.OSS_ACCESS_KEY);
+        this.endpoint = jobConf.get(DataLoadConfig.OSS_ENDPOINT);
+        this.bucket = jobConf.get(DataLoadConfig.OSS_BUCKET_NAME);
+        this.object = jobConf.get(DataLoadConfig.OSS_OBJECT_NAME);
 
         if (!endpoint.startsWith("https")) {
             endpoint = "https://" + endpoint;
@@ -57,10 +58,10 @@ public class OSSFS extends AbstractFileSystem {
     }
 
     public OSSFS(Properties properties) throws IOException {
-        this.ossAccessID = properties.getProperty(Constants.OSS_ACCESS_ID);
-        this.ossAccessKey = properties.getProperty(Constants.OSS_ACCESS_KEY);
+        this.ossAccessID = properties.getProperty(DataLoadConfig.OSS_ACCESS_ID);
+        this.ossAccessKey = properties.getProperty(DataLoadConfig.OSS_ACCESS_KEY);
         if (this.ossAccessID == null || this.ossAccessID.isEmpty()) {
-            String URL = properties.getProperty(Constants.OSS_INFO_URL);
+            String URL = properties.getProperty(DataLoadConfig.OSS_INFO_URL);
             HashMap<String, String> o = getOSSInfoFromURL(URL);
             this.ossAccessID = o.get("ossAccessID");
             this.ossAccessKey = o.get("ossAccessKey");
@@ -68,9 +69,9 @@ public class OSSFS extends AbstractFileSystem {
             this.bucket = o.get("ossBucketName");
             this.object = o.get("ossObjectName");
         } else {
-            this.endpoint = properties.getProperty(Constants.OSS_ENDPOINT);
-            this.bucket = properties.getProperty(Constants.OSS_BUCKET_NAME);
-            this.object = properties.getProperty(Constants.OSS_OBJECT_NAME);
+            this.endpoint = properties.getProperty(DataLoadConfig.OSS_ENDPOINT);
+            this.bucket = properties.getProperty(DataLoadConfig.OSS_BUCKET_NAME);
+            this.object = properties.getProperty(DataLoadConfig.OSS_OBJECT_NAME);
         }
         initClient();
     }
@@ -83,11 +84,11 @@ public class OSSFS extends AbstractFileSystem {
     }
 
     public void setJobConf(JobConf jobConf) {
-        jobConf.set(Constants.OSS_ACCESS_ID, ossAccessID);
-        jobConf.set(Constants.OSS_ACCESS_KEY, ossAccessKey);
-        jobConf.set(Constants.OSS_ENDPOINT, endpoint);
-        jobConf.set(Constants.OSS_BUCKET_NAME, bucket);
-        jobConf.set(Constants.OSS_OBJECT_NAME, object);
+        jobConf.set(DataLoadConfig.OSS_ACCESS_ID, ossAccessID);
+        jobConf.set(DataLoadConfig.OSS_ACCESS_KEY, ossAccessKey);
+        jobConf.set(DataLoadConfig.OSS_ENDPOINT, endpoint);
+        jobConf.set(DataLoadConfig.OSS_BUCKET_NAME, bucket);
+        jobConf.set(DataLoadConfig.OSS_OBJECT_NAME, object);
     }
 
     private HashMap<String, String> getOSSInfoFromURL(String URL) throws IOException {
@@ -143,11 +144,11 @@ public class OSSFS extends AbstractFileSystem {
 
     public Map<String, String> getConfig() {
         HashMap<String, String> config = new HashMap<>();
-        config.put(Constants.OSS_ACCESS_ID, ossAccessID);
-        config.put(Constants.OSS_ACCESS_KEY, ossAccessKey);
-        config.put(Constants.OSS_ENDPOINT, endpoint);
-        config.put(Constants.OSS_BUCKET_NAME, bucket);
-        config.put(Constants.OSS_OBJECT_NAME, object);
+        config.put(DataLoadConfig.OSS_ACCESS_ID, ossAccessID);
+        config.put(DataLoadConfig.OSS_ACCESS_KEY, ossAccessKey);
+        config.put(DataLoadConfig.OSS_ENDPOINT, endpoint);
+        config.put(DataLoadConfig.OSS_BUCKET_NAME, bucket);
+        config.put(DataLoadConfig.OSS_OBJECT_NAME, object);
         return config;
     }
 

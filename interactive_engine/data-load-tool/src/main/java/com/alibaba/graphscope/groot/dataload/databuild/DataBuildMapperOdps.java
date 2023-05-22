@@ -17,7 +17,7 @@ package com.alibaba.graphscope.groot.dataload.databuild;
 
 import com.alibaba.graphscope.compiler.api.exception.PropertyDefNotFoundException;
 import com.alibaba.graphscope.compiler.api.schema.*;
-import com.alibaba.graphscope.groot.dataload.util.Constants;
+import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
 import com.alibaba.graphscope.sdkcommon.schema.PropertyValue;
 import com.aliyun.odps.data.Record;
@@ -49,14 +49,14 @@ public class DataBuildMapperOdps extends MapperBase {
         outKey = context.createMapOutputKeyRecord();
         outVal = context.createMapOutputValueRecord();
 
-        String metaData = context.getJobConf().get(Constants.META_INFO);
+        String metaData = context.getJobConf().get(DataLoadConfig.META_INFO);
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, String> metaMap =
                 objectMapper.readValue(metaData, new TypeReference<Map<String, String>>() {});
-        String schemaJson = metaMap.get(Constants.SCHEMA_JSON);
+        String schemaJson = metaMap.get(DataLoadConfig.SCHEMA_JSON);
         graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
         dataEncoder = new DataEncoder(graphSchema);
-        String columnMappingsJson = metaMap.get(Constants.COLUMN_MAPPINGS);
+        String columnMappingsJson = metaMap.get(DataLoadConfig.COLUMN_MAPPINGS);
         fileToColumnMappingInfo =
                 objectMapper.readValue(
                         columnMappingsJson, new TypeReference<Map<String, ColumnMappingInfo>>() {});

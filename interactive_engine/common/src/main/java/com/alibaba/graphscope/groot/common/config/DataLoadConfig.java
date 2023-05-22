@@ -1,6 +1,6 @@
-package com.alibaba.graphscope.groot.dataload.util;
+package com.alibaba.graphscope.groot.common.config;
 
-public class Constants {
+public class DataLoadConfig {
 
     // Get property
 

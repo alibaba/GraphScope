@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.groot.store.external;
 
+import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.aliyun.odps.Odps;
 import com.aliyun.odps.account.AliyunAccount;
 import com.aliyun.odps.tunnel.TunnelException;
@@ -20,19 +21,19 @@ public class VolumeStorage extends ExternalStorage {
     String volumeName;
     String partSpec;
 
-    public VolumeStorage(String path, Map<String, String> config) throws IOException {
-        String endpoint = config.get("odps.endpoint");
-        String accessID = config.get("odps.access.id");
-        String accessKey = config.get("odps.access.key");
+    public VolumeStorage(String path, Map<String, String> config) {
+        String endpoint = config.get(DataLoadConfig.ODPS_ENDPOINT);
+        String accessID = config.get(DataLoadConfig.ODPS_ACCESS_ID);
+        String accessKey = config.get(DataLoadConfig.ODPS_ACCESS_KEY);
         AliyunAccount account = new AliyunAccount(accessID, accessKey);
 
         Odps odps = new Odps(account);
         odps.setEndpoint(endpoint);
         tunnel = new VolumeTunnel(odps);
 
-        projectName = config.get("odps.volume.project");
-        volumeName = config.get("odps.volume.name");
-        partSpec = config.get("odps.volume.partspec");
+        projectName = config.get(DataLoadConfig.ODPS_VOLUME_PROJECT);
+        volumeName = config.get(DataLoadConfig.ODPS_VOLUME_NAME);
+        partSpec = config.get(DataLoadConfig.ODPS_VOLUME_PARTSPEC);
     }
 
     @Override

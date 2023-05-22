@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.groot.dataload.util;
 
+import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.aliyun.odps.Odps;
 import com.aliyun.odps.OdpsException;
 import com.aliyun.odps.Volume;
@@ -22,21 +23,21 @@ public class VolumeFS extends AbstractFileSystem {
     FileSystem fs;
 
     public VolumeFS(Properties properties) {
-        projectName = properties.getProperty(Constants.ODPS_VOLUME_PROJECT); // Could be null
-        volumeName = properties.getProperty(Constants.ODPS_VOLUME_NAME);
-        partSpec = properties.getProperty(Constants.ODPS_VOLUME_PARTSPEC);
+        projectName = properties.getProperty(DataLoadConfig.ODPS_VOLUME_PROJECT); // Could be null
+        volumeName = properties.getProperty(DataLoadConfig.ODPS_VOLUME_NAME);
+        partSpec = properties.getProperty(DataLoadConfig.ODPS_VOLUME_PARTSPEC);
     }
 
     public VolumeFS(JobConf jobConf) throws IOException {
-        projectName = jobConf.get(Constants.ODPS_VOLUME_PROJECT);
-        volumeName = jobConf.get(Constants.ODPS_VOLUME_NAME);
-        partSpec = jobConf.get(Constants.ODPS_VOLUME_PARTSPEC);
+        projectName = jobConf.get(DataLoadConfig.ODPS_VOLUME_PROJECT);
+        volumeName = jobConf.get(DataLoadConfig.ODPS_VOLUME_NAME);
+        partSpec = jobConf.get(DataLoadConfig.ODPS_VOLUME_PARTSPEC);
     }
 
     public void setJobConf(JobConf jobConf) {
-        jobConf.set(Constants.ODPS_VOLUME_PROJECT, projectName);
-        jobConf.set(Constants.ODPS_VOLUME_NAME, volumeName);
-        jobConf.set(Constants.ODPS_VOLUME_PARTSPEC, partSpec);
+        jobConf.set(DataLoadConfig.ODPS_VOLUME_PROJECT, projectName);
+        jobConf.set(DataLoadConfig.ODPS_VOLUME_NAME, volumeName);
+        jobConf.set(DataLoadConfig.ODPS_VOLUME_PARTSPEC, partSpec);
     }
 
     public void open(TaskContext context, String mode) throws IOException {
@@ -80,12 +81,12 @@ public class VolumeFS extends AbstractFileSystem {
             throw new IOException("Not an AliyunAccount");
         }
         HashMap<String, String> config = new HashMap<>();
-        config.put(Constants.ODPS_ACCESS_ID, aliyunAccount.getAccessId());
-        config.put(Constants.ODPS_ACCESS_KEY, aliyunAccount.getAccessKey());
-        config.put(Constants.ODPS_ENDPOINT, odps.getEndpoint());
-        config.put(Constants.ODPS_VOLUME_PROJECT, projectName);
-        config.put(Constants.ODPS_VOLUME_NAME, volumeName);
-        config.put(Constants.ODPS_VOLUME_PARTSPEC, partSpec);
+        config.put(DataLoadConfig.ODPS_ACCESS_ID, aliyunAccount.getAccessId());
+        config.put(DataLoadConfig.ODPS_ACCESS_KEY, aliyunAccount.getAccessKey());
+        config.put(DataLoadConfig.ODPS_ENDPOINT, odps.getEndpoint());
+        config.put(DataLoadConfig.ODPS_VOLUME_PROJECT, projectName);
+        config.put(DataLoadConfig.ODPS_VOLUME_NAME, volumeName);
+        config.put(DataLoadConfig.ODPS_VOLUME_PARTSPEC, partSpec);
         return config;
     }
 
