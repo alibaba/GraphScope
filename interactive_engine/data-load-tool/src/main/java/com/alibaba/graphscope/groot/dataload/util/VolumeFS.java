@@ -69,6 +69,7 @@ public class VolumeFS extends AbstractFileSystem {
             outputStream.write(buffer, 0, len);
         }
         outputStream.close();
+        System.out.println("Copied " + srcFile + " to " + dstFile);
     }
 
     public void createDirectory(String dirName) throws IOException {}

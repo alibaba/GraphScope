@@ -14,7 +14,6 @@
 package com.alibaba.graphscope.groot;
 
 import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,12 +92,7 @@ public class SnapshotCache {
                         || graphDef.getSchemaVersion() > oldGraphDef.getVersion())) {
             newSnapshotInfoBuilder.setGraphDef(graphDef);
             logger.info("schema updated. schema version [" + graphDef.getVersion() + "]");
-            try {
-                logger.info(graphDef.formatJson());
-            } catch (JsonProcessingException e) {
-                logger.error("Error when logging graphDef", e);
-                logger.info(graphDef.toProto().toString());
-            }
+            logger.info(graphDef.toProto().toString());
         }
         this.snapshotWithSchemaRef.set(newSnapshotInfoBuilder.build());
         logger.debug("snapshotId update to [" + snapshotId + "]");
