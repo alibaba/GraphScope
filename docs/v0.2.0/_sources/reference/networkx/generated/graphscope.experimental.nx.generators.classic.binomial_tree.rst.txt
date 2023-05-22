@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.generators.classic.binomial\_tree
-============================================================
-
-.. currentmodule:: graphscope.experimental.nx.generators.classic
-
-.. autofunction:: binomial_tree

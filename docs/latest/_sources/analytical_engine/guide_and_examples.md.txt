@@ -98,7 +98,7 @@ Write and run algorithms in Python
 Write and run algorithms in Java with PIE and Pregel model
 ````
 
-Better still, if you already have your application running on Giraph or GraphX, the packaged `jar` can directly run on GraphScope. The migration is totally transparent, you even don't need to have the sourcecode!
+Better still, if you already have your application running on Giraph or GraphX, the packaged `jar` can directly run on GraphScope. The migration is totally transparent, you even don't need to have the source code!
 
 ````{panels}
 :header: text-center

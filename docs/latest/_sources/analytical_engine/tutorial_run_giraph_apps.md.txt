@@ -39,7 +39,7 @@ import graphscope
 import os
 from graphscope.framework.app import load_app
 
-"""Or lauch session in k8s cluster"""
+"""Or launch session in k8s cluster"""
 sess = graphscope.session(cluster_type='hosts') 
 
 sess.add_lib("/home/graphscope/grape-demo-0.19.0-shaded.jar")

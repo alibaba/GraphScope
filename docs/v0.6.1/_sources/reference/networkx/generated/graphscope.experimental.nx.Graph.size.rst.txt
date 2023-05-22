@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.Graph.size
-=====================================
-
-.. currentmodule:: graphscope.experimental.nx
-
-.. automethod:: Graph.size

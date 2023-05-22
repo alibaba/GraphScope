@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.generators.social.les\_miserables\_graph
-===================================================================
-
-.. currentmodule:: graphscope.experimental.nx.generators.social
-
-.. autofunction:: les_miserables_graph

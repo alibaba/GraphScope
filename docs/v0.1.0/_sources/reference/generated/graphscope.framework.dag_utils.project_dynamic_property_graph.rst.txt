@@ -1,6 +1,0 @@
-﻿graphscope.framework.dag\_utils.project\_dynamic\_property\_graph
-=================================================================
-
-.. currentmodule:: graphscope.framework.dag_utils
-
-.. autofunction:: project_dynamic_property_graph

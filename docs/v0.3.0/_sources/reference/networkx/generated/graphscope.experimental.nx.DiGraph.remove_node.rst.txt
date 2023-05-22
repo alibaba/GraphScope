@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.DiGraph.remove\_node
-===============================================
-
-.. currentmodule:: graphscope.experimental.nx
-
-.. automethod:: DiGraph.remove_node

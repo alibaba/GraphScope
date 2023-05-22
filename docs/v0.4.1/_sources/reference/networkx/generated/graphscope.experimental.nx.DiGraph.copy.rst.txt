@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.DiGraph.copy
-=======================================
-
-.. currentmodule:: graphscope.experimental.nx
-
-.. automethod:: DiGraph.copy

@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.DiGraph.adjacency
-============================================
-
-.. currentmodule:: graphscope.experimental.nx
-
-.. automethod:: DiGraph.adjacency

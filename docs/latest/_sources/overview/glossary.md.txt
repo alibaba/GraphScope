@@ -1,6 +1,6 @@
 # Glossary
 
-This page lists all the golssary used in the GraphScope project.
+This page lists all the glossary used in the GraphScope project.
 
 #### FLASH
 
@@ -21,7 +21,7 @@ Read more: [Best Paper on SIGMOD2017](https://homepages.inf.ed.ac.uk/wenfei/pape
 
 #### GAE
 
-GAE is short for GraphScope Anlaytical Engine, a.k.a., GRAPE.
+GAE is short for GraphScope Analytical Engine, a.k.a., GRAPE.
 
 #### GART
 

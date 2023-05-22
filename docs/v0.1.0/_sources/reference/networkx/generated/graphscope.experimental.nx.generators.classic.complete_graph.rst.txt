@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.generators.classic.complete\_graph
-=============================================================
-
-.. currentmodule:: graphscope.experimental.nx.generators.classic
-
-.. autofunction:: complete_graph

@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.Graph.project\_to\_simple
-====================================================
-
-.. currentmodule:: graphscope.experimental.nx
-
-.. automethod:: Graph.project_to_simple

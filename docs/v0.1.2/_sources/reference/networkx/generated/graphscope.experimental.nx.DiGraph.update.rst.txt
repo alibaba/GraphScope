@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.DiGraph.update
-=========================================
-
-.. currentmodule:: graphscope.experimental.nx
-
-.. automethod:: DiGraph.update
