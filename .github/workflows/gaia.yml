@@ -63,8 +63,7 @@ jobs:
 
     - name: Ir Unit Test
       run: |
-        # TODO(siyuan): fix this zstd symbol link error
-        # cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && make test
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && make test
 
     - name: CommonType Unit Test
       run: |
