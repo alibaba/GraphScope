@@ -39,6 +39,7 @@ public class VolumeStorage extends ExternalStorage {
     @Override
     public void downloadDataSimple(String srcPath, String dstPath) throws IOException {
         logger.info("Downloading " + srcPath + " to " + dstPath);
+        long start = System.currentTimeMillis();
         String[] pathItems = srcPath.split("://");
         String fileName = pathItems[1];
         // Read data from the input stream and write it to the output stream.
@@ -57,5 +58,8 @@ public class VolumeStorage extends ExternalStorage {
         } catch (TunnelException e) {
             throw new IOException(e);
         }
+        long finish = System.currentTimeMillis();
+        long timeElapsed = finish - start;
+        logger.info("Downloaded " + srcPath + " in " + timeElapsed + " ms.");
     }
 }
