@@ -337,8 +337,8 @@ class OperationExecutor:
             ("grpc.max_metadata_size", GS_GRPC_MAX_MESSAGE_LENGTH),
         ]
         # Check connectivity, otherwise the stub is useless
-        retry = 0
-        while retry < 20:
+        delay = 2
+        for retry in range(8):  # approximated 255s
             try:
                 channel = grpc.insecure_channel(
                     self._launcher.analytical_engine_endpoint, options=options
@@ -348,11 +348,13 @@ class OperationExecutor:
                 return stub
             except grpc.RpcError as e:
                 logger.warning(
-                    "Connecting to analytical engine... retrying %d time", retry
+                    "Connecting to analytical engine... tried %d time, will retry in %d seconds",
+                    retry + 1,
+                    delay,
                 )
                 logger.warning("Error code: %s, details %s", e.code(), e.details())
-                retry += 1
-                time.sleep(3)
+                time.sleep(delay)
+                delay *= 2  # back off
         raise RuntimeError(
             "Failed to connect to engine in 60s, deployment may failed. Please check coordinator log for details"
         )
