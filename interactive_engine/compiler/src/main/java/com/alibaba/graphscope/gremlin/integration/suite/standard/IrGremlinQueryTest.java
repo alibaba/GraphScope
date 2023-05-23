@@ -46,7 +46,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Object>
             get_g_V_out_as_a_in_select_a_as_b_select_b_by_values();
 
-    public abstract Traversal<Vertex, Map<String, Vertex>> get_g_V_matchXa_in_b__b_out_c__not_c_out_aX();
+    public abstract Traversal<Vertex, Map<String, Vertex>>
+            get_g_V_matchXa_in_b__b_out_c__not_c_out_aX();
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
@@ -133,14 +134,37 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_matchXa_in_b__b_out_c__not_c_out_aX() {
-        final Traversal<Vertex, Map<String, Vertex>> traversal = get_g_V_matchXa_in_b__b_out_c__not_c_out_aX();
+        final Traversal<Vertex, Map<String, Vertex>> traversal =
+                get_g_V_matchXa_in_b__b_out_c__not_c_out_aX();
         printTraversalForm(traversal);
-        checkResults(makeMapList(3,
-            "a", convertToVertex(graph, "vadas"), "b", convertToVertex(graph, "marko"), "c", convertToVertex(graph, "vadas"),
-            "a", convertToVertex(graph, "josh"), "b", convertToVertex(graph, "marko"), "c", convertToVertex(graph, "vadas"),
-            "a", convertToVertex(graph, "josh"), "b", convertToVertex(graph, "marko"), "c", convertToVertex(graph, "josh"),
-            "a", convertToVertex(graph, "vadas"), "b", convertToVertex(graph, "marko"), "c", convertToVertex(graph, "josh")),
-            traversal);
+        checkResults(
+                makeMapList(
+                        3,
+                        "a",
+                        convertToVertex(graph, "vadas"),
+                        "b",
+                        convertToVertex(graph, "marko"),
+                        "c",
+                        convertToVertex(graph, "vadas"),
+                        "a",
+                        convertToVertex(graph, "josh"),
+                        "b",
+                        convertToVertex(graph, "marko"),
+                        "c",
+                        convertToVertex(graph, "vadas"),
+                        "a",
+                        convertToVertex(graph, "josh"),
+                        "b",
+                        convertToVertex(graph, "marko"),
+                        "c",
+                        convertToVertex(graph, "josh"),
+                        "a",
+                        convertToVertex(graph, "vadas"),
+                        "b",
+                        convertToVertex(graph, "marko"),
+                        "c",
+                        convertToVertex(graph, "josh")),
+                traversal);
     }
 
     public static class Traversals extends IrGremlinQueryTest {
@@ -177,8 +201,12 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         }
 
         @Override
-        public Traversal<Vertex, Map<String, Vertex>> get_g_V_matchXa_in_b__b_out_c__not_c_out_aX() {
-            return g.V().match(as("a").in("knows").as("b"),as("b").out("knows").as("c"),not(as("c").out("knows").as("a")));
+        public Traversal<Vertex, Map<String, Vertex>>
+                get_g_V_matchXa_in_b__b_out_c__not_c_out_aX() {
+            return g.V().match(
+                            as("a").in("knows").as("b"),
+                            as("b").out("knows").as("c"),
+                            not(as("c").out("knows").as("a")));
         }
     }
 }
