@@ -20,27 +20,34 @@ import os
 import platform
 import sys
 
+
 def _force_preload_libgomp():
-    ''' Load libgomp before importing tensorflow. See also:
-        - https://github.com/opencv/opencv/issues/14884
-        - https://github.com/pytorch/pytorch/issues/2575
-        - https://github.com/dmlc/xgboost/issues/7110#issuecomment-880841484
-    '''
-    if platform.system() != 'Linux' or platform.processor() != 'aarch64':
+    """Load libgomp before importing tensorflow. See also:
+    - https://github.com/opencv/opencv/issues/14884
+    - https://github.com/pytorch/pytorch/issues/2575
+    - https://github.com/dmlc/xgboost/issues/7110#issuecomment-880841484
+    """
+    if platform.system() != "Linux" or platform.processor() != "aarch64":
         return
 
     import ctypes
     import glob
 
-    pkgs_directory = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..')
-    for lib_directory in [os.path.join(pkgs_directory, 'graphscope_client.libs'),
-                          os.path.join(pkgs_directory, 'tensorflow_cpu_aws.libs')]:
-        for libfile in glob.glob(lib_directory + '/libgomp*.so*'):
+    pkgs_directory = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), "..", ".."
+    )
+    for lib_directory in [
+        os.path.join(pkgs_directory, "graphscope_client.libs"),
+        os.path.join(pkgs_directory, "tensorflow_cpu_aws.libs"),
+    ]:
+        for libfile in glob.glob(lib_directory + "/libgomp*.so*"):
             import sys
+
             try:
                 ctypes.cdll.LoadLibrary(libfile)
             except:
                 pass
+
 
 _force_preload_libgomp()
 del _force_preload_libgomp

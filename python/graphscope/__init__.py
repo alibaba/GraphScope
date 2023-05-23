@@ -21,7 +21,9 @@ import platform
 import sys
 
 # Tensorflow with Python 3.7 and ARM platform requires lower version of protobuf
-if (sys.version_info.major == 3 and sys.version_info.minor == 7) or (platform.system() == "Linux" and platform.processor() == 'aarch64'):
+if (sys.version_info.major == 3 and sys.version_info.minor == 7) or (
+    platform.system() == "Linux" and platform.processor() == "aarch64"
+):
     os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 # The gremlinpython has a async event loop, which may conflicts with
