@@ -93,7 +93,7 @@ try:
         if tf is not None:
             try:
                 tf.reset_default_graph()
-            except:  # noqa: E722, pylint: disable=bare-except
+            except:  # noqa: E722,B110, pylint: disable=bare-except
                 pass
 
     ctx = {"GRPC_VERBOSITY": "NONE"}
