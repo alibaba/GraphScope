@@ -19,8 +19,11 @@ package com.alibaba.graphscope.cypher.service;
 import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.HttpExecutionClient;
+import com.alibaba.graphscope.common.client.RpcExecutionClient;
 import com.alibaba.graphscope.common.client.channel.HostURIChannelFetcher;
+import com.alibaba.graphscope.common.client.channel.HostsRpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
@@ -36,8 +39,9 @@ public class CypherServiceMain {
         Antlr4Parser cypherParser = new CypherAntlr4Parser();
         GraphPlanner graphPlanner = new GraphPlanner(graphConfig);
         IrMetaQueryCallback queryCallback = new IrMetaQueryCallback(new ExperimentalMetaFetcher(graphConfig));
-        // ExecutionClient client = new RpcExecutionClient(graphConfig, new HostsRpcChannelFetcher(graphConfig));
-        ExecutionClient client = new HttpExecutionClient(graphConfig, new HostURIChannelFetcher(graphConfig));
+        ExecutionClient client = FrontendConfig.ENGINE_TYPE.get(graphConfig).equals("pegasus") ?
+                new RpcExecutionClient(graphConfig, new HostsRpcChannelFetcher(graphConfig))
+                : new HttpExecutionClient(graphConfig, new HostURIChannelFetcher(graphConfig));
         CommunityBootstrapper bootstrapper = new CypherBootstrapper(graphConfig, cypherParser, graphPlanner, queryCallback, client);
         bootstrapper.start(
                 Path.of(
