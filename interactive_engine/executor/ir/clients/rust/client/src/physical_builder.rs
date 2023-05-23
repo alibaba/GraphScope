@@ -451,6 +451,15 @@ impl JobBuilder {
         self
     }
 
+    // Notice that this is used to set the meta_data of the **Last Appended OP**
+    pub fn with_meta_data(&mut self, meta_data: Option<algebra_pb::MetaData>) {
+        self.plan.with_meta_data(
+            meta_data
+                .map(|meta| vec![meta.into()])
+                .unwrap_or_default(),
+        );
+    }
+
     pub fn sink(&mut self, sink: algebra_pb::Sink) {
         self.plan.sink(sink.into());
     }
