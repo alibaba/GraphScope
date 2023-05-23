@@ -68,7 +68,7 @@ public class StoreService implements MetricsAgent {
     private ExecutorService writeExecutor;
     private ExecutorService ingestExecutor;
     private ExecutorService garbageCollectExecutor;
-    private ExecutorService downloadExecutor;
+    private ThreadPoolExecutor downloadExecutor;
     private final boolean enableGc;
     private volatile boolean shouldStop = true;
 
@@ -129,13 +129,14 @@ public class StoreService implements MetricsAgent {
         logger.info("StoreService started. storeId [" + this.storeId + "]");
         this.downloadExecutor =
                 new ThreadPoolExecutor(
-                        0,
-                        8,
-                        0L,
+                        16,
+                        16,
+                        1000L,
                         TimeUnit.MILLISECONDS,
                         new LinkedBlockingQueue<>(),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-download", logger));
+        this.downloadExecutor.allowCoreThreadTimeOut(true);
         logger.info("StoreService started. storeId [" + this.storeId + "]");
     }
 
