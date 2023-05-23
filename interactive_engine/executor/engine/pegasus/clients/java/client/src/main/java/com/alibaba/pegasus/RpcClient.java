@@ -15,8 +15,7 @@
  */
 package com.alibaba.pegasus;
 
-import com.alibaba.pegasus.common.StreamIterator;
-import com.alibaba.pegasus.intf.CloseableIterator;
+import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.JobServiceGrpc;
 import com.alibaba.pegasus.service.protocol.JobServiceGrpc.JobServiceStub;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
@@ -29,34 +28,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class RpcClient {
     private static final Logger logger = LoggerFactory.getLogger(RpcClient.class);
+    private final List<RpcChannel> channels;
+    private final List<JobServiceStub> serviceStubs;
+    private final long rpcTimeout;
 
-    private List<RpcChannel> channels;
-
-    public RpcClient(List<RpcChannel> channels) {
-        this.channels = channels;
+    public RpcClient(long grpcTimeout, List<RpcChannel> channels) {
+        this.rpcTimeout = grpcTimeout;
+        this.channels = Objects.requireNonNull(channels);
+        this.serviceStubs = channels.stream().map(k -> JobServiceGrpc.newStub(k.getChannel())).collect(Collectors.toList());
     }
 
-    public CloseableIterator<JobResponse> submit(JobRequest jobRequest)
-            throws InterruptedException {
-        StreamIterator<JobResponse> responseIterator = new StreamIterator<>();
+    public void submit(JobRequest jobRequest, ResultProcessor processor) {
         AtomicInteger counter = new AtomicInteger(this.channels.size());
         AtomicBoolean finished = new AtomicBoolean(false);
-        for (RpcChannel rpcChannel : channels) {
-            JobServiceStub asyncStub = JobServiceGrpc.newStub(rpcChannel.getChannel());
-            // todo: make timeout configurable
+        serviceStubs.forEach(asyncStub -> {
             asyncStub
-                    .withDeadlineAfter(600000, TimeUnit.MILLISECONDS)
-                    .submit(
-                            jobRequest,
-                            new JobResponseObserver(responseIterator, finished, counter));
-        }
-        return responseIterator;
+                    .withDeadlineAfter(rpcTimeout, TimeUnit.MILLISECONDS)
+                    .submit(jobRequest, new JobResponseObserver(processor, finished, counter));
+        });
     }
 
     public void shutdown() throws InterruptedException {
@@ -66,15 +63,15 @@ public class RpcClient {
     }
 
     private static class JobResponseObserver implements StreamObserver<JobResponse> {
-        private final StreamIterator<JobResponse> iterator;
+        private final ResultProcessor processor;
         private final AtomicBoolean finished;
         private final AtomicInteger counter;
 
         public JobResponseObserver(
-                StreamIterator<JobResponse> iterator,
+                ResultProcessor processor,
                 AtomicBoolean finished,
                 AtomicInteger counter) {
-            this.iterator = iterator;
+            this.processor = processor;
             this.finished = finished;
             this.counter = counter;
         }
@@ -84,11 +81,7 @@ public class RpcClient {
             if (finished.get()) {
                 return;
             }
-            try {
-                this.iterator.putData(jobResponse);
-            } catch (InterruptedException e) {
-                onError(e);
-            }
+            processor.process(jobResponse);
         }
 
         @Override
@@ -98,7 +91,7 @@ public class RpcClient {
             }
             Status status = Status.fromThrowable(throwable);
             logger.error("get job response error: {}", status);
-            this.iterator.fail(throwable);
+            processor.error(status);
         }
 
         @Override
@@ -106,11 +99,7 @@ public class RpcClient {
             logger.info("finish get job response from one server");
             if (counter.decrementAndGet() == 0) {
                 logger.info("finish get job response from all servers");
-                try {
-                    this.iterator.finish();
-                } catch (InterruptedException e) {
-                    onError(e);
-                }
+                processor.finish();
             }
         }
     }

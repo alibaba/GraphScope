@@ -14,24 +14,14 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.schema;
+package com.alibaba.graphscope.common.ir.schema.procedure;
 
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-import org.apache.calcite.schema.Statistic;
+public interface StoredProcedures {
+    @Nullable StoredProcedureMeta getStoredProcedure(String procedureName);
 
-import java.util.List;
-
-/**
- * Extends {@link GraphSchema} to add {@link Statistic}
- */
-public interface StatisticSchema extends GraphSchema {
-    // get meta for CBO
-    Statistic getStatistic(List<String> tableName);
-
-    // if the property name need to be converted to id
-    boolean isColumnId();
-
-    // schema json for ir core
-    String schemaJson();
+    static StoredProcedures createEmpty() {
+        return (String producerName) -> null;
+    }
 }

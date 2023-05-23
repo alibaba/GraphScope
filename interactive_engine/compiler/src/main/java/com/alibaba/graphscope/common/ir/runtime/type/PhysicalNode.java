@@ -21,6 +21,8 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
 
+import java.util.Objects;
+
 /**
  * a wrapper of node (i.e. {@link com.sun.jna.Pointer} for FFI interfaces) in ir_core
  * @param <T>
@@ -31,8 +33,8 @@ public class PhysicalNode<T> extends AbstractRelNode {
 
     protected PhysicalNode(RelOptCluster cluster, RelTraitSet traitSet, RelNode original, T node) {
         super(cluster, traitSet);
-        this.original = original;
-        this.node = node;
+        this.original = Objects.requireNonNull(original);
+        this.node = Objects.requireNonNull(node);
     }
 
     public PhysicalNode(RelNode original, T node) {

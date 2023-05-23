@@ -63,11 +63,17 @@ public class Utils {
                     Thread.currentThread()
                             .getContextClassLoader()
                             .getResource("schema/modern.json");
+            URL procedureResource =
+                    Thread.currentThread()
+                            .getContextClassLoader()
+                            .getResource("schema/stored_procedures.json");
             Configs configs =
                     new Configs(
                             ImmutableMap.of(
                                     GraphConfig.GRAPH_SCHEMA.getKey(),
-                                    schemaResource.toURI().getPath()));
+                                    schemaResource.toURI().getPath(),
+                                    GraphConfig.STORED_PROCEDURES.getKey(),
+                                    procedureResource.toURI().getPath()));
             return new ExperimentalMetaFetcher(configs).fetch().get();
         } catch (Exception e) {
             throw new RuntimeException(e);

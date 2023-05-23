@@ -16,8 +16,10 @@
 
 package com.alibaba.graphscope.cypher.result;
 
+import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.alibaba.pegasus.common.StreamIterator;
 import org.neo4j.fabric.stream.summary.EmptySummary;
 import org.neo4j.fabric.stream.summary.Summary;
 import org.neo4j.graphdb.ExecutionPlanDescription;
@@ -28,26 +30,23 @@ import org.neo4j.kernel.impl.query.QueryExecution;
 import org.neo4j.kernel.impl.query.QuerySubscriber;
 import org.neo4j.values.AnyValue;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * return streaming records in a reactive way
  */
-public class CypherRecordProcessor implements QueryExecution {
-    private final Iterator<IrResult.Record> recordIterator;
+public class CypherRecordProcessor implements QueryExecution, ExecutionResponseListener {
     private final RecordParser<AnyValue> recordParser;
     private final QuerySubscriber subscriber;
+    private final StreamIterator<IrResult.Record> recordIterator;
     private final Summary summary;
 
     public CypherRecordProcessor(
-            Iterator<IrResult.Record> recordIterator,
             RecordParser<AnyValue> recordParser,
             QuerySubscriber subscriber) {
-        this.recordIterator = Objects.requireNonNull(recordIterator);
-        this.subscriber = subscriber;
         this.recordParser = recordParser;
+        this.subscriber = subscriber;
+        this.recordIterator = new StreamIterator<>();
         this.summary = new EmptySummary();
         initializeSubscriber();
     }
@@ -98,11 +97,33 @@ public class CypherRecordProcessor implements QueryExecution {
     }
 
     @Override
-    public void cancel() {
-    }
+    public void cancel() {}
 
     @Override
     public boolean await() throws Exception {
         return this.recordIterator.hasNext();
+    }
+
+    @Override
+    public void onNext(IrResult.Record record) {
+        try {
+            this.recordIterator.putData(record);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void onCompleted() {
+        try {
+            this.recordIterator.finish();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void onError(Throwable t) {
+        this.recordIterator.fail(t);
     }
 }

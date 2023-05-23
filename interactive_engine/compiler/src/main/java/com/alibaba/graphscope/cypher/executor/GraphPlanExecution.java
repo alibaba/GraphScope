@@ -17,11 +17,12 @@
 package com.alibaba.graphscope.cypher.executor;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
+import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.cypher.result.CypherRecordParser;
 import com.alibaba.graphscope.cypher.result.CypherRecordProcessor;
-import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
@@ -33,7 +34,6 @@ import org.neo4j.kernel.impl.query.QueryExecution;
 import org.neo4j.kernel.impl.query.QuerySubscriber;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class GraphPlanExecution<C> implements StatementResults.SubscribableExecution {
@@ -50,28 +50,32 @@ public class GraphPlanExecution<C> implements StatementResults.SubscribableExecu
     @Override
     public QueryExecution subscribe(QuerySubscriber querySubscriber) {
         try {
-            ExecutionClient.Request request = new ExecutionClient.Request(this.planSummary.getId(), this.planSummary.getName(), this.planSummary.getPhysicalPlan());
-            Iterator<IrResult.Record> recordIterator = this.client.submit(request);
-            return new CypherRecordProcessor(
-                    recordIterator,
+            ExecutionRequest request = new ExecutionRequest(this.planSummary.getId(), this.planSummary.getName(), this.planSummary.getPhysicalBuilder());
+            CypherRecordProcessor recordProcessor = new CypherRecordProcessor(
                     new CypherRecordParser(getOutputType(planSummary.getLogicalPlan())),
                     querySubscriber);
+            this.client.submit(request, recordProcessor);
+            return recordProcessor;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private RelDataType getOutputType(RelNode relNode) {
-        List<RelNode> inputs = Lists.newArrayList(relNode);
-        List<RelDataTypeField> outputFields = new ArrayList<>();
-        while (!inputs.isEmpty()) {
-            RelNode cur = inputs.remove(0);
-            outputFields.addAll(cur.getRowType().getFieldList());
-            if (AliasInference.removeAlias(cur)) {
-                break;
+    private RelDataType getOutputType(LogicalPlan logicalPlan) {
+        if (logicalPlan.getRegularQuery() != null) {
+            List<RelNode> inputs = Lists.newArrayList(logicalPlan.getRegularQuery());
+            List<RelDataTypeField> outputFields = new ArrayList<>();
+            while (!inputs.isEmpty()) {
+                RelNode cur = inputs.remove(0);
+                outputFields.addAll(cur.getRowType().getFieldList());
+                if (AliasInference.removeAlias(cur)) {
+                    break;
+                }
+                inputs.addAll(cur.getInputs());
             }
-            inputs.addAll(cur.getInputs());
+            return new RelRecordType(StructKind.FULLY_QUALIFIED, outputFields);
+        } else {
+            return logicalPlan.getProcedureCall().getType();
         }
-        return new RelRecordType(StructKind.FULLY_QUALIFIED, outputFields);
     }
 }

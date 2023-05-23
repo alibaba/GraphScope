@@ -17,16 +17,16 @@
 package com.alibaba.graphscope.common.client;
 
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
+import com.alibaba.graphscope.common.client.type.ExecutionRequest;
+import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.pegasus.RpcChannel;
 import com.alibaba.pegasus.RpcClient;
-import com.alibaba.pegasus.common.StreamIterator;
+import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
-
-import java.util.Iterator;
-import java.util.function.Function;
+import io.grpc.Status;
 
 public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
     private final Configs graphConfig;
@@ -35,13 +35,13 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
     public RpcExecutionClient(Configs graphConfig, ChannelFetcher<RpcChannel> channelFetcher) {
         super(channelFetcher);
         this.graphConfig = graphConfig;
-        this.rpcClient = new RpcClient(channelFetcher.fetch());
+        this.rpcClient = new RpcClient(PegasusConfig.PEGASUS_GRPC_TIMEOUT.get(graphConfig), channelFetcher.fetch());
     }
 
     @Override
-    public Iterator<IrResult.Record> submit(Request request) throws Exception {
+    public void submit(ExecutionRequest request, ExecutionResponseListener listener) throws Exception {
         PegasusClient.JobRequest jobRequest =
-                PegasusClient.JobRequest.parseFrom((byte[])request.getRequestPlan().build());
+                PegasusClient.JobRequest.parseFrom((byte[])request.getRequestPhysical().build());
         PegasusClient.JobConfig jobConfig =
                 PegasusClient.JobConfig.newBuilder()
                         .setJobId(request.getRequestId())
@@ -55,11 +55,24 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
                         .setAll(com.alibaba.pegasus.service.protocol.PegasusClient.Empty.newBuilder().build())
                         .build();
         jobRequest = jobRequest.toBuilder().setConf(jobConfig).build();
-        return transform(this.rpcClient.submit(jobRequest), (PegasusClient.JobResponse response) -> {
-            try {
-                return IrResult.Results.parseFrom(response.getResp()).getRecord();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+        this.rpcClient.submit(jobRequest, new ResultProcessor() {
+            @Override
+            public void process(PegasusClient.JobResponse jobResponse) {
+                try {
+                    listener.onNext(IrResult.Results.parseFrom(jobResponse.getResp()).getRecord());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public void finish() {
+                listener.onCompleted();
+            }
+
+            @Override
+            public void error(Status status) {
+                listener.onError(status.getCause());
             }
         });
     }
@@ -69,18 +82,5 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
         if (rpcClient != null) {
             this.rpcClient.shutdown();
         }
-    }
-
-    private <T, R> Iterator<R> transform(Iterator<T> originalIterator, Function<T, R> apply) {
-        return new StreamIterator() {
-            @Override
-            public R next() {
-                return apply.apply(originalIterator.next());
-            }
-            @Override
-            public boolean hasNext() {
-                return originalIterator.hasNext();
-            }
-        };
     }
 }

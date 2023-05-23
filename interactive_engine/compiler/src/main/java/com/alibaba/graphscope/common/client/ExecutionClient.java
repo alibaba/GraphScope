@@ -17,41 +17,16 @@
 package com.alibaba.graphscope.common.client;
 
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
-import com.alibaba.graphscope.common.ir.runtime.type.PhysicalPlan;
-import com.alibaba.graphscope.gaia.proto.IrResult;
-
-import java.util.Iterator;
+import com.alibaba.graphscope.common.client.type.ExecutionRequest;
+import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 
 public abstract class ExecutionClient<C> {
     protected final ChannelFetcher<C> channelFetcher;
     public ExecutionClient(ChannelFetcher<C> channelFetcher) {
         this.channelFetcher = channelFetcher;
     }
-    public abstract Iterator<IrResult.Record> submit(Request request) throws Exception;
+
+    public abstract void submit(ExecutionRequest request, ExecutionResponseListener listener) throws Exception;
 
     public abstract void close() throws Exception;
-
-    public static class Request {
-        private final long requestId;
-        private final String requestName;
-        private final PhysicalPlan requestPlan;
-
-        public Request(long requestId, String requestName, PhysicalPlan requestPlan) {
-            this.requestId = requestId;
-            this.requestName = requestName;
-            this.requestPlan = requestPlan;
-        }
-
-        public long getRequestId() {
-            return requestId;
-        }
-
-        public String getRequestName() {
-            return requestName;
-        }
-
-        public PhysicalPlan getRequestPlan() {
-            return requestPlan;
-        }
-    }
 }

@@ -26,7 +26,6 @@
 package com.alibaba.graphscope.gremlin.plugin.processor;
 
 import com.alibaba.graphscope.common.IrPlan;
-import com.alibaba.graphscope.common.client.RpcBroadcastProcessor;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
@@ -42,6 +41,7 @@ import com.alibaba.graphscope.gremlin.plugin.strategy.ExpandFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
+import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -86,7 +86,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected GraphTraversalSource g;
     protected Configs configs;
     protected PlannerConfig plannerConfig;
-    protected RpcBroadcastProcessor broadcastProcessor;
+    protected RpcClient rpcClient;
     protected IrMetaFetcher irMetaFetcher;
     protected IrMetaQueryCallback metaQueryCallback;
 
@@ -102,7 +102,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.configs = configs;
         this.plannerConfig = PlannerConfig.create(this.configs);
         this.irMetaFetcher = irMetaFetcher;
-        this.broadcastProcessor = new RpcBroadcastProcessor(fetcher);
+        this.rpcClient = new RpcClient(PegasusConfig.PEGASUS_GRPC_TIMEOUT.get(this.configs), fetcher.fetch());
         this.metaQueryCallback = metaQueryCallback;
     }
 
@@ -338,7 +338,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         .setAll(PegasusClient.Empty.newBuilder().build())
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();
-        broadcastProcessor.broadcast(request, resultProcessor);
+        this.rpcClient.submit(request, resultProcessor);
     }
 
     public static void applyStrategies(Traversal traversal) {
@@ -355,5 +355,12 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         strategies.add(InlineFilterStrategy.instance());
         strategies.add(ExpandFusionStepStrategy.instance());
         traversal.asAdmin().applyStrategies();
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (this.rpcClient != null) {
+            this.rpcClient.shutdown();
+        }
     }
 }

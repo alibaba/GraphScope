@@ -18,8 +18,8 @@ package com.alibaba.graphscope.cypher.service;
 
 import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.client.ExecutionClient;
-import com.alibaba.graphscope.common.client.RpcExecutionClient;
-import com.alibaba.graphscope.common.client.channel.HostsRpcChannelFetcher;
+import com.alibaba.graphscope.common.client.HttpExecutionClient;
+import com.alibaba.graphscope.common.client.channel.HostURIChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
@@ -36,12 +36,13 @@ public class CypherServiceMain {
         Antlr4Parser cypherParser = new CypherAntlr4Parser();
         GraphPlanner graphPlanner = new GraphPlanner(graphConfig);
         IrMetaQueryCallback queryCallback = new IrMetaQueryCallback(new ExperimentalMetaFetcher(graphConfig));
-        ExecutionClient client = new RpcExecutionClient(graphConfig, new HostsRpcChannelFetcher(graphConfig));
+        // ExecutionClient client = new RpcExecutionClient(graphConfig, new HostsRpcChannelFetcher(graphConfig));
+        ExecutionClient client = new HttpExecutionClient(graphConfig, new HostURIChannelFetcher(graphConfig));
         CommunityBootstrapper bootstrapper = new CypherBootstrapper(graphConfig, cypherParser, graphPlanner, queryCallback, client);
         bootstrapper.start(
                 Path.of(
                         "/tmp/neo4j"),
-                Path.of("neo4j.conf"),
+                Path.of("conf/neo4j.conf"),
                 ImmutableMap.of(),
                 false);
     }

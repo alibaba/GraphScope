@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
+import com.alibaba.graphscope.common.ir.rel.GraphRelShuttleWrapper;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
@@ -30,10 +31,11 @@ import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
+import com.alibaba.graphscope.common.ir.runtime.RegularPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
 import com.alibaba.graphscope.common.ir.runtime.type.PhysicalNode;
-import com.alibaba.graphscope.common.ir.runtime.type.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiData;
@@ -45,7 +47,6 @@ import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
-import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -57,20 +58,21 @@ import java.util.List;
 /**
  * build ffi logical plan in ir core by jna invocation
  */
-public class FfiPhysicalPlan extends PhysicalPlan<Pointer, byte[]> {
+public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> {
     private static final IrCoreLibrary LIB = IrCoreLibrary.INSTANCE;
     private final IrMeta irMeta;
     private final Configs graphConfig;
     private final Pointer ptrPlan;
     private int lastIdx;
 
-    public FfiPhysicalPlan(RelOptCluster cluster, IrMeta irMeta, Configs graphConfig) {
-        super(cluster);
+    public FfiPhysicalBuilder(Configs graphConfig, IrMeta irMeta, LogicalPlan logicalPlan) {
+        super(logicalPlan, new GraphRelShuttleWrapper(new RelToFfiConverter(irMeta.getSchema().isColumnId())));
         this.graphConfig = graphConfig;
         this.irMeta = irMeta;
-        checkFfiResult(LIB.setSchema(irMeta.getSchemaJson()));
+        checkFfiResult(LIB.setSchema(irMeta.getSchema().schemaJson()));
         this.ptrPlan = LIB.initLogicalPlan();
         this.lastIdx = -1;
+        initialize();
     }
 
     @Override

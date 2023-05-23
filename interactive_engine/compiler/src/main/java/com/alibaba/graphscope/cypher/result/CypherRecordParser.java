@@ -16,14 +16,15 @@
 
 package com.alibaba.graphscope.cypher.result;
 
-import com.alibaba.graphscope.common.result.RecordParser;
+import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphPxdElementType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
+import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
+import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.ArraySqlType;
@@ -48,20 +49,14 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
 
     @Override
     public List<AnyValue> parseFrom(IrResult.Record record) {
-        try {
-            List<AnyValue> columns = Lists.newArrayList();
-            outputType
-                    .getFieldList()
-                    .forEach(
-                            k -> {
-                                IrResult.Column column =
-                                        getIrColumn(k, record.getColumnsList());
-                                columns.add(parseEntry(column.getEntry(), k.getType()));
-                            });
-            return columns;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        Preconditions.checkArgument(record.getColumnsCount() == outputType.getFieldCount(), "column size of results should be consistent with output type");
+        List<AnyValue> columns = new ArrayList<>(record.getColumnsCount());
+        for (int i = 0; i < record.getColumnsCount(); i++) {
+            IrResult.Column column = record.getColumns(i);
+            RelDataTypeField field = outputType.getFieldList().get(i);
+            columns.add(parseEntry(column.getEntry(), field.getType()));
         }
+        return columns;
     }
 
     @Override
@@ -73,20 +68,35 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         Preconditions.checkArgument(
                 dataType instanceof GraphSchemaType,
                 "data type of vertex should be " + GraphSchemaType.class);
-        return VirtualValues.nodeValue(vertex.getId(), Values.stringArray(String.valueOf(vertex.getLabel().getId())), MapValue.EMPTY);
+        return VirtualValues.nodeValue(
+                vertex.getId(),
+                Values.stringArray(getLabelName(vertex.getLabel(), getLabelTypes((GraphSchemaType) dataType))),
+                MapValue.EMPTY);
     }
 
-    protected RelationshipReference parseEdge(IrResult.Edge edge, @Nullable RelDataType dataType) {
+    protected RelationshipValue parseEdge(IrResult.Edge edge, @Nullable RelDataType dataType) {
         Preconditions.checkArgument(
                 dataType instanceof GraphSchemaType,
                 "data type of edge should be " + GraphSchemaType.class);
-        return VirtualValues.relationship(edge.getId());
+        return VirtualValues.relationshipValue(
+                edge.getId(),
+                VirtualValues.nodeValue(
+                        edge.getSrcId(),
+                        Values.stringArray(getSrcLabelName(edge.getSrcLabel(), getLabelTypes((GraphSchemaType) dataType))),
+                        MapValue.EMPTY),
+                VirtualValues.nodeValue(
+                        edge.getDstId(),
+                        Values.stringArray(getDstLabelName(edge.getDstLabel(), getLabelTypes((GraphSchemaType) dataType))),
+                        MapValue.EMPTY),
+                Values.stringValue(getLabelName(edge.getLabel(), getLabelTypes((GraphSchemaType) dataType))),
+                MapValue.EMPTY);
     }
 
     protected AnyValue parseGraphPath(IrResult.GraphPath path, @Nullable RelDataType dataType) {
         Preconditions.checkArgument(dataType.getSqlTypeName() == SqlTypeName.ARRAY);
         ArraySqlType arrayType = (ArraySqlType) dataType;
         Preconditions.checkArgument(arrayType.getComponentType() instanceof GraphPxdElementType);
+        // todo: support path expand result
         GraphPxdElementType elementType = (GraphPxdElementType) arrayType.getComponentType();
         throw new NotImplementedException("type " + PathValue.class + " is not implemented yet");
     }
@@ -121,6 +131,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         Preconditions.checkArgument(
                 dataType.getSqlTypeName() == SqlTypeName.MULTISET
                         || dataType.getSqlTypeName() == SqlTypeName.ARRAY);
+        // todo: support collect result
         throw new NotImplementedException("type " + ArrayValue.class + " is not implemented yet");
     }
 
@@ -148,35 +159,79 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         }
     }
 
-    private IrResult.Column getIrColumn(RelDataTypeField field, List<IrResult.Column> columnList) {
-        List<Object> existColumns = new ArrayList<>();
-        for (IrResult.Column column : columnList) {
-            Common.NameOrId nameOrId = column.getNameOrId();
-            switch (nameOrId.getItemCase()) {
-                case ID:
-                    if (field.getIndex() == nameOrId.getId()) {
-                        return column;
+    private String getLabelName(Common.NameOrId nameOrId, List<GraphLabelType> labelTypes) {
+        switch (nameOrId.getItemCase()) {
+            case NAME:
+                return nameOrId.getName();
+            case ID:
+            default:
+                List<Integer> labelIds = new ArrayList<>();
+                for (GraphLabelType labelType : labelTypes) {
+                    if (labelType.getLabelId() == nameOrId.getId()) {
+                        return labelType.getLabel();
                     }
-                    existColumns.add(nameOrId.getId());
-                    break;
-                case NAME:
-                default:
-                    // hack: column id is in string format
-                    if (nameOrId.getName().matches("^[0-9]+$")) {
-                        int nameId = Integer.valueOf(nameOrId.getName());
-                        if (field.getIndex() == nameId) {
-                            return column;
-                        }
-                        existColumns.add(nameId);
-                    } else {
-                        if (field.getName().equals(nameOrId.getName())) {
-                            return column;
-                        }
-                        existColumns.add(nameOrId.getName());
-                    }
-            }
+                    labelIds.add(labelType.getLabelId());
+                }
+                throw new IllegalArgumentException(
+                        "label id="
+                                + nameOrId.getId()
+                                + " not found, expected ids are "
+                                + labelIds);
         }
-        throw new IllegalArgumentException(
-                "field " + field + " not found, expected columns are" + existColumns);
     }
+
+    private String getSrcLabelName(Common.NameOrId nameOrId, List<GraphLabelType> labelTypes) {
+        switch (nameOrId.getItemCase()) {
+            case NAME:
+                return nameOrId.getName();
+            case ID:
+            default:
+                List<Integer> labelIds = new ArrayList<>();
+                for (GraphLabelType labelType : labelTypes) {
+                    if (labelType.getSrcLabelId() == nameOrId.getId()) {
+                        return labelType.getSrcLabel();
+                    }
+                }
+                throw new IllegalArgumentException(
+                        "src label id="
+                                + nameOrId.getId()
+                                + " not found, expected ids are "
+                                + labelIds);
+        }
+    }
+
+    private String getDstLabelName(Common.NameOrId nameOrId, List<GraphLabelType> labelTypes) {
+        switch (nameOrId.getItemCase()) {
+            case NAME:
+                return nameOrId.getName();
+            case ID:
+            default:
+                List<Integer> labelIds = new ArrayList<>();
+                for (GraphLabelType labelType : labelTypes) {
+                    if (labelType.getDstLabelId() == nameOrId.getId()) {
+                        return labelType.getDstLabel();
+                    }
+                }
+                throw new IllegalArgumentException(
+                        "dst label id="
+                                + nameOrId.getId()
+                                + " not found, expected ids are "
+                                + labelIds);
+        }
+    }
+
+    private List<GraphLabelType> getLabelTypes(GraphSchemaType dataType) {
+        List<GraphLabelType> labelTypes = new ArrayList<>();
+        if (dataType instanceof GraphSchemaTypeList) {
+            ((GraphSchemaTypeList) dataType)
+                    .forEach(
+                            k -> {
+                                labelTypes.add(k.getLabelType());
+                            });
+        } else {
+            labelTypes.add(dataType.getLabelType());
+        }
+        return labelTypes;
+    }
+
 }

@@ -18,17 +18,13 @@ package com.alibaba.graphscope.common.ir.runtime;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
-import com.alibaba.graphscope.common.ir.rel.GraphRelShuttleWrapper;
-import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalPlan;
-import com.alibaba.graphscope.common.ir.runtime.ffi.RelToFfiConverter;
-import com.alibaba.graphscope.common.ir.runtime.type.PhysicalPlan;
+import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.ir.tools.config.*;
-import com.alibaba.graphscope.common.jna.type.FfiData;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
-import com.sun.jna.Pointer;
 import org.apache.calcite.rel.RelNode;
 import org.junit.Assert;
 import org.junit.Test;
@@ -86,14 +82,10 @@ public class FfiLogicalPlanTest {
                     + " alias=[x], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 aggregate.explain().trim());
-        try (PhysicalPlan<Pointer, FfiData.ByValue> ffiPlan =
-                new PhysicalPlanConverter(
-                                new GraphRelShuttleWrapper(new RelToFfiConverter(true)),
-                                new FfiPhysicalPlan(
-                                        builder.getCluster(), Utils.schemaMeta, getMockGraphConfig()))
-                        .go(aggregate)) {
+        try (PhysicalBuilder<byte[]> ffiBuilder =
+                new FfiPhysicalBuilder(getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(aggregate, false))) {
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("ffi_logical_plan.json"), ffiPlan.explain());
+                    FileUtils.readJsonFromResource("ffi_logical_plan.json"), ffiBuilder.explain());
         }
     }
 

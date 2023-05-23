@@ -1,0 +1,21 @@
+[
+  {
+    "name": "modern_1",
+    "parameters": [
+      {
+        "name": "name",
+        "type": "STRING"
+      },
+      {
+        "name": "age",
+        "type": "INTEGER"
+      }
+    ],
+    "returnType": [
+      {
+        "name": "id",
+        "type": "LONG"
+      }
+    ]
+  }
+]

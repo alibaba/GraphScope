@@ -19,16 +19,13 @@ package com.alibaba.graphscope.common.ir.tools;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
-import com.alibaba.graphscope.common.ir.rel.GraphRelShuttleWrapper;
-import com.alibaba.graphscope.common.ir.runtime.PhysicalPlanConverter;
-import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalPlan;
-import com.alibaba.graphscope.common.ir.runtime.ffi.RelToFfiConverter;
-import com.alibaba.graphscope.common.ir.runtime.type.PhysicalPlan;
+import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
+import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
+import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.store.IrMeta;
-import com.alibaba.graphscope.cypher.antlr4.visitor.GraphBuilderVisitor;
-import com.google.common.collect.Lists;
+import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.GraphOptCluster;
@@ -37,11 +34,9 @@ import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rex.RexBuilder;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -86,60 +81,43 @@ public class GraphPlanner {
             // build logical plan from parsed query
             StatisticSchema schema = irMeta.getSchema();
             GraphBuilder graphBuilder = GraphBuilder.create(null, this.optCluster, new GraphOptSchema(this.optCluster, schema));
-            RelNode relNode = new GraphBuilderVisitor(graphBuilder).visit(parsedQuery).build();
+            LogicalPlan logicalPlan = new LogicalPlanVisitor(graphBuilder, this.irMeta).visit(this.parsedQuery);
             // apply optimizations
-            if (plannerConfig.isOn()) {
+            if (plannerConfig.isOn()
+                    && logicalPlan.getRegularQuery() != null && !logicalPlan.isReturnEmpty()) {
+                RelNode regularQuery = logicalPlan.getRegularQuery();
                 RelOptPlanner planner = this.optCluster.getPlanner();
-                planner.setRoot(relNode);
-                relNode = planner.findBestExp();
+                planner.setRoot(regularQuery);
+                logicalPlan = new LogicalPlan(planner.findBestExp(), logicalPlan.isReturnEmpty());
             }
             // build physical plan from logical plan
-            if (!returnEmpty(relNode)) {
-                try (PhysicalPlan physicalPlan = new PhysicalPlanConverter<>(
-                        new GraphRelShuttleWrapper(
-                                new RelToFfiConverter(schema.isColumnId())),
-                        new FfiPhysicalPlan(optCluster, irMeta, graphConfig)).go(relNode)) {
-                    return new Summary(this.id, this.name, relNode, physicalPlan, false);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            } else { // if the result is empty, we don't need to generate physical plan
-                return new Summary(this.id, this.name, relNode, null, true);
+            PhysicalBuilder physicalBuilder;
+            if (logicalPlan.isReturnEmpty()) {
+                physicalBuilder = PhysicalBuilder.createEmpty(logicalPlan);
+            } else if (logicalPlan.getRegularQuery() != null) {
+                physicalBuilder = new FfiPhysicalBuilder(graphConfig, irMeta, logicalPlan);
+            } else {
+                physicalBuilder = new ProcedurePhysicalBuilder(logicalPlan);
             }
-        }
-
-        private boolean returnEmpty(RelNode relNode) {
-            List<RelNode> inputs = Lists.newArrayList(relNode);
-            while (!inputs.isEmpty()) {
-                RelNode cur = inputs.remove(0);
-                if (cur instanceof LogicalValues) {
-                    return true;
-                }
-                inputs.addAll(cur.getInputs());
-            }
-            return false;
+            return new Summary(this.id, this.name, logicalPlan, physicalBuilder);
         }
     }
 
     public static class Summary {
         private final long id;
         private final String name;
-        private final RelNode logicalPlan;
-        // if returnEmpty is true, physicalPlan is null
-        private final @Nullable PhysicalPlan physicalPlan;
-        private final boolean returnEmpty;
+        private final LogicalPlan logicalPlan;
+        private final PhysicalBuilder physicalBuilder;
 
         public Summary(
                 long id,
                 String name,
-                RelNode logicalPlan,
-                @Nullable PhysicalPlan physicalPlan,
-                boolean returnEmpty) {
+                LogicalPlan logicalPlan,
+                PhysicalBuilder physicalBuilder) {
             this.id = id;
             this.name = name;
             this.logicalPlan = Objects.requireNonNull(logicalPlan);
-            this.physicalPlan = physicalPlan;
-            this.returnEmpty = returnEmpty;
+            this.physicalBuilder = Objects.requireNonNull(physicalBuilder);
         }
 
         public long getId() {
@@ -149,17 +127,13 @@ public class GraphPlanner {
         public String getName() {
             return name;
         }
-        
-        public RelNode getLogicalPlan() {
+
+        public LogicalPlan getLogicalPlan() {
             return logicalPlan;
         }
 
-        public @Nullable PhysicalPlan getPhysicalPlan() {
-            return physicalPlan;
-        }
-
-        public boolean isReturnEmpty() {
-            return returnEmpty;
+        public @Nullable PhysicalBuilder getPhysicalBuilder() {
+            return physicalBuilder;
         }
     }
 

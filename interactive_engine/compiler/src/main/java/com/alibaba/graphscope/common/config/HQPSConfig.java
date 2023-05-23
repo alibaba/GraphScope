@@ -14,24 +14,12 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.schema;
+package com.alibaba.graphscope.common.config;
 
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
+public class HQPSConfig {
+    public static final Config<String> HQPS_URIS =
+            Config.stringConfig("hqps.uris", "http://localhost:8080");
 
-import org.apache.calcite.schema.Statistic;
-
-import java.util.List;
-
-/**
- * Extends {@link GraphSchema} to add {@link Statistic}
- */
-public interface StatisticSchema extends GraphSchema {
-    // get meta for CBO
-    Statistic getStatistic(List<String> tableName);
-
-    // if the property name need to be converted to id
-    boolean isColumnId();
-
-    // schema json for ir core
-    String schemaJson();
+    public static final Config<Long> HQPS_HTTP_TIMEOUT =
+            Config.longConfig("hqps.http.timeout", 6000000l);
 }

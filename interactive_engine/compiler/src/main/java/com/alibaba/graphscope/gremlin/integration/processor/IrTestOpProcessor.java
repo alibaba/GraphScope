@@ -114,11 +114,6 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
         }
     }
 
-    @Override
-    public void close() throws Exception {
-        this.broadcastProcessor.close();
-    }
-
     private String getScript(Bytecode byteCode) {
         String script = GroovyTranslator.of("g").translate(byteCode).getScript();
         // remove type cast from original script, g.V().has("age",P.gt((int) 30))

@@ -17,41 +17,42 @@
 package com.alibaba.graphscope.common.store;
 
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
+import com.alibaba.graphscope.common.ir.schema.procedure.StoredProcedures;
 
 import java.util.Objects;
 
 public class IrMeta {
-    private StatisticSchema schema;
-    private String schemaJson;
+    private final SnapshotId snapshotId;
+    private final StatisticSchema schema;
+    private final StoredProcedures storedProcedures;
 
-    private long snapshotId;
-    private boolean acquireSnapshot;
-
-    public IrMeta(StatisticSchema schema, String schemaJson) {
-        this.schema = Objects.requireNonNull(schema);
-        this.schemaJson = Objects.requireNonNull(schemaJson);
+    public IrMeta(StatisticSchema schema) {
+        this(SnapshotId.createEmpty(), schema);
     }
 
-    public IrMeta(StatisticSchema schema, String schemaJson, long snapshotId) {
-        this.schema = schema;
-        this.schemaJson = schemaJson;
-        this.snapshotId = snapshotId;
-        this.acquireSnapshot = true;
+    public IrMeta(StatisticSchema schema, StoredProcedures storedProcedures) {
+        this(SnapshotId.createEmpty(), schema, storedProcedures);
+    }
+
+    public IrMeta(SnapshotId snapshotId, StatisticSchema schema) {
+        this(snapshotId, schema, StoredProcedures.createEmpty());
+    }
+
+    public IrMeta(SnapshotId snapshotId, StatisticSchema schema, StoredProcedures storedProcedures) {
+        this.snapshotId = Objects.requireNonNull(snapshotId);
+        this.schema = Objects.requireNonNull(schema);
+        this.storedProcedures = Objects.requireNonNull(storedProcedures);
     }
 
     public StatisticSchema getSchema() {
         return schema;
     }
 
-    public String getSchemaJson() {
-        return schemaJson;
-    }
-
-    public long getSnapshotId() {
+    public SnapshotId getSnapshotId() {
         return snapshotId;
     }
 
-    public boolean isAcquireSnapshot() {
-        return acquireSnapshot;
+    public StoredProcedures getStoredProcedures() {
+        return storedProcedures;
     }
 }

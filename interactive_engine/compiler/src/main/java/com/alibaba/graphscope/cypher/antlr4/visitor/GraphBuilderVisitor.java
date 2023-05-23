@@ -19,11 +19,10 @@ package com.alibaba.graphscope.cypher.antlr4.visitor;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariableConverter;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.config.*;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.cypher.antlr4.visitor.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
-
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;

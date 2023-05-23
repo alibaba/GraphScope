@@ -19,6 +19,7 @@ package com.alibaba.graphscope.cypher.executor;
 import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.client.ExecutionClient;
+import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
@@ -101,15 +102,23 @@ public class GraphQueryExecutor extends FabricExecutor {
             ParseTree parseTree = antlr4Parser.parse(statement);
             GraphPlanner.PlannerInstance instance = graphPlanner.instance(parseTree, irMeta);
             GraphPlanner.Summary planSummary = instance.plan();
-            if (planSummary.isReturnEmpty()) {
-                return StatementResults.initial();
+            try (PhysicalBuilder physicalBuilder = planSummary.getPhysicalBuilder()) {
+                logger.info("cypher query \"{}\", job conf name \"{}\", logical plan {}, physical plan {}",
+                        statement,
+                        planSummary.getName(),
+                        planSummary.getLogicalPlan().explain(),
+                        physicalBuilder.explain());
+                if (planSummary.getLogicalPlan().isReturnEmpty()) {
+                    return StatementResults.initial();
+                }
+                QuerySubject querySubject = new QuerySubject.BasicQuerySubject();
+                StatementResults.SubscribableExecution execution = new GraphPlanExecution(
+                        this.client,
+                        planSummary);
+                metaQueryCallback.afterExec(irMeta);
+                StatementResult result = StatementResults.connectVia(execution, querySubject);
+                return result;
             }
-            QuerySubject querySubject = new QuerySubject.BasicQuerySubject();
-            StatementResults.SubscribableExecution execution = new GraphPlanExecution(
-                    this.client,
-                    planSummary);
-            metaQueryCallback.afterExec(irMeta);
-            return StatementResults.connectVia(execution, querySubject);
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {

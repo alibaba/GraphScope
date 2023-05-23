@@ -14,24 +14,14 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.schema;
+package com.alibaba.graphscope.common.client.type;
 
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
+import com.alibaba.graphscope.gaia.proto.IrResult;
 
-import org.apache.calcite.schema.Statistic;
+public interface ExecutionResponseListener {
+    void onNext(IrResult.Record record);
 
-import java.util.List;
+    void onCompleted();
 
-/**
- * Extends {@link GraphSchema} to add {@link Statistic}
- */
-public interface StatisticSchema extends GraphSchema {
-    // get meta for CBO
-    Statistic getStatistic(List<String> tableName);
-
-    // if the property name need to be converted to id
-    boolean isColumnId();
-
-    // schema json for ir core
-    String schemaJson();
+    void onError(Throwable t);
 }
