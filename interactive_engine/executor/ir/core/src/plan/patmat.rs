@@ -424,6 +424,10 @@ impl MergedSentence {
             base.set_has_as_opr(has_as_opr);
         }
     }
+
+    pub fn len(&self) -> usize {
+        self.bases.len()
+    }
 }
 
 impl From<BaseSentence> for MergedSentence {
@@ -448,7 +452,7 @@ impl TryFrom<MergedSentence> for JoinSentence {
     type Error = IrError;
 
     fn try_from(merged: MergedSentence) -> IrResult<Self> {
-        if merged.bases.is_empty() {
+        if merged.len() == 0 {
             Err(IrError::InvalidPattern("empty `MergedSentence` is not allowed".to_string()))
         } else {
             let tags = merged.tags.clone();
@@ -456,26 +460,32 @@ impl TryFrom<MergedSentence> for JoinSentence {
                 .bases
                 .into_iter()
                 .collect::<VecDeque<_>>();
-            let mut first: JoinSentence = queue.pop_front().unwrap().into();
-            if first.join_kind != pb::join::JoinKind::Inner {
-                return Err(IrError::InvalidPattern(
-                    "the first sentence of `MergedSentence` must have InnerJoin".to_string(),
-                ));
-            }
 
-            while !queue.is_empty() {
-                let second = queue.pop_front().unwrap();
-                let join_kind = second.join_kind;
-                first = JoinSentence {
-                    left: Rc::new(first),
-                    right: Some(Rc::new(second)),
-                    common_tags: tags.clone(),
-                    tags: tags.clone(),
-                    join_kind,
-                };
-            }
+            let first = queue.pop_front().unwrap();
+            if queue.is_empty() {
+                Ok(first.into())
+            } else {
+                let mut first: JoinSentence = first.into();
+                if first.join_kind != pb::join::JoinKind::Inner {
+                    return Err(IrError::InvalidPattern(
+                        "the first sentence of `MergedSentence` must have InnerJoin".to_string(),
+                    ));
+                }
 
-            Ok(first)
+                while !queue.is_empty() {
+                    let second = queue.pop_front().unwrap();
+                    let join_kind = second.join_kind;
+                    first = JoinSentence {
+                        left: Rc::new(first),
+                        right: Some(Rc::new(second)),
+                        common_tags: tags.clone(),
+                        tags: tags.clone(),
+                        join_kind,
+                    };
+                }
+
+                Ok(first)
+            }
         }
     }
 }
@@ -524,7 +534,11 @@ impl MatchingStrategy for MergedSentence {
 
 impl AsBaseSentence for MergedSentence {
     fn get_base(&self) -> Option<&BaseSentence> {
-        None
+        if self.len() == 1 {
+            self.bases.first()
+        } else {
+            None
+        }
     }
 
     fn get_tags(&self) -> &BTreeSet<NameOrId> {
@@ -698,7 +712,11 @@ impl MatchingStrategy for CompoSentence {
 
 impl AsBaseSentence for CompoSentence {
     fn get_base(&self) -> Option<&BaseSentence> {
-        None
+        if self.tail.is_none() {
+            self.head.get_base()
+        } else {
+            None
+        }
     }
     fn get_tags(&self) -> &BTreeSet<NameOrId> {
         &self.tags
@@ -1490,13 +1508,13 @@ mod test {
         ]);
 
         // Join (id = 8) (
-        //    As(a), Out(), As(b), Out(), As(c) (id = 4)
-        //    As(a), Out(), As(c) (id = 7)
+        //    As(a), Out(), As(c) (id = 2)
+        //    As(a), Out(), As(b), Out(), As(c) (id = 7)
         // )
         let plan = strategy.build_logical_plan().unwrap();
-        assert_eq!(plan.nodes.get(4).unwrap().children, vec![8]);
+        assert_eq!(plan.nodes.get(2).unwrap().children, vec![8]);
         assert_eq!(
-            plan.nodes.get(4).unwrap().opr.clone().unwrap(),
+            plan.nodes.get(7).unwrap().opr.clone().unwrap(),
             pb::As { alias: "c".try_into().ok() }.into()
         );
         assert_eq!(plan.nodes.get(7).unwrap().children, vec![8]);
@@ -1531,21 +1549,21 @@ mod test {
             gen_sentence_x_out_y("b", Some("d"), false, false),
         ]);
         // Join (opr_id = 14)
-        //      As(b), Out(), as(d), (opr_id = 13),
-        //      Join (opr_id = 10) (
-        //          As(a), Out(), As(b), Out(), As(c), In(), (this has been reversed), As(d) (opr_id = 6)
-        //          As(a), Out(), As(d), (opr_id = 9)
+        //      As(b), Out(), as(d), (opr_id = 2),
+        //      Join (opr_id = 14) (
+        //          As(), As(a), Out(), As(d), (opr_id = 6)
+        //          As(a), Out(), As(b), Out(), As(c), In(), (12, this has been reversed), As(d) (opr_id = 13)
         //      )
         // )
         let plan = strategy.build_logical_plan().unwrap();
         println!("{:#?}", plan.nodes);
 
-        assert_eq!(plan.nodes.first().unwrap().opr.clone().unwrap(), pb::As { alias: None }.into());
+        assert_eq!(plan.nodes.get(3).unwrap().opr.clone().unwrap(), pb::As { alias: None }.into());
         assert_eq!(
-            plan.nodes.get(6).unwrap().opr.clone().unwrap(),
+            plan.nodes.get(12).unwrap().opr.clone().unwrap(),
             pb::EdgeExpand {
                 v_tag: None,
-                direction: 1, // check this has been reversed from 0 to 1
+                direction: 1, // check this has been reversed from 0 (Out) to 1 (In)
                 params: Some(query_params()),
                 expand_opt: 0,
                 alias: None,
@@ -1553,10 +1571,10 @@ mod test {
             }
             .into()
         );
-        assert_eq!(plan.nodes.get(7).unwrap().children, vec![11]);
-        assert_eq!(plan.nodes.get(10).unwrap().children, vec![11]);
+        assert_eq!(plan.nodes.get(6).unwrap().children, vec![14]);
+        assert_eq!(plan.nodes.get(13).unwrap().children, vec![14]);
         assert_eq!(
-            plan.nodes.get(11).unwrap().opr.clone().unwrap(),
+            plan.nodes.get(14).unwrap().opr.clone().unwrap(),
             pb::Join {
                 left_keys: vec![
                     common_pb::Variable { tag: Some("a".into()), property: None, node_type: None },
@@ -1570,7 +1588,7 @@ mod test {
             }
             .into()
         );
-        assert_eq!(plan.nodes.get(11).unwrap().children, vec![15]);
+        assert_eq!(plan.nodes.get(2).unwrap().children, vec![15]);
         assert_eq!(plan.nodes.get(14).unwrap().children, vec![15]);
         assert_eq!(
             plan.nodes.last().unwrap().opr.clone().unwrap(),
@@ -1598,20 +1616,21 @@ mod test {
             gen_sentence_x_out_y("a", Some("d"), false, false),
             gen_sentence_x_out_y("b", Some("d"), false, false),
         ]);
-        // Join (opr_id = 14)
-        //      As(b), Out(), as(d), (opr_id = 13),
-        //      Join (opr_id = 10) (
-        //          As(a), Out(), As(b), Out(), As(c), (opr_id = 4)
-        //          As(a), Out(), As(d), Out(), As(c) (opr_id = 9)
+        // Join (opr_id = 15)
+        //      As(b), Out(), as(d), (opr_id = 2),
+        //      Join (opr_id = 14) (
+        //          As(), As(a), Out(), As(b), Out(), As(c), (opr_id = 8)
+        //          As(a), Out(), As(d), Out(), As(c) (opr_id = 13)
         //      )
         // )
         let plan = strategy.build_logical_plan().unwrap();
         println!("{:#?}", plan.nodes);
 
-        assert_eq!(plan.nodes.get(5).unwrap().children, vec![11]);
-        assert_eq!(plan.nodes.get(10).unwrap().children, vec![11]);
+        assert_eq!(plan.nodes.get(3).unwrap().opr.clone().unwrap(), pb::As { alias: None }.into());
+        assert_eq!(plan.nodes.get(8).unwrap().children, vec![14]);
+        assert_eq!(plan.nodes.get(13).unwrap().children, vec![14]);
         assert_eq!(
-            plan.nodes.get(11).unwrap().opr.clone().unwrap(),
+            plan.nodes.get(14).unwrap().opr.clone().unwrap(),
             pb::Join {
                 left_keys: vec![
                     common_pb::Variable { tag: Some("a".into()), property: None, node_type: None },
@@ -1625,7 +1644,7 @@ mod test {
             }
             .into()
         );
-        assert_eq!(plan.nodes.get(11).unwrap().children, vec![15]);
+        assert_eq!(plan.nodes.get(2).unwrap().children, vec![15]);
         assert_eq!(plan.nodes.get(14).unwrap().children, vec![15]);
         assert_eq!(
             plan.nodes.last().unwrap().opr.clone().unwrap(),
@@ -1716,13 +1735,25 @@ mod test {
             gen_sentence_x_out_y("c", Some("a"), false, false),
         ]);
         // Join (id = 8) (
-        //    As(a), Out(), As(b), Out(), As(c) (id = 4),
-        //    As(c), Out(), As(a) (id = 7),
+        //    As(a), In() (id = 1, reversed), As(c) (id = 2),
+        //    As(a), Out(), As(b), Out(), As(c) (id = 7),
         // )
         let plan = strategy.build_logical_plan().unwrap();
         assert_eq!(plan.nodes.len(), 9);
-        assert_eq!(plan.nodes.get(4).unwrap().children, vec![8]);
+        assert_eq!(plan.nodes.get(2).unwrap().children, vec![8]);
         assert_eq!(plan.nodes.get(7).unwrap().children, vec![8]);
+        assert_eq!(
+            plan.nodes.get(1).unwrap().opr.clone().unwrap(),
+            pb::EdgeExpand {
+                v_tag: None,
+                direction: 1, // check this has been reversed from 0 (Out) to 1 (In)
+                params: Some(query_params()),
+                expand_opt: 0,
+                alias: None,
+                meta_data: None
+            }
+            .into()
+        );
         assert_eq!(
             plan.nodes.last().unwrap().opr.clone().unwrap(),
             pb::Join {
@@ -1748,20 +1779,21 @@ mod test {
             gen_sentence_x_out_y("a", Some("d"), false, false),
         ]);
         // Join (id = 11) (
-        //      Join (id = 7) (
-        //          As(), As(a), Out(), As(b) (id = 3),
-        //                As(a), Out(), As(c) (id = 6),
+        //      As(a), Out(), As(d) (id = 2)
+        //      Join (id = 10) (
+        //          As(), As(a), Out(), As(b) (id = 6),
+        //                As(a), Out(), As(c) (id = 9),
         //      ),
-        //      As(a), Out(), As(d) (id = 10)
         //)
         let plan = strategy.build_logical_plan().unwrap();
+        println!("{:#?}", plan.nodes);
         assert_eq!(plan.nodes.len(), 12);
-        assert_eq!(plan.nodes.first().unwrap().opr.clone().unwrap(), pb::As { alias: None }.into());
+        assert_eq!(plan.nodes.get(3).unwrap().opr.clone().unwrap(), pb::As { alias: None }.into());
 
-        assert_eq!(plan.nodes.get(3).unwrap().children, vec![7]);
-        assert_eq!(plan.nodes.get(6).unwrap().children, vec![7]);
+        assert_eq!(plan.nodes.get(6).unwrap().children, vec![10]);
+        assert_eq!(plan.nodes.get(9).unwrap().children, vec![10]);
         assert_eq!(
-            plan.nodes.get(7).unwrap().opr.clone().unwrap(),
+            plan.nodes.get(10).unwrap().opr.clone().unwrap(),
             pb::Join {
                 left_keys: vec![common_pb::Variable {
                     tag: Some("a".into()),
@@ -1778,7 +1810,7 @@ mod test {
             .into()
         );
 
-        assert_eq!(plan.nodes.get(7).unwrap().children, vec![11]);
+        assert_eq!(plan.nodes.get(2).unwrap().children, vec![11]);
         assert_eq!(plan.nodes.get(10).unwrap().children, vec![11]);
         assert_eq!(
             plan.nodes.get(11).unwrap().opr.clone().unwrap(),
@@ -1794,6 +1826,50 @@ mod test {
                     node_type: None
                 },],
                 kind: 0 // inner join
+            }
+            .into()
+        );
+    }
+
+    #[test]
+    fn pattern_case8_into_logical_plan() {
+        let strategy = NaiveStrategy::from(vec![
+            gen_sentence_x_out_y("a", Some("b"), false, false).into(),
+            gen_sentence_x_out_y("b", Some("c"), false, false).into(),
+            gen_sentence_x_out_y("c", Some("a"), false, true).into(),
+        ]);
+
+        // AntiJoin (id = 8) (
+        //    As(a), Out(), As(b), Out(), As(c) (id = 4)
+        //    As(a), In(), As(c) (id = 7)
+        // )
+        let plan = strategy.build_logical_plan().unwrap();
+        assert_eq!(plan.nodes.len(), 9);
+
+        assert_eq!(plan.nodes.get(4).unwrap().children, vec![8]);
+        assert_eq!(plan.nodes.get(7).unwrap().children, vec![8]);
+        assert_eq!(
+            plan.nodes.get(8).unwrap().opr.clone().unwrap(),
+            pb::Join {
+                left_keys: vec![common_pb::Variable {
+                    tag: Some("a".into()),
+                    property: None,
+                    node_type: None
+                },common_pb::Variable {
+                    tag: Some("c".into()),
+                    property: None,
+                    node_type: None
+                }],
+                right_keys: vec![common_pb::Variable {
+                    tag: Some("a".into()),
+                    property: None,
+                    node_type: None
+                },common_pb::Variable {
+                    tag: Some("c".into()),
+                    property: None,
+                    node_type: None
+                }],
+                kind: 5 // inner join
             }
             .into()
         );
