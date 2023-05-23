@@ -72,7 +72,7 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
 
             @Override
             public void error(Status status) {
-                listener.onError(status.getCause());
+                listener.onError(status.asException());
             }
         });
     }

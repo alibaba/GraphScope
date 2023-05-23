@@ -36,11 +36,14 @@ import org.neo4j.values.storable.ArrayValue;
 import org.neo4j.values.storable.BooleanValue;
 import org.neo4j.values.storable.Values;
 import org.neo4j.values.virtual.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CypherRecordParser implements RecordParser<AnyValue> {
+    private static final Logger logger = LoggerFactory.getLogger(CypherRecordParser.class);
     private final RelDataType outputType;
 
     public CypherRecordParser(RelDataType outputType) {
@@ -49,11 +52,13 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
 
     @Override
     public List<AnyValue> parseFrom(IrResult.Record record) {
+        logger.info("record: {}, expected type {}", record, this.outputType);
         Preconditions.checkArgument(record.getColumnsCount() == outputType.getFieldCount(), "column size of results should be consistent with output type");
         List<AnyValue> columns = new ArrayList<>(record.getColumnsCount());
         for (int i = 0; i < record.getColumnsCount(); i++) {
             IrResult.Column column = record.getColumns(i);
             RelDataTypeField field = outputType.getFieldList().get(i);
+            logger.info("column: {}, field {}", column, field);
             columns.add(parseEntry(column.getEntry(), field.getType()));
         }
         return columns;

@@ -109,7 +109,7 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
         try {
             this.recordIterator.putData(record);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            onError(e);
         }
     }
 
@@ -118,12 +118,13 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
         try {
             this.recordIterator.finish();
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            onError(e);
         }
     }
 
     @Override
     public void onError(Throwable t) {
+        t = (t == null) ? new RuntimeException("Unknown error") : t;
         this.recordIterator.fail(t);
     }
 }

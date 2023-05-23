@@ -56,7 +56,9 @@ public class HttpExecutionClient extends ExecutionClient<URI>{
                     .build();
             // todo: synchronous call will block compiler thread
             HttpResponse<byte[]> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+            logger.info("http response: {}", response);
             Hqps.HighQPSResults results = Hqps.HighQPSResults.parseFrom(response.body());
+            logger.info("http results: {}", results);
             for (IrResult.Results irResult: results.getResultsList()) {
                 listener.onNext(irResult.getRecord());
             }
