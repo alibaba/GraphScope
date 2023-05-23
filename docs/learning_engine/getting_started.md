@@ -26,6 +26,21 @@ you also need to install the tensorflow.
 python3 -m pip install tensorflow==2.8.0
 ```
 
+Only `v2.11.0` supported under the linux aarch64 platform:
+
+```python
+>>> import platform
+>>> platform.system()
+'Linux'
+>>> platform.processor()
+'aarch64'
+```
+
+```bash
+# Install the fixed 'v2.11.0' verion of tensorflow under the linux aarch64 platform
+python3 -m pip install tensorflow==2.11.0
+```
+
 ## Running GraphScope Learning Engine on Local
 
 The `graphscope` package includes everything you need to train GNN models 
