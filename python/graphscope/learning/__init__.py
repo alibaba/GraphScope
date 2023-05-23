@@ -45,7 +45,7 @@ def _force_preload_libgomp():
 
             try:
                 ctypes.cdll.LoadLibrary(libfile)
-            except:
+            except:  # noqa: E722, pylint: disable=bare-except
                 pass
 
 
