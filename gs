@@ -1337,8 +1337,9 @@ gs_test_command() {
   function test_interactive {
     get_test_data
     if [[ -n ${on_local} ]]; then
+      cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && make build QUIET_OPT=""
       # IR unit test
-      cd interactive_engine/compiler && make test
+      cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && make test
       # CommonType Unit Test
       cd "${GS_SOURCE_DIR}"/interactive_engine/executor/common/dyn_type && cargo test
       # Store Unit test
