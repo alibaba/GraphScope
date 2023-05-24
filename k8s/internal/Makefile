@@ -102,6 +102,9 @@ graphscope-darwin-py3:
 
 graphscope-manylinux2014-py3-nodocker:
 	cd $(WORKING_DIR)/../.. && \
+	if [[ "${ARCH}" == "aarch64" ]]; then python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
+		export AUDITWHEEL_PLAT=manylinux2014_${ARCH}; \
+		python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; fi && \
 	for _ in {1..5}; do if make INSTALL_PREFIX=${INSTALL_PREFIX}; then break; fi; done && \
 	for _ in {1..5}; do if $(MAKE_INSTALL_COMMAND); then break; fi; done && \
 	if [ ${INSTALL_PREFIX} != ${GRAPHSCOPE_HOME} ]; then sudo cp -rsn ${INSTALL_PREFIX}/* ${GRAPHSCOPE_HOME}/; fi && \
@@ -150,24 +153,49 @@ graphscope-client-manylinux2014-py3-nodocker:
 	cmake -DKNN=OFF -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
 	make graphlearn_shared -j`nproc` && \
 	export LD_LIBRARY_PATH=$(WORKING_DIR)/../../learning_engine/graph-learn/graphlearn/built/lib:$$LD_LIBRARY_PATH && \
+	if [[ "${ARCH}" == "aarch64" ]]; then export AUDITWHEEL_PLAT=manylinux2014_${ARCH}; fi && \
 	for py in cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311; do \
 		cd $(WORKING_DIR)/../../python; \
 		export PATH=/opt/python/$$py/bin:$$PATH; \
 		python3 -m pip install -U pip; \
 		if [[ "$$py" == "cp311-cp311" ]]; then \
-			python3 -m pip install "numpy==1.23.2" "pandas" "grpcio" "grpcio-tools" wheel "auditwheel==5.0.0"; \
+			if [[ "${ARCH}" == "aarch64" ]]; then \
+				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
+				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
+				python3 -m pip install "numpy==1.23.2" "pandas" wheel "auditwheel==5.0.0"; \
+			else \
+				python3 -m pip install "numpy==1.23.2" "pandas" "grpcio" "grpcio-tools" wheel "auditwheel==5.0.0"; \
+			fi; \
 		elif [[ "$$py" == "cp310-cp310" ]]; then \
-			python3 -m pip install "numpy==1.21.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
+			if [[ "${ARCH}" == "aarch64" ]]; then \
+				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
+				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
+				python3 -m pip install "numpy==1.21.2" "pandas" wheel "auditwheel==5.0.0"; \
+			else \
+				python3 -m pip install "numpy==1.21.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
+			fi; \
 		elif [[ "$$py" == "cp39-cp39" ]]; then \
-			python3 -m pip install "numpy==1.19.3" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
+			if [[ "${ARCH}" == "aarch64" ]]; then \
+				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
+				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
+				python3 -m pip install "numpy==1.19.3" "pandas" wheel "auditwheel==5.0.0"; \
+			else \
+				python3 -m pip install "numpy==1.19.3" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
+			fi; \
 		else \
-			python3 -m pip install "numpy==1.18.5" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
+			if [[ "${ARCH}" == "aarch64" ]]; then \
+				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
+				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
+				python3 -m pip install "numpy" "pandas" wheel "auditwheel==5.0.0"; \
+			else \
+				python3 -m pip install "numpy==1.18.5" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
+			fi; \
 		fi; \
 		sudo rm -rf build; \
 		sudo rm -rf dist/*.whl; \
 		python3 setup.py bdist_wheel; \
 		cd dist; \
-		auditwheel repair ./*.whl; \
+		auditwheel repair ./*.whl --plat=manylinux2014_${ARCH}; \
 	done
 
 graphscope-client-darwin-py3:
