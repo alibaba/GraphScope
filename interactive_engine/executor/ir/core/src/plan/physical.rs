@@ -247,6 +247,10 @@ impl AsPhysical for pb::PathExpand {
         if let Some(expand_base) = path_expand.base.as_mut() {
             let edge_expand = expand_base.edge_expand.as_mut();
             let getv = expand_base.get_v.as_mut();
+            let edge_expand_meta = edge_expand
+                .as_ref()
+                .map(|opr| opr.meta_data.clone())
+                .unwrap_or(None);
             if edge_expand.is_some() && getv.is_none() {
                 // Must be the case of EdgeExpand with Opt=Vertex
                 if edge_expand.unwrap().expand_opt != pb::edge_expand::ExpandOpt::Vertex as i32 {
@@ -286,10 +290,17 @@ impl AsPhysical for pb::PathExpand {
                     edge_expand, getv
                 )));
             }
+
+            path_expand.post_process(builder, plan_meta)?;
+            // Set the Metadata of PathExpand to the Metadata of EdgeExpand
+            builder
+                .path_expand(path_expand)
+                .with_meta_data(edge_expand_meta);
+
+            Ok(())
+        } else {
+            Err(IrError::MissingData("PathExpand::base".to_string()))
         }
-        path_expand.post_process(builder, plan_meta)?;
-        builder.path_expand(path_expand);
-        Ok(())
     }
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
