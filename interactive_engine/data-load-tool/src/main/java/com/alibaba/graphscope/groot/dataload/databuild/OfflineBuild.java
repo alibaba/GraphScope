@@ -16,6 +16,7 @@ package com.alibaba.graphscope.groot.dataload.databuild;
 import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
 import com.alibaba.graphscope.compiler.api.schema.GraphElement;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
+import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.sdkcommon.common.DataLoadTarget;
 import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
@@ -44,19 +45,6 @@ import java.util.*;
 public class OfflineBuild {
     private static final Logger logger = LoggerFactory.getLogger(OfflineBuild.class);
 
-    public static final String INPUT_PATH = "input.path";
-    public static final String OUTPUT_PATH = "output.path";
-    public static final String GRAPH_ENDPOINT = "graph.endpoint";
-    public static final String SCHEMA_JSON = "schema.json";
-    public static final String SEPARATOR = "separator";
-    public static final String COLUMN_MAPPING_CONFIG = "column.mapping.config";
-    public static final String SPLIT_SIZE = "split.size";
-
-    public static final String COLUMN_MAPPINGS = "column.mappings";
-    public static final String LDBC_CUSTOMIZE = "ldbc.customize";
-    public static final String LOAD_AFTER_BUILD = "load.after.build";
-    public static final String SKIP_HEADER = "skip.header";
-
     public static void main(String[] args)
             throws IOException, ClassNotFoundException, InterruptedException {
         String propertiesFile = args[0];
@@ -64,11 +52,24 @@ public class OfflineBuild {
         try (InputStream is = new FileInputStream(propertiesFile)) {
             properties.load(is);
         }
-        String inputPath = properties.getProperty(INPUT_PATH);
-        String outputPath = properties.getProperty(OUTPUT_PATH);
-        String columnMappingConfigStr = properties.getProperty(COLUMN_MAPPING_CONFIG);
-        String graphEndpoint = properties.getProperty(GRAPH_ENDPOINT);
-        GrootClient client = GrootClient.newBuilder().setHosts(graphEndpoint).build();
+        String inputPath = properties.getProperty(DataLoadConfig.INPUT_PATH);
+        String outputPath = properties.getProperty(DataLoadConfig.OUTPUT_PATH);
+        String columnMappingConfigStr =
+                properties.getProperty(DataLoadConfig.COLUMN_MAPPING_CONFIG);
+        String graphEndpoint = properties.getProperty(DataLoadConfig.GRAPH_ENDPOINT);
+
+        String uniquePath =
+                properties.getProperty(DataLoadConfig.UNIQUE_PATH, UuidUtils.getBase64UUIDString());
+
+        String username = properties.getProperty(DataLoadConfig.USER_NAME, "");
+        String password = properties.getProperty(DataLoadConfig.PASS_WORD, "");
+
+        GrootClient client =
+                GrootClient.newBuilder()
+                        .setHosts(graphEndpoint)
+                        .setUsername(username)
+                        .setPassword(password)
+                        .build();
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, FileColumnMapping> columnMappingConfig =
                 objectMapper.readValue(
@@ -93,22 +94,30 @@ public class OfflineBuild {
                 (fileName, fileColumnMapping) -> {
                     columnMappingInfos.put(fileName, fileColumnMapping.toColumnMappingInfo(schema));
                 });
-        String ldbcCustomize = properties.getProperty(LDBC_CUSTOMIZE, "true");
-        long splitSize = Long.valueOf(properties.getProperty(SPLIT_SIZE, "256")) * 1024 * 1024;
+        String ldbcCustomize = properties.getProperty(DataLoadConfig.LDBC_CUSTOMIZE, "true");
+        long splitSize =
+                Long.parseLong(properties.getProperty(DataLoadConfig.SPLIT_SIZE, "256"))
+                        * 1024
+                        * 1024;
         boolean loadAfterBuild =
-                properties.getProperty(LOAD_AFTER_BUILD, "false").equalsIgnoreCase("true");
-        boolean skipHeader = properties.getProperty(SKIP_HEADER, "true").equalsIgnoreCase("true");
+                properties
+                        .getProperty(DataLoadConfig.LOAD_AFTER_BUILD, "false")
+                        .equalsIgnoreCase("true");
+        boolean skipHeader =
+                properties.getProperty(DataLoadConfig.SKIP_HEADER, "true").equalsIgnoreCase("true");
+        String separator = properties.getProperty(DataLoadConfig.SEPARATOR, "\\|");
+
         Configuration conf = new Configuration();
         conf.setBoolean("mapreduce.map.speculative", false);
         conf.setBoolean("mapreduce.reduce.speculative", false);
         conf.setLong(CombineTextInputFormat.SPLIT_MINSIZE_PERNODE, splitSize);
         conf.setLong(CombineTextInputFormat.SPLIT_MINSIZE_PERRACK, splitSize);
-        conf.setStrings(SCHEMA_JSON, schemaJson);
+        conf.setStrings(DataLoadConfig.SCHEMA_JSON, schemaJson);
         String mappings = objectMapper.writeValueAsString(columnMappingInfos);
-        conf.setStrings(COLUMN_MAPPINGS, mappings);
-        conf.setBoolean(LDBC_CUSTOMIZE, ldbcCustomize.equalsIgnoreCase("true"));
-        conf.set(SEPARATOR, properties.getProperty(SEPARATOR, "\\|"));
-        conf.setBoolean(SKIP_HEADER, skipHeader);
+        conf.setStrings(DataLoadConfig.COLUMN_MAPPINGS, mappings);
+        conf.setBoolean(DataLoadConfig.LDBC_CUSTOMIZE, ldbcCustomize.equalsIgnoreCase("true"));
+        conf.set(DataLoadConfig.SEPARATOR, separator);
+        conf.setBoolean(DataLoadConfig.SKIP_HEADER, skipHeader);
         Job job = Job.getInstance(conf, "build graph data");
         job.setJarByClass(OfflineBuild.class);
         job.setMapperClass(DataBuildMapper.class);
@@ -122,28 +131,28 @@ public class OfflineBuild {
         LazyOutputFormat.setOutputFormatClass(job, SstOutputFormat.class);
         FileInputFormat.addInputPath(job, new Path(inputPath));
         FileInputFormat.setInputDirRecursive(job, true);
-        String uniquePath = UuidUtils.getBase64UUIDString();
+
         Path outputDir = new Path(outputPath, uniquePath);
         FileOutputFormat.setOutputPath(job, outputDir);
         if (!job.waitForCompletion(true)) {
             System.exit(1);
         }
-        FileSystem fs = outputDir.getFileSystem(job.getConfiguration());
-        String dataPath = fs.makeQualified(outputDir).toString();
 
         Map<String, String> outputMeta = new HashMap<>();
-        outputMeta.put("endpoint", graphEndpoint);
-        outputMeta.put("schema", schemaJson);
-        outputMeta.put("mappings", mappings);
-        outputMeta.put("datapath", dataPath);
-        outputMeta.put("unique_path", uniquePath);
+        outputMeta.put(DataLoadConfig.GRAPH_ENDPOINT, graphEndpoint);
+        outputMeta.put(DataLoadConfig.SCHEMA_JSON, schemaJson);
+        outputMeta.put(DataLoadConfig.COLUMN_MAPPINGS, mappings);
+        outputMeta.put(DataLoadConfig.UNIQUE_PATH, uniquePath);
 
+        FileSystem fs = outputDir.getFileSystem(job.getConfiguration());
         FSDataOutputStream os = fs.create(new Path(outputDir, "META"));
         os.writeUTF(objectMapper.writeValueAsString(outputMeta));
         os.flush();
         os.close();
 
         if (loadAfterBuild) {
+            String dataPath = fs.makeQualified(outputDir).toString();
+
             logger.info("start ingesting data");
             client.ingestData(dataPath);
 
@@ -166,5 +175,6 @@ public class OfflineBuild {
             }
             client.commitDataLoad(tableToTarget, uniquePath);
         }
+        client.close();
     }
 }

@@ -2,9 +2,7 @@
 #
 # groot command tool
 
-set -x
-set -e
-set -o pipefail
+set -xeo pipefail
 
 usage() {
 cat <<END
@@ -20,7 +18,6 @@ cat <<END
 
     start_max_node                            start max_node of gaia
     start_server                              start individual groot server
-    start_load_tools                          start load_tools
 END
 }
 
@@ -91,12 +88,6 @@ start_max_node() {
        "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
 }
 
-start_load_tools() {
-  _setup_env
-  java -cp "${GROOT_HOME}/lib/data-load-tool-0.0.1-SNAPSHOT.jar" \
-       com.alibaba.graphscope.groot.dataload.LoadTool "$@"
-}
-
 # start groot server
 start_server() {
   _setup_env
@@ -138,13 +129,10 @@ while test $# -ne 0; do
     -h|--help) usage; exit ;;
     start_max_node) start_max_node "gaia" "$@"; exit;;
     start_server) start_server "$@"; exit;;
-    start_load_tools) start_load_tools "$@"; exit;;
     *)
       echo "unrecognized option or command '${arg}'"
       usage; exit;;
   esac
 done
 
-set +e
-set +o pipefail
-set +x
+set +xeo pipefail

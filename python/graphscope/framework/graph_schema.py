@@ -555,12 +555,16 @@ class GraphSchema:
     def drop(self, label, src_label=None, dst_label=None):
         for item in self._vertex_labels:
             if label == item.label:
+                if src_label is not None or dst_label is not None:
+                    raise ValueError(
+                        "Vertex label should not have source and destination."
+                    )
                 self._vertex_labels_to_drop.append(VertexLabel(label))
                 return
         for item in self._edge_labels:
             if label == item.label:
                 label_to_drop = EdgeLabel(label)
-                if src_label and dst_label:
+                if src_label is not None and dst_label is not None:
                     label_to_drop.source(src_label).destination(dst_label)
                 self._edge_labels_to_drop.append(label_to_drop)
                 return

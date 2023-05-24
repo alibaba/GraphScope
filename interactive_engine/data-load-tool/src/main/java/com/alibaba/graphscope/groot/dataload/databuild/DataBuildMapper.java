@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.dataload.databuild;
 
 import com.alibaba.graphscope.compiler.api.exception.PropertyDefNotFoundException;
 import com.alibaba.graphscope.compiler.api.schema.*;
+import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
 import com.alibaba.graphscope.sdkcommon.schema.PropertyValue;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -46,26 +47,25 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
     private String separator;
     private Map<String, ColumnMappingInfo> fileToColumnMappingInfo;
 
-    private ObjectMapper objectMapper;
-    private BytesWritable outKey = new BytesWritable();
-    private BytesWritable outVal = new BytesWritable();
-    private boolean ldbcCustomize;
+    private final BytesWritable outKey = new BytesWritable();
+    private final BytesWritable outVal = new BytesWritable();
+    private boolean ldbcCustomize; // Do some customize data type transformations for LDBC data
     private boolean skipHeader;
 
     @Override
     protected void setup(Context context) throws IOException {
-        this.objectMapper = new ObjectMapper();
         Configuration conf = context.getConfiguration();
-        this.separator = conf.get(OfflineBuild.SEPARATOR);
-        String schemaJson = conf.get(OfflineBuild.SCHEMA_JSON);
+        this.separator = conf.get(DataLoadConfig.SEPARATOR);
+        String schemaJson = conf.get(DataLoadConfig.SCHEMA_JSON);
         this.graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
         this.dataEncoder = new DataEncoder(this.graphSchema);
-        String columnMappingsJson = conf.get(OfflineBuild.COLUMN_MAPPINGS);
+        String columnMappingsJson = conf.get(DataLoadConfig.COLUMN_MAPPINGS);
+        ObjectMapper objectMapper = new ObjectMapper();
         this.fileToColumnMappingInfo =
-                this.objectMapper.readValue(
+                objectMapper.readValue(
                         columnMappingsJson, new TypeReference<Map<String, ColumnMappingInfo>>() {});
-        this.ldbcCustomize = conf.getBoolean(OfflineBuild.LDBC_CUSTOMIZE, false);
-        this.skipHeader = conf.getBoolean(OfflineBuild.SKIP_HEADER, true);
+        this.ldbcCustomize = conf.getBoolean(DataLoadConfig.LDBC_CUSTOMIZE, false);
+        this.skipHeader = conf.getBoolean(DataLoadConfig.SKIP_HEADER, true);
         DST_FMT.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
     }
 
@@ -79,7 +79,7 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
         String fileName = fullPath.substring(fullPath.lastIndexOf('/') + 1);
         ColumnMappingInfo columnMappingInfo = this.fileToColumnMappingInfo.get(fileName);
         if (columnMappingInfo == null) {
-            logger.warn("Mapper: ignore [" + fileName + "]");
+            logger.warn("Mapper: ignore [{}], fullPath is [{}]", fileName, fullPath);
             return;
         }
 
@@ -164,7 +164,7 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
                                         + "] -> ["
                                         + propertyId
                                         + "], data ["
-                                        + items
+                                        + Arrays.toString(items)
                                         + "]");
                     }
                     DataType dataType = propertyDef.getDataType();
