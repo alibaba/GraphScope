@@ -20,7 +20,7 @@
       </activation>
     </profile>
     <profile>
-      <id>graphscope-assembly</id>
+      <id>graphscope</id>
       <build>
         <plugins>
           <plugin>
@@ -49,7 +49,7 @@
       </dependencies>
     </profile>
     <profile>
-      <id>groot-assembly</id>
+      <id>groot</id>
       <build>
         <plugins>
           <plugin>

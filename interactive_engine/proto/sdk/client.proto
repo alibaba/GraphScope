@@ -153,6 +153,7 @@ message GetLoggerInfoResponse {
 }
 
 message ClearIngestRequest {
+  string dataPath = 1;
 }
 
 message ClearIngestResponse {

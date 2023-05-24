@@ -37,10 +37,10 @@ public class SstOutputFormat extends FileOutputFormat<BytesWritable, BytesWritab
 
     public static class SstRecordWriter extends RecordWriter<BytesWritable, BytesWritable> {
 
-        private SstFileWriter sstFileWriter;
-        private FileSystem fs;
-        private String fileName;
-        private Path path;
+        private final SstFileWriter sstFileWriter;
+        private final FileSystem fs;
+        private final String fileName;
+        private final Path path;
 
         public SstRecordWriter(FileSystem fs, Path path) throws RocksDBException {
             this.fs = fs;

@@ -410,41 +410,47 @@ The loading process contains three steps:
 3. Commit to the online service so that data is ready for serving queries
 
 ##### Build: Building a partitioned graph
-Build data by running the hadoop map-reduce job with following command.
 
-```bash
-./data_load/bin/load_tool.sh hadoop-build <path/to/config/file>
+  Build data by running the hadoop map-reduce job with following command:
+  
+  ```
+  $ ./load_tool.sh build <path/to/config/file>
+  ```
+
+  The config file should follow a format that is recognized by Java `java.util.Properties` class. Here is an example:
+  
 ```
-The config file should follow a format that is recognized by Java `java.util.Properties` class. 
-
-Here is an example:
-
-```properties
 split.size=256
 separator=\\|
 input.path=/tmp/ldbc_sample
 output.path=/tmp/data_output
-graph.endpoint=<ip>:<grpc_port>
+graph.endpoint=1.2.3.4:55555
 column.mapping.config={"person_0_0.csv":{"label":"person","propertiesColMap":{"0":"id","1":"name"}},"person_knows_person_0_0.csv":{"label":"knows","srcLabel":"person","dstLabel":"person","srcPkColMap":{"0":"id"},"dstPkColMap":{"1":"id"},"propertiesColMap":{"2":"date"}}}
 skip.header=true
+load.after.build=true
+# This is not required when load.after.build=true
+# hadoop.endpoint=127.0.0.1:9000
+# ```
+  
+  Details of the parameters are listed below:
+  
+  | Config key            | Required | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+  |-----------------------|----------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+  | split.size            | false    | 256     | Hadoop map-reduce input data split size in MB                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+  | separator             | false    | \\\\\|  | Separator used to parse each field in a line                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 
+  | input.path            | true     | -       | Input HDFS dir                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+  | output.path           | true     | -       | Output HDFS dir                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+  | graph.endpoint        | true     | -       | RPC endpoint of the graph storage service. You can get the RPC endpoint following this document: [GraphScope Store Service](https://github.com/alibaba/GraphScope/tree/main/charts/graphscope-store)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+  | column.mapping.config | true     | -       | Mapping info for each input file in JSON format. Each key in the first level should be a fileName that can be found in the `input.path`, and the corresponding value defines the mapping info. For a vertex type, the mapping info should includes 1) `label` of the vertex type, 2) `propertiesColMap` that describes the mapping from input field to graph property in the format of `{ columnIdx: "propertyName" }`. For an edge type, the mapping info should includes 1) `label` of the edge type, 2) `srcLabel` of the source vertex type, 3) `dstLabel` of the destination vertex type, 4) `srcPkColMap` that describes the mapping from input field to graph property of the primary keys in the source vertex type, 5) `dstPkColMap` that describes the mapping from input field to graph property of the primary keys in the destination vertex type, 6) `propertiesColMap` that describes the mapping from input field to graph property of the edge type |
+  | skip.header           | false    | true    | Whether to skip the first line of the input file                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+  | load.after.build      | false    | false   | Whether to immediately ingest and commit the builded files                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+  | hadoop.endpoint       | false    | -       | Endpoint of hadoop cluster in the format of <host>:<ip>. Not required when `load.after.build` is set to true                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+
+  After data building completed, you can find the output files in the `output.path` of HDFS. The output files includes a 
+  meta file named `META`, an empty file named `_SUCCESS`, and some data files that one for each partition named in the 
+  pattern of `part-r-xxxxx.sst`. The layout of the output directory should look like:
+  
 ```
-
-Details of the parameters are listed below:
-
-| **Config key** | **Required** | **Default** | **Description** |
-| --- | --- | --- | --- |
-| split.size | false | 256 | Hadoop map-reduce input data split size in MB |
-| separator | false | \\\\&#124; | Seperator used to parse each field in a line |
-| input.path | true | N/A | Input HDFS dir |
-| output.path | true | N/A | Output HDFS dir |
-| graph.endpoint | true | N/A | GRPC endpoint of groot. You can find the  endpoint in previous section, or use `helm status demo`to get it. |
-| column.mapping.config | true | N/A | Mapping info for each input file in JSON format. Each key in the first level should be a fileName that can be found in the input.path, and the corresponding value defines the mapping info. For a vertex type, the mapping info should includes 1) label of the vertex type, 2) propertiesColMap that describes the mapping from input field to graph property in the format of { columnIdx: “propertyName” }. For an edge type, the mapping info should includes 1) label of the edge type, 2) srcLabel of the source vertex type, 3) dstLabel of the destination vertex type, 4) srcPkColMap that describes the mapping from input field to graph property of the primary keys in the source vertex type, 5) dstPkColMap that describes the mapping from input field to graph property of the primary keys in the destination vertex type, 6) propertiesColMap that describes the mapping from input field to graph property of the edge type |
-| skip.header | false | true | Whether to skip the first line of the input file |
-
-
-After data building completed, you can find the output files in the `output.path` of HDFS. The output files includes a meta file named `META`, an empty file named `_SUCCESS`, and some data files that one for each partition named in the pattern of `part-r-xxxxx.sst`. The layout of the output directory should look like:
-
-```properties
 /tmp/data_output
   |- META
   |- _SUCCESS
@@ -454,21 +460,29 @@ After data building completed, you can find the output files in the `output.path
   ...
 ```
 
-##### Ingest: Loading graph partitions
+If `load.after.build=true`, then you can skip step 2 and 3.
+Else, please proceed to ingest and commit.
 
-Now ingest the offline built data into the graph storage:<br />NOTE: You need to make sure that the HDFS endpoint that can be accessed from the processes of the graph store.
-```bash
-./data_load/bin/load_tool.sh -c ingest -d hdfs://1.2.3.4:9000/tmp/data_output
-```
-The offline built data can be ingested successfully only once, otherwise errors will occur.
+#### 2. Loading graph partitions
+  
+  Now ingest the offline built data into the graph storage. Run:
+  
+  ```
+  $ ./load_data.sh ingest <path/to/config/file>
+  ```
 
-##### Commit: Commit to store service
+  The offline built data can be ingested successfully only once, otherwise errors will occur.
 
-After data ingested into graph storage, you need to commit data loading. The data will not be able to read until committed successfully.
-```bash
-./data_load/bin/load_tool.sh -c commit -d hdfs://1.2.3.4:9000/tmp/data_output
-```
-Notice: The later committed data will overwrite the earlier committed data which have same vertex types or edge relations.
+#### 3. Commit to store service
+  
+  After data ingested into graph storage, you need to commit data loading. The data will not be able to read until committed successfully. Run:
+  
+  ```
+  $ ./load_data.sh commit <path/to/config/file>
+  ```
+
+  **Note: The later committed data will overwrite the earlier committed data which have same vertex types or edge relations.**
+
 
 ### Realtime Write
 

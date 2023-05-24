@@ -1,69 +1,2513 @@
 GraphScope
-Copyright 2020 Alibaba Group Holding Limited
+Copyright 2020 Alibaba Group Holding Limited. 
 
-The project includes software from the apache-arrow project (Apache 2.0)
- * Copyright 2000-2020 Kitware, Inc. and Contributors
- * https://github.com/apache/arrow
+The following 3rd-party software packages may be used by or distributed with GraphScope. 
+Any information relevant to third-party vendors listed below are collected using common, reasonable means.
 
-The project includes software from the peloton project (Apache 2.0)
- * Copyright (c) 2015-2018, Carnegie Mellon University Database Group
- * https://github.com/cmu-db/peloton
+Date generated: 2023-5-22
+Revision ID: fb79c621172acbe43f32f4eae6268edabc3aea3b
 
-This product includes software from the Caffe project (BSD, 2-clause)
- * All contributions by the University of California:
-    Copyright (c) 2014-2017 The Regents of the University of California (Regents)
- * All other contributions:
-    Copyright (c) 2014-2017, the respective contributors
- * https://github.com/BVLC/caffe
+--------------------------------------------------------------------------------
+Package Title: @antv/graphin-graphscope (1.0.4)
+--------------------------------------------------------------------------------
 
-The project includes software from the grpc-cmake-example project (MIT)
- * Authored by Ivan Safonov
- * https://github.com/IvanSafonov/grpc-cmake-example
+which is avaliable under license(s): MIT
 
-This product includes software from the boost/leaf project (BSL-1.0 License)
- * Copyright (c) 2018-2020 Emil Dotchevski and Reverge Studios, Inc.
- * https://github.com/boostorg/leaf
+--------------------------------------------------------------------------------
+Package Title: black (23.3.0)
+--------------------------------------------------------------------------------
 
-This product includes software from the alibaba/graph-learn project (Apache 2.0)
-* Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
-* https://github.com/alibaba/graph-learn
+which is avaliable under license(s): MIT
+Copyright (c) 2018 Łukasz Langa
 
-This product includes software from the networkx/networkx project (BSD, 3-clause)
-* Copyright (C) 2004-2020, NetworkX Developers
-* https://github.com/networkx/networkx
+--------------------------------------------------------------------------------
+Package Title: breathe (4.30.0)
+--------------------------------------------------------------------------------
 
-This product includes software from the tnm/murmurhash-java project
-* Which has no license, but open sourced to public domain by Viliam Holub
-* https://github.com/tnm/murmurhash-java
+which is avaliable under license(s): BSD-3-Clause
+Copyright (c) 2009, Michael Jones
+All rights reserved.
 
-This product includes software from the elastic/elasticsearch project (Apache 2.0)
-* Licensed to Elasticsearch under one or more contributor license agreements.
-* https://github.com/elastic/elasticsearch
+--------------------------------------------------------------------------------
+Package Title: css-loader (3.6.0)
+--------------------------------------------------------------------------------
 
-This product includes software from the apache/flink project (Apache 2.0)
-* Licensed to the Apache Software Foundation (ASF)
-* https://github.com/apache/flink
+which is avaliable under license(s): MIT
+Copyright JS Foundation and other contributors
 
-This product includes software from the apache/tinkerpop project (Apache 2.0)
-* Licensed to the Apache Software Foundation (ASF)
-* https://github.com/apache/tinkerpop
+--------------------------------------------------------------------------------
+Package Title: Cython (3.0a6)
+--------------------------------------------------------------------------------
 
-This product includes software from the hgraphdb project (Apache 2.0)
-* Licensed to Robert Yokota
-* https://github.com/rayokota/hgraphdb
+which is avaliable under license(s): Apache-2.0
 
-This product includes software from the cuba-platform/cuba project (Apache 2.0)
-* Copyright (c) 2008-2016 Haulmont
-* https://github.com/cuba-platform/cuba
+--------------------------------------------------------------------------------
+Package Title: docutils (0.16)
+--------------------------------------------------------------------------------
 
-This product includes software from the natelandau/shell-scripts project
-* Which has no license, but open sourced to public domain by Nathaniel Landau
-* https://github.com/natelandau/shell-scripts
+* Multi-license: BSD-2-Clause OR MIT *
 
-This product includes software from the apache/calcite project (Apache 2.0)
-* Licensed to the Apache Software Foundation (ASF)
-* https://github.com/apache/calcite
+:Author: David Goodger
 
-This product includes software from the antlr/antlr4 project (BSD, 3-clause)
-* Copyright (c) 2012-2022 The ANTLR Project. All rights reserved.
-* https://github.com/antlr/antlr4
+--------------------------------------------------------------------------------
+Package Title: eslint (6.8.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright JS Foundation and other contributors, https://js.foundation
+
+--------------------------------------------------------------------------------
+Package Title: eslint-config-prettier (6.15.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) 2017, 2018, 2019 Simon Lydell and contributors
+
+--------------------------------------------------------------------------------
+Package Title: eslint-plugin-prettier (3.4.1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright © 2017 Andres Suarez and Teddy Katz
+
+--------------------------------------------------------------------------------
+Package Title: etcd-distro (3.5.1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Apache-2.0
+Copyright 2017 The etcd Authors
+
+--------------------------------------------------------------------------------
+Package Title: expect.js (0.3.1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) 2011 Guillermo Rauch &lt;guillermo@learnboost.com&gt;
+
+--------------------------------------------------------------------------------
+Package Title: flake8 (4.0.1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+
+== Flake8 License (MIT) ==
+Copyright (C) 2011-2013 Tarek Ziade <tarek@ziade.org>Copyright (C) 2012-2016 Ian Cordasco <graffatcolmingov@gmail.com>
+
+--------------------------------------------------------------------------------
+Package Title: fs-extra (7.0.1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+
+(The MIT License)
+Copyright (c) 2011-2017 JP Richardson
+
+--------------------------------------------------------------------------------
+Package Title: furo (2023.5.20)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) 2020 Pradyun Gedam <mail@pradyunsg.me>
+
+--------------------------------------------------------------------------------
+Package Title: gremlinpython (3.6.3rc1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Apache-2.0
+
+--------------------------------------------------------------------------------
+Package Title: grpcio (1.49.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Multi-license: Apache-2.0 OR BSD-3-Clause OR MPL-2.0
+
+--------------------------------------------------------------------------------
+Package Title: grpcio-tools (1.49.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Apache-2.0
+Copyright 2015 gRPC authors
+--------------------------------------------------------------------------------
+Package Title: husky (4.3.8)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+
+MIT License
+Copyright (c) 2017 - present
+
+--------------------------------------------------------------------------------
+Package Title: ipywidgets (7.0.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): BSD-3-Clause
+
+This project is licensed under the terms of the Modified BSD License
+(also known as New or Revised or 3-Clause BSD), as follows:
+
+- Copyright (c) 2016, Jupyter Development Team
+
+All rights reserved.
+
+--------------------------------------------------------------------------------
+Package Title: isort (5.10.1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) 2013 Timothy Edmund Crosley
+
+--------------------------------------------------------------------------------
+Package Title: jupyterlab (2.0.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): BSD-3-Clause
+Copyright (c) 2015 Project Jupyter Contributors . All rights reserved.
+
+--------------------------------------------------------------------------------
+Package Title: @jupyter-widgets/base (3.0.0)
+--------------------------------------------------------------------------------
+
+* Multi-license: BSD-2-Clause OR BSD-3-Clause *
+Copyright (c) 2015 Project Jupyter Contributors
+All rights reserved.
+
+--------------------------------------------------------------------------------
+Package Title: karma (6.4.2)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+
+Copyright (C) 2011-2021 Google, Inc.
+
+--------------------------------------------------------------------------------
+Package Title: karma-chrome-launcher (2.2.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (C) 2011-2013 Google, Inc.
+
+--------------------------------------------------------------------------------
+Package Title: karma-firefox-launcher (1.3.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (C) 2011-2013 Google, Inc.
+
+--------------------------------------------------------------------------------
+Package Title: karma-ie-launcher (1.0.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (C) 2011-2013 Google, Inc.
+
+--------------------------------------------------------------------------------
+Package Title: karma-mocha (1.3.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (C) 2011-2013 Google, Inc.
+
+--------------------------------------------------------------------------------
+Package Title: karma-mocha-reporter (2.2.5)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Multi-license: MIT 
+Copyright (C) 2013-2016 Litixsoft GmbH <info@litixsoft.de>
+Licensed under the MIT license.
+
+--------------------------------------------------------------------------------
+Package Title: karma-typescript (5.5.4)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (C) 2016-2021 Erik Barke, Monounity.
+
+--------------------------------------------------------------------------------
+Package Title: kubernetes (24.2.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Apache-2.0
+
+--------------------------------------------------------------------------------
+Package Title: linkify-it-py (2.0.2)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+MIT License
+Copyright (c) 2020 tsutsu3
+
+===============================================================================
+
+Original Javascript version:
+Copyright (c) 2015 Vitaly Puzrin.
+
+--------------------------------------------------------------------------------
+Package Title: lint-staged (10.5.4)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) 2016 Andrey Okonetchnikov
+
+--------------------------------------------------------------------------------
+Package Title: matplotlib-base (3.7.1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): 
+Apache-2.0, APAFML, BitstreamVera, CC0-1.0, GPL-1.0-or-later, MatPlotLib, OFL-1.1, Python-2.0, Qhull, PIL
+
+--------------------------------------------------------------------------------
+Package Title: mkdirp (0.5.6)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright 2010 James Halliday (mail@substack.net)
+
+--------------------------------------------------------------------------------
+Package Title: mocha (5.2.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) 2011-2018 JS Foundation and contributors, https://js.foundation
+
+--------------------------------------------------------------------------------
+Package Title: msgpack (1.0.5)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Apache-2.0
+Copyright (C) 2008-2011 INADA Naoki <songofacandy@gmail.com>
+
+--------------------------------------------------------------------------------
+Package Title: myst-parser (0.13.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+
+MIT License
+Copyright (c) 2020 ExecutableBookProject
+
+--------------------------------------------------------------------------------
+Package Title: nest-asyncio (1.5.6)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): BSD-2-Clause
+Copyright (c) 2018-2020, Ewald de Wit
+All rights reserved.
+
+--------------------------------------------------------------------------------
+Package Title: networkx (2.8.4)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): BSD-3-Clause
+Copyright (c) 2004-2022, NetworkX Developers . All rights reserved.
+
+--------------------------------------------------------------------------------
+Package Title: numpy ()
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): BSD-3-Clause
+Copyright (c) 2005-2022, NumPy Developers.
+All rights reserved.
+
+--------------------------------------------------------------------------------
+Package Title: packaging ()
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): 
+Apache-2.0 
+Copyright (c) Donald Stufft and individual contributors.
+All rights reserved.
+
+--------------------------------------------------------------------------------
+Package Title: pandas (1.5.3)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): BSD-3-Clause
+Copyright (c) 2008-2011 AQR Capital Management, LLC, Lambda Foundry, Inc. and PyData Development Team. 
+All rights reserved.
+
+--------------------------------------------------------------------------------
+Package Title: @phosphor/application (1.7.3)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): * BSD-3-Clause *
+Copyright (c) 2014-2017, PhosphorJS Contributors
+All rights reserved.
+
+--------------------------------------------------------------------------------
+Package Title: @phosphor/widgets (1.9.3)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Multi-license: BSD-2-Clause OR BSD-3-Clause, BSD-3-Clause
+Copyright (c) 2014-2017, PhosphorJS Contributors
+All rights reserved.
+
+--------------------------------------------------------------------------------
+Package Title: prettier (2.8.8)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Apache-2.0
+Copyright © James Long and contributors
+
+-----------------------------------------
+## Bundled dependencies
+
+### @angular/compiler@v12.2.16
+
+License: MIT
+By: angular
+Repository: <https://github.com/angular/angular.git>
+
+----------------------------------------
+
+### @babel/code-frame@v7.18.6
+
+License: MIT
+By: The Babel Team
+Repository: <https://github.com/babel/babel.git>
+
+----------------------------------------
+
+### @babel/helper-validator-identifier@v7.19.1
+
+License: MIT
+By: The Babel Team
+Repository: <https://github.com/babel/babel.git>
+
+----------------------------------------
+
+### @babel/highlight@v7.18.6
+
+License: MIT
+By: The Babel Team
+Repository: <https://github.com/babel/babel.git>
+----------------------------------------
+
+### @babel/parser@v7.21.3
+
+License: MIT
+By: The Babel Team
+Repository: <https://github.com/babel/babel.git>
+
+----------------------------------------
+
+### @glimmer/env@v0.1.7
+
+License: MIT
+Copyright (c) 2017 Martin Muñoz and contributors.
+
+----------------------------------------
+
+### @glimmer/syntax@v0.84.2
+
+License: MIT
+Copyright (c) 2015 Tilde, Inc.
+
+----------------------------------------
+
+### @glimmer/util@v0.84.2
+
+License: MIT
+Copyright (c) 2015 Tilde, Inc.
+
+----------------------------------------
+
+### @handlebars/parser@v2.0.0
+
+License: ISC
+Repository: <git+https://github.com/handlebars-lang/handlebars-parser.git>
+
+----------------------------------------
+
+### @iarna/toml@v2.2.5
+
+License: ISC
+By: Rebecca Turner
+Repository: <git+https://github.com/iarna/iarna-toml.git>
+Copyright (c) 2016, Rebecca Turner <me@re-becca.org>
+
+----------------------------------------
+
+### @nodelib/fs.scandir@v2.1.5
+
+License: MIT
+Copyright (c) Denis Malinochkin
+
+----------------------------------------
+
+### @nodelib/fs.stat@v2.0.5
+
+License: MIT
+Copyright (c) Denis Malinochkin
+
+----------------------------------------
+
+### @nodelib/fs.walk@v1.2.8
+
+License: MIT
+Copyright (c) Denis Malinochkin
+
+----------------------------------------
+
+### @typescript-eslint/types@v5.55.0
+
+License: MIT
+Repository: <https://github.com/typescript-eslint/typescript-eslint.git>
+Copyright (c) 2019 typescript-eslint and other contributors
+
+----------------------------------------
+
+### @typescript-eslint/typescript-estree@v5.55.0
+
+License: BSD-2-Clause
+Repository: <https://github.com/typescript-eslint/typescript-eslint.git>
+Copyright JS Foundation and other contributors, https://js.foundation
+
+----------------------------------------
+
+### @typescript-eslint/visitor-keys@v5.55.0
+
+License: MIT
+Repository: <https://github.com/typescript-eslint/typescript-eslint.git>
+Copyright (c) 2019 typescript-eslint and other contributors
+
+----------------------------------------
+
+### acorn@v8.8.1
+
+License: MIT
+Repository: <https://github.com/acornjs/acorn.git>
+Copyright (C) 2012-2022 by various contributors (see AUTHORS)
+
+----------------------------------------
+
+### acorn-jsx@v5.3.2
+
+License: MIT
+Repository: <https://github.com/acornjs/acorn-jsx>
+Copyright (C) 2012-2017 by Ingvar Stepanyan
+
+----------------------------------------
+
+### aggregate-error@v3.1.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### angular-estree-parser@v2.5.1
+
+License: MIT
+By: Ika
+Copyright (c) Ika <ikatyang@gmail.com> (https://github.com/ikatyang)
+
+----------------------------------------
+
+### angular-html-parser@v1.8.0
+
+License: MIT
+By: Ika
+Copyright (c) Ika <ikatyang@gmail.com> (https://github.com/ikatyang)
+
+----------------------------------------
+
+### ansi-regex@v6.0.1
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### ansi-styles@v3.2.1
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### array-union@v2.1.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### bail@v1.0.5
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2015 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### balanced-match@v1.0.2
+
+License: MIT
+By: Julian Gruber
+Repository: <git://github.com/juliangruber/balanced-match.git>
+Copyright (c) 2013 Julian Gruber &lt;julian@juliangruber.com&gt;
+
+----------------------------------------
+
+### brace-expansion@v1.1.11
+
+License: MIT
+By: Julian Gruber
+Repository: <git://github.com/juliangruber/brace-expansion.git>
+Copyright (c) 2013 Julian Gruber <julian@juliangruber.com>
+
+----------------------------------------
+
+### braces@v3.0.2
+
+License: MIT
+By: Jon Schlinkert
+Copyright (c) 2014-2018, Jon Schlinkert.
+
+----------------------------------------
+
+### camelcase@v6.3.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### ccount@v1.1.0
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2015 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### chalk@v2.4.2
+
+License: MIT
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### chalk@v5.0.1
+
+License: MIT
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### character-entities@v1.2.4
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2015 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### character-entities-legacy@v1.1.4
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2015 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### character-reference-invalid@v1.1.4
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2015 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### ci-info@v3.3.0
+
+License: MIT
+By: Thomas Watson Steen
+Repository: <https://github.com/watson/ci-info.git>
+Copyright (c) 2016-2021 Thomas Watson Steen
+
+----------------------------------------
+
+### clean-stack@v2.2.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### clone@v1.0.4
+
+License: MIT
+By: Paul Vorbach
+Repository: <git://github.com/pvorb/node-clone.git>
+Copyright © 2011-2015 Paul Vorbach <paul@vorba.ch>
+
+----------------------------------------
+
+### collapse-white-space@v1.0.6
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2015 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### color-convert@v1.9.3
+
+License: MIT
+By: Heather Arthur
+Copyright (c) 2011-2016 Heather Arthur <fayearthur@gmail.com>
+
+----------------------------------------
+
+### color-name@v1.1.3
+
+License: MIT
+By: DY
+Repository: <git@github.com:dfcreative/color-name.git>
+Copyright (c) 2015 Dmitry Ivanov
+
+----------------------------------------
+
+### commondir@v1.0.1
+
+License: MIT
+By: James Halliday
+Repository: <http://github.com/substack/node-commondir.git>
+Copyright (c) 2013 James Halliday (mail@substack.net)
+
+----------------------------------------
+
+### concat-map@v0.0.1
+
+License: MIT
+By: James Halliday
+Repository: <git://github.com/substack/node-concat-map.git>
+
+----------------------------------------
+
+### cosmiconfig@v7.0.1
+
+License: MIT
+By: David Clark
+Repository: <git+https://github.com/davidtheclark/cosmiconfig.git>
+Copyright (c) 2015 David Clark
+
+----------------------------------------
+
+### cross-spawn@v7.0.3
+
+License: MIT
+By: André Cruz
+Repository: <git@github.com:moxystudio/node-cross-spawn.git>
+Copyright (c) 2018 Made With MOXY Lda <hello@moxy.studio>
+
+----------------------------------------
+
+### crypto-random-string@v4.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### css-units-list@v1.1.0
+
+License: MIT
+By: fisker Cheung
+Copyright (c) fisker Cheung <lionkay@gmail.com> (https://www.fiskercheung.com/)
+
+----------------------------------------
+
+### dashify@v2.0.0
+
+License: MIT
+By: Jon Schlinkert
+Copyright (c) 2015-present, Jon Schlinkert.
+
+----------------------------------------
+
+### defaults@v1.0.4
+
+License: MIT
+By: Elijah Insua
+Repository: <git://github.com/sindresorhus/node-defaults.git>
+Copyright (c) 2022 Sindre SorhusCopyright (c) 2015 Elijah Insua
+
+----------------------------------------
+
+### del@v6.1.1
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### detect-newline@v3.1.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### diff@v5.0.0
+
+License: BSD-3-Clause
+Repository: <git://github.com/kpdecker/jsdiff.git>
+Copyright (c) 2009-2015, Kevin Decker <kpdecker@gmail.com>
+
+----------------------------------------
+
+### dir-glob@v3.0.1
+
+License: MIT
+By: Kevin Mårtensson
+Copyright (c) Kevin Mårtensson <kevinmartensson@gmail.com> (github.com/kevva)
+
+----------------------------------------
+
+### editorconfig@v0.15.3
+
+License: MIT
+By: EditorConfig Team
+Repository: <git://github.com/editorconfig/editorconfig-core-js.git>
+Copyright © 2012 EditorConfig Team
+
+----------------------------------------
+
+### editorconfig-to-prettier@v1.0.0
+
+License: ISC
+By: Joseph Frazier
+Repository: <git+https://github.com/josephfrazier/editorconfig-to-prettier.git>
+
+----------------------------------------
+
+### emoji-regex@v9.2.2
+
+License: MIT
+By: Mathias Bynens
+Repository: <https://github.com/mathiasbynens/emoji-regex.git>
+Copyright Mathias Bynens <https://mathiasbynens.be/>
+
+----------------------------------------
+
+### error-ex@v1.3.2
+
+License: MIT
+Copyright (c) 2015 JD Ballard
+
+----------------------------------------
+
+### escape-string-regexp@v1.0.5
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### escape-string-regexp@v5.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### eslint-visitor-keys@v3.3.0
+
+License: Apache-2.0
+By: Toru Nagashima
+----------------------------------------
+
+### espree@v9.4.1
+
+License: BSD-2-Clause
+By: Nicholas C. Zakas
+Copyright (c) Open JS Foundation
+
+----------------------------------------
+
+### esutils@v2.0.3
+
+License: BSD-2-Clause
+Repository: <http://github.com/estools/esutils.git>
+
+----------------------------------------
+
+### execa@v6.1.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### extend@v3.0.2
+
+License: MIT
+By: Stefan Thomas
+Repository: <https://github.com/justmoon/node-extend.git>
+Copyright (c) 2014 Stefan Thomas
+
+----------------------------------------
+
+### fast-glob@v3.2.12
+
+License: MIT
+By: Denis Malinochkin
+Copyright (c) Denis Malinochkin
+
+----------------------------------------
+
+### fast-json-stable-stringify@v2.1.0
+
+License: MIT
+By: James Halliday
+Repository: <git://github.com/epoberezkin/fast-json-stable-stringify.git>
+Copyright (c) 2017 Evgeny PoberezkinCopyright (c) 2013 James Halliday
+
+----------------------------------------
+
+### fastq@v1.14.0
+
+License: ISC
+By: Matteo Collina
+Repository: <git+https://github.com/mcollina/fastq.git>
+Copyright (c) 2015-2020, Matteo Collina <matteo.collina@gmail.com>
+
+----------------------------------------
+
+### file-entry-cache@v6.0.1
+
+License: MIT
+By: Roy Riojas
+Copyright (c) 2015 Roy Riojas
+
+----------------------------------------
+
+### fill-range@v7.0.1
+
+License: MIT
+By: Jon Schlinkert
+Copyright (c) 2014-present, Jon Schlinkert.
+
+----------------------------------------
+
+### find-cache-dir@v3.3.2
+
+License: MIT
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### find-parent-dir@v0.3.1
+
+License: MIT
+By: Thorsten Lorenz
+Repository: <git://github.com/thlorenz/find-parent-dir.git>
+Copyright 2013 Thorsten Lorenz. 
+
+----------------------------------------
+
+### find-up@v4.1.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### flat-cache@v3.0.4
+
+License: MIT
+By: Roy Riojas
+Copyright (c) 2015 Roy Riojas
+
+----------------------------------------
+
+### flatted@v3.2.7
+
+License: ISC
+By: Andrea Giammarchi
+Repository: <git+https://github.com/WebReflection/flatted.git>
+Copyright (c) 2018-2020, Andrea Giammarchi, @WebReflection
+
+----------------------------------------
+
+### flatten@v1.0.3
+
+License: MIT
+By: Joshua Holbrook
+Repository: <git+https://github.com/mk-pmb/flatten-js.git>
+Copyright (c) 2016 Joshua Holbrook
+
+----------------------------------------
+
+### flow-parser@v0.180.0
+
+License: MIT
+By: Flow Team
+Repository: <https://github.com/facebook/flow.git>
+
+----------------------------------------
+
+### fs.realpath@v1.0.0
+
+License: ISC
+By: Isaac Z. Schlueter
+Repository: <git+https://github.com/isaacs/fs.realpath.git>
+
+----------------------------------------
+
+### function-bind@v1.1.1
+
+License: MIT
+By: Raynos
+Copyright (c) 2013 Raynos.
+
+----------------------------------------
+
+### get-stdin@v8.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### get-stream@v6.0.1
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### glob@v7.2.3
+
+License: ISC
+By: Isaac Z. Schlueter
+Repository: <git://github.com/isaacs/node-glob.git>
+Copyright (c) Isaac Z. Schlueter and Contributors
+
+----------------------------------------
+
+### glob-parent@v5.1.2
+
+License: ISC
+By: Gulp Team
+Copyright (c) 2015, 2019 Elan Shanker
+
+----------------------------------------
+
+### globby@v11.1.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### graceful-fs@v4.2.10
+
+License: ISC
+Repository: <https://github.com/isaacs/node-graceful-fs>
+Copyright (c) 2011-2022 Isaac Z. Schlueter, Ben Noordhuis, and Contributors
+
+----------------------------------------
+
+### graphql@v15.6.1
+
+License: MIT
+Repository: <https://github.com/graphql/graphql-js.git>
+Copyright (c) GraphQL Contributors
+
+----------------------------------------
+
+### has@v1.0.3
+
+License: MIT
+By: Thiago de Arruda
+Repository: <git://github.com/tarruda/has.git>
+Copyright (c) 2013 Thiago de Arruda
+
+----------------------------------------
+
+### has-flag@v3.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### html-element-attributes@v3.1.0
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### html-tag-names@v2.0.1
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### human-signals@v3.0.1
+
+License: Apache-2.0
+By: ehmicky
+
+----------------------------------------
+
+### ignore@v5.2.4
+
+License: MIT
+By: kael
+Repository: <git@github.com:kaelzhang/node-ignore.git>
+Copyright (c) 2013 Kael Zhang <i@kael.me>, contributors
+
+----------------------------------------
+
+### import-fresh@v3.3.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### indent-string@v4.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### indexes-of@v1.0.1
+
+License: MIT
+By: Dominic Tarr
+Repository: <git://github.com/dominictarr/indexes-of.git>
+Copyright (c) 2013 Dominic Tarr
+
+----------------------------------------
+
+### inflight@v1.0.6
+
+License: ISC
+By: Isaac Z. Schlueter
+Repository: <https://github.com/npm/inflight.git>
+Copyright (c) Isaac Z. Schlueter
+
+----------------------------------------
+
+### inherits@v2.0.4
+
+License: ISC
+Copyright (c) Isaac Z. Schlueter
+
+----------------------------------------
+
+### is-alphabetical@v1.0.4
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+---------------------------------------
+
+### is-alphanumerical@v1.0.4
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### is-arrayish@v0.2.1
+
+License: MIT
+By: Qix
+Repository: <https://github.com/qix-/node-is-arrayish.git>
+Copyright (c) 2015 JD Ballard
+
+----------------------------------------
+
+### is-buffer@v2.0.5
+
+License: MIT
+By: Feross Aboukhadijeh
+Repository: <git://github.com/feross/is-buffer.git>
+Copyright (c) Feross Aboukhadijeh
+
+----------------------------------------
+
+### is-core-module@v2.11.0
+
+License: MIT
+By: Jordan Harband
+Repository: <git+https://github.com/inspect-js/is-core-module.git>
+Copyright (c) 2014 Dave Justice
+-------------------------------------
+
+### is-decimal@v1.0.4
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### is-extglob@v2.1.1
+
+License: MIT
+By: Jon Schlinkert
+Copyright (c) 2014-2016, Jon Schlinkert
+
+----------------------------------------
+
+### is-fullwidth-code-point@v4.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### is-glob@v4.0.3
+
+License: MIT
+By: Jon Schlinkert
+Copyright (c) 2014-2017, Jon Schlinkert.
+
+----------------------------------------
+
+### is-hexadecimal@v1.0.4
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### is-number@v7.0.0
+
+License: MIT
+By: Jon Schlinkert
+Copyright (c) 2014-present, Jon Schlinkert.
+
+----------------------------------------
+
+### is-path-cwd@v2.2.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### is-path-inside@v3.0.3
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### is-plain-obj@v2.1.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### is-stream@v3.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### is-whitespace-character@v1.0.4
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### is-word-character@v1.0.4
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### isexe@v2.0.0
+
+License: ISC
+By: Isaac Z. Schlueter
+Repository: <git+https://github.com/isaacs/isexe.git>
+Copyright (c) Isaac Z. Schlueter and Contributors
+
+----------------------------------------
+
+### jest-docblock@v28.1.1
+
+License: MIT
+Repository: <https://github.com/facebook/jest.git>
+Copyright (c) Facebook, Inc. and its affiliates.
+
+----------------------------------------
+
+### js-tokens@v4.0.0
+
+License: MIT
+By: Simon Lydell
+Copyright (c) 2014, 2015, 2016, 2017, 2018 Simon Lydell
+
+----------------------------------------
+
+### json-parse-even-better-errors@v2.3.1
+
+License: MIT
+By: Kat Marchán
+Copyright 2017 Kat MarchánCopyright npm, Inc.
+
+----------------------------------------
+
+### json5@v2.2.2
+
+License: MIT
+By: Aseem Kishore
+Repository: <git+https://github.com/json5/json5.git>
+Copyright (c) 2012-2018 Aseem Kishore, and [others].
+
+----------------------------------------
+
+### leven@v2.1.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### leven@v4.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### lines-and-columns@v1.2.4
+
+License: MIT
+By: Brian Donovan
+Repository: <https://github.com/eventualbuddha/lines-and-columns.git>
+Copyright (c) 2015 Brian Donovan
+
+----------------------------------------
+
+### lines-and-columns@v2.0.3
+
+License: MIT
+By: Brian Donovan
+Repository: <https://github.com/eventualbuddha/lines-and-columns.git>
+Copyright (c) 2015 Brian Donovan
+
+----------------------------------------
+
+### linguist-languages@v7.21.0
+
+License: MIT
+By: Ika
+Copyright (c) Ika <ikatyang@gmail.com> (https://github.com/ikatyang)
+
+----------------------------------------
+
+### locate-path@v5.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### lru-cache@v4.1.5
+
+License: ISC
+By: Isaac Z. Schlueter
+Copyright (c) Isaac Z. Schlueter and Contributors
+-----------------------------------
+
+### lru-cache@v6.0.0
+
+License: ISC
+By: Isaac Z. Schlueter
+Copyright (c) Isaac Z. Schlueter and Contributors
+
+----------------------------------------
+
+### make-dir@v3.1.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### map-age-cleaner@v0.1.3
+
+License: MIT
+By: Sam Verschueren
+Copyright (c) Sam Verschueren <sam.verschueren@gmail.com> (github.com/SamVerschueren)
+
+----------------------------------------
+
+### markdown-escapes@v1.0.4
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### mem@v9.0.2
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### merge-stream@v2.0.0
+
+License: MIT
+By: Stephen Sugden
+Copyright (c) Stephen Sugden <me@stephensugden.com> (stephensugden.com)
+---------------------------------------
+
+### merge2@v1.4.1
+
+License: MIT
+Repository: <git@github.com:teambition/merge2.git>
+Copyright (c) 2014-2020 Teambition
+
+----------------------------------------
+
+### meriyah@v4.2.1
+
+License: ISC
+By: Kenny F.
+Repository: <https://github.com/meriyah/meriyah>
+Copyright (c) 2019 and later, KFlash and others.
+
+----------------------------------------
+
+### micromatch@v4.0.5
+
+License: MIT
+By: Jon Schlinkert
+Copyright (c) 2014-present, Jon Schlinkert.
+
+----------------------------------------
+
+### mimic-fn@v4.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### minimatch@v3.1.2
+
+License: ISC
+By: Isaac Z. Schlueter
+Repository: <git://github.com/isaacs/minimatch.git>
+Copyright (c) Isaac Z. Schlueter and Contributors
+
+----------------------------------------
+
+### minimist@v1.2.6
+
+License: MIT
+By: James Halliday
+Repository: <git://github.com/substack/minimist.git>
+
+----------------------------------------
+
+### n-readlines@v1.0.1
+
+License: MIT
+By: Yoan Arnaudov
+Repository: <http://github.com/nacholibre/node-readlines.git>
+Copyright (c) 2013 Liucw
+
+----------------------------------------
+
+### npm-run-path@v5.1.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### once@v1.4.0
+
+License: ISC
+By: Isaac Z. Schlueter
+Repository: <git://github.com/isaacs/once>
+Copyright (c) Isaac Z. Schlueter and Contributors
+
+----------------------------------------
+
+### onetime@v6.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### outdent@v0.8.0
+
+License: MIT
+By: Andrew Bradley
+Repository: <git+https://github.com/cspotcode/outdent.git>
+Copyright (c) 2016 Andrew Bradley
+
+----------------------------------------
+
+### p-defer@v1.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### p-limit@v2.3.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### p-locate@v4.1.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### p-map@v4.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### p-try@v2.2.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### parse-entities@v2.0.0
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2015 Titus Wormer <mailto:tituswormer@gmail.com>
+-------------------------------------
+
+### parse-json@v5.2.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+--------------------------------------
+
+### parse-srcset@v1.0.2
+
+License: MIT
+By: Alex Bell
+Repository: <git+https://github.com/albell/parse-srcset.git>
+Copyright (c) 2014 Alex Bell
+
+----------------------------------------
+
+### path-exists@v4.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### path-is-absolute@v1.0.1
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+---------------------------------------
+
+### path-key@v3.1.1
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### path-parse@v1.0.7
+
+License: MIT
+By: Javier Blanco
+Repository: <https://github.com/jbgutierrez/path-parse.git>
+Copyright (c) 2015 Javier Blanco
+
+----------------------------------------
+
+### path-type@v4.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### picocolors@v0.2.1
+
+License: ISC
+By: Alexey Raspopov
+Copyright (c) 2021 Alexey Raspopov, Kostiantyn Denysov, Anton Verinov
+
+----------------------------------------
+
+### picomatch@v2.3.1
+
+License: MIT
+By: Jon Schlinkert
+Copyright (c) 2017-present, Jon Schlinkert.
+
+----------------------------------------
+
+### pkg-dir@v4.2.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### please-upgrade-node@v3.2.0
+
+License: MIT
+By: typicode
+Repository: <git+https://github.com/typicode/please-upgrade-node.git>
+Copyright (c) 2017 
+
+----------------------------------------
+
+### postcss@v7.0.39
+
+License: MIT
+By: Andrey Sitnik
+Copyright 2013 Andrey Sitnik <andrey@sitnik.ru>
+
+----------------------------------------
+
+### postcss-less@v3.1.4
+
+License: MIT
+By: Denys Kniazevych
+Copyright (c) 2013 Andrey Sitnik <andrey@sitnik.ru>
+Copyright (c) 2016 Denys Kniazevych <webschik@gmail.com>
+Copyright (c) 2016 Pat Sissons <patricksissons@gmail.com>
+Copyright (c) 2017 Andrew Powell <andrew@shellscape.org>
+
+----------------------------------------
+
+### postcss-media-query-parser@v0.2.3
+
+License: MIT
+By: dryoma
+Repository: <git+https://github.com/dryoma/postcss-media-query-parser.git>
+
+----------------------------------------
+
+### postcss-scss@v2.1.1
+
+License: MIT
+By: Andrey Sitnik
+Copyright 2013 Andrey Sitnik <andrey@sitnik.ru>
+
+----------------------------------------
+
+### postcss-selector-parser@v2.2.3
+
+License: MIT
+By: Ben Briggs
+Copyright (c) Ben Briggs <beneb.info@gmail.com> (http://beneb.info)
+
+----------------------------------------
+
+### postcss-values-parser@v2.0.1
+
+License: MIT
+By: Andrew Powell (shellscape)
+Copyright (c) Andrew Powell <andrew@shellscape.org>
+
+----------------------------------------
+
+### pseudomap@v1.0.2
+
+License: ISC
+By: Isaac Z. Schlueter
+Repository: <git+https://github.com/isaacs/pseudomap.git>
+Copyright (c) Isaac Z. Schlueter and Contributors
+
+----------------------------------------
+
+### queue-microtask@v1.2.3
+
+License: MIT
+By: Feross Aboukhadijeh
+Repository: <git://github.com/feross/queue-microtask.git>
+Copyright (c) Feross Aboukhadijeh
+--------------------------------------
+
+### remark-footnotes@v2.0.0
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2020 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### remark-math@v3.0.1
+
+License: MIT
+By: Junyoung Choi
+
+----------------------------------------
+
+### remark-parse@v8.0.3
+
+License: MIT
+By: Titus Wormer
+
+----------------------------------------
+
+### repeat-string@v1.6.1
+
+License: MIT
+By: Jon Schlinkert
+Copyright (c) 2014-2016, Jon Schlinkert.
+
+----------------------------------------
+
+### resolve@v1.22.1
+
+License: MIT
+By: James Halliday
+Repository: <git://github.com/browserify/resolve.git>
+Copyright (c) 2012 James Halliday
+
+----------------------------------------
+
+### resolve-from@v4.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### reusify@v1.0.4
+
+License: MIT
+By: Matteo Collina
+Repository: <git+https://github.com/mcollina/reusify.git>
+Copyright (c) 2015 Matteo Collina
+
+----------------------------------------
+
+### rimraf@v3.0.2
+
+License: ISC
+By: Isaac Z. Schlueter
+Copyright (c) Isaac Z. Schlueter and Contributors
+
+----------------------------------------
+
+### rollup-plugin-node-polyfills@v0.2.1
+
+License: MIT
+Repository: <git@github.com:ionic-team/rollup-plugin-node-polyfills.git>
+Copyright (c) 2019 these people
+
+----------------------------------------
+
+### run-parallel@v1.2.0
+
+License: MIT
+By: Feross Aboukhadijeh
+Repository: <git://github.com/feross/run-parallel.git>
+Copyright (c) Feross Aboukhadijeh
+
+----------------------------------------
+
+### sdbm@v2.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+-------------------------------------
+
+### semver@v6.3.0
+
+License: ISC
+Copyright (c) Isaac Z. Schlueter and Contributors
+
+----------------------------------------
+
+### semver@v7.3.7
+
+License: ISC
+By: GitHub Inc.
+Repository: <https://github.com/npm/node-semver.git>
+
+----------------------------------------
+
+### semver@v7.3.8
+
+License: ISC
+By: GitHub Inc.
+Repository: <https://github.com/npm/node-semver.git>
+Copyright (c) Isaac Z. Schlueter and Contributors
+
+----------------------------------------
+
+### semver-compare@v1.0.0
+
+License: MIT
+By: James Halliday
+Repository: <git://github.com/substack/semver-compare.git>
+
+----------------------------------------
+
+### shebang-command@v2.0.0
+
+License: MIT
+By: Kevin Mårtensson
+Copyright (c) Kevin Mårtensson <kevinmartensson@gmail.com> (github.com/kevva)
+
+----------------------------------------
+
+### shebang-regex@v3.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### sigmund@v1.0.1
+
+License: ISC
+By: Isaac Z. Schlueter
+Repository: <git://github.com/isaacs/sigmund>
+Copyright (c) Isaac Z. Schlueter and Contributors
+Copyright notice and this permission notice appear in all copies.
+
+----------------------------------------
+
+### signal-exit@v3.0.7
+
+License: ISC
+By: Ben Coe
+Repository: <https://github.com/tapjs/signal-exit.git>
+Copyright (c) 2015, Contributors
+
+----------------------------------------
+
+### simple-html-tokenizer@v0.5.11
+
+License: MIT
+Repository: <https://github.com/tildeio/simple-html-tokenizer.git>
+Copyright (c) 2014 Yehuda Katz and contributors
+
+----------------------------------------
+
+### slash@v3.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### state-toggle@v1.0.3
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### string-width@v5.0.1
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### strip-ansi@v7.0.1
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### strip-final-newline@v3.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### supports-color@v5.5.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### temp-dir@v2.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+----------------------------------------
+
+### tempy@v2.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### to-regex-range@v5.0.1
+
+License: MIT
+By: Jon Schlinkert
+Copyright (c) 2015-present, Jon Schlinkert.
+
+----------------------------------------
+
+### trim@v0.0.1
+
+By: TJ Holowaychuk
+
+----------------------------------------
+
+### trim-trailing-lines@v1.1.4
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2015 Titus Wormer <mailto:tituswormer@gmail.com>
+
+----------------------------------------
+
+### trough@v1.0.5
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### tslib@v1.14.1
+
+License: 0BSD
+By: Microsoft Corp.
+Repository: <https://github.com/Microsoft/tslib.git>
+Copyright (c) Microsoft Corporation.
+
+----------------------------------------
+
+### tsutils@v3.21.0
+
+License: MIT
+By: Klaus Meinhardt
+Repository: <https://github.com/ajafff/tsutils>
+Copyright (c) 2017 Klaus Meinhardt
+
+----------------------------------------
+
+### typescript@v5.0.2
+
+License: Apache-2.0
+By: Microsoft Corp.
+Repository: <https://github.com/Microsoft/TypeScript.git>
+
+----------------------------------------
+
+### unherit@v1.1.3
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2015 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### unified@v9.2.1
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2015 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### uniq@v1.0.1
+
+License: MIT
+By: Mikola Lysenko
+Repository: <git://github.com/mikolalysenko/uniq.git>
+Copyright (c) 2013 Mikola Lysenko
+
+----------------------------------------
+
+### unique-string@v3.0.0
+
+License: MIT
+By: Sindre Sorhus
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+----------------------------------------
+
+### unist-util-is@v4.1.0
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2015 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### unist-util-remove-position@v2.0.1
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### unist-util-stringify-position@v2.0.3
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### unist-util-visit@v2.0.3
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2015 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### unist-util-visit-parents@v3.1.1
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### vfile@v4.2.1
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2015 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### vfile-location@v3.2.0
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### vfile-message@v2.0.4
+
+License: MIT
+By: Titus Wormer
+Copyright (c) 2017 Titus Wormer <tituswormer@gmail.com>
+
+----------------------------------------
+
+### vnopts@v1.0.2
+
+License: MIT
+By: Ika
+Copyright (c) Ika <ikatyang@gmail.com> (https://github.com/ikatyang)
+
+----------------------------------------
+
+### wcwidth@v1.0.1
+
+License: MIT
+By: Tim Oxley
+Repository: <git+https://github.com/timoxley/wcwidth.git>
+Copyright (C) 2012 by Jun Woong.
+
+----------------------------------------
+
+### which@v2.0.2
+
+License: ISC
+By: Isaac Z. Schlueter
+Repository: <git://github.com/isaacs/node-which.git>
+Copyright (c) Isaac Z. Schlueter and Contributors
+Copyright notice and this permission notice appear in all copies.
+
+----------------------------------------
+
+### wrappy@v1.0.2
+
+License: ISC
+By: Isaac Z. Schlueter
+Repository: <https://github.com/npm/wrappy>
+Copyright (c) Isaac Z. Schlueter and Contributors
+Copyright notice and this permission notice appear in all copies.
+
+----------------------------------------
+
+### xtend@v4.0.2
+
+License: MIT
+By: Raynos
+Copyright (c) 2012-2014 Raynos.
+
+----------------------------------------
+
+### yallist@v2.1.2
+
+License: ISC
+By: Isaac Z. Schlueter
+Repository: <git+https://github.com/isaacs/yallist.git>
+Copyright (c) Isaac Z. Schlueter and Contributors
+Copyright notice and this permission notice appear in all copies.
+
+----------------------------------------
+
+### yallist@v4.0.0
+
+License: ISC
+By: Isaac Z. Schlueter
+Repository: <git+https://github.com/isaacs/yallist.git>
+Copyright (c) Isaac Z. Schlueter and Contributors
+Copyright notice and this permission notice appear in all copies.
+
+----------------------------------------
+
+### yaml@v1.10.2
+
+License: ISC
+By: Eemeli Aro
+Copyright 2018 Eemeli Aro <eemeli@gmail.com>
+
+----------------------------------------
+
+### yaml-unist-parser@v1.3.1
+
+License: MIT
+By: Ika
+Copyright (c) Ika <ikatyang@gmail.com> (https://github.com/ikatyang)
+
+--------------------------------------------------------------------------------
+Package Title: prometheus-client (0.14.1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Apache-2.0
+
+--------------------------------------------------------------------------------
+Package Title: psutil ()
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): BSD-3-Clause
+--------------------------------------------------------------------------------
+Package Title: pyarrow (10.0.1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Apache-2.0
+Copyright 2011 Kitware, Inc
+
+--------------------------------------------------------------------------------
+Package Title: Pygments (2.4.1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): * Apache-2.0 *
+Copyright 2006-2017 by the Pygments team, see AUTHORS.
+
+--------------------------------------------------------------------------------
+Package Title: pylint ()
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): GPL-2.0-only
+
+--------------------------------------------------------------------------------
+Package Title: pysimdjson (5.0.2)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Multi-license: Apache-2.0 OR MIT
+Copyright (c) 2019 Tyler Kennedy
+
+--------------------------------------------------------------------------------
+Package Title: pytest ()
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) 2004 Holger Krekel and others
+
+--------------------------------------------------------------------------------
+Package Title: pytest-cov ()
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+
+Copyright (c) 2010 Meme Dough
+
+--------------------------------------------------------------------------------
+Package Title: pytest-timeout ()
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (C) 2012, 2014 Floris Bruynooghe
+
+--------------------------------------------------------------------------------
+Package Title: PyYAML ()
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) 2017-2021 Ingy döt NetCopyright (c) 2006-2016 Kirill Simonov
+
+--------------------------------------------------------------------------------
+Package Title: react (16.14.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) Facebook, Inc. and its affiliates.
+
+--------------------------------------------------------------------------------
+Package Title: react-dom (16.14.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) Facebook, Inc. and its affiliates.
+
+--------------------------------------------------------------------------------
+Package Title: rich (13.3.5)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) 2020 Will McGugan
+
+--------------------------------------------------------------------------------
+Package Title: rimraf (2.7.1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): ISC
+Copyright (c) Isaac Z. Schlueter and Contributors
+
+--------------------------------------------------------------------------------
+Package Title: setuptools (65.7.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright Jason R. Coombs
+
+--------------------------------------------------------------------------------
+Package Title: source-map-loader (0.2.4)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright JS Foundation and other contributors
+
+--------------------------------------------------------------------------------
+Package Title: spectate (1.0.1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) 2021 Ryan S. Morshead
+
+--------------------------------------------------------------------------------
+Package Title: spectate (0.4.1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) 2016 Ryan S. Morshead
+
+--------------------------------------------------------------------------------
+Package Title: sphinx (4.1.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) 2007-2021 by the Sphinx team (see AUTHORS file).
+All rights reserved.
+
+Licenses for incorporated software
+==================================
+
+The included smartypants module, included as sphinx.util.smartypants,
+is available under the following license:
+
+----------------------------------------------------------------------
+SmartyPants_ license::
+
+    Copyright (c) 2003 John Gruber
+    (https://daringfireball.net/projects/smartypants/)
+    All rights reserved.
+
+smartypants.py license::
+
+    smartypants.py is a derivative work of SmartyPants.
+
+The included JQuery JavaScript library is available under the MIT
+license:
+
+Copyright (c) 2008 John Resig, https://jquery.com/
+
+The included Underscore JavaScript library is available under the MIT
+license:Copyright (c) 2009 Jeremy Ashkenas, DocumentCloud
+
+The included implementation of NumpyDocstring._parse_numpydoc_see_also_section
+was derived from code under the following license:
+Copyright (C) 2008 Stefan van der Walt <stefan@mentat.za.net>, Pauli Virtanen <pav@iki.fi>
+
+Copyright (c) 2007-2021 by the Sphinx team (see AUTHORS file).
+--------------------------------------------------------------------------------
+Package Title: sphinx-copybutton (0.5.2)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+
+MIT License
+Copyright (c) 2018 Chris Holdgraf
+
+--------------------------------------------------------------------------------
+Package Title: sphinxemoji (0.2.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): BSD-2-Clause
+
+--------------------------------------------------------------------------------
+Package Title: sphinxext-opengraph (0.8.2)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): BSD-3-Clause
+Copyright (c) 2020 FIRST
+All rights reserved.
+
+--------------------------------------------------------------------------------
+Package Title: sphinx-panels (0.6.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+
+MIT License
+Copyright (c) 2020 Executable Books
+
+--------------------------------------------------------------------------------
+Package Title: style-loader (1.3.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright JS Foundation and other contributors
+
+--------------------------------------------------------------------------------
+Package Title: tomli (2.0.1)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+
+MIT License
+Copyright (c) 2021 Taneli Hukkinen
+
+--------------------------------------------------------------------------------
+Package Title: tqdm ()
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Multi-license: MIT OR MPL-2.0
+
+`tqdm` is a product of collaborative work.
+Unless otherwise stated, all authors (see commit logs) retain copyright
+for their respective work, and release the work under the MIT licence
+(text below).
+Copyright (c) 2013 noamraph
+
+--------------------------------------------------------------------------------
+Package Title: traitlets (5.9.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): BSD-3-Clause
+
+- Copyright (c) 2001-, IPython Development Team
+
+All rights reserved.
+
+--------------------------------------------------------------------------------
+Package Title: ts-loader (5.4.5)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) 2015 TypeStrong
+
+--------------------------------------------------------------------------------
+Package Title: typescript (3.9.10)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Apache-2.0
+
+--------------------------------------------------------------------------------
+Package Title: @typescript-eslint/eslint-plugin (2.34.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+
+MIT License
+Copyright (c) 2019 TypeScript ESLint and other contributors
+
+--------------------------------------------------------------------------------
+Package Title: @typescript-eslint/parser (2.34.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): BSD-2-Clause
+
+TypeScript ESLint ParserCopyright JS Foundation and other contributors, https://js.foundation
+
+--------------------------------------------------------------------------------
+Package Title: @types/expect.js (0.3.29)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) <year> <copyright holders>
+
+--------------------------------------------------------------------------------
+Package Title: @types/mocha (5.2.7)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+--------------------------------------------------------------------------------
+Package Title: @types/node (10.17.60)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) Microsoft Corporation.
+
+--------------------------------------------------------------------------------
+Package Title: @types/react (16.14.41)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) Microsoft Corporation.
+
+--------------------------------------------------------------------------------
+Package Title: @types/react-dom (16.9.19)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) Microsoft Corporation.
+
+--------------------------------------------------------------------------------
+Package Title: @types/webpack-env (1.18.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) Microsoft Corporation.
+
+--------------------------------------------------------------------------------
+Package Title: ujson (5.7.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): BSD-3-Clause, TCL
+Developed by ESN, an Electronic Arts Inc. studio.Copyright (c) 2014, Electronic Arts Inc.
+All rights reserved.
+
+--------------------------------------------------------------------------------
+Package Title: vineyard (0.14.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Apache 2.0
+
+--------------------------------------------------------------------------------
+Package Title: vineyard-io (0.14.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): Apache 2.0
+
+--------------------------------------------------------------------------------
+Package Title: webpack (4.46.0)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright JS Foundation and other contributors
+
+--------------------------------------------------------------------------------
+Package Title: webpack-cli (3.3.12)
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright JS Foundation and other contributors
+
+--------------------------------------------------------------------------------
+Package Title: wheel ()
+--------------------------------------------------------------------------------
+
+which is avaliable under license(s): MIT
+Copyright (c) 2012 Daniel Holth <dholth@fastmail.fm> and contributors
+
+--------------------------------------------------------------------------------
+
+Report Generated by FOSSA on 2023-5-22

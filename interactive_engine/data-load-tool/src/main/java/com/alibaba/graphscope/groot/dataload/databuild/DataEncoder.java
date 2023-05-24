@@ -32,10 +32,10 @@ import java.util.Map;
 public class DataEncoder {
 
     private static final long SNAPSHOT_ID = ~0L;
-    private ByteBuffer scratch = ByteBuffer.allocate(1 << 20);
-    private Map<GraphElement, List<Integer>> labelPkIds = new HashMap<>();
+    private final ByteBuffer scratch = ByteBuffer.allocate(1 << 20);
+    private final Map<GraphElement, List<Integer>> labelPkIds = new HashMap<>();
 
-    private Map<Integer, Codec> labelToCodec;
+    private final Map<Integer, Codec> labelToCodec;
 
     public DataEncoder(GraphSchema graphSchema) {
         this.labelToCodec = buildCodecs(graphSchema);
