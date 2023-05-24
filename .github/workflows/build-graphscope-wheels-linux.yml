@@ -42,15 +42,22 @@ jobs:
       if: false
       uses: mxschmitt/action-tmate@v2
 
+    - name: Test Secret
+      env:
+        SUPER_SECRET: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        echo "${SUPER_SECRET}"
+
     - name: Build Wheel Package
+      if: false
       run: |
         # change the version for nightly release
         # 0.15.0 -> 0.15.0a20220808
         time=$(date "+%Y%m%d")
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
-        # if [[ "${{ GITHUB.REF }}" == "refs/heads/main" ]]; then
-        echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION;
-        # fi
+        if [[ "${{ GITHUB.REF }}" == "refs/heads/main" ]]; then
+          echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION;
+        fi
 
         cd ${GITHUB_WORKSPACE}/k8s/internal
         # build graphscope wheels
