@@ -542,6 +542,12 @@
         <groupId>org.neo4j</groupId>
         <artifactId>neo4j</artifactId>
         <version>${noe4j.version}</version>
+        <exclusions>
+          <exclusion>
+              <groupId>org.slf4j</groupId>
+              <artifactId>slf4j-nop</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.immutables</groupId>
