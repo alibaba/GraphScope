@@ -1,26 +1,16 @@
 name: Build GraphScope Wheels on Linux
 
 # on: [push, pull_request]
-# on:
-#   workflow_dispatch:
-#   schedule:
+on:
+  workflow_dispatch:
+  schedule:
     # The notifications for scheduled workflows are sent to the user who
     # last modified the cron syntax in the workflow file.
     # Trigger the workflow at 03:00(CST) every day.
-#     - cron:  '00 19 * * *'
-#   push:
-#     tags:
-#       - "v*"
-
-on:
-  # Trigger the workflow on push or pull request,
-  # but only for the main branch
+    - cron:  '00 19 * * *'
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    tags:
+      - "v*"
 
 concurrency:
   group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
@@ -31,6 +21,7 @@ env:
 
 jobs:
   build-wheels-for-arm64:
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: [self-hosted, Linux, ARM64]
 
     steps:
@@ -42,14 +33,7 @@ jobs:
       if: false
       uses: mxschmitt/action-tmate@v2
 
-    - name: Test Secret
-      env:
-        SUPER_SECRET: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        echo "${SUPER_SECRET}"
-
     - name: Build Wheel Package
-      if: false
       run: |
         # change the version for nightly release
         # 0.15.0 -> 0.15.0a20220808
@@ -76,7 +60,9 @@ jobs:
         mkdir ${GITHUB_WORKSPACE}/upload_pypi
         mv ${GITHUB_WORKSPACE}/python/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
         mv ${GITHUB_WORKSPACE}/coordinator/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
-        mv ${GITHUB_WORKSPACE}/coordinator/dist/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
+        # only wheel packages that platform aware need to be published.
+        # the wheel packages under the coordinator/dist directory are same to the amd64 platform
+        # mv ${GITHUB_WORKSPACE}/coordinator/dist/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
