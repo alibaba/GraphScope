@@ -16,9 +16,9 @@
 package com.alibaba.graphscope.groot.dataload.databuild;
 
 public class BytesRef {
-    private byte[] array;
-    private int offset;
-    private int length;
+    private final byte[] array;
+    private final int offset;
+    private final int length;
 
     public BytesRef(byte[] array, int offset, int length) {
         this.array = array;

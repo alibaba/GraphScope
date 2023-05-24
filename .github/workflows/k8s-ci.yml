@@ -692,7 +692,7 @@ jobs:
           minikube image load graphscope/learning:${SHORT_SHA}
 
           export PYTHONPATH=${GITHUB_WORKSPACE}/python:${PYTHONPATH}
-          cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install --quiet -DskipTests -Drust.compile.skip=true -P graphscope,graphscope-assembly
+          cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install --quiet -DskipTests -Drust.compile.skip=true -P graphscope
           cd ${GITHUB_WORKSPACE}/interactive_engine/tests
           # ./function_test.sh 8111 1
           ./function_test.sh 8112 2
