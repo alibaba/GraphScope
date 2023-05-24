@@ -24,11 +24,6 @@ object LoadToolSpark {
       .appName("LoadToolSpark")
       .getOrCreate()
 
-//    val odps = CupidSession.get.odps
-//    val acc = odps.getAccount.asInstanceOf[AliyunAccount]
-//    println("Id " + acc.getAccessId)
-//    println("Key " + acc.getAccessKey)
-
     try {
       val command = args(0)
       val configPath = args(1)

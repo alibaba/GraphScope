@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CommitDataCommand extends DataCommand {
-
     public CommitDataCommand(String dataPath) throws IOException {
         super(dataPath);
     }

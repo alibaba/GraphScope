@@ -363,14 +363,14 @@ public class StoreService implements MetricsAgent {
         }
     }
 
-    public void clearIngest(String uniquePath) throws IOException {
+    public void clearIngest(String dataPath) throws IOException {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
-        if (uniquePath.isEmpty()) {
+        if (dataPath == null || dataPath.isEmpty()) {
             logger.warn("Must set a sub-path for clearing.");
             return;
         }
 
-        Path downloadPath = Paths.get(dataRoot, "download", uniquePath);
+        Path downloadPath = Paths.get(dataRoot, "download", dataPath);
         try {
             logger.info("Clearing directory {}", downloadPath);
             FileUtils.forceDelete(downloadPath.toFile());

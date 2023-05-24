@@ -33,12 +33,6 @@
     </dependency>
 
     <dependency>
-      <groupId>com.aliyun.odps</groupId>
-      <artifactId>cupid-sdk</artifactId>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
         <groupId>com.aliyun.odps</groupId>
         <artifactId>odps-sdk-mapred</artifactId>
         <scope>provided</scope>
