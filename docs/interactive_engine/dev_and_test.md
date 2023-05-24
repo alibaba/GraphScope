@@ -20,7 +20,7 @@ With `gs` command-line utility, you can build interactive engine of GraphScope w
 # Clone a repo if needed
 # git clone https://github.com/alibaba/graphscope
 # cd graphscope
-./gs make interactive
+./gs make interactive --experimental
 ```
 
 You may want to grab a cup of coffee cause this compiling will take a while, which
