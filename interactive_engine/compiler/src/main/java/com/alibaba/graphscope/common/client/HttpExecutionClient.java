@@ -23,6 +23,8 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.HQPSConfig;
 import com.alibaba.graphscope.gaia.proto.Hqps;
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.google.common.collect.Lists;
+import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,38 +34,59 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
-public class HttpExecutionClient extends ExecutionClient<URI>{
+public class HttpExecutionClient extends ExecutionClient<URI> {
     private static final Logger logger = LoggerFactory.getLogger(HttpExecutionClient.class);
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String TEXT_PLAIN = "text/plain;charset=UTF-8";
     private final HttpClient httpClient;
-
     public HttpExecutionClient(Configs graphConfig, ChannelFetcher<URI> channelFetcher) {
         super(channelFetcher);
         this.httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofMillis(HQPSConfig.HQPS_HTTP_TIMEOUT.get(graphConfig))).build();
     }
-
     @Override
     public void submit(ExecutionRequest request, ExecutionResponseListener listener) throws Exception {
-        List<URI> httpURIs = channelFetcher.fetch();
-        logger.info("http uris: {}", httpURIs);
-        for(URI httpURI : httpURIs) {
+        List<CompletableFuture> responseFutures = Lists.newArrayList();
+        for (URI httpURI : channelFetcher.fetch()) {
             HttpRequest httpRequest = HttpRequest.newBuilder()
                     .uri(httpURI)
                     .headers(CONTENT_TYPE, TEXT_PLAIN)
                     .POST(HttpRequest.BodyPublishers.ofByteArray((byte[]) request.getRequestPhysical().build()))
                     .build();
             // todo: synchronous call will block compiler thread
-            HttpResponse<byte[]> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
-            logger.info("http response: {}", response);
-            Hqps.HighQPSResults results = Hqps.HighQPSResults.parseFrom(response.body());
-            logger.info("http results: {}", results);
-            for (IrResult.Results irResult: results.getResultsList()) {
-                listener.onNext(irResult.getRecord());
-            }
+            CompletableFuture<HttpResponse<byte[]>> responseFuture = httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+            responseFuture.whenComplete((bytes, exception) -> {
+                if (exception != null) {
+                    listener.onError(exception);
+                }
+                try {
+                    Hqps.HighQPSResults results = Hqps.HighQPSResults.parseFrom(bytes.body());
+                    logger.info("receive results {}", results);
+                    for (IrResult.Results irResult : results.getResultsList()) {
+                        listener.onNext(irResult.getRecord());
+                    }
+                } catch (InvalidProtocolBufferException e) {
+                    listener.onError(e);
+                }
+            });
+            responseFutures.add(responseFuture);
         }
-        listener.onCompleted();
+        CompletableFuture<Void> joinFuture = CompletableFuture.runAsync(() -> {
+            try {
+                logger.info("wait for all response");
+                CompletableFuture.allOf(responseFutures.toArray(new CompletableFuture[0])).get();
+                logger.info("all response received");
+                listener.onCompleted();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        joinFuture.whenComplete((aVoid, exception) -> {
+            if (exception != null) {
+                listener.onError(exception);
+            }
+        });
     }
 
     @Override
