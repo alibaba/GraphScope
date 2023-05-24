@@ -97,7 +97,7 @@ Compute closeness centrality for vertices.
 
 ## Clustering
 
-The clustering algorithm is to compute the clustering coefficient for each vertex of a graph. The clustering coefficient of a vertex in a graph quantifies how close its neighbours are to being a clique (complete graph).
+The clustering algorithm is to compute the clustering coefficient for each vertex of a graph. The clustering coefficient of a vertex in a graph quantifies how close its neighbors are to being a clique (complete graph).
 
 ```{py:function} clustering()
 
@@ -275,7 +275,7 @@ Compute shortest paths from a source vertex in the graph.
 
 ## VoteRank
 
-VoteRank is to measure a ranking of the vertices in a graph based on a voting scheme. With VoteRank, all vertices vote for each of its in-neighbours and the vertices with the top highest votes is elected iteratively. 
+VoteRank is to measure a ranking of the vertices in a graph based on a voting scheme. With VoteRank, all vertices vote for each of its in-neighbors and the vertices with the top highest votes is elected iteratively. 
 
 ```{py:function} voterank(num_of_nodes)
 

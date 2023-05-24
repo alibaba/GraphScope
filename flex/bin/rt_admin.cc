@@ -41,6 +41,9 @@ int main(int argc, char** argv) {
     port = atoi(port_env);
   }
   httplib::Client cli(url, port);
+  cli.set_connection_timeout(0, 300000);
+  cli.set_read_timeout(60, 0);
+  cli.set_write_timeout(60, 0);
 
   std::string op = argv[1];
   if (op == "--version" || op == "-v") {

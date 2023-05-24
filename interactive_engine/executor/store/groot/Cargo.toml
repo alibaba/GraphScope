@@ -21,7 +21,8 @@ log4rs = "1.2"
 grpcio = "0.10"
 grpcio-sys = { version = "0.10", features = ["openssl-vendored"] }
 # deactivation of bzip2 due to https://github.com/rust-rocksdb/rust-rocksdb/issues/609
-rocksdb = { version = "0.19.0", features = ["snappy", "lz4", "zstd", "zlib"], default-features = false }
+# deactivation of zstd due to the 'hidden symbol "ZSTD_maxCLevel" is referenced by DSO' error
+rocksdb = { version = "0.19.0", features = ["snappy", "lz4", "zlib"], default-features = false }
 dyn_type = { path = "../../common/dyn_type" }
 
 [build-dependencies]

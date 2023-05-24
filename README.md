@@ -316,7 +316,7 @@ sess.close()
 
 This operation will notify the backend engines and vineyard
 to safely unload graphs and their applications,
-Then, the coordinator will dealloc all the applied resources in the k8s cluster.
+Then, the coordinator will release all the applied resources in the k8s cluster.
 
 Please note that we have not hardened this release for production use and it lacks important security features such as authentication and encryption, and therefore **it is NOT recommended for production use (yet)!**
 

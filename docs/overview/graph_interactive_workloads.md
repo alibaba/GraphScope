@@ -1,6 +1,6 @@
 # Graph Interactive Workloads
 Graph interactive workloads primarily focus on exploring complex graph structures in an
-**interative** manner. There're two common interactive workloads, namely
+**interactive** manner. There're two common interactive workloads, namely
 - Graph traversal: This type of workload involves traversing the graph from a set of source vertices
   while satisfying the constraints on the vertices and edges that the traversal passes. Graph
   traversal differs from the [analytics](./graph_analytics_workloads.md) workload as it typically accesses a small
