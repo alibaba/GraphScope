@@ -174,10 +174,8 @@ class LocalLauncher(AbstractLauncher):
         )
 
     def create_interactive_instance(self, object_id: int, schema_path: str):
-        # check java version
         try:
-            java_version = get_java_version()
-            logger.info("Java version: %s", java_version)
+            logger.info("Java version: %s", get_java_version())
         except:  # noqa: E722
             logger.exception("Cannot get version of java")
 

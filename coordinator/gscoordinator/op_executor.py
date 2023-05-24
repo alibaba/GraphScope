@@ -17,7 +17,7 @@ from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.graph_utils import normalize_parameter_edges
 from graphscope.framework.graph_utils import normalize_parameter_vertices
 from graphscope.framework.loader import Loader
-from graphscope.framework.utils import find_java
+from graphscope.framework.utils import find_java_exe
 from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import normalize_data_type_str
 from graphscope.proto import attr_value_pb2
@@ -377,7 +377,7 @@ class OperationExecutor:
         # Disable ENABLE_JAVA_SDK when java is not installed on coordinator
         if config["enable_java_sdk"] == "ON":
             try:
-                find_java()
+                find_java_exe()
             except RuntimeError:
                 logger.warning(
                     "Disable java sdk support since java is not installed on coordinator"
