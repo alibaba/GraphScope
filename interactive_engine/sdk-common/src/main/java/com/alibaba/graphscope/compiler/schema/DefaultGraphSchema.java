@@ -71,7 +71,7 @@ public class DefaultGraphSchema implements GraphSchema {
             return getElement(idToLabelList.get(labelId));
         }
 
-        throw new GraphElementNotFoundException("label not exist for labelid " + labelId);
+        throw new GraphElementNotFoundException("label not exist for label ID " + labelId);
     }
 
     @Override

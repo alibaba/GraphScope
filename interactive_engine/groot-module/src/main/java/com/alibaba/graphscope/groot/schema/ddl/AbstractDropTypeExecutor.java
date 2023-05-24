@@ -43,13 +43,13 @@ public abstract class AbstractDropTypeExecutor extends AbstractDdlExecutor {
                     String dstLabel = kind.getDstVertexLabel();
                     if (srcLabel.equals(label) || dstLabel.equals(label)) {
                         throw new DdlException(
-                                "cannot drop label [ "
+                                "cannot drop label ["
                                         + label
-                                        + " ], since it has related edgeKinds [ "
+                                        + "], since it has related edgeKinds ["
                                         + srcLabel
-                                        + " ] -> [ "
+                                        + "] -> ["
                                         + dstLabel
-                                        + " ]");
+                                        + "]");
                     }
                 }
             }

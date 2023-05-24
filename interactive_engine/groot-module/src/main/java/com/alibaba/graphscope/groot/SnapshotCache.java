@@ -30,9 +30,9 @@ public class SnapshotCache {
 
     public static final Logger logger = LoggerFactory.getLogger(SnapshotCache.class);
 
-    private AtomicReference<SnapshotWithSchema> snapshotWithSchemaRef;
+    private final AtomicReference<SnapshotWithSchema> snapshotWithSchemaRef;
 
-    private TreeMap<Long, List<SnapshotListener>> snapshotToListeners;
+    private final TreeMap<Long, List<SnapshotListener>> snapshotToListeners;
 
     public SnapshotCache() {
         SnapshotWithSchema snapshotWithSchema = SnapshotWithSchema.newBuilder().build();
@@ -65,7 +65,7 @@ public class SnapshotCache {
      *
      * <p>We need to decide whether should the writing framework coupled with the implementation of
      * schema synchronization. Options are discussed here:
-     * https://yuque.antfin-inc.com/graphscope/project/eibfty#EQGg9 This interface assumes write
+     * <a href="https://yuque.antfin-inc.com/graphscope/project/eibfty#EQGg9">Schema synchronization</a> This interface assumes write
      * framework isn't coupled with schema synchronization.
      *
      * @param snapshotId
@@ -92,6 +92,7 @@ public class SnapshotCache {
                         || graphDef.getSchemaVersion() > oldGraphDef.getVersion())) {
             newSnapshotInfoBuilder.setGraphDef(graphDef);
             logger.info("schema updated. schema version [" + graphDef.getVersion() + "]");
+            logger.info(graphDef.toProto().toString());
         }
         this.snapshotWithSchemaRef.set(newSnapshotInfoBuilder.build());
         logger.debug("snapshotId update to [" + snapshotId + "]");
