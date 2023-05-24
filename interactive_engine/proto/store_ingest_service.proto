@@ -33,7 +33,7 @@ message StoreIngestResponse {
 }
 
 message StoreClearIngestRequest {
-
+  string dataPath = 1;
 }
 
 message StoreClearIngestResponse {

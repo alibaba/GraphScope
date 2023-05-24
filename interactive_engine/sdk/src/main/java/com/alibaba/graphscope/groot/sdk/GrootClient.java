@@ -260,8 +260,8 @@ public class GrootClient implements Closeable {
         this.gremlinClient.close();
     }
 
-    public void clearIngest() {
-        this.stub.clearIngest(ClearIngestRequest.newBuilder().build());
+    public void clearIngest(String dataPath) {
+        this.stub.clearIngest(ClearIngestRequest.newBuilder().setDataPath(dataPath).build());
     }
 
     public static GrootClientBuilder newBuilder() {

@@ -182,28 +182,35 @@ public class OfflineBuildOdps {
         if (loadAfterBuild) {
             fullQualifiedDataPath = fullQualifiedDataPath + uniquePath;
             logger.info("start ingesting data from " + fullQualifiedDataPath);
-            System.out.println("Ingesting data with config:");
+            logger.info("Ingesting data with config:");
             config.forEach((key, value) -> logger.info(key + "=" + value));
-            client.ingestData(fullQualifiedDataPath, config);
-
-            logger.info("start committing bulk load");
-            Map<Long, DataLoadTarget> tableToTarget = new HashMap<>();
-            for (ColumnMappingInfo columnMappingInfo : columnMappingInfos.values()) {
-                long tableId = columnMappingInfo.getTableId();
-                int labelId = columnMappingInfo.getLabelId();
-                GraphElement graphElement = schema.getElement(labelId);
-                String label = graphElement.getLabel();
-                DataLoadTarget.Builder builder = DataLoadTarget.newBuilder();
-                builder.setLabel(label);
-                if (graphElement instanceof GraphEdge) {
-                    builder.setSrcLabel(
-                            schema.getElement(columnMappingInfo.getSrcLabelId()).getLabel());
-                    builder.setDstLabel(
-                            schema.getElement(columnMappingInfo.getDstLabelId()).getLabel());
+            try {
+                client.ingestData(fullQualifiedDataPath, config);
+                logger.info("start committing bulk load");
+                Map<Long, DataLoadTarget> tableToTarget = new HashMap<>();
+                for (ColumnMappingInfo columnMappingInfo : columnMappingInfos.values()) {
+                    long tableId = columnMappingInfo.getTableId();
+                    int labelId = columnMappingInfo.getLabelId();
+                    GraphElement graphElement = schema.getElement(labelId);
+                    String label = graphElement.getLabel();
+                    DataLoadTarget.Builder builder = DataLoadTarget.newBuilder();
+                    builder.setLabel(label);
+                    if (graphElement instanceof GraphEdge) {
+                        builder.setSrcLabel(
+                                schema.getElement(columnMappingInfo.getSrcLabelId()).getLabel());
+                        builder.setDstLabel(
+                                schema.getElement(columnMappingInfo.getDstLabelId()).getLabel());
+                    }
+                    tableToTarget.put(tableId, builder.build());
                 }
-                tableToTarget.put(tableId, builder.build());
+                client.commitDataLoad(tableToTarget, uniquePath);
+
+            } catch (Exception ex) {
+                logger.error("Failed to ingest/commit data", ex);
+                client.clearIngest(uniquePath);
+                client.close();
+                throw ex;
             }
-            client.commitDataLoad(tableToTarget, uniquePath);
         }
         client.close();
     }

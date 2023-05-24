@@ -353,16 +353,24 @@ public class StoreService implements MetricsAgent {
                             }
                         }
                         if (counter.decrementAndGet() == 0) {
+                            logger.info("All download tasks finished.");
                             finished.set(true);
                             callback.onCompleted(null);
+                        } else {
+                            logger.info(counter.get() + " download tasks remaining");
                         }
                     });
         }
     }
 
-    public void clearIngest() throws IOException {
+    public void clearIngest(String uniquePath) throws IOException {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
-        Path downloadPath = Paths.get(dataRoot, "download");
+        if (uniquePath.isEmpty()) {
+            logger.warn("Must set a sub-path for clearing.");
+            return;
+        }
+
+        Path downloadPath = Paths.get(dataRoot, "download", uniquePath);
         try {
             logger.info("Clearing directory {}", downloadPath);
             FileUtils.forceDelete(downloadPath.toFile());
@@ -370,7 +378,7 @@ public class StoreService implements MetricsAgent {
             // Ignore
         }
         logger.info("cleared directory {}", downloadPath);
-        Files.createDirectories(downloadPath);
+        // Files.createDirectories(downloadPath);
     }
 
     public void garbageCollect(long snapshotId, CompletionCallback<Void> callback) {
