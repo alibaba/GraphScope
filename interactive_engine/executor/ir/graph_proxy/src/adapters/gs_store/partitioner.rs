@@ -19,6 +19,7 @@ use std::sync::Arc;
 use global_query::store_api::{PartitionId, VertexId};
 use global_query::GraphPartitionManager;
 
+use crate::apis::partitioner::QueryPartitions;
 use crate::apis::{Partitioner, ID};
 use crate::{GraphProxyError, GraphProxyResult};
 
@@ -62,7 +63,7 @@ impl Partitioner for GrootMultiPartition {
 
     fn get_worker_partitions(
         &self, job_workers: usize, worker_id: u32,
-    ) -> GraphProxyResult<Option<Vec<u64>>> {
+    ) -> GraphProxyResult<QueryPartitions> {
         // Get worker partition list logic is as follows:
         // 1. `process_partition_list = self.graph_partition_manager.get_process_partition_list()`
         // get all partitions on current server
@@ -81,7 +82,7 @@ impl Partitioner for GrootMultiPartition {
             "job_workers {:?}, worker id: {:?},  worker_partition_list {:?}",
             job_workers, worker_id, worker_partition_list
         );
-        Ok(Some(worker_partition_list))
+        Ok(QueryPartitions::WholePartitions(worker_partition_list))
     }
 }
 
@@ -138,7 +139,7 @@ impl Partitioner for VineyardMultiPartition {
 
     fn get_worker_partitions(
         &self, job_workers: usize, worker_id: u32,
-    ) -> GraphProxyResult<Option<Vec<u64>>> {
+    ) -> GraphProxyResult<QueryPartitions> {
         // Get worker partition list logic is as follows:
         // 1. `process_partition_list = self.graph_partition_manager.get_process_partition_list()`
         // get all partitions on current server
@@ -154,6 +155,6 @@ impl Partitioner for VineyardMultiPartition {
             "job_workers {:?}, worker id: {:?},  worker_partition_list {:?}",
             job_workers, worker_id, worker_partition_list
         );
-        Ok(Some(worker_partition_list))
+        Ok(QueryPartitions::WholePartitions(worker_partition_list))
     }
 }

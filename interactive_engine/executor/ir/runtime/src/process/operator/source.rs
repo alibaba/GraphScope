@@ -128,7 +128,7 @@ impl SourceOperator {
         match res {
             Ok(partition_list) => {
                 debug!("Assign worker {:?} to scan partition list: {:?}", worker_index, partition_list);
-                self.query_params.partitions = partition_list;
+                self.query_params.partitions = Some(partition_list);
             }
             Err(err) => {
                 debug!("get partition list failed in graph_partition_manager in source op {:?}", err);

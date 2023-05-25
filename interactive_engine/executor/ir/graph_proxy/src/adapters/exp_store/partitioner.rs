@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::apis::partitioner::QueryPartitions;
 use crate::apis::{Partitioner, ID};
 use crate::GraphProxyResult;
 
@@ -35,11 +36,19 @@ impl Partitioner for SimplePartition {
     }
 
     fn get_worker_partitions(
-        &self, _job_workers: usize, _worker_id: u32,
-    ) -> GraphProxyResult<Option<Vec<u64>>> {
+        &self, job_workers: usize, worker_id: u32,
+    ) -> GraphProxyResult<QueryPartitions> {
         // In graph that one server contains a single graph partition,
-        // there's no need to assign the specific partition id for query (as all workers will scan part of current partition).
+        // all workers will scan part of current partition; and assign the partition id as server_id;
         // In source scan, workers will scan the vertices in a parallel way
-        Ok(None)
+        let server_id = (worker_id / job_workers as u32) as u64;
+        if job_workers == 1 {
+            // to query the whole partition
+            Ok(QueryPartitions::WholePartitions(vec![server_id]))
+        } else {
+            // to query partial partition
+            let worker_index = worker_id % job_workers as u32;
+            Ok(QueryPartitions::PartialPartition(worker_index, job_workers as u32, server_id))
+        }
     }
 }

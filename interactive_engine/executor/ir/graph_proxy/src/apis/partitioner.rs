@@ -16,6 +16,16 @@
 use crate::apis::ID;
 use crate::GraphProxyResult;
 
+#[derive(Debug, Clone)]
+pub enum QueryPartitions {
+    // WholePartitions specifies the partition(s) to query.
+    // Empty vector indicates to query all partitions in current process.
+    WholePartitions(Vec<u64>),
+    // PartialPartitions indicates **partial partitions** to query, specified as `(i, n, partition_id)`,
+    // means that to query the first `i`-th part out of `n` parts, of the partition with the given `partition_id`.
+    PartialPartition(u32, u32, u64),
+}
+
 pub trait Partitioner: Send + Sync + 'static {
     /// Given the element id and job_workers (number of worker per server),
     /// return the id of worker that is going to process
@@ -24,5 +34,5 @@ pub trait Partitioner: Send + Sync + 'static {
     /// return the partition list that the worker is going to process
     fn get_worker_partitions(
         &self, job_workers: usize, worker_id: u32,
-    ) -> GraphProxyResult<Option<Vec<u64>>>;
+    ) -> GraphProxyResult<QueryPartitions>;
 }

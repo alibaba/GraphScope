@@ -26,6 +26,7 @@ use ir_common::generated::physical as pb;
 use ir_common::{LabelId, NameOrId, OneOrMany};
 use pegasus::codec::{ReadExt, WriteExt};
 
+use crate::apis::partitioner::QueryPartitions;
 use crate::utils::expr::eval_pred::PEvaluator;
 
 pub mod element;
@@ -70,7 +71,7 @@ pub struct QueryParams {
     pub labels: Vec<LabelId>,
     pub limit: Option<usize>,
     pub columns: Option<Vec<NameOrId>>,
-    pub partitions: Option<Vec<u64>>,
+    pub partitions: Option<QueryPartitions>,
     pub filter: Option<Arc<PEvaluator>>,
     pub sample_ratio: Option<f64>,
     pub extra_params: Option<HashMap<String, String>>,

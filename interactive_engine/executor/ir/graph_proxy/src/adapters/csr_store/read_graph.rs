@@ -33,6 +33,7 @@ use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
 use crate::apis::graph::PKV;
+use crate::apis::partitioner::QueryPartitions;
 use crate::apis::{
     from_fn, register_graph, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
     Statement, Vertex, ID,
@@ -70,17 +71,18 @@ impl ReadGraph for CSRStore {
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         let label_ids = encode_storage_label(&params.labels);
         let props = params.columns.clone();
-
-        let worker_id = pegasus::get_current_worker_checked()
-            .map(|worker| worker.index)
-            .unwrap_or(0);
-        let workers_num = pegasus::get_current_worker_checked()
-            .map(|worker| worker.local_peers)
-            .unwrap_or(1);
+        let partitions = params
+            .partitions
+            .as_ref()
+            .ok_or(GraphProxyError::query_store_error("Empty Partitions on CsrStore"))?;
+        let (idx, num) = match partitions {
+            QueryPartitions::WholePartitions(_) => (0, 1),
+            QueryPartitions::PartialPartition(idx, num, _) => (*idx, *num),
+        };
 
         let result = self
             .store
-            .get_partitioned_vertices(label_ids.as_ref(), worker_id, workers_num)
+            .get_partitioned_vertices(label_ids.as_ref(), idx, num)
             .map(move |v| to_runtime_vertex(v, props.clone()));
         Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
     }
@@ -96,18 +98,19 @@ impl ReadGraph for CSRStore {
     fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
         let label_ids = encode_storage_label(&params.labels);
         let props = params.columns.clone();
-
-        let worker_id = pegasus::get_current_worker_checked()
-            .map(|worker| worker.index)
-            .unwrap_or(0);
-        let workers_num = pegasus::get_current_worker_checked()
-            .map(|worker| worker.local_peers)
-            .unwrap_or(1);
+        let partitions = params
+            .partitions
+            .as_ref()
+            .ok_or(GraphProxyError::query_store_error("Empty Partitions on CsrStore"))?;
+        let (idx, num) = match partitions {
+            QueryPartitions::WholePartitions(_) => (0, 1),
+            QueryPartitions::PartialPartition(idx, num, _) => (*idx, *num),
+        };
         let partition_id = self.store.partition as u8;
 
         let result = self
             .store
-            .get_partitioned_edges(label_ids.as_ref(), worker_id, workers_num)
+            .get_partitioned_edges(label_ids.as_ref(), idx, num)
             .map(move |e| to_runtime_edge(e, None, props.clone(), partition_id));
         Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
     }

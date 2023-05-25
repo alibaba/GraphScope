@@ -31,6 +31,7 @@ use ir_common::{KeyId, LabelId, NameOrId, OneOrMany};
 
 use crate::adapters::gs_store::details::{LazyEdgeDetails, LazyVertexDetails};
 use crate::apis::graph::PKV;
+use crate::apis::partitioner::QueryPartitions;
 use crate::apis::{
     from_fn, register_graph, Direction, DynDetails, Edge, QueryParams, ReadGraph, Statement, Vertex, ID,
 };
@@ -121,10 +122,7 @@ where
                 get_all_storage_props()
             };
 
-            let partitions: Vec<PartitionId> = partitions
-                .iter()
-                .map(|pid| *pid as PartitionId)
-                .collect();
+            let partitions = encode_partitions(partitions)?;
 
             let columns = params.columns.clone();
             let result = store
@@ -178,8 +176,9 @@ where
             .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
         {
             if let Some(worker_partitions) = params.partitions.as_ref() {
+                let worker_partitions = encode_partitions(&worker_partitions)?;
                 // only the one responsible for vid is going to search for the vertex
-                let vertex_partition = self.partition_manager.get_partition_id(vid) as u64;
+                let vertex_partition = self.partition_manager.get_partition_id(vid) as u32;
                 if worker_partitions.contains(&vertex_partition) {
                     self.get_vertex(&[vid as ID], params)
                         .map(|mut v_iter| v_iter.next())
@@ -223,10 +222,7 @@ where
                 get_all_storage_props()
             };
 
-            let partitions: Vec<PartitionId> = partitions
-                .iter()
-                .map(|pid| *pid as PartitionId)
-                .collect();
+            let partitions: Vec<PartitionId> = encode_partitions(&partitions)?;
             let result = store.get_all_edges(
                 si,
                 label_ids.as_ref(),
@@ -714,6 +710,19 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
         Object::Blob(b) => Property::Bytes(b.to_vec()),
         Object::None => Property::Null,
         _ => Property::Unknown,
+    }
+}
+
+#[inline]
+fn encode_partitions(query_partitions: &QueryPartitions) -> GraphProxyResult<Vec<PartitionId>> {
+    match query_partitions {
+        QueryPartitions::WholePartitions(partitions) => Ok(partitions
+            .iter()
+            .map(|pid| *pid as PartitionId)
+            .collect()),
+        QueryPartitions::PartialPartition(_, _, _) => {
+            Err(GraphProxyError::unsupported_error("PartialPartition on GraphScopeStore"))
+        }
     }
 }
 
