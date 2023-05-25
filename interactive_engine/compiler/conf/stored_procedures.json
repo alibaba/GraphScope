@@ -1,19 +1,43 @@
 [
   {
-    "name": "modern_1",
+    "name": "query_ic2",
     "parameters": [
       {
-        "name": "name",
-        "type": "STRING"
+        "name": "personId2",
+        "type": "LONG"
       },
       {
-        "name": "age",
-        "type": "INTEGER"
+        "name": "maxDate",
+        "type": "LONG"
       }
     ],
     "returnType": [
       {
-        "name": "id",
+        "name": "personId",
+        "type": "LONG"
+      },
+      {
+        "name": "personFirstName",
+        "type": "STRING"
+      },
+      {
+        "name": "personLastName",
+        "type": "STRING"
+      },
+      {
+        "name": "messageId",
+        "type": "LONG"
+      },
+      {
+        "name": "context",
+        "type": "STRING"
+      },
+      {
+        "name": "imageFile",
+        "type": "STRING"
+      },
+      {
+        "name": "creationDate",
         "type": "LONG"
       }
     ]

@@ -55,14 +55,14 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                     .POST(HttpRequest.BodyPublishers.ofByteArray((byte[]) request.getRequestPhysical().build()))
                     .build();
             // todo: synchronous call will block compiler thread
-            CompletableFuture<HttpResponse<byte[]>> responseFuture = httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
-            responseFuture.whenComplete((bytes, exception) -> {
+            CompletableFuture<HttpResponse<byte[]>> responseFuture =
+                    httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofByteArray())
+                            .whenComplete((bytes, exception) -> {
                 if (exception != null) {
                     listener.onError(exception);
                 }
                 try {
                     Hqps.HighQPSResults results = Hqps.HighQPSResults.parseFrom(bytes.body());
-                    logger.info("receive results {}", results);
                     for (IrResult.Results irResult : results.getResultsList()) {
                         listener.onNext(irResult.getRecord());
                     }
