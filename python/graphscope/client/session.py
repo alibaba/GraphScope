@@ -1370,6 +1370,12 @@ def set_option(**kwargs):
         if k == "vineyard_shared_mem":
             setattr("_local_vineyard_shared_mem", v)
 
+        # use string as log level
+        if k == "log_level" and isinstance(v, int):
+            level = logging.getLevelName(v)
+            if " " not in level:  # invalid number will returns "Level xxx"
+                setattr(gs_config, k, level.upper())
+
     GSLogger.update()
 
 
