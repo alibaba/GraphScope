@@ -465,6 +465,7 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._namespace,
             name=self._coordinator_name,
+            pods_watcher=self._coordinator_pods_watcher,
             timeout_seconds=self._saved_locals["timeout_seconds"],
         ):
             self._coordinator_pods_watcher.stop()
@@ -536,13 +537,11 @@ class KubernetesClusterLauncher(Launcher):
                 "Coordinator pod start successful with address %s, connecting to service ...",
                 self._coordinator_endpoint,
             )
-        except Exception as e:
+        except Exception:
             time.sleep(1)
             self._dump_coordinator_failed_status()
             self.stop()
-            raise K8sError(
-                "Error when launching Coordinator on kubernetes cluster"
-            ) from e
+            raise
 
     def stop(self, wait=False):
         """Stop graphscope instance on kubernetes cluster.
