@@ -74,9 +74,7 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
         }
         CompletableFuture<Void> joinFuture = CompletableFuture.runAsync(() -> {
             try {
-                logger.info("wait for all response");
                 CompletableFuture.allOf(responseFutures.toArray(new CompletableFuture[0])).get();
-                logger.info("all response received");
                 listener.onCompleted();
             } catch (Exception e) {
                 throw new RuntimeException(e);
