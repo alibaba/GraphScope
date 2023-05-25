@@ -181,7 +181,7 @@ def command_for_func(func):
 
 def run(cmd, **kwargs):
     """Echo a command before running it.  Defaults to repo as cwd"""
-    log.info("> " + list2cmdline(cmd))
+    log.info("> %s", list2cmdline(cmd))
     kwargs.setdefault("cwd", HERE)
     kwargs.setdefault("shell", os.name == "nt")
     if not isinstance(cmd, (list, tuple)) and os.name != "nt":
@@ -344,10 +344,10 @@ def install_npm(
 
             if not which(npm_cmd[0]):
                 log.error(
-                    "`{0}` unavailable.  If you're running this command "
-                    "using sudo, make sure `{0}` is available to sudo".format(
-                        npm_cmd[0]
-                    )
+                    "`%s` unavailable.  If you're running this command "
+                    "using sudo, make sure `%s` is available to sudo",
+                    npm_cmd[0],
+                    npm_cmd[0],
                 )
                 return
 
