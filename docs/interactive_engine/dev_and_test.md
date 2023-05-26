@@ -12,19 +12,19 @@ docker run --name dev -it --shm-size=4096m registry.cn-hongkong.aliyuncs.com/gra
 
 Please refer to [Dev Environment](../development/dev_guide.md#dev-environment) to find more options to get a dev environment.
 
-## Test GIE with Local Experimental Store
+## Build and Test GIE with Local Experimental Store
  You first set the working directory to local repo. If you are in the above
  dev container, it should be `/workspaces/GraphScope`.
 ```bash
 export GRAPHSCOPE_HOME=`pwd`
 # Here the `pwd` is the root path of GraphScope repository
+./gs make interactive --storage-type=experimental
 ```
 See more about `GRAPHSCOPE_HOME` in [run tests](../development/how_to_test.md#run-tests)
 
-
 You could locally test the GIE engine with a single command:
 ```bash
-./gs test interactive --local
+./gs test interactive --local --storage-type=experimental
 ```
 
 Recall that in [GIE](./design_of_gie.md), a gremlin query will be firstly parsed to an IR logical plan by the compiler, and then into a physical plan,
@@ -49,4 +49,10 @@ computed engine. The test includes:
 In [GIE standalone deployment](./deployment.md), we have instructed on how to deploy GIE in a
 Kubenetes cluster with Vineyard store. Here, we show how to develop and test GIE with vineyard
 store on a local machine.
+```bash
+./gs make interactive --storage-type=vineyard
+```
 
+```bash
+./gs test interactive --local --storage-type=vineyard
+```
