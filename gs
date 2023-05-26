@@ -161,18 +161,13 @@ gs_make_image_usage() {
     # :flag.usage
     printf "  %s\n" "--registry REGISTRY"
     printf "    registry name\n"
-    printf "    Default: docker.io\n"
+    printf "    Default: registry.cn-hongkong.aliyuncs.com\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "--tag TAG"
     printf "    image tag name to build\n"
     printf "    Default: latest\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "--cn CN"
-    printf "    Whether to use CN located mirrors to speed up download. [Not implemented]\n"
     echo
 
     # :command.usage_fixed_flags
@@ -193,6 +188,7 @@ gs_make_image_usage() {
     printf "%s\n" "Examples:"
     printf "  gs make-image graphscope-dev\n"
     printf "  gs make-image analytical --registry registry.cn-hongkong.aliyuncs.com\n"
+    printf "  gs make-image analytical --registry docker.io\n"
     echo
 
   fi
@@ -236,7 +232,7 @@ gs_dev_usage() {
     # :command.usage_examples
     printf "%s\n" "Examples:"
     printf "  gs dev\n"
-    printf "  gs dev --local /home/bar/graphscope\n"
+    printf "  gs dev --local ~/graphscope\n"
     echo
 
   fi
@@ -1161,7 +1157,6 @@ gs_make_command() {
   make_interactive() {
       if [[ -n ${experimental_flag} ]]; then
           cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && make build QUIET_OPT=""
-
       else
           make interactive
       fi
@@ -1204,6 +1199,7 @@ gs_make_command() {
   }
 
   make_${component}
+
 }
 
 # :command.function
@@ -1284,28 +1280,28 @@ gs_dev_command() {
   inspect_args
 
   local=${args[--local]}
+
+  mount_option=""
+
   if [[ -n $local ]]; then
-      echo "local=" $local
+  	echo "Opened a new container with $local mounted to /home/graphscope/graphscope."
+  	mount_option="--mount type=bind,source=${local},target=/home/graphscope/graphscope"
   else
-      echo "No local assigned, use default `pwd` to mount as working directory."
-      local=`pwd`
+  	echo "No local directory assigned, open a new container without mounting local directory."
   fi
 
-  #docker pull graphscope/graphscope-dev
+  # docker pull graphscope/graphscope-dev
+  REGISTRY="registry.cn-hongkong.aliyuncs.com"
   docker run \
-      -it graphscope/graphscope-dev \
-      /bin/bash
-
-      # -v $local:/home/graphscope/workspace
+  	-it \
+  	${mount_option} \
+  	${REGISTRY}/graphscope/graphscope-dev:latest
 
 }
 
 # :command.function
 gs_test_command() {
   # src/test_command.sh
-  echo "# this file is located in 'src/test_command.sh'"
-  echo "# code for 'gs test' goes here"
-  echo "# you can edit it freely and regenerate (it will not be overwritten)"
   inspect_args
 
   testdata=${args[--testdata]}
@@ -1314,85 +1310,96 @@ gs_test_command() {
   nx=${args[--nx]}
   export GS_TEST_DIR=${testdata}
 
-  # analytical, analytical-java, interactive, learning, local-e2e, k8s-e2e, groot
+  # analytical, analytical-java, interactive, learning, e2e, groot
 
   type=${args[type]}
 
   GS_SOURCE_DIR="$(dirname -- "$(readlink -f "${BASH_SOURCE}")")"
 
   function get_test_data {
-    if [[ ! -d ${GS_TEST_DIR} ]]; then
-      log "Downloading test data to ${testdata}"
-      git clone -b master --single-branch --depth=1 https://github.com/graphscope/gstest.git "${GS_TEST_DIR}"
-    fi
+  	if [[ ! -d ${GS_TEST_DIR} ]]; then
+  		log "Downloading test data to ${testdata}"
+  		git clone -b master --single-branch --depth=1 https://github.com/graphscope/gstest.git "${GS_TEST_DIR}"
+  	fi
   }
 
   function test_analytical {
-    get_test_data
-    "${GS_SOURCE_DIR}"/analytical_engine/test/app_tests.sh --test_dir "${GS_TEST_DIR}"
+  	get_test_data
+  	info "Testing analytical on local"
+  	"${GS_SOURCE_DIR}"/analytical_engine/test/app_tests.sh --test_dir "${GS_TEST_DIR}"
   }
 
   function test_analytical-java {
-    get_test_data
+  	get_test_data
+  	info "Testing analytical-java on local"
 
-    pushd "${GS_SOURCE_DIR}"/analytical_engine/java || exit
-    mvn test -Dmaven.antrun.skip=true --quiet
-    popd || exit
+  	pushd "${GS_SOURCE_DIR}"/analytical_engine/java || exit
+  	mvn test -Dmaven.antrun.skip=true
+  	popd || exit
 
-    version=$(cat "${GS_SOURCE_DIR}"/VERSION)
-    export RUN_JAVA_TESTS=ON
-    export USER_JAR_PATH="${GS_SOURCE_DIR}"/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
-    # for giraph test
-    export GIRAPH_JAR_PATH="${GS_SOURCE_DIR}"/analytical_engine/java/grape-giraph/target/grape-giraph-${version}-shaded.jar
+  	version=$(cat "${GS_SOURCE_DIR}"/VERSION)
+  	export RUN_JAVA_TESTS=ON
+  	export USER_JAR_PATH="${GS_SOURCE_DIR}"/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
+  	# for giraph test
+  	export GIRAPH_JAR_PATH="${GS_SOURCE_DIR}"/analytical_engine/java/grape-giraph/target/grape-giraph-${version}-shaded.jar
 
-    "${GS_SOURCE_DIR}"/analytical_engine/test/app_tests.sh --test_dir "${GS_TEST_DIR}"
+  	"${GS_SOURCE_DIR}"/analytical_engine/test/app_tests.sh --test_dir "${GS_TEST_DIR}"
   }
 
   function test_interactive {
-    get_test_data
-    if [[ -n ${on_local} ]]; then
-      # IR unit test
-      cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && make test
-      # CommonType Unit Test
-      cd "${GS_SOURCE_DIR}"/interactive_engine/executor/common/dyn_type && cargo test
-      # Store Unit test
-      cd "${GS_SOURCE_DIR}"/interactive_engine/executor/store/exp_store && cargo test
+  	get_test_data
+  	if [[ -n ${on_local} ]]; then
+  		info "Testing interactive on local"
+  		# IR unit test
+  		cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && make test
+  		# CommonType Unit Test
+  		cd "${GS_SOURCE_DIR}"/interactive_engine/executor/common/dyn_type && cargo test
+  		# Store Unit test
+  		cd "${GS_SOURCE_DIR}"/interactive_engine/executor/store/exp_store && cargo test
 
-      # IR integration test
-      cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_exprimental_ci.sh
-      # IR integration pattern test
-      cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_exprimental_pattern_ci.sh
-    else
-      export PYTHONPATH="${GS_SOURCE_DIR}"/python:${PYTHONPATH}
-      cd "${GS_SOURCE_DIR}"/interactive_engine && mvn clean install --quiet -DskipTests -Drust.compile.skip=true -P graphscope,graphscope-assembly
-      cd "${GS_SOURCE_DIR}"/interactive_engine/tests || exit
-      ./function_test.sh 8112 2
-    fi
+  		# IR integration test
+  		cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_exprimental_ci.sh
+  		# IR integration pattern test
+  		cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_exprimental_pattern_ci.sh
+  	fi
+  	if [[ -n ${on_k8s} ]]; then
+  		info "Testing interactive on k8s"
+  		export PYTHONPATH="${GS_SOURCE_DIR}"/python:${PYTHONPATH}
+  		cd "${GS_SOURCE_DIR}"/interactive_engine && mvn clean install --quiet -DskipTests -Drust.compile.skip=true -P graphscope,graphscope-assembly
+  		cd "${GS_SOURCE_DIR}"/interactive_engine/tests || exit
+  		./function_test.sh 8112 2
+  	fi
   }
   function test_learning {
-    get_test_data
-    err "Not implemented"
-    exit 1
+  	get_test_data
+  	err "Not implemented"
+  	exit 1
   }
 
-  function test_local-e2e {
-    get_test_data
-    cd "${GS_SOURCE_DIR}"/python || exit
-
-    # unittest
-    python3 -m pytest -s -vvv --exitfirst graphscope/tests/minitest/test_min.py
+  function test_e2e {
+  	get_test_data
+  	cd "${GS_SOURCE_DIR}"/python || exit
+  	if [[ -n ${on_local} ]]; then
+  		# unittest
+  		python3 -m pytest -s -vvv --exitfirst graphscope/tests/minitest/test_min.py
+  	fi
+  	if [[ -n ${on_k8s} ]]; then
+  		python3 -m pytest -s -vvv --exitfirst ./graphscope/tests/kubernetes/test_demo_script.py
+  	fi
   }
 
-  function test_k8s-e2e {
-    get_test_data
-    cd "${GS_SOURCE_DIR}"/python || exit
-    python3 -m pytest -s -vvv --exitfirst ./graphscope/tests/kubernetes/test_demo_script.py
-  }
-
-  function test_for_groot {
-    get_test_data
-    cd "${GS_SOURCE_DIR}"/python || exit
-    python3 -m pytest --exitfirst -s -vvv ./graphscope/tests/kubernetes/test_store_service.py
+  function test_groot {
+  	get_test_data
+  	if [[ -n ${on_local} ]]; then
+  		info "Testing groot on local"
+  		cd "${GS_SOURCE_DIR}"/interactive_engine/groot-server
+  		mvn test -Pgremlin-test
+  	fi
+  	if [[ -n ${on_k8s} ]]; then
+  		info "Testing groot on k8s, note you must already setup a groot cluster and necessary environment variables"
+  		cd "${GS_SOURCE_DIR}"/python || exit
+  		python3 -m pytest --exitfirst -s -vvv ./graphscope/tests/kubernetes/test_store_service.py
+  	fi
   }
 
   test_"${type}"
@@ -1794,67 +1801,67 @@ gs_format_command() {
   GS_SOURCE_DIR="$(dirname -- "$(readlink -f "${BASH_SOURCE}")")"
 
   function format_cpp {
-    if ! [ -x "$(command -v clang-format)" ]; then
-      echo 'Downloading clang-format.' >&2
-      curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output ${GRAPHSCOPE_HOME}/bin/clang-format
-      chmod +x ${GRAPHSCOPE_HOME}/clang-format
-    fi
-    pushd "${GS_SOURCE_DIR}"/analytical_engine || exit
-    files=$(find ./apps ./benchmarks ./core ./frame ./misc ./test \( -name "*.h" -o -name "*.cc" \))
+  	if ! [ -x "$(command -v clang-format)" ]; then
+  		echo 'Downloading clang-format.' >&2
+  		curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output ${GRAPHSCOPE_HOME}/bin/clang-format
+  		chmod +x ${GRAPHSCOPE_HOME}/clang-format
+  		export PATH="${GRAPHSCOPE_HOME}/bin:${PATH}"
+  	fi
+  	pushd "${GS_SOURCE_DIR}"/analytical_engine || exit
+  	files=$(find ./apps ./benchmarks ./core ./frame ./misc ./test \( -name "*.h" -o -name "*.cc" \))
 
-    # run format
-    clang-format -i --style=file $(echo $files)
-    popd || exit
+  	# run format
+  	clang-format -i --style=file $(echo $files)
+  	popd || exit
   }
 
   function lint_cpp {
-    pushd "${GS_SOURCE_DIR}"/analytical_engine || exit
-    files=$(find ./apps ./benchmarks ./core ./frame ./misc ./test \( -name "*.h" -o -name "*.cc" \))
+  	pushd "${GS_SOURCE_DIR}"/analytical_engine || exit
+  	files=$(find ./apps ./benchmarks ./core ./frame ./misc ./test \( -name "*.h" -o -name "*.cc" \))
 
-    ./misc/cpplint.py $(echo $files)
-    popd || exit
+  	./misc/cpplint.py $(echo $files)
+  	popd || exit
   }
 
   function format_java {
-    jarfile=google-java-format-1.13.0-all-deps.jar
-    if [[ ! -f ${jarfile} ]]; then
-      wget https://github.com/google/google-java-format/releases/download/v1.13.0/${jarfile}
-    fi
-    # run formatter in-place
-    java -jar ${jarfile} --aosp --skip-javadoc-formatting -i $(git ls-files *.java)
+  	jarfile=google-java-format-1.13.0-all-deps.jar
+  	if [[ ! -f ${jarfile} ]]; then
+  		wget https://github.com/google/google-java-format/releases/download/v1.13.0/${jarfile}
+  	fi
+  	# run formatter in-place
+  	java -jar ${jarfile} --aosp --skip-javadoc-formatting -i $(git ls-files *.java)
 
   }
 
   function format_python {
-    if ! [ -x "$(command -v black)" ]; then
-      pip3 install -r ${GS_SOURCE_DIR}/coordinator/requirements-dev.txt --user
-    fi
-    pushd python || exit
-    python3 -m isort --check --diff .
-    python3 -m black --check --diff .
-    python3 -m flake8 .
-    popd || exit
-    pushd coordinator || exit
-    python3 -m isort --check --diff .
-    python3 -m black --check --diff .
-    python3 -m flake8 .
-    popd || exit
+  	if ! [ -x "$(command -v black)" ]; then
+  		pip3 install -r ${GS_SOURCE_DIR}/coordinator/requirements-dev.txt --user
+  	fi
+  	pushd python || exit
+  	python3 -m isort --check --diff .
+  	python3 -m black --check --diff .
+  	python3 -m flake8 .
+  	popd || exit
+  	pushd coordinator || exit
+  	python3 -m isort --check --diff .
+  	python3 -m black --check --diff .
+  	python3 -m flake8 .
+  	popd || exit
   }
 
   function format_rust {
-
-    cd "${GS_SOURCE_DIR}"/interactive_engine/executor/assembly/groot
-    cargo +nightly fmt -- --check
-    cd "${GS_SOURCE_DIR}"/interactive_engine/executor/assembly/v6d
-    cargo +nightly fmt -- --check
-    cd "${GS_SOURCE_DIR}"/interactive_engine/executor/common/dyn_type/
-    cargo +nightly fmt -- --check
-    cd "${GS_SOURCE_DIR}"/interactive_engine/executor/engine/pegasus/
-    cargo +nightly fmt -- --check
-    cd "${GS_SOURCE_DIR}"/interactive_engine/executor/ir/
-    cargo +nightly fmt -- --check
-    cd "${GS_SOURCE_DIR}"/interactive_engine/executor/store/
-    cargo +nightly fmt -- --check
+  	cd "${GS_SOURCE_DIR}"/interactive_engine/executor/assembly/groot
+  	cargo +nightly fmt -- --check
+  	cd "${GS_SOURCE_DIR}"/interactive_engine/executor/assembly/v6d
+  	cargo +nightly fmt -- --check
+  	cd "${GS_SOURCE_DIR}"/interactive_engine/executor/common/dyn_type/
+  	cargo +nightly fmt -- --check
+  	cd "${GS_SOURCE_DIR}"/interactive_engine/executor/engine/pegasus/
+  	cargo +nightly fmt -- --check
+  	cd "${GS_SOURCE_DIR}"/interactive_engine/executor/ir/
+  	cargo +nightly fmt -- --check
+  	cd "${GS_SOURCE_DIR}"/interactive_engine/executor/store/
+  	cargo +nightly fmt -- --check
   }
 
   format_"${lang}"
@@ -2122,21 +2129,6 @@ gs_make_image_parse_requirements() {
         fi
         ;;
 
-      # :flag.case
-      --cn)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-
-          args['--cn']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--cn requires an argument: --cn CN" >&2
-          exit 1
-        fi
-        ;;
-
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -2166,7 +2158,7 @@ gs_make_image_parse_requirements() {
   fi
 
   # :command.default_assignments
-  [[ -n ${args['--registry']:-} ]] || args['--registry']="docker.io"
+  [[ -n ${args['--registry']:-} ]] || args['--registry']="registry.cn-hongkong.aliyuncs.com"
   [[ -n ${args['--tag']:-} ]] || args['--tag']="latest"
 
   # :command.whitelist_filter
