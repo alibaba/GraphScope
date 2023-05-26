@@ -1164,8 +1164,9 @@ gs_make_command() {
   make_interactive() {
       if [[ ${storage_type} = "experimental" ]]; then
           cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && make build QUIET_OPT=""
-      else if [[ ${storage_type} = "vineyard" ]]; then
+      elif [[ ${storage_type} = "vineyard" ]]; then
           cd "${GS_SOURCE_DIR}"/interactive_engine && mvn package -DskipTests -Drust.compile.mode=release -P graphscope,graphscope-assembly
+          cd "${GS_SOURCE_DIR}"/interactive_engine/assembly/target && tar xvzf graphscope.tar.gz
       else
           make interactive
       fi
@@ -1371,18 +1372,36 @@ gs_test_command() {
   			cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_exprimental_ci.sh
   			# IR integration pattern test
   			cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_exprimental_pattern_ci.sh
-  		else if [[ ${storage_type} = "vineyard" ]]; then
+  		elif [[ ${storage_type} = "vineyard" ]]; then
   			info "Testing interactive on local with vineyard storage"
   			# start vineyard service
   			export VINEYARD_IPC_SOCKET=/tmp/vineyard.sock
   			vineyardd --socket=${VINEYARD_IPC_SOCKET} --meta=local &
+  			# load modern graph
+  			vineyard-graph-loader --config "${GS_SOURCE_DIR}"/charts/gie-standalone/config/v6d_modern_loader.json
   			# start gie executor && frontend
   			export GRAPHSCOPE_HOME="${GS_SOURCE_DIR}"/interactive_engine/assembly/target/graphscope
   			schema_json=$(ls /tmp/*.json | head -1)
   			object_id=${schema_json//[^0-9]/}
   			GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} ${GRAPHSCOPE_HOME}/bin/giectl create_gremlin_instance_on_local /tmp/gs/${object_id} ${object_id} ${schema_json} 1 1235 1234 8182 ${VINEYARD_IPC_SOCKET}
   			# IR integration test
-  			cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && make gremlin_test
+  			sleep 3s
+  			cd "${GS_SOURCE_DIR}"/interactive_engine/compiler
+  			make gremlin_test || true
+  			# clean
+  			rm -rf /tmp/*.json
+  			id=$(pgrep -f 'gaia_executor')
+  			if [[ -n ${id} ]]; then
+  				echo ${id} | xargs kill
+  			fi
+  			id=$(pgrep -f 'frontend')
+  			if [[ -n ${id} ]]; then
+  				echo ${id} | xargs kill
+  			fi
+  			id=$(pgrep -f 'vineyardd')
+  			if [[ -n ${id} ]]; then
+  				echo ${id} | xargs kill -9
+  			fi
   		else
   			info "Testing interactive on local with default storage"
   		fi
