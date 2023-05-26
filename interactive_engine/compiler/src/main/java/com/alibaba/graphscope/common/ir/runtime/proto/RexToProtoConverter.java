@@ -132,4 +132,22 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                                 .build())
                 .build();
     }
+
+    @Override
+    public OuterExpression.Expression visitDynamicParam(RexDynamicParam dynamicParam) {
+        DataType.IrDataType paramDataType =
+                Utils.protoIrDataType(dynamicParam.getType(), isColumnId);
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setParam(
+                                        OuterExpression.DynamicParam.newBuilder()
+                                                .setName(dynamicParam.getName())
+                                                .setIndex(dynamicParam.getIndex())
+                                                .setDataType(paramDataType)
+                                                .build())
+                                .setNodeType(paramDataType)
+                                .build())
+                .build();
+    }
 }

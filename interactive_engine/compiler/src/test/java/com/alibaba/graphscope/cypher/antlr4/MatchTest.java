@@ -99,4 +99,14 @@ public class MatchTest {
                     + "], matchOpt=[INNER])",
                 match.explain().trim());
     }
+
+    @Test
+    public void match_5_test() {
+        RelNode match = Utils.eval("Match (n:person {age: $age}) Return n").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(n=[n], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[n], fusedFilter=[[=(DEFAULT.age, ?0)]], opt=[VERTEX])",
+                match.explain().trim());
+    }
 }

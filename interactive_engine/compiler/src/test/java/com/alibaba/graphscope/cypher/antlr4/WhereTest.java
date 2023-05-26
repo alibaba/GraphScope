@@ -58,4 +58,17 @@ public class WhereTest {
                     + " 1), 29), =(DEFAULT.name, 'marko')))]], opt=[VERTEX])",
                 where.explain().trim());
     }
+
+    @Test
+    public void where_3_test() {
+        RelNode where =
+                Utils.eval("Match (n:person) Where n.name = $name1 or n.name = $name2 Return n")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(n=[n], isAppend=[false])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[n], fusedFilter=[[OR(=(DEFAULT.name, ?0), =(DEFAULT.name, ?1))]],"
+                    + " opt=[VERTEX])",
+                where.explain().trim());
+    }
 }
