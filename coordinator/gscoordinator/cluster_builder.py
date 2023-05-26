@@ -446,18 +446,6 @@ class EngineCluster:
         )
         return service
 
-    def get_vineyard_service(self):
-        service_type = self._service_type
-        name = f"{self._vineyard_prefix}{self._instance_id}"
-        ports = [kube_client.V1ServicePort(name=name, port=self._vineyard_service_port)]
-        service_spec = ResourceBuilder.get_service_spec(
-            service_type, ports, self._engine_labels, None
-        )
-        service = ResourceBuilder.get_service(
-            self._namespace, name, service_spec, self._engine_labels
-        )
-        return service
-
     def get_learning_service(self, object_id, start_port):
         service_type = self._service_type
         num_workers = self._num_workers
@@ -488,15 +476,14 @@ class EngineCluster:
 
     @property
     def vineyard_service_name(self):
-        return self.engine_stateful_set_name + "-vineyard-sidecar-rpc"
+        return f"{self.engine_stateful_set_name}-{self._instance_id}-vineyard-rpc"
 
     def get_vineyard_service_endpoint(self, api_client):
         # return f"{self.vineyard_service_name}:{self._vineyard_service_port}"
         service_name = self.vineyard_service_name
-        service_type = self._service_type
+        service_type = "ClusterIP"
         if self.vineyard_deployment_exists():
             service_name = self._vineyard_deployment + "-rpc"
-            service_type = "ClusterIP"
         endpoints = get_service_endpoints(
             api_client=api_client,
             namespace=self._namespace,

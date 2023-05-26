@@ -584,7 +584,9 @@ class KubernetesClusterLauncher(AbstractLauncher):
             self._api_client.sanitize_for_serialization(workload)
         )
 
-        sts_name = self._engine_cluster.engine_stateful_set_name
+        sts_name = (
+            f"{self._engine_cluster.engine_stateful_set_name}-{self._instance_id}"
+        )
         owner_reference = [
             {
                 "apiVersion": self._owner_references[0].api_version,
@@ -609,7 +611,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         new_workload_json = vineyard.deploy.vineyardctl.inject(
             resource=workload_json,
             sidecar_volume_mountpath="/tmp/vineyard_workspace",
-            name=sts_name + "-vineyard-sidecar",
+            name=sts_name + "-vineyard",
             apply_resources=True,
             owner_references=owner_reference_json,
             sidecar_image=self._vineyard_image,
@@ -629,13 +631,13 @@ class KubernetesClusterLauncher(AbstractLauncher):
         return new_workload
 
     def _create_engine_stateful_set(self):
-        logger.info("Create engine headless services...")
-        service = self._engine_cluster.get_engine_headless_service()
-        service.metadata.owner_references = self._owner_references
-        response = self._core_api.create_namespaced_service(self._namespace, service)
-        self._resource_object.append(response)
         logger.info("Creating engine pods...")
-
+        # we don't need to create the headless service for engines here,
+        # as the etcd service is already created by the vineyardctl
+        # service = self._engine_cluster.get_engine_headless_service()
+        # service.metadata.owner_references = self._owner_references
+        # response = self._core_api.create_namespaced_service(self._namespace, service)
+        # self._resource_object.append(response)
         stateful_set = self._engine_cluster.get_engine_stateful_set()
         if self.vineyard_deployment_exists():
             # schedule engine statefulset to the same node with vineyard deployment
@@ -644,6 +646,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             )
         else:
             stateful_set = self._inject_vineyard_as_sidecar(stateful_set)
+
         response = self._apps_api.create_namespaced_stateful_set(
             self._namespace, stateful_set
         )
@@ -661,13 +664,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def _create_frontend_service(self):
         logger.info("Creating frontend service...")
         service = self._engine_cluster.get_interactive_frontend_service(8233)
-        service.metadata.owner_references = self._owner_references
-        response = self._core_api.create_namespaced_service(self._namespace, service)
-        self._resource_object.append(response)
-
-    def _create_vineyard_service(self):
-        logger.info("Creating vineyard service...")
-        service = self._engine_cluster.get_vineyard_service()
         service.metadata.owner_references = self._owner_references
         response = self._core_api.create_namespaced_service(self._namespace, service)
         self._resource_object.append(response)
