@@ -97,7 +97,8 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                             IrMeta irMeta = metaQueryCallback.beforeExec();
                             processTraversal(
                                     traversal,
-                                    new GremlinTestResultProcessor(ctx, traversal, testGraph),
+                                    new GremlinTestResultProcessor(
+                                            ctx, traversal, testGraph, this.configs),
                                     jobId,
                                     script,
                                     irMeta);
