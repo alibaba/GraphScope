@@ -269,6 +269,7 @@ MathJax = {
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
@@ -2278,6 +2279,12 @@ MathJax = {
         <span class="c1"># different cluster types in pursuit of better user experience.</span>
         <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;vineyard_shared_mem&quot;</span><span class="p">:</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="s2">&quot;_local_vineyard_shared_mem&quot;</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># use string as log level</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;log_level&quot;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLevelName</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot; &quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">level</span><span class="p">:</span>  <span class="c1"># invalid number will returns &quot;Level xxx&quot;</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">gs_config</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">level</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
 
     <span class="n">GSLogger</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
 

@@ -280,6 +280,7 @@ MathJax = {
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/dev_and_test.html">Dev and Test</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
@@ -932,8 +933,8 @@ MathJax = {
 <p>We already covered how to test for engines in</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="../analytical_engine/dev_and_test.html#how-to-test"><span class="std std-ref">Build and test analytical engine</span></a></p></li>
-<li><p><a class="reference internal" href="#../interactive_engine/dev_and_test.md#how-to-test"><span class="xref myst">Build and test interactive engine</span></a></p></li>
-<li><p><a class="reference internal" href="#../interactive_engine/dev_and_test.md#how-to-test"><span class="xref myst">Build and test learning engine</span></a></p></li>
+<li><p><a class="reference internal" href="../interactive_engine/dev_and_test.html#how-to-test"><span class="std std-ref">Build and test interactive engine</span></a></p></li>
+<li><p><a class="reference internal" href="../interactive_engine/dev_and_test.html#how-to-test"><span class="std std-ref">Build and test learning engine</span></a></p></li>
 </ul>
 <p>Here in this guide we will focus on how to do the e2e test, where multiple engines will working together.</p>
 <div class="section" id="test-graphscope-on-local">
@@ -956,17 +957,7 @@ MathJax = {
 <div class="section" id="run-tests">
 <h3>Run tests<a class="headerlink" href="#run-tests" title="Permalink to this heading">#</a></h3>
 <p>Run a bunch of test cases that involves 3 engines</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">gs</span></code> could let you easily switch from production mode and development mode, where</p>
-<ul class="simple">
-<li><p>production mode means you have installed graphscope to somewhere and you want to use the executable located at there.</p></li>
-<li><p>development mode means you want to find your executables in local directory</p></li>
-</ul>
-<p>For example, execute <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">GRAPHSCOPE_ENV=prod</span></code> to set working directory to <code class="docutils literal notranslate"><span class="pre">/opt/graphscope</span></code> (the default GRAPHSCOPE_HOME location), and execute <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">GRAPHSCOPE_ENV=dev</span></code> will set working directory to your local GraphScope repository.</p>
-</div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">GRAPHSCOPE_ENV</span><span class="o">=</span>prod
-./gs<span class="w"> </span><span class="nb">test</span><span class="w"> </span>local-e2e
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span><span class="nb">test</span><span class="w"> </span>e2e<span class="w"> </span>--local
 </pre></div>
 </div>
 </div>
@@ -999,7 +990,7 @@ MathJax = {
 <h3>Run tests<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
 <p>The tests would launch a couple of pods on your cluster, so you need to set appropriate environment variables to let it use your newly built image.</p>
 <p>Take our previous built image for example, which has an empty registry (or you could say it’s <code class="docutils literal notranslate"><span class="pre">docker.io</span></code> by default), and tagged <code class="docutils literal notranslate"><span class="pre">latest</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span><span class="nb">test</span><span class="w"> </span>k8s-e2e<span class="w"> </span>--registry<span class="o">=</span><span class="s2">&quot;&quot;</span><span class="w"> </span>--tag<span class="o">=</span><span class="s2">&quot;latest&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span><span class="nb">test</span><span class="w"> </span>e2e<span class="w"> </span>--k8s<span class="w"> </span>--registry<span class="o">=</span><span class="s2">&quot;docker.io&quot;</span><span class="w"> </span>--tag<span class="o">=</span><span class="s2">&quot;latest&quot;</span>
 </pre></div>
 </div>
 </div>
