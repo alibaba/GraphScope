@@ -481,7 +481,7 @@ class EngineCluster:
     def get_vineyard_service_endpoint(self, api_client):
         # return f"{self.vineyard_service_name}:{self._vineyard_service_port}"
         service_name = self.vineyard_service_name
-        service_type = "ClusterIP"
+        service_type = self._service_type
         if self.vineyard_deployment_exists():
             service_name = self._vineyard_deployment + "-rpc"
         endpoints = get_service_endpoints(

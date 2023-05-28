@@ -618,6 +618,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             sidecar_size=self._vineyard_shared_mem,
             sidecar_cpu=self._vineyard_cpu,
             sidecar_memory=self._vineyard_mem,
+            sidecar_service_type=self._service_type,
             output="json",
             capture=True,
         )
