@@ -98,16 +98,19 @@ class GrapeEngine {
       LOG(INFO) << "grape-engine (master) RPC server is stopping...";
       rpc_server_->StopServer();
       service_thread_.join();
+      rpc_server_.reset();
     }
 
     if (dispatcher_) {
       LOG(INFO) << "grape-engine dispatcher is stopping...";
       dispatcher_->Stop();
+      dispatcher_.reset();
     }
 
     if (vineyard_server_) {
       LOG(INFO) << "vineyardd instance is stopping...";
       vineyard_server_->Stop();
+      vineyard_server_.reset();
     }
   }
 
