@@ -1165,7 +1165,7 @@ gs_make_command() {
       if [[ ${storage_type} = "experimental" ]]; then
           cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && make build QUIET_OPT=""
       elif [[ ${storage_type} = "vineyard" ]]; then
-          cd "${GS_SOURCE_DIR}"/interactive_engine && mvn package -DskipTests -Drust.compile.mode=release -P graphscope,graphscope-assembly
+          cd "${GS_SOURCE_DIR}"/interactive_engine && mvn install -DskipTests -Drust.compile.mode=release -P graphscope,graphscope-assembly
           cd "${GS_SOURCE_DIR}"/interactive_engine/assembly/target && tar xvzf graphscope.tar.gz
       else
           make interactive
@@ -1378,6 +1378,7 @@ gs_test_command() {
   			export VINEYARD_IPC_SOCKET=/tmp/vineyard.sock
   			vineyardd --socket=${VINEYARD_IPC_SOCKET} --meta=local &
   			# load modern graph
+  			export STORE_DATA_PATH="${GS_SOURCE_DIR}"/charts/gie-standalone/data
   			vineyard-graph-loader --config "${GS_SOURCE_DIR}"/charts/gie-standalone/config/v6d_modern_loader.json
   			# start gie executor && frontend
   			export GRAPHSCOPE_HOME="${GS_SOURCE_DIR}"/interactive_engine/assembly/target/graphscope
