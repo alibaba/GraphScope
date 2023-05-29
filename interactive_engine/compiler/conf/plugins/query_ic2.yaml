@@ -11,16 +11,5 @@ params:
     type: "long"
 returns:
   - name: "personId"
-    type: "long"
-  - name: "personFirstName"
-    type: "string"
-  - name: "personLastName"
-    type: "string"
-  - name: "messageId"
-    type: "long"
-  - name: "context"
-    type: "string"
-  - name: "imageFile"
-    type: "string"
-  - name: "creationDate"
-    type: "long"
+    type: "multiset(string)"
+

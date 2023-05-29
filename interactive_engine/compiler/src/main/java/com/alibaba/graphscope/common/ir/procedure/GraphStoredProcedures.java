@@ -98,7 +98,7 @@ public class GraphStoredProcedures implements StoredProcedures {
     }
 
     private RelDataType createDataType(String typeString) {
-        typeString = typeString.toUpperCase();
+        typeString = typeString.toUpperCase().replaceAll("\\s*", "");
         switch (typeString) {
             case "STRING":
                 return typeFactory.createSqlType(SqlTypeName.CHAR);
@@ -112,6 +112,41 @@ public class GraphStoredProcedures implements StoredProcedures {
                 return typeFactory.createSqlType(SqlTypeName.DOUBLE);
             case "LONG":
                 return typeFactory.createSqlType(SqlTypeName.BIGINT);
+            case "MULTISET(STRING)":
+                return typeFactory.createMultisetType(
+                        typeFactory.createSqlType(SqlTypeName.CHAR), -1);
+            case "MULTISET(INTEGER)":
+                return typeFactory.createMultisetType(
+                        typeFactory.createSqlType(SqlTypeName.INTEGER), -1);
+            case "MULTISET(BOOLEAN)":
+                return typeFactory.createMultisetType(
+                        typeFactory.createSqlType(SqlTypeName.BOOLEAN), -1);
+            case "MULTISET(FLOAT)":
+                return typeFactory.createMultisetType(
+                        typeFactory.createSqlType(SqlTypeName.FLOAT), -1);
+            case "MULTISET(DOUBLE)":
+                return typeFactory.createMultisetType(
+                        typeFactory.createSqlType(SqlTypeName.DOUBLE), -1);
+            case "MULTISET(LONG)":
+                return typeFactory.createMultisetType(
+                        typeFactory.createSqlType(SqlTypeName.BIGINT), -1);
+            case "ARRAY(STRING)":
+                return typeFactory.createArrayType(typeFactory.createSqlType(SqlTypeName.CHAR), -1);
+            case "ARRAY(INTEGER)":
+                return typeFactory.createArrayType(
+                        typeFactory.createSqlType(SqlTypeName.INTEGER), -1);
+            case "ARRAY(BOOLEAN)":
+                return typeFactory.createArrayType(
+                        typeFactory.createSqlType(SqlTypeName.BOOLEAN), -1);
+            case "ARRAY(FLOAT)":
+                return typeFactory.createArrayType(
+                        typeFactory.createSqlType(SqlTypeName.FLOAT), -1);
+            case "ARRAY(DOUBLE)":
+                return typeFactory.createArrayType(
+                        typeFactory.createSqlType(SqlTypeName.DOUBLE), -1);
+            case "ARRAY(LONG)":
+                return typeFactory.createArrayType(
+                        typeFactory.createSqlType(SqlTypeName.BIGINT), -1);
             default:
                 throw new UnsupportedOperationException("unsupported type: " + typeString);
         }

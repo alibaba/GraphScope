@@ -23,7 +23,6 @@ import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
 import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
-import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 import com.google.common.base.Preconditions;
 
 import org.apache.calcite.rel.type.RelDataType;
@@ -33,7 +32,6 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.commons.lang3.NotImplementedException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.neo4j.values.AnyValue;
-import org.neo4j.values.storable.ArrayValue;
 import org.neo4j.values.storable.BooleanValue;
 import org.neo4j.values.storable.Values;
 import org.neo4j.values.virtual.*;
@@ -42,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CypherRecordParser implements RecordParser<AnyValue> {
     private static final Logger logger = LoggerFactory.getLogger(CypherRecordParser.class);
@@ -127,14 +126,8 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                 return Values.doubleValue(value.getF64());
             case STR:
                 return Values.stringValue(value.getStr());
-            case NONE:
-                return Values.NO_VALUE;
-            case PAIR_ARRAY:
-            case STR_ARRAY:
-            case I32_ARRAY:
-            case F64_ARRAY:
             default:
-                throw new GremlinResultParserException(value.getItemCase() + " is unsupported yet");
+                throw new NotImplementedException(value.getItemCase() + " is unsupported yet");
         }
     }
 
@@ -145,8 +138,45 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         Preconditions.checkArgument(
                 dataType.getSqlTypeName() == SqlTypeName.MULTISET
                         || dataType.getSqlTypeName() == SqlTypeName.ARRAY);
-        // todo: support collect result
-        throw new NotImplementedException("type " + ArrayValue.class + " is not implemented yet");
+        switch (dataType.getComponentType().getSqlTypeName()) {
+            case BOOLEAN:
+                return Values.booleanArray(
+                        convert(
+                                collection.getCollectionList().stream()
+                                        .map(k -> k.getObject().getBoolean())
+                                        .collect(Collectors.toList())));
+            case INTEGER:
+                return Values.intArray(
+                        collection.getCollectionList().stream()
+                                .mapToInt(k -> k.getObject().getI32())
+                                .toArray());
+            case BIGINT:
+                return Values.longArray(
+                        collection.getCollectionList().stream()
+                                .mapToLong(k -> k.getObject().getI64())
+                                .toArray());
+            case DOUBLE:
+                return Values.doubleArray(
+                        collection.getCollectionList().stream()
+                                .mapToDouble(k -> k.getObject().getF64())
+                                .toArray());
+            case CHAR:
+                return Values.stringArray(
+                        collection.getCollectionList().stream()
+                                .map(k -> k.getObject().getStr())
+                                .toArray(String[]::new));
+            default:
+                throw new NotImplementedException(
+                        dataType.getComponentType().getSqlTypeName() + " is unsupported yet");
+        }
+    }
+
+    private boolean[] convert(List<Boolean> values) {
+        boolean[] result = new boolean[values.size()];
+        for (int i = 0; i < values.size(); i++) {
+            result[i] = values.get(i);
+        }
+        return result;
     }
 
     protected AnyValue parseEntry(IrResult.Entry entry, @Nullable RelDataType dataType) {
