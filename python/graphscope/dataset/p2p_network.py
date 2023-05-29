@@ -23,7 +23,7 @@ from graphscope.dataset.io_utils import DATA_SITE
 from graphscope.dataset.io_utils import download_file
 
 
-def load_p2p_network(sess=None, prefix=None, directed=False):
+def load_p2p_network(sess=None, prefix=None, directed=False, generate_eid=True):
     """Load p2p graph.
     A peer-to-peer dataset derived from Gnutella peer-to-peer network, August 31 2002,
     with generated data on vertices and edges. See more details here:
@@ -37,6 +37,8 @@ def load_p2p_network(sess=None, prefix=None, directed=False):
             With standalone mode, set prefix None will try to download from
             source URL. Defaults to None.
         directed (bool, optional): Determine to load a directed or undirected graph.
+            Defaults to True.
+        generate_eid (bool, optional): True will generate id for each edge as the first property.
             Defaults to True.
 
     Returns:
@@ -76,7 +78,7 @@ def load_p2p_network(sess=None, prefix=None, directed=False):
     if sess is None:
         sess = get_default_session()
 
-    graph = sess.g(directed=directed)
+    graph = sess.g(directed=directed, generate_eid=generate_eid)
     graph = graph.add_vertices(
         os.path.join(prefix, "p2p-31_property_v_0"), "host"
     ).add_edges(
