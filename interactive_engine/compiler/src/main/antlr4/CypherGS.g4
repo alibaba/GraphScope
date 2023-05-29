@@ -311,7 +311,7 @@ oC_NumberLiteral
 oC_IntegerLiteral
               :  HexInteger
                   | OctalInteger
-                  | DecimalInteger
+                  | DecimalInteger ('l' | 'L') ?
                   ;
 
 HexInteger
