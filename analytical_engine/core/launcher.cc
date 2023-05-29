@@ -113,6 +113,7 @@ void VineyardServer::Stop() {
   if (proc_ && proc_->valid()) {
     kill(proc_->id(), SIGTERM);
     proc_->wait();
+    proc_.reset();
   }
 }
 
