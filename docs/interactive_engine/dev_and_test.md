@@ -50,6 +50,7 @@ computed engine. The test includes:
 In [GIE standalone deployment](./deployment.md), we have instructed on how to deploy GIE in a
 Kubenetes cluster with Vineyard store. Here, we show how to develop and test GIE with vineyard
 store on a local machine.
+
 You could build the GIE engine (on vineyard store) with the following command:
 ```bash
 ./gs make interactive --storage-type=vineyard
@@ -68,7 +69,7 @@ If you want to individually start the executor role, you can follow the steps be
 ```bash
 export GRAPHSCOPE_HOME=<your_local_repo>/interactive_engine/assembly/target/graphscope
 ```
-1. Configure the `$GRAPHSCOPE_HOME/conf/executor.vineyard.properties` file:
+3. Configure the `$GRAPHSCOPE_HOME/conf/executor.vineyard.properties` file:
 ```bash
 graph.name = GRAPH_NAME
 # RPC port that executor will listen on
