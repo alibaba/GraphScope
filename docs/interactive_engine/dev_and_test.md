@@ -13,16 +13,18 @@ docker run --name dev -it --shm-size=4096m registry.cn-hongkong.aliyuncs.com/gra
 Please refer to [Dev Environment](../development/dev_guide.md#dev-environment) to find more options to get a dev environment.
 
 ## Build and Test GIE with Local Experimental Store
- You first set the working directory to local repo. If you are in the above
- dev container, it should be `/workspaces/GraphScope`.
+ You first set the working directory to local repo. 
+ ```bash
+ # Here the `pwd` is the root path of GraphScope repository. If you are in the above
+ # dev container, it should be `/workspaces/GraphScope`.
+ export GRAPHSCOPE_HOME=`pwd`
+ ```
+ Now you are ready to build the code with a local ``experimental'' store that is included only for local testing purpose.
 ```bash
-export GRAPHSCOPE_HOME=`pwd`
-# Here the `pwd` is the root path of GraphScope repository
 ./gs make interactive --storage-type=experimental
 ```
-See more about `GRAPHSCOPE_HOME` in [run tests](../development/how_to_test.md#run-tests)
 
-You could locally test the GIE engine with a single command:
+You then could locally test the GIE engine with a single command:
 ```bash
 ./gs test interactive --local --storage-type=experimental
 ```
