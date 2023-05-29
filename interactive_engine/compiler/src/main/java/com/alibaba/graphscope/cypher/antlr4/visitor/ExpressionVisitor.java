@@ -18,6 +18,7 @@ package com.alibaba.graphscope.cypher.antlr4.visitor;
 
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariable;
+import com.alibaba.graphscope.common.ir.tools.AliasIdGenerator;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
@@ -34,18 +35,17 @@ import org.apache.commons.lang3.ObjectUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     private final GraphBuilderVisitor parent;
     private final GraphBuilder builder;
-    private final AtomicInteger paramIndexGenerator;
+    private final AliasIdGenerator paramIdGenerator;
 
     public ExpressionVisitor(GraphBuilderVisitor parent) {
         this.parent = parent;
         this.builder = Objects.requireNonNull(parent).getGraphBuilder();
-        this.paramIndexGenerator = new AtomicInteger(0);
+        this.paramIdGenerator = new AliasIdGenerator();
     }
 
     @Override
@@ -193,7 +193,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     @Override
     public ExprVisitorResult visitOC_Parameter(CypherGSParser.OC_ParameterContext ctx) {
         String paramName = ctx.oC_SymbolicName().getText();
-        int paramIndex = this.paramIndexGenerator.getAndIncrement();
+        int paramIndex = this.paramIdGenerator.generate(paramName);
         GraphRexBuilder rexBuilder = (GraphRexBuilder) builder.getRexBuilder();
         return new ExprVisitorResult(rexBuilder.makeGraphDynamicParam(paramName, paramIndex));
     }
