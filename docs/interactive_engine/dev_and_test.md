@@ -63,9 +63,9 @@ You could locally test the GIE engine (on vineyard store) with a single command:
 
 If you want to individually start the executor role, you can follow the steps below:
 
-1. First, make sure that a Vineyard service is already running and a graph has been successfully loaded. Let's assume the object ID of the graph is 7541917260097168.
+1. First, make sure that a Vineyard service is already running and a graph has been successfully loaded. Let's assume the object ID of the graph is `7541917260097168`.
 
-2. Set the GRAPHSCOPE_HOME environment variable:
+2. Set the `GRAPHSCOPE_HOME` environment variable:
 ```bash
 export GRAPHSCOPE_HOME=<your_local_repo>/interactive_engine/assembly/target/graphscope
 ```
