@@ -95,16 +95,8 @@ public class StoreDataBatch {
     public int getSize() {
         if (this.size == -1) {
             this.size =
-                    this.dataBatch.stream()
-                            .collect(
-                                    Collectors.summingInt(
-                                            partitionToBatch ->
-                                                    partitionToBatch.values().stream()
-                                                            .collect(
-                                                                    Collectors.summingInt(
-                                                                            batch ->
-                                                                                    batch
-                                                                                            .getOperationCount()))));
+                    this.dataBatch.stream().mapToInt(partitionToBatch ->
+                            partitionToBatch.values().stream().mapToInt(OperationBatch::getOperationCount).sum()).sum();
         }
         return this.size;
     }
