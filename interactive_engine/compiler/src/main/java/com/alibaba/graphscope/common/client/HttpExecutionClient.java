@@ -25,6 +25,7 @@ import com.alibaba.graphscope.gaia.proto.Hqps;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,53 +42,71 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String TEXT_PLAIN = "text/plain;charset=UTF-8";
     private final HttpClient httpClient;
+
     public HttpExecutionClient(Configs graphConfig, ChannelFetcher<URI> channelFetcher) {
         super(channelFetcher);
-        this.httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofMillis(HQPSConfig.HQPS_HTTP_TIMEOUT.get(graphConfig))).build();
-    }
-    @Override
-    public void submit(ExecutionRequest request, ExecutionResponseListener listener) throws Exception {
-        List<CompletableFuture> responseFutures = Lists.newArrayList();
-        for (URI httpURI : channelFetcher.fetch()) {
-            HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(httpURI)
-                    .headers(CONTENT_TYPE, TEXT_PLAIN)
-                    .POST(HttpRequest.BodyPublishers.ofByteArray((byte[]) request.getRequestPhysical().build()))
-                    .build();
-            // todo: synchronous call will block compiler thread
-            CompletableFuture<HttpResponse<byte[]>> responseFuture =
-                    httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofByteArray())
-                            .whenComplete((bytes, exception) -> {
-                if (exception != null) {
-                    listener.onError(exception);
-                }
-                try {
-                    Hqps.HighQPSResults results = Hqps.HighQPSResults.parseFrom(bytes.body());
-                    for (IrResult.Results irResult : results.getResultsList()) {
-                        listener.onNext(irResult.getRecord());
-                    }
-                } catch (InvalidProtocolBufferException e) {
-                    listener.onError(e);
-                }
-            });
-            responseFutures.add(responseFuture);
-        }
-        CompletableFuture<Void> joinFuture = CompletableFuture.runAsync(() -> {
-            try {
-                CompletableFuture.allOf(responseFutures.toArray(new CompletableFuture[0])).get();
-                listener.onCompleted();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-        joinFuture.whenComplete((aVoid, exception) -> {
-            if (exception != null) {
-                listener.onError(exception);
-            }
-        });
+        this.httpClient =
+                HttpClient.newBuilder()
+                        .connectTimeout(
+                                Duration.ofMillis(HQPSConfig.HQPS_HTTP_TIMEOUT.get(graphConfig)))
+                        .build();
     }
 
     @Override
-    public void close() throws Exception {
+    public void submit(ExecutionRequest request, ExecutionResponseListener listener)
+            throws Exception {
+        List<CompletableFuture> responseFutures = Lists.newArrayList();
+        for (URI httpURI : channelFetcher.fetch()) {
+            HttpRequest httpRequest =
+                    HttpRequest.newBuilder()
+                            .uri(httpURI)
+                            .headers(CONTENT_TYPE, TEXT_PLAIN)
+                            .POST(
+                                    HttpRequest.BodyPublishers.ofByteArray(
+                                            (byte[]) request.getRequestPhysical().build()))
+                            .build();
+            // todo: synchronous call will block compiler thread
+            CompletableFuture<HttpResponse<byte[]>> responseFuture =
+                    httpClient
+                            .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofByteArray())
+                            .whenComplete(
+                                    (bytes, exception) -> {
+                                        if (exception != null) {
+                                            listener.onError(exception);
+                                        }
+                                        try {
+                                            Hqps.HighQPSResults results =
+                                                    Hqps.HighQPSResults.parseFrom(bytes.body());
+                                            for (IrResult.Results irResult :
+                                                    results.getResultsList()) {
+                                                listener.onNext(irResult.getRecord());
+                                            }
+                                        } catch (InvalidProtocolBufferException e) {
+                                            listener.onError(e);
+                                        }
+                                    });
+            responseFutures.add(responseFuture);
+        }
+        CompletableFuture<Void> joinFuture =
+                CompletableFuture.runAsync(
+                        () -> {
+                            try {
+                                CompletableFuture.allOf(
+                                                responseFutures.toArray(new CompletableFuture[0]))
+                                        .get();
+                                listener.onCompleted();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+        joinFuture.whenComplete(
+                (aVoid, exception) -> {
+                    if (exception != null) {
+                        listener.onError(exception);
+                    }
+                });
     }
+
+    @Override
+    public void close() throws Exception {}
 }

@@ -25,6 +25,7 @@ import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.calcite.rel.RelNode;
 import org.junit.Assert;
 import org.junit.Test;
@@ -83,7 +84,10 @@ public class FfiLogicalPlanTest {
                     + "], matchOpt=[INNER])",
                 aggregate.explain().trim());
         try (PhysicalBuilder<byte[]> ffiBuilder =
-                new FfiPhysicalBuilder(getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(aggregate, false))) {
+                new FfiPhysicalBuilder(
+                        getMockGraphConfig(),
+                        Utils.schemaMeta,
+                        new LogicalPlan(aggregate, false))) {
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("ffi_logical_plan.json"), ffiBuilder.explain());
         }

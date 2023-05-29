@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.cypher.result.CypherRecordParser;
 import com.alibaba.graphscope.cypher.result.CypherRecordProcessor;
 import com.google.common.collect.Lists;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -40,9 +41,7 @@ public class GraphPlanExecution<C> implements StatementResults.SubscribableExecu
     private final ExecutionClient<C> client;
     private final GraphPlanner.Summary planSummary;
 
-    public GraphPlanExecution(
-            ExecutionClient<C> client,
-            GraphPlanner.Summary planSummary) {
+    public GraphPlanExecution(ExecutionClient<C> client, GraphPlanner.Summary planSummary) {
         this.client = client;
         this.planSummary = planSummary;
     }
@@ -50,10 +49,15 @@ public class GraphPlanExecution<C> implements StatementResults.SubscribableExecu
     @Override
     public QueryExecution subscribe(QuerySubscriber querySubscriber) {
         try {
-            ExecutionRequest request = new ExecutionRequest(this.planSummary.getId(), this.planSummary.getName(), this.planSummary.getPhysicalBuilder());
-            CypherRecordProcessor recordProcessor = new CypherRecordProcessor(
-                    new CypherRecordParser(getOutputType(planSummary.getLogicalPlan())),
-                    querySubscriber);
+            ExecutionRequest request =
+                    new ExecutionRequest(
+                            this.planSummary.getId(),
+                            this.planSummary.getName(),
+                            this.planSummary.getPhysicalBuilder());
+            CypherRecordProcessor recordProcessor =
+                    new CypherRecordProcessor(
+                            new CypherRecordParser(getOutputType(planSummary.getLogicalPlan())),
+                            querySubscriber);
             this.client.submit(request, recordProcessor);
             return recordProcessor;
         } catch (Exception e) {

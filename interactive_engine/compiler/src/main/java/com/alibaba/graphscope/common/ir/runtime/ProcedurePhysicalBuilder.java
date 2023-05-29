@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.ir.runtime.proto.Utils;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.Hqps;
+
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlOperator;
 
@@ -36,18 +37,21 @@ public class ProcedurePhysicalBuilder extends PhysicalBuilder<byte[]> {
         setHQPSQueryProcedureArgs(procedureCall, builder);
     }
 
-    private void setHQPSQueryProcedureName(RexCall procedureCall, Hqps.HighQPSQuery.Builder builder) {
+    private void setHQPSQueryProcedureName(
+            RexCall procedureCall, Hqps.HighQPSQuery.Builder builder) {
         SqlOperator operator = procedureCall.getOperator();
         builder.setQueryName(Common.NameOrId.newBuilder().setName(operator.getName()).build());
     }
 
-    private void setHQPSQueryProcedureArgs(RexCall procedureCall, Hqps.HighQPSQuery.Builder builder) {
+    private void setHQPSQueryProcedureArgs(
+            RexCall procedureCall, Hqps.HighQPSQuery.Builder builder) {
         List<RexNode> operands = procedureCall.getOperands();
         for (int i = 0; i < operands.size(); ++i) {
-            builder.addArguments(Hqps.Argument.newBuilder()
-                    .setParamInd(i)
-                    .setValue(Utils.protoValue((RexLiteral) operands.get(i)))
-                    .build());
+            builder.addArguments(
+                    Hqps.Argument.newBuilder()
+                            .setParamInd(i)
+                            .setValue(Utils.protoValue((RexLiteral) operands.get(i)))
+                            .build());
         }
     }
 
@@ -62,6 +66,5 @@ public class ProcedurePhysicalBuilder extends PhysicalBuilder<byte[]> {
     }
 
     @Override
-    public void close() throws Exception {
-    }
+    public void close() throws Exception {}
 }

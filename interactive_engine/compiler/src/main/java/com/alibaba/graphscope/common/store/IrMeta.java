@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.common.store;
 
-import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.procedure.StoredProcedures;
+import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 
 import java.util.Objects;
 
@@ -38,7 +38,8 @@ public class IrMeta {
         this(snapshotId, schema, StoredProcedures.createEmpty());
     }
 
-    public IrMeta(SnapshotId snapshotId, StatisticSchema schema, StoredProcedures storedProcedures) {
+    public IrMeta(
+            SnapshotId snapshotId, StatisticSchema schema, StoredProcedures storedProcedures) {
         this.snapshotId = Objects.requireNonNull(snapshotId);
         this.schema = Objects.requireNonNull(schema);
         this.storedProcedures = Objects.requireNonNull(storedProcedures);

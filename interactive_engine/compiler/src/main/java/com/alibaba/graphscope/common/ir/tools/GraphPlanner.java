@@ -26,6 +26,7 @@ import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
+
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.GraphOptCluster;
@@ -69,7 +70,12 @@ public class GraphPlanner {
         private final GraphOptCluster optCluster;
         private final IrMeta irMeta;
 
-        public PlannerInstance(long id, String name, ParseTree parsedQuery, GraphOptCluster optCluster, IrMeta irMeta) {
+        public PlannerInstance(
+                long id,
+                String name,
+                ParseTree parsedQuery,
+                GraphOptCluster optCluster,
+                IrMeta irMeta) {
             this.id = id;
             this.name = name;
             this.parsedQuery = parsedQuery;
@@ -80,11 +86,15 @@ public class GraphPlanner {
         public Summary plan() {
             // build logical plan from parsed query
             StatisticSchema schema = irMeta.getSchema();
-            GraphBuilder graphBuilder = GraphBuilder.create(null, this.optCluster, new GraphOptSchema(this.optCluster, schema));
-            LogicalPlan logicalPlan = new LogicalPlanVisitor(graphBuilder, this.irMeta).visit(this.parsedQuery);
+            GraphBuilder graphBuilder =
+                    GraphBuilder.create(
+                            null, this.optCluster, new GraphOptSchema(this.optCluster, schema));
+            LogicalPlan logicalPlan =
+                    new LogicalPlanVisitor(graphBuilder, this.irMeta).visit(this.parsedQuery);
             // apply optimizations
             if (plannerConfig.isOn()
-                    && logicalPlan.getRegularQuery() != null && !logicalPlan.isReturnEmpty()) {
+                    && logicalPlan.getRegularQuery() != null
+                    && !logicalPlan.isReturnEmpty()) {
                 RelNode regularQuery = logicalPlan.getRegularQuery();
                 RelOptPlanner planner = this.optCluster.getPlanner();
                 planner.setRoot(regularQuery);
@@ -110,10 +120,7 @@ public class GraphPlanner {
         private final PhysicalBuilder physicalBuilder;
 
         public Summary(
-                long id,
-                String name,
-                LogicalPlan logicalPlan,
-                PhysicalBuilder physicalBuilder) {
+                long id, String name, LogicalPlan logicalPlan, PhysicalBuilder physicalBuilder) {
             this.id = id;
             this.name = name;
             this.logicalPlan = Objects.requireNonNull(logicalPlan);

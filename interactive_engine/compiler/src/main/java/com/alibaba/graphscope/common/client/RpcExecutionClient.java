@@ -26,6 +26,7 @@ import com.alibaba.pegasus.RpcChannel;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
+
 import io.grpc.Status;
 
 public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
@@ -35,13 +36,17 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
     public RpcExecutionClient(Configs graphConfig, ChannelFetcher<RpcChannel> channelFetcher) {
         super(channelFetcher);
         this.graphConfig = graphConfig;
-        this.rpcClient = new RpcClient(PegasusConfig.PEGASUS_GRPC_TIMEOUT.get(graphConfig), channelFetcher.fetch());
+        this.rpcClient =
+                new RpcClient(
+                        PegasusConfig.PEGASUS_GRPC_TIMEOUT.get(graphConfig),
+                        channelFetcher.fetch());
     }
 
     @Override
-    public void submit(ExecutionRequest request, ExecutionResponseListener listener) throws Exception {
+    public void submit(ExecutionRequest request, ExecutionResponseListener listener)
+            throws Exception {
         PegasusClient.JobRequest jobRequest =
-                PegasusClient.JobRequest.parseFrom((byte[])request.getRequestPhysical().build());
+                PegasusClient.JobRequest.parseFrom((byte[]) request.getRequestPhysical().build());
         PegasusClient.JobConfig jobConfig =
                 PegasusClient.JobConfig.newBuilder()
                         .setJobId(request.getRequestId())
@@ -49,36 +54,41 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
                         .setWorkers(PegasusConfig.PEGASUS_WORKER_NUM.get(graphConfig))
                         .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(graphConfig))
                         .setMemoryLimit(PegasusConfig.PEGASUS_MEMORY_LIMIT.get(graphConfig))
-                        .setBatchCapacity(
-                                PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(graphConfig))
+                        .setBatchCapacity(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(graphConfig))
                         .setTimeLimit(PegasusConfig.PEGASUS_TIMEOUT.get(graphConfig))
-                        .setAll(com.alibaba.pegasus.service.protocol.PegasusClient.Empty.newBuilder().build())
+                        .setAll(
+                                com.alibaba.pegasus.service.protocol.PegasusClient.Empty
+                                        .newBuilder()
+                                        .build())
                         .build();
         jobRequest = jobRequest.toBuilder().setConf(jobConfig).build();
-        this.rpcClient.submit(jobRequest, new ResultProcessor() {
-            @Override
-            public void process(PegasusClient.JobResponse jobResponse) {
-                try {
-                    listener.onNext(IrResult.Results.parseFrom(jobResponse.getResp()).getRecord());
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
+        this.rpcClient.submit(
+                jobRequest,
+                new ResultProcessor() {
+                    @Override
+                    public void process(PegasusClient.JobResponse jobResponse) {
+                        try {
+                            listener.onNext(
+                                    IrResult.Results.parseFrom(jobResponse.getResp()).getRecord());
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
 
-            @Override
-            public void finish() {
-                listener.onCompleted();
-            }
+                    @Override
+                    public void finish() {
+                        listener.onCompleted();
+                    }
 
-            @Override
-            public void error(Status status) {
-                listener.onError(status.asException());
-            }
-        });
+                    @Override
+                    public void error(Status status) {
+                        listener.onError(status.asException());
+                    }
+                });
     }
 
     @Override
-    public void close() throws Exception{
+    public void close() throws Exception {
         if (rpcClient != null) {
             this.rpcClient.shutdown();
         }

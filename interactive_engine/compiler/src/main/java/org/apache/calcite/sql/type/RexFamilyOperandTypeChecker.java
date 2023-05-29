@@ -44,8 +44,8 @@ public class RexFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
     @Override
     public boolean checkOperandTypes(SqlCallBinding callBinding, boolean throwOnFailure) {
         if (families.size() != callBinding.getOperandCount()) {
-            Litmus.THROW.fail("wrong operand count {} for {}",
-                    callBinding.getOperandCount(), families);
+            Litmus.THROW.fail(
+                    "wrong operand count {} for {}", callBinding.getOperandCount(), families);
         }
         if (!(callBinding instanceof RexCallBinding)) {
             throw new IllegalArgumentException(

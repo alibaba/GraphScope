@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.runtime;
 
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
+
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -26,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public abstract class PhysicalBuilder<R> implements AutoCloseable {
     protected final LogicalPlan logicalPlan;
+
     protected PhysicalBuilder(LogicalPlan logicalPlan) {
         this.logicalPlan = logicalPlan;
     }
@@ -54,8 +56,7 @@ public abstract class PhysicalBuilder<R> implements AutoCloseable {
             }
 
             @Override
-            public void close() throws Exception {
-            }
+            public void close() throws Exception {}
         };
     }
 }

@@ -29,6 +29,7 @@ import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.google.common.collect.ImmutableMap;
+
 import org.neo4j.server.CommunityBootstrapper;
 
 import java.nio.file.Path;
@@ -38,16 +39,18 @@ public class CypherServiceMain {
         Configs graphConfig = new Configs("conf/ir.compiler.properties");
         Antlr4Parser cypherParser = new CypherAntlr4Parser();
         GraphPlanner graphPlanner = new GraphPlanner(graphConfig);
-        IrMetaQueryCallback queryCallback = new IrMetaQueryCallback(new ExperimentalMetaFetcher(graphConfig));
-        ExecutionClient client = FrontendConfig.ENGINE_TYPE.get(graphConfig).equals("pegasus") ?
-                new RpcExecutionClient(graphConfig, new HostsRpcChannelFetcher(graphConfig))
-                : new HttpExecutionClient(graphConfig, new HostURIChannelFetcher(graphConfig));
-        CommunityBootstrapper bootstrapper = new CypherBootstrapper(graphConfig, cypherParser, graphPlanner, queryCallback, client);
+        IrMetaQueryCallback queryCallback =
+                new IrMetaQueryCallback(new ExperimentalMetaFetcher(graphConfig));
+        ExecutionClient client =
+                FrontendConfig.ENGINE_TYPE.get(graphConfig).equals("pegasus")
+                        ? new RpcExecutionClient(
+                                graphConfig, new HostsRpcChannelFetcher(graphConfig))
+                        : new HttpExecutionClient(
+                                graphConfig, new HostURIChannelFetcher(graphConfig));
+        CommunityBootstrapper bootstrapper =
+                new CypherBootstrapper(
+                        graphConfig, cypherParser, graphPlanner, queryCallback, client);
         bootstrapper.start(
-                Path.of(
-                        "/tmp/neo4j"),
-                Path.of("conf/neo4j.conf"),
-                ImmutableMap.of(),
-                false);
+                Path.of("/tmp/neo4j"), Path.of("conf/neo4j.conf"), ImmutableMap.of(), false);
     }
 }

@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 public class HostURIChannelFetcher implements ChannelFetcher<URI> {
     private Configs graphConfig;
+
     public HostURIChannelFetcher(Configs graphConfig) {
         this.graphConfig = graphConfig;
     }
@@ -34,6 +35,8 @@ public class HostURIChannelFetcher implements ChannelFetcher<URI> {
     public List<URI> fetch() {
         String hosts = HQPSConfig.HQPS_URIS.get(graphConfig);
         String[] hostsArr = hosts.split(",");
-        return Arrays.asList(hostsArr).stream().map(k -> URI.create(k)).collect(Collectors.toList());
+        return Arrays.asList(hostsArr).stream()
+                .map(k -> URI.create(k))
+                .collect(Collectors.toList());
     }
 }

@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.pegasus.common.StreamIterator;
+
 import org.neo4j.fabric.stream.summary.EmptySummary;
 import org.neo4j.fabric.stream.summary.Summary;
 import org.neo4j.graphdb.ExecutionPlanDescription;
@@ -41,9 +42,7 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
     private final StreamIterator<IrResult.Record> recordIterator;
     private final Summary summary;
 
-    public CypherRecordProcessor(
-            RecordParser<AnyValue> recordParser,
-            QuerySubscriber subscriber) {
+    public CypherRecordProcessor(RecordParser<AnyValue> recordParser, QuerySubscriber subscriber) {
         this.recordParser = recordParser;
         this.subscriber = subscriber;
         this.recordIterator = new StreamIterator<>();
@@ -82,10 +81,10 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
 
     @Override
     public void request(long l) throws Exception {
-        while(l > 0 && recordIterator.hasNext()) {
+        while (l > 0 && recordIterator.hasNext()) {
             IrResult.Record record = recordIterator.next();
             List<AnyValue> columns = recordParser.parseFrom(record);
-            for (int i = 0; i < columns.size(); i++ ) {
+            for (int i = 0; i < columns.size(); i++) {
                 subscriber.onField(i, columns.get(i));
             }
             subscriber.onRecordCompleted();

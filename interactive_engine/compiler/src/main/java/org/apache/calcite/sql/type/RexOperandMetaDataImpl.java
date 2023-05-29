@@ -26,11 +26,16 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
 
-public class RexOperandMetaDataImpl extends RexFamilyOperandTypeChecker implements SqlOperandMetadata{
+public class RexOperandMetaDataImpl extends RexFamilyOperandTypeChecker
+        implements SqlOperandMetadata {
     private final Function<RelDataTypeFactory, List<RelDataType>> paramTypesFactory;
     private final IntFunction<String> paramNameFn;
 
-    RexOperandMetaDataImpl(List<SqlTypeFamily> families, Function<RelDataTypeFactory, List<RelDataType>> paramTypesFactory, IntFunction<String> paramNameFn, Predicate<Integer> optional) {
+    RexOperandMetaDataImpl(
+            List<SqlTypeFamily> families,
+            Function<RelDataTypeFactory, List<RelDataType>> paramTypesFactory,
+            IntFunction<String> paramNameFn,
+            Predicate<Integer> optional) {
         super(families, optional);
         this.paramTypesFactory = Objects.requireNonNull(paramTypesFactory, "paramTypesFactory");
         this.paramNameFn = paramNameFn;
@@ -43,7 +48,7 @@ public class RexOperandMetaDataImpl extends RexFamilyOperandTypeChecker implemen
 
     @Override
     public List<RelDataType> paramTypes(RelDataTypeFactory typeFactory) {
-        return (List)this.paramTypesFactory.apply(typeFactory);
+        return (List) this.paramTypesFactory.apply(typeFactory);
     }
 
     @Override

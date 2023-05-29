@@ -122,30 +122,32 @@ public class ClientExample {
         JobRequest req = jobBuilder.build();
 
         StreamIterator<JobResponse> resultIterator = new StreamIterator();
-        rpcClient.submit(req, new ResultProcessor() {
-            @Override
-            public void process(JobResponse response) {
-                try {
-                    resultIterator.putData(response);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+        rpcClient.submit(
+                req,
+                new ResultProcessor() {
+                    @Override
+                    public void process(JobResponse response) {
+                        try {
+                            resultIterator.putData(response);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
 
-            @Override
-            public void finish() {
-                try {
-                    resultIterator.finish();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+                    @Override
+                    public void finish() {
+                        try {
+                            resultIterator.finish();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
 
-            @Override
-            public void error(Status status) {
-                resultIterator.fail(status.getCause());
-            }
-        });
+                    @Override
+                    public void error(Status status) {
+                        resultIterator.fail(status.getCause());
+                    }
+                });
         rpcClient.shutdown();
     }
 }

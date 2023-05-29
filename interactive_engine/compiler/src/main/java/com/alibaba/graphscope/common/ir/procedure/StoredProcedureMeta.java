@@ -52,10 +52,7 @@ public class StoredProcedureMeta {
 
         @Override
         public String toString() {
-            return "Parameter{" +
-                    "name='" + name + '\'' +
-                    ", dataType=" + dataType +
-                    '}';
+            return "Parameter{" + "name='" + name + '\'' + ", dataType=" + dataType + '}';
         }
     }
 
@@ -73,10 +70,14 @@ public class StoredProcedureMeta {
 
     @Override
     public String toString() {
-        return "StoredProcedureMeta{" +
-                "name='" + name + '\'' +
-                ", returnType=" + returnType +
-                ", parameters=" + parameters +
-                '}';
+        return "StoredProcedureMeta{"
+                + "name='"
+                + name
+                + '\''
+                + ", returnType="
+                + returnType
+                + ", parameters="
+                + parameters
+                + '}';
     }
 }

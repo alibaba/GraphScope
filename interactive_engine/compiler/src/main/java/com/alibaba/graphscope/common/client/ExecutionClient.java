@@ -22,11 +22,13 @@ import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 
 public abstract class ExecutionClient<C> {
     protected final ChannelFetcher<C> channelFetcher;
+
     public ExecutionClient(ChannelFetcher<C> channelFetcher) {
         this.channelFetcher = channelFetcher;
     }
 
-    public abstract void submit(ExecutionRequest request, ExecutionResponseListener listener) throws Exception;
+    public abstract void submit(ExecutionRequest request, ExecutionResponseListener listener)
+            throws Exception;
 
     public abstract void close() throws Exception;
 }

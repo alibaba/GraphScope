@@ -17,6 +17,7 @@
 package org.apache.calcite.sql.type;
 
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 
@@ -88,7 +89,11 @@ public abstract class RexOperandTypes {
     public static final SqlSingleOperandTypeChecker DIVISION_OPERATOR =
             OperandTypes.or(NUMERIC_NUMERIC, INTERVAL_NUMERIC);
 
-    public static SqlOperandMetadata operandMetadata(List<SqlTypeFamily> families, Function<RelDataTypeFactory, List<RelDataType>> typesFactory, IntFunction<String> operandName, Predicate<Integer> optional) {
+    public static SqlOperandMetadata operandMetadata(
+            List<SqlTypeFamily> families,
+            Function<RelDataTypeFactory, List<RelDataType>> typesFactory,
+            IntFunction<String> operandName,
+            Predicate<Integer> optional) {
         return new RexOperandMetaDataImpl(families, typesFactory, operandName, optional);
     }
 }

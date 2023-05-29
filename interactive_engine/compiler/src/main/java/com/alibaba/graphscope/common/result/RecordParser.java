@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.result;
 
 import com.alibaba.graphscope.gaia.proto.IrResult;
+
 import org.apache.calcite.rel.type.RelDataType;
 
 import java.util.List;

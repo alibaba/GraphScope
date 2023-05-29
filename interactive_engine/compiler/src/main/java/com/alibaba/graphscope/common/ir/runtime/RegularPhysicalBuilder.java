@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.runtime;
 
 import com.alibaba.graphscope.common.ir.runtime.type.PhysicalNode;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelVisitor;
@@ -25,6 +26,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public abstract class RegularPhysicalBuilder<T, R> extends PhysicalBuilder<R> {
     protected RelShuttle relShuttle;
+
     protected RegularPhysicalBuilder(LogicalPlan logicalPlan, RelShuttle relShuttle) {
         super(logicalPlan);
         this.relShuttle = relShuttle;
@@ -33,13 +35,14 @@ public abstract class RegularPhysicalBuilder<T, R> extends PhysicalBuilder<R> {
     protected void initialize() {
         if (this.logicalPlan.getRegularQuery() != null && !this.logicalPlan.isReturnEmpty()) {
             RelNode regularQuery = this.logicalPlan.getRegularQuery();
-            RelVisitor relVisitor = new RelVisitor() {
-                @Override
-                public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
-                    super.visit(node, ordinal, parent);
-                    appendNode((PhysicalNode) node.accept(relShuttle));
-                }
-            };
+            RelVisitor relVisitor =
+                    new RelVisitor() {
+                        @Override
+                        public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
+                            super.visit(node, ordinal, parent);
+                            appendNode((PhysicalNode) node.accept(relShuttle));
+                        }
+                    };
             relVisitor.go(regularQuery);
         }
     }

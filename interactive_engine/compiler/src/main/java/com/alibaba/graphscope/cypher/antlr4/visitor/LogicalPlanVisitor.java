@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 import com.google.common.collect.Lists;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rex.RexNode;
@@ -45,10 +46,15 @@ public class LogicalPlanVisitor extends CypherGSBaseVisitor<LogicalPlan> {
     @Override
     public LogicalPlan visitOC_Query(CypherGSParser.OC_QueryContext ctx) {
         if (ctx.oC_RegularQuery() != null) {
-            RelNode regularQuery = new GraphBuilderVisitor(this.builder).visitOC_RegularQuery(ctx.oC_RegularQuery()).build();
+            RelNode regularQuery =
+                    new GraphBuilderVisitor(this.builder)
+                            .visitOC_RegularQuery(ctx.oC_RegularQuery())
+                            .build();
             return new LogicalPlan(regularQuery, returnEmpty(regularQuery));
         } else {
-            RexNode procedureCall = new ProcedureCallVisitor(this.builder, this.irMeta).visitOC_StandaloneCall(ctx.oC_StandaloneCall());
+            RexNode procedureCall =
+                    new ProcedureCallVisitor(this.builder, this.irMeta)
+                            .visitOC_StandaloneCall(ctx.oC_StandaloneCall());
             return new LogicalPlan(procedureCall);
         }
     }

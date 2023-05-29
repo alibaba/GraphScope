@@ -25,6 +25,7 @@ import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 import com.google.common.base.Preconditions;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.ArraySqlType;
@@ -52,7 +53,9 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
 
     @Override
     public List<AnyValue> parseFrom(IrResult.Record record) {
-        Preconditions.checkArgument(record.getColumnsCount() == outputType.getFieldCount(), "column size of results should be consistent with output type");
+        Preconditions.checkArgument(
+                record.getColumnsCount() == outputType.getFieldCount(),
+                "column size of results should be consistent with output type");
         List<AnyValue> columns = new ArrayList<>(record.getColumnsCount());
         for (int i = 0; i < record.getColumnsCount(); i++) {
             IrResult.Column column = record.getColumns(i);
@@ -73,7 +76,8 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                 "data type of vertex should be " + GraphSchemaType.class);
         return VirtualValues.nodeValue(
                 vertex.getId(),
-                Values.stringArray(getLabelName(vertex.getLabel(), getLabelTypes((GraphSchemaType) dataType))),
+                Values.stringArray(
+                        getLabelName(vertex.getLabel(), getLabelTypes((GraphSchemaType) dataType))),
                 MapValue.EMPTY);
     }
 
@@ -85,13 +89,20 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                 edge.getId(),
                 VirtualValues.nodeValue(
                         edge.getSrcId(),
-                        Values.stringArray(getSrcLabelName(edge.getSrcLabel(), getLabelTypes((GraphSchemaType) dataType))),
+                        Values.stringArray(
+                                getSrcLabelName(
+                                        edge.getSrcLabel(),
+                                        getLabelTypes((GraphSchemaType) dataType))),
                         MapValue.EMPTY),
                 VirtualValues.nodeValue(
                         edge.getDstId(),
-                        Values.stringArray(getDstLabelName(edge.getDstLabel(), getLabelTypes((GraphSchemaType) dataType))),
+                        Values.stringArray(
+                                getDstLabelName(
+                                        edge.getDstLabel(),
+                                        getLabelTypes((GraphSchemaType) dataType))),
                         MapValue.EMPTY),
-                Values.stringValue(getLabelName(edge.getLabel(), getLabelTypes((GraphSchemaType) dataType))),
+                Values.stringValue(
+                        getLabelName(edge.getLabel(), getLabelTypes((GraphSchemaType) dataType))),
                 MapValue.EMPTY);
     }
 
@@ -236,5 +247,4 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         }
         return labelTypes;
     }
-
 }

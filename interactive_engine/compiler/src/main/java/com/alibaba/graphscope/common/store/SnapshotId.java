@@ -20,8 +20,10 @@ public class SnapshotId {
     public static final SnapshotId createEmpty() {
         return new SnapshotId(false, -1);
     }
+
     private final boolean acquired;
     private final long snapshotId;
+
     public SnapshotId(boolean acquired, long snapshotId) {
         this.acquired = acquired;
         this.snapshotId = snapshotId;

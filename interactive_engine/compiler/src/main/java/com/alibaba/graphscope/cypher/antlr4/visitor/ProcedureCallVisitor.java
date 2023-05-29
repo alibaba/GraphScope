@@ -24,6 +24,7 @@ import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlOperator;
 
@@ -46,7 +47,8 @@ public class ProcedureCallVisitor extends CypherGSBaseVisitor<RexNode> {
         return visitOC_Statement(ctx.oC_Statement());
     }
 
-    @Override public RexNode visitOC_StandaloneCall(CypherGSParser.OC_StandaloneCallContext ctx) {
+    @Override
+    public RexNode visitOC_StandaloneCall(CypherGSParser.OC_StandaloneCallContext ctx) {
         if (ctx.oC_ExplicitProcedureInvocation() != null) {
             return visitOC_ExplicitProcedureInvocation(ctx.oC_ExplicitProcedureInvocation());
         } else {
@@ -55,14 +57,19 @@ public class ProcedureCallVisitor extends CypherGSBaseVisitor<RexNode> {
     }
 
     @Override
-    public RexNode visitOC_ExplicitProcedureInvocation(CypherGSParser.OC_ExplicitProcedureInvocationContext ctx) {
+    public RexNode visitOC_ExplicitProcedureInvocation(
+            CypherGSParser.OC_ExplicitProcedureInvocationContext ctx) {
         SqlOperator operator = visitOC_ProcedureNameAsOperator(ctx.oC_ProcedureName());
-        List<RexNode> operands = ctx.oC_Expression().stream().map(this::visitOC_Expression).collect(Collectors.toList());
+        List<RexNode> operands =
+                ctx.oC_Expression().stream()
+                        .map(this::visitOC_Expression)
+                        .collect(Collectors.toList());
         return builder.call(operator, operands);
     }
 
     @Override
-    public RexNode visitOC_ImplicitProcedureInvocation(CypherGSParser.OC_ImplicitProcedureInvocationContext ctx) {
+    public RexNode visitOC_ImplicitProcedureInvocation(
+            CypherGSParser.OC_ImplicitProcedureInvocationContext ctx) {
         SqlOperator operator = visitOC_ProcedureNameAsOperator(ctx.oC_ProcedureName());
         return builder.call(operator, ImmutableList.of());
     }

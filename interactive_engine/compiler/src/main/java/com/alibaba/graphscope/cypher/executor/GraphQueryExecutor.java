@@ -17,12 +17,13 @@
 package com.alibaba.graphscope.cypher.executor;
 
 import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
-import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.client.ExecutionClient;
+import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
+
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.neo4j.fabric.config.FabricConfig;
 import org.neo4j.fabric.eval.CatalogManager;
@@ -43,7 +44,8 @@ import java.util.concurrent.Executor;
 
 public class GraphQueryExecutor extends FabricExecutor {
     private static final Logger logger = LoggerFactory.getLogger(GraphQueryExecutor.class);
-    private static final String GET_ROUTING_TABLE_STATEMENT = "CALL dbms.routing.getRoutingTable($routingContext, $databaseName)";
+    private static final String GET_ROUTING_TABLE_STATEMENT =
+            "CALL dbms.routing.getRoutingTable($routingContext, $databaseName)";
     private static String PING_STATEMENT = "CALL db.ping()";
     private final Configs graphConfig;
     private final Antlr4Parser antlr4Parser;
@@ -91,8 +93,9 @@ public class GraphQueryExecutor extends FabricExecutor {
      * @return
      */
     @Override
-    public StatementResult run(FabricTransaction fabricTransaction, String statement, MapValue parameters) {
-            IrMeta irMeta = null;
+    public StatementResult run(
+            FabricTransaction fabricTransaction, String statement, MapValue parameters) {
+        IrMeta irMeta = null;
         try {
             // hack ways to execute routing table or ping statement before executing the real query
             if (statement.equals(GET_ROUTING_TABLE_STATEMENT) || statement.equals(PING_STATEMENT)) {
@@ -103,7 +106,9 @@ public class GraphQueryExecutor extends FabricExecutor {
             GraphPlanner.PlannerInstance instance = graphPlanner.instance(parseTree, irMeta);
             GraphPlanner.Summary planSummary = instance.plan();
             try (PhysicalBuilder physicalBuilder = planSummary.getPhysicalBuilder()) {
-                logger.info("cypher query \"{}\", job conf name \"{}\", logical plan {}, physical plan {}",
+                logger.info(
+                        "cypher query \"{}\", job conf name \"{}\", logical plan {}, physical plan"
+                                + " {}",
                         statement,
                         planSummary.getName(),
                         planSummary.getLogicalPlan().explain(),
@@ -112,9 +117,8 @@ public class GraphQueryExecutor extends FabricExecutor {
                     return StatementResults.initial();
                 }
                 QuerySubject querySubject = new QuerySubject.BasicQuerySubject();
-                StatementResults.SubscribableExecution execution = new GraphPlanExecution(
-                        this.client,
-                        planSummary);
+                StatementResults.SubscribableExecution execution =
+                        new GraphPlanExecution(this.client, planSummary);
                 metaQueryCallback.afterExec(irMeta);
                 StatementResult result = StatementResults.connectVia(execution, querySubject);
                 return result;

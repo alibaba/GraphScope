@@ -43,17 +43,23 @@ public class RpcClient {
     public RpcClient(long grpcTimeout, List<RpcChannel> channels) {
         this.rpcTimeout = grpcTimeout;
         this.channels = Objects.requireNonNull(channels);
-        this.serviceStubs = channels.stream().map(k -> JobServiceGrpc.newStub(k.getChannel())).collect(Collectors.toList());
+        this.serviceStubs =
+                channels.stream()
+                        .map(k -> JobServiceGrpc.newStub(k.getChannel()))
+                        .collect(Collectors.toList());
     }
 
     public void submit(JobRequest jobRequest, ResultProcessor processor) {
         AtomicInteger counter = new AtomicInteger(this.channels.size());
         AtomicBoolean finished = new AtomicBoolean(false);
-        serviceStubs.forEach(asyncStub -> {
-            asyncStub
-                    .withDeadlineAfter(rpcTimeout, TimeUnit.MILLISECONDS)
-                    .submit(jobRequest, new JobResponseObserver(processor, finished, counter));
-        });
+        serviceStubs.forEach(
+                asyncStub -> {
+                    asyncStub
+                            .withDeadlineAfter(rpcTimeout, TimeUnit.MILLISECONDS)
+                            .submit(
+                                    jobRequest,
+                                    new JobResponseObserver(processor, finished, counter));
+                });
     }
 
     public void shutdown() throws InterruptedException {
@@ -68,9 +74,7 @@ public class RpcClient {
         private final AtomicInteger counter;
 
         public JobResponseObserver(
-                ResultProcessor processor,
-                AtomicBoolean finished,
-                AtomicInteger counter) {
+                ResultProcessor processor, AtomicBoolean finished, AtomicInteger counter) {
             this.processor = processor;
             this.finished = finished;
             this.counter = counter;

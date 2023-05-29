@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.gremlin.Utils;
+
 import org.neo4j.collection.Dependencies;
 import org.neo4j.common.DependencyResolver;
 import org.neo4j.common.DependencySatisfier;
@@ -46,22 +47,38 @@ public class CypherBootstrapper extends CommunityBootstrapper {
     private final List<Class<?>> externalClassTypes;
     private final ExecutionClient client;
 
-    public CypherBootstrapper(Configs graphConfig, Antlr4Parser cypherParser, GraphPlanner graphPlanner, IrMetaQueryCallback queryCallback, ExecutionClient client) {
+    public CypherBootstrapper(
+            Configs graphConfig,
+            Antlr4Parser cypherParser,
+            GraphPlanner graphPlanner,
+            IrMetaQueryCallback queryCallback,
+            ExecutionClient client) {
         this.client = client;
-        this.externalDependencies = createExternalDependencies(graphConfig, cypherParser, graphPlanner, queryCallback, client);
-        this.externalClassTypes = Arrays.asList(Configs.class, Antlr4Parser.class, GraphPlanner.class, IrMetaQueryCallback.class, ExecutionClient.class);
+        this.externalDependencies =
+                createExternalDependencies(
+                        graphConfig, cypherParser, graphPlanner, queryCallback, client);
+        this.externalClassTypes =
+                Arrays.asList(
+                        Configs.class,
+                        Antlr4Parser.class,
+                        GraphPlanner.class,
+                        IrMetaQueryCallback.class,
+                        ExecutionClient.class);
     }
 
     @Override
     protected DatabaseManagementService createNeo(
             Config config, GraphDatabaseDependencies dependencies) {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                client.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }));
+        Runtime.getRuntime()
+                .addShutdownHook(
+                        new Thread(
+                                () -> {
+                                    try {
+                                        client.close();
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }));
         dependencies.dependencies(externalDependencies);
         DatabaseManagementServiceFactory facadeFactory =
                 new CypherDatabaseManagementServiceFactory(
@@ -69,27 +86,41 @@ public class CypherBootstrapper extends CommunityBootstrapper {
         return facadeFactory.build(config, dependencies);
     }
 
-    private Dependencies createExternalDependencies(Configs configs, Antlr4Parser cypherParser, GraphPlanner graphPlanner, IrMetaQueryCallback queryCallback, ExecutionClient client) {
+    private Dependencies createExternalDependencies(
+            Configs configs,
+            Antlr4Parser cypherParser,
+            GraphPlanner graphPlanner,
+            IrMetaQueryCallback queryCallback,
+            ExecutionClient client) {
         Dependencies dependencies = new Dependencies();
-        dependencies.satisfyDependencies(configs, cypherParser, graphPlanner, queryCallback, client);
+        dependencies.satisfyDependencies(
+                configs, cypherParser, graphPlanner, queryCallback, client);
         return dependencies;
     }
 
     private class CypherDatabaseManagementServiceFactory extends DatabaseManagementServiceFactory {
         private final List<Class<?>> externalClassTypes;
-        public CypherDatabaseManagementServiceFactory(DbmsInfo dbmsInfo, Function<GlobalModule, AbstractEditionModule> editionFactory, List<Class<?>> externalClassTypes) {
+
+        public CypherDatabaseManagementServiceFactory(
+                DbmsInfo dbmsInfo,
+                Function<GlobalModule, AbstractEditionModule> editionFactory,
+                List<Class<?>> externalClassTypes) {
             super(dbmsInfo, editionFactory);
             this.externalClassTypes = externalClassTypes;
         }
 
         @Override
-        protected GlobalModule createGlobalModule(Config config, ExternalDependencies externalDependencies) {
-            GlobalModule globalModule = new GlobalModule(config, this.dbmsInfo, externalDependencies);
-            DependencyResolver externalDependencyResolver = globalModule.getExternalDependencyResolver();
+        protected GlobalModule createGlobalModule(
+                Config config, ExternalDependencies externalDependencies) {
+            GlobalModule globalModule =
+                    new GlobalModule(config, this.dbmsInfo, externalDependencies);
+            DependencyResolver externalDependencyResolver =
+                    globalModule.getExternalDependencyResolver();
             DependencySatisfier globalDependencySatisfier = globalModule.getGlobalDependencies();
             for (Class<?> classType : externalClassTypes) {
                 if (externalDependencyResolver.containsDependency(classType)) {
-                    globalDependencySatisfier.satisfyDependency(externalDependencyResolver.resolveDependency(classType));
+                    globalDependencySatisfier.satisfyDependency(
+                            externalDependencyResolver.resolveDependency(classType));
                 }
             }
             return globalModule;
@@ -99,15 +130,13 @@ public class CypherBootstrapper extends CommunityBootstrapper {
     private class CypherModuleManagement extends CommunityEditionModule {
         public CypherModuleManagement(GlobalModule globalModule) {
             super(globalModule);
-            FabricServicesBootstrap bootstrap = new CypherQueryServiceBootstrap(
-                    globalModule.getGlobalLife(),
-                    globalModule.getGlobalDependencies(),
-                    globalModule.getLogService());
+            FabricServicesBootstrap bootstrap =
+                    new CypherQueryServiceBootstrap(
+                            globalModule.getGlobalLife(),
+                            globalModule.getGlobalDependencies(),
+                            globalModule.getLogService());
             Utils.setFieldValue(
-                    CommunityEditionModule.class,
-                    this,
-                    "fabricServicesBootstrap",
-                    bootstrap);
+                    CommunityEditionModule.class, this, "fabricServicesBootstrap", bootstrap);
         }
     }
 }

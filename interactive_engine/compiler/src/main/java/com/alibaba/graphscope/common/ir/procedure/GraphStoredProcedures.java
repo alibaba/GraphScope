@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.ir.procedure;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -44,13 +45,12 @@ public class GraphStoredProcedures implements StoredProcedures {
         this.storedProcedureMetaMap = Maps.newLinkedHashMap();
         File dir = new File(procedureDir);
         Preconditions.checkArgument(dir.exists() && dir.isDirectory());
-        for(File file : dir.listFiles()) {
+        for (File file : dir.listFiles()) {
             if (file.getName().endsWith(".yaml")) {
                 StoredProcedureMeta meta = createStoredProcedureMeta(file);
                 this.storedProcedureMetaMap.put(meta.getName(), meta);
             }
         }
-        logger.info("stored procedures {}", this.storedProcedureMetaMap);
     }
 
     @Override
@@ -65,8 +65,7 @@ public class GraphStoredProcedures implements StoredProcedures {
         return new StoredProcedureMeta(
                 procedureName,
                 createReturnType((List) config.get("returns")),
-                createParameters((List) config.get("params"))
-        );
+                createParameters((List) config.get("params")));
     }
 
     private RelDataType createReturnType(List config) {
@@ -75,7 +74,11 @@ public class GraphStoredProcedures implements StoredProcedures {
         int index = 0;
         while (iterator.hasNext()) {
             Map<String, Object> field = (Map<String, Object>) iterator.next();
-            fields.add(new RelDataTypeFieldImpl((String) field.get("name"), index, createDataType((String) field.get("type"))));
+            fields.add(
+                    new RelDataTypeFieldImpl(
+                            (String) field.get("name"),
+                            index,
+                            createDataType((String) field.get("type"))));
             ++index;
         }
         return new RelRecordType(fields);
@@ -84,12 +87,12 @@ public class GraphStoredProcedures implements StoredProcedures {
     private List<StoredProcedureMeta.Parameter> createParameters(List config) {
         List<StoredProcedureMeta.Parameter> parameters = Lists.newArrayList();
         Iterator iterator = config.iterator();
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             Map<String, Object> parameter = (Map<String, Object>) iterator.next();
-            parameters.add(new StoredProcedureMeta.Parameter(
-                    (String) parameter.get("name"),
-                    createDataType((String) parameter.get("type"))
-            ));
+            parameters.add(
+                    new StoredProcedureMeta.Parameter(
+                            (String) parameter.get("name"),
+                            createDataType((String) parameter.get("type"))));
         }
         return parameters;
     }

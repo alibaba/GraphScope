@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.antlr4.SyntaxErrorListener;
 import com.alibaba.graphscope.grammar.CypherGSLexer;
 import com.alibaba.graphscope.grammar.CypherGSParser;
+
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.DefaultErrorStrategy;

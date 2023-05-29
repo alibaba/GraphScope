@@ -47,6 +47,7 @@ import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -66,7 +67,9 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
     private int lastIdx;
 
     public FfiPhysicalBuilder(Configs graphConfig, IrMeta irMeta, LogicalPlan logicalPlan) {
-        super(logicalPlan, new GraphRelShuttleWrapper(new RelToFfiConverter(irMeta.getSchema().isColumnId())));
+        super(
+                logicalPlan,
+                new GraphRelShuttleWrapper(new RelToFfiConverter(irMeta.getSchema().isColumnId())));
         this.graphConfig = graphConfig;
         this.irMeta = irMeta;
         checkFfiResult(LIB.setSchema(irMeta.getSchema().schemaJson()));
