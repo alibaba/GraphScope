@@ -76,7 +76,6 @@ _setup_env() {
 
 # start max_node of gaia
 start_max_node() {
-  type=$1; shift
   _setup_env
 
   java -server \
@@ -127,7 +126,7 @@ while test $# -ne 0; do
   arg=$1; shift
   case $arg in
     -h|--help) usage; exit ;;
-    start_max_node) start_max_node "gaia" "$@"; exit;;
+    start_max_node) start_max_node "$@"; exit;;
     start_server) start_server "$@"; exit;;
     *)
       echo "unrecognized option or command '${arg}'"

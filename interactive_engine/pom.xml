@@ -81,10 +81,10 @@
     <log4j2.version>2.19.0</log4j2.version>
     <logback.version>1.2.3</logback.version>
     <groovy.version>2.5.14</groovy.version>
-    <kafka.version>2.7.2</kafka.version>
+    <kafka.version>3.3.1</kafka.version>
     <kafka.junit.version>3.2.1</kafka.junit.version>
-    <zookeeper.version>3.6.3</zookeeper.version>
-    <curator.version>5.4.0</curator.version>
+    <zookeeper.version>3.8.1</zookeeper.version>
+    <curator.version>5.5.0</curator.version>
     <jackson.version>2.14.1</jackson.version>
     <protoc.version>3.21.12</protoc.version>
     <protobuf.version>3.21.12</protobuf.version>
@@ -96,7 +96,8 @@
     <testng.version>6.9.9</testng.version>
     <mockito.version>4.0.0</mockito.version>
     <rocksdb.version>5.15.10</rocksdb.version>
-    <metrics.core.version>3.2.5</metrics.core.version>
+    <metrics.core.version>4.2.18</metrics.core.version>
+    <jgrapht.version>1.5.1</jgrapht.version>
     <skip.tests>true</skip.tests>
     <flatten.maven.plugin>1.1.0</flatten.maven.plugin>
     <javax.annotation.version>1.2</javax.annotation.version>
@@ -499,6 +500,11 @@
         <groupId>org.apache.kafka</groupId>
         <artifactId>kafka_2.13</artifactId>
         <version>${kafka.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jgrapht</groupId>
+        <artifactId>jgrapht-core</artifactId>
+        <version>${jgrapht.version}</version>
       </dependency>
 
       <dependency>
