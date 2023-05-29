@@ -89,7 +89,14 @@ where
     fn scan_vertex(
         &self, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
-        if let Some(partitions) = params.partitions.as_ref() {
+        let partitions = params
+            .partitions
+            .as_ref()
+            .ok_or(Err(GraphProxyError::query_store_error(
+                "empty partitions in scan_vertex in GraphScopeStore",
+            )))?;
+        let worker_partitions = get_worker_partitions(partitions);
+        if !worker_partitions.is_empty() {
             let store = self.store.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
@@ -122,8 +129,6 @@ where
                 get_all_storage_props()
             };
 
-            let partitions = encode_partitions(partitions)?;
-
             let columns = params.columns.clone();
             let result = store
                 .get_all_vertices(
@@ -136,8 +141,8 @@ where
                     prop_ids.as_ref(),
                     // Zero limit means no limit. Same as follows.
                     0,
-                    // Each worker will scan the partitions pre-allocated in source operator. Same as follows.
-                    partitions.as_ref(),
+                    // Each worker will scan the partitions pre-allocated in get_worker_partitions(). Same as follows.
+                    worker_partitions.as_ref(),
                 )
                 .map(move |v| to_runtime_vertex(v, columns.clone()));
 
@@ -153,38 +158,30 @@ where
     }
 
     fn index_scan_vertex(
-        &self, label_id: LabelId, primary_key: &PKV, params: &QueryParams,
+        &self, label_id: LabelId, primary_key: &PKV, _params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>> {
         // get_vertex_id_by_primary_keys() is a global query function, that is,
         // you can query vertices (with only vertex id) by pks on any graph partitions (not matter locally or remotely).
-        // To guarantee the correctness (i.e., avoid duplication results), we pre-assign partitions for workers,
-        // and only the worker responsible for this vertex (i.e., contains the vertex in its partitions) is going to search for it.
-
-        let store_label_id = encode_storage_label(label_id)?;
-        let store_indexed_values = match primary_key {
-            OneOrMany::One(pkv) => {
-                vec![encode_store_prop_val(pkv[0].1.clone())]
-            }
-            OneOrMany::Many(pkvs) => pkvs
-                .iter()
-                .map(|(_pk, value)| encode_store_prop_val(value.clone()))
-                .collect(),
-        };
-
-        if let Some(vid) = self
-            .partition_manager
-            .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
-        {
-            if let Some(worker_partitions) = params.partitions.as_ref() {
-                let worker_partitions = encode_partitions(&worker_partitions)?;
-                // only the one responsible for vid is going to search for the vertex
-                let vertex_partition = self.partition_manager.get_partition_id(vid) as u32;
-                if worker_partitions.contains(&vertex_partition) {
-                    self.get_vertex(&[vid as ID], params)
-                        .map(|mut v_iter| v_iter.next())
-                } else {
-                    Ok(None)
+        // To guarantee the correctness (i.e., avoid duplication results), only one worker (for now, it is worker 0) is going to search for it.
+        let worker_id = pegasus::get_current_worker_checked()
+            .map(|worker| worker.index)
+            .unwrap_or(0);
+        if worker_id == 0 {
+            let store_label_id = encode_storage_label(label_id)?;
+            let store_indexed_values = match primary_key {
+                OneOrMany::One(pkv) => {
+                    vec![encode_store_prop_val(pkv[0].1.clone())]
                 }
+                OneOrMany::Many(pkvs) => pkvs
+                    .iter()
+                    .map(|(_pk, value)| encode_store_prop_val(value.clone()))
+                    .collect(),
+            };
+            if let Some(vid) = self
+                .partition_manager
+                .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
+            {
+                Ok(Some(Vertex::new(vid as ID, Some(label_id.clone()), DynDetails::default())))
             } else {
                 Ok(None)
             }
@@ -194,7 +191,14 @@ where
     }
 
     fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
-        if let Some(partitions) = params.partitions.as_ref() {
+        let partitions = params
+            .partitions
+            .as_ref()
+            .ok_or(Err(GraphProxyError::query_store_error(
+                "empty partitions in scan_edge in GraphScopeStore",
+            )))?;
+        let worker_partitions = get_worker_partitions(partitions);
+        if !worker_partitions.is_empty() {
             let store = self.store.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
@@ -222,7 +226,6 @@ where
                 get_all_storage_props()
             };
 
-            let partitions: Vec<PartitionId> = encode_partitions(&partitions)?;
             let result = store.get_all_edges(
                 si,
                 label_ids.as_ref(),
@@ -230,7 +233,7 @@ where
                 None,
                 prop_ids.as_ref(),
                 0,
-                partitions.as_ref(),
+                worker_partitions.as_ref(),
             );
             let iter = RuntimeEdgeIter::new(result, true, params.columns.clone());
 
@@ -713,17 +716,27 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
     }
 }
 
+/// Given all the partitions,
+/// return the partition_list that current worker is going to scan.
 #[inline]
-fn encode_partitions(query_partitions: &QueryPartitions) -> GraphProxyResult<Vec<PartitionId>> {
-    match query_partitions {
-        QueryPartitions::WholePartitions(partitions) => Ok(partitions
-            .iter()
-            .map(|pid| *pid as PartitionId)
-            .collect()),
-        QueryPartitions::PartialPartition(_, _, _) => {
-            Err(GraphProxyError::unsupported_error("PartialPartition on GraphScopeStore"))
+fn get_worker_partitions(query_partitions: &Vec<u32>) -> Vec<PartitionId> {
+    let workers_num = pegasus::get_current_worker_checked()
+        .map(|worker| worker.local_peers)
+        .unwrap_or(1);
+    let worker_idx = pegasus::get_current_worker_checked()
+        .map(|worker| worker.index % workers_num)
+        .unwrap_or(0);
+    let mut worker_partition_list = vec![];
+    for pid in query_partitions {
+        if *pid % workers_num == worker_idx {
+            worker_partition_list.push(pid as PartitionId)
         }
     }
+    debug!(
+        "workers_num {:?}, worker_idx: {:?},  worker_partition_list {:?}",
+        workers_num, worker_idx, worker_partition_list
+    );
+    worker_partition_list
 }
 
 /// Transform type of ids to PartitionLabeledVertexIds as required by graphscope store,

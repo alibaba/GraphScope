@@ -60,7 +60,7 @@ impl Default for SourceOperator {
 
 impl SourceOperator {
     pub fn new(
-        op: pb::PhysicalOpr, job_workers: usize, worker_index: u32, partitioner: Arc<dyn Partitioner>,
+        op: pb::PhysicalOpr, job_workers: usize, partitioner: Arc<dyn Partitioner>,
     ) -> FnGenResult<Self> {
         let op_kind = op.try_into()?;
         match op_kind {
@@ -81,13 +81,13 @@ impl SourceOperator {
                         // query by indexed_scan
                         let primary_key_values = <Vec<(NameOrId, Object)>>::try_from(ip2)?;
                         source_op.primary_key_values = Some(PKV::from(primary_key_values));
-                        source_op.set_partitions(job_workers, worker_index, partitioner)?;
+                        source_op.set_partitions(partitioner)?;
                         debug!("Runtime source op of indexed scan {:?}", source_op);
                     }
                     Ok(source_op)
                 } else {
                     let mut source_op = SourceOperator::try_from(scan)?;
-                    source_op.set_partitions(job_workers, worker_index, partitioner)?;
+                    source_op.set_partitions(partitioner)?;
                     debug!("Runtime source op of scan {:?}", source_op);
                     Ok(source_op)
                 }
@@ -120,14 +120,12 @@ impl SourceOperator {
         Ok(())
     }
 
-    /// Assign partition_list for each worker to call scan_vertex
-    fn set_partitions(
-        &mut self, job_workers: usize, worker_index: u32, partitioner: Arc<dyn Partitioner>,
-    ) -> ParsePbResult<()> {
-        let res = partitioner.get_worker_partitions(job_workers, worker_index);
+    /// Assign the partition_list for scan_vertex
+    fn set_partitions(&mut self, partitioner: Arc<dyn Partitioner>) -> ParsePbResult<()> {
+        let res = partitioner.get_local_partitions();
         match res {
             Ok(partition_list) => {
-                debug!("Assign worker {:?} to scan partition list: {:?}", worker_index, partition_list);
+                debug!("local partition list to scan: {:?}", partition_list);
                 self.query_params.partitions = Some(partition_list);
             }
             Err(err) => {

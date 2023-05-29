@@ -61,28 +61,10 @@ impl Partitioner for GrootMultiPartition {
         Ok(server_index * worker_num_per_server + worker_index as u64)
     }
 
-    fn get_worker_partitions(
-        &self, job_workers: usize, worker_id: u32,
-    ) -> GraphProxyResult<QueryPartitions> {
-        // Get worker partition list logic is as follows:
-        // 1. `process_partition_list = self.graph_partition_manager.get_process_partition_list()`
-        // get all partitions on current server
-        // 2. 'pid % job_workers' picks one worker to do the computation.
-        // and 'pid % job_workers == worker_id % job_workers' checks if current worker is the picked worker
-        let mut worker_partition_list = vec![];
-        let process_partition_list = self
+    fn get_local_partitions(&self) -> GraphProxyResult<Vec<u32>> {
+        Ok(self
             .graph_partition_manager
-            .get_process_partition_list();
-        for pid in process_partition_list {
-            if pid % (job_workers as u32) == worker_id % (job_workers as u32) {
-                worker_partition_list.push(pid as u64)
-            }
-        }
-        info!(
-            "job_workers {:?}, worker id: {:?},  worker_partition_list {:?}",
-            job_workers, worker_id, worker_partition_list
-        );
-        Ok(QueryPartitions::WholePartitions(worker_partition_list))
+            .get_process_partition_list())
     }
 }
 
@@ -137,24 +119,7 @@ impl Partitioner for VineyardMultiPartition {
         Ok(server_index * worker_num_per_server + worker_index)
     }
 
-    fn get_worker_partitions(
-        &self, job_workers: usize, worker_id: u32,
-    ) -> GraphProxyResult<QueryPartitions> {
-        // Get worker partition list logic is as follows:
-        // 1. `process_partition_list = self.graph_partition_manager.get_process_partition_list()`
-        // get all partitions on current server
-        // 2. 'pid % job_workers' picks one worker to do the computation.
-        // and 'pid % job_workers == worker_id % job_workers' checks if current worker is the picked worker
-        let mut worker_partition_list = vec![];
-        for pid in self.computed_process_partition_list.iter() {
-            if pid % (job_workers as u32) == worker_id % (job_workers as u32) {
-                worker_partition_list.push((*pid) as u64)
-            }
-        }
-        info!(
-            "job_workers {:?}, worker id: {:?},  worker_partition_list {:?}",
-            job_workers, worker_id, worker_partition_list
-        );
-        Ok(QueryPartitions::WholePartitions(worker_partition_list))
+    fn get_local_partitions(&self) -> GraphProxyResult<Vec<u32>> {
+        Ok(self.computed_process_partition_list.clone())
     }
 }

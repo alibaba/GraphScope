@@ -76,12 +76,8 @@ impl FnGenerator {
 
     fn gen_source(&self, opr: pb::PhysicalOpr) -> FnGenResult<DynIter<Record>> {
         let worker_id = pegasus::get_current_worker();
-        let source_opr = SourceOperator::new(
-            opr,
-            worker_id.local_peers as usize,
-            worker_id.index,
-            self.partitioner.clone(),
-        )?;
+        let source_opr =
+            SourceOperator::new(opr, worker_id.local_peers as usize, self.partitioner.clone())?;
         Ok(source_opr.gen_source(worker_id.index as usize)?)
     }
 

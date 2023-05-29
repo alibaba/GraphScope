@@ -33,13 +33,12 @@ use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
 use crate::apis::graph::PKV;
-use crate::apis::partitioner::QueryPartitions;
 use crate::apis::{
     from_fn, register_graph, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
     Statement, Vertex, ID,
 };
-use crate::errors::{GraphProxyError, GraphProxyResult};
-use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit};
+use crate::errors::GraphProxyResult;
+use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit, GraphProxyError};
 
 const EXP_STORE_PK: KeyId = 0;
 
@@ -234,39 +233,32 @@ impl ReadGraph for ExpStore {
         let label_ids = encode_storage_label(&params.labels);
         let props = params.columns.clone();
 
-        let partitions = params
-            .partitions
-            .as_ref()
-            .ok_or(GraphProxyError::query_store_error("Empty Partitions on ExpStore"))?;
+        // get_current_worker_checked() in case pegasus not started, i.e., for ci tests.
+        let workers_num = pegasus::get_current_worker_checked()
+            .map(|worker| worker.local_peers)
+            .unwrap_or(1);
+        let worker_idx = pegasus::get_current_worker_checked()
+            .map(|worker| worker.index % workers_num)
+            .unwrap_or(0);
+        let count = self
+            .store
+            .count_all_vertices(label_ids.as_ref());
+        let partial_count = count / workers_num as usize;
+        let take_count = if (worker_idx + 1) == workers_num {
+            // the last part
+            count - partial_count * (workers_num as usize - 1)
+        } else {
+            partial_count
+        };
 
-        match partitions {
-            QueryPartitions::WholePartitions(_) => {
-                let result = self
-                    .store
-                    .get_all_vertices(label_ids.as_ref())
-                    .map(move |v| to_runtime_vertex(v, props.clone()));
-                Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
-            }
-            QueryPartitions::PartialPartition(index, num, _) => {
-                let count = self
-                    .store
-                    .count_all_vertices(label_ids.as_ref());
-                let partial_count = count / *num as usize;
-                let take_count = if (*index + 1) == *num {
-                    // the last part
-                    count - partial_count * (*num as usize - 1)
-                } else {
-                    partial_count
-                };
-                let result = self
-                    .store
-                    .get_all_vertices(label_ids.as_ref())
-                    .skip(*index as usize * partial_count)
-                    .take(take_count)
-                    .map(move |v| to_runtime_vertex(v, props.clone()));
-                Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
-            }
-        }
+        let result = self
+            .store
+            .get_all_vertices(label_ids.as_ref())
+            .skip(worker_idx as usize * partial_count)
+            .take(take_count)
+            .map(move |v| to_runtime_vertex(v, props.clone()));
+
+        Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
     }
 
     fn index_scan_vertex(
@@ -284,37 +276,29 @@ impl ReadGraph for ExpStore {
         let label_ids = encode_storage_label(&params.labels);
         let props = params.columns.clone();
 
-        let partitions = params
-            .partitions
-            .as_ref()
-            .ok_or(GraphProxyError::query_store_error("Empty Partitions on ExpStore"))?;
+        // get_current_worker_checked() in case pegasus not started, i.e., for ci tests.
+        let workers_num = pegasus::get_current_worker_checked()
+            .map(|worker| worker.local_peers)
+            .unwrap_or(1);
+        let worker_idx = pegasus::get_current_worker_checked()
+            .map(|worker| worker.index % workers_num)
+            .unwrap_or(0);
+        let count = self.store.count_all_edges(label_ids.as_ref());
+        let partial_count = count / workers_num as usize;
+        let take_count = if (worker_idx + 1) == workers_num {
+            count - partial_count * (workers_num as usize - 1)
+        } else {
+            partial_count
+        };
 
-        match partitions {
-            QueryPartitions::WholePartitions(_) => {
-                let result = self
-                    .store
-                    .get_all_edges(label_ids.as_ref())
-                    .map(move |v| to_runtime_edge(v, props.clone()));
-                Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
-            }
-            QueryPartitions::PartialPartition(index, num, _) => {
-                let count = self.store.count_all_edges(label_ids.as_ref());
-                let partial_count = count / *num as usize;
-                let take_count = if *index + 1 == *num {
-                    count - partial_count * (*num as usize - 1)
-                } else {
-                    partial_count
-                };
+        let result = self
+            .store
+            .get_all_edges(label_ids.as_ref())
+            .skip(worker_idx as usize * partial_count)
+            .take(take_count)
+            .map(move |v| to_runtime_edge(v, props.clone()));
 
-                let result = self
-                    .store
-                    .get_all_edges(label_ids.as_ref())
-                    .skip(*index as usize * partial_count)
-                    .take(take_count)
-                    .map(move |v| to_runtime_edge(v, props.clone()));
-                Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
-            }
-        }
+        Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
     }
 
     fn get_vertex(
