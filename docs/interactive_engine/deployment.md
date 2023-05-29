@@ -99,9 +99,11 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
 
    Download Gremlin console and unpack to your local directory.
    ```bash
-   curl -LO https://dlcdn.apache.org/tinkerpop/3.6.2/apache-tinkerpop-gremlin-console-3.6.2-bin.zip && \
-   unzip apache-tinkerpop-gremlin-console-3.6.2-bin.zip && \
-   cd apache-tinkerpop-gremlin-console-3.6.2
+   # if the given version (3.6.4) is not found, try to access https://dlcdn.apache.org to
+   # download an available version.
+   curl -LO https://dlcdn.apache.org/tinkerpop/3.6.4/apache-tinkerpop-gremlin-console-3.6.4-bin.zip && \
+   unzip apache-tinkerpop-gremlin-console-3.6.4-bin.zip && \
+   cd apache-tinkerpop-gremlin-console-3.6.4
    ```
 
    Modify the `hosts` and `port` in `conf/remote.yaml` to the GIE Frontend Service endpoint.
@@ -126,7 +128,6 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
 ```bash
    helm uninstall [YOUR_RELEASE_NAME]
 ```
-
 
 ## Using Your Own Data
 Currently, a single instance of GIE can only handle one set of graph data. This means that you must

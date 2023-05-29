@@ -12,20 +12,25 @@ docker run --name dev -it --shm-size=4096m registry.cn-hongkong.aliyuncs.com/gra
 
 Please refer to [Dev Environment](../development/dev_guide.md#dev-environment) to find more options to get a dev environment.
 
-## Build and Test GIE with Local Experimental Store
-Clone a repo if needed.
+## Build GIE with Vineyard Store on a Local Machine
+In [GIE standalone deployment](./deployment.md), we have instructed on how to deploy GIE in a Kubenetes cluster with Vineyard store. Here, we show how to develop and test GIE with vineyard store on a local machine.
+
+Clone the ``graphscope'' repo if you do not have it.
 ```bash
 git clone https://github.com/alibaba/graphscope
 cd graphscope
 ```
-Now you are ready to build the code with a local ``experimental'' store that is included only for local testing purpose.
-```bash
-./gs make interactive --storage-type=experimental
-```
 
-You then could locally test the GIE engine with a single command:
+Now you are ready to build the GIE engine (on vineyard store) with the following command:
 ```bash
-./gs test interactive --local --storage-type=experimental
+./gs make interactive --storage-type=vineyard
+```
+You can find the built artifacts in `interactive_engine/assembly/target/graphscope`.
+
+## Test GIE with Vineyard Store on a Local Machine
+You could test the GIE engine on vineyard store with the following command:
+```bash
+./gs test interactive --local --storage-type=vineyard
 ```
 
 Recall that in [GIE](./design_of_gie.md), a gremlin query will be firstly parsed to an IR logical plan by the compiler, and then into a physical plan,
@@ -38,7 +43,7 @@ which will verifies the correctness of generating the IR logical plan from some 
 for each rust package, mainly including:
   - `core`: Processing an IR logical plan into a physical plan.
   - `runtime`: Assembling a physical plan into an executable job.
-- Integration test: An e2e test, from compiling a gremlin queries to obtaining the results from the
+- Integration test: An end2end test, from compiling a gremlin queries to obtaining the results from the
 computed engine. The test includes:
   - [Tinkerpop's gremlin test](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/gremlin/integration/suite/standard): We replicate Tinkerpop's official test suit, which is mostly based on Tinkerpop's [modern](https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/)
   graph.
@@ -46,30 +51,27 @@ computed engine. The test includes:
   - [LDBC test](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/gremlin/integration/suite/ldbc): We further test GIE against the LDBC complex workloads on the LDBC social network with the scale factor (sf) 1.
    Please refer to the [tutorial](./tutorial_ldbc_gremlin.md) for more information.
 
-## Build and Test GIE with Vineyard Store
-In [GIE standalone deployment](./deployment.md), we have instructed on how to deploy GIE in a
-Kubenetes cluster with Vineyard store. Here, we show how to develop and test GIE with vineyard
-store on a local machine.
+### Manually Starting the GIE Services
+The end-to-end integration test mentioned above involves initiating the GIE services of a `frontend` to send Gremlin queries, and an `executor` (with vineyard) to execute those queries. The subsequent instructions outline the process of individually starting the `frontend` and `executor` to facilitate a more in-depth exploration of the engine.
 
-You could build the GIE engine (on vineyard store) with the following command:
+1. First, make sure that a vineyard service is already running and a graph has been successfully loaded. Let's assume the object ID of the graph is `7541917260097168`.
+
+In case that you have no idea of how to start a vineyard store, we instruct you to
+start a vineyard store that has manages a [modern graph](https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/).
+
 ```bash
-./gs make interactive --storage-type=vineyard
+export VINEYARD_IPC_SOCKET=/tmp/vineyard.sock
+vineyardd --socket=${VINEYARD_IPC_SOCKET} --meta=local &
+# load modern graph
+export STORE_DATA_PATH=charts/gie-standalone/data  # relative to graphscope repo
+vineyard-graph-loader --config charts/gie-standalone/config/v6d_modern_loader.json
 ```
 
-You could locally test the GIE engine (on vineyard store) with a single command:
+2. Set the `GIE_TEST_HOME` environment variable:
 ```bash
-./gs test interactive --local --storage-type=vineyard
+export GIE_TEST_HOME=interactive_engine/assembly/target/graphscope
 ```
-
-If you want to individually start the executor role, you can follow the steps below:
-
-1. First, make sure that a Vineyard service is already running and a graph has been successfully loaded. Let's assume the object ID of the graph is `7541917260097168`.
-
-2. Set the `GRAPHSCOPE_HOME` environment variable:
-```bash
-export GRAPHSCOPE_HOME=<your_local_repo>/interactive_engine/assembly/target/graphscope
-```
-3. Configure the `$GRAPHSCOPE_HOME/conf/executor.vineyard.properties` file:
+3. Configure the `$GIE_TEST_HOME/conf/executor.vineyard.properties` file:
 ```bash
 graph.name = GRAPH_NAME
 # RPC port that executor will listen on
@@ -96,12 +98,10 @@ graph.vineyard.object.id: 7541917260097168
 
 4. Start the `gaia_executor`:
 ```bash
-$GRAPHSCOPE_HOME/bin/gaia_executor $GRAPHSCOPE_HOME/conf/log4rs.yml $GRAPHSCOPE_HOME/conf/executor.vineyard.properties &
+$GIE_TEST_HOME/bin/gaia_executor $GIE_TEST_HOME/conf/log4rs.yml $GIE_TEST_HOME/conf/executor.vineyard.properties &
 ```
 
-If you want to individually start the frontend role, follow these steps:
-
-1. Configure the `$GRAPHSCOPE_HOME/conf/frontend.vineyard.properties` file:
+5. Configure the `$GIE_TEST_HOME/conf/frontend.vineyard.properties` file:
 ```bash
 ## Pegasus service config
 # a.k.a. thread num
@@ -126,9 +126,12 @@ frontend.service.port = 8182
 # auth.password = default
 ```
 
-2. Start the `frontend`:
+6. Start the `frontend`:
 ```bash
-java -cp ".:$GRAPHSCOPE_HOME/lib/*" -Djna.library.path=$GRAPHSCOPE_HOME/lib com.alibaba.graphscope.frontend.Frontend $GRAPHSCOPE_HOME/conf/frontend.vineyard.properties &
+java -cp ".:$GIE_TEST_HOME/lib/*" -Djna.library.path=$GIE_TEST_HOME/lib com.alibaba.graphscope.frontend.Frontend $GIE_TEST_HOME/conf/frontend.vineyard.properties &
 ```
 
-To access the frontend service, visit localhost:8182 in your gremlin console.
+With the frontend service, you can open the gremlin console and set the endpoint to
+`localhost:8182`, as given [here](./deployment.md#deploy-your-first-gie-service).
+
+7. Stop all services:
