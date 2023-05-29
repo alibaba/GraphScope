@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
-import com.alibaba.graphscope.common.ir.schema.procedure.StoredProcedureMeta;
+import com.alibaba.graphscope.common.ir.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.store.IrMeta;

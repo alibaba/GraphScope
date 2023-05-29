@@ -19,8 +19,8 @@ package com.alibaba.graphscope.common.store;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.schema.GraphSchemaWrapper;
-import com.alibaba.graphscope.common.ir.schema.procedure.MockStoredProcedures;
-import com.alibaba.graphscope.common.ir.schema.procedure.StoredProcedures;
+import com.alibaba.graphscope.common.ir.procedure.GraphStoredProcedures;
+import com.alibaba.graphscope.common.ir.procedure.StoredProcedures;
 import com.alibaba.graphscope.gremlin.Utils;
 
 import java.io.IOException;
@@ -30,9 +30,9 @@ public class ExperimentalMetaFetcher implements IrMetaFetcher {
     private final IrMeta meta;
 
     public ExperimentalMetaFetcher(Configs configs) throws IOException {
-        String procedureFilePath = GraphConfig.STORED_PROCEDURES.get(configs);
-        StoredProcedures storedProcedures = (procedureFilePath != null && !procedureFilePath.isEmpty()) ?
-                new MockStoredProcedures(Utils.readStringFromFile(procedureFilePath)) : StoredProcedures.createEmpty();
+        String procedureDir = GraphConfig.STORED_PROCEDURES.get(configs);
+        StoredProcedures storedProcedures = (procedureDir != null && !procedureDir.isEmpty()) ?
+                new GraphStoredProcedures(procedureDir) : StoredProcedures.createEmpty();
         String schemaFilePath = GraphConfig.GRAPH_SCHEMA.get(configs);
         String schemaJson = Utils.readStringFromFile(schemaFilePath);
         this.meta =

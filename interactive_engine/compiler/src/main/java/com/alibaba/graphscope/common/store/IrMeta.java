@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.common.store;
 
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
-import com.alibaba.graphscope.common.ir.schema.procedure.StoredProcedures;
+import com.alibaba.graphscope.common.ir.procedure.StoredProcedures;
 
 import java.util.Objects;
 

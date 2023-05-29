@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.schema.procedure;
+package com.alibaba.graphscope.common.ir.procedure;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -25,34 +23,34 @@ import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class MockStoredProcedures implements StoredProcedures {
+public class GraphStoredProcedures implements StoredProcedures {
+    private static final Logger logger = LoggerFactory.getLogger(GraphStoredProcedures.class);
     private final RelDataTypeFactory typeFactory;
     private final Map<String, StoredProcedureMeta> storedProcedureMetaMap;
 
-    public MockStoredProcedures(String json) throws IOException {
+    public GraphStoredProcedures(String procedureDir) throws IOException {
         this.typeFactory = new JavaTypeFactoryImpl();
         this.storedProcedureMetaMap = Maps.newLinkedHashMap();
-
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode jsonNode = mapper.readTree(json);
-        Preconditions.checkArgument(jsonNode.isArray());
-        Iterator<JsonNode> iterator = jsonNode.iterator();
-        while(iterator.hasNext()) {
-            JsonNode procedure = iterator.next();
-            String procedureName = procedure.get("name").asText();
-            StoredProcedureMeta meta = new StoredProcedureMeta(
-                    procedureName,
-                    createReturnType(procedure.get("returnType")),
-                    createParameters(procedure.get("parameters"))
-            );
-            this.storedProcedureMetaMap.put(procedureName, meta);
+        File dir = new File(procedureDir);
+        Preconditions.checkArgument(dir.exists() && dir.isDirectory());
+        for(File file : dir.listFiles()) {
+            if (file.getName().endsWith(".yaml")) {
+                StoredProcedureMeta meta = createStoredProcedureMeta(file);
+                this.storedProcedureMetaMap.put(meta.getName(), meta);
+            }
         }
+        logger.info("stored procedures {}", this.storedProcedureMetaMap);
     }
 
     @Override
@@ -60,34 +58,44 @@ public class MockStoredProcedures implements StoredProcedures {
         return this.storedProcedureMetaMap.get(procedureName);
     }
 
-    private RelDataType createReturnType(JsonNode jsonNode) {
-        Preconditions.checkArgument(jsonNode.isArray());
+    private StoredProcedureMeta createStoredProcedureMeta(File yamlFile) throws IOException {
+        Yaml yaml = new Yaml();
+        Map<String, Object> config = yaml.load(new FileInputStream(yamlFile));
+        String procedureName = (String) config.get("name");
+        return new StoredProcedureMeta(
+                procedureName,
+                createReturnType((List) config.get("returns")),
+                createParameters((List) config.get("params"))
+        );
+    }
+
+    private RelDataType createReturnType(List config) {
         List<RelDataTypeField> fields = Lists.newArrayList();
-        Iterator<JsonNode> iterator = jsonNode.iterator();
+        Iterator iterator = config.iterator();
         int index = 0;
         while (iterator.hasNext()) {
-            JsonNode field = iterator.next();
-            fields.add(new RelDataTypeFieldImpl(field.get("name").asText(), index, createDataType(field.get("type").asText())));
+            Map<String, Object> field = (Map<String, Object>) iterator.next();
+            fields.add(new RelDataTypeFieldImpl((String) field.get("name"), index, createDataType((String) field.get("type"))));
             ++index;
         }
         return new RelRecordType(fields);
     }
 
-    private List<StoredProcedureMeta.Parameter> createParameters(JsonNode jsonNode) {
-        Preconditions.checkArgument(jsonNode.isArray());
+    private List<StoredProcedureMeta.Parameter> createParameters(List config) {
         List<StoredProcedureMeta.Parameter> parameters = Lists.newArrayList();
-        Iterator<JsonNode> iterator = jsonNode.iterator();
+        Iterator iterator = config.iterator();
         while(iterator.hasNext()) {
-            JsonNode parameter = iterator.next();
+            Map<String, Object> parameter = (Map<String, Object>) iterator.next();
             parameters.add(new StoredProcedureMeta.Parameter(
-                    parameter.get("name").asText(),
-                    createDataType(parameter.get("type").asText())
+                    (String) parameter.get("name"),
+                    createDataType((String) parameter.get("type"))
             ));
         }
         return parameters;
     }
 
     private RelDataType createDataType(String typeString) {
+        typeString = typeString.toUpperCase();
         switch (typeString) {
             case "STRING":
                 return typeFactory.createSqlType(SqlTypeName.CHAR);

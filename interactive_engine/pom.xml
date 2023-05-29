@@ -146,6 +146,7 @@
     <scala.maven.version>3.2.2</scala.maven.version>
     <cobertura.maven.version>2.7</cobertura.maven.version>
     <noe4j.version>4.4.0</noe4j.version>
+    <snake.yaml.version>2.0</snake.yaml.version>
   </properties>
 
   <dependencyManagement>
@@ -554,6 +555,11 @@
         <artifactId>value</artifactId>
         <version>${immutables.version}</version>
         <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>${snake.yaml.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.schema.procedure;
+package com.alibaba.graphscope.common.ir.procedure;
 
 import org.apache.calcite.rel.type.RelDataType;
 
@@ -49,6 +49,14 @@ public class StoredProcedureMeta {
         public RelDataType getDataType() {
             return dataType;
         }
+
+        @Override
+        public String toString() {
+            return "Parameter{" +
+                    "name='" + name + '\'' +
+                    ", dataType=" + dataType +
+                    '}';
+        }
     }
 
     public String getName() {
@@ -61,5 +69,14 @@ public class StoredProcedureMeta {
 
     public List<Parameter> getParameters() {
         return Collections.unmodifiableList(parameters);
+    }
+
+    @Override
+    public String toString() {
+        return "StoredProcedureMeta{" +
+                "name='" + name + '\'' +
+                ", returnType=" + returnType +
+                ", parameters=" + parameters +
+                '}';
     }
 }

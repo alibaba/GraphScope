@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.schema.procedure;
+package com.alibaba.graphscope.common.ir.procedure;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 

@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import com.alibaba.graphscope.common.ir.schema.procedure.StoredProcedureMeta;
+import com.alibaba.graphscope.common.ir.procedure.StoredProcedureMeta;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.SqlMonotonicBinaryOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
