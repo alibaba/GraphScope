@@ -193,7 +193,8 @@ public enum TestGraphFactory implements GraphProperties {
         @Override
         public Map<String, Object> getProperties(Configs configs) {
             String json;
-            if (PegasusConfig.PEGASUS_WORKER_NUM.get(configs) == 1) {
+            int servers = PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length;
+            if (servers == 1) {
                 json =
                         "{\n"
                                 + "  \"vertex_properties\": {\n"
