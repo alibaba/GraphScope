@@ -33,26 +33,15 @@ You could test the GIE engine on vineyard store with the following command:
 ./gs test interactive --local --storage-type=vineyard
 ```
 
-Recall that in [GIE](./design_of_gie.md), a gremlin query will be firstly parsed to an IR logical plan by the compiler, and then into a physical plan,
-which will be further assembled into a job that can be executed in the
-computing engine (Pegasus). There mainly include the following three parts of test:
-
-- GIE compiler unit test: This part of test goes through the Java codebase of compiler in `interactive_engine/compiler`,
-which will verifies the correctness of generating the IR logical plan from some [gremlin steps](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/compiler/src/test/java/com/alibaba/graphscope/gremlin).
-- GIE IR unit test: This part of test goes through the Rust codebase of IR layer in `interactive_engine/executor/ir`, and runs `cargo test`
-for each rust package, mainly including:
-  - `core`: Processing an IR logical plan into a physical plan.
-  - `runtime`: Assembling a physical plan into an executable job.
-- Integration test: An end2end test, from compiling a gremlin queries to obtaining the results from the
-computed engine. The test includes:
+This will run end2end tests, from compiling a gremlin queries to obtaining and verifying the results from the computed engine. The test includes:
   - [Tinkerpop's gremlin test](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/gremlin/integration/suite/standard): We replicate Tinkerpop's official test suit, which is mostly based on Tinkerpop's [modern](https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/)
   graph.
   - [IR pattern test](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/gremlin/integration/suite/pattern): In addition to Tinkerpop's official test of `match` steps, we offer extra pattern queries on modern graph.
   - [LDBC test](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/gremlin/integration/suite/ldbc): We further test GIE against the LDBC complex workloads on the LDBC social network with the scale factor (sf) 1.
    Please refer to the [tutorial](./tutorial_ldbc_gremlin.md) for more information.
 
-### Manually Starting the GIE Services
-The end-to-end integration test mentioned above involves initiating the GIE services of a `frontend` to send Gremlin queries, and an `executor` (with vineyard) to execute those queries. The subsequent instructions outline the process of individually starting the `frontend` and `executor` to facilitate a more in-depth exploration of the engine.
+## Manually Starting the GIE Services
+A minimum set of GIE services includes a `frontend` to send Gremlin queries, and an `executor` (with vineyard) to execute those queries. The subsequent instructions outline the process of individually starting the `frontend` and `executor` to facilitate a more in-depth exploration of the engine.
 
 1. First, make sure that a vineyard service is already running and a graph has been successfully loaded. Once the graph is successfully loaded into vineyard, you will obtain an `<v6d_object_id>`
 for accessing the graph data.
@@ -72,6 +61,7 @@ vineyard-graph-loader --config charts/gie-standalone/config/v6d_modern_loader.js
 ```bash
 export GIE_TEST_HOME=interactive_engine/assembly/target/graphscope
 ```
+
 3. Configure the `$GIE_TEST_HOME/conf/executor.vineyard.properties` file:
 ```bash
 graph.name = GRAPH_NAME
@@ -136,3 +126,9 @@ With the frontend service, you can open the gremlin console and set the endpoint
 `localhost:8182`, as given [here](./deployment.md#deploy-your-first-gie-service).
 
 7. Stop all services:
+You can manually kill the processes of `vineyardd`, `gaia_executor` and `frontend` by:
+```
+pkill -f vineyardd
+pkill -f gaia_executor
+pkill -f Frontend
+```
