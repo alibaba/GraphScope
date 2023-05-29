@@ -54,7 +54,8 @@ computed engine. The test includes:
 ### Manually Starting the GIE Services
 The end-to-end integration test mentioned above involves initiating the GIE services of a `frontend` to send Gremlin queries, and an `executor` (with vineyard) to execute those queries. The subsequent instructions outline the process of individually starting the `frontend` and `executor` to facilitate a more in-depth exploration of the engine.
 
-1. First, make sure that a vineyard service is already running and a graph has been successfully loaded. Let's assume the object ID of the graph is `7541917260097168`.
+1. First, make sure that a vineyard service is already running and a graph has been successfully loaded. Once the graph is successfully loaded into vineyard, you will obtain an `<v6d_object_id>`
+for accessing the graph data.
 
 In case that you have no idea of how to start a vineyard store, we instruct you to
 start a vineyard store that has manages a [modern graph](https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/).
@@ -93,7 +94,7 @@ pegasus.worker.num = 1
 graph.type = VINEYARD
 
 # Please replace with the actual object ID of your graph
-graph.vineyard.object.id: 7541917260097168
+graph.vineyard.object.id: <v6d_object_id>
 ```
 
 4. Start the `gaia_executor`:
@@ -116,7 +117,7 @@ pegasus.output.capacity = 16
 pegasus.hosts = localhost:1234
 
 # graph schema path
-graph.schema = /tmp/7541917260097168.json
+graph.schema = /tmp/<v6d_object_id>.json
 
 ## Frontend Config
 frontend.service.port = 8182
