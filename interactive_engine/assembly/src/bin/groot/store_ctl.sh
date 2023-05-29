@@ -8,16 +8,15 @@ usage() {
 cat <<END
   A script to launch groot service.
 
-  Usage: store_ctl.sh [options] [command] [parameters]
+  Usage: store_ctl.sh [options] [parameters]
 
   Options:
 
-    -h, --help           output help information
+    -h, --help       Output help information
 
   Commands:
 
-    start_max_node                            start max_node of gaia
-    start_server                              start individual groot server
+    start            Start individual groot server. If no arguments given, start all servers as local deployment
 END
 }
 
@@ -74,19 +73,6 @@ _setup_env() {
   libpath="$(echo "${GROOT_HOME}"/lib/*.jar | tr ' ' ':')"
 }
 
-# start max_node of gaia
-start_max_node() {
-  _setup_env
-
-  java -server \
-       -Dlogback.configurationFile="${GROOT_LOGBACK_FILE}" \
-       -Dconfig.file="${GROOT_CONF_FILE}" \
-       -Dlog.dir="${LOG_DIR}" \
-       -Dlog.name="${LOG_NAME}" \
-       -cp "${libpath}" com.alibaba.graphscope.groot.servers.MaxNode \
-       "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
-}
-
 # start groot server
 start_server() {
   _setup_env
@@ -112,7 +98,7 @@ start_server() {
             -XX:NumberOfGCLogFiles=32
             -XX:GCLogFileSize=64m"
 
-  java ${java_opt} \
+  java "${java_opt}" \
       -Dlogback.configurationFile="${GROOT_LOGBACK_FILE}" \
       -Dconfig.file="${GROOT_CONF_FILE}" \
       -Dlog.dir="${LOG_DIR}" \
@@ -126,8 +112,7 @@ while test $# -ne 0; do
   arg=$1; shift
   case $arg in
     -h|--help) usage; exit ;;
-    start_max_node) start_max_node "$@"; exit;;
-    start_server) start_server "$@"; exit;;
+    start) start_server "$@"; exit;;
     *)
       echo "unrecognized option or command '${arg}'"
       usage; exit;;

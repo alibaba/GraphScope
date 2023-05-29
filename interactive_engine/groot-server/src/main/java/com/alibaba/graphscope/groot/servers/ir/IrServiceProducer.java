@@ -34,11 +34,15 @@ import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.servers.AbstractService;
 import com.alibaba.graphscope.groot.servers.ComputeServiceProducer;
 import com.alibaba.graphscope.groot.store.StoreService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class IrServiceProducer implements ComputeServiceProducer {
+    private static final Logger logger = LoggerFactory.getLogger(IrServiceProducer.class);
+
     private Configs configs;
 
     public IrServiceProducer(Configs configs) {
@@ -49,6 +53,7 @@ public class IrServiceProducer implements ComputeServiceProducer {
     public AbstractService makeGraphService(
             SchemaFetcher schemaFetcher, ChannelManager channelManager) {
         int executorCount = CommonConfig.STORE_NODE_COUNT.get(configs);
+        int port = GremlinConfig.GREMLIN_PORT.get(configs);
         RpcChannelFetcher channelFetcher =
                 new RpcChannelManagerFetcher(channelManager, executorCount, RoleType.GAIA_RPC);
         com.alibaba.graphscope.common.config.Configs irConfigs = getConfigs();
@@ -62,11 +67,12 @@ public class IrServiceProducer implements ComputeServiceProducer {
 
         return new AbstractService() {
             private IrGremlinServer irGremlinServer =
-                    new IrGremlinServer(GremlinConfig.GREMLIN_PORT.get(configs));
+                    new IrGremlinServer(port);
 
             @Override
             public void start() {
                 try {
+                    logger.info("Starting Gremlin service at port {}", port);
                     irGremlinServer.start(
                             irConfigs,
                             irMetaFetcher,
