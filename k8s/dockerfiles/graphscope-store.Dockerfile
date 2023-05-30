@@ -29,14 +29,7 @@ RUN apt-get update -y && \
 ENV GRAPHSCOPE_HOME=/usr/local
 ENV JAVA_HOME=/usr/lib/jvm/default-java
 
-COPY --from=builder /home/graphscope/groot/bin /usr/local/groot/bin
-COPY --from=builder /home/graphscope/groot/conf /usr/local/groot/conf
-COPY --from=builder /home/graphscope/groot/lib /usr/local/groot/lib
-COPY --from=builder /home/graphscope/groot/native /usr/local/groot/native
-
-# For local cluster deployment
-COPY --from=builder /home/graphscope/.m2/repository/org/apache/curator/curator-test/5.4.0/curator-test-5.4.0.jar /usr/local/groot/lib/curator-test-5.4.0.jar
-COPY --from=builder /home/graphscope/.m2/repository/org/scala-lang/scala-library/2.13.9/scala-library-2.13.9.jar /usr/local/groot/lib/scala-library-2.13.9.jar
+COPY --from=builder /home/graphscope/groot /usr/local/groot
 
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
