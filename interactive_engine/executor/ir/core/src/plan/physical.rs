@@ -772,15 +772,14 @@ impl AsPhysical for LogicalPlan {
 // 3. To intersect a->c, b->c with key=c, with filters
 // we support expanding vertices with filters on edges (i.e., filters on a->c, b->c), e.g., Intersect{{a-filter->c, b-filter->c}, key=c};
 // if expanding vertices with filters on vertices (i.e., filters on c), translate into Intersect{{a->c, b->c}, key=c} + Select {filter on c}
-// For now, this logic is in the translation rule in Pattern in logical plan
-// TODO: move this logic into physical layer, as we may able to directly filter vertices during intersection if we have the global view of storage.
+// 4. To intersect a->...->d->c and b->c with key=c, where a->..->d->c is a path from a to c,
+// if so, translate into PathExpand{a->d} + Intersect{d->c, b->c, key=c}.
 
 // Thus, after build intersect, the physical plan looks like:
 // 1. the last ops in intersect's sub_plans are the ones to intersect;
-// 2. the intersect op can be:
-//     1) EdgeExpand with Opt = ExpandE followed by GetV with Opt = End, which is to expand and intersect on id-only vertices; (supported currently)
+// 2. the intersect op includes:
+//     1) EdgeExpand with Opt = ExpandV, which is to expand and intersect on id-only vertices; (supported currently)
 //     2) EdgeExpand with Opt = ExpandE, which is to expand and intersect on edges (although, not considered in Pattern yet);
-// and 3) GetV with Opt = Self, which is to expand and intersect on vertices, while there may be some filters on the intersected vertices. (TODO e2e)
 
 fn add_intersect_job_builder(
     builder: &mut JobBuilder, plan_meta: &mut PlanMeta, intersect_opr: &pb::Intersect,
@@ -827,6 +826,8 @@ fn add_intersect_job_builder(
                 //    and the last edge_expand is the one to intersect.
                 //    Notice that if we have predicates for vertices in path_expand, or for the last vertex of path_expand,
                 //    do the filtering after intersection.
+                // TODO: there might be a bug here:
+                // if path_expand has an alias which indicates that the path would be referred later, it may not as expected.
                 let mut path_expand = path_expand.clone();
                 let path_expand_base = path_expand
                     .base

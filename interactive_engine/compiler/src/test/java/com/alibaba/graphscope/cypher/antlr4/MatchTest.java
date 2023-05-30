@@ -86,7 +86,7 @@ public class MatchTest {
                     + " tables=[knows]}], alias=[DEFAULT], fusedFilter=[[=(DEFAULT.weight,"
                     + " 1.0E0)]], opt=[OUT])\n"
                     + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[c], opt=[END])\n"
+                    + " alias=[DEFAULT], opt=[END])\n"
                     + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[EndV],"
                     + " alias=[b])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
