@@ -1123,7 +1123,7 @@ class Graph(GraphInterface):
                 identical with the one that called serialized method.
         """
         try:
-            
+            import vineyard
             import vineyard.io
         except ImportError:
             raise RuntimeError(

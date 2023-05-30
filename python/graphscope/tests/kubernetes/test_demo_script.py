@@ -25,6 +25,10 @@ import time
 
 import numpy as np
 import pytest
+import vineyard
+from kubernetes import client
+from kubernetes import config
+from kubernetes.client.rest import ApiException
 
 import graphscope
 from graphscope import Graph
@@ -175,6 +179,9 @@ def gs_session_with_lazy_mode():
 def create_vineyard_deployment_on_single_node():
     import vineyard
 
+
+@pytest.fixture
+def create_vineyard_deployment_on_single_node():
     # create vineyard deployment on single node
     # set the replicas of vineyard and etcd to 1 as there is only one node in the cluster
     vineyard.deploy.vineyardctl.deploy.vineyard_deployment(
@@ -503,6 +510,179 @@ def test_query_modern_graph(
     # traversal on moder graph
     g = interactive.traversal_source()
     modern_bytecode(g)
+
+
+def create_pv(name, path):
+    config.load_kube_config()
+    v1 = client.CoreV1Api()
+    try:
+        pv = {
+            "apiVersion": "v1",
+            "kind": "PersistentVolume",
+            "metadata": {
+                "name": name,
+                "labels": {
+                    "app.kubernetes.io/name": name,
+                },
+            },
+            "spec": {
+                "capacity": {"storage": "1Gi"},
+                "accessModes": ["ReadWriteOnce"],
+                "storageClassName": "manual",
+                "hostPath": {
+                    "path": path,
+                    "type": "DirectoryOrCreate",
+                },
+            },
+        }
+
+        v1.create_persistent_volume(body=pv)
+    except ApiException as e:
+        logger.error(
+            "Exception when calling CoreV1Api->create_persistent_volume: %s\n" % e
+        )
+
+
+def create_pvc(name, namespace, pv_name):
+    config.load_kube_config()
+    v1 = client.CoreV1Api()
+    try:
+        pvc = {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "name": name,
+                "namespace": namespace,
+            },
+            "spec": {
+                "accessModes": ["ReadWriteOnce"],
+                "resources": {"requests": {"storage": "1Gi"}},
+                "storageClassName": "manual",
+                "selector": {
+                    "matchLabels": {
+                        "app.kubernetes.io/name": pv_name,
+                    }
+                },
+            },
+        }
+
+        v1.create_namespaced_persistent_volume_claim(namespace=namespace, body=pvc)
+    except ApiException as e:
+        logger.error(
+            "Exception when calling CoreV1Api->create_persistent_volume_claim: %s\n" % e
+        )
+
+
+def create_namespace(name):
+    config.load_kube_config()
+    v1 = client.CoreV1Api()
+    try:
+        # Create a new namespace object
+        ns = client.V1Namespace()
+        ns.metadata = client.V1ObjectMeta(name=name)
+        v1.create_namespace(ns)
+    except ApiException as e:
+        logger.error("Exception when calling CoreV1Api->create_namespace: %s\n" % e)
+
+
+def test_store_and_restore_graphs(
+    modern_graph_data_dir,
+):
+    namespace = "graphscope-system"
+    create_namespace(namespace)
+    old_sess = graphscope.session(
+        num_workers=1,
+        k8s_namespace="graphscope-system",
+        k8s_image_registry=get_gs_registry_on_ci_env(),
+        k8s_image_tag=get_gs_tag_on_ci_env(),
+        k8s_coordinator_cpu=2,
+        k8s_coordinator_mem="4Gi",
+        k8s_vineyard_cpu=2,
+        k8s_vineyard_mem="1Gi",
+        k8s_engine_cpu=2,
+        k8s_engine_mem="4Gi",
+        vineyard_shared_mem="4Gi",
+        k8s_vineyard_deployment="vineyardd-sample",
+        k8s_volumes=get_k8s_volumes(),
+    )
+    graph = load_modern_graph(old_sess, "/testingdata/modern_graph")
+    interactive = old_sess.gremlin(graph)
+    graph_vineyard_id = vineyard.ObjectID(graph.vineyard_id)
+    graph_person_count = interactive.execute(
+        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+    ).all()[0]
+    graph_knows_count = interactive.execute(
+        'g.V().hasLabel("person").outE("knows").count()'
+    ).all()[0]
+
+    sub_graph = interactive.subgraph(  # noqa: F841
+        'g.V().hasLabel("person").outE("knows")'
+    )
+    sub_graph_person_count = interactive.execute(
+        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+    ).all()[0]
+    sub_graph_knows_count = interactive.execute(
+        'g.V().hasLabel("person").outE("knows").count()'
+    ).all()[0]
+
+    sub_graph_vineyard_id = vineyard.ObjectID(sub_graph.vineyard_id)
+    # create the pv and pvc for backup
+    pv_name = "test-pv"
+    path = "/var/vineyard/dump"
+    pvc_name = "test-pvc"
+    create_pv(pv_name, path)
+    create_pvc(pvc_name, namespace, pv_name)
+    # store the specific graphs to pvc
+    old_sess.store_graphs_to_pvc(
+        graphIDs=[graph_vineyard_id, sub_graph_vineyard_id],
+        path=path,
+        pvc_name=pvc_name,
+    )
+
+    old_sess.close()
+    # wait the session to be closed
+    wait_for_pod_deletion("coordinator", namespace)
+    wait_for_pod_deletion("gs-engine", namespace)
+
+    # create a new session to recover the graph
+    new_sess = graphscope.session(
+        num_workers=1,
+        k8s_namespace="graphscope-system",
+        k8s_image_registry=get_gs_registry_on_ci_env(),
+        k8s_image_tag=get_gs_tag_on_ci_env(),
+        k8s_coordinator_cpu=2,
+        k8s_coordinator_mem="4Gi",
+        k8s_vineyard_cpu=2,
+        k8s_vineyard_mem="1Gi",
+        k8s_engine_cpu=2,
+        k8s_engine_mem="4Gi",
+        vineyard_shared_mem="4Gi",
+        k8s_vineyard_deployment="vineyardd-sample",
+        k8s_volumes=get_k8s_volumes(),
+    )
+    new_sess.restore_graphs_from_pvc(
+        path=path,
+        pvc_name=pvc_name,
+    )
+
+    new_graph = new_sess.g(vineyard.ObjectID(graph_vineyard_id))
+    interactive = new_sess.gremlin(new_graph)
+    new_graph_person_count = interactive.execute(
+        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+    ).all()[0]
+    new_graph_knows_count = interactive.execute(
+        'g.V().hasLabel("person").outE("knows").count()'
+    ).all()[0]
+
+    new_sub_graph = new_sess.g(vineyard.ObjectID(sub_graph_vineyard_id))
+    interactive2 = new_sess.gremlin(new_sub_graph)
+    new_sub_graph_person_count = interactive2.execute("g.V().count()").all()[0]
+    new_sub_graph_knows_count = interactive2.execute("g.E().count()").all()[0]
+
+    assert graph_person_count == new_graph_person_count
+    assert graph_knows_count == new_graph_knows_count
+    assert sub_graph_person_count == new_sub_graph_person_count
+    assert sub_graph_knows_count == new_sub_graph_knows_count
 
 
 def test_serialize_roundtrip(gs_session_distributed, p2p_property_dir):
