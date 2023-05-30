@@ -70,7 +70,6 @@ pub struct QueryParams {
     pub labels: Vec<LabelId>,
     pub limit: Option<usize>,
     pub columns: Option<Vec<NameOrId>>,
-    pub partitions: Option<Vec<u32>>,
     pub filter: Option<Arc<PEvaluator>>,
     pub sample_ratio: Option<f64>,
     pub extra_params: Option<HashMap<String, String>>,
@@ -169,11 +168,7 @@ impl QueryParams {
     }
 
     pub fn is_queryable(&self) -> bool {
-        !(self.labels.is_empty()
-            && self.filter.is_none()
-            && self.limit.is_none()
-            && self.partitions.is_none()
-            && self.columns.is_none())
+        !(self.labels.is_empty() && self.filter.is_none() && self.limit.is_none() && self.columns.is_none())
     }
 
     pub fn get_extra_param(&self, key: &str) -> Option<&String> {

@@ -90,8 +90,7 @@ where
     fn scan_vertex(
         &self, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
-        let server_partitions = &self.server_partitions;
-        let worker_partitions = assign_worker_partitions(server_partitions);
+        let worker_partitions = assign_worker_partitions(&self.server_partitions);
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
             let si = params
@@ -187,8 +186,7 @@ where
     }
 
     fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
-        let server_partitions = &self.server_partitions;
-        let worker_partitions = assign_worker_partitions(server_partitions);
+        let worker_partitions = assign_worker_partitions(&self.server_partitions);
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
             let si = params
