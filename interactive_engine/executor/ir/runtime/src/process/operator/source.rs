@@ -19,7 +19,7 @@ use std::sync::Arc;
 
 use dyn_type::Object;
 use graph_proxy::apis::graph::PKV;
-use graph_proxy::apis::{get_graph, Edge, Partitioner, QueryParams, Vertex, ID};
+use graph_proxy::apis::{get_graph, Edge, QueryParams, Router, Vertex, ID};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::physical as pb;
@@ -59,9 +59,7 @@ impl Default for SourceOperator {
 }
 
 impl SourceOperator {
-    pub fn new(
-        op: pb::PhysicalOpr, job_workers: usize, partitioner: Arc<dyn Partitioner>,
-    ) -> FnGenResult<Self> {
+    pub fn new(op: pb::PhysicalOpr, job_workers: usize, partitioner: Arc<dyn Router>) -> FnGenResult<Self> {
         let op_kind = op.try_into()?;
         match op_kind {
             pb::physical_opr::operator::OpKind::Scan(mut scan) => {
@@ -81,13 +79,11 @@ impl SourceOperator {
                         // query by indexed_scan
                         let primary_key_values = <Vec<(NameOrId, Object)>>::try_from(ip2)?;
                         source_op.primary_key_values = Some(PKV::from(primary_key_values));
-                        source_op.set_partitions(partitioner)?;
                         debug!("Runtime source op of indexed scan {:?}", source_op);
                     }
                     Ok(source_op)
                 } else {
-                    let mut source_op = SourceOperator::try_from(scan)?;
-                    source_op.set_partitions(partitioner)?;
+                    let source_op = SourceOperator::try_from(scan)?;
                     debug!("Runtime source op of scan {:?}", source_op);
                     Ok(source_op)
                 }
@@ -99,11 +95,11 @@ impl SourceOperator {
 
     /// Assign source vertex ids for each worker to call get_vertex
     fn set_src(
-        &mut self, ids: Vec<ID>, job_workers: usize, partitioner: Arc<dyn Partitioner>,
+        &mut self, ids: Vec<ID>, job_workers: usize, partitioner: Arc<dyn Router>,
     ) -> ParsePbResult<()> {
         let mut partitions = HashMap::new();
         for id in ids {
-            match partitioner.get_partition(&id, job_workers) {
+            match partitioner.route(&id, job_workers) {
                 Ok(wid) => {
                     partitions
                         .entry(wid)
@@ -117,25 +113,6 @@ impl SourceOperator {
             }
         }
         self.src = Some(partitions);
-        Ok(())
-    }
-
-    /// Assign the partition_list for scan_vertex
-    fn set_partitions(&mut self, partitioner: Arc<dyn Partitioner>) -> ParsePbResult<()> {
-        let res = partitioner.get_local_partitions();
-        match res {
-            Ok(partition_list) => {
-                debug!("local partition list to scan: {:?}", partition_list);
-                self.query_params.partitions = Some(partition_list);
-            }
-            Err(err) => {
-                debug!("get partition list failed in graph_partition_manager in source op {:?}", err);
-                Err(ParsePbError::Unsupported(format!(
-                    "get partition list failed in graph_partition_manager in source op {:?}",
-                    err
-                )))?
-            }
-        }
         Ok(())
     }
 }

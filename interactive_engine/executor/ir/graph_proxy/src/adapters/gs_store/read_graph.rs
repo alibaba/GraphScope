@@ -54,6 +54,7 @@ where
 {
     store: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
     partition_manager: Arc<dyn GraphPartitionManager>,
+    server_partitions: Vec<PartitionId>,
     row_filter_pushdown: bool,
     column_filter_pushdown: bool,
 }
@@ -61,8 +62,8 @@ where
 #[allow(dead_code)]
 pub fn create_gs_store<V, VI, E, EI>(
     store: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
-    partition_manager: Arc<dyn GraphPartitionManager>, row_filter_push_down: bool,
-    column_filter_push_down: bool,
+    partition_manager: Arc<dyn GraphPartitionManager>, server_partitions: Vec<PartitionId>,
+    row_filter_push_down: bool, column_filter_push_down: bool,
 ) where
     V: StoreVertex + 'static,
     VI: Iterator<Item = V> + Send + 'static,
@@ -72,6 +73,7 @@ pub fn create_gs_store<V, VI, E, EI>(
     let graph = GraphScopeStore {
         store,
         partition_manager,
+        server_partitions,
         row_filter_pushdown: row_filter_push_down,
         column_filter_pushdown: column_filter_push_down,
     };
@@ -88,13 +90,8 @@ where
     fn scan_vertex(
         &self, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
-        let partitions = params
-            .partitions
-            .as_ref()
-            .ok_or(GraphProxyError::query_store_error(
-                "empty partitions in scan_vertex in GraphScopeStore",
-            ))?;
-        let worker_partitions = get_worker_partitions(partitions);
+        let server_partitions = &self.server_partitions;
+        let worker_partitions = assign_worker_partitions(server_partitions);
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
             let si = params
@@ -140,7 +137,7 @@ where
                     prop_ids.as_ref(),
                     // Zero limit means no limit. Same as follows.
                     0,
-                    // Each worker will scan the partitions pre-allocated in get_worker_partitions(). Same as follows.
+                    // Each worker will scan the partitions returned by assign_worker_partitions(). Same as follows.
                     worker_partitions.as_ref(),
                 )
                 .map(move |v| to_runtime_vertex(v, columns.clone()));
@@ -190,13 +187,8 @@ where
     }
 
     fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
-        let partitions = params
-            .partitions
-            .as_ref()
-            .ok_or(GraphProxyError::query_store_error(
-                "empty partitions in scan_edge in GraphScopeStore",
-            ))?;
-        let worker_partitions = get_worker_partitions(partitions);
+        let server_partitions = &self.server_partitions;
+        let worker_partitions = assign_worker_partitions(server_partitions);
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
             let si = params
@@ -718,7 +710,7 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
 /// Given all the partitions,
 /// return the partition_list that current worker is going to scan.
 #[inline]
-fn get_worker_partitions(query_partitions: &Vec<u32>) -> Vec<PartitionId> {
+fn assign_worker_partitions(query_partitions: &Vec<u32>) -> Vec<PartitionId> {
     let workers_num = pegasus::get_current_worker_checked()
         .map(|worker| worker.local_peers)
         .unwrap_or(1);

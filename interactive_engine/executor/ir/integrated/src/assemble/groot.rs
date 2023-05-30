@@ -53,6 +53,8 @@ where
         create_gs_store(
             self.graph_query.clone(),
             self.graph_partitioner.clone(),
+            self.graph_partitioner
+                .get_process_partition_list(),
             true,
             column_filter_push_down,
         );

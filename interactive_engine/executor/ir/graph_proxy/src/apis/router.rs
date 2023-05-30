@@ -16,10 +16,12 @@
 use crate::apis::ID;
 use crate::GraphProxyResult;
 
-pub trait Partitioner: Send + Sync + 'static {
-    /// Given the element id and job_workers (number of worker per server),
-    /// return the id of worker that is going to process
-    fn get_partition(&self, id: &ID, job_workers: usize) -> GraphProxyResult<u64>;
-    /// Get the local partition list that is going to be processed by current server.
-    fn get_local_partitions(&self) -> GraphProxyResult<Vec<u32>>;
+/// A router used to route the data to the destination worker.
+/// Specifically, given the graph element id to query,
+/// it firstly route the data to the server (aka. process) which is able to access the queried data from graph storage,
+/// and then pick a worker (aka. thread) in that server to do the query.
+pub trait Router: Send + Sync + 'static {
+    /// Given the element id and job_workers (number of workers per server),
+    /// return the worker id that is going to do the query.
+    fn route(&self, id: &ID, job_workers: usize) -> GraphProxyResult<u64>;
 }

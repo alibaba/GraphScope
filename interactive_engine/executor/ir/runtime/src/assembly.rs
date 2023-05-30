@@ -16,7 +16,7 @@
 use std::convert::TryInto;
 use std::sync::Arc;
 
-use graph_proxy::apis::Partitioner;
+use graph_proxy::apis::Router;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
@@ -64,25 +64,24 @@ pub struct IRJobAssembly {
 
 #[derive(Clone)]
 struct FnGenerator {
-    partitioner: Arc<dyn Partitioner>,
+    router: Arc<dyn Router>,
 }
 
 /// An UDF generator for physical operators,
 /// which generates the udf that can be executed by the engine.
 impl FnGenerator {
-    fn new(partitioner: Arc<dyn Partitioner>) -> Self {
-        FnGenerator { partitioner }
+    fn new(router: Arc<dyn Router>) -> Self {
+        FnGenerator { router }
     }
 
     fn gen_source(&self, opr: pb::PhysicalOpr) -> FnGenResult<DynIter<Record>> {
         let worker_id = pegasus::get_current_worker();
-        let source_opr =
-            SourceOperator::new(opr, worker_id.local_peers as usize, self.partitioner.clone())?;
+        let source_opr = SourceOperator::new(opr, worker_id.local_peers as usize, self.router.clone())?;
         Ok(source_opr.gen_source(worker_id.index as usize)?)
     }
 
     fn gen_shuffle(&self, res: &pb::repartition::Shuffle) -> FnGenResult<RecordShuffle> {
-        let p = self.partitioner.clone();
+        let p = self.router.clone();
         let num_workers = pegasus::get_current_worker().local_peers as usize;
         let record_router = RecordRouter::new(p, num_workers, res.shuffle_key)?;
         Ok(Box::new(record_router))
@@ -154,8 +153,8 @@ impl FnGenerator {
 }
 
 impl IRJobAssembly {
-    pub fn new<D: Partitioner>(partitioner: D) -> Self {
-        IRJobAssembly { udf_gen: FnGenerator::new(Arc::new(partitioner)) }
+    pub fn new<D: Router>(router: D) -> Self {
+        IRJobAssembly { udf_gen: FnGenerator::new(Arc::new(router)) }
     }
 
     fn install(

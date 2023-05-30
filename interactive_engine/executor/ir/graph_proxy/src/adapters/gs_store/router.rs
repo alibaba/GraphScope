@@ -19,7 +19,7 @@ use std::sync::Arc;
 use global_query::store_api::{PartitionId, VertexId};
 use global_query::GraphPartitionManager;
 
-use crate::apis::{Partitioner, ID};
+use crate::apis::{Router, ID};
 use crate::{GraphProxyError, GraphProxyResult};
 
 /// A partition utility that one server contains multiple graph partitions for Groot Store
@@ -34,9 +34,9 @@ impl GrootMultiPartition {
     }
 }
 
-impl Partitioner for GrootMultiPartition {
-    fn get_partition(&self, id: &ID, worker_num_per_server: usize) -> GraphProxyResult<u64> {
-        // The partitioning logics is as follows:
+impl Router for GrootMultiPartition {
+    fn route(&self, id: &ID, worker_num_per_server: usize) -> GraphProxyResult<u64> {
+        // The route logics is as follows:
         // 1. `partition_id = self.graph_partition_manager.get_partition_id(*id as VertexId)` routes a given id
         // to the partition that holds its data.
         // 2. `server_index = partition_id % self.num_servers as u64` routes the partition id to the
@@ -59,41 +59,28 @@ impl Partitioner for GrootMultiPartition {
         let worker_index = partition_id % worker_num_per_server;
         Ok(server_index * worker_num_per_server + worker_index as u64)
     }
-
-    fn get_local_partitions(&self) -> GraphProxyResult<Vec<u32>> {
-        Ok(self
-            .graph_partition_manager
-            .get_process_partition_list())
-    }
 }
 
 /// A partition utility that one server contains multiple graph partitions for Vineyard
-/// Starting gaia with vineyard will pre-allocate partitions for each worker to process,
-/// thus we use graph_partitioner together with partition_worker_mapping for data routing.
+/// Starting GIE with vineyard will pre-allocate partitions for each server to process,
+/// thus we use graph_partitioner together with partition_server_index_mapping for data routing.
 pub struct VineyardMultiPartition {
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
     // mapping of partition id -> server_index
     partition_server_index_mapping: HashMap<u32, u32>,
-    // computed partition ids after split fragments on same vineyard instance to multiple
-    // worker processes
-    computed_process_partition_list: Vec<u32>,
 }
 
 impl VineyardMultiPartition {
     pub fn new(
         graph_partition_manager: Arc<dyn GraphPartitionManager>,
-        partition_server_index_mapping: HashMap<u32, u32>, computed_process_partition_list: Vec<u32>,
+        partition_server_index_mapping: HashMap<u32, u32>,
     ) -> VineyardMultiPartition {
-        VineyardMultiPartition {
-            graph_partition_manager,
-            partition_server_index_mapping,
-            computed_process_partition_list,
-        }
+        VineyardMultiPartition { graph_partition_manager, partition_server_index_mapping }
     }
 }
 
-impl Partitioner for VineyardMultiPartition {
-    fn get_partition(&self, id: &ID, worker_num_per_server: usize) -> GraphProxyResult<u64> {
+impl Router for VineyardMultiPartition {
+    fn route(&self, id: &ID, worker_num_per_server: usize) -> GraphProxyResult<u64> {
         // The partitioning logics is as follows:
         // 1. `partition_id = self.graph_partition_manager.get_partition_id(*id as VertexId)` routes a given id
         // to the partition that holds its data.
@@ -116,9 +103,5 @@ impl Partitioner for VineyardMultiPartition {
             )))? as u64;
         let worker_index = partition_id as u64 % worker_num_per_server;
         Ok(server_index * worker_num_per_server + worker_index)
-    }
-
-    fn get_local_partitions(&self) -> GraphProxyResult<Vec<u32>> {
-        Ok(self.computed_process_partition_list.clone())
     }
 }

@@ -15,7 +15,7 @@
 
 use std::sync::Arc;
 
-use graph_proxy::apis::{GraphElement, Partitioner};
+use graph_proxy::apis::{GraphElement, Router};
 use ir_common::error::ParsePbError;
 use ir_common::KeyId;
 use pegasus::api::function::{FnResult, RouteFunction};
@@ -25,14 +25,14 @@ use crate::process::entry::{Entry, EntryType};
 use crate::process::record::Record;
 
 pub struct RecordRouter {
-    p: Arc<dyn Partitioner>,
+    p: Arc<dyn Router>,
     num_workers: usize,
     shuffle_key: Option<KeyId>,
 }
 
 impl RecordRouter {
     pub fn new(
-        p: Arc<dyn Partitioner>, num_workers: usize, shuffle_key: Option<KeyId>,
+        p: Arc<dyn Router>, num_workers: usize, shuffle_key: Option<KeyId>,
     ) -> Result<Self, ParsePbError> {
         if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime shuffle number of worker {:?} and shuffle key {:?}", num_workers, shuffle_key);
@@ -47,15 +47,13 @@ impl RouteFunction<Record> for RecordRouter {
             match entry.get_type() {
                 EntryType::Vertex => {
                     let id = entry.id();
-                    Ok(self.p.get_partition(&id, self.num_workers)?)
+                    Ok(self.p.route(&id, self.num_workers)?)
                 }
                 EntryType::Edge => {
                     let e = entry
                         .as_edge()
                         .ok_or(FnExecError::Unreachable)?;
-                    Ok(self
-                        .p
-                        .get_partition(&e.src_id, self.num_workers)?)
+                    Ok(self.p.route(&e.src_id, self.num_workers)?)
                 }
                 EntryType::Path => {
                     let p = entry
@@ -63,7 +61,7 @@ impl RouteFunction<Record> for RecordRouter {
                         .ok_or(FnExecError::Unreachable)?;
                     Ok(self
                         .p
-                        .get_partition(&p.get_path_end().id(), self.num_workers)?)
+                        .route(&p.get_path_end().id(), self.num_workers)?)
                 }
                 // TODO:
                 _ => Ok(0),

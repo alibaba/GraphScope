@@ -14,9 +14,9 @@
 //! limitations under the License.
 
 mod details;
-mod partitioner;
 mod read_graph;
+mod router;
 mod translation;
 
-pub use partitioner::{GrootMultiPartition, VineyardMultiPartition};
 pub use read_graph::create_gs_store;
+pub use router::{GrootMultiPartition, VineyardMultiPartition};

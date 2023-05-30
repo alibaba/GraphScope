@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::apis::{Partitioner, ID};
+use crate::apis::{Router, ID};
 use crate::GraphProxyResult;
 
 /// A simple partition utility that one server contains a single graph partition
@@ -21,23 +21,16 @@ pub struct SimplePartition {
     pub num_servers: usize,
 }
 
-impl Partitioner for SimplePartition {
-    fn get_partition(&self, id: &ID, workers: usize) -> GraphProxyResult<u64> {
+impl Router for SimplePartition {
+    fn route(&self, id: &ID, workers: usize) -> GraphProxyResult<u64> {
         let id_usize = *id as usize;
         let magic_num = id_usize / self.num_servers;
-        // The partitioning logics is as follows:
+        // The route logics is as follows:
         // 1. `R = id - magic_num * num_servers = id % num_servers` routes a given id
         // to the machine R that holds its data.
         // 2. `R * workers` shifts the worker's id in the machine R.
         // 3. `magic_num % workers` then picks up one of the workers in the machine R
         // to do the computation.
         Ok(((id_usize - magic_num * self.num_servers) * workers + magic_num % workers) as u64)
-    }
-
-    fn get_local_partitions(&self) -> GraphProxyResult<Vec<u32>> {
-        // In graph that one server contains a single graph partition,
-        // there's no need to assign the specific partition id for query,
-        // as all workers will scan part of current partition.
-        Ok(vec![])
     }
 }
