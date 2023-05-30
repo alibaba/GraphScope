@@ -197,9 +197,6 @@ public class MaxNode extends NodeBase {
 
     public static void main(String[] args) throws Exception {
         String configFile = System.getProperty("config.file");
-        configFile =
-                "/Users/siyuan/CLionProjects/graphscope/interactive_engine/assembly/src/conf/groot/config.template";
-
         Configs conf = new Configs(configFile);
         conf = Configs.newBuilder(conf).put(CommonConfig.ENGINE_TYPE.getKey(), "gaia").build();
         MaxNode maxNode = new MaxNode(conf);
