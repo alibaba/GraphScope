@@ -62,6 +62,10 @@
         <module>data-load-tool</module>
         <module>sdk</module>
         <module>sdk-common</module>
+        <module>groot-module</module>
+        <module>groot-server</module>
+        <module>executor/engine/pegasus/clients/java/client</module>
+        <module>compiler</module>
       </modules>
     </profile>
   </profiles>
@@ -81,8 +85,8 @@
     <log4j2.version>2.19.0</log4j2.version>
     <logback.version>1.2.3</logback.version>
     <groovy.version>2.5.14</groovy.version>
-    <kafka.version>3.3.1</kafka.version>
-    <kafka.junit.version>2.7.2</kafka.junit.version>
+    <kafka.version>2.7.2</kafka.version>
+    <kafka.junit.version>3.2.1</kafka.junit.version>
     <zookeeper.version>3.6.3</zookeeper.version>
     <curator.version>5.4.0</curator.version>
     <jackson.version>2.14.1</jackson.version>

@@ -34,6 +34,7 @@ import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.servers.AbstractService;
 import com.alibaba.graphscope.groot.servers.ComputeServiceProducer;
 import com.alibaba.graphscope.groot.store.StoreService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,8 +67,7 @@ public class IrServiceProducer implements ComputeServiceProducer {
                 new FrontendQueryManager(irMetaFetcher, frontendId, updateCommitter);
 
         return new AbstractService() {
-            private IrGremlinServer irGremlinServer =
-                    new IrGremlinServer(port);
+            private IrGremlinServer irGremlinServer = new IrGremlinServer(port);
 
             @Override
             public void start() {
