@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class StoreDataBatch {
     private String requestId;
@@ -96,15 +95,12 @@ public class StoreDataBatch {
         if (this.size == -1) {
             this.size =
                     this.dataBatch.stream()
-                            .collect(
-                                    Collectors.summingInt(
-                                            partitionToBatch ->
-                                                    partitionToBatch.values().stream()
-                                                            .collect(
-                                                                    Collectors.summingInt(
-                                                                            batch ->
-                                                                                    batch
-                                                                                            .getOperationCount()))));
+                            .mapToInt(
+                                    partitionToBatch ->
+                                            partitionToBatch.values().stream()
+                                                    .mapToInt(OperationBatch::getOperationCount)
+                                                    .sum())
+                            .sum();
         }
         return this.size;
     }

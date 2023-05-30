@@ -104,6 +104,7 @@ public class PkHashUtilsTest {
                                 + "], interval_speed ["
                                 + (int) (1000000000.0 * interval / cost)
                                 + "]");
+                break;
             }
         }
     }

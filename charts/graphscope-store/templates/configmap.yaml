@@ -124,5 +124,5 @@ data:
 
     export LOG_NAME=graphscope-store
     export GROOT_CONF_FILE=/etc/groot/groot.config
-    ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start_server ${ROLE}
+    ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start ${ROLE}
 {{- end -}}

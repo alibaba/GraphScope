@@ -12,7 +12,7 @@ sed -e "s@LOG4RS_CONFIG@${groot_dir}/conf/log4rs.yml@g" \
     -e "s@backup.enable=false@backup.enable=true@g" \
     -e "s@log.recycle.enable=true@log.recycle.enable=false@g" \
     conf/config.template > /tmp/max_node_backup_test.config
-LOG_NAME=maxnode GROOT_CONF_FILE=/tmp/max_node_backup_test.config ./bin/store_ctl.sh start_max_node &
+LOG_NAME=maxnode GROOT_CONF_FILE=/tmp/max_node_backup_test.config ./bin/store_ctl.sh start &
 sleep 30
 # load data
 cd ${base_dir} && mvn clean -Dtest=com.alibaba.graphscope.groot.sdk.ClientBackupTest test
