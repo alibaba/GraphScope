@@ -45,6 +45,7 @@
       <modules>
         <module>assembly</module>
         <module>common</module>
+        <module>data-load-tool</module>
         <module>executor</module>
         <module>groot-module</module>
         <module>groot-server</module>

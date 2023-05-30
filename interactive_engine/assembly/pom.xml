@@ -80,6 +80,11 @@
           <artifactId>c-end-lgraph</artifactId>
           <version>${project.version}</version>
         </dependency>
+        <dependency>
+          <groupId>com.alibaba.graphscope</groupId>
+          <artifactId>data-load-tool</artifactId>
+          <version>${project.version}</version>
+        </dependency>
       </dependencies>
     </profile>
   </profiles>

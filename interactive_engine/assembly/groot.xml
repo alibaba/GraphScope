@@ -57,6 +57,9 @@
         <dependencySet>
             <scope>runtime</scope>
             <outputDirectory>lib</outputDirectory>
+            <excludes>
+                <exclude>com.alibaba.graphscope:data-load-tool</exclude>
+            </excludes>
         </dependencySet>
         <dependencySet>
             <scope>test</scope>

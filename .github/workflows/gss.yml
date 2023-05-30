@@ -92,7 +92,7 @@ jobs:
         export SCCACHE_DIR=~/.cache/sccache
         export RUSTC_WRAPPER=/usr/local/bin/sccache
         cd ${GITHUB_WORKSPACE}/interactive_engine
-        mvn clean install -P groot,groot-data-load -Drust.compile.mode=debug -DskipTests --quiet
+        mvn clean install -P groot -Drust.compile.mode=debug -DskipTests --quiet
 
         sccache --show-stats
 
