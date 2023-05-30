@@ -12,7 +12,7 @@ docker run --name dev -it --shm-size=4096m registry.cn-hongkong.aliyuncs.com/gra
 
 Please refer to [Dev Environment](../development/dev_guide.md#dev-environment) to find more options to get a dev environment.
 
-## Build GIE with Vineyard Store on a Local Machine
+## Build GIE with Vineyard Store on Local
 In [GIE standalone deployment](./deployment.md), we have instructed on how to deploy GIE in a Kubenetes cluster with Vineyard store. Here, we show how to develop and test GIE with vineyard store on a local machine.
 
 Clone the ``graphscope'' repo if you do not have it.
@@ -27,7 +27,7 @@ Now you are ready to build the GIE engine (on vineyard store) with the following
 ```
 You can find the built artifacts in `interactive_engine/assembly/target/graphscope`.
 
-## Test GIE with Vineyard Store on a Local Machine
+## Test GIE with Vineyard Store on Local
 You could test the GIE engine on vineyard store with the following command:
 ```bash
 ./gs test interactive --local --storage-type=vineyard
@@ -40,14 +40,15 @@ This will run end2end tests, from compiling a gremlin queries to obtaining and v
   - [LDBC test](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/gremlin/integration/suite/ldbc): We further test GIE against the LDBC complex workloads on the LDBC social network with the scale factor (sf) 1.
    Please refer to the [tutorial](./tutorial_ldbc_gremlin.md) for more information.
 
-## Manually Starting the GIE Services
+## Manually Start the GIE Services
 A minimum set of GIE services includes a `frontend` to send Gremlin queries, and an `executor` (with vineyard) to execute those queries. The subsequent instructions outline the process of individually starting the `frontend` and `executor` to facilitate a more in-depth exploration of the engine.
 
 1. First, make sure that a vineyard service is already running and a graph has been successfully loaded. Once the graph is successfully loaded into vineyard, you will obtain an `<v6d_object_id>`
 for accessing the graph data.
 
-In case that you have no idea of how to start a vineyard store, we instruct you to
-start a vineyard store that has manages a [modern graph](https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/).
+````{hint}
+If you are unsure about how to initiate a vineyard store, the subsequent instructions can assist you in creating a
+vineyard store with a [modern graph](https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/).
 
 ```bash
 export VINEYARD_IPC_SOCKET=/tmp/vineyard.sock
@@ -56,6 +57,7 @@ vineyardd --socket=${VINEYARD_IPC_SOCKET} --meta=local &
 export STORE_DATA_PATH=charts/gie-standalone/data  # relative to graphscope repo
 vineyard-graph-loader --config charts/gie-standalone/config/v6d_modern_loader.json
 ```
+````
 
 2. Set the `GIE_TEST_HOME` environment variable:
 ```bash
@@ -125,8 +127,7 @@ java -cp ".:$GIE_TEST_HOME/lib/*" -Djna.library.path=$GIE_TEST_HOME/lib com.alib
 With the frontend service, you can open the gremlin console and set the endpoint to
 `localhost:8182`, as given [here](./deployment.md#deploy-your-first-gie-service).
 
-7. Stop all services:
-You can manually kill the processes of `vineyardd`, `gaia_executor` and `frontend` by:
+7. Kill the services of `vineyardd`, `gaia_executor` and `frontend`:
 ```
 pkill -f vineyardd
 pkill -f gaia_executor
