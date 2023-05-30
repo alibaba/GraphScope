@@ -105,8 +105,10 @@ jobs:
     - name: Upload tools for helm test to Artifact
       uses: actions/upload-artifact@v3
       with:
-        name: groot.tar.gz
-        path: interactive_engine/assembly/target/groot.tar.gz
+        name: groot
+        path: |
+          interactive_engine/assembly/target/groot.tar.gz
+          interactive_engine/data-load-tool/target/data-load-tool-0.0.1-SNAPSHOT.jar
         retention-days: 5
 
   helm-test:
@@ -130,7 +132,7 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: groot.tar.gz
+        name: groot
         path: artifacts
 
     - name: Set GITHUB_ENV
@@ -140,6 +142,9 @@ jobs:
 
     - name: Prepare Image
       run: |
+        ls -la artifacts/*/*
+        mv artifacts/assembly/target/groot.tar.gz artifacts/
+        mv artifacts/data-load-tool/target/data-load-tool-0.0.1-SNAPSHOT.jar artifacts/
         docker build -t ${{ env.GSS_IMAGE }}:${SHORT_SHA} \
                 -f .github/workflows/docker/graphscope-store.Dockerfile .
 
@@ -170,10 +175,6 @@ jobs:
 
     - name: Create the kubernetes cluster
       run: |
-        # groot.tar.gz is needed for offline_load.sh
-        # see .github/workflows/hadoop_scripts/offline_load.sh.template
-        pushd artifacts
-        tar -zxf ./groot.tar.gz
         # download gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
@@ -234,9 +235,10 @@ jobs:
         ./prepare_hadoop.sh /tmp/hadoop-2.10.1
         export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
 
-        REPLACE_STR=${GITHUB_WORKSPACE}/artifacts/groot
-        sed s/GROOT_HOME/${REPLACE_STR//\//\\/}/ offline_load.sh.template > offline_load.sh
-        chmod +x offline_load.sh
+        # data-load-tool is needed for offline_load.sh
+        # see .github/workflows/hadoop_scripts/offline_load.sh
+
+        export LOADER_DIR=${GITHUB_WORKSPACE}/artifacts
         export LOAD_DATA_SCRIPT=${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts/offline_load.sh
         sed s/GRAPH_ENDPOINT/$NODE_IP:$GRPC_PORT/ databuild.config.template > databuild.config
 

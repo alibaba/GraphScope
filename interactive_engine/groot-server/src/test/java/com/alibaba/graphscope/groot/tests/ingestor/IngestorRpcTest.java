@@ -124,6 +124,6 @@ public class IngestorRpcTest {
                 .writeStore(any(), any());
         client.writeStore(
                 Arrays.asList(StoreDataBatch.newBuilder().requestId("test_req").build()), callback);
-        verify(callback).onCompleted(10);
+        verify(callback).onCompleted(12);
     }
 }
