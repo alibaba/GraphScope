@@ -104,8 +104,9 @@ gs_make_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "--experimental"
-    printf "    make install experimental components\n"
+    printf "  %s\n" "--storage-type STORAGE_TYPE"
+    printf "    make gie with specified storage type\n"
+    printf "    Default: default\n"
     echo
 
     # :command.usage_fixed_flags
@@ -266,6 +267,12 @@ gs_test_usage() {
     # :flag.usage
     printf "  %s\n" "--local"
     printf "    Run local tests\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "--storage-type STORAGE_TYPE"
+    printf "    test gie with specified storage type\n"
+    printf "    Default: default\n"
     echo
 
     # :flag.usage
@@ -1136,7 +1143,7 @@ gs_make_command() {
   log "Making component ${component}"
 
   install_prefix=${args[--install-prefix]}
-  experimental_flag=${args[--experimental]}
+  storage_type=${args[--storage-type]}
 
   GS_SOURCE_DIR="$(dirname -- "$(readlink -f "${BASH_SOURCE}")")"
 
@@ -1155,8 +1162,11 @@ gs_make_command() {
   }
 
   make_interactive() {
-      if [[ -n ${experimental_flag} ]]; then
+      if [[ ${storage_type} = "experimental" ]]; then
           cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && make build QUIET_OPT=""
+      elif [[ ${storage_type} = "vineyard" ]]; then
+          cd "${GS_SOURCE_DIR}"/interactive_engine && mvn install -DskipTests -Drust.compile.mode=release -P graphscope,graphscope-assembly
+          cd "${GS_SOURCE_DIR}"/interactive_engine/assembly/target && tar xvzf graphscope.tar.gz
       else
           make interactive
       fi
@@ -1306,6 +1316,7 @@ gs_test_command() {
 
   testdata=${args[--testdata]}
   on_local=${args[--local]}
+  storage_type=${args[--storage-type]}
   on_k8s=${args[--k8s]}
   nx=${args[--nx]}
   export GS_TEST_DIR=${testdata}
@@ -1349,18 +1360,52 @@ gs_test_command() {
   function test_interactive {
   	get_test_data
   	if [[ -n ${on_local} ]]; then
-  		info "Testing interactive on local"
-  		# IR unit test
-  		cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && make test
-  		# CommonType Unit Test
-  		cd "${GS_SOURCE_DIR}"/interactive_engine/executor/common/dyn_type && cargo test
-  		# Store Unit test
-  		cd "${GS_SOURCE_DIR}"/interactive_engine/executor/store/exp_store && cargo test
-
-  		# IR integration test
-  		cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_exprimental_ci.sh
-  		# IR integration pattern test
-  		cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_exprimental_pattern_ci.sh
+  		if [[ ${storage_type} = "experimental" ]]; then
+  			info "Testing interactive on local with experimental storage"
+  			# IR unit test
+  			cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && make test
+  			# CommonType Unit Test
+  			cd "${GS_SOURCE_DIR}"/interactive_engine/executor/common/dyn_type && cargo test
+  			# Store Unit test
+  			cd "${GS_SOURCE_DIR}"/interactive_engine/executor/store/exp_store && cargo test
+  			# IR integration test
+  			cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_exprimental_ci.sh
+  			# IR integration pattern test
+  			cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_exprimental_pattern_ci.sh
+  		elif [[ ${storage_type} = "vineyard" ]]; then
+  			info "Testing interactive on local with vineyard storage"
+  			# start vineyard service
+  			export VINEYARD_IPC_SOCKET=/tmp/vineyard.sock
+  			vineyardd --socket=${VINEYARD_IPC_SOCKET} --meta=local &
+  			# load modern graph
+  			export STORE_DATA_PATH="${GS_SOURCE_DIR}"/charts/gie-standalone/data
+  			vineyard-graph-loader --config "${GS_SOURCE_DIR}"/charts/gie-standalone/config/v6d_modern_loader.json
+  			# start gie executor && frontend
+  			export GRAPHSCOPE_HOME="${GS_SOURCE_DIR}"/interactive_engine/assembly/target/graphscope
+  			schema_json=$(ls /tmp/*.json | head -1)
+  			object_id=${schema_json//[^0-9]/}
+  			GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} ${GRAPHSCOPE_HOME}/bin/giectl create_gremlin_instance_on_local /tmp/gs/${object_id} ${object_id} ${schema_json} 1 1235 1234 8182 ${VINEYARD_IPC_SOCKET}
+  			# IR integration test
+  			sleep 3s
+  			cd "${GS_SOURCE_DIR}"/interactive_engine/compiler
+  			make gremlin_test || true
+  			# clean
+  			rm -rf /tmp/*.json
+  			id=$(pgrep -f 'gaia_executor')
+  			if [[ -n ${id} ]]; then
+  				echo ${id} | xargs kill
+  			fi
+  			id=$(pgrep -f 'frontend')
+  			if [[ -n ${id} ]]; then
+  				echo ${id} | xargs kill
+  			fi
+  			id=$(pgrep -f 'vineyardd')
+  			if [[ -n ${id} ]]; then
+  				echo ${id} | xargs kill -9
+  			fi
+  		else
+  			info "Testing interactive on local with default storage"
+  		fi
   	fi
   	if [[ -n ${on_k8s} ]]; then
   		info "Testing interactive on k8s"
@@ -2025,11 +2070,18 @@ gs_make_parse_requirements() {
         ;;
 
       # :flag.case
-      --experimental)
+      --storage-type)
 
-        # :flag.case_no_arg
-        args['--experimental']=1
-        shift
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--storage-type']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--storage-type requires an argument: --storage-type STORAGE_TYPE" >&2
+          exit 1
+        fi
         ;;
 
       -?*)
@@ -2057,6 +2109,7 @@ gs_make_parse_requirements() {
   # :command.default_assignments
   [[ -n ${args['component']:-} ]] || args['component']="all"
   [[ -n ${args['--install-prefix']:-} ]] || args['--install-prefix']="/opt/graphscope"
+  [[ -n ${args['--storage-type']:-} ]] || args['--storage-type']="default"
 
   # :command.whitelist_filter
   if [[ -n ${args['component']} ]] && [[ ! ${args['component']} =~ ^(all|install|analytical|analytical-java|interactive|learning|analytical-install|analytical-java-install|interactive-install|learning-install|client|coordinator|clean)$ ]]; then
@@ -2269,6 +2322,21 @@ gs_test_parse_requirements() {
         ;;
 
       # :flag.case
+      --storage-type)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--storage-type']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--storage-type requires an argument: --storage-type STORAGE_TYPE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --k8s)
 
         # :flag.case_no_arg
@@ -2322,6 +2390,7 @@ gs_test_parse_requirements() {
   done
 
   # :command.default_assignments
+  [[ -n ${args['--storage-type']:-} ]] || args['--storage-type']="default"
   [[ -n ${args['--testdata']:-} ]] || args['--testdata']="/tmp/gstest"
 
   # :command.whitelist_filter
