@@ -36,6 +36,7 @@ import warnings
 try:
     from kubernetes import client as kube_client
     from kubernetes import config as kube_config
+    import vineyard
 except ImportError:
     kube_client = None
     kube_config = None
@@ -585,6 +586,10 @@ class Session(object):
             "show_log",
             "log_level",
         )
+        
+        # the mapping table from old vineyard object id to new vineyard object id
+        self._vineyard_object_mapping_table = {}
+        
         saved_locals = locals()
         for param in self._accessable_params:
             self._config_params[param] = saved_locals[param]
@@ -1103,6 +1108,66 @@ class Session(object):
         """Get configuration of the session."""
         return self._config_params
 
+    def backup_vineyard_depployment(self, graphIDs: str, path: str, pvc_name: str):
+        if self._cluster_type != types_pb2.K8S:
+            return
+        # check if session exist
+        if self.session_id is None:
+            return
+        vineyard_deployment_name = self._config_params["k8s_vineyard_deployment"]
+        vineyard_deployment_namespace = self._config_params["k8s_namespace"]
+        # The next function will create a kubernetes job for backuping
+        # the specific graphIDs to the specific path of the specific pvc
+        # if the graphIDs is None, it will backup all the graphs stored
+        # in the vineyard deployment
+        vineyard.deploy.vineyardctl.deploy.backup_job(
+            kubeconfig = self._config_params["k8s_client_config"],
+            backup_name = "vineyard-backup",
+            vineyard_deployment_name = vineyard_deployment_name,
+            vineyard_deployment_namespace = vineyard_deployment_namespace,
+            path = path,
+            objectIDs = graphIDs,
+            pvc_name = pvc_name,
+        )
+    
+    def recover_vineyard_deployment(self, path: str, pvc_name: str):
+        if self._cluster_type != types_pb2.K8S:
+            return
+        # check if session exist
+        if self.session_id is None:
+            return
+        vineyard_deployment_name = self._config_params["k8s_vineyard_deployment"]
+        vineyard_deployment_namespace = self._config_params["k8s_namespace"]
+        vineyard.deploy.vineyardctl.deploy.recover_job(
+            kubeconfig = self._config_params["k8s_client_config"],
+            backup_name = "vineyard-recover",
+            vineyard_deployment_name = vineyard_deployment_name,
+            vineyard_deployment_namespace = vineyard_deployment_namespace,
+            recover_path = path,
+            pvc_name = pvc_name,
+        )
+        try:
+            api_client = resolve_api_client(
+                self._config_params["k8s_client_config"]
+            )
+        except kube_config.ConfigException as e:
+            raise RuntimeError(
+                "Kubernetes environment not found, you may want to"
+                ' launch session locally with param cluster_type="hosts"'
+            ) from e
+        _core_api = kube_client.CoreV1Api(api_client)
+        config_map = _core_api.read_namespaced_config_map(
+            name="vineyard-recover" + "-mapping-table",
+            namespace=vineyard_deployment_namespace,
+        )
+
+        # parse configmap data to the self._vineyard_object_mapping_table
+        for key in config_map.data:
+            self._vineyard_object_mapping_table[key] = config_map.data[key]
+
+    def get_vineyard_object_mapping_table(self):
+        return self._vineyard_object_mapping_table
+
     def g(
         self,
         incoming_data=None,
@@ -1113,6 +1178,8 @@ class Session(object):
         vertex_map="global",
         compact_edges=False,
     ):
+        if isinstance(incoming_data, vineyard.ObjectID) and self._vineyard_object_mapping_table[str(incoming_data)] is not None:
+            incoming_data = vineyard.ObjectID(self._vineyard_object_mapping_table[str(incoming_data)])
         return self._wrapper(
             GraphDAGNode(
                 self,
