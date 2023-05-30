@@ -40,12 +40,12 @@
       <id>groot</id>
       <properties>
         <rust.compile.target>groot</rust.compile.target>
+        <scala.version>2.13.9</scala.version>
       </properties>
       <modules>
         <module>assembly</module>
         <module>common</module>
         <module>executor</module>
-        <module>data-load-tool</module>
         <module>groot-module</module>
         <module>groot-server</module>
         <module>lgraph</module>
@@ -57,15 +57,14 @@
     </profile>
     <profile>
       <id>groot-data-load</id>
+      <properties>
+        <scala.version>2.12.10</scala.version>
+      </properties>
       <modules>
         <module>common</module>
         <module>data-load-tool</module>
         <module>sdk</module>
         <module>sdk-common</module>
-        <module>groot-module</module>
-        <module>groot-server</module>
-        <module>executor/engine/pegasus/clients/java/client</module>
-        <module>compiler</module>
       </modules>
     </profile>
   </profiles>
