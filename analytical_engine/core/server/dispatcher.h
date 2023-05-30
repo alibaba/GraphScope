@@ -176,8 +176,8 @@ class Dispatcher {
   bool running_;
   grape::CommSpec comm_spec_;
   std::shared_ptr<Subscriber> subscriber_;
-  vineyard::BlockingQueue<std::shared_ptr<CommandDetail>> cmd_queue_;
-  vineyard::BlockingQueue<std::vector<DispatchResult>> result_queue_;
+  vineyard::PCBlockingQueue<std::shared_ptr<CommandDetail>> cmd_queue_;
+  vineyard::PCBlockingQueue<std::vector<DispatchResult>> result_queue_;
 };
 
 }  // namespace gs
