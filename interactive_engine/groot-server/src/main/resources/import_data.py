@@ -24,9 +24,9 @@ from graphscope.framework.record import EdgeRecordKey, VertexRecordKey
 from gremlin_python.driver.client import Client
 
 
-node_ip = os.environ["NODE_IP"]
-grpc_port = os.environ["GRPC_PORT"]
-gremlin_port = os.environ["GREMLIN_PORT"]
+node_ip = os.environ.get("NODE_IP", "127.0.0.1")
+grpc_port = os.environ.get("GRPC_PORT", "55556")
+gremlin_port = os.environ.get("GREMLIN_PORT", "12312")
 grpc_endpoint = f"{node_ip}:{grpc_port}"
 gremlin_endpoint = f"{node_ip}:{gremlin_port}"
 
@@ -55,7 +55,7 @@ def create_modern_graph_schema(graph):
         "name", "str"
     ).add_property("age", "int")
     schema.add_vertex_label("software").add_primary_key("id", "long").add_property(
-        "name"
+        "name", "str"
     ).add_property("lang", "str")
     schema.add_edge_label("knows").source("person").destination("person").add_property(
         "edge_id", "long"
@@ -118,7 +118,7 @@ def load_data_of_modern_graph(conn, graph, prefix):
             for e in knows.itertuples(index=False)
         ]
     )
-    edges.append(
+    edges.extend(
         [
             [
                 EdgeRecordKey(
@@ -220,5 +220,5 @@ if __name__ == "__main__":
     client = get_client()
     conn = get_conn()
     graph = conn.g()
-    # create_modern_graph(conn, graph, client)
-    create_crew_graph(conn, graph, client)
+    create_modern_graph(conn, graph, client)
+    # create_crew_graph(conn, graph, client)
