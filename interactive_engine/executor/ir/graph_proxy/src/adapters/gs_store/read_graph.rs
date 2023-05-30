@@ -31,7 +31,6 @@ use ir_common::{KeyId, LabelId, NameOrId, OneOrMany};
 
 use crate::adapters::gs_store::details::{LazyEdgeDetails, LazyVertexDetails};
 use crate::apis::graph::PKV;
-use crate::apis::partitioner::QueryPartitions;
 use crate::apis::{
     from_fn, register_graph, Direction, DynDetails, Edge, QueryParams, ReadGraph, Statement, Vertex, ID,
 };
@@ -92,9 +91,9 @@ where
         let partitions = params
             .partitions
             .as_ref()
-            .ok_or(Err(GraphProxyError::query_store_error(
+            .ok_or(GraphProxyError::query_store_error(
                 "empty partitions in scan_vertex in GraphScopeStore",
-            )))?;
+            ))?;
         let worker_partitions = get_worker_partitions(partitions);
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
@@ -194,9 +193,9 @@ where
         let partitions = params
             .partitions
             .as_ref()
-            .ok_or(Err(GraphProxyError::query_store_error(
+            .ok_or(GraphProxyError::query_store_error(
                 "empty partitions in scan_edge in GraphScopeStore",
-            )))?;
+            ))?;
         let worker_partitions = get_worker_partitions(partitions);
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
@@ -729,7 +728,7 @@ fn get_worker_partitions(query_partitions: &Vec<u32>) -> Vec<PartitionId> {
     let mut worker_partition_list = vec![];
     for pid in query_partitions {
         if *pid % workers_num == worker_idx {
-            worker_partition_list.push(pid as PartitionId)
+            worker_partition_list.push(*pid as PartitionId)
         }
     }
     debug!(

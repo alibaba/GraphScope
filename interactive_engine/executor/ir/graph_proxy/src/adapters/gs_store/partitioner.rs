@@ -19,7 +19,6 @@ use std::sync::Arc;
 use global_query::store_api::{PartitionId, VertexId};
 use global_query::GraphPartitionManager;
 
-use crate::apis::partitioner::QueryPartitions;
 use crate::apis::{Partitioner, ID};
 use crate::{GraphProxyError, GraphProxyResult};
 
