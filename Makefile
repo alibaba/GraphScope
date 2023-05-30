@@ -72,7 +72,7 @@ clean:
 client: learning
 	cd $(CLIENT_DIR) && \
 	python3 -m pip install -r requirements.txt -r requirements-dev.txt --user && \
-	export PATH=$(PATH):$(HOME)/.local/bin
+	export PATH=$(PATH):$(HOME)/.local/bin && \
 	python3 setup.py build_ext --inplace --user
 	if [[ "${ARCH}" == "aarch64" ]]; then \
 		python3 setup.py bdist_wheel; \
