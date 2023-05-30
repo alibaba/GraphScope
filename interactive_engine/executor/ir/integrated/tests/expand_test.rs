@@ -46,7 +46,7 @@ mod test {
         create_exp_store();
         let source_opr_pb = pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None };
         let source =
-            SourceOperator::new(source_opr_pb.into(), 1, 1, Arc::new(SimplePartition { num_servers: 1 }))
+            SourceOperator::new(source_opr_pb.into(), 1, Arc::new(SimplePartition { num_servers: 1 }))
                 .unwrap();
         source.gen_source(0).unwrap()
     }
@@ -54,7 +54,7 @@ mod test {
     fn source_gen_with_scan_opr(scan_opr_pb: pb::Scan) -> Box<dyn Iterator<Item = Record> + Send> {
         create_exp_store();
         let source =
-            SourceOperator::new(scan_opr_pb.into(), 1, 1, Arc::new(SimplePartition { num_servers: 1 }))
+            SourceOperator::new(scan_opr_pb.into(), 1, Arc::new(SimplePartition { num_servers: 1 }))
                 .unwrap();
         source.gen_source(0).unwrap()
     }

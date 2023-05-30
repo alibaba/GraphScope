@@ -43,7 +43,7 @@ mod test {
         create_exp_store();
         let scan_opr_pb = pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None };
         let source =
-            SourceOperator::new(scan_opr_pb.into(), 1, 1, Arc::new(SimplePartition { num_servers: 1 }))
+            SourceOperator::new(scan_opr_pb.into(), 1, Arc::new(SimplePartition { num_servers: 1 }))
                 .unwrap();
         source.gen_source(0).unwrap()
     }
