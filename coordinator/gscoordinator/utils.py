@@ -353,18 +353,18 @@ def _compile_on_kubernetes(commands, workdir, output_name, pod, container):
             test_cmd = f"test -f {lib_path}"
             logger.debug(delegate_command_to_pod(test_cmd, pod, container))
             logger.info("Library exists, skip compilation")
-            logger.debug(run_kube_cp_command(pod, lib_path, lib_path, container, False))
+            logger.debug(run_kube_cp_command(lib_path, lib_path, pod, container, False))
             return lib_path
         except RuntimeError:
             pass
         parent_dir = os.path.dirname(workdir)
         mkdir = f"mkdir -p {parent_dir}"
         logger.debug(delegate_command_to_pod(mkdir, pod, container))
-        logger.debug(run_kube_cp_command(pod, workdir, workdir, container, True))
+        logger.debug(run_kube_cp_command(workdir, workdir, pod, container, True))
         for command in commands:
             command = f"cd {workdir} && {command}"
             logger.debug(delegate_command_to_pod(command, pod, container))
-        logger.debug(run_kube_cp_command(pod, lib_path, lib_path, container, False))
+        logger.debug(run_kube_cp_command(lib_path, lib_path, pod, container, False))
         if not os.path.isfile(lib_path):
             logger.error("Could not find desired library, found files are:")
             logger.error(os.listdir(workdir))

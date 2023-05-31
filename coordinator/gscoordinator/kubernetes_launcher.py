@@ -335,7 +335,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             except RuntimeError:
                 cmd = f"mkdir -p {os.path.dirname(path)}"
                 logger.debug(delegate_command_to_pod(cmd, pod, container))
-                logger.debug(run_kube_cp_command(pod, path, path, container, True))
+                logger.debug(run_kube_cp_command(path, path, pod, container, True))
 
     def close_analytical_instance(self):
         pass
@@ -841,7 +841,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         container = self._engine_cluster.analytical_container_name
         for pod in self._pod_name_list:
             logger.debug(
-                run_kube_cp_command(pod, hosts, "/tmp/hosts_of_nodes", container, True)
+                run_kube_cp_command(hosts, "/tmp/hosts_of_nodes", pod, container, True)
             )
 
         # launch engine
