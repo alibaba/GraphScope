@@ -76,53 +76,8 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
    ```
    You should see the GIE Frontend service endpoint as `<ip>:<gremlinPort>`.
 
-- Connect to the GIE frontend service using the official Python SDK or Gremlin console.
-  - From Python SDK.
-   ```Python
-   import sys
-   from gremlin_python import statics
-   from gremlin_python.structure.graph import Graph
-   from gremlin_python.process.graph_traversal import __
-   from gremlin_python.process.strategies import *
-   from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
-
-   graph = Graph()
-   gremlin_endpoint = # the endpoint you've obtained from step 6.
-   remoteConn = DriverRemoteConnection('ws://' + gremlin_endpoint + '/gremlin','g')
-   g = graph.traversal().withRemote(remoteConn)
-
-   res = g.V().count().next()
-   assert res == 6
-   ```
-
-  - From Gremlin Console.
-
-   Download Gremlin console and unpack to your local directory.
-   ```bash
-   # if the given version (3.6.4) is not found, try to access https://dlcdn.apache.org to
-   # download an available version.
-   curl -LO https://dlcdn.apache.org/tinkerpop/3.6.4/apache-tinkerpop-gremlin-console-3.6.4-bin.zip && \
-   unzip apache-tinkerpop-gremlin-console-3.6.4-bin.zip && \
-   cd apache-tinkerpop-gremlin-console-3.6.4
-   ```
-
-   Modify the `hosts` and `port` in `conf/remote.yaml` to the GIE Frontend Service endpoint.
-   Then open the Gremlin console
-   ```bash
-   chmod +x bin/gremlin.sh
-   bin/gremlin.sh
-   ```
-
-   Type in the following:
-   ```bash
-   gremlin> :remote connect tinkerpop.server conf/remote.yaml
-   gremlin> :remote console
-   gremlin> g.V().count()
-   ==> 6
-   gremlin>
-   ```
-
-   You are now ready to submit any Gremlin queries via either the Python SDK or Gremlin console.
+- Connect to the GIE frontend service using the Tinkerpop's official SDKs or Gremlin console, which
+can be found [here](./tinkerpop_eco.md).
 
 ## Remove the GIE Service
 ```bash
