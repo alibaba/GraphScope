@@ -1,6 +1,7 @@
 # Python
 __pycache__/
 *.pyc
+*.pyi
 .ipynb_checkpoints
 *.egg-info/
 *.egg/

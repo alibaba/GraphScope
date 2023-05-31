@@ -74,14 +74,8 @@ client: learning
 	python3 -m pip install -r requirements.txt -r requirements-dev.txt --user && \
 	export PATH=$(PATH):$(HOME)/.local/bin && \
 	python3 setup.py build_ext --inplace --user
-	if [[ "${ARCH}" == "aarch64" ]]; then \
-		python3 setup.py bdist_wheel; \
-		python3 -m pip install --user dist/*.whl; \
-		rm -fr  $(CLIENT_DIR)/build; \
-	else \
-		python3 -m pip install --user --editable $(CLIENT_DIR); \
-		rm -rf $(CLIENT_DIR)/*.egg-info; \
-	fi
+	python3 -m pip install --user --no-build-isolation --editable $(CLIENT_DIRNT_DIR)
+	rm -rf $(CLIENT_DIR)/*.egg-info
 
 coordinator: client
 	cd $(COORDINATOR_DIR) && \
