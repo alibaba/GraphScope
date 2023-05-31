@@ -152,6 +152,10 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._engine_mem = engine_mem
         self._vineyard_shared_mem = vineyard_shared_mem
 
+        self._vineyard_cpu = vineyard_cpu
+        self._vineyard_mem = vineyard_mem
+        self._vineyard_image = vineyard_image
+
         self._with_dataset = with_dataset
         self._preemptive = preemptive
         self._service_type = service_type
@@ -432,22 +436,218 @@ class KubernetesClusterLauncher(AbstractLauncher):
         )
         self._resource_object.append(response)
 
-    def _create_engine_stateful_set(self):
-        logger.info("Create engine headless services...")
-        service = self._engine_cluster.get_engine_headless_service()
-        service.metadata.owner_references = self._owner_references
-        response = self._core_api.create_namespaced_service(self._namespace, service)
-        self._resource_object.append(response)
-        logger.info("Creating engine pods...")
+    # The function is used to inject vineyard as a sidecar container into the workload
+    # and return the json string of new workload which is injected with vineyard sidecar
+    #
+    # Assume we have a workload json as below:
+    #
+    # {
+    #  "apiVersion": "apps/v1",
+    #  "kind": "Deployment",
+    #  "metadata": {
+    #    "name": "nginx-deployment",
+    #    "namespace": "vineyard-job"
+    #  },
+    #  "spec": {
+    #    "selector": {
+    #      "matchLabels": {
+    #        "app": "nginx"
+    #      }
+    #    },
+    #    "template": {
+    #      "metadata": {
+    #        "labels": {
+    #          "app": "nginx"
+    #        }
+    #      },
+    #      "spec": {
+    #        "containers": [
+    #          {
+    #            "name": "nginx",
+    #            "image": "nginx:1.14.2",
+    #            "ports": [
+    #              {
+    #                "containerPort": 80
+    #              }
+    #            ]
+    #          }
+    #        ]
+    #      }
+    #    }
+    #  }
+    # }
+    #
+    # The function will return a new workload json as below:
+    #
+    # {
+    #  "apiVersion": "apps/v1",
+    #  "kind": "Deployment",
+    #  "metadata": {
+    #    "creationTimestamp": null,
+    #    "name": "nginx-deployment",
+    #    "namespace": "vineyard-job"
+    #  },
+    #  "spec": {
+    #    "selector": {
+    #      "matchLabels": {
+    #        "app": "nginx"
+    #      }
+    #    }
+    #  },
+    #  "template": {
+    #    "metadata": null,
+    #    "labels": {
+    #      "app": "nginx",
+    #      "app.vineyard.io/name": "vineyard-sidecar"
+    #    },
+    #    "spec": {
+    #      "containers": [
+    #        {
+    #          "command": null,
+    #          "image": "nginx:1.14.2",
+    #          "name": "nginx",
+    #          "ports": [
+    #            {
+    #              "containerPort": 80
+    #            }
+    #          ],
+    #          "volumeMounts": [
+    #            {
+    #              "mountPath": "/var/run",
+    #              "name": "vineyard-socket"
+    #            }
+    #          ]
+    #        },
+    #        {
+    #          "command": [
+    #            "/bin/bash",
+    #            "-c",
+    #            "/usr/bin/wait-for-it.sh -t 60 vineyard-sidecar-etcd-service.vineyard-job.svc.cluster.local:2379; \\\n
+    #             sleep 1; /usr/local/bin/vineyardd --sync_crds true --socket /var/run/vineyard.sock --size 256Mi \\\n
+    #             --stream_threshold 80 --etcd_cmd etcd --etcd_prefix /vineyard \\\n
+    #             --etcd_endpoint http://vineyard-sidecar-etcd-service:2379\n"
+    #          ],
+    #          "env": [
+    #            {
+    #              "name": "VINEYARDD_UID",
+    #              "value": null
+    #            },
+    #            {
+    #              "name": "VINEYARDD_NAME",
+    #              "value": "vineyard-sidecar"
+    #            },
+    #            {
+    #              "name": "VINEYARDD_NAMESPACE",
+    #              "value": "vineyard-job"
+    #            }
+    #          ],
+    #          "image": "vineyardcloudnative/vineyardd:latest",
+    #          "imagePullPolicy": "IfNotPresent",
+    #          "name": "vineyard-sidecar",
+    #          "ports": [
+    #            {
+    #              "containerPort": 9600,
+    #              "name": "vineyard-rpc",
+    #              "protocol": "TCP"
+    #            }
+    #          ],
+    #          "volumeMounts": [
+    #            {
+    #              "mountPath": "/var/run",
+    #              "name": "vineyard-socket"
+    #            }
+    #          ]
+    #        }
+    #      ],
+    #      "volumes": [
+    #        {
+    #          "emptyDir": {},
+    #          "name": "vineyard-socket"
+    #        }
+    #      ]
+    #    }
+    #  }
+    # }
 
+    def _inject_vineyard_as_sidecar(self, workload):
+        import vineyard
+
+        # create the annotations for the workload's template if not exists
+        if workload.spec.template.metadata.annotations is None:
+            workload.spec.template.metadata.annotations = {}
+
+        # create the labels for the workload's template if not exists
+        if workload.spec.template.metadata.labels is None:
+            workload.spec.template.metadata.labels = {}
+
+        workload_json = json.dumps(
+            self._api_client.sanitize_for_serialization(workload)
+        )
+
+        sts_name = (
+            f"{self._engine_cluster.engine_stateful_set_name}-{self._instance_id}"
+        )
+        owner_reference = [
+            {
+                "apiVersion": self._owner_references[0].api_version,
+                "kind": self._owner_references[0].kind,
+                "name": self._owner_references[0].name,
+                "uid": self._owner_references[0].uid,
+            }
+        ]
+
+        owner_reference_json = json.dumps(owner_reference)
+        # inject vineyard sidecar into the workload
+        #
+        # the name is used to specify the name of the sidecar container, which is also the
+        # labelSelector of the rpc service and the etcd service.
+        #
+        # the apply_resources is used to apply resources to the kubernetes cluster during
+        # the injection.
+        #
+        # for more details about vineyardctl inject, please refer to the link below:
+        # https://github.com/v6d-io/v6d/tree/main/k8s/cmd#vineyardctl-inject
+
+        new_workload_json = vineyard.deploy.vineyardctl.inject(
+            resource=workload_json,
+            sidecar_volume_mountpath="/tmp/vineyard_workspace",
+            name=sts_name + "-vineyard",
+            apply_resources=True,
+            owner_references=owner_reference_json,
+            sidecar_image=self._vineyard_image,
+            sidecar_size=self._vineyard_shared_mem,
+            sidecar_cpu=self._vineyard_cpu,
+            sidecar_memory=self._vineyard_mem,
+            sidecar_service_type=self._service_type,
+            output="json",
+            capture=True,
+        )
+
+        normalized_workload_json = json.loads(new_workload_json)
+        final_workload_json = json.loads(normalized_workload_json["workload"])
+
+        fake_kube_response = FakeKubeResponse(final_workload_json)
+
+        new_workload = self._api_client.deserialize(fake_kube_response, type(workload))
+        return new_workload
+
+    def _create_engine_stateful_set(self):
+        logger.info("Creating engine pods...")
+        # we don't need to create the headless service for engines here,
+        # as the etcd service is already created by the vineyardctl
+        # service = self._engine_cluster.get_engine_headless_service()
+        # service.metadata.owner_references = self._owner_references
+        # response = self._core_api.create_namespaced_service(self._namespace, service)
+        # self._resource_object.append(response)
         stateful_set = self._engine_cluster.get_engine_stateful_set()
         if self.vineyard_deployment_exists():
             # schedule engine statefulset to the same node with vineyard deployment
             stateful_set = self._add_pod_affinity_for_vineyard_deployment(
                 workload=stateful_set
             )
+        else:
+            stateful_set = self._inject_vineyard_as_sidecar(stateful_set)
 
-        stateful_set.metadata.owner_references = self._owner_references
         response = self._apps_api.create_namespaced_stateful_set(
             self._namespace, stateful_set
         )
@@ -465,13 +665,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def _create_frontend_service(self):
         logger.info("Creating frontend service...")
         service = self._engine_cluster.get_interactive_frontend_service(8233)
-        service.metadata.owner_references = self._owner_references
-        response = self._core_api.create_namespaced_service(self._namespace, service)
-        self._resource_object.append(response)
-
-    def _create_vineyard_service(self):
-        logger.info("Creating vineyard service...")
-        service = self._engine_cluster.get_vineyard_service()
         service.metadata.owner_references = self._owner_references
         response = self._core_api.create_namespaced_service(self._namespace, service)
         self._resource_object.append(response)
@@ -503,8 +696,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
         if self._with_mars:
             # scheduler used by Mars
             self._create_mars_scheduler()
-        if self._vineyard_deployment is None:
-            self._create_vineyard_service()
 
     def _waiting_for_services_ready(self):
         logger.info("Waiting for services ready...")
