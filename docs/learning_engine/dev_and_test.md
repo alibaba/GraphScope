@@ -27,7 +27,6 @@ We provided a docker image `graphscope-dev` with all tools and dependices includ
 ```bash
 # Use a mirror in HK aliyun to speed up the download if in need.
 # export REGISTRY=registry.cn-hongkong.aliyuncs.com/
-# TODO(yuansi): make it works
 
 docker run --rm -it --shm-size=4096m REGISTRY/graphscope/graphscope-dev:latest
 ```
