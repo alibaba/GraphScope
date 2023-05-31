@@ -1,23 +1,26 @@
-# Frequently Asked Questions (FAQs) for GIE Gremlin Usage
+# FAQs for GIE Gremlin Usage
 
 ## What's the difference between Inner ID and Property ID ?
 
-The main difference between Inner ID and Property ID is that Inner ID is a system-assigned identifier used internally by the graph engine for efficient data storage and retrieval, while Property ID is a user-defined property within a specific entity type. 
+The main difference between Inner ID and Property ID is that Inner ID is a system-assigned identifier used internally by the graph engine for efficient data storage and retrieval, while Property ID is a user-defined property within a specific entity type.
 
 For example, in the LDBC (Linked Data Benchmark Council) schema, we have an entity type called 'PERSON', which has its own list of properties, consisting of 'id', 'name' and 'birthday'. In the actual storage, we maintain key-value pairs for each instance of entity type 'PERSON', and internally maintain a unique ID to differentiate each such instance. The unique ID in this context is referred to as the Inner ID, and the 'id' in the attribute list is the Property ID.
 
 GIE Gremlin provides different approaches to query a vertex instance by its Inner ID or Property ID, similar to:
 ```scss
 // by its inner id
-g.V(1)
-g.V().hasId(1)
+g.V(123456)
+g.V().hasId(123456)
 
-// by its property id 
+// by its property id
 g.V().has('id', 1)
 ```
 
-For edges, we do not currently provide any approaches to query based on Inner ID, for two reasons: 
-- Firstly, Inner ID is internally maintained by the system and should not be exposed to users by default. 
+In the above case, the vertex may have a property `id` with value 1, which is mapped to a globally
+unique inner id `123456`.
+
+For edges, we do not currently provide any approaches to query based on Inner ID, for two reasons:
+- Firstly, Inner ID is internally maintained by the system and should not be exposed to users by default.
 - Secondly, a single edge instance may not be uniquely identified by Inner ID alone, as it typically requires a triplet such as \<src, dst, edge\>.
 
 ## How to use path expand in GIE Gremlin ?
@@ -63,14 +66,14 @@ g.V().hasLabel('PERSON').groupCount().by('name', 'age')
 ```
 which is equivalent to:
 ```scss
-SELECT 
-  PERSON.name, 
-  PERSON.age, 
-  COUNT(*) 
-FROM 
-  PERSON 
-GROUP BY 
-  PERSON.name, 
+SELECT
+  PERSON.name,
+  PERSON.age,
+  COUNT(*)
+FROM
+  PERSON
+GROUP BY
+  PERSON.name,
   PERSON.age
 ```
 ### group by multiple values:
@@ -83,13 +86,13 @@ g.V()
 ```
 which is equivalent to :
 ```scss
-SELECT 
-  PERSON.name, 
-  COUNT(age) AS age_cnt, 
-  SUM(age) AS age_sum 
-FROM 
-  PERSON 
-GROUP BY 
+SELECT
+  PERSON.name,
+  COUNT(age) AS age_cnt,
+  SUM(age) AS age_sum
+FROM
+  PERSON
+GROUP BY
   name
 ```
 Please refer to [Aggregate](https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/supported_gremlin_steps.md#aggregate-group) for more usage.

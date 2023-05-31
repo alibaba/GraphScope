@@ -4,16 +4,16 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta property="og:title" content="Tutorial: Training a Node Classification Model on Your Local Machine" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="learning_engine/tuttorial_node_classification_local.html" />
+<meta property="og:url" content="learning_engine/tutorial_node_classification_local.html" />
 <meta property="og:site_name" content="GraphScope" />
 <meta property="og:description" content="This tutorial presents an end-to-end example that illustrates how GraphScope trains the EgoGraphSAGE model for a node classification task. To demonstrate this, we utilize the ogbn-mag dataset, whic..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="/_images/social_previews/summary_learning_engine_tuttorial_node_classification_local_6b82ba43.png" />
+<meta property="og:image" content="/_images/social_previews/summary_learning_engine_tutorial_node_classification_local_6b82ba43.png" />
 <meta property="og:image:alt" content="This tutorial presents an end-to-end example that illustrates how GraphScope trains the EgoGraphSAGE model for a node classification task. To demonstrate thi..." />
 <meta name="description" content="This tutorial presents an end-to-end example that illustrates how GraphScope trains the EgoGraphSAGE model for a node classification task. To demonstrate this, we utilize the ogbn-mag dataset, whic..." />
 <meta name="twitter:card" content="summary_large_image" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tutorial: Training a Node Classification Model on K8s Cluster" href="tutorial_node_classification_k8s.html" /><link rel="prev" title="Guide and Examples" href="guide_and_examples.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.05.20 -->
         <title>Tutorial: Training a Node Classification Model on Your Local Machine - GraphScope documentation</title>
@@ -281,14 +281,15 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/dev_and_test.html">Dev and Test</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="design_of_gle.html">Design of GLE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_sampling.html">Graph Sampling</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Guide and Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="guide_and_examples.html">Guide and Examples</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Guide and Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Tutorial: Training a Node Classification Model on Your Local Machine</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial_node_classification_k8s.html">Tutorial: Training a Node Classification Model on K8s Cluster</a></li>
 </ul>
 </li>
@@ -905,7 +906,7 @@ MathJax = {
         </a>
         <div class="content-icon-container">
           <div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/learning_engine/tuttorial_node_classification_local.md" title="Edit this page">
+  <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/learning_engine/tutorial_node_classification_local.md" title="Edit this page">
     <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
       <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
@@ -960,7 +961,7 @@ and abstract. It’s worth noting that the embeddings of individual words are pr
 <span class="n">gs</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="c1"># load the obgn-mag graph as example.</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">load_ogbn_mag</span><span class="p">()</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">load_ogbn_mag</span><span class="p">()</span>
 
 <span class="c1"># print the schema of the graph</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
@@ -1038,9 +1039,9 @@ and abstract. It’s worth noting that the embeddings of individual words are pr
 <div class="section" id="train-the-model">
 <h2>Train the Model<a class="headerlink" href="#train-the-model" title="Permalink to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train</span><span class="p">(</span><span class="n">lg</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="n">edge_type</span><span class="o">=</span><span class="s2">&quot;cites&quot;</span><span class="p">,</span>
-          <span class="n">class_num</span><span class="o">=</span><span class="mi">349</span><span class="p">,</span>  <span class="c1"># output dimension</span>
-          <span class="n">features_num</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>  <span class="c1"># input dimension</span>
-<span class="p">)</span>
+      <span class="n">class_num</span><span class="o">=</span><span class="mi">349</span><span class="p">,</span>  <span class="c1"># output dimension</span>
+      <span class="n">features_num</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>  <span class="c1"># input dimension</span>
+      <span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1051,8 +1052,26 @@ and abstract. It’s worth noting that the embeddings of individual words are pr
       <footer>
         
         <div class="related-pages">
-          
-          
+          <a class="next-page" href="tutorial_node_classification_k8s.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Tutorial: Training a Node Classification Model on K8s Cluster</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="guide_and_examples.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Guide and Examples</div>
+                
+              </div>
+            </a>
         </div>
         <div class="bottom-of-page">
           <div class="left-details">

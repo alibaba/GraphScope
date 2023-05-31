@@ -281,7 +281,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interactive_engine/dev_and_test.html">Dev and Test</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine/faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul>
@@ -289,6 +289,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="learning_engine/design_of_gle.html">Design of GLE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine/graph_sampling.html">Graph Sampling</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="learning_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Guide and Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine/tutorial_node_classification_local.html">Tutorial: Training a Node Classification Model on Your Local Machine</a></li>
 <li class="toctree-l2"><a class="reference internal" href="learning_engine/tutorial_node_classification_k8s.html">Tutorial: Training a Node Classification Model on K8s Cluster</a></li>
 </ul>
 </li>
@@ -980,15 +981,15 @@ This case is observed when using GraphScope with helm. If users did not correctl
 <blockquote>
 <div><p>If GraphScope seems to get stuck, the possible cause might be:</p>
 <ul class="simple">
-<li><p>In the session launching stage, the most cases are waiting for Pods ready. The time consuming may be caused by a poor network connection during pulling image, or by failing to acquire the requested resources to launch a session.</p></li>
+<li><p>In the session launching stage, the most cases are waiting for Pods ready. The time consumption may be caused by a poor network connection during pulling image, or by failing to acquire the requested resources to launch a session.</p></li>
 <li><p>In the graph loading stage, it is time consuming to load and build a large graph.</p></li>
-<li><p>When running a user-defined or built-in analytical algorithm, it may takes time to compile the algorithm over the loaded graph.</p></li>
+<li><p>When running a user-defined or built-in analytical algorithm, it may take time to compile the algorithm over the loaded graph.</p></li>
 </ul>
 </div></blockquote>
 </li>
 <li><p>Why <cite>No such file or directory</cite> error when loading graph?</p>
 <blockquote>
-<div><p>This mostly occur when you are deploying GraphScope in a Kubernetes cluster, the file must be visible to the <code class="docutils literal notranslate"><span class="pre">engnine</span></code> Pod of GraphScope. You may need to mount a volume to the Pods or use cloud storage providers.</p>
+<div><p>This mostly occurs when you are deploying GraphScope in a Kubernetes cluster, the file must be visible to the <code class="docutils literal notranslate"><span class="pre">engnine</span></code> Pod of GraphScope. You may need to mount a volume to the Pods or use cloud storage providers.</p>
 <p>Specifically, if your cluster is deployed with <a class="reference external" href="https://kind.sigs.k8s.io">kind</a>, you may need to setup <a class="reference external" href="https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts">extra-mounts</a> to mount your local directory to kind nodes.</p>
 </div></blockquote>
 </li>
@@ -1018,8 +1019,8 @@ This case is observed when using GraphScope with helm. If users did not correctl
 <li><p>ENV: Use helm to install graphscope-store, NFS to supply PV.</p></li>
 <li><p>Appearance: Pod <code class="docutils literal notranslate"><span class="pre">graphscope-store-kafka-0</span></code> , <code class="docutils literal notranslate"><span class="pre">graphscope-store-zookeeper-0</span></code> reports <code class="docutils literal notranslate"><span class="pre">CrashLoopBackOff</span></code> status.</p></li>
 <li><p>Check: First use <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">graphscope-store-zookeeper-0</span></code> to check log. If the log shows <code class="docutils literal notranslate"><span class="pre">mkdir:</span> <span class="pre">cannot</span> <span class="pre">create</span> <span class="pre">directory</span> <span class="pre">'/bitnami/zookeeper/data':</span> <span class="pre">Permission</span> <span class="pre">denied</span></code>.</p></li>
-<li><p>Reason: Normaly, the permission of NFS directories we created is <code class="docutils literal notranslate"><span class="pre">root</span> <span class="pre">755</span></code> (depends on your sepcify environment), but the default user of graphscope-store is <code class="docutils literal notranslate"><span class="pre">graphscope(1001)</span></code>, so these pods have no permission to write on NFS.</p></li>
-<li><p>Solution: There are two slutions to solve this.</p>
+<li><p>Reason: Normally, the permission of NFS directories we created is <code class="docutils literal notranslate"><span class="pre">root</span> <span class="pre">755</span></code> (depends on your specific environment), but the default user of graphscope-store is <code class="docutils literal notranslate"><span class="pre">graphscope(1001)</span></code>, so these pods have no permission to write on NFS.</p></li>
+<li><p>Solution: There are two solutions to solve this.</p>
 <blockquote>
 <div><p>The brutal one is using <code class="docutils literal notranslate"><span class="pre">chmod</span> <span class="pre">777</span></code> on all related PV directories, this is efficient but not recommended in production environment.</p>
 <p>The elegant one is creating <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> user and user group first, and then grant the access permission on <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> to the related NFS directories.</p>
@@ -1028,14 +1029,14 @@ This case is observed when using GraphScope with helm. If users did not correctl
 </ul>
 </li>
 <li><p>why <code class="docutils literal notranslate"><span class="pre">Timeout</span> <span class="pre">Exception</span></code> raised during launching GraphScope instance on kubernetes cluster?</p>
-<p>It will take a few minutes for pulling image during the first time for launching GraphScope instance. Thus, the <code class="docutils literal notranslate"><span class="pre">Timeout</span> <span class="pre">Exception</span></code> may caused by a poor network connection.
+<p>It will take a few minutes for pulling image during the first time for launching GraphScope instance. Thus, the <code class="docutils literal notranslate"><span class="pre">Timeout</span> <span class="pre">Exception</span></code> may be caused by a poor network connection.
 You can increase the value of <code class="docutils literal notranslate"><span class="pre">timeout_seconds</span></code> parameter as your expectation by <code class="docutils literal notranslate"><span class="pre">graphscope.set_option(timeout_seconds=600))</span></code>.</p>
 </li>
 <li><p>Failed to run GraphScope (either in single machine or in docker container) due to failed connection to building blocks like etcd?</p>
 <p>It may be caused by that your machine is in an enterprise network, which requires proxy configurations to access network properly. This may lead to wrong address resolution and port occupancy. You can try to add addresses like <code class="docutils literal notranslate"><span class="pre">hostname</span> <span class="pre">-i</span></code> and <code class="docutils literal notranslate"><span class="pre">0.0.0.0</span></code> to your environment variable <code class="docutils literal notranslate"><span class="pre">no_proxy</span></code> or <code class="docutils literal notranslate"><span class="pre">NO_PROXY</span></code> (be aware of <a class="reference external" href="https://unix.stackexchange.com/questions/23452/set-a-network-range-in-the-no-proxy-environment-variable">the prefix/suffix policy of no_proxy</a>)</p>
 </li>
 <li><p>How to print debug info in GAE Cython SDK Algorithms?</p>
-<p>python3 print function is a convinent way to show useful debug info, use print with param flush=True then the stream is forcibly flushed.</p>
+<p>python3 print function is a convenient way to show useful debug info, use print with param flush=True then the stream is forcibly flushed.</p>
 <p>More details please refer to <a class="reference external" href="https://docs.python.org/3.3/library/functions.html#print">Python Documentation</a>.</p>
 </li>
 </ol>

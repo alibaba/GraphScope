@@ -281,7 +281,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/dev_and_test.html">Dev and Test</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul>
@@ -289,6 +289,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine/design_of_gle.html">Design of GLE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine/graph_sampling.html">Graph Sampling</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../learning_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Guide and Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../learning_engine/tutorial_node_classification_local.html">Tutorial: Training a Node Classification Model on Your Local Machine</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../learning_engine/tutorial_node_classification_k8s.html">Tutorial: Training a Node Classification Model on K8s Cluster</a></li>
 </ul>
 </li>
@@ -1213,7 +1214,7 @@ MathJax = {
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
 <span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
 
-<span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">generate_eid</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <span class="c1"># 加载自己的算法</span>
 <span class="n">my_app</span> <span class="o">=</span> <span class="n">SSSP_Pregel</span><span class="p">()</span>

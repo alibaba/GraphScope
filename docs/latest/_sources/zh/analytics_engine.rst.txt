@@ -319,7 +319,7 @@ GraphScope 支持用户在自定义算法中通过 :code:`context.math` 上的�
     import graphscope
     from graphscope.dataset import load_p2p_network
 
-    g = load_p2p_network()
+    g = load_p2p_network(generate_eid=False)
 
     # 加载自己的算法
     my_app = SSSP_Pregel()

@@ -13,7 +13,7 @@
 <meta property="og:image:alt" content="This document describes how to build and test GraphScope Interactive Engine from source code. Dev Environment: Here we would use a prebuilt docker image with..." />
 <meta name="description" content="This document describes how to build and test GraphScope Interactive Engine from source code. Dev Environment: Here we would use a prebuilt docker image with necessary dependencies installed. Pleas..." />
 <meta name="twitter:card" content="summary_large_image" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Frequently Asked Questions (FAQs) for GIE Gremlin Usage" href="faq.html" /><link rel="prev" title="Supported Gremlin Steps" href="supported_gremlin_steps.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="FAQs for GIE Gremlin Usage" href="faq.html" /><link rel="prev" title="Supported Gremlin Steps" href="supported_gremlin_steps.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.05.20 -->
         <title>Dev and Test - GraphScope documentation</title>
@@ -281,7 +281,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Dev and Test</a></li>
-<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul>
@@ -289,6 +289,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine/design_of_gle.html">Design of GLE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine/graph_sampling.html">Graph Sampling</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../learning_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Guide and Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../learning_engine/tutorial_node_classification_local.html">Tutorial: Training a Node Classification Model on Your Local Machine</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../learning_engine/tutorial_node_classification_k8s.html">Tutorial: Training a Node Classification Model on K8s Cluster</a></li>
 </ul>
 </li>
@@ -938,32 +939,134 @@ MathJax = {
 </div>
 <p>Please refer to <a class="reference internal" href="../development/dev_guide.html#dev-environment"><span class="std std-ref">Dev Environment</span></a> to find more options to get a dev environment.</p>
 </div>
-<div class="section" id="build-interactive-engine">
-<h2>Build Interactive Engine<a class="headerlink" href="#build-interactive-engine" title="Permalink to this heading">#</a></h2>
-<p>With <code class="docutils literal notranslate"><span class="pre">gs</span></code> command-line utility, you can build interactive engine of GraphScope with a single command.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clone a repo if needed</span>
-<span class="c1"># git clone https://github.com/alibaba/graphscope</span>
-<span class="c1"># cd graphscope</span>
-./gs<span class="w"> </span>make<span class="w"> </span>interactive<span class="w"> </span>--experimental
+<div class="section" id="build-gie-with-vineyard-store-on-local">
+<h2>Build GIE with Vineyard Store on Local<a class="headerlink" href="#build-gie-with-vineyard-store-on-local" title="Permalink to this heading">#</a></h2>
+<p>In <a class="reference internal" href="deployment.html"><span class="std std-doc">GIE standalone deployment</span></a>, we have instructed on how to deploy GIE in a Kubenetes cluster with Vineyard store. Here, we show how to develop and test GIE with vineyard store on a local machine.</p>
+<p>Clone the ``graphscope’’ repo if you do not have it.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/alibaba/graphscope
+<span class="nb">cd</span><span class="w"> </span>graphscope
 </pre></div>
 </div>
-<p>You may want to grab a cup of coffee cause this compiling will take a while, which
-includes compiling the java code of GIE compiler, and the rust code of GIE engine.
-You may found the built artifacts in <code class="docutils literal notranslate"><span class="pre">interactive_engine/assembly/target/graphscope.tar.gz</span></code>.</p>
-</div>
-<div class="section" id="how-to-test">
-<h2>How to Test<a class="headerlink" href="#how-to-test" title="Permalink to this heading">#</a></h2>
-<p>You could easily test with the new artifacts with a single command:</p>
-<p>Here we set the working directory to local repo.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">GRAPHSCOPE_HOME</span><span class="o">=</span><span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>
-<span class="c1"># Here the `pwd` is the root path of GraphScope repository</span>
+<p>Now you are ready to build the GIE engine (on vineyard store) with the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>interactive<span class="w"> </span>--storage-type<span class="o">=</span>vineyard
 </pre></div>
 </div>
-<p>See more about <code class="docutils literal notranslate"><span class="pre">GRAPHSCOPE_HOME</span></code> in <a class="reference internal" href="../development/how_to_test.html#run-tests"><span class="std std-ref">run tests</span></a></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span><span class="nb">test</span><span class="w"> </span>interactive
+<p>You can find the built artifacts in <code class="docutils literal notranslate"><span class="pre">interactive_engine/assembly/target/graphscope</span></code>.</p>
+</div>
+<div class="section" id="test-gie-with-vineyard-store-on-local">
+<h2>Test GIE with Vineyard Store on Local<a class="headerlink" href="#test-gie-with-vineyard-store-on-local" title="Permalink to this heading">#</a></h2>
+<p>You could test the GIE engine on vineyard store with the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span><span class="nb">test</span><span class="w"> </span>interactive<span class="w"> </span>--local<span class="w"> </span>--storage-type<span class="o">=</span>vineyard
 </pre></div>
 </div>
-<p>It would download the test dataset to the <code class="docutils literal notranslate"><span class="pre">/tmp/gstest</span></code> (if not exists) and run multiple algorithms against various graphs, and compare the result with the ground truth.</p>
+<p>This will run end2end tests, from compiling a gremlin queries to obtaining and verifying the results from the computed engine. The test includes:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/gremlin/integration/suite/standard">Tinkerpop’s gremlin test</a>: We replicate Tinkerpop’s official test suit, which is mostly based on Tinkerpop’s <a class="reference external" href="https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/">modern</a>
+graph.</p></li>
+<li><p><a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/gremlin/integration/suite/pattern">IR pattern test</a>: In addition to Tinkerpop’s official test of <code class="docutils literal notranslate"><span class="pre">match</span></code> steps, we offer extra pattern queries on modern graph.</p></li>
+<li><p><a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/gremlin/integration/suite/ldbc">LDBC test</a>: We further test GIE against the LDBC complex workloads on the LDBC social network with the scale factor (sf) 1.
+Please refer to the <a class="reference internal" href="tutorial_ldbc_gremlin.html"><span class="std std-doc">tutorial</span></a> for more information.</p></li>
+</ul>
+</div>
+<div class="section" id="manually-start-the-gie-services">
+<h2>Manually Start the GIE Services<a class="headerlink" href="#manually-start-the-gie-services" title="Permalink to this heading">#</a></h2>
+<p>A minimum set of GIE services includes a <code class="docutils literal notranslate"><span class="pre">frontend</span></code> to send Gremlin queries, and an <code class="docutils literal notranslate"><span class="pre">executor</span></code> (with vineyard) to execute those queries. The subsequent instructions outline the process of individually starting the <code class="docutils literal notranslate"><span class="pre">frontend</span></code> and <code class="docutils literal notranslate"><span class="pre">executor</span></code> to facilitate a more in-depth exploration of the engine.</p>
+<ol class="arabic simple">
+<li><p>First, make sure that a vineyard service is already running and a graph has been successfully loaded. Once the graph is successfully loaded into vineyard, you will obtain an <code class="docutils literal notranslate"><span class="pre">&lt;v6d_object_id&gt;</span></code>
+for accessing the graph data.</p></li>
+</ol>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>If you are unsure about how to initiate a vineyard store, the subsequent instructions can assist you in creating a
+vineyard store with a <a class="reference external" href="https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/">modern graph</a>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">VINEYARD_IPC_SOCKET</span><span class="o">=</span>/tmp/vineyard.sock
+vineyardd<span class="w"> </span>--socket<span class="o">=</span><span class="si">${</span><span class="nv">VINEYARD_IPC_SOCKET</span><span class="si">}</span><span class="w"> </span>--meta<span class="o">=</span><span class="nb">local</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="c1"># load modern graph</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">STORE_DATA_PATH</span><span class="o">=</span>charts/gie-standalone/data<span class="w">  </span><span class="c1"># relative to graphscope repo</span>
+vineyard-graph-loader<span class="w"> </span>--config<span class="w"> </span>charts/gie-standalone/config/v6d_modern_loader.json
+</pre></div>
+</div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Set the <code class="docutils literal notranslate"><span class="pre">GIE_TEST_HOME</span></code> environment variable:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">GIE_TEST_HOME</span><span class="o">=</span>interactive_engine/assembly/target/graphscope
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Configure the <code class="docutils literal notranslate"><span class="pre">$GIE_TEST_HOME/conf/executor.vineyard.properties</span></code> file:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>graph.name<span class="w"> </span><span class="o">=</span><span class="w"> </span>GRAPH_NAME
+<span class="c1"># RPC port that executor will listen on</span>
+rpc.port<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1234</span>
+
+<span class="c1"># Server ID</span>
+server.id<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
+
+<span class="c1"># Total server size</span>
+server.size<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span>
+
+<span class="c1"># ip:port separated by &#39;,&#39;</span>
+<span class="c1"># e.g., 1.2.3.4:1234,1.2.3.5:1234</span>
+network.servers<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">127</span>.0.0.1:11234
+
+<span class="c1"># This worker refers to the number of threads</span>
+pegasus.worker.num<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span>
+
+graph.type<span class="w"> </span><span class="o">=</span><span class="w"> </span>VINEYARD
+
+<span class="c1"># Please replace with the actual object ID of your graph</span>
+graph.vineyard.object.id:<span class="w"> </span>&lt;v6d_object_id&gt;
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>Start the <code class="docutils literal notranslate"><span class="pre">gaia_executor</span></code>:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">$GIE_TEST_HOME</span>/bin/gaia_executor<span class="w"> </span><span class="nv">$GIE_TEST_HOME</span>/conf/log4rs.yml<span class="w"> </span><span class="nv">$GIE_TEST_HOME</span>/conf/executor.vineyard.properties<span class="w"> </span><span class="p">&amp;</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="5">
+<li><p>Configure the <code class="docutils literal notranslate"><span class="pre">$GIE_TEST_HOME/conf/frontend.vineyard.properties</span></code> file:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1">## Pegasus service config</span>
+<span class="c1"># a.k.a. thread num</span>
+pegasus.worker.num<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span>
+pegasus.timeout<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">240000</span>
+pegasus.batch.size<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1024</span>
+pegasus.output.capacity<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">16</span>
+
+<span class="c1"># executor config</span>
+<span class="c1"># ip:port separated by &#39;,&#39;</span>
+<span class="c1"># e.g., 1.2.3.4:1234,1.2.3.5:1234</span>
+pegasus.hosts<span class="w"> </span><span class="o">=</span><span class="w"> </span>localhost:1234
+
+<span class="c1"># graph schema path</span>
+graph.schema<span class="w"> </span><span class="o">=</span><span class="w"> </span>/tmp/&lt;v6d_object_id&gt;.json
+
+<span class="c1">## Frontend Config</span>
+frontend.service.port<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">8182</span>
+
+<span class="c1"># disable authentication if username or password is not set</span>
+<span class="c1"># auth.username = default</span>
+<span class="c1"># auth.password = default</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="6">
+<li><p>Start the <code class="docutils literal notranslate"><span class="pre">frontend</span></code>:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>java<span class="w"> </span>-cp<span class="w"> </span><span class="s2">&quot;.:</span><span class="nv">$GIE_TEST_HOME</span><span class="s2">/lib/*&quot;</span><span class="w"> </span>-Djna.library.path<span class="o">=</span><span class="nv">$GIE_TEST_HOME</span>/lib<span class="w"> </span>com.alibaba.graphscope.frontend.Frontend<span class="w"> </span><span class="nv">$GIE_TEST_HOME</span>/conf/frontend.vineyard.properties<span class="w"> </span><span class="p">&amp;</span>
+</pre></div>
+</div>
+<p>With the frontend service, you can open the gremlin console and set the endpoint to
+<code class="docutils literal notranslate"><span class="pre">localhost:8182</span></code>, as given <a class="reference internal" href="deployment.html#deploy-your-first-gie-service"><span class="std std-ref">here</span></a>.</p>
+<ol class="arabic simple" start="7">
+<li><p>Kill the services of <code class="docutils literal notranslate"><span class="pre">vineyardd</span></code>, <code class="docutils literal notranslate"><span class="pre">gaia_executor</span></code> and <code class="docutils literal notranslate"><span class="pre">frontend</span></code>:</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pkill</span> <span class="o">-</span><span class="n">f</span> <span class="n">vineyardd</span>
+<span class="n">pkill</span> <span class="o">-</span><span class="n">f</span> <span class="n">gaia_executor</span>
+<span class="n">pkill</span> <span class="o">-</span><span class="n">f</span> <span class="n">Frontend</span>
+</pre></div>
+</div>
 </div>
 </div>
 
@@ -977,7 +1080,7 @@ You may found the built artifacts in <code class="docutils literal notranslate">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</div>
+                <div class="title">FAQs for GIE Gremlin Usage</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -1027,8 +1130,9 @@ You may found the built artifacts in <code class="docutils literal notranslate">
             <ul>
 <li><a class="reference internal" href="#">Dev and Test</a><ul>
 <li><a class="reference internal" href="#dev-environment">Dev Environment</a></li>
-<li><a class="reference internal" href="#build-interactive-engine">Build Interactive Engine</a></li>
-<li><a class="reference internal" href="#how-to-test">How to Test</a></li>
+<li><a class="reference internal" href="#build-gie-with-vineyard-store-on-local">Build GIE with Vineyard Store on Local</a></li>
+<li><a class="reference internal" href="#test-gie-with-vineyard-store-on-local">Test GIE with Vineyard Store on Local</a></li>
+<li><a class="reference internal" href="#manually-start-the-gie-services">Manually Start the GIE Services</a></li>
 </ul>
 </li>
 </ul>

@@ -281,7 +281,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/dev_and_test.html">Dev and Test</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul class="current">
@@ -289,6 +289,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="design_of_gle.html">Design of GLE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_sampling.html">Graph Sampling</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Guide and Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_node_classification_local.html">Tutorial: Training a Node Classification Model on Your Local Machine</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial_node_classification_k8s.html">Tutorial: Training a Node Classification Model on K8s Cluster</a></li>
 </ul>
 </li>
@@ -951,7 +952,6 @@ on your local machine, or build it in our provided docker image.</p>
 <p>We provided a docker image <code class="docutils literal notranslate"><span class="pre">graphscope-dev</span></code> with all tools and dependices included.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Use a mirror in HK aliyun to speed up the download if in need.</span>
 <span class="c1"># export REGISTRY=registry.cn-hongkong.aliyuncs.com/</span>
-<span class="c1"># TODO(yuansi): make it works</span>
 
 docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>--shm-size<span class="o">=</span>4096m<span class="w"> </span>REGISTRY/graphscope/graphscope-dev:latest
 </pre></div>

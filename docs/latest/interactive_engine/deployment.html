@@ -281,7 +281,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="design_of_gie.html">Design of GIE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev_and_test.html">Dev and Test</a></li>
-<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul>
@@ -289,6 +289,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine/design_of_gle.html">Design of GLE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine/graph_sampling.html">Graph Sampling</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../learning_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Guide and Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../learning_engine/tutorial_node_classification_local.html">Tutorial: Training a Node Classification Model on Your Local Machine</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../learning_engine/tutorial_node_classification_k8s.html">Tutorial: Training a Node Classification Model on K8s Cluster</a></li>
 </ul>
 </li>
@@ -929,27 +930,18 @@ MathJax = {
         <article role="main">
           <div class="tex2jax_ignore mathjax_ignore section" id="standalone-deployment-for-gie">
 <h1>Standalone Deployment for GIE<a class="headerlink" href="#standalone-deployment-for-gie" title="Permalink to this heading">#</a></h1>
-<p>We have demonstrated <a class="reference internal" href="getting_started.html"><span class="std std-doc">how to execute interactive queries</span></a> easily by installing Graphscope via <code class="docutils literal notranslate"><span class="pre">pip</span></code> on a local machine. However, in real-life applications, graphs are often too large to fit on a single machine. In such cases, Graphscope can be deployed on a cluster, such as a <a class="reference internal" href="#../deploy_graphscope_on_self_managed_k8s.md"><span class="xref myst">self-managed k8s cluster</span></a>, for processing large-scale graphs. But you may wonder, “what if I only need the GIE engine and not the whole package that includes GAE and GLE?” This tutorial will walk you through the process of standalone deployment of GIE on a self-managed k8s cluster.</p>
+<p>We have demonstrated <a class="reference internal" href="getting_started.html"><span class="std std-doc">how to execute interactive queries</span></a> easily by installing Graphscope via <code class="docutils literal notranslate"><span class="pre">pip</span></code> on a local machine. However, in real-life applications, graphs are often too large to fit on a single machine. In such cases, Graphscope can be deployed on a cluster, such as a <a class="reference internal" href="#../deploy_graphscope_on_self_managed_k8s.md"><span class="xref myst">self-managed k8s cluster</span></a>, for processing large-scale graphs. But you may wonder, “what if I only need the GIE engine and not the whole package of GraphScope?” This tutorial will walk you through the process of standalone deployment of GIE on a self-managed k8s cluster.</p>
 <p>Throughout the tutorial, we assume all machines are running Linux system.
 We do not guarantee that it works as smoothly as Linux on the other platform.
 For your reference, we’ve tested the tutorial on Ubuntu 20.04.</p>
-<div class="section" id="the-k8s-cluster">
-<h2>The K8s Cluster<a class="headerlink" href="#the-k8s-cluster" title="Permalink to this heading">#</a></h2>
-<p>If you do not have a K8s cluster to work on, don’t worry. We have three simple ways for you to create one and get started with the deployment:</p>
-<ul>
-<li><p>Use a K8s cluster from Cloud Providers like <a class="reference external" href="https://www.aliyun.com/product/kubernetes">ACK</a> from Alibaba Cloud.</p></li>
-<li><p>Create a K8s cluster using <a class="reference external" href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/">kubeadm</a>.</p></li>
-<li><p>Create a local K8s cluster using <a class="reference external" href="https://minikube.sigs.k8s.io/docs/start/">minikube</a>:</p>
-<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install `minikube` on your platform</span>
-<span class="c1"># Recommend using `none` driver on a Linux machine to free from loading image to control plane.</span>
-<span class="c1"># Check https://minikube.sigs.k8s.io/docs/handbook/pushing/ for details.</span>
-minikube<span class="w"> </span>start<span class="w"> </span>--driver<span class="o">=</span>none
-</pre></div>
-</div>
-</li>
-<li><p>Use a local k8s cluster in <a class="reference external" href="https://docs.docker.com/desktop/kubernetes/">docker desktop</a>.</p></li>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Kubernetes Cluster</p></li>
+<li><p>Python &gt;= 3.9</p></li>
 </ul>
-<p>To learn more about the creation of a k8s cluster, please refer to the <a class="reference external" href="https://kubernetes.io/zh-cn/docs/tutorials/kubernetes-basics/create-cluster/">official guide</a>.</p>
+<p>To get started, you need to prepare a Kubernetes Cluster to continue.</p>
+<p>Incase you doesn’t have one, you could refer to the instruction of <a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html#prepare-a-kubernetes-cluster"><span class="std std-ref">create kubernetes cluster</span></a>.</p>
 </div>
 <div class="section" id="deploy-your-first-gie-service">
 <h2>Deploy Your First GIE Service<a class="headerlink" href="#deploy-your-first-gie-service" title="Permalink to this heading">#</a></h2>
@@ -1038,9 +1030,11 @@ and modify the <code class="docutils literal notranslate"><span class="pre">host
 <li><p>From Gremlin Console.</p></li>
 </ul>
 <p>Download Gremlin console and unpack to your local directory.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-LO<span class="w"> </span>https://dlcdn.apache.org/tinkerpop/3.6.2/apache-tinkerpop-gremlin-console-3.6.2-bin.zip<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
-unzip<span class="w"> </span>apache-tinkerpop-gremlin-console-3.6.2-bin.zip<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
-<span class="nb">cd</span><span class="w"> </span>apache-tinkerpop-gremlin-console-3.6.2
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># if the given version (3.6.4) is not found, try to access https://dlcdn.apache.org to</span>
+<span class="c1"># download an available version.</span>
+curl<span class="w"> </span>-LO<span class="w"> </span>https://dlcdn.apache.org/tinkerpop/3.6.4/apache-tinkerpop-gremlin-console-3.6.4-bin.zip<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+unzip<span class="w"> </span>apache-tinkerpop-gremlin-console-3.6.4-bin.zip<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="nb">cd</span><span class="w"> </span>apache-tinkerpop-gremlin-console-3.6.4
 </pre></div>
 </div>
 <p>Modify the <code class="docutils literal notranslate"><span class="pre">hosts</span></code> and <code class="docutils literal notranslate"><span class="pre">port</span></code> in <code class="docutils literal notranslate"><span class="pre">conf/remote.yaml</span></code> to the GIE Frontend Service endpoint.
@@ -1236,7 +1230,7 @@ Obviously, the total number of working threads is: ‘executor.replicaCount x pe
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Standalone Deployment for GIE</a><ul>
-<li><a class="reference internal" href="#the-k8s-cluster">The K8s Cluster</a></li>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li><a class="reference internal" href="#deploy-your-first-gie-service">Deploy Your First GIE Service</a></li>
 <li><a class="reference internal" href="#remove-the-gie-service">Remove the GIE Service</a></li>
 <li><a class="reference internal" href="#using-your-own-data">Using Your Own Data</a></li>
