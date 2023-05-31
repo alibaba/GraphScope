@@ -62,7 +62,7 @@ from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
 from gscoordinator.utils import delegate_command_to_pod
 from gscoordinator.utils import parse_as_glog_level
-from gscoordinator.utils import run_command
+from gscoordinator.utils import run_kube_cp_command
 from gscoordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -197,7 +197,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._mars_worker_mem = mars_worker_mem
 
         self._pod_name_list = []
-        self._pod_ip_list = None
+        self._pod_ip_list = []
         self._pod_host_ip_list = None
 
         self._analytical_engine_endpoint = None
@@ -335,8 +335,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             except RuntimeError:
                 cmd = f"mkdir -p {os.path.dirname(path)}"
                 logger.debug(delegate_command_to_pod(cmd, pod, container))
-                cmd = f"kubectl cp {path} {pod}:{path} -c {container}"
-                logger.debug(run_command(cmd))
+                logger.debug(run_kube_cp_command(path, path, pod, container, True))
 
     def close_analytical_instance(self):
         pass
@@ -834,16 +833,16 @@ class KubernetesClusterLauncher(AbstractLauncher):
         )
 
         # generate and distribute hostfile
-        kube_hosts_path = os.path.join(get_tempdir(), "kube_hosts")
-        with open(kube_hosts_path, "w") as f:
+        hosts = os.path.join(get_tempdir(), "kube_hosts")
+        with open(hosts, "w") as f:
             for i, pod_ip in enumerate(self._pod_ip_list):
                 f.write(f"{pod_ip} {self._pod_name_list[i]}\n")
 
+        container = self._engine_cluster.analytical_container_name
         for pod in self._pod_name_list:
-            container = self._engine_cluster.analytical_container_name
-            cmd = f"kubectl -n {self._namespace} cp {kube_hosts_path} {pod}:/tmp/hosts_of_nodes -c {container}"
-            cmd = shlex.split(cmd)
-            subprocess.check_call(cmd)
+            logger.debug(
+                run_kube_cp_command(hosts, "/tmp/hosts_of_nodes", pod, container, True)
+            )
 
         # launch engine
         rmcp = ResolveMPICmdPrefix(rsh_agent=True)
@@ -1022,10 +1021,9 @@ class KubernetesClusterLauncher(AbstractLauncher):
             container = self._engine_cluster.learning_container_name
             sub_cmd = f"python3 -m gscoordinator.learning {handle} {config} {pod_index}"
             cmd = f"kubectl -n {self._namespace} exec -it -c {container} {pod} -- {sub_cmd}"
-            logging.debug("launching learning server: %s", " ".join(cmd))
-            cmd = shlex.split(cmd)
+            logger.debug("launching learning server: %s", " ".join(cmd))
             proc = subprocess.Popen(
-                cmd,
+                shlex.split(cmd),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 encoding="utf-8",
