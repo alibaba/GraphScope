@@ -13,7 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::apis::{Router, ID};
+use crate::apis::router::{ClusterInfo, PartitionId, PartitionInfo, Router, ServerId};
+use crate::apis::ID;
 use crate::GraphProxyResult;
 
 /// A simple partition utility that one server contains a single graph partition
@@ -21,16 +22,16 @@ pub struct SimplePartition {
     pub num_servers: usize,
 }
 
-impl Router for SimplePartition {
-    fn route(&self, id: &ID, workers: usize) -> GraphProxyResult<u64> {
-        let id_usize = *id as usize;
-        let magic_num = id_usize / self.num_servers;
-        // The route logics is as follows:
-        // 1. `R = id - magic_num * num_servers = id % num_servers` routes a given id
-        // to the machine R that holds its data.
-        // 2. `R * workers` shifts the worker's id in the machine R.
-        // 3. `magic_num % workers` then picks up one of the workers in the machine R
-        // to do the computation.
-        Ok(((id_usize - magic_num * self.num_servers) * workers + magic_num % workers) as u64)
+impl PartitionInfo for SimplePartition {
+    fn get_partition_id(&self, data: &ID) -> GraphProxyResult<PartitionId> {
+        Ok((*data as usize % self.num_servers) as u32)
     }
 }
+
+impl ClusterInfo for SimplePartition {
+    fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId> {
+        Ok(partition_id)
+    }
+}
+
+impl Router for SimplePartition {}
