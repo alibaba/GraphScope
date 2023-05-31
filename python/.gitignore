@@ -13,6 +13,7 @@ lib/
 
 # Protobuf GRPC
 *.pb.*
+*.pyi*
 *_pb2.py
 *_pb2_grpc.py
 
