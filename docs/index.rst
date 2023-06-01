@@ -18,7 +18,7 @@ and the vineyard store that offers efficient in-memory data transfers.
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Overview
 
    overview/intro
@@ -33,17 +33,18 @@ and the vineyard store that offers efficient in-memory data transfers.
    frequently_asked_questions
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Installation & Deployment
 
    deployment/install_on_local
    deployment/deploy_graphscope_on_self_managed_k8s
-   deployment/deploy_graphscope_on_existing_vineyard_cluster
-   deployment/deploy_graphscope_on_clouds
+   deployment/deploy_with_existing_vineyard_cluster
+   .. deployment/deploy_graphscope_on_clouds
    deployment/deploy_graphscope_with_helm
+   deployment/install_in_offline_env
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Graph Analytical Engine
 
    analytical_engine/getting_started
@@ -52,11 +53,11 @@ and the vineyard store that offers efficient in-memory data transfers.
    analytical_engine/guide_and_examples
    analytical_engine/dev_and_test
    analytical_engine/apis
-   analytical_engine/faqs
+   .. analytical_engine/faqs
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Graph Interactive Engine
 
    interactive_engine/getting_started
@@ -68,7 +69,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    interactive_engine/faq.md
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Graph Learning Engine
 
    learning_engine/getting_started
@@ -78,10 +79,10 @@ and the vineyard store that offers efficient in-memory data transfers.
    learning_engine/dev_and_test
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Storage Engine
 
-   storage_engine/getting_started
+   .. storage_engine/getting_started
    storage_engine/grin
    storage_engine/groot
    storage_engine/vineyard
@@ -89,27 +90,27 @@ and the vineyard store that offers efficient in-memory data transfers.
    storage_engine/gart
 
 .. toctree::
-   :maxdepth: 2
-   :caption: troubleshooting & utilities
+   :maxdepth: 1
+   :caption: Troubleshooting & Utilities
 
    utilities/how_to_find_logs
-   utilities/monitoring
+   .. utilities/monitoring
    utilities/gs
    utilities/error_codes
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Development
 
    development/dev_guide
    development/code_style_guide
    development/how_to_test
+   .. development/how_to_debug
    development/how_to_contribute
-   development/how_to_debugging
-   development/how_to_install_in_offline_mode
+ 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Reference
 
    reference/python_index
