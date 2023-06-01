@@ -22,7 +22,7 @@ mod test {
     use std::sync::Arc;
 
     use graph_proxy::apis::GraphElement;
-    use graph_proxy::{create_exp_store, SimplePartition};
+    use graph_proxy::create_exp_store;
     use graph_store::common::DefaultId;
     use graph_store::ldbc::LDBCVertexParser;
     use ir_common::generated::physical as pb;
@@ -35,9 +35,7 @@ mod test {
     // g.V()
     fn scan_gen(scan_opr_pb: pb::Scan) -> Box<dyn Iterator<Item = Record> + Send> {
         create_exp_store();
-        let source =
-            SourceOperator::new(scan_opr_pb.into(), 1, Arc::new(SimplePartition { num_servers: 1 }))
-                .unwrap();
+        let source = SourceOperator::new(scan_opr_pb.into(), 1, Arc::new(TestRouter {})).unwrap();
         source.gen_source(0).unwrap()
     }
 
