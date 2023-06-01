@@ -2,7 +2,7 @@ var searchData=
 [
   ['oe_5f_379',['oe_',['../classgs_1_1MutablePropertyFragment.html#a638f350c23c74622c8ef3200844e7f7f',1,'gs::MutablePropertyFragment']]],
   ['oe_5fstrategy_5f_380',['oe_strategy_',['../classgs_1_1Schema.html#ab8266e631244bb852f8589922d4b4a63',1,'gs::Schema']]],
-  ['offset_381',['offset',['../structgs_1_1string__item.html#a8839f2fc8729f6e2502e4e9229fb2302',1,'gs::string_item']]],
+  ['offset_381',['offset',['../structgs_1_1string__item.html#a297c1c326b97de7dac3f129faae09b15',1,'gs::string_item']]],
   ['offset_5fbuffer_382',['offset_buffer',['../classgs_1_1StringViewVector.html#a9bfc8e4b371345895455a6976aca96e1',1,'gs::StringViewVector::offset_buffer()'],['../classgs_1_1StringViewVector.html#aa7d8a4fb62fa534923f7ec522794d5b0',1,'gs::StringViewVector::offset_buffer() const']]],
   ['offsets_5f_383',['offsets_',['../classgs_1_1StringViewVector.html#a5e0ce2a7004c3159a354187a1cab81bf',1,'gs::StringViewVector']]],
   ['oid_5ft_384',['oid_t',['../namespacegs.html#a4cad570efc8f4ee4a5f8c76d1265b4af',1,'gs']]],

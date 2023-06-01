@@ -5,7 +5,7 @@ var searchData=
   ['label_5ft_320',['label_t',['../namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2',1,'gs']]],
   ['last_5fts_321',['last_ts',['../classgs_1_1WalsParser.html#a086dc3b0d3a789439c2443c4a7321328',1,'gs::WalsParser']]],
   ['last_5fts_5f_322',['last_ts_',['../classgs_1_1WalsParser.html#a8d8298ce00a205408eb7984240573e27',1,'gs::WalsParser']]],
-  ['length_323',['length',['../structgs_1_1WalHeader.html#ac57680125c452ba3d7e6aca95729742a',1,'gs::WalHeader::length()'],['../structgs_1_1string__item.html#a30deac16565600a4def3a8ef73639c61',1,'gs::string_item::length()']]],
+  ['length_323',['length',['../structgs_1_1WalHeader.html#ac57680125c452ba3d7e6aca95729742a',1,'gs::WalHeader::length()'],['../structgs_1_1string__item.html#a0bcdf4ccebb55327bda911d446f41bf8',1,'gs::string_item::length()']]],
   ['lf_5findexers_5f_324',['lf_indexers_',['../classgs_1_1MutablePropertyFragment.html#a1a88fa43fbd90bee136ce2d03b781385',1,'gs::MutablePropertyFragment']]],
   ['lfindexer_325',['LFIndexer',['../classgs_1_1LFIndexer.html',1,'gs::LFIndexer&lt; INDEX_T &gt;'],['../classgs_1_1LFIndexer.html#a7ddc61009f12f991391a442c5566cec1',1,'gs::LFIndexer::LFIndexer()'],['../classgs_1_1LFIndexer.html#ac08465e8963d1dc17810fd5295c39947',1,'gs::LFIndexer::LFIndexer(const LFIndexer &amp;rhs)']]],
   ['lid_5fto_5foid_326',['lid_to_oid',['../classgs_1_1UpdateTransaction.html#ad785eebdee29e94d02c1141d0553543f',1,'gs::UpdateTransaction']]],

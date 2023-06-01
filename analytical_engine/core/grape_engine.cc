@@ -98,16 +98,19 @@ class GrapeEngine {
       LOG(INFO) << "grape-engine (master) RPC server is stopping...";
       rpc_server_->StopServer();
       service_thread_.join();
+      rpc_server_.reset();
     }
 
     if (dispatcher_) {
       LOG(INFO) << "grape-engine dispatcher is stopping...";
       dispatcher_->Stop();
+      dispatcher_.reset();
     }
 
     if (vineyard_server_) {
       LOG(INFO) << "vineyardd instance is stopping...";
       vineyard_server_->Stop();
+      vineyard_server_.reset();
     }
   }
 
@@ -201,10 +204,11 @@ int main(int argc, char* argv[]) {
   FLAGS_stderrthreshold = std::numeric_limits<int>::max();
 
   grape::gflags::SetUsageMessage(
-      "Usage: mpiexec [mpi_opts] ./grape_engine [grape_opts]");
-  if (argc == 1) {
+      "Usage: mpiexec [mpi_opts] ./grape_engine [grape_opts].\n"
+      "  Example: mpiexec -n 1 ./grape_engine -host 0.0.0.0 -port 50001");
+  if (argc == 2 && strcmp(argv[1], "-h") == 0) {
     grape::gflags::ShowUsageWithFlagsRestrict(argv[0], "core/flags");
-    exit(1);
+    exit(0);
   }
   grape::gflags::ParseCommandLineFlags(&argc, &argv, true);
   grape::gflags::ShutDownCommandLineFlags();

@@ -299,16 +299,27 @@ def delegate_command_to_pod(args: str, pod: str, container: str):
     """Delegate a command to a pod.
 
     Args:
-        command (str): Command to be delegated.
-        pod_name (str): Pod name.
-        namespace (str): Namespace of the pod.
+         command (str): Command to be delegated.
+         pod_name (str): Pod name.
+         namespace (str): Namespace of the pod.
 
-    Returns:
-        str: Output of the command.
+     Returns:
+         str: Output of the command.
     """
     # logger.info("Delegate command to pod: %s, %s, %s", args, pod, container)
     args = f'kubectl exec -c {container} {pod} -- bash -c "{args}"'
     return run_command(args)
+
+
+def run_kube_cp_command(src, dst, pod, container=None, host_to_pod=True):
+    if host_to_pod:
+        cmd = f"kubectl cp {src} {pod}:{dst}"
+    else:
+        cmd = f"kubectl cp {pod}:{src} {dst}"
+    if container is not None:
+        cmd = f"{cmd} -c {container}"
+    cmd = f"{cmd} --retries=5"
+    return run_command(cmd)
 
 
 def compile_library(commands, workdir, output_name, launcher):
@@ -336,34 +347,31 @@ def _compile_on_kubernetes(commands, workdir, output_name, pod, container):
         container,
     )
     try:
-        full_path = get_lib_path(workdir, output_name)
+        lib_path = get_lib_path(workdir, output_name)
         try:
             # The library may exists in the analytical pod.
-            test_cmd = f"test -f {full_path}"
+            test_cmd = f"test -f {lib_path}"
             logger.debug(delegate_command_to_pod(test_cmd, pod, container))
             logger.info("Library exists, skip compilation")
-            cp = f"kubectl cp {pod}:{full_path} {full_path} -c {container}"
-            logger.debug(run_command(cp))
-            return full_path
+            logger.debug(run_kube_cp_command(lib_path, lib_path, pod, container, False))
+            return lib_path
         except RuntimeError:
             pass
         parent_dir = os.path.dirname(workdir)
         mkdir = f"mkdir -p {parent_dir}"
         logger.debug(delegate_command_to_pod(mkdir, pod, container))
-        cp = f"kubectl cp {workdir} {pod}:{workdir} -c {container}"
-        logger.debug(run_command(cp))
+        logger.debug(run_kube_cp_command(workdir, workdir, pod, container, True))
         for command in commands:
             command = f"cd {workdir} && {command}"
             logger.debug(delegate_command_to_pod(command, pod, container))
-        cp = f"kubectl cp {pod}:{full_path} {full_path} -c {container}"
-        logger.debug(run_command(cp))
-        if not os.path.isfile(full_path):
+        logger.debug(run_kube_cp_command(lib_path, lib_path, pod, container, False))
+        if not os.path.isfile(lib_path):
             logger.error("Could not find desired library, found files are:")
             logger.error(os.listdir(workdir))
-            raise FileNotFoundError(full_path)
+            raise FileNotFoundError(lib_path)
     except Exception as e:
         raise CompilationError(f"Failed to compile {output_name} on kubernetes") from e
-    return full_path
+    return lib_path
 
 
 def _compile_on_local(commands, workdir, output_name):
@@ -371,16 +379,16 @@ def _compile_on_local(commands, workdir, output_name):
     try:
         for command in commands:
             logger.debug(run_command(command, cwd=workdir))
-        full_path = get_lib_path(workdir, output_name)
-        if not os.path.isfile(full_path):
+        lib_path = get_lib_path(workdir, output_name)
+        if not os.path.isfile(lib_path):
             logger.error("Could not find desired library")
             logger.info(os.listdir(workdir))
-            raise FileNotFoundError(full_path)
+            raise FileNotFoundError(lib_path)
     except Exception as e:
         raise CompilationError(
             f"Failed to compile {output_name} on platform {get_platform_info()}"
         ) from e
-    return full_path
+    return lib_path
 
 
 def compile_app(

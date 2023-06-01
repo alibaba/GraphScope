@@ -1,26 +1,19 @@
 # Standalone Deployment for GIE
 
-We have demonstrated [how to execute interactive queries](./getting_started.md) easily by installing Graphscope via `pip` on a local machine. However, in real-life applications, graphs are often too large to fit on a single machine. In such cases, Graphscope can be deployed on a cluster, such as a [self-managed k8s cluster](../deploy_graphscope_on_self_managed_k8s.md), for processing large-scale graphs. But you may wonder, "what if I only need the GIE engine and not the whole package that includes GAE and GLE?" This tutorial will walk you through the process of standalone deployment of GIE on a self-managed k8s cluster.
+We have demonstrated [how to execute interactive queries](./getting_started.md) easily by installing Graphscope via `pip` on a local machine. However, in real-life applications, graphs are often too large to fit on a single machine. In such cases, Graphscope can be deployed on a cluster, such as a [self-managed k8s cluster](../deploy_graphscope_on_self_managed_k8s.md), for processing large-scale graphs. But you may wonder, "what if I only need the GIE engine and not the whole package of GraphScope?" This tutorial will walk you through the process of standalone deployment of GIE on a self-managed k8s cluster.
 
 Throughout the tutorial, we assume all machines are running Linux system.
 We do not guarantee that it works as smoothly as Linux on the other platform.
 For your reference, we've tested the tutorial on Ubuntu 20.04.
 
-## The K8s Cluster
-If you do not have a K8s cluster to work on, don't worry. We have three simple ways for you to create one and get started with the deployment:
+## Prerequisites
 
-- Use a K8s cluster from Cloud Providers like [ACK](https://www.aliyun.com/product/kubernetes) from Alibaba Cloud.
-- Create a K8s cluster using [kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/).
-- Create a local K8s cluster using [minikube](https://minikube.sigs.k8s.io/docs/start/):
-  ```Bash
-  # Install `minikube` on your platform
-  # Recommend using `none` driver on a Linux machine to free from loading image to control plane.
-  # Check https://minikube.sigs.k8s.io/docs/handbook/pushing/ for details.
-  minikube start --driver=none
-  ```
-- Use a local k8s cluster in [docker desktop](https://docs.docker.com/desktop/kubernetes/).
+- Kubernetes Cluster
+- Python >= 3.9
 
-To learn more about the creation of a k8s cluster, please refer to the [official guide](https://kubernetes.io/zh-cn/docs/tutorials/kubernetes-basics/create-cluster/).
+To get started, you need to prepare a Kubernetes Cluster to continue.
+
+Incase you doesn't have one, you could refer to the instruction of [create kubernetes cluster](../deployment/deploy_graphscope_on_self_managed_k8s.md#prepare-a-kubernetes-cluster).
 
 
 ## Deploy Your First GIE Service
@@ -106,9 +99,11 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
 
    Download Gremlin console and unpack to your local directory.
    ```bash
-   curl -LO https://dlcdn.apache.org/tinkerpop/3.6.2/apache-tinkerpop-gremlin-console-3.6.2-bin.zip && \
-   unzip apache-tinkerpop-gremlin-console-3.6.2-bin.zip && \
-   cd apache-tinkerpop-gremlin-console-3.6.2
+   # if the given version (3.6.4) is not found, try to access https://dlcdn.apache.org to
+   # download an available version.
+   curl -LO https://dlcdn.apache.org/tinkerpop/3.6.4/apache-tinkerpop-gremlin-console-3.6.4-bin.zip && \
+   unzip apache-tinkerpop-gremlin-console-3.6.4-bin.zip && \
+   cd apache-tinkerpop-gremlin-console-3.6.4
    ```
 
    Modify the `hosts` and `port` in `conf/remote.yaml` to the GIE Frontend Service endpoint.
@@ -133,7 +128,6 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
 ```bash
    helm uninstall [YOUR_RELEASE_NAME]
 ```
-
 
 ## Using Your Own Data
 Currently, a single instance of GIE can only handle one set of graph data. This means that you must

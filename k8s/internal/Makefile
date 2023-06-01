@@ -162,34 +162,34 @@ graphscope-client-manylinux2014-py3-nodocker:
 			if [[ "${ARCH}" == "aarch64" ]]; then \
 				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
 				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
-				python3 -m pip install "numpy==1.23.2" "pandas" wheel "auditwheel==5.0.0"; \
 			else \
-				python3 -m pip install "numpy==1.23.2" "pandas" "grpcio" "grpcio-tools" wheel "auditwheel==5.0.0"; \
+				python3 -m pip install "grpcio" "grpcio-tools"; \
 			fi; \
+			python3 -m pip install mypy-protobuf "numpy==1.23.2" "pandas" wheel "auditwheel==5.0.0"; \
 		elif [[ "$$py" == "cp310-cp310" ]]; then \
 			if [[ "${ARCH}" == "aarch64" ]]; then \
 				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
 				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
-				python3 -m pip install "numpy==1.21.2" "pandas" wheel "auditwheel==5.0.0"; \
 			else \
-				python3 -m pip install "numpy==1.21.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
+				python3 -m pip install "grpcio>=1.49" "grpcio-tools>=1.49"; \
 			fi; \
+			python3 -m pip install mypy-protobuf "numpy==1.21.2" "pandas" wheel "auditwheel==5.0.0"; \
 		elif [[ "$$py" == "cp39-cp39" ]]; then \
 			if [[ "${ARCH}" == "aarch64" ]]; then \
 				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
 				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
-				python3 -m pip install "numpy==1.19.3" "pandas" wheel "auditwheel==5.0.0"; \
 			else \
-				python3 -m pip install "numpy==1.19.3" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
+				python3 -m pip install "grpcio>=1.49" "grpcio-tools>=1.49"; \
 			fi; \
+			python3 -m pip install mypy-protobuf "numpy==1.19.3" "pandas" wheel "auditwheel==5.0.0"; \
 		else \
 			if [[ "${ARCH}" == "aarch64" ]]; then \
 				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
 				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
-				python3 -m pip install "numpy" "pandas" wheel "auditwheel==5.0.0"; \
 			else \
-				python3 -m pip install "numpy==1.18.5" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
+				python3 -m pip install "grpcio>=1.49" "grpcio-tools>=1.49"; \
 			fi; \
+			python3 -m pip install mypy-protobuf "numpy" "pandas" wheel "auditwheel==5.0.0"; \
 		fi; \
 		sudo rm -rf build; \
 		sudo rm -rf dist/*.whl; \
@@ -214,20 +214,20 @@ graphscope-client-darwin-py3:
 		py=$$(python3 -V 2>&1 | awk '{print $$2}' | awk -F '.' '{print $$1$$2}') && \
 		pip3 install -U pip && \
 		if [[ "$$py" == "311" ]]; then \
-			pip3 install "numpy==1.23.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+			pip3 install mypy-protobuf "numpy==1.23.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 		elif [[ "$$py" == "310" ]]; then \
-			pip3 install "numpy==1.21.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+			pip3 install mypy-protobuf "numpy==1.21.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 		elif [[ "$$py" == "cp39-cp39" ]]; then \
 			if [[ "${ARCH}" == "arm64" ]]; then \
-				pip3 install "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+				pip3 install mypy-protobuf "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 			else \
-				pip3 install "numpy==1.19.3" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+				pip3 install mypy-protobuf "numpy==1.19.3" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 			fi; \
 		else \
 			if [[ "${ARCH}" == "arm64" ]]; then \
-				pip3 install "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+				pip3 install mypy-protobuf "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 			else \
-				pip3 install "numpy==1.18.5" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+				pip3 install mypy-protobuf "numpy==1.18.5" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 			fi; \
 		fi; \
 		rm -rf build dist/*.whl || true && \

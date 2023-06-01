@@ -822,11 +822,9 @@ class ArrowProjectedFragment
 
   inline bool GetInnerVertex(const oid_t& oid, vertex_t& v) const {
     vid_t gid;
-    if (vm_ptr_->GetGid(internal_oid_t(oid), gid)) {
-      if (vid_parser_.GetFid(gid) == fid_) {
-        v.SetValue(vid_parser_.GetLid(gid));
-        return true;
-      }
+    if (vm_ptr_->GetGid(fid_, internal_oid_t(oid), gid)) {
+      v.SetValue(vid_parser_.GetLid(gid));
+      return true;
     }
     return false;
   }
