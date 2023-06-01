@@ -203,7 +203,7 @@ train_gcn(lg, node_type="paper", edge_type="cites",
 ````
 
 
-## Graph Interactive Query Quick Start
+## Graph Analytical Task Quick Start
 
 
 The installed `graphscope` package includes everything you need to analyze a graph on your local machine. If you have a graph analytical job that needs to run iterative algorithms, it works well with `graphscope`.
@@ -236,8 +236,12 @@ print(ret.to_dataframe(selector={'id': 'v.id', 'distance': 'r'})
 ```
 ````
 
+## Graph Interactive Query Quick Start
+
+TODO(Robin):
+
 ## Graph Learning Quick Start
 
-TBF
+TODO(LiSu):
 
 
