@@ -1,8 +1,10 @@
 # Apache TinkerPop Ecosystem
 [Apache TinkerPop](http://tinkerpop.apache.org/) is an open framework for developing interactive graph applications using the Gremlin query language.  GIE implements TinkerPop's [Gremlin Server](https://tinkerpop.apache.org/docs/current/reference/#gremlin-server) interface so that the system can seamlessly interact with the TinkerPop ecosystem, including development tools such as [Gremlin Console] (https://tinkerpop.apache.org/docs/current/reference/#gremlin-console) and language wrappers such as Java and Python.
 
-All you need to connect with existing Tinkerpop ecosystem is to obtain the GIE Frontend Service endpoint, as shown
-in the [deployment](./deployment.md#deploy-your-first-gie-service).
+All you need to connect with existing Tinkerpop ecosystem is to obtain the GIE Frontend service endpoint.
+How to do that?
+- Follow the [instruction](./deployment.md#deploy-your-first-gie-service) while deploying GIE in a K8s cluster,
+- Follow the [instruction](./dev_and_test.md#manually-start-the-gie-services) while starting GIE on a local machine.
 
 ## Connecting Gremlin within Python
 
@@ -25,9 +27,11 @@ GIE makes it easy to connect to a loaded graph with Tinkerpop's [Gremlin-Python]
    assert res == 6
    ```
 
-In fact, we have implemented the ``interactive`` object for submitting Gremlin queries in [GraphScope's
-python SDK](./getting_started.md), which is instance of the ``InteractiveQuery`` Python class, a simple wrapper around
-Tinkerpop's Gremlin-Python.
+````{hint}
+A simpler option is to use the `gremlin` object for submitting Gremlin queries through
+[GraphScope's python SDK](./getting_started.md), which is a wrapper that encompasses Tinkerpop's
+ Gremlin-Python and will automatically acquire the endpoint.
+````
 
 ## Connecting Gremlin within Java
 See [Gremlin-Java](https://tinkerpop.apache.org/docs/current/reference/#gremlin-java) for connecting Gremlin

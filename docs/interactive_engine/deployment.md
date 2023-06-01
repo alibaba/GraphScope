@@ -70,7 +70,7 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
    You should see the `[YOUR_RELEASE_NAME]-gie-standalone-frontend-0` and `[YOUR_RELEASE_NAME]-gie-standalone-store-0` pods running.
 
 - Get the endpoint of the GIE Frontend service:
-   ```
+   ```bash
    kubectl describe svc [YOUR_RELEASE_NAME]-gie-standalone-frontend \
    | grep "Endpoints:" | awk -F' ' '{print $2}'
    ```
