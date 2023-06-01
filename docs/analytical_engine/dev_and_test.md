@@ -29,10 +29,7 @@ communication between workers, and applications, are heavily reused in the analy
 
 If you want to fully understand the analytcial engine, it is highly recommaned that you start from libgrape-lite.
 
-TODO: [figure]
-
-The code located in the `analytical_engine` directory functions like extensions to libgrape-lite, 
-thereby making it full-fledged with the following enhancements:
+The code located in the `analytical_engine` directory functions like extensions to libgrape-lite, thereby making it full-fledged with the following enhancements:
 
 - K8s support to enable management by the GraphScope coordinator;
 - Many built-in algorithms, while libgrape-lite's only ships with 6 analytical algorithms in LDBC Graphalytics Benchmark;
@@ -42,55 +39,45 @@ thereby making it full-fledged with the following enhancements:
 The code is organized as follows:
 
 - `apps` contains various built-in algorithms/applications.
+- `core`: The core directory contains extensions to the libgrape-lite library and is organized in the same way as the [libgrape-lite](https://github.com/alibaba/libgrape-lite/tree/master/grape) directory. The extensions are located in the same directory as their base in libgrape-lite. More specifically,
+    - `core/app` contains classes related to applications, which serve as base classes to inherit from when implementing new applications.
+    - `core/communication` contains extension on communication layers.
+    - `core/cuda` contains a suite of graph structure implementations and communications on the GPU for GPU-accelerated computations.
+    - `core/fragment` contains the extended fragments and their loaders. e.g., mutable graph fragment. 
+    - `core/io` more `io_adaptor`s.
+    - `core/parallel` contains the parallel sub-layer for computation and communications, such as a helper class for parallel execution with threads and how message buffers are managed and synced between workers.
+    - `core/serialization` extend the serialization in libgrape-lite to include property graphs.
+    - `core/utils` contains utility functions and classes.
+    - `core/vertex_map` contains some vertex_maps designed to manage the mapping between the original vertex ID and the internal identifier of a vertex.
+    - `core/worker` contains the worker, which executes the applications locally and communicates with other workers.
+- `frame` are used to wrap the libgrape-lite library for integration into GraphScope. This is necessary because libgrape-lite heavily relies on Templates to define applications and graphs, which is inadequate for loading **property** graphs and applications in GraphScope scenarios. Property graphs usually have multiple label and property types, which cannot be determined before loading. For this reason, GraphScope has implemented JIT technology to compile property graphs and their associated applications at runtime. These frames serve as wrappers to facilitate these tasks.
+- `java` contains Java implementations. GraphScope supports implementing applications with Pregel/Giraph and GraphX APIs. In addition, existing Giraph/GraphX applications(jars) can be run on GraphScope without any modification. Read more about Java support [here](tutorial_dev_algo_java).
 - `benchmarks` contains code related to performance testing and benchmarking.
 - `cmake` contains CMake scripts for configuring the build.
-- `core`: This directory contains the core components of the analytical engine, including the application management (app), communication, context, fragment, input/output (io), object, parallel execution, server, utility functions (utils), vertex mapping, worker threads, and others[oai_citation:4](https://github.com/alibaba/GraphScope/tree/main/analytical_engine/core).
+- `test` contains test cases and scripts.
 
-5. `frame`: This directory includes files like `app_frame.cc`, `ctx_wrapper_builder.h`, `cython_app_frame.cc`, `flash_app_frame.cc`, `project_frame.cc`, and `property_graph_frame.cc` that seem to be related to different types of computations or operations in the GraphScope analytical engine[oai_citation:5](https://github.com/alibaba/GraphScope/tree/main/analytical_engine/frame).
+:::{figure-md}
+<img src="../images/fig-grape.jpg"
+     alt="Key components of libgrape-lite"
+     width="80%">
 
-6. `java`: This directory contains several subdirectories related to Java implementations in the GraphScope analytical engine. These include grape-annotation, grape-demo, grape-giraph, grape-graphx, grape-jdk, grape-rdd-reader, and grape-runtime[oai_citation:6](https://github.com/alibaba/GraphScope/tree/main/analytical_engine/java).
+Key components of libgrape-lite
+:::   
 
-7. `misc`: The misc directory contains miscellaneous files that don't fit into the other categories. In this case, it contains a Python script for linting C++ code (`cpplint.py`)[oai_citation:7](https://github.com/alibaba/GraphScope/tree/main/analytical_engine/misc).
+The figure above illustrates the key components of libgrape-lite, (as well as analytical engine in GraphScope), and how they work. More specifically,
 
-- `test` contains various test scripts and files.
+- `Fragment` is a partition of graph data and is a processing object for graphs on a computing node.
+- `MessageMessager` manages communication strategies, takes responsible for managing message communication and state synchronization between fragments explicitly or implicitly.
+- `Application` is the main logic of the user's application. In an application, the user can access the local `Fragment` or send/receive messages through the `MessageManager`. 
+- `Worker`, a class that is responsible for loading the graph (`Fragment`), calling the application to compute on the local `Fragment`, and communicating with `Worker`s on other computing nodes through the `MessageManager`.
 
-Please note that this is a general overview. To understand the details of how the code is organized, you would need to read the code and any associated documentation, or possibly reach out to the project maintainers.
+## Making Modifications
 
+- You are encouraged to fork the repo and make modifications on your own fork.
+- It is much easier to begin with a small change, such as revising a specific algorithm, adding a new algorithm, and then gradually move on to more complex changes. You are suggested to avoid large changes in a single commit.
+- If you want to contribute to the repo, please refer to [Contributing to GraphScope](../development/contributing.md) to get more details.
 
-    - Overview of the codebase structure, explaining what each main directory and file is for.
-    - Deep dive into key directories and files, explaining important classes, functions, and data structures.
-    - Include diagrams or flowcharts where they can help illustrate code organization or data flow.
-
-4. **Making Modifications**
-    - Guide to creating a new branch for their changes.
-    - Instructions on how to navigate the codebase to find the areas relevant to the changes they want to make.
-    - Best practices for modifying the code, such as adhering to existing coding styles and conventions, adding comments, and avoiding large changes in a single commit.
-
-5. **Building the Code**
-    - Step-by-step guide to building the project, explaining any build scripts or tools used.
-    - Instructions for resolving common build errors.
-
-6. **Testing**
-    - Explanation of the testing philosophy and framework used in GraphScope.
-    - Instructions on how to run existing tests.
-    - Guide to writing new tests for their changes, emphasizing the importance of thorough testing.
-
-7. **Submitting Changes**
-    - Instructions for committing and pushing their changes.
-    - Guide to opening a pull request, including any project-specific guidelines for PR descriptions, linking issues, etc.
-
-8. **Conclusion**
-    - Summarize the main points of the tutorial.
-    - Encourage the reader to contribute to the project and provide links to any further resources, such as more detailed documentation, community forums, etc.
-
-Remember, this is a very high-level outline, and the specific details will depend on the GraphScope project and the specific changes a developer wants to make. A good tutorial would involve going through the process yourself to ensure all the steps are accurate and clear.
-
-
-
-This document describes how to build and test GraphScope Analytical Engine from source code.
-
-
-## Build Analytical Engine
+## Building Analytical Engine
 
 With `gs` command-line utility, you can build analytical engine of GraphScope with a single command.
 
@@ -101,7 +88,7 @@ With `gs` command-line utility, you can build analytical engine of GraphScope wi
 ./gs make analytical
 ```
 
-You may found the built artifacts in `analytical_engine/build/grape_engine`.
+The code of analytical engine is a cmake project, with a `CMakeLists.txt` in the its root directory (`/analytical_engine`). After the building with `gs`, you may found the built artifacts in `analytical_engine/build/grape_engine`.
 
 Together with the `grape_engine` are shared libraries, or there may have a bunch of test binaries if you choose to build the tests.
 
@@ -112,16 +99,14 @@ You could install it to a location by
 ```
 
 ````{note}
-More in-depth view:
-
 The `CMakeLists.txt` of analytical engine is in `analytical_engine/CMakeLists.txt`.
 
-Take a look at this file if you want to investigate more of the analytical engine.
+Take a look at this file if you want to investigate more of the analytical engine or customize the building.
 ````
 
-## How to Test
+## Testing
 
-You could easily test with the new artifacts with a single command:
+The analytical engine has a suite of tests to ensure the correctness of the code, from unit tests to graph algorithm correctness tests. You could easily test with the new artifacts with a single command:
 
 Here we set the working directory to local repo.
 ```bash
