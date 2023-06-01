@@ -13,6 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::sync::Arc;
+
 use graph_proxy::{create_csr_store, SimplePartition};
 use runtime::IRJobAssembly;
 
@@ -31,7 +33,7 @@ impl QueryCsrGraph {
 impl InitializeJobAssembly for QueryCsrGraph {
     fn initialize_job_assembly(&self) -> IRJobAssembly {
         create_csr_store();
-        let partitioner = SimplePartition { num_servers: self.num_servers };
-        IRJobAssembly::new(partitioner)
+        let partitioner = Arc::new(SimplePartition { num_servers: self.num_servers });
+        IRJobAssembly::with(partitioner.clone(), partitioner)
     }
 }

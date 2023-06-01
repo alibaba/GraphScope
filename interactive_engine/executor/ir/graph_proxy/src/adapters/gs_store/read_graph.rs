@@ -31,9 +31,7 @@ use ir_common::{KeyId, LabelId, NameOrId, OneOrMany};
 
 use crate::adapters::gs_store::details::{LazyEdgeDetails, LazyVertexDetails};
 use crate::apis::graph::PKV;
-use crate::apis::{
-    from_fn, register_graph, Direction, DynDetails, Edge, QueryParams, ReadGraph, Statement, Vertex, ID,
-};
+use crate::apis::{from_fn, Direction, DynDetails, Edge, QueryParams, ReadGraph, Statement, Vertex, ID};
 use crate::utils::expr::eval_pred::PEvaluator;
 use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit};
 use crate::{GraphProxyError, GraphProxyResult};
@@ -64,7 +62,8 @@ pub fn create_gs_store<V, VI, E, EI>(
     store: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
     partition_manager: Arc<dyn GraphPartitionManager>, server_partitions: Vec<PartitionId>,
     row_filter_push_down: bool, column_filter_push_down: bool,
-) where
+) -> Arc<GraphScopeStore<V, VI, E, EI>>
+where
     V: StoreVertex + 'static,
     VI: Iterator<Item = V> + Send + 'static,
     E: StoreEdge + 'static,
@@ -77,7 +76,7 @@ pub fn create_gs_store<V, VI, E, EI>(
         row_filter_pushdown: row_filter_push_down,
         column_filter_pushdown: column_filter_push_down,
     };
-    register_graph(Arc::new(graph));
+    Arc::new(graph)
 }
 
 impl<V, VI, E, EI> ReadGraph for GraphScopeStore<V, VI, E, EI>

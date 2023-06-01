@@ -1,5 +1,5 @@
 //
-//! Copyright 2021 Alibaba Group Holding Limited.
+//! Copyright 2023 Alibaba Group Holding Limited.
 //!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
@@ -13,24 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::apis::ID;
-use crate::GraphProxyResult;
+use std::sync::Arc;
 
-pub type PartitionId = u32;
-pub type ServerId = u32;
+use graph_proxy::apis::partitioner::{ClusterInfo, PartitionInfo};
+use graph_proxy::apis::ID;
+use graph_proxy::GraphProxyResult;
+
 pub type WorkerId = u64;
-
-/// A `PartitionInfo` is used to query the partition information when the data has been partitioned.
-pub trait PartitionInfo: Send + 'static {
-    /// Given the data, return the id of the partition that holds the data.
-    fn get_partition_id(&self, data: &ID) -> GraphProxyResult<PartitionId>;
-}
-
-/// A `ClusterInfo` is used to query the cluster information when the system is running on a cluster.
-pub trait ClusterInfo {
-    /// Given the partition id, return the id of the server that is able to access the partition.
-    fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId>;
-}
 
 /// A `Router` is used to route the data to the destination worker so that it can be properly processed,
 /// especially when the underlying data has been partitioned across the cluster.
@@ -44,12 +33,26 @@ pub trait ClusterInfo {
 /// - It first do `25534 % 10 == 4`, which means it must be routed to the 4-th server.
 /// - Any worker in the 4-th server can process the vertex. Thus it randomly picks a worker, saying 5-th worker, which has ID 4 * 10 + 5 = 45.
 /// - Then 45-th worker will be returned for routing this vertex.
-pub trait Router: PartitionInfo + ClusterInfo + Send + Sync + 'static {
+pub trait Router: Send + Sync + 'static {
     /// a route function that given the data, return the worker id that is going to do the query.
-    fn route(&self, data: &ID, job_workers: usize) -> GraphProxyResult<WorkerId> {
-        // a default implementation that pick a random worker to do the query.
-        let partition_id = self.get_partition_id(data)?;
-        let server_id = self.get_server_id(partition_id)?;
+    fn route(&self, data: &ID, job_workers: usize) -> GraphProxyResult<WorkerId>;
+}
+
+pub struct DistributedDataRouter<P: PartitionInfo, C: ClusterInfo> {
+    partition_info: Arc<P>,
+    cluster_info: Arc<C>,
+}
+
+impl<P: PartitionInfo, C: ClusterInfo> DistributedDataRouter<P, C> {
+    pub fn new(partition_info: Arc<P>, cluster_info: Arc<C>) -> Self {
+        DistributedDataRouter { partition_info, cluster_info }
+    }
+}
+
+impl<P: PartitionInfo, C: ClusterInfo> Router for DistributedDataRouter<P, C> {
+    fn route(&self, data: &i64, job_workers: usize) -> GraphProxyResult<u64> {
+        let partition_id = self.partition_info.get_partition_id(data)?;
+        let server_id = self.cluster_info.get_server_id(partition_id)?;
         let random_worker_index = (*data as usize % job_workers) as u32;
         Ok((server_id * job_workers as u32 + random_worker_index) as u64)
     }

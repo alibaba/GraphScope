@@ -16,7 +16,7 @@
 use std::convert::TryInto;
 use std::sync::Arc;
 
-use graph_proxy::apis::Router;
+use graph_proxy::apis::partitioner::{ClusterInfo, PartitionInfo};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
@@ -45,6 +45,7 @@ use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::operator::sort::CompareFunctionGen;
 use crate::process::operator::source::SourceOperator;
 use crate::process::record::{Record, RecordKey};
+use crate::router::{DistributedDataRouter, Router};
 
 type RecordMap = Box<dyn MapFunction<Record, Record>>;
 type RecordFilterMap = Box<dyn FilterMapFunction<Record, Record>>;
@@ -155,6 +156,11 @@ impl FnGenerator {
 impl IRJobAssembly {
     pub fn new<D: Router>(router: D) -> Self {
         IRJobAssembly { udf_gen: FnGenerator::new(Arc::new(router)) }
+    }
+
+    pub fn with<P: PartitionInfo, C: ClusterInfo>(p: Arc<P>, c: Arc<C>) -> Self {
+        let default_router = DistributedDataRouter::new(p, c);
+        IRJobAssembly { udf_gen: FnGenerator::new(Arc::new(default_router)) }
     }
 
     fn install(

@@ -18,8 +18,23 @@ pub use assembly::IRJobAssembly;
 pub mod assembly;
 pub mod error;
 pub mod process;
+pub mod router;
 
 #[macro_use]
 extern crate dyn_type;
 #[macro_use]
 extern crate log;
+
+use std::sync::Arc;
+
+use graph_proxy::apis::partitioner::{ClusterInfo, PartitionInfo};
+use graph_proxy::apis::{register_graph, ReadGraph};
+
+/// Initialize a job assembly with the given graph, partition info and cluster info.
+pub fn initialize_job_assembly<G: ReadGraph + 'static, P: PartitionInfo, C: ClusterInfo>(
+    graph: Arc<G>, partition_info: Arc<P>, cluster_info: Arc<C>,
+) -> IRJobAssembly {
+    register_graph(graph);
+    let job_assembly = IRJobAssembly::with(partition_info, cluster_info);
+    job_assembly
+}

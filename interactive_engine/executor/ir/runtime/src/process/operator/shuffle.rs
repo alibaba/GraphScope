@@ -15,7 +15,7 @@
 
 use std::sync::Arc;
 
-use graph_proxy::apis::{GraphElement, Router};
+use graph_proxy::apis::GraphElement;
 use ir_common::error::ParsePbError;
 use ir_common::KeyId;
 use pegasus::api::function::{FnResult, RouteFunction};
@@ -23,6 +23,7 @@ use pegasus::api::function::{FnResult, RouteFunction};
 use crate::error::FnExecError;
 use crate::process::entry::{Entry, EntryType};
 use crate::process::record::Record;
+use crate::router::Router;
 
 pub struct RecordRouter {
     p: Arc<dyn Router>,

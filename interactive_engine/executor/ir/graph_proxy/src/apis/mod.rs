@@ -14,8 +14,8 @@
 //! limitations under the License.
 
 pub mod graph;
+pub mod partitioner;
 pub mod read_graph;
-pub mod router;
 pub mod write_graph;
 
 pub use graph::element::{
@@ -23,5 +23,4 @@ pub use graph::element::{
 };
 pub use graph::{read_id, write_id, Direction, QueryParams, ID};
 pub use read_graph::{from_fn, get_graph, register_graph, ReadGraph, Statement};
-pub use router::Router;
 pub use write_graph::WriteGraphProxy;

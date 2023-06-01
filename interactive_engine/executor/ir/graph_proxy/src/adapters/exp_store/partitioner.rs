@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::apis::router::{ClusterInfo, PartitionId, PartitionInfo, Router, ServerId};
+use crate::apis::partitioner::{ClusterInfo, PartitionId, PartitionInfo, ServerId};
 use crate::apis::ID;
 use crate::GraphProxyResult;
 
@@ -33,5 +33,3 @@ impl ClusterInfo for SimplePartition {
         Ok(partition_id)
     }
 }
-
-impl Router for SimplePartition {}

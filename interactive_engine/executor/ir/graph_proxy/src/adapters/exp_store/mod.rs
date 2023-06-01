@@ -13,8 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+mod partitioner;
 mod read_graph;
-mod router;
 
+pub use partitioner::SimplePartition;
 pub use read_graph::create_exp_store;
-pub use router::SimplePartition;

@@ -19,7 +19,7 @@ use std::sync::Arc;
 
 use dyn_type::Object;
 use graph_proxy::apis::graph::PKV;
-use graph_proxy::apis::{get_graph, Edge, QueryParams, Router, Vertex, ID};
+use graph_proxy::apis::{get_graph, Edge, QueryParams, Vertex, ID};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::physical as pb;
@@ -27,6 +27,7 @@ use ir_common::{KeyId, NameOrId};
 
 use crate::error::{FnGenError, FnGenResult};
 use crate::process::record::Record;
+use crate::router::Router;
 
 #[derive(Debug)]
 pub enum SourceType {
