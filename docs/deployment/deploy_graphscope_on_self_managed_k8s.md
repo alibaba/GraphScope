@@ -1,4 +1,4 @@
-# Deploy GraphScope on K8s cluster
+# Deploy on K8s Cluster
 
 To processing large-scale graph in a distributed environment, GraphScope is designed to be deployed on a Kubernetes(K8s) cluster. 
 

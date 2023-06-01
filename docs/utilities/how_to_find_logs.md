@@ -1,6 +1,7 @@
 # How to Find logs
 
-By default, GraphScope is usually running in a silent mode following the convention of Python applications. To enable verbose logging, turn on by:
+By default, GraphScope is running in a silent mode following the convention of Python applications. 
+To enable verbose logging, turn it on by this command after importing `graphscope`.
 
 ```python
 >>> import graphscope
@@ -26,9 +27,9 @@ $ kubectl describe pod <pod_name>
 $ kubectl logs -f <pod_name>
 ```
 
-### Find logs for Graph Analytical Engine (GAE)
+### Find logs for GraphScope Analytical Engine (GAE)
 
-Within the k8s environment, all logs for Graph Analytical Engine (GAE) are consolidated into the coordinator pod. Therefore, you can view GAE logs by using the command:
+Within the k8s environment, all logs for the analytical engine (GAE) are consolidated into the coordinator pod. Therefore, you can view GAE logs by using the command:
 
 ```shell
 $ kubectl logs -f coordinator-syoove-79b44f7b58-ctmqb
