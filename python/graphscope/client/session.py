@@ -1013,6 +1013,11 @@ class Session(object):
             # try to connect to exist coordinator
             self._coordinator_endpoint = self._config_params["addr"]
         elif self._cluster_type == types_pb2.K8S:
+            # if users only provide kube_config file path
+            if isinstance(self._config_params["k8s_client_config"], str):
+                self._config_params["k8s_client_config"] = {
+                    "config_file": self._config_params["k8s_client_config"]
+                }
             if isinstance(
                 self._config_params["k8s_client_config"],
                 kube_client.api_client.ApiClient,
