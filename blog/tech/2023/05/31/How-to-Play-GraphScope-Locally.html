@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">How to Run and Develop GraphScope Locally</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2023-05-31">31 May 2023</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2023-05-31">31 May 2023</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">How to Run and Develop GraphScope Locally</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2023-05-31-title-picture.jpg" alt="graph-computing" />
+In this post, we will detail two ways to install GraphScope locally: 1) directly install the published binary package through pip; 2) compile and build the latest version of GraphScope from source code.</p>
+
+<h2 id="install-graphscope-via-pip">Install GraphScope via pip</h2>
+
+<p>The <a href="https://pypi.org/project/graphscope/">Python release package</a> of GraphScope contains the necessary components and dependencies for the client and server runtime. Before installing GraphScope, make sure that the current environment meets the following prerequisites:</p>
+
+<ul>
+  <li>Linux system: Ubuntu 20.04 or higher, CentOS 7 or higher</li>
+  <li>Pre-installed GCC 7.1+</li>
+  <li>MacOS 11+ (Intel) or MacOS 12+ (Apple silicon)</li>
+  <li>Python &gt;= 3.8 and pip &gt;= 19.3</li>
+  <li>For Windows users, you may want to install Ubuntu on WSL2 to use this package;</li>
+</ul>
+
+<p>Install the latest version of GraphScope via pip:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>pip3 <span class="nb">install </span>graphscope <span class="nt">--upgrade</span>
+</code></pre></div></div>
+
+<p>You can check if GraphScope has been installed correctly with the following Python command:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="n">graphcope</span>
+<span class="gp">&gt;&gt;&gt;</span> <span class="n">graphscope</span><span class="p">.</span><span class="n">__version__</span>
+<span class="mf">0.21</span><span class="p">.</span><span class="mi">0</span>
+</code></pre></div></div>
+
+<p>If the version number of GraphScope is displayed correctly as shown above, then you can start using GraphScope. <a href="http://try.graphscope.app/">Playground</a> and <a href="https://github.com/alibaba/GraphScope/tree/main/tutorials">Tutorials</a> provide some getting started examples, which will be helpful for your GraphScope journey.</p>
+
+<h2 id="build-graphscope-from-source-code">Build GraphScope from Source Code</h2>
+
+<p>GraphScope is comprised of three engines targeting for different business scenario, and a coordinator that could bring them together, and a client for users to connect and perform various tasks.</p>
+
+<p>In this section, taking the <a href="https://graphscope.io/docs/latest/overview/graph_analytics_workloads">GAE engine</a> as an example, we will introduce how to build and test a single engine, and then give a demo on how to do the e2e test where multiple engines will working together.</p>
+
+<h3 id="dev-environment">Dev Environment</h3>
+
+<p>Since compiling GraphScope requires some third-party tools and dependencies such as <a href="https://github.com/v6d-io/v6d">Vineyard</a>, <a href="https://github.com/alibaba/libgrape-lite">libgrape-lite</a>, and also requires compilation frameworks for different languages such as g++, Maven, Rustc, etc. Some dependencies can be installed directly by the package manager, while others need to be installed by compiling source code. Therefore, to make life easier, we provide a a docker image based on centos7 with all required dependencies installed.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest
+</code></pre></div></div>
+
+<p>Please refer to <a href="https://graphscope.io/docs/latest/development/dev_guide#dev-environment">Dev Environment</a> to find more options to get a dev environment.</p>
+
+<h3 id="build-analytical-engine">Build Analytical Engine</h3>
+
+<p>For developers, they just need to git clone the latest version of code from the <a href="https://github.com/alibaba/GraphScope">repository</a>, make their changes to the code and build GraphScope with <code class="language-plaintext highlighter-rouge">gs</code> command-line utility:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># set docker container shared memory: 10G</span>
+<span class="nb">sudo </span>docker run <span class="nt">--shm-size</span> 10240m <span class="nt">-it</span> registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest /bin/bash
+
+git clone https://github.com/alibaba/GraphScope.git
+
+<span class="c"># building</span>
+<span class="nb">cd </span>GraphScope <span class="o">&amp;&amp;</span> ./gs make analytical
+</code></pre></div></div>
+
+<p>You may found the built artifacts under the directory <code class="language-plaintext highlighter-rouge">analytical_engine/build/grape_engine</code>, together with the grape_engine are shared libraries, or there may have a bunch of test binaries if you choose to build the tests.</p>
+
+<p>Then, you could install it to a specified location by:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./gs make analytical-install <span class="nt">--install-prefix</span> /opt/graphscope
+</code></pre></div></div>
+
+<h3 id="test-analytical-engine">Test Analytical Engine</h3>
+
+<p>You could easily test with the new artifacts with a single command:</p>
+
+<p>Here we set the working directory to local repo.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">GRAPHSCOPE_HOME</span><span class="o">=</span><span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>
+<span class="c"># Here the `pwd` is the root path of GraphScope repository</span>
+</code></pre></div></div>
+
+<p>See more about <code class="language-plaintext highlighter-rouge">GRAPHSCOPE_HOME</code> in <a href="https://graphscope.io/docs/latest/development/how_to_test#run-tests">run tests</a></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./gs <span class="nb">test </span>analytical
+</code></pre></div></div>
+
+<p>It would download the test dataset to the /tmp/gstest (if not exists) and run multiple algorithms against various graphs, and compare the result with the ground truth.</p>
+
+<p>You can follow the <a href="https://graphscope.io/docs/latest/interactive_engine/dev_and_test#">GIE Doc</a> and <a href="https://graphscope.io/docs/latest/learning_engine/dev_and_test">GLE Doc</a> to build and test these components.</p>
+
+<h3 id="e2e-test">E2E Test</h3>
+
+<p><strong>Build All Targets for GraphScope</strong></p>
+
+<p>With <code class="language-plaintext highlighter-rouge">gs</code> command-line utility, you can build all targets for GraphScope with a single command.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./gs make <span class="nb">install</span>
+</code></pre></div></div>
+
+<p><strong>Run tests</strong></p>
+
+<p>Run a bunch of test cases that involves 3 engines</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>export GRAPHSCOPE_HOME=/opt/graphscope
+./gs test e2e --local
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>In this post, we introduce two ways to install GraphScope locally. In order to process large-scale data more effectively, You can also deploy and try GraphScope on Kubernetes clusters with the help of vineyard as a distributed memory manager. For more details, please refer to the <a href="https://graphscope.io/docs/latest">official document</a>. We will also introduce in the subsequent articles.</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=How to Run and Develop GraphScope Locally&amp;url=https://graphscope.io/tech/2023/05/31/How-to-Play-GraphScope-Locally.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2023/05/31/How-to-Play-GraphScope-Locally.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2023/05/31/How-to-Play-GraphScope-Locally.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2023 &bull; All rights reserved.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+    
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+</body>
+</html>

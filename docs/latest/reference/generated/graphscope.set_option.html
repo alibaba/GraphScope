@@ -22,14 +22,9 @@
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/brands.min.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/regular.min.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/solid.min.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/fontawesome.min.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/rst-versions.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/theme-toggle.css" />
     
     
 
@@ -231,10 +226,10 @@ MathJax = {
 <p class="caption" role="heading"><span class="caption-text">Installation &amp; Deployment</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../deployment/install_on_local.html">Install GraphScope on Local</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on K8s cluster</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../deployment/deploy_graphscope_on_existing_vineyard_cluster.html">Use an existing vineyard cluster with multiple GraphScope sessions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../deployment/deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy on K8s Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment/deploy_with_existing_vineyard_cluster.html">Depoly with Existing Vineyard Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment/install_in_offline_env.html">Install GraphScope in offline environment</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Analytical Engine</span></p>
 <ul>
@@ -266,7 +261,6 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/dev_and_test.html">Dev and Test</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/faqs.html">FAQs</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Interactive Engine</span></p>
 <ul>
@@ -295,17 +289,15 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Storage Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../storage_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../storage_engine/grin.html">GRIN: Graph Retrieval INterface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../storage_engine/groot.html">Groot: Persistent Graph Store</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../storage_engine/vineyard.html">In-memory immutable graphs on Vineyard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../storage_engine/graphar.html">GraphAr: Standard Graph Data File Format</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../storage_engine/gart.html">GART: Bridging the Gap between Relational OLTP and Graph Workloads</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">troubleshooting &amp; utilities</span></p>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Utilities</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities/how_to_find_logs.html">How to Find logs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../utilities/monitoring.html">Monitoring</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../utilities/error_codes.html">Error Codes</a></li>
 </ul>
@@ -315,10 +307,6 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="../../development/code_style_guide.html">Code Style Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/how_to_test.html">How to Test</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/how_to_contribute.html">How to Contribute</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../development/how_to_debugging.html">Debugging on local deployment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../development/how_to_debugging.html#debugging-on-kubernetes-deployment">Debugging on Kubernetes deployment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../development/how_to_debugging.html#commands-for-debugging">Commands for Debugging</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../development/how_to_install_in_offline_mode.html">Install GraphScope in offline mode</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current">
@@ -884,7 +872,7 @@ MathJax = {
 
     <hr />
     <small>
-      <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      <span>Hosted on <a href="https://pages.cloudflare.com/">Cloudflare Pages</a>.</span>
     </small>
   </div>
 </div>
@@ -963,6 +951,7 @@ MathJax = {
 <li><p>k8s_waiting_for_delete</p></li>
 <li><p>timeout_seconds</p></li>
 <li><p>dataset_download_retries</p></li>
+<li><p>k8s_deploy_mode</p></li>
 </ul>
 </dd>
 </dl>
@@ -1018,7 +1007,7 @@ kv pair of GraphScope config you want to set.</p>
           </div>
           <div class="right-details">
             <div class="icons">
-              <a class="muted-link fa fa-solid fa-github fa-2x" href="https://github.com/alibaba/GraphScope" aria-label="GitHub"></a>
+              <a class="muted-link muted-link" href="https://github.com/alibaba/GraphScope" aria-label="GitHub"><svg stroke='currentColor' fill='currentColor' stroke-width='0' viewBox='0 0 16 16'><path fill-rule='evenodd' d='M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z'></path></svg></a>
               
             </div>
           </div>

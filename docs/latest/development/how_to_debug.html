@@ -2,21 +2,21 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Install GraphScope in offline mode" />
+    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Debugging on local deployment" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="development/how_to_install_in_offline_mode.html" />
+<meta property="og:url" content="development/how_to_debug.html" />
 <meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="Some users may face the problem that they need to install GraphScope on an environment that has no internet access. We provide some sample solutions to address that problems. Install from wheels: U..." />
+<meta property="og:description" content="This document shows how to debugging GraphScope under various conditions. Debugging on Kubernetes deployment: Commands for Debugging: Here is list with commands usually used for checking the status..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="/_images/social_previews/summary_development_how_to_install_in_offline_mode_87c958e8.png" />
-<meta property="og:image:alt" content="Some users may face the problem that they need to install GraphScope on an environment that has no internet access. We provide some sample solutions to addre..." />
-<meta name="description" content="Some users may face the problem that they need to install GraphScope on an environment that has no internet access. We provide some sample solutions to address that problems. Install from wheels: U..." />
+<meta property="og:image" content="/_images/social_previews/summary_development_how_to_debug_0e147f98.png" />
+<meta property="og:image:alt" content="This document shows how to debugging GraphScope under various conditions. Debugging on Kubernetes deployment: Commands for Debugging: Here is list with comma..." />
+<meta name="description" content="This document shows how to debugging GraphScope under various conditions. Debugging on Kubernetes deployment: Commands for Debugging: Here is list with commands usually used for checking the status..." />
 <meta name="twitter:card" content="summary_large_image" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Python API Reference" href="../reference/python_index.html" /><link rel="prev" title="Debugging on local deployment" href="how_to_debugging.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.05.20 -->
-        <title>Install GraphScope in offline mode - GraphScope documentation</title>
+        <title>Debugging on local deployment - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -24,14 +24,9 @@
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/brands.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/regular.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/solid.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/fontawesome.min.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/theme-toggle.css" />
     
     
 
@@ -196,7 +191,7 @@ MathJax = {
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -233,10 +228,10 @@ MathJax = {
 <p class="caption" role="heading"><span class="caption-text">Installation &amp; Deployment</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/install_on_local.html">Install GraphScope on Local</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on K8s cluster</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_existing_vineyard_cluster.html">Use an existing vineyard cluster with multiple GraphScope sessions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy on K8s Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_with_existing_vineyard_cluster.html">Depoly with Existing Vineyard Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/install_in_offline_env.html">Install GraphScope in offline environment</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Analytical Engine</span></p>
 <ul>
@@ -268,7 +263,6 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine/dev_and_test.html">Dev and Test</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../analytical_engine/faqs.html">FAQs</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Interactive Engine</span></p>
 <ul>
@@ -297,30 +291,24 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Storage Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../storage_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../storage_engine/grin.html">GRIN: Graph Retrieval INterface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../storage_engine/groot.html">Groot: Persistent Graph Store</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../storage_engine/vineyard.html">In-memory immutable graphs on Vineyard</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../storage_engine/graphar.html">GraphAr: Standard Graph Data File Format</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../storage_engine/gart.html">GART: Bridging the Gap between Relational OLTP and Graph Workloads</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">troubleshooting &amp; utilities</span></p>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Utilities</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find logs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/monitoring.html">Monitoring</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/error_codes.html">Error Codes</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="dev_guide.html">Development Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="code_style_guide.html">Code Style Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how_to_test.html">How to Test</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how_to_contribute.html">How to Contribute</a></li>
-<li class="toctree-l1"><a class="reference internal" href="how_to_debugging.html">Debugging on local deployment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="how_to_debugging.html#debugging-on-kubernetes-deployment">Debugging on Kubernetes deployment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="how_to_debugging.html#commands-for-debugging">Commands for Debugging</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Install GraphScope in offline mode</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
@@ -886,7 +874,7 @@ MathJax = {
 
     <hr />
     <small>
-      <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      <span>Hosted on <a href="https://pages.cloudflare.com/">Cloudflare Pages</a>.</span>
     </small>
   </div>
 </div>
@@ -906,7 +894,7 @@ MathJax = {
         </a>
         <div class="content-icon-container">
           <div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/development/how_to_install_in_offline_mode.md" title="Edit this page">
+  <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/development/how_to_debug.md" title="Edit this page">
     <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
       <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
@@ -922,233 +910,45 @@ MathJax = {
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="install-graphscope-in-offline-mode">
-<h1>Install GraphScope in offline mode<a class="headerlink" href="#install-graphscope-in-offline-mode" title="Permalink to this heading">#</a></h1>
-<p>Some users may face the problem that they need to install GraphScope on an environment that has no internet access.</p>
-<p>We provide some sample solutions to address that problems.</p>
-<div class="section" id="install-from-wheels">
-<h2>Install from wheels<a class="headerlink" href="#install-from-wheels" title="Permalink to this heading">#</a></h2>
-<p>Users could download the all the wheels along with its dependencies of graphscope for offline usage.</p>
-<ol class="arabic">
-<li><p>Create a requirements.txt file that lists all of the packages you need. You can do this by running the following command:</p>
-<p><code class="docutils literal notranslate"><span class="pre">echo</span> <span class="pre">&quot;graphscope&quot;</span> <span class="pre">&gt;</span> <span class="pre">requirements.txt</span></code></p>
-</li>
-<li><p>Download the wheels for all of the packages listed in the requirements.txt file. You can do this by running the following command:</p>
-<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">download</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code></p>
-</li>
-<li><p>Copy the wheels to a folder on your computer that you can access offline.</p></li>
-<li><p>When you need to use the packages offline, you can install them by running the following command:</p>
-<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">--no-index</span> <span class="pre">--find-links=./wheels</span> <span class="pre">.</span></code></p>
-</li>
-</ol>
-<p>This will install all of the packages listed in the <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> file from the wheels that you have downloaded.</p>
+          <p>This document shows how to debugging GraphScope under various conditions.</p>
+<div class="section" id="debugging-on-local-deployment">
+<h1>Debugging on local deployment<a class="headerlink" href="#debugging-on-local-deployment" title="Permalink to this heading">#</a></h1>
 </div>
-<div class="section" id="install-from-source">
-<h2>Install from source<a class="headerlink" href="#install-from-source" title="Permalink to this heading">#</a></h2>
-<p>We give an example to start with a basic operating system, download all dependencies for offline use, and the compile options to compile and install dependencies and graphscope analytical engine.</p>
-<p>The operating system: CentOS 7</p>
-<p>Dependencies:</p>
+<div class="section" id="debugging-on-kubernetes-deployment">
+<h1>Debugging on Kubernetes deployment<a class="headerlink" href="#debugging-on-kubernetes-deployment" title="Permalink to this heading">#</a></h1>
+</div>
+<div class="section" id="commands-for-debugging">
+<h1>Commands for Debugging<a class="headerlink" href="#commands-for-debugging" title="Permalink to this heading">#</a></h1>
+<p>Here is list with commands usually used for checking the status of the GraphScope deployment on K8s.</p>
 <ul class="simple">
-<li><p>GCC 8.3.1</p></li>
-<li><p>make 3.82</p></li>
-<li><p>which  (boost dependency)</p></li>
-<li><p>perl  (boost dependency)</p></li>
-<li><p>Python 3.8  (vineyard dependency)</p></li>
-<li><p>cmake v3.24.3</p></li>
-<li><p>openmpi 4.0.5</p></li>
-<li><p>gflags 2.2.2</p></li>
-<li><p>glog 0.6.0</p></li>
-<li><p>apache-arrow 10.0.1</p></li>
-<li><p>boost 1.74.0</p></li>
-<li><p>openssl 1.1.1</p></li>
-<li><p>zlib 1.2.11</p></li>
-<li><p>protobuf 21.9</p></li>
-<li><p>grpc 1.49.1</p></li>
-<li><p>libgrape-lite master</p></li>
-<li><p>vineyard 0.13.5</p></li>
-<li><p>libclang (python package)</p></li>
+<li><p>Check the status of the pods in a specific namespace <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">pods</span> <span class="pre">-n</span> <span class="pre">&lt;namespace&gt;</span></code></p></li>
+<li><p>Get detailed information about a pod: <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">describe</span> <span class="pre">pod</span> <span class="pre">&lt;pod-name&gt;</span> <span class="pre">-n</span> <span class="pre">&lt;namespace&gt;</span></code></p></li>
+<li><p>Check the logs of a container in a pod: <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">&lt;pod-name&gt;</span> <span class="pre">&lt;container-name&gt;</span> <span class="pre">-n</span> <span class="pre">&lt;namespace&gt;</span></code></p></li>
+<li><p>Check the events related to a pod: <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">events</span> <span class="pre">--field-selector</span> <span class="pre">involvedObject.name=&lt;pod-name&gt;</span> <span class="pre">-n</span> <span class="pre">&lt;namespace&gt;</span></code></p></li>
+<li><p>Check the configuration of a resource: <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">&lt;resource-type&gt;</span> <span class="pre">&lt;resource-name&gt;</span> <span class="pre">-o</span> <span class="pre">yaml</span> <span class="pre">-n</span> <span class="pre">&lt;namespace&gt;</span></code></p></li>
 </ul>
-<p>Dependency location for downloading:</p>
-<ul class="simple">
-<li><p><a class="reference external" href="https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies/dependencies.tar.gz">Third party dependencies</a></p></li>
-<li><p><a class="reference external" href="https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies/libgrape-lite.tar.gz">libgrape-lite</a></p></li>
+<div class="section" id="debugging-techniques">
+<h2>Debugging Techniques<a class="headerlink" href="#debugging-techniques" title="Permalink to this heading">#</a></h2>
+<ul>
+<li><p>Verify that the Docker image used in the deployment is correct and can be pulled by Kubernetes.</p></li>
+<li><p>Check the logs of the container in the pod to see if there are any error messages or warnings that could indicate the source of the problem.</p></li>
+<li><p>Increase the log level of the GraphScope components. This will produce more verbose output that may help pinpoint the source of the problem.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="n">graphscope</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">graphscope</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Use kubectl exec to access a running container in a pod and run diagnostic commands inside it.</p></li>
+<li><p>Use kubectl port-forward to forward a port from a pod to your local machine and access the service directly from your browser or command line.</p></li>
+<li><p>Check the Kubernetes events to see if there are any events related to the pod that could explain the problem.</p></li>
 </ul>
-<p>And you could get the source code of GraphScope on <a class="reference external" href="https://github.com/alibaba/graphscope">github</a></p>
-<div class="section" id="download-dependencies-and-graphscope">
-<h3>Download dependencies and GraphScope<a class="headerlink" href="#download-dependencies-and-graphscope" title="Permalink to this heading">#</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-LO<span class="w"> </span>https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies/dependencies.tar.gz
-curl<span class="w"> </span>-LO<span class="w"> </span>https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies/libgrape-lite.tar.gz
-git<span class="w"> </span>clone<span class="w"> </span>https://github.com/alibaba/graphscope
-tar<span class="w"> </span>czf<span class="w"> </span>graphscope.tar.gz<span class="w"> </span>graphscope
-</pre></div>
-</div>
-</div>
-<div class="section" id="copy-all-files-to-the-destination-environment-and-extract-them-to-a-location">
-<h3>Copy all files to the destination environment and extract them to a location<a class="headerlink" href="#copy-all-files-to-the-destination-environment-and-extract-them-to-a-location" title="Permalink to this heading">#</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="n">workdir</span>
-<span class="n">tar</span> <span class="n">xzf</span> <span class="n">dependencies</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span> <span class="o">-</span><span class="n">C</span> <span class="n">workdir</span><span class="o">/</span>
-<span class="n">tar</span> <span class="n">xzf</span> <span class="n">libgrape</span><span class="o">-</span><span class="n">lite</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span> <span class="o">-</span><span class="n">C</span> <span class="n">workdir</span><span class="o">/</span><span class="n">dependencies</span><span class="o">/</span>
-<span class="n">tar</span> <span class="n">xzf</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span> <span class="o">-</span><span class="n">C</span> <span class="n">workdir</span><span class="o">/</span><span class="n">dependencies</span><span class="o">/</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="section" id="install-basic-packages-and-gcc-g-python">
-<h2>Install basic packages and gcc-g++, python<a class="headerlink" href="#install-basic-packages-and-gcc-g-python" title="Permalink to this heading">#</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>yum<span class="w"> </span>install<span class="w"> </span>centos-release-scl-rh<span class="w"> </span>-y
-yum<span class="w"> </span>install<span class="w"> </span>which<span class="w"> </span>perl<span class="w"> </span>make<span class="w"> </span>devtoolset-8-gcc-c++<span class="w"> </span>rh-python38-python-pip<span class="w"> </span>-y
-<span class="nb">source</span><span class="w"> </span>/opt/rh/devtoolset-8/enable
-<span class="nb">source</span><span class="w"> </span>/opt/rh/rh-python38/enable
-</pre></div>
-</div>
-</div>
-<div class="section" id="install-third-party-dependencies-and-graphscope-analytical-engine">
-<h2>Install third-party dependencies and GraphScope Analytical Engine<a class="headerlink" href="#install-third-party-dependencies-and-graphscope-analytical-engine" title="Permalink to this heading">#</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
-<span class="nb">set</span><span class="w"> </span>-euxo<span class="w"> </span>pipefail
-<span class="c1"># This directory is the path to the `dependencies` directory in the previous step</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">DIR</span><span class="o">=</span>/data/dependencies
-<span class="c1"># This would be the install prefix of dependencies and GraphScope</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">PREFIX</span><span class="o">=</span>/data/install
-
-mkdir<span class="w"> </span>-p<span class="w"> </span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span>/bin/:<span class="si">${</span><span class="nv">PATH</span><span class="si">}</span>/
-<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="si">${</span><span class="nv">LD_LIBRARY_PATH</span><span class="k">:-</span><span class="s2">&quot;&quot;</span><span class="si">}</span>:<span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span>/lib:<span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span>/lib64
-
-<span class="c1"># Install libclang</span>
-python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="si">${</span><span class="nv">DIR</span><span class="si">}</span>/libclang-16.0.0-py2.py3-none-manylinux2010_x86_64.whl
-
-<span class="c1"># Install cmake</span>
-bash<span class="w"> </span><span class="si">${</span><span class="nv">DIR</span><span class="si">}</span>/cmake-3.24.3-linux-x86_64.sh<span class="w"> </span>--skip-license<span class="w"> </span>--prefix<span class="o">=</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span>
-
-<span class="c1"># Install gflags</span>
-<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">DIR</span><span class="si">}</span>/gflags-2.2.2
-cmake<span class="w"> </span>.<span class="w"> </span>-DBUILD_SHARED_LIBS<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DCMAKE_PREFIX_PATH<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="s2">&quot;</span>
-make<span class="w"> </span>-j<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>install
-
-<span class="c1"># Install glog</span>
-<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">DIR</span><span class="si">}</span>/glog-0.6.0
-cmake<span class="w"> </span>.<span class="w"> </span>-DBUILD_SHARED_LIBS<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DCMAKE_PREFIX_PATH<span class="o">=</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span>
-make<span class="w"> </span>-j<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>install
-
-<span class="c1"># Install boost</span>
-<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">DIR</span><span class="si">}</span>/boost_1_74_0
-./bootstrap.sh<span class="w"> </span>--prefix<span class="o">=</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="w"> </span>--with-libraries<span class="o">=</span>system,filesystem,context,program_options,regex,thread,random,chrono,atomic,date_time
-./b2<span class="w"> </span>install<span class="w"> </span><span class="nv">link</span><span class="o">=</span>shared<span class="w"> </span>runtime-link<span class="o">=</span>shared<span class="w"> </span><span class="nv">variant</span><span class="o">=</span>release<span class="w"> </span><span class="nv">threading</span><span class="o">=</span>multi
-
-<span class="c1"># Install openssl</span>
-<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">DIR</span><span class="si">}</span>/openssl-OpenSSL_1_1_1h
-./config<span class="w"> </span>--prefix<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>-fPIC<span class="w"> </span>-shared
-make<span class="w"> </span>-j
-make<span class="w"> </span>install
-
-<span class="c1"># Install apache-arrow</span>
-<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">DIR</span><span class="si">}</span>/arrow-apache-arrow-10.0.1
-mkdir<span class="w"> </span>-p<span class="w"> </span>build<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
-cmake<span class="w"> </span>../cpp<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DCMAKE_PREFIX_PATH<span class="o">=</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_COMPUTE<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_WITH_UTF8PROC<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_CSV<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_FILESYSTEM<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_IPC<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_BUILD_BENCHMARKS<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_BUILD_EXAMPLES<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_BUILD_INTEGRATION<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_BUILD_UTILITIES<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_BUILD_TESTS<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_ENABLE_TIMING_TESTS<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_FUZZING<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_JEMALLOC<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_BUILD_SHARED<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DARROW_BUILD_STATIC<span class="o">=</span>OFF
-make<span class="w"> </span>-j<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>install
-
-<span class="c1"># Install openmpi</span>
-<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">DIR</span><span class="si">}</span>/openmpi-4.0.5
-./configure<span class="w"> </span>--enable-mpi-cxx<span class="w"> </span>--disable-dlopen<span class="w"> </span>--prefix<span class="o">=</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span>
-make<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
-make<span class="w"> </span>install
-
-<span class="c1"># Install protobuf</span>
-<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">DIR</span><span class="si">}</span>/protobuf-21.9
-./configure<span class="w"> </span>--prefix<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>--enable-shared<span class="w"> </span>--disable-static
-make<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
-make<span class="w"> </span>install
-
-<span class="c1"># Install zlib</span>
-<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">DIR</span><span class="si">}</span>/zlib-1.2.11
-cmake<span class="w"> </span>.<span class="w"> </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DCMAKE_PREFIX_PATH<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DBUILD_SHARED_LIBS<span class="o">=</span>ON
-make<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
-make<span class="w"> </span>install
-
-<span class="c1"># Install grpc</span>
-<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">DIR</span><span class="si">}</span>/grpc
-cmake<span class="w"> </span>.<span class="w"> </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DCMAKE_PREFIX_PATH<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DBUILD_SHARED_LIBS<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DgRPC_INSTALL<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DgRPC_BUILD_TESTS<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DgRPC_BUILD_CSHARP_EXT<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DgRPC_BUILD_GRPC_CSHARP_PLUGIN<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DgRPC_BUILD_GRPC_NODE_PLUGIN<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DgRPC_BUILD_GRPC_PHP_PLUGIN<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DgRPC_BUILD_GRPC_PYTHON_PLUGIN<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DgRPC_BUILD_GRPC_RUBY_PLUGIN<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DgRPC_BACKWARDS_COMPATIBILITY_MODE<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DgRPC_PROTOBUF_PROVIDER<span class="o">=</span>package<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DgRPC_ZLIB_PROVIDER<span class="o">=</span>package<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DgRPC_SSL_PROVIDER<span class="o">=</span>package<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DOPENSSL_ROOT_DIR<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DCMAKE_CXX_FLAGS<span class="o">=</span><span class="s2">&quot;-fpermissive&quot;</span>
-make<span class="w"> </span>-j
-make<span class="w"> </span>install
-
-<span class="c1"># Install libgrape-lite</span>
-<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">DIR</span><span class="si">}</span>/libgrape-lite
-cmake<span class="w"> </span>.<span class="w"> </span>-DCMAKE_PREFIX_PATH<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="s2">&quot;</span>
-make<span class="w"> </span>-j
-make<span class="w"> </span>install
-
-<span class="c1"># Install vineyard</span>
-<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">DIR</span><span class="si">}</span>/v6d-0.13.4
-cmake<span class="w"> </span>.<span class="w"> </span>-DCMAKE_PREFIX_PATH<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DBUILD_VINEYARD_TESTS<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DBUILD_SHARED_LIBS<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DBUILD_VINEYARD_PYTHON_BINDINGS<span class="o">=</span>OFF
-make<span class="w"> </span>-j4
-make<span class="w"> </span>install
-
-<span class="c1"># Install graphscope</span>
-<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">DIR</span><span class="si">}</span>/graphscope/analytical_engine
-mkdir<span class="w"> </span>-p<span class="w"> </span>build<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
-cmake<span class="w"> </span>..<span class="w">  </span>-DCMAKE_PREFIX_PATH<span class="o">=</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DNETWORKX<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DENABLE_JAVA_SDK<span class="o">=</span>OFF<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>-DBUILD_TESTS<span class="o">=</span>OFF
-make<span class="w"> </span>-j
-make<span class="w"> </span>install
-
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Install complete, you could find the binary file in the </span><span class="si">${</span><span class="nv">PREFIX</span><span class="si">}</span><span class="s2">/bin&quot;</span>
-</pre></div>
-</div>
 </div>
 </div>
 
@@ -1157,26 +957,8 @@ make<span class="w"> </span>install
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="../reference/python_index.html">
-              <div class="page-info">
-                <div class="context">
-                  <span>Next</span>
-                </div>
-                <div class="title">Python API Reference</div>
-              </div>
-              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
-            </a>
-          <a class="prev-page" href="how_to_debugging.html">
-              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
-              <div class="page-info">
-                <div class="context">
-                  <span>Previous</span>
-                </div>
-                
-                <div class="title">Debugging on local deployment</div>
-                
-              </div>
-            </a>
+          
+          
         </div>
         <div class="bottom-of-page">
           <div class="left-details">
@@ -1190,7 +972,7 @@ make<span class="w"> </span>install
           </div>
           <div class="right-details">
             <div class="icons">
-              <a class="muted-link fa fa-solid fa-github fa-2x" href="https://github.com/alibaba/GraphScope" aria-label="GitHub"></a>
+              <a class="muted-link muted-link" href="https://github.com/alibaba/GraphScope" aria-label="GitHub"><svg stroke='currentColor' fill='currentColor' stroke-width='0' viewBox='0 0 16 16'><path fill-rule='evenodd' d='M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z'></path></svg></a>
               
             </div>
           </div>
@@ -1198,34 +980,8 @@ make<span class="w"> </span>install
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">Install GraphScope in offline mode</a><ul>
-<li><a class="reference internal" href="#install-from-wheels">Install from wheels</a></li>
-<li><a class="reference internal" href="#install-from-source">Install from source</a><ul>
-<li><a class="reference internal" href="#download-dependencies-and-graphscope">Download dependencies and GraphScope</a></li>
-<li><a class="reference internal" href="#copy-all-files-to-the-destination-environment-and-extract-them-to-a-location">Copy all files to the destination environment and extract them to a location</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#install-basic-packages-and-gcc-g-python">Install basic packages and gcc-g++, python</a></li>
-<li><a class="reference internal" href="#install-third-party-dependencies-and-graphscope-analytical-engine">Install third-party dependencies and GraphScope Analytical Engine</a></li>
-</ul>
-</li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>
