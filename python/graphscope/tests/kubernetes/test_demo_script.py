@@ -628,12 +628,12 @@ def test_store_and_restore_graphs(
     sub_graph_vineyard_id = vineyard.ObjectID(sub_graph.vineyard_id)
     # create the pv and pvc for backup
     pv_name = "test-pv"
-    path = "/var/vineyard/dump"
+    path = "/var/vineyard1/test"
     pvc_name = "test-pvc"
     create_pv(pv_name, path)
     create_pvc(pvc_name, namespace, pv_name)
     # store the specific graphs to pvc
-    old_sess.store_graphs_to_pvc(
+    old_sess.store_to_pvc(
         graphIDs=[graph_vineyard_id, sub_graph_vineyard_id],
         path=path,
         pvc_name=pvc_name,
@@ -660,7 +660,7 @@ def test_store_and_restore_graphs(
         k8s_vineyard_deployment="vineyardd-sample",
         k8s_volumes=get_k8s_volumes(),
     )
-    new_sess.restore_graphs_from_pvc(
+    new_sess.restore_from_pvc(
         path=path,
         pvc_name=pvc_name,
     )

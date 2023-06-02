@@ -1111,7 +1111,7 @@ class Session(object):
             ) from e
         return api_client
 
-    def _check_pvc_exist(self, pvc_name, pvc_namespace):
+    def _check_pvc_exists(self, pvc_name, pvc_namespace):
         api_client = self._get_api_client()
         _core_api = kube_client.CoreV1Api(api_client)
         try:
@@ -1124,7 +1124,7 @@ class Session(object):
                 f"PVC {pvc_name} not found in namespace {pvc_namespace}"
             ) from e
 
-    def _check_vineyard_deployment_for_ready(
+    def _check_vineyard_deployment_exists(
         self, vineyard_deployment_name, vineyard_deployment_namespace
     ):
         api_client = self._get_api_client()
@@ -1142,7 +1142,7 @@ class Session(object):
             else:
                 raise e
 
-    def store_graphs_to_pvc(self, graphIDs, path: str, pvc_name: str):
+    def store_to_pvc(self, graphIDs, path: str, pvc_name: str):
         """
         Stores the given graph IDs to the given path with the given PVC.
         Also, if you want to store graphs of different sessions to the same pv,
@@ -1160,7 +1160,7 @@ class Session(object):
         Args:
             graph_ids: The list of graph IDs to store.
                        Supported types:
-                       - list: list of vineyard.ObjectID
+                       - list: list of vineyard.ObjectID or graphscope.Graph
             path: The path in the pv to which the pvc is bound.
             pvc_name: The name of the PVC.
 
@@ -1169,13 +1169,17 @@ class Session(object):
         """
         if self._cluster_type != types_pb2.K8S:
             raise RuntimeError("Only support kubernetes cluster")
-        if not isinstance(graphIDs, list):
-            raise RuntimeError("graphIDs should be a list of vineyard.ObjectID")
-        objectids = ",".join(repr(id) for id in graphIDs)
+        object_ids = []
+        for object in graphIDs:
+            if isinstance(object, Graph):
+                object_ids.append(object.vineyard_id)
+            else:
+                object_ids.append(object)
+        object_ids = ",".join(object_ids)
         vineyard_deployment_name = self._config_params["k8s_vineyard_deployment"]
         namespace = self._config_params["k8s_namespace"]
-        self._check_vineyard_deployment_for_ready(vineyard_deployment_name, namespace)
-        self._check_pvc_exist(pvc_name, namespace)
+        self._check_vineyard_deployment_exists(vineyard_deployment_name, namespace)
+        self._check_pvc_exists(pvc_name, namespace)
         # The next function will create a kubernetes job for backuping
         # the specific graphIDs to the specific path of the specific pvc
         vineyard.deploy.vineyardctl.deploy.backup_job(
@@ -1184,11 +1188,11 @@ class Session(object):
             vineyard_deployment_namespace=namespace,
             namespace=namespace,
             path=path,
-            objectids=objectids,
+            objectids=",".join(object_ids),
             pvc_name=pvc_name,
         )
 
-    def restore_graphs_from_pvc(self, path: str, pvc_name: str):
+    def restore_from_pvc(self, path: str, pvc_name: str):
         """
         Restores the graphs from the given path in the given PVC.
 
@@ -1203,8 +1207,8 @@ class Session(object):
             raise RuntimeError("Only support kubernetes cluster")
         vineyard_deployment_name = self._config_params["k8s_vineyard_deployment"]
         namespace = self._config_params["k8s_namespace"]
-        self._check_vineyard_deployment_for_ready(vineyard_deployment_name, namespace)
-        self._check_pvc_exist(pvc_name, namespace)
+        self._check_vineyard_deployment_exists(vineyard_deployment_name, namespace)
+        self._check_pvc_exists(pvc_name, namespace)
         random_suffix = random_string(6)
         vineyard.deploy.vineyardctl.deploy.recover_job(
             recover_name="vineyard-recover-" + random_suffix,
@@ -1260,7 +1264,7 @@ class Session(object):
             graph_vineyard_id = self._vineyard_object_mapping_table[
                 repr(vineyard.ObjectID(incoming_data))
             ]
-            logger.info("Restore graph from original graph {graph_vineyard_id}")
+            logger.info("Restore graph from original graph: %s", graph_vineyard_id)
             incoming_data = vineyard.ObjectID(graph_vineyard_id)
         return self._wrapper(
             GraphDAGNode(
