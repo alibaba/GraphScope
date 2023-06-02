@@ -315,6 +315,7 @@ class Session(object):
         k8s_engine_pod_node_selector=gs_config.k8s_engine_pod_node_selector,
         k8s_volumes=gs_config.k8s_volumes,
         k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
+        k8s_deploy_mode=gs_config.k8s_deploy_mode,
         timeout_seconds=gs_config.timeout_seconds,
         dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
         enabled_engines=gs_config.enabled_engines,
@@ -483,6 +484,10 @@ class Session(object):
                 Expect this value to be greater than 5 (heartbeat interval).
                 Disable dangling check by setting -1.
 
+            k8s_deploy_mode (str, optional): the deploy mode of engines on the kubernetes cluster. Default to eager.
+                eager: create all engine pods at once
+                lazy: create engine pods when called
+
             k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.
 
             **kw (dict, optional): Other optional parameters will be put to :code:`**kw`.
@@ -569,6 +574,7 @@ class Session(object):
             "reconnect",
             "k8s_volumes",
             "k8s_waiting_for_delete",
+            "k8s_deploy_mode",
             "timeout_seconds",
             "dangling_timeout_seconds",
             "with_mars",
@@ -614,6 +620,7 @@ class Session(object):
                     ","
                 )
             )
+
             for item in engines:
                 if item not in valid_engines:
                     raise ValueError(
@@ -641,17 +648,7 @@ class Session(object):
         if kw:
             raise ValueError("Value not recognized: ", list(kw.keys()))
 
-        if self._config_params["addr"]:
-            logger.info(
-                "Connecting graphscope session with address: %s",
-                self._config_params["addr"],
-            )
-        else:
-            logger.info(
-                "Initializing graphscope session with parameters: %s",
-                self._config_params,
-            )
-
+        self._log_session_info()
         self._closed = False
 
         # coordinator service endpoint
@@ -712,6 +709,18 @@ class Session(object):
     @property
     def dag(self):
         return self._dag
+
+    def _log_session_info(self):
+        if self._config_params["addr"]:
+            logger.info(
+                "Connecting graphscope session with address: %s",
+                self._config_params["addr"],
+            )
+        else:
+            logger.info(
+                "Initializing graphscope session with parameters: %s",
+                self._config_params,
+            )
 
     def _load_config(self, path, silent=True):
         config_path = os.path.expandvars(os.path.expanduser(path))
@@ -1347,6 +1356,7 @@ def set_option(**kwargs):
         - k8s_waiting_for_delete
         - timeout_seconds
         - dataset_download_retries
+        - k8s_deploy_mode
 
     Args:
         kwargs: dict
@@ -1413,6 +1423,7 @@ def get_option(key):
         - k8s_waiting_for_delete
         - timeout_seconds
         - dataset_download_retries
+        - k8s_deploy_mode
 
     Args:
         key: str

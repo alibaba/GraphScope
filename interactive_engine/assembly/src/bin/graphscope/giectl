@@ -250,6 +250,7 @@ create_gremlin_instance_on_local() {
 #   executor_rpc_port
 #   frontend_port
 #   coordinator_name: name of coordinator deployment object in k8s
+#   engine_selector: the label name of engine selector
 ##########################
 create_gremlin_instance_on_k8s() {
   declare -r GRAPHSCOPE_RUNTIME=$1
@@ -264,22 +265,28 @@ create_gremlin_instance_on_k8s() {
   declare -r executor_rpc_port=$7
   declare -r frontend_port=$8
   declare -r coordinator_name=$9 # deployment name of coordinator
+  declare -r engine_selector=${10}
 
   instance_id=${coordinator_name#*-}
 
-  pod_ips=$(kubectl get pod -lapp.kubernetes.io/component=engine,app.kubernetes.io/instance=${instance_id} -o jsonpath='{.items[*].status.podIP}')
+  pod_ips=$(kubectl get pod -lapp.kubernetes.io/component=engine,app.kubernetes.io/instance=${instance_id},app.kubernetes.io/engine_selector=${engine_selector} -o jsonpath='{.items[*].status.podIP}')
+
   pegasus_hosts=""
   for pod in ${pod_ips}; do
     pegasus_hosts="${pegasus_hosts},${pod}:${executor_rpc_port}"
   done
   pegasus_hosts=${pegasus_hosts:1}
 
-  frontend_name=$(kubectl get pod -lapp.kubernetes.io/component=frontend,app.kubernetes.io/instance=${instance_id} -o jsonpath='{.items[*].metadata.name}')
+  frontend_name=$(kubectl get pod -lapp.kubernetes.io/component=frontend,app.kubernetes.io/instance=${instance_id},app.kubernetes.io/engine_selector=${engine_selector} -o jsonpath='{.items[*].metadata.name}')
+
+  log "wait for frontend pod ready."
+  kubectl wait --for=condition=Ready pod/${frontend_name} --timeout=60s
 
   launch_frontend_cmd="GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} \
       ${GRAPHSCOPE_HOME}/bin/giectl start_frontend \
       ${GRAPHSCOPE_RUNTIME} ${object_id} ${schema_path} ${pegasus_hosts} ${frontend_port}"
   kubectl cp ${schema_path} ${frontend_name}:${schema_path}
+
   kubectl exec ${frontend_name} -- /bin/bash -c "${launch_frontend_cmd}"
 
   network_servers=""
@@ -302,7 +309,7 @@ create_gremlin_instance_on_k8s() {
   timeout_seconds=60
   # random from range [50001, 51000) for interactive engine
   frontend_external_port=$(( ((RANDOM<<15)|RANDOM) % 1000 + 50000 ))
-  frontend_deployment_name=$(kubectl get deployment -lapp.kubernetes.io/component=frontend,app.kubernetes.io/instance=${instance_id} -o jsonpath='{.items[*].metadata.name}')
+  frontend_deployment_name=$(kubectl get deployment -lapp.kubernetes.io/component=frontend,app.kubernetes.io/instance=${instance_id},app.kubernetes.io/engine_selector=${engine_selector} -o jsonpath='{.items[*].metadata.name}')
   if [ "${GREMLIN_EXPOSE}" = "LoadBalancer" ]; then
     kubectl expose deployment ${frontend_deployment_name} --name=gremlin-${object_id} --port=${frontend_external_port} \
       --target-port=${frontend_port} --type=LoadBalancer 1>/dev/null 2>&1

@@ -866,6 +866,12 @@ def parse_sys_args():
         help="Mount the aliyun dataset bucket as a volume by ossfs.",
     )
     parser.add_argument(
+        "--k8s_deploy_mode",
+        type=str,
+        default="eager",
+        help="The deploying mode of graphscope, eager or lazy.",
+    )
+    parser.add_argument(
         "--monitor",
         type=str2bool,
         nargs="?",
@@ -933,6 +939,7 @@ def get_launcher(args):
             with_mars=args.k8s_with_mars,
             enabled_engines=args.k8s_enabled_engines,
             dataset_proxy=args.dataset_proxy,
+            deploy_mode=args.k8s_deploy_mode,
         )
     elif args.cluster_type == "hosts":
         launcher = LocalLauncher(
