@@ -46,6 +46,7 @@ class Property:
         pb.name = self.name
         pb.data_type = self.data_type
         pb.pk = self.is_primary_key
+        pb.comment = self.comment
         return pb
 
     @property
@@ -60,7 +61,7 @@ class Property:
         return prop
 
     def __repr__(self) -> str:
-        return f"Property({self.id}, {self.name}, {graph_def_pb2.DataTypePb.Name(self.data_type)})"
+        return f"Property({self.id}, {self.name}, {graph_def_pb2.DataTypePb.Name(self.data_type)}, {self.is_primary_key}, {self.comment})"
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -71,6 +72,7 @@ class Property:
             "id": self.id,
             "type": graph_def_pb2.DataTypePb.Name(self.data_type),
             "is_primary_key": self.is_primary_key,
+            "comment": self._comment,
         }
 
 
@@ -85,6 +87,7 @@ class Label:
         "_label_id",
         "_valid_props",
         "_prop_index",
+        "_comment",
     ]
 
     def __init__(self, name, label_id=0):
@@ -95,14 +98,20 @@ class Label:
 
         self._valid_props: list[int] = []
         self._prop_index: dict[str, int] = {}
+        self._comment: str = ""
 
-    def add_property(self, name, data_type, is_primary_key=False):
+    def add_property(self, name, data_type, is_primary_key=False, comment=""):
         self._prop_index[name] = len(self._props)
         if isinstance(data_type, str):
             data_type = unify_type(data_type)
-        self._props.append(Property(name, data_type, is_primary_key, len(self._props)))
+        self._props.append(
+            Property(name, data_type, is_primary_key, len(self._props), comment)
+        )
         self._valid_props.append(1)
         return self
+
+    def set_comment(self, comment):
+        self._comment = comment
 
     @property
     def id(self) -> int:
@@ -116,6 +125,10 @@ class Label:
     def properties(self) -> List:
         return list(itertools.compress(self._props, self._valid_props))
 
+    @property
+    def comment(self):
+        return self._comment
+
     def get_property_id(self, name):
         idx = self._prop_index[name]
         if not self._valid_props[idx]:
@@ -128,7 +141,7 @@ class Label:
         )
 
     def __repr__(self) -> str:
-        s = f"Label: {self.label}\nProperties: {', '.join([str(p) for p in self.properties])}\n"
+        s = f"Label: {self.label}\nProperties: {', '.join([str(p) for p in self.properties])}\nComment: {self.comment}"
         return s
 
     def __str__(self) -> str:
@@ -148,6 +161,7 @@ class Label:
         pb = graph_def_pb2.TypeDefPb()
         pb.label = self._name
         pb.type_enum = self.type_enum
+        pb.comment = self._comment
         for prop in self.properties:
             pb.props.append(prop.as_property_def())
         return pb
@@ -157,6 +171,7 @@ class Label:
         label = cls(pb.label)
         label._label_id = pb.label_id.id
         label._version_id = pb.version_id
+        label._comment = pb.comment
         for prop_pb in pb.props:
             label._props.append(Property.from_property_def(prop_pb))
             label._valid_props.append(1)
@@ -170,8 +185,8 @@ class VertexLabel(Label):
     def type_enum(self):
         return graph_def_pb2.TypeEnumPb.VERTEX
 
-    def add_primary_key(self, name, data_type):
-        return self.add_property(name, data_type, True)
+    def add_primary_key(self, name, data_type, comment=""):
+        return self.add_property(name, data_type, True, comment)
 
 
 class EdgeLabel(Label):
@@ -530,8 +545,9 @@ class GraphSchema:
     def signature(self):
         return hashlib.sha256("{}".format(self.__repr__()).encode("utf-8")).hexdigest()
 
-    def add_vertex_label(self, label, vid_field=None, properties=None):
+    def add_vertex_label(self, label, vid_field=None, properties=None, comment=""):
         item = VertexLabel(label)
+        item.set_comment(comment)
         if vid_field:
             item = item.add_primary_key(*vid_field)
         if properties:
@@ -540,8 +556,11 @@ class GraphSchema:
         self._vertex_labels_to_add.append(item)
         return self._vertex_labels_to_add[-1]
 
-    def add_edge_label(self, label, src_label=None, dst_label=None, properties=None):
+    def add_edge_label(
+        self, label, src_label=None, dst_label=None, properties=None, comment=""
+    ):
         item = EdgeLabel(label)
+        item.set_comment(comment)
         if src_label:
             item = item.source(src_label)
         if dst_label:

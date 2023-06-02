@@ -45,13 +45,17 @@ def demo(gs_conn, restart):
     if not restart:
         # Create schema
         schema = graph.schema()
-        schema.add_vertex_label("person").add_primary_key("id", "long").add_property(
-            "name", "str"
-        )
+        schema.add_vertex_label("person").add_primary_key(
+            "id", "long", comment="PK"
+        ).add_property("name", "str", comment="name of the person")
         schema.add_edge_label("knows").source("person").destination(
             "person"
         ).add_property("date", "str")
         schema.update()
+        assert len(schema._vertex_labels) == 1
+        assert schema._vertex_labels[0].comment == "PK"
+        assert len(schema._vertex_labels[0]._props) == 1
+        assert schema._vertex_labels[0]._props[0].comment == "name of the person"
         # Bulk load data
         load_script = os.environ["LOAD_DATA_SCRIPT"]
         subprocess.check_call([load_script])
