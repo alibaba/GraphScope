@@ -91,6 +91,7 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
     for (auto const& item : fg->Fragments()) {
       vy_info.add_fragments(item.second);
     }
+    graph_def.mutable_extension()->PackFrom(vy_info);
     gs::set_graph_def(frag, graph_def);
 
     auto wrapper = std::make_shared<gs::FragmentWrapper<_GRAPH_TYPE>>(
