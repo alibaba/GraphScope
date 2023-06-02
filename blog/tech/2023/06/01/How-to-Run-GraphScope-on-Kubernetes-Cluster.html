@@ -1,0 +1,332 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">How to Run GraphScope on Kubernetes Cluster</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2023-06-01">01 Jun 2023</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2023-06-01">01 Jun 2023</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">How to Run GraphScope on Kubernetes Cluster</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2023-06-01-title-picture.png" alt="graphscope-on-kubernetes" />
+This article will provide a detailed introduction on how to deploy GraphScope on a Kubernetes cluster. In real industrial scenarios, the scale of graph data that needs to be processed is huge and has far exceeded the processing capacity of a single machine. Therefore, in addition to the single-machine deployment method, GraphScope also supports running on a Kubernetes cluster with the distributed memory data management capability provided by vineyard. It will cover the following topics: 1) How to deploy GraphScope based on a Kubernetes cluster; 2) The details of the work behind it; 3) How to use your own built GraphScope development image in a distributed environment.</p>
+
+<h2 id="prerequisites">Prerequisites</h2>
+
+<ul>
+  <li>A Kubernetes cluster, which could be a Kubernetes cluster provided by cloud vendor, or a tool that could simulating a cluster such as <a href="https://kind.sigs.k8s.io/docs/">kind</a>/<a href="https://minikube.sigs.k8s.io/docs/start/">minikube</a>.</li>
+  <li><a href="https://kubernetes.io/docs/reference/kubectl/">kubectl</a> for interacting with kubernetes cluster</li>
+  <li><a href="https://www.python.org/downloads/">Python3</a> environment for graphscope client</li>
+  <li><a href="https://www.docker.com/">Docker</a> Only if you choose to setup a local cluster</li>
+</ul>
+
+<p>This article uses Kind1 as an example to introduce how to build a virtual Kubernetes cluster on a local machine and deploy GraphScope upon that. If you want to build a real multi-node cluster, you can refer to the <a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm">kubeadm documentation</a>; If you don’t want to manually manage a Kubernetes cluster, you can also choose a well-known cloud vendor product, such as <a href="https://www.aliyun.com/product/kubernetes">Aliyun ACK</a>, <a href="https://aws.amazon.com/eks/?nc1=h_ls">AWS EKS</a>, etc.</p>
+
+<p>Assuming you have <code class="language-plaintext highlighter-rouge">kind</code> installed in your machine, bootstrap a virtual cluster by the following command</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kind create cluster
+</code></pre></div></div>
+
+<p>You can also use the script provided by GraphScope to install the required dependencies and initialize the virtual cluster at once</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>wget <span class="nt">-O</span> - https://raw.githubusercontent.com/alibaba/GraphScope/main/scripts/install_deps.sh | bash <span class="nt">-s</span> <span class="nt">--</span> <span class="nt">--k8s</span>
+</code></pre></div></div>
+
+<p>The script’s will install the necessary dependencies and attempt to launch a Kubernetes cluster through <code class="language-plaintext highlighter-rouge">Kind</code>. If you choose not to use <code class="language-plaintext highlighter-rouge">Kind</code>, you can also use other community-supported tools to build a Kubernetes cluster. After launching the local virtual cluster, we can run the following command to check if the Kubernetes configuration is correct:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get nodes
+
+NAME    STATUS   ROLES    AGE    VERSION
+node1    Ready    &lt;none&gt;   5d9h   v1.22.3-aliyun.1
+</code></pre></div></div>
+
+<p>Then, install the GraphScope Python client by</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip3 <span class="nb">install </span>graphscope
+</code></pre></div></div>
+
+<h2 id="deploying-the-cluster-through-python">Deploying the cluster through Python</h2>
+
+<p>GraphScope distribute artifacts as docker images. By default, if the machine running GraphScope does not have a corresponding image, it will pull the latest version of image. Therefore, please ensure that your cluster can access the public image repository.</p>
+
+<p><code class="language-plaintext highlighter-rouge">Session</code> serves as the entry point for GraphScope on the client side. It manages a set of resources behind GraphScope and allows users to interact with various engines of GraphScope running on this set of resources.</p>
+
+<p>Next, we can create a GraphScope instance with two worker nodes on the Kubernetes cluster.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="n">graphscope</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">session</span><span class="p">(</span><span class="n">num_workers</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nf">print</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="p">{</span><span class="sh">'</span><span class="s">status</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">active</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">type</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">k8s</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">engine_hosts</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">gs-engine-jlspyc-6k8j7,gs-engine-jlspyc-mlnvb</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">namespace</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">gs-xxwczb</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">session_id</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">session_narhaktn</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">num_workers</span><span class="sh">'</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+</code></pre></div></div>
+
+<p>The first deployment may take some time to pull the image. After the deployment is successful, we can see the current status of the <code class="language-plaintext highlighter-rouge">sess</code> and the <code class="language-plaintext highlighter-rouge">namespace</code> to which this instance belongs.</p>
+
+<p>In the command line window, we can use the <code class="language-plaintext highlighter-rouge">kubectl get</code> to view the components launched by the current GraphScope instance.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Check pods</span>
+<span class="nv">$ </span>kubectl <span class="nt">-n</span> gs-xxwczb get pod
+NAME                                  READY   STATUS    RESTARTS   AGE
+coordinator-jlspyc-6d6fd7f747-9sr7x   1/1     Running   0          8m27s
+gs-engine-jlspyc-6k8j7                2/2     Running   0          8m23s
+gs-engine-jlspyc-mlnvb                2/2     Running   0          8m23s
+gs-etcd-jlspyc-0                      1/1     Running   0          8m24s
+
+<span class="c"># Check service</span>
+<span class="nv">$ </span>kubectl <span class="nt">-n</span> gs-xxwczb get service
+NAME                         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>               AGE
+coordinator-service-jlspyc   NodePort    172.16.137.185   &lt;none&gt;        59050:32277/TCP       8m55s
+gs-etcd-jlspyc-0             ClusterIP   172.16.208.134   &lt;none&gt;        57534/TCP,58955/TCP   8m51s
+gs-etcd-service-jlspyc       ClusterIP   172.16.248.69    &lt;none&gt;        58955/TCP             8m52s
+</code></pre></div></div>
+
+<p>The process of starting each component by Session is as follows:</p>
+
+<p><img src="/blog/assets/images/k8s-session-process.png" alt="graphscope-launching-process" /></p>
+
+<p>As shown in the above figure, behind this statement <code class="language-plaintext highlighter-rouge">sess = graphscope.session(num_workers=2)</code>, GraphScope would launch each component in the following process:</p>
+
+<ol>
+  <li>By default, when creating a session, this method creates a separate namespace for each Kubernetes object used later, including <code class="language-plaintext highlighter-rouge">Pod</code>, <code class="language-plaintext highlighter-rouge">Role</code>, etc. When the user closes the session, the entire namespace will be deleted.</li>
+  <li>After the namespace is created, the subsequent startup process is proceeded through the Kubernetes API using the default service account. Since the default service account does not have permission to read <code class="language-plaintext highlighter-rouge">Pod</code>s, we create a <code class="language-plaintext highlighter-rouge">Role</code> that can operate on <code class="language-plaintext highlighter-rouge">Pod</code> and <code class="language-plaintext highlighter-rouge">Deployment</code>, <code class="language-plaintext highlighter-rouge">Statefulsets</code> objects in the corresponding namespace using RBAC API after creating a namespace on the client side, then bind it to the default service account. This allows containers created by GraphScope to access other kubernetes objects in their respective namespaces.</li>
+  <li>The client will launch Coordinator as the entry point of GraphScope backend service. It would communicates with client through GRPC and manages the lifecycle of Graph Analysis Engine (GAE), Graph Interactive Engine (GIE), and Graph Learning Engine (GLE).</li>
+  <li>Coordinator Pod will launch server-side components in the current namespace according to session parameters passed by client — a <code class="language-plaintext highlighter-rouge">Statefulsets</code> with graph computing engines and Vineyard containers.</li>
+  <li>Finally, GraphScope Coordinator uses Kubernetes Service to expose services to external applications (in this case, the client). Currently, we support NodePort and LoadBalancer as service types. For specific configuration details, please refer to parameter details below.</li>
+</ol>
+
+<h2 id="session-parameters">Session parameters</h2>
+
+<p>Session can accept a set of parameters to customize the configuration of the cluster. For example, the <code class="language-plaintext highlighter-rouge">num_workers</code> parameter can define number of workers to be launched, and the <code class="language-plaintext highlighter-rouge">timeout_seconds</code> parameter defines the timeout time for creating the cluster. The meanings and default values ​​of some commonly used parameters are as follows. For details of all parameters, please refer to the <a href="https://graphscope.io/docs/reference/session.html">documentation</a>.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameters</th>
+      <th>Description</th>
+      <th>Default Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>addr</td>
+      <td>To connect to a existing GraphScope cluster. Commonly used with helm deployment</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>k8s_namespace</td>
+      <td>Specify the namespace. If exists, deploy GraphScope within that namespace. Else create a new namespace</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>k8s_image_registry</td>
+      <td>The registry of GraphScope images</td>
+      <td>registry.cn-hongkong.aliyuncs.com</td>
+    </tr>
+    <tr>
+      <td>k8s_image_tag</td>
+      <td>The tag of GraphScope images</td>
+      <td>0.22.0 (the version of the client)</td>
+    </tr>
+    <tr>
+      <td>k8s_image_pull_policy</td>
+      <td>The image pull policy, one of <code class="language-plaintext highlighter-rouge">IfNotPresent</code> and <code class="language-plaintext highlighter-rouge">Always</code></td>
+      <td><code class="language-plaintext highlighter-rouge">IfNotPresent</code></td>
+    </tr>
+    <tr>
+      <td>k8s_service_type</td>
+      <td>How to expose service. one of <code class="language-plaintext highlighter-rouge">NodePort</code> and <code class="language-plaintext highlighter-rouge">LoadBalancer</code></td>
+      <td><code class="language-plaintext highlighter-rouge">NodePort</code></td>
+    </tr>
+    <tr>
+      <td>num_workers</td>
+      <td>The number of GraphScope engine workers</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>show_log</td>
+      <td>Where output detailed log on client</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>log_level</td>
+      <td>The log level, could be <code class="language-plaintext highlighter-rouge">DEBUG</code> and <code class="language-plaintext highlighter-rouge">INFO</code></td>
+      <td><code class="language-plaintext highlighter-rouge">INFO</code></td>
+    </tr>
+    <tr>
+      <td>timeout_seconds</td>
+      <td>The timeout duration when creating GraphScope cluster</td>
+      <td>600</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Among the above parameters, <code class="language-plaintext highlighter-rouge">k8s_service_type</code> is usually the one that needs attention. You can choose the appropriate service type according to the following introduction:</p>
+
+<ul>
+  <li>
+    <p><code class="language-plaintext highlighter-rouge">NodePort</code> type is the most simple way to import external traffic into Kubernetes services. As its name suggests, it opens a specific port (range 30000 ~ 32767) on the corresponding Kubernetes node. Any traffic sent to this port will be forwarded to the corresponding service (that is, the Coordinator service in GraphScope). Therefore, if you use <code class="language-plaintext highlighter-rouge">NodePort</code> type, please make sure that the machine where the Python client is located can communicate with the Kubernetes cluster node.</p>
+  </li>
+  <li>
+    <p><code class="language-plaintext highlighter-rouge">LoadBalancer</code> type is the standard way to expose services to the Internet. However, currently deployed Kubernetes clusters usually do not have LoadBalancer capabilities by default. You need to deploy it manually,. In addition, certified platforms such as Aliyun ACK or AWS EKS usually directly provide LoadBalancer capabilities.</p>
+  </li>
+</ul>
+
+<h2 id="develop-and-build-custom-images">Develop and build custom images</h2>
+
+<p>While GraphScope provides docker images associated with every release, you could also build a custom image from the source code.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git clone https://github.com/alibaba/GraphScope.git <span class="o">&amp;&amp;</span> <span class="nb">cd </span>GraphScope/k8s
+<span class="c"># Build images for all components, including analytical, interactive, learning and coordinator</span>
+<span class="nv">$ </span>make all
+<span class="c"># or if you want to build a image for a specific component</span>
+<span class="nv">$ </span>make analytical
+</code></pre></div></div>
+
+<p>The command will produce the corresponding image, which could be used by specifying parameters in <code class="language-plaintext highlighter-rouge">Session</code>. Assuming the image are named <code class="language-plaintext highlighter-rouge">graphscope/analytical:latest</code>, which means
+the registry is empty or <code class="language-plaintext highlighter-rouge">docker.io</code>, and the tag is <code class="language-plaintext highlighter-rouge">latest</code>.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="n">graphscope</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">session</span><span class="p">(</span><span class="n">k8s_image_registry</span><span class="o">=</span><span class="sh">""</span><span class="p">,</span> <span class="n">k8s_image_tag</span><span class="o">=</span><span class="sh">"</span><span class="s">latest</span><span class="sh">"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+<p>As a graph computing engine that can efficiently process ultra-large-scale data in cloud-native environments, this article focuses on how to deploy GraphScope based on Kubernetes environments. At the same time, this article also details the details behind the deployment of GraphScope on Kubernetes. In addition, GraphScope also supports deployment in the form of <a href="https://helm.sh/">Helm</a>, which allows clients to connect to a deployed service. We will also detail this part in subsequent articles. Finally, we sincerely welcome everyone to use GraphScope and provide feedback on any issues encountered.</p>
+
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=How to Run GraphScope on Kubernetes Cluster&amp;url=https://graphscope.io/tech/2023/06/01/How-to-Run-GraphScope-on-Kubernetes-Cluster.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2023/06/01/How-to-Run-GraphScope-on-Kubernetes-Cluster.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2023/06/01/How-to-Run-GraphScope-on-Kubernetes-Cluster.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2023 &bull; All rights reserved.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+    
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+</body>
+</html>
+
