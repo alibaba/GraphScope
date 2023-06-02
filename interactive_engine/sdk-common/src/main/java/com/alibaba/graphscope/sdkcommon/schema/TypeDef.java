@@ -31,7 +31,7 @@ public class TypeDef implements GraphElement {
 
     private String label;
     private LabelId labelId;
-    private String comment;
+    private String comment = "";
 
     private List<PropertyDef> properties;
     private List<Integer> pkIdxs;
@@ -207,7 +207,7 @@ public class TypeDef implements GraphElement {
         private LabelId labelId;
         private List<PropertyDef> properties = new ArrayList<>();
         private TypeEnum typeEnum;
-        private String comment;
+        private String comment = "";
 
         private Builder() {}
 
