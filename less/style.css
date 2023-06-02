@@ -653,12 +653,17 @@ form {
 /*superslides*/
 /*temp use without slides*/
 #slide .slides-container {
-  height: 600px;
+  height: 640px;
   /*background: url(../img/header-bg-2.jpg);*/
   background: linear-gradient(135deg, #1F76F0 0%, #00cccc 100%);
   /*background-repeat: no-repeat;*/
   background-size: 100% auto;
   background-position: center;
+}
+@media (min-width: 2000px) {
+  #slide .slides-container {
+    height: 700px;
+  }
 }
 #slide #header-bg div canvas {
   /*background-color: linear-gradient(135deg, #010408 0%, #1565c0 100%)*/

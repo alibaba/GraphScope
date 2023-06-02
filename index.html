@@ -12,19 +12,6 @@
 
         gtag('config', 'G-5V27DVHLP0');
     </script>
-
-    <!-- Baidu Analytics -->
-    <script>
-        var _hmt = _hmt || [];
-        (function() {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
-        var s = document.getElementsByTagName("script")[0]; 
-        s.parentNode.insertBefore(hm, s);
-        })();
-    </script>
-    
-    
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -52,10 +39,7 @@
     <link href="https://fonts.googleapis.com/css?family=Fira+Mono">
 
     <!-- Theme CSS -->
-    <link href="css/style-f43daf4bf2.min.css" rel="stylesheet">
-    <link href="vendor/termynal/termynal.css" rel="stylesheet">
-    <link href="vendor/owl/owl.carousel.css" rel="stylesheet">
-    <link href="vendor/owl/owl.theme.css" rel="stylesheet">
+    <link href="css/style-115f6e6125.min.css" rel="stylesheet">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -252,7 +236,7 @@
                             </div>
                         </div>
                     </a>
-					<a href="blog/tech/2023/05/31/How-to-Play-GraphScope-Locally.html" class="link-2-post">
+                    <a href="blog/tech/2023/05/31/How-to-Play-GraphScope-Locally.html" class="link-2-post">
                         <div class="item app-card">
                             <img src="blog/assets/images/2023-05-31-title-picture.jpg" />
                             <div class="desc">
@@ -267,9 +251,8 @@
                             <img src="blog/assets/images/2023-05-25-graph-computing.png" />
                             <div class="desc">
                                 <h2> Categories, Languages, and Systems of Graph Computing </h2>
-                                <p> In this post, we will introduce the categories, languages, and systems of graph computing.
-                                 </p>
-                                 <p class="posted-date">Posted on 25-May-2023</p>
+                                <p> In this post, we will introduce the categories, languages, and systems of graph computing.</p>
+                                <p class="posted-date">Posted on 25-May-2023</p>
                             </div>
                         </div>
                     </a>
@@ -376,7 +359,7 @@
     </footer>
 
     <!-- termynal -->
-    <script src="vendor/termynal/termynal.js" data-termynal-container="#termynal"></script>
+    <script src="vendor/termynal/termynal.min.js" data-termynal-container="#termynal"></script>
 
     <!-- jQuery -->
     <script src="vendor/jquery/jquery.min.js"></script>
@@ -385,202 +368,13 @@
     <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
 
     <!-- Plugin JavaScript -->
-    <script src="vendor/jquery/jquery.easing.min.js"></script>
-    <script src="vendor/jquery/jquery.animate-enhanced.min.js"></script>
     <script src="vendor/scrollreveal/scrollreveal.min.js"></script>
-    <script src="vendor/superslides/jquery.superslides.min.js"></script>
 
-    <!-- Theme JavaScript -->
-    <script type="text/javascript" src="js/particles.min.js"></script>
-    <script src="js/creative.min.js"></script>
+    <!-- particles effect -->
+    <script src="js/pcls.min.js"></script>
 
-    <script type="text/javascript" src="vendor/three/three.min.js"></script>
-    <script type="text/javascript" src="vendor/three/CanvasRenderer.js"></script>
-    <script type="text/javascript" src="vendor/three/Projector.js"></script>
-    <script type="text/javascript" src="vendor/three/stats.min.js"></script>
-
-    <script type="text/javascript" src="vendor/owl/owl.carousel.js"></script>
-
-    <script>
-        var SEPARATION = 100, AMOUNTX = 50, AMOUNTY = 50;
-
-        var container, stats;
-        var camera, scene, renderer;
-
-        var particles, particle, count = 0;
-
-        var mouseX = 0, mouseY = 0;
-
-        var windowHalfX = window.innerWidth / 2;
-        var windowHalfY = window.innerHeight / 2;
-
-        // if (window.innerWidth > 600) {
-        init();
-        animate();
-        // }
-        // else {
-        //     document.getElementById('header-bg');
-        //     document.getElementById("header-bg").className += " mobile-header";
-        // }
-
-        function init() {
-
-            container = document.createElement('div');
-            document.getElementById('header-bg').appendChild(container);
-
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
-            camera.position.z = 1000;
-
-            scene = new THREE.Scene();
-            // scene.background = new THREE.Color( 0xff0000 );
-
-            particles = new Array();
-
-            var PI2 = Math.PI * 2;
-            var material = new THREE.SpriteCanvasMaterial({
-
-                color: 0xffffff,
-                program: function (context) {
-
-                    context.beginPath();
-                    context.arc(0, 0, 0.5, 0, PI2, true);
-                    context.fill();
-
-                }
-
-            });
-
-            var i = 0;
-
-            for (var ix = 0; ix < AMOUNTX; ix++) {
-
-                for (var iy = 0; iy < AMOUNTY; iy++) {
-
-                    particle = particles[i++] = new THREE.Sprite(material);
-                    particle.position.x = ix * SEPARATION - ((AMOUNTX * SEPARATION) / 2);
-                    particle.position.z = iy * SEPARATION - ((AMOUNTY * SEPARATION) / 2);
-                    scene.add(particle);
-
-                }
-
-            }
-
-            renderer = new THREE.CanvasRenderer({ alpha: true });
-            // renderer.setClearColor( 0xffffff, 0)
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight + 200);
-            container.appendChild(renderer.domElement);
-
-            // stats = new Stats();
-            // container.appendChild( stats.dom );
-
-            document.addEventListener('mousemove', onDocumentMouseMove, false);
-            document.addEventListener('touchstart', onDocumentTouchStart, false);
-            document.addEventListener('touchmove', onDocumentTouchMove, false);
-
-            //
-
-            window.addEventListener('resize', onWindowResize, false);
-
-        }
-
-        function onWindowResize() {
-
-            windowHalfX = window.innerWidth / 2;
-            windowHalfY = window.innerHeight / 2;
-
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-
-            renderer.setSize(window.innerWidth, window.innerHeight);
-
-        }
-
-        //
-
-        function onDocumentMouseMove(event) {
-
-            mouseX = event.clientX - windowHalfX;
-            // mouseY = event.clientY - windowHalfY;
-            // = -300
-            // console.log(mouseY)
-
-        }
-
-        function onDocumentTouchStart(event) {
-
-            if (event.touches.length === 1) {
-                event.preventDefault();
-                mouseX = event.touches[0].pageX - windowHalfX;
-                // mouseY = event.touches[ 0 ].pageY - windowHalfY;
-
-            }
-
-        }
-
-        function onDocumentTouchMove(event) {
-
-            if (event.touches.length === 1) {
-                event.preventDefault();
-                mouseX = event.touches[0].pageX - windowHalfX;
-                // mouseY = event.touches[ 0 ].pageY - windowHalfY;
-
-            }
-
-        }
-
-        //
-
-        function animate() {
-            requestAnimationFrame(animate);
-            render();
-            // stats.update();
-
-        }
-
-        function render() {
-
-            mouseY = -300;
-
-            camera.position.x += (mouseX - camera.position.x) * .05;
-            camera.position.y += (- mouseY - camera.position.y) * .05;
-            camera.lookAt(scene.position);
-
-            var i = 0;
-
-            for (var ix = 0; ix < AMOUNTX; ix++) {
-
-                for (var iy = 0; iy < AMOUNTY; iy++) {
-
-                    particle = particles[i++];
-                    particle.position.y = (Math.sin((ix + count) * 0.3) * 50) +
-                        (Math.sin((iy + count) * 0.5) * 50);
-                    particle.scale.x = particle.scale.y = (Math.sin((ix + count) * 0.3) + 1) * 4 +
-                        (Math.sin((iy + count) * 0.5) + 1) * 4;
-
-                }
-
-            }
-
-            renderer.render(scene, camera);
-
-            count += 0.1;
-
-        }
-
-        $("#owl-slides").owlCarousel({
-            itemsCustom: [
-                [0, 1],
-                [200, 1],
-                [900, 2],
-                [1200, 3],
-                [2000, 3]
-            ],
-        });
-
-
-    </script>
-
+    <!-- specific effect on index -->
+    <script src="js/index.min.js"></script>
 </body>
 
 </html>
