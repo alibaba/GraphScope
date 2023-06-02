@@ -207,6 +207,12 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
         self._vineyard_pod_name_list = []
 
+        # set the kube config file
+        self._k8s_config_file = self.get_current_kubeconfig()
+        config = kwargs.pop("k8s_client_config", {})
+        if "config_file" in config:
+            self._k8s_config_file = config["config_file"]
+
         if self._vineyard_deployment is not None:
             self._deploy_vineyard_deployment_if_not_exist()
             # check the if the vineyard deployment is ready again
@@ -301,6 +307,19 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
     def vineyard_deployment_exists(self):
         return self._vineyard_deployment is not None
+
+    def get_current_kubeconfig(self):
+        """Gets the current kubeconfig file path.
+
+        Returns:
+            str: The path to the current kubeconfig file.
+        """
+
+        kubeconfig_path = os.environ.get("KUBECONFIG")
+        if kubeconfig_path is None:
+            kubeconfig_path = "~/.kube/config"
+
+        return kubeconfig_path
 
     # the argument `with_analytical_` means whether to add the analytical engine
     # container to the engine statefulset, and the other three arguments are similar.
@@ -862,6 +881,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         # https://github.com/v6d-io/v6d/tree/main/k8s/cmd#vineyardctl-inject
 
         new_workload_json = vineyard.deploy.vineyardctl.inject(
+            kubeconfig=self._k8s_config_file,
             resource=workload_json,
             sidecar_volume_mountpath="/tmp/vineyard_workspace",
             name=sts_name + "-vineyard",
@@ -1055,6 +1075,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             self._api_client.sanitize_for_serialization(workload)
         )
         new_workload_json = vineyard.deploy.vineyardctl.schedule.workload(
+            kubeconfig=self._k8s_config_file,
             resource=workload_json,
             vineyardd_name=self._vineyard_deployment,
             vineyardd_namespace=self._namespace,
@@ -1257,6 +1278,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
         owner_reference_json = self._get_owner_reference_as_json()
         vineyard.deploy.vineyardctl.deploy.vineyard_deployment(
+            kubeconfig=self._k8s_config_file,
             name=self._vineyard_deployment,
             namespace=self._namespace,
             vineyard_replicas=self._num_workers,
