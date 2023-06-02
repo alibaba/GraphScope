@@ -61,7 +61,8 @@ class Property:
         return prop
 
     def __repr__(self) -> str:
-        return f"Property({self.id}, {self.name}, {graph_def_pb2.DataTypePb.Name(self.data_type)}, {self.is_primary_key}, {self.comment})"
+        type_str = graph_def_pb2.DataTypePb.Name(self.data_type)
+        return f"Property({self.id}, {self.name}, {type_str}, {self.is_primary_key}, {self.comment})"
 
     def __str__(self) -> str:
         return self.__repr__()
