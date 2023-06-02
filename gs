@@ -1035,7 +1035,7 @@ install_vineyard() {
   make -j"${jobs}"
   make install
   strip "${V6D_PREFIX}"/bin/vineyard* "${V6D_PREFIX}"/lib/libvineyard*
-  pip3 install --no-cache -i https://pypi.org/simple "vineyard==${v6d_version}"
+  pip3 install --no-cache -i https://pypi.org/simple -U "vineyard" "vineyard-io"
   cp -rs "${V6D_PREFIX}"/* "${install_prefix}"/
   popd || exit
   popd || exit

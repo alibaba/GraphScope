@@ -378,7 +378,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
                     )
                 )
             except K8SApiException:
-                logger.error(f"Coordinator {self._coordinator_name} not found")
+                logger.error("Coordinator %s not found", self._coordinator_name)
 
         return owner_references
 
@@ -1257,7 +1257,9 @@ class KubernetesClusterLauncher(AbstractLauncher):
             )
         except K8SApiException:
             logger.info(
-                f"Vineyard deployment {self._namespace}/{self._vineyard_deployment} not exist"
+                "Vineyard deployment %s/%s not exist",
+                self._namespace,
+                self._vineyard_deployment,
             )
             return False
         return True

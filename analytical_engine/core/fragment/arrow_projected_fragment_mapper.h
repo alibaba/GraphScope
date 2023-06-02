@@ -37,6 +37,8 @@
 
 #include "core/fragment/arrow_projected_fragment.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 /**
@@ -141,7 +143,7 @@ class ArrowProjectedFragmentMapper {
               << " vertex properties";
     new_vprop_name = "VPROP_" + std::to_string(old_vprop_num);
     std::shared_ptr<vdata_array_t> arrow_vdata_array;
-    vdata_array_builder.Finish(&arrow_vdata_array);
+    ARROW_CHECK_OK(vdata_array_builder.Finish(&arrow_vdata_array));
 
     std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>
         vertex_columns_map;
@@ -182,7 +184,7 @@ class ArrowProjectedFragmentMapper {
     new_eprop_name = "EPROP_" + std::to_string(old_eprop_num);
 
     std::shared_ptr<edata_array_t> arrow_edata_array;
-    edata_array_builder.Finish(&arrow_edata_array);
+    ARROW_CHECK_OK(edata_array_builder.Finish(&arrow_edata_array));
 
     std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>
         edge_columns_map;

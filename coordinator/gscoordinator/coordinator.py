@@ -992,9 +992,9 @@ def start_server(launcher, args):
             logger.info(
                 "Coordinator monitor server listen at 0.0.0.0:%d", args.monitor_port
             )
-        except Exception as e:
-            logger.error(
-                "Failed to start monitor server 0.0.0.0:%d : %s", args.monitor_port, e
+        except Exception:  # noqa: E722, pylint: disable=broad-except
+            logger.exception(
+                "Failed to start monitor server 0.0.0.0:%d", args.monitor_port
             )
 
     # handle SIGTERM signal

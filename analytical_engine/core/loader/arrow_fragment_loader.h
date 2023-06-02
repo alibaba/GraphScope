@@ -64,16 +64,16 @@ template <
     template <typename OID_T_ = typename vineyard::InternalType<OID_T>::type,
               typename VID_T_ = VID_T>
     class VERTEX_MAP_T = vineyard::ArrowVertexMap>
-class ArrowFragmentLoader
-    : public vineyard::ArrowFragmentLoader<OID_T, VID_T, VERTEX_MAP_T> {
-  using Base = vineyard::ArrowFragmentLoader<OID_T, VID_T, VERTEX_MAP_T>;
+class ArrowFragmentLoader : public vineyard::ArrowFragmentLoader<OID_T, VID_T> {
+  using Base = vineyard::ArrowFragmentLoader<OID_T, VID_T>;
 
   using typename Base::internal_oid_t;
   using typename Base::label_id_t;
   using typename Base::oid_array_t;
   using typename Base::oid_t;
-  using typename Base::vertex_map_t;
   using typename Base::vid_t;
+
+  using vertex_map_t = VERTEX_MAP_T<internal_oid_t, VID_T>;
 
   using Base::CONSOLIDATE_TAG;
   using Base::DST_LABEL_TAG;
@@ -107,9 +107,10 @@ class ArrowFragmentLoader
                       const std::vector<std::string>& efiles,
                       const std::vector<std::string>& vfiles,
                       bool directed = true, bool generate_eid = false,
-                      bool retain_oid = false)
+                      bool retain_oid = false, bool compact_edges = false)
       : Base(client, comm_spec, efiles, vfiles, directed, generate_eid,
-             retain_oid),
+             retain_oid, vineyard::is_local_vertex_map<vertex_map_t>::value,
+             compact_edges),
         graph_info_(nullptr),
         giraph_enabled_(false) {}
 
@@ -118,7 +119,9 @@ class ArrowFragmentLoader
                       std::shared_ptr<detail::Graph> graph_info)
       : Base(client, comm_spec, std::vector<std::string>{},
              std::vector<std::string>{}, graph_info->directed,
-             graph_info->generate_eid, graph_info->retain_oid),
+             graph_info->generate_eid, graph_info->retain_oid,
+             vineyard::is_local_vertex_map<vertex_map_t>::value,
+             graph_info->compact_edges),
         graph_info_(graph_info) {
 #ifdef ENABLE_JAVA_SDK
     // check when vformat or eformat start with giraph. if not, we
@@ -249,8 +252,7 @@ class ArrowFragmentLoader
 
   boost::leaf::result<vineyard::ObjectID> LoadFragmentAsFragmentGroup() {
     BOOST_LEAF_AUTO(frag_id, LoadFragment());
-    auto frag = std::dynamic_pointer_cast<
-        vineyard::ArrowFragment<OID_T, VID_T, typename Base::vertex_map_t>>(
+    auto frag = std::dynamic_pointer_cast<vineyard::ArrowFragmentBase>(
         client_.GetObject(frag_id));
     if (frag == nullptr) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,

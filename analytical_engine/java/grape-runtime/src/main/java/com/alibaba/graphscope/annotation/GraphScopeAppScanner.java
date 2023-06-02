@@ -244,7 +244,7 @@ public class GraphScopeAppScanner {
         {
             Pattern pattern =
                     Pattern.compile(
-                            "(.+)<(.+),(.+),(.+),(.+),vineyard::ArrowVertexMap<(.+),(.+)>>");
+                            "(.+)<(.+),(.+),(.+),(.+),vineyard::ArrowVertexMap<(.+),(.+)>,(.+)>");
             Matcher matcher = pattern.matcher(graphTemplateStr);
             if (matcher.find()) {
                 return new String[] {
@@ -257,7 +257,7 @@ public class GraphScopeAppScanner {
             }
         }
         {
-            Pattern pattern = Pattern.compile("(.+)<(.+),(.+),(.+),(.+)>");
+            Pattern pattern = Pattern.compile("(.+)<(.+),(.+),(.+),(.+),(.+)>");
             Matcher matcher = pattern.matcher(graphTemplateStr);
             if (matcher.find()) {
                 return new String[] {

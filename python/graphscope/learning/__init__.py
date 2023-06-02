@@ -106,12 +106,12 @@ try:
     try:
         import examples
     except ImportError:
-        pass
+        raise
 
     from graphscope.learning.graph import Graph
 
 except ImportError:
-    pass
+    raise
 finally:
     sys.path.pop(sys.path.index(os.path.dirname(__file__)))
     sys.path.pop(
