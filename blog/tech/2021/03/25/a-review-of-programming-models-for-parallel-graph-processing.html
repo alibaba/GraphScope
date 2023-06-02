@@ -72,8 +72,8 @@ To explore underlying insights hidden in graph data, many graph analytics algori
 <p>With the vertex-centric model, the vertex program of single source shortest paths (SSSP) is expressed as follows.</p>
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">VertexProgramForSSSP</span><span class="p">():</span>
     <span class="c1"># receive and merge incoming messages
-</span>    <span class="n">incoming_msgs</span> <span class="o">=</span> <span class="n">ReceiveMessages</span><span class="p">()</span>
-    <span class="n">merged_msg</span> <span class="o">=</span> <span class="n">Reduce</span><span class="p">(</span><span class="n">incoming_msgs</span><span class="p">,</span> <span class="n">MIN</span><span class="p">)</span>
+</span>    <span class="n">incoming_msgs</span> <span class="o">=</span> <span class="nc">ReceiveMessages</span><span class="p">()</span>
+    <span class="n">merged_msg</span> <span class="o">=</span> <span class="nc">Reduce</span><span class="p">(</span><span class="n">incoming_msgs</span><span class="p">,</span> <span class="n">MIN</span><span class="p">)</span>
     
     <span class="c1"># update vertex property
 </span>    <span class="k">if</span> <span class="n">dist</span> <span class="o">&gt;</span> <span class="n">merged_msg</span><span class="p">:</span>
@@ -82,7 +82,7 @@ To explore underlying insights hidden in graph data, many graph analytics algori
     <span class="c1"># send messages to neighbors
 </span>    <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">dist</span> <span class="o">+</span> <span class="n">edge_weight</span> <span class="o">&lt;</span> <span class="n">neighbor_dist</span><span class="p">:</span>
-            <span class="n">SendMessage</span><span class="p">(</span><span class="n">neighbor</span><span class="p">,</span> <span class="n">dist</span> <span class="o">+</span> <span class="n">edge_weight</span><span class="p">)</span>
+            <span class="nc">SendMessage</span><span class="p">(</span><span class="n">neighbor</span><span class="p">,</span> <span class="n">dist</span> <span class="o">+</span> <span class="n">edge_weight</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>However, the performance of Pregel drops dramatically when facing natural graphs which follow a power-law distribution. To solve this problem, PowerGraph[2] proposed the GAS (Gather-Apply-Scatter) programming model for the vertex-cut graph partitioning strategy. The <em>Gather</em> function runs locally on each partition and then one accumulator is sent from each mirror to the master. The master runs the <em>Apply</em> function and then sends the updated vertex data to all mirrors. Finally, the <em>Scatter</em> phase is run in parallel on mirrors to update the data on adjacent edges.</p>
@@ -92,24 +92,24 @@ To explore underlying insights hidden in graph data, many graph analytics algori
 <p>Following the GAS abstraction, the SSSP can be implemented as follows.</p>
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">GASForSSSP</span><span class="p">():</span>
     <span class="c1"># gather_nbrs: ALL_NBRS
-</span>    <span class="k">def</span> <span class="nf">gather</span><span class="p">(</span><span class="n">D_u</span><span class="p">,</span> <span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">),</span> <span class="n">D_v</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">D_v</span> <span class="o">+</span> <span class="n">D</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">u</span><span class="p">)</span>
+</span>    <span class="k">def</span> <span class="nf">gather</span><span class="p">(</span><span class="n">D_u</span><span class="p">,</span> <span class="nc">D</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">),</span> <span class="n">D_v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">D_v</span> <span class="o">+</span> <span class="nc">D</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">u</span><span class="p">)</span>
     
     <span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span> 
-        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nf">min</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
     
     <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="n">D_u</span><span class="p">,</span> <span class="n">new_dist</span><span class="p">):</span>
         <span class="n">D_u</span> <span class="o">=</span> <span class="n">new_dist</span>
         
     <span class="c1"># scatter_nbrs: ALL_NBRS
-</span>    <span class="k">def</span> <span class="nf">scatter</span><span class="p">(</span><span class="n">D_u</span><span class="p">,</span><span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">),</span><span class="n">D_v</span><span class="p">):</span>
+</span>    <span class="k">def</span> <span class="nf">scatter</span><span class="p">(</span><span class="n">D_u</span><span class="p">,</span><span class="nc">D</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">),</span><span class="n">D_v</span><span class="p">):</span>
         <span class="c1"># If changed, activate neighbor
-</span>	<span class="k">if</span><span class="p">(</span><span class="n">changed</span><span class="p">(</span><span class="n">D_u</span><span class="p">)):</span>
-	    <span class="n">Activate</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-	<span class="k">if</span><span class="p">(</span><span class="n">increased</span><span class="p">(</span><span class="n">D_u</span><span class="p">)):</span>
+</span>	<span class="nf">if</span><span class="p">(</span><span class="nf">changed</span><span class="p">(</span><span class="n">D_u</span><span class="p">)):</span>
+	    <span class="nc">Activate</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+	<span class="nf">if</span><span class="p">(</span><span class="nf">increased</span><span class="p">(</span><span class="n">D_u</span><span class="p">)):</span>
 	    <span class="k">return</span> <span class="n">NULL</span>
 	<span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">D_u</span> <span class="o">+</span> <span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">D_u</span> <span class="o">+</span> <span class="nc">D</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
 </code></pre></div></div>
 
 <h5 id="pros">Pros:</h5>
@@ -136,31 +136,31 @@ To explore underlying insights hidden in graph data, many graph analytics algori
 </span>    	<span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">subgraph</span><span class="p">.</span><span class="n">internal_vertices</span><span class="p">:</span>
 	    <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">SOURCE</span><span class="p">:</span>
 		<span class="n">v</span><span class="p">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># set distance to source as 0
-</span>		<span class="n">openset</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="c1"># distance has improved
+</span>		<span class="n">openset</span><span class="p">.</span><span class="nf">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="c1"># distance has improved
 </span>	    <span class="k">else</span><span class="p">:</span>
 		<span class="n">v</span><span class="p">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">MAX_INT</span> <span class="c1"># not source vertex
 </span>	<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">:</span> <span class="c1"># process input messages
 </span>	    <span class="k">if</span> <span class="n">subgraph</span><span class="p">.</span><span class="n">vertices</span><span class="p">[</span><span class="n">m</span><span class="p">.</span><span class="n">vertex</span><span class="p">].</span><span class="n">value</span> <span class="o">&gt;</span> <span class="n">m</span><span class="p">.</span><span class="n">value</span><span class="p">:</span>
 		<span class="n">subgraph</span><span class="p">.</span><span class="n">vertices</span><span class="p">[</span><span class="n">m</span><span class="p">.</span><span class="n">vertex</span><span class="p">].</span><span class="n">value</span> <span class="o">=</span> <span class="n">m</span><span class="p">.</span><span class="n">value</span>
-		<span class="n">openset</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">vertex</span><span class="p">)</span> <span class="c1"># distance improved
-</span>	<span class="n">boundarySet</span> <span class="o">=</span> <span class="n">dijkstra</span><span class="p">(</span><span class="n">openset</span><span class="p">)</span>
+		<span class="n">openset</span><span class="p">.</span><span class="nf">add</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">vertex</span><span class="p">)</span> <span class="c1"># distance improved
+</span>	<span class="n">boundarySet</span> <span class="o">=</span> <span class="nf">dijkstra</span><span class="p">(</span><span class="n">openset</span><span class="p">)</span>
 	<span class="c1"># Send new distances to boundary vertices
-</span>	<span class="k">for</span> <span class="p">(</span><span class="n">boundarySG</span><span class="p">,</span> <span class="n">vertex</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">boundarySet</span><span class="p">:</span>
-	    <span class="n">SendToSubgraphVertex</span><span class="p">(</span><span class="n">boundarySG</span><span class="p">,</span> <span class="n">vertex</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-	<span class="n">VoteToHalt</span><span class="p">()</span>
+</span>	<span class="nf">for </span><span class="p">(</span><span class="n">boundarySG</span><span class="p">,</span> <span class="n">vertex</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">boundarySet</span><span class="p">:</span>
+	    <span class="nc">SendToSubgraphVertex</span><span class="p">(</span><span class="n">boundarySG</span><span class="p">,</span> <span class="n">vertex</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+	<span class="nc">VoteToHalt</span><span class="p">()</span>
 
 <span class="k">def</span> <span class="nf">dijkstra</span><span class="p">(</span><span class="n">openset</span><span class="p">):</span>
     <span class="n">boundaryOpenset</span> <span class="o">=</span> <span class="n">NULL</span>
     <span class="k">while</span> <span class="n">openset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NULL</span><span class="p">:</span>
-	<span class="n">v</span> <span class="o">=</span> <span class="n">GetShortestVertex</span><span class="p">(</span><span class="n">openset</span><span class="p">)</span>
+	<span class="n">v</span> <span class="o">=</span> <span class="nc">GetShortestVertex</span><span class="p">(</span><span class="n">openset</span><span class="p">)</span>
 	<span class="k">for</span> <span class="n">v2</span> <span class="ow">in</span> <span class="n">v</span><span class="p">.</span><span class="n">neighbors</span><span class="p">:</span>
             <span class="c1"># update neighbors, notify if boundary.
-</span>	    <span class="k">if</span> <span class="n">v2</span><span class="p">.</span><span class="n">isBoundary</span><span class="p">():</span>
-		<span class="n">boundaryOpenset</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">v2</span><span class="p">.</span><span class="n">subgraph</span><span class="p">,</span><span class="n">v2</span><span class="p">,</span><span class="n">v</span><span class="p">.</span><span class="n">value</span><span class="o">+</span><span class="n">dis</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">v2</span><span class="p">))</span>
-	    <span class="k">else</span> <span class="k">if</span> <span class="n">v2</span><span class="p">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">value</span> <span class="o">+</span> <span class="n">dis</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">v2</span><span class="p">):</span>
-		<span class="n">v2</span><span class="p">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">v</span><span class="p">.</span><span class="n">value</span> <span class="o">+</span> <span class="n">dis</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">v2</span><span class="p">)</span>
-		<span class="n">openset</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span> <span class="c1"># distance has improved
-</span>	<span class="n">openset</span><span class="p">.</span><span class="n">remove</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="c1"># done with this local vertex
+</span>	    <span class="k">if</span> <span class="n">v2</span><span class="p">.</span><span class="nf">isBoundary</span><span class="p">():</span>
+		<span class="n">boundaryOpenset</span><span class="p">.</span><span class="nf">add</span><span class="p">(</span><span class="n">v2</span><span class="p">.</span><span class="n">subgraph</span><span class="p">,</span><span class="n">v2</span><span class="p">,</span><span class="n">v</span><span class="p">.</span><span class="n">value</span><span class="o">+</span><span class="nf">dis</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">v2</span><span class="p">))</span>
+	    <span class="k">else</span> <span class="k">if</span> <span class="n">v2</span><span class="p">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">value</span> <span class="o">+</span> <span class="nf">dis</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">v2</span><span class="p">):</span>
+		<span class="n">v2</span><span class="p">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">v</span><span class="p">.</span><span class="n">value</span> <span class="o">+</span> <span class="nf">dis</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">v2</span><span class="p">)</span>
+		<span class="n">openset</span><span class="p">.</span><span class="nf">add</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span> <span class="c1"># distance has improved
+</span>	<span class="n">openset</span><span class="p">.</span><span class="nf">remove</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="c1"># done with this local vertex
 </span>    <span class="k">return</span> <span class="n">boundaryOpenset</span> 
 </code></pre></div></div>
 
@@ -191,24 +191,24 @@ To explore underlying insights hidden in graph data, many graph analytics algori
 
 <p>The following pseudo-code shows how SSSP is expressed in the PIE model, where the Dijkstra’s algorithm is directly used for the computation of parallel SSSP.</p>
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">dijkstra</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">):</span>
-    <span class="n">heap</span> <span class="o">=</span> <span class="n">VertexHeap</span><span class="p">()</span>
+    <span class="n">heap</span> <span class="o">=</span> <span class="nc">VertexHeap</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">updates</span><span class="p">:</span>
 	<span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">updates</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-	<span class="n">heap</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+	<span class="n">heap</span><span class="p">.</span><span class="nf">push</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
         
-    <span class="n">updates</span><span class="p">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">updates</span><span class="p">.</span><span class="nf">clear</span><span class="p">()</span>
     
-    <span class="k">while</span> <span class="ow">not</span> <span class="n">heap</span><span class="p">.</span><span class="n">empty</span><span class="p">():</span>
-	<span class="n">u</span> <span class="o">=</span> <span class="n">heap</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">vid</span>
-	<span class="n">distu</span> <span class="o">=</span> <span class="n">heap</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">val</span>
-	<span class="n">heap</span><span class="p">.</span><span class="n">pop</span><span class="p">()</span>
-	<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">g</span><span class="p">.</span><span class="n">get_outgoing_edges</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
-	    <span class="n">v</span> <span class="o">=</span> <span class="n">e</span><span class="p">.</span><span class="n">get_neighbor</span><span class="p">()</span>
-	    <span class="n">distv</span> <span class="o">=</span> <span class="n">distu</span> <span class="o">+</span> <span class="n">e</span><span class="p">.</span><span class="n">data</span><span class="p">()</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">heap</span><span class="p">.</span><span class="nf">empty</span><span class="p">():</span>
+	<span class="n">u</span> <span class="o">=</span> <span class="n">heap</span><span class="p">.</span><span class="nf">top</span><span class="p">().</span><span class="n">vid</span>
+	<span class="n">distu</span> <span class="o">=</span> <span class="n">heap</span><span class="p">.</span><span class="nf">top</span><span class="p">().</span><span class="n">val</span>
+	<span class="n">heap</span><span class="p">.</span><span class="nf">pop</span><span class="p">()</span>
+	<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">g</span><span class="p">.</span><span class="nf">get_outgoing_edges</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
+	    <span class="n">v</span> <span class="o">=</span> <span class="n">e</span><span class="p">.</span><span class="nf">get_neighbor</span><span class="p">()</span>
+	    <span class="n">distv</span> <span class="o">=</span> <span class="n">distu</span> <span class="o">+</span> <span class="n">e</span><span class="p">.</span><span class="nf">data</span><span class="p">()</span>
 	    <span class="k">if</span> <span class="n">vals</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">distv</span><span class="p">:</span>
 		<span class="n">vals</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">distv</span>
-		    <span class="k">if</span> <span class="n">g</span><span class="p">.</span><span class="n">is_inner_vertex</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
-			<span class="n">heap</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">distv</span><span class="p">)</span>
+		    <span class="k">if</span> <span class="n">g</span><span class="p">.</span><span class="nf">is_inner_vertex</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+			<span class="n">heap</span><span class="p">.</span><span class="nf">push</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">distv</span><span class="p">)</span>
 			<span class="n">updates</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">distv</span>       
 	<span class="k">return</span> <span class="n">updates</span>
 
@@ -216,10 +216,10 @@ To explore underlying insights hidden in graph data, many graph analytics algori
     <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vertices</span><span class="p">:</span>
         <span class="n">updates</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">MAX_INT</span>
     <span class="n">updates</span><span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">dijkstra</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">)</span>
+    <span class="nf">dijkstra</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">)</span>
     
 <span class="k">def</span> <span class="nf">IncEval</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">):</span>
-    <span class="n">dijkstra</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">)</span>
+    <span class="nf">dijkstra</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">)</span>
 </code></pre></div></div>
 
 <p>Currently, the PIE model has been developed and evaluated in the graph analytical engine of GraphScope. On the LDBC Graph Analytics benchmark, GraphScope outperforms other state-of-the-art graph processing systems (see <a href="https://github.com/alibaba/libgrape-lite/blob/master/Performance.md">link</a>). Welcome to try and develop your own graph algorithms with GraphScope.</p>
@@ -284,7 +284,7 @@ To explore underlying insights hidden in graph data, many graph analytics algori
     <footer class="site-footer clearfix">
       <section class="copyright">
         <a href="/blog">GraphScope</a> &copy; 
-              2021 &bull; All rights reserved.
+              2023 &bull; All rights reserved.
       </section>
       <section class="poweredby">Made with Jekyll using 
         <a href="http://github.com/rosario/kasper">Kasper theme</a>
@@ -308,7 +308,7 @@ To explore underlying insights hidden in graph data, many graph analytics algori
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
 
-    </script>  
+    </script>   
 
     <!-- Baidu analytics code -->
     <script>
@@ -319,6 +319,6 @@ To explore underlying insights hidden in graph data, many graph analytics algori
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
       })();
-    </script> 
+    </script>
 </body>
 </html>
