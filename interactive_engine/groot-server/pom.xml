@@ -204,7 +204,7 @@
                 <include>**/GremlinStandardTest.java</include>
               </includes>
               <argLine>
-                -Djna.library.path=${project.parent.basedir}/executor/assembly/groot/target:/usr/local/lib:${project.parent.basedir}/lgraph/build:${project.parent.basedir}/executor/ir/target/release
+                -Djna.library.path=${project.parent.basedir}/executor/assembly/groot/target:/usr/local/lib:${project.parent.basedir}/lgraph/build:${project.parent.basedir}/executor/ir/target/release -Xmx1024m
               </argLine>
               <environmentVariables>
                 <RUST_BACKTRACE>1</RUST_BACKTRACE>
@@ -232,7 +232,7 @@
             <exclude>**/FfiTest.java</exclude>
           </excludes>
           <argLine>
-            -Djna.library.path=${project.parent.basedir}/executor/assembly/groot/target:/usr/local/lib:${project.parent.basedir}/lgraph/build:${project.parent.basedir}/executor/ir/target/release
+            -Djna.library.path=${project.parent.basedir}/executor/assembly/groot/target:/usr/local/lib:${project.parent.basedir}/lgraph/build:${project.parent.basedir}/executor/ir/target/release -Xmx1024m
           </argLine>
           <environmentVariables>
             <RUST_BACKTRACE>1</RUST_BACKTRACE>
