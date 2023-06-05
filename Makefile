@@ -72,21 +72,16 @@ clean:
 client: learning
 	cd $(CLIENT_DIR) && \
 	python3 -m pip install -r requirements.txt -r requirements-dev.txt --user && \
-	python3 setup.py build_ext --inplace --user
-	if [[ "${ARCH}" == "aarch64" ]]; then \
-		python3 setup.py bdist_wheel; \
-		python3 -m pip install --user dist/*.whl; \
-		rm -fr  $(CLIENT_DIR)/build; \
-	else \
-		python3 -m pip install --user --editable $(CLIENT_DIR); \
-		rm -rf $(CLIENT_DIR)/*.egg-info; \
-	fi
+	export PATH=$(PATH):$(HOME)/.local/bin && \
+	python3 setup.py build_ext --inplace --user && \
+	python3 -m pip install --user --no-build-isolation --editable $(CLIENT_DIR) && \
+	rm -rf $(CLIENT_DIR)/*.egg-info
 
 coordinator: client
 	cd $(COORDINATOR_DIR) && \
 	python3 -m pip install -r requirements.txt -r requirements-dev.txt --user && \
-	python3 setup.py build_builtin
-	python3 -m pip install --user --editable $(COORDINATOR_DIR)
+	python3 setup.py build_builtin && \
+	python3 -m pip install --user --editable $(COORDINATOR_DIR) && \
 	rm -rf $(COORDINATOR_DIR)/*.egg-info
 
 # We deliberately make $(ENGINE) depends on a file, and $(ENGINE)-install depends on $(ENGINE),

@@ -146,13 +146,13 @@ int main(int argc, char** argv) {
   }
 
   VLOG(1) << "Property: " << run_property << ", app name: " << app_name
-          << ", thread num: " << threadNum << ", outprefix: " << output_prefix;
+          << ", thread num: " << threadNum << ", out prefix: " << output_prefix;
   {
     vineyard::Client client;
     VINEYARD_CHECK_OK(client.Connect(ipc_socket));
 
     VLOG(1) << "Connected to IPCServer: " << ipc_socket;
-    VLOG(1) << "Using ArrowFragment with objid: " << fragment_id;
+    VLOG(1) << "Using ArrowFragment with object id: " << fragment_id;
 
     std::shared_ptr<FragmentType> fragment =
         std::dynamic_pointer_cast<FragmentType>(client.GetObject(fragment_id));

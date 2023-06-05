@@ -105,8 +105,10 @@ jobs:
     - name: Upload tools for helm test to Artifact
       uses: actions/upload-artifact@v3
       with:
-        name: groot.tar.gz
-        path: interactive_engine/assembly/target/groot.tar.gz
+        name: groot
+        path: |
+          interactive_engine/assembly/target/groot.tar.gz
+          interactive_engine/data-load-tool/target/data-load-tool-0.0.1-SNAPSHOT.jar
         retention-days: 5
 
   helm-test:
@@ -130,7 +132,7 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: groot.tar.gz
+        name: groot
         path: artifacts
 
     - name: Set GITHUB_ENV
@@ -140,25 +142,28 @@ jobs:
 
     - name: Prepare Image
       run: |
+        ls -la artifacts/*/*
+        mv artifacts/assembly/target/groot.tar.gz artifacts/
+        mv artifacts/data-load-tool/target/data-load-tool-0.0.1-SNAPSHOT.jar artifacts/
         docker build -t ${{ env.GSS_IMAGE }}:${SHORT_SHA} \
                 -f .github/workflows/docker/graphscope-store.Dockerfile .
 
     - name: Prepare the log directory
       run: |
         # create the helm installation log directory
-        mkdir -p ${{ github.workspace }}/helm-installation-logs
+        mkdir -p ${{ github.workspace }}/k8s-ci-helm-installation-logs
 
         # create the demo fresh of helm installation log directory
-        mkdir -p ${{ github.workspace }}/demo-fresh-of-helm-installation-logs
+        mkdir -p ${{ github.workspace }}/k8s-ci-demo-fresh-of-helm-installation-logs
 
         # create the demo script of helm installation with pv log directory
-        mkdir -p ${{ github.workspace }}/demo-script-of-helm-installation-with-pv-logs
+        mkdir -p ${{ github.workspace }}/k8s-ci-demo-script-of-helm-installation-with-pv-logs
 
         # create the helm test of helm installation with pv log directory
-        mkdir -p ${{ github.workspace }}/helm-test-of-helm-installation-with-pv-logs
+        mkdir -p ${{ github.workspace }}/k8s-ci-helm-test-of-helm-installation-with-pv-logs
 
         # create the demo after restart of helm installation with pv log directory
-        mkdir -p ${{ github.workspace }}/demo-after-restart-of-helm-installation-with-pv-logs
+        mkdir -p ${{ github.workspace }}/k8s-ci-demo-after-restart-of-helm-installation-with-pv-logs
 
     - name: Setup SSH
       run: |
@@ -170,10 +175,6 @@ jobs:
 
     - name: Create the kubernetes cluster
       run: |
-        # groot.tar.gz is needed for offline_load.sh
-        # see .github/workflows/hadoop_scripts/offline_load.sh.template
-        pushd artifacts
-        tar -zxf ./groot.tar.gz
         # download gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
@@ -201,13 +202,6 @@ jobs:
         helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
         helm test ci --timeout 5m0s
 
-    - name: upload the k8s logs to artifact
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: helm-installation-logs
-        path: ${{ github.workspace }}/helm-installation-logs
-
     - name: Stop to export kubernetes logs
       uses: dashanji/kubernetes-log-export-action@v4
       env:
@@ -234,9 +228,10 @@ jobs:
         ./prepare_hadoop.sh /tmp/hadoop-2.10.1
         export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
 
-        REPLACE_STR=${GITHUB_WORKSPACE}/artifacts/groot
-        sed s/GROOT_HOME/${REPLACE_STR//\//\\/}/ offline_load.sh.template > offline_load.sh
-        chmod +x offline_load.sh
+        # data-load-tool is needed for offline_load.sh
+        # see .github/workflows/hadoop_scripts/offline_load.sh
+
+        export LOADER_DIR=${GITHUB_WORKSPACE}/artifacts
         export LOAD_DATA_SCRIPT=${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts/offline_load.sh
         sed s/GRAPH_ENDPOINT/$NODE_IP:$GRPC_PORT/ databuild.config.template > databuild.config
 
@@ -251,13 +246,6 @@ jobs:
         python3 -m pip install pytest-cov --user
         python3 setup.py build_proto
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_fresh
-
-    - name: upload the k8s logs to artifact
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: demo-fresh-of-helm-installation-logs
-        path: ${{ github.workspace }}/demo-fresh-of-helm-installation-logs
 
     - name: Stop to export kubernetes logs
       uses: dashanji/kubernetes-log-export-action@v4
@@ -280,13 +268,6 @@ jobs:
         cd ${GITHUB_WORKSPACE}/charts
         helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
 
-    - name: upload the k8s logs to artifact
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: demo-script-of-helm-installation-with-pv-logs
-        path: ${{ github.workspace }}/demo-script-of-helm-installation-with-pv-logs
-
     - name: Stop to export kubernetes logs
       uses: dashanji/kubernetes-log-export-action@v4
       env:
@@ -307,13 +288,6 @@ jobs:
         export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
         helm test ci --timeout 10m0s
-
-    - name: upload the k8s logs to artifact
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: helm-test-of-helm-installation-with-pv-logs
-        path: ${{ github.workspace }}/helm-test-of-helm-installation-with-pv-logs
 
     - name: Stop to export kubernetes logs
       uses: dashanji/kubernetes-log-export-action@v4
@@ -338,10 +312,10 @@ jobs:
 
     - name: upload the k8s logs to artifact
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
-        name: demo-after-restart-of-helm-installation-with-pv-logs
-        path: ${{ github.workspace }}/demo-after-restart-of-helm-installation-with-pv-logs
+        name: k8s-test-logs
+        path: ${{ github.workspace }}/k8s-ci-*-logs
 
     - name: Stop to export kubernetes logs
       uses: dashanji/kubernetes-log-export-action@v4

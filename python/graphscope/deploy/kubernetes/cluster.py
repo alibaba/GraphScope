@@ -95,6 +95,7 @@ class KubernetesClusterLauncher(Launcher):
         timeout_seconds=600,
         dangling_timeout_seconds=None,
         k8s_waiting_for_delete=False,
+        k8s_deploy_mode=None,
         with_dataset=False,
         **kwargs,
     ):
@@ -432,6 +433,14 @@ class KubernetesClusterLauncher(Launcher):
                 [
                     "--k8s_engine_pod_node_selector",
                     f"{self.base64_encode(json.dumps(self._saved_locals['k8s_engine_pod_node_selector']))}",
+                ]
+            )
+
+        if self._saved_locals["k8s_deploy_mode"] is not None:
+            args.extend(
+                [
+                    "--k8s_deploy_mode",
+                    str(self._saved_locals["k8s_deploy_mode"]),
                 ]
             )
         print(args)

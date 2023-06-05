@@ -29,10 +29,7 @@ RUN apt-get update -y && \
 ENV GRAPHSCOPE_HOME=/usr/local
 ENV JAVA_HOME=/usr/lib/jvm/default-java
 
-COPY --from=builder /home/graphscope/groot/bin /usr/local/groot/bin
-COPY --from=builder /home/graphscope/groot/conf /usr/local/groot/conf
-COPY --from=builder /home/graphscope/groot/lib /usr/local/groot/lib
-COPY --from=builder /home/graphscope/groot/native /usr/local/groot/native
+COPY --from=builder /home/graphscope/groot /usr/local/groot
 
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers

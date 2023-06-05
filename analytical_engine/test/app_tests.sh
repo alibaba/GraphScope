@@ -387,7 +387,7 @@ declare -a apps_with_directed=(
 )
 
 cmd_prefix="mpirun"
-if ompi_info; then
+if ompi_info >/dev/null 2>&1; then
   echo "Using openmpi"
   cmd_prefix="${cmd_prefix} --allow-run-as-root"
 fi
@@ -415,6 +415,9 @@ run_sampling_path 2 ./run_vy_app "${socket_file}" "${test_dir}"/property/samplin
 
 # local vm
 run_vy_2 ${np} ./run_vy_app_local_vm "${socket_file}" 1 "${test_dir}"/property/p2p-31_property_e "${test_dir}"/property/p2p-31_property_v 1
+
+# compact edges
+run_vy_2 ${np} ./run_vy_app_compact "${socket_file}" 1 "${test_dir}"/property/p2p-31_property_e "${test_dir}"/property/p2p-31_property_v 1
 
 run_vy ${np} ./run_pregel_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v
 rm -rf ./test_output/*
@@ -445,7 +448,4 @@ then
   fi
 fi
 
-
-
 info "Passed all tests for GraphScope analytical engine."
-

@@ -117,6 +117,14 @@ class GSParams {
     return get_param_impl<T>(params_, key);
   }
 
+  template <typename T>
+  bl::result<T> Get(rpc::ParamKey key, T const& default_value) const {
+    if (params_.find(key) == params_.end()) {
+      return default_value;
+    }
+    return get_param_impl<T>(params_, key);
+  }
+
   bool HasKey(rpc::ParamKey key) const {
     return params_.find(key) != params_.end();
   }

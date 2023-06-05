@@ -118,6 +118,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
     graph_def.set_key(graph_name);
     graph_def.set_directed(directed);
     graph_def.set_graph_type(rpc::graph::DYNAMIC_PROPERTY);
+    graph_def.set_compact_edges(false);
     // dynamic graph doesn't have a vineyard id
     gs::rpc::graph::MutableGraphInfoPb graph_info;
     if (graph_def.has_extension()) {

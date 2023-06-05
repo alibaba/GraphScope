@@ -55,13 +55,13 @@ If you don't find an answer to your question here, feel free to file an `Issues`
 
     If GraphScope seems to get stuck, the possible cause might be:
 
-    - In the session launching stage, the most cases are waiting for Pods ready. The time consuming may be caused by a poor network connection during pulling image, or by failing to acquire the requested resources to launch a session.
+    - In the session launching stage, the most cases are waiting for Pods ready. The time consumption may be caused by a poor network connection during pulling image, or by failing to acquire the requested resources to launch a session.
     - In the graph loading stage, it is time consuming to load and build a large graph.
-    - When running a user-defined or built-in analytical algorithm, it may takes time to compile the algorithm over the loaded graph.
+    - When running a user-defined or built-in analytical algorithm, it may take time to compile the algorithm over the loaded graph.
 
 8. Why `No such file or directory` error when loading graph?
 
-    This mostly occur when you are deploying GraphScope in a Kubernetes cluster, the file must be visible to the ``engnine`` Pod of GraphScope. You may need to mount a volume to the Pods or use cloud storage providers.
+    This mostly occurs when you are deploying GraphScope in a Kubernetes cluster, the file must be visible to the ``engnine`` Pod of GraphScope. You may need to mount a volume to the Pods or use cloud storage providers.
 
     Specifically, if your cluster is deployed with `kind <https://kind.sigs.k8s.io>`_, you may need to setup `extra-mounts <https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts>`_ to mount your local directory to kind nodes.
 
@@ -95,9 +95,9 @@ If you don't find an answer to your question here, feel free to file an `Issues`
 
     - Check: First use ``kubectl logs graphscope-store-zookeeper-0`` to check log. If the log shows ``mkdir: cannot create directory '/bitnami/zookeeper/data': Permission denied``.
 
-    - Reason: Normaly, the permission of NFS directories we created is ``root 755`` (depends on your sepcify environment), but the default user of graphscope-store is ``graphscope(1001)``, so these pods have no permission to write on NFS.
+    - Reason: Normally, the permission of NFS directories we created is ``root 755`` (depends on your specific environment), but the default user of graphscope-store is ``graphscope(1001)``, so these pods have no permission to write on NFS.
 
-    - Solution: There are two slutions to solve this.
+    - Solution: There are two solutions to solve this.
 
         The brutal one is using ``chmod 777`` on all related PV directories, this is efficient but not recommended in production environment.
 
@@ -105,7 +105,7 @@ If you don't find an answer to your question here, feel free to file an `Issues`
 
 12. why ``Timeout Exception`` raised during launching GraphScope instance on kubernetes cluster?
 
-    It will take a few minutes for pulling image during the first time for launching GraphScope instance. Thus, the ``Timeout Exception`` may caused by a poor network connection.
+    It will take a few minutes for pulling image during the first time for launching GraphScope instance. Thus, the ``Timeout Exception`` may be caused by a poor network connection.
     You can increase the value of ``timeout_seconds`` parameter as your expectation by ``graphscope.set_option(timeout_seconds=600))``.
 
 13. Failed to run GraphScope (either in single machine or in docker container) due to failed connection to building blocks like etcd?
@@ -114,7 +114,7 @@ If you don't find an answer to your question here, feel free to file an `Issues`
 
 14. How to print debug info in GAE Cython SDK Algorithms?
 
-    python3 print function is a convinent way to show useful debug info, use print with param flush=True then the stream is forcibly flushed.
+    python3 print function is a convenient way to show useful debug info, use print with param flush=True then the stream is forcibly flushed.
 
     More details please refer to `Python Documentation <https://docs.python.org/3.3/library/functions.html#print>`_.
 

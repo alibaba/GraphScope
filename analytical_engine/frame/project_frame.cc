@@ -53,12 +53,14 @@ template <typename FRAG_T>
 class ProjectSimpleFrame {};
 
 template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T,
-          typename VERTEX_MAP_T>
-class ProjectSimpleFrame<
-    gs::ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>> {
-  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>;
+          typename VERTEX_MAP_T, bool COMPACT>
+class ProjectSimpleFrame<gs::ArrowProjectedFragment<
+    OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T, COMPACT>> {
+  using fragment_t =
+      vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T, COMPACT>;
   using projected_fragment_t =
-      gs::ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>;
+      gs::ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T,
+                                 COMPACT>;
 
  public:
   __attribute__((visibility(
@@ -85,6 +87,7 @@ class ProjectSimpleFrame<
     rpc::graph::GraphDefPb graph_def;
     graph_def.set_key(projected_graph_name);
     graph_def.set_graph_type(rpc::graph::ARROW_PROJECTED);
+    graph_def.set_compact_edges(input_frag->compact_edges());
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
       graph_def.extension().UnpackTo(&vy_info);
@@ -112,6 +115,7 @@ class ProjectSimpleFrame<
     const auto& parent_meta = meta.GetMemberMeta("arrow_fragment");
 
     graph_def.set_directed(parent_meta.template GetKeyValue<bool>("directed_"));
+    graph_def.set_compact_edges(fragment->compact_edges());
 
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
@@ -181,6 +185,7 @@ class ProjectSimpleFrame<
 
     graph_def.set_key(projected_graph_name);
     graph_def.set_graph_type(rpc::graph::ARROW_FLATTENED);
+    graph_def.set_compact_edges(input_frag->compact_edges());
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
       graph_def.extension().UnpackTo(&vy_info);
@@ -229,6 +234,7 @@ class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
 
     graph_def.set_key(projected_graph_name);
     graph_def.set_graph_type(rpc::graph::DYNAMIC_PROJECTED);
+    graph_def.set_compact_edges(false);
     gs::rpc::graph::MutableGraphInfoPb graph_info;
     if (graph_def.has_extension()) {
       graph_def.extension().UnpackTo(&graph_info);

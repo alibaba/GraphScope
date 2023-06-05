@@ -36,13 +36,12 @@
 #include "vineyard/basic/ds/arrow_utils.h"
 #include "vineyard/common/util/config.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
+#include "vineyard/graph/fragment/property_graph_types.h"
 
 #include "core/config.h"
 #include "core/fragment/arrow_projected_fragment_base.h"  // IWYU pragma: export
 #include "core/vertex_map/arrow_projected_vertex_map.h"
 #include "graphscope/proto/types.pb.h"
-
-namespace bl = boost::leaf;
 
 namespace arrow {
 class Array;
@@ -221,8 +220,110 @@ class Nbr {
   inline const Nbr* operator->() const { return this; }
 
  private:
-  const mutable nbr_unit_t* nbr_;
+  mutable const nbr_unit_t* nbr_;
   TypedArray<EDATA_T> edata_array_;
+};
+
+template <typename VID_T, typename EID_T, typename EDATA_T>
+class CompactNbr {
+  using vid_t = VID_T;
+  using eid_t = EID_T;
+  using nbr_unit_t = vineyard::property_graph_utils::NbrUnit<VID_T, EID_T>;
+
+ public:
+  CompactNbr(const uint8_t* nbr, const size_t offset, const size_t size,
+             TypedArray<EDATA_T> edata_array)
+      : nbr_(nbr),
+        next_(nbr),
+        size_(size),
+        edata_array_(edata_array),
+        current_(0) {
+    decode();
+
+    // move the pointer to the correct offset after first decode
+    for (size_t i = 0; i < offset % batch_size; ++i) {
+      ++(*this);
+    }
+  }
+
+  CompactNbr(const CompactNbr& rhs)
+      : nbr_(rhs.nbr_),
+        next_(rhs.next),
+        size_(rhs.size_),
+        edata_array_(rhs.edata_array_),
+        data_(rhs.data_),
+        current_(rhs.current_) {}
+
+  grape::Vertex<vid_t> neighbor() const {
+    return grape::Vertex<vid_t>(data_[current_ % batch_size].vid);
+  }
+
+  grape::Vertex<vid_t> get_neighbor() const {
+    return grape::Vertex<vid_t>(data_[current_ % batch_size].vid);
+  }
+
+  eid_t edge_id() const { return data_[current_ % batch_size].eid; }
+
+  typename TypedArray<EDATA_T>::value_type data() const {
+    return edata_array_[data_[current_ % batch_size].eid];
+  }
+
+  typename TypedArray<EDATA_T>::value_type get_data() const {
+    return edata_array_[data_[current_ % batch_size].eid];
+  }
+
+  inline const CompactNbr& operator++() const {
+    VID_T prev_vid = data_[current_ % batch_size].vid;
+    current_ += 1;
+    decode();
+    data_[current_ % batch_size].vid += prev_vid;
+    return *this;
+  }
+
+  inline CompactNbr operator++(int) const {
+    CompactNbr ret(*this);
+    ++(*this);
+    return ret;
+  }
+
+  inline bool operator==(const CompactNbr& rhs) const {
+    return nbr_ == rhs.nbr_;
+  }
+
+  inline bool operator!=(const CompactNbr& rhs) const {
+    return nbr_ != rhs.nbr_;
+  }
+
+  inline bool operator<(const CompactNbr& rhs) const { return nbr_ < rhs.nbr_; }
+
+  inline const CompactNbr& operator*() const { return *this; }
+
+  inline const CompactNbr* operator->() const { return this; }
+
+ private:
+  inline void decode() const {
+    if (likely((current_ % batch_size != 0) || current_ >= size_)) {
+      if (unlikely(current_ == size_)) {
+        nbr_ = next_;
+      }
+      return;
+    }
+    nbr_ = next_;
+    size_t n =
+        (current_ + batch_size) < size_ ? batch_size : (size_ - current_);
+    next_ = v8dec32(const_cast<unsigned char*>(
+                        reinterpret_cast<const unsigned char*>(next_)),
+                    n * element_size, reinterpret_cast<uint32_t*>(data_));
+  }
+
+  static constexpr size_t element_size = sizeof(nbr_unit_t) / sizeof(uint32_t);
+  static constexpr size_t batch_size = VARINT_ENCODING_BATCH_SIZE;
+  mutable const uint8_t *nbr_, *next_ = nullptr;
+  mutable size_t size_;
+  TypedArray<EDATA_T> edata_array_;
+
+  mutable nbr_unit_t data_[batch_size];
+  mutable size_t current_ = 0;
 };
 
 /**
@@ -290,6 +391,97 @@ class Nbr<VID_T, EID_T, grape::EmptyType> {
   const mutable nbr_unit_t* nbr_;
 };
 
+template <typename VID_T, typename EID_T>
+class CompactNbr<VID_T, EID_T, grape::EmptyType> {
+  using vid_t = VID_T;
+  using eid_t = EID_T;
+  using nbr_unit_t = vineyard::property_graph_utils::NbrUnit<VID_T, EID_T>;
+
+ public:
+  explicit CompactNbr(const nbr_unit_t* nbr, const size_t offset,
+                      const size_t size)
+      : nbr_(nbr), next_(nbr), size_(size), current_(0) {
+    decode();
+
+    // move the pointer to the correct offset after first decode
+    for (size_t i = 0; i < offset % batch_size; ++i) {
+      ++(*this);
+    }
+  }
+
+  CompactNbr(const CompactNbr& rhs)
+      : nbr_(rhs.nbr_),
+        next_(rhs.next),
+        size_(rhs.size_),
+        data_(rhs.data_),
+        current_(rhs.current_) {}
+
+  grape::Vertex<vid_t> neighbor() const {
+    return grape::Vertex<vid_t>(data_[current_ % batch_size].vid);
+  }
+
+  grape::Vertex<vid_t> get_neighbor() const {
+    return grape::Vertex<vid_t>(data_[current_ % batch_size].vid);
+  }
+
+  eid_t edge_id() const { return data_[current_ % batch_size].eid; }
+
+  grape::EmptyType data() const { return grape::EmptyType(); }
+
+  grape::EmptyType get_data() const { return grape::EmptyType(); }
+
+  inline const CompactNbr& operator++() const {
+    VID_T prev_vid = data_[current_ % batch_size].vid;
+    current_ += 1;
+    decode();
+    data_[current_ % batch_size].vid += prev_vid;
+    return *this;
+  }
+
+  inline CompactNbr operator++(int) const {
+    CompactNbr ret(*this);
+    ++ret;
+    return ret;
+  }
+
+  inline bool operator==(const CompactNbr& rhs) const {
+    return nbr_ == rhs.nbr_;
+  }
+  inline bool operator!=(const CompactNbr& rhs) const {
+    return nbr_ != rhs.nbr_;
+  }
+
+  inline bool operator<(const CompactNbr& rhs) const { return nbr_ < rhs.nbr_; }
+
+  inline const CompactNbr& operator*() const { return *this; }
+
+  inline const CompactNbr* operator->() const { return this; }
+
+ private:
+  inline void decode() const {
+    if (likely((current_ % batch_size != 0) || current_ >= size_)) {
+      if (unlikely(current_ == size_)) {
+        nbr_ = next_;
+      }
+      return;
+    }
+    nbr_ = next_;
+    size_t n =
+        (current_ + batch_size) < size_ ? batch_size : (size_ - current_);
+    next_ = v8dec32(const_cast<unsigned char*>(
+                        reinterpret_cast<const unsigned char*>(next_)),
+                    n * element_size, reinterpret_cast<uint32_t*>(data_));
+  }
+
+  static constexpr size_t element_size = sizeof(nbr_unit_t) / sizeof(uint32_t);
+  static constexpr size_t batch_size = VARINT_ENCODING_BATCH_SIZE;
+  mutable const uint8_t *nbr_, *next_ = nullptr;
+  mutable size_t size_;
+
+  mutable nbr_unit_t data_[batch_size];
+  mutable size_t current_ = 0;
+};
+
 /**
  * @brief This is the internal representation of neighbors for a vertex.
  *
@@ -330,6 +522,80 @@ class AdjList {
   TypedArray<EDATA_T> edata_array_;
 };
 
+template <typename VID_T, typename EID_T, typename EDATA_T>
+class CompactAdjList {
+  using vid_t = VID_T;
+  using eid_t = EID_T;
+  using nbr_unit_t = vineyard::property_graph_utils::NbrUnit<vid_t, eid_t>;
+
+ public:
+  CompactAdjList() : begin_(NULL), end_(NULL), offset_(0), size_(0) {}
+
+  CompactAdjList(const CompactAdjList& nbrs)
+      : begin_(nbrs.begin_),
+        end_(nbrs.end_),
+        offset_(nbrs.offset_),
+        size_(nbrs.size_),
+        edata_array_(nbrs.edata_array_) {}
+
+  CompactAdjList(CompactAdjList&& nbrs)
+      : begin_(nbrs.begin_),
+        end_(nbrs.end_),
+        offset_(nbrs.offset_),
+        size_(nbrs.size_),
+        edata_array_(nbrs.edata_array_) {}
+
+  CompactAdjList(const uint8_t* begin, const uint8_t* end, const size_t offset,
+                 const size_t size, TypedArray<EDATA_T> edata_array)
+      : begin_(begin),
+        end_(end),
+        offset_(offset),
+        size_(size),
+        edata_array_(edata_array) {}
+
+  CompactAdjList& operator=(const CompactAdjList& rhs) {
+    begin_ = rhs.begin_;
+    end_ = rhs.end_;
+    offset_ = rhs.offset_;
+    size_ = rhs.size_;
+    edata_array_ = rhs.edata_array_;
+    return *this;
+  }
+
+  CompactAdjList& operator=(CompactAdjList&& rhs) {
+    begin_ = rhs.begin_;
+    end_ = rhs.end_;
+    offset_ = rhs.offset_;
+    size_ = rhs.size_;
+    edata_array_ = rhs.edata_array_;
+    return *this;
+  }
+
+  CompactNbr<VID_T, EID_T, EDATA_T> begin() const {
+    return CompactNbr<VID_T, EID_T, EDATA_T>(begin_, offset_, size_,
+                                             edata_array_);
+  }
+
+  CompactNbr<VID_T, EID_T, EDATA_T> end() const {
+    return CompactNbr<VID_T, EID_T, EDATA_T>(end_, offset_, 0, edata_array_);
+  }
+
+  size_t Size() const { return size_; }
+
+  size_t Offset() const { return offset_; }
+
+  inline bool Empty() const { return end_ == begin_; }
+
+  inline bool NotEmpty() const { return !Empty(); }
+
+ private:
+  const uint8_t* begin_;
+  const uint8_t* end_;
+  size_t offset_ = 0, size_ = 0;
+
+  TypedArray<EDATA_T> edata_array_;
+};
+
 template <typename VID_T, typename EID_T>
 class AdjList<VID_T, EID_T, grape::EmptyType> {
   using vid_t = VID_T;
@@ -362,6 +628,69 @@ class AdjList<VID_T, EID_T, grape::EmptyType> {
   const nbr_unit_t* end_;
 };
 
+template <typename VID_T, typename EID_T>
+class CompactAdjList<VID_T, EID_T, grape::EmptyType> {
+  using vid_t = VID_T;
+  using eid_t = EID_T;
+  using nbr_unit_t = vineyard::property_graph_utils::NbrUnit<vid_t, eid_t>;
+
+ public:
+  CompactAdjList() : begin_(NULL), end_(NULL), offset_(0), size_(0) {}
+
+  CompactAdjList(const CompactAdjList& nbrs)
+      : begin_(nbrs.begin_),
+        end_(nbrs.end_),
+        offset_(nbrs.offset_),
+        size_(nbrs.size_) {}
+
+  CompactAdjList(CompactAdjList&& nbrs)
+      : begin_(nbrs.begin_),
+        end_(nbrs.end_),
+        offset_(nbrs.offset_),
+        size_(nbrs.size_) {}
+
+  CompactAdjList(const uint8_t* begin, const uint8_t* end, const size_t offset,
+                 const size_t size, TypedArray<grape::EmptyType>)
+      : begin_(begin), end_(end), offset_(offset), size_(size) {}
+
+  CompactAdjList& operator=(const CompactAdjList& rhs) {
+    begin_ = rhs.begin_;
+    end_ = rhs.end_;
+    offset_ = rhs.offset_;
+    size_ = rhs.size_;
+    return *this;
+  }
+
+  CompactAdjList& operator=(CompactAdjList&& rhs) {
+    begin_ = rhs.begin_;
+    end_ = rhs.end_;
+    offset_ = rhs.offset_;
+    size_ = rhs.size_;
+    return *this;
+  }
+
+  CompactNbr<VID_T, EID_T, grape::EmptyType> begin() const {
+    return CompactNbr<VID_T, EID_T, grape::EmptyType>(begin_, offset_, size_);
+  }
+
+  CompactNbr<VID_T, EID_T, grape::EmptyType> end() const {
+    return CompactNbr<VID_T, EID_T, grape::EmptyType>(end_, offset_, 0);
+  }
+
+  size_t Size() const { return size_; }
+
+  size_t Offset() const { return offset_; }
+
+  inline bool Empty() const { return end_ == begin_; }
+
+  inline bool NotEmpty() const { return !Empty(); }
+
+ private:
+  const uint8_t* begin_;
+  const uint8_t* end_;
+  size_t offset_ = 0, size_ = 0;
+};
+
 }  // namespace arrow_projected_fragment_impl
 
 /**
@@ -376,11 +705,12 @@ class AdjList<VID_T, EID_T, grape::EmptyType> {
  */
 template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T,
           typename VERTEX_MAP_T = vineyard::ArrowVertexMap<
-              typename vineyard::InternalType<OID_T>::type, VID_T>>
+              typename vineyard::InternalType<OID_T>::type, VID_T>,
+          bool COMPACT = false>
 class ArrowProjectedFragment
     : public ArrowProjectedFragmentBase,
       public vineyard::BareRegistered<ArrowProjectedFragment<
-          OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>> {
+          OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T, COMPACT>> {
  public:
   using oid_t = OID_T;
   using vid_t = VID_T;
@@ -394,11 +724,15 @@ class ArrowProjectedFragment
 
   using vertex_t = grape::Vertex<vid_t>;
   using nbr_t = arrow_projected_fragment_impl::Nbr<vid_t, eid_t, EDATA_T>;
+  using compact_nbr_t =
+      arrow_projected_fragment_impl::CompactNbr<vid_t, eid_t, EDATA_T>;
   using nbr_unit_t = vineyard::property_graph_utils::NbrUnit<vid_t, eid_t>;
   using adj_list_t =
       arrow_projected_fragment_impl::AdjList<vid_t, eid_t, EDATA_T>;
-  using const_adj_list_t =
-      arrow_projected_fragment_impl::AdjList<vid_t, eid_t, EDATA_T>;
+  using compact_adj_list_t =
+      arrow_projected_fragment_impl::CompactAdjList<vid_t, eid_t, EDATA_T>;
+  using const_adj_list_t = adj_list_t;
+  using const_compact_adj_list_t = compact_adj_list_t;
   using property_vertex_map_t = VERTEX_MAP_T;
   using vertex_map_t =
       ArrowProjectedVertexMap<internal_oid_t, vid_t, property_vertex_map_t>;
@@ -407,7 +741,7 @@ class ArrowProjectedFragment
   using vdata_t = VDATA_T;
   using edata_t = EDATA_T;
   using property_graph_t =
-      vineyard::ArrowFragment<oid_t, vid_t, property_vertex_map_t>;
+      vineyard::ArrowFragment<oid_t, vid_t, property_vertex_map_t, COMPACT>;
 
   using vid_array_t = typename vineyard::ConvertToArrowType<vid_t>::ArrayType;
   using eid_array_t = typename vineyard::ConvertToArrowType<eid_t>::ArrayType;
@@ -429,9 +763,9 @@ class ArrowProjectedFragment
   static std::unique_ptr<vineyard::Object> Create() __attribute__((used)) {
     return std::static_pointer_cast<vineyard::Object>(
         std::unique_ptr<ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t,
-                                               property_vertex_map_t>>{
+                                               property_vertex_map_t, COMPACT>>{
             new ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t,
-                                       property_vertex_map_t>()});
+                                       property_vertex_map_t, COMPACT>()});
   }
 #endif
 #else
@@ -445,12 +779,13 @@ class ArrowProjectedFragment
   ~ArrowProjectedFragment() {}
 
   static std::shared_ptr<ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t,
-                                                property_vertex_map_t>>
-  Project(std::shared_ptr<
-              vineyard::ArrowFragment<oid_t, vid_t, property_vertex_map_t>>
-              fragment,
-          const label_id_t& v_label, const prop_id_t& v_prop,
-          const label_id_t& e_label, const prop_id_t& e_prop) {
+                                                property_vertex_map_t, COMPACT>>
+  Project(
+      std::shared_ptr<
+          vineyard::ArrowFragment<oid_t, vid_t, property_vertex_map_t, COMPACT>>
+          fragment,
+      const label_id_t& v_label, const prop_id_t& v_prop,
+      const label_id_t& e_label, const prop_id_t& e_prop) {
     vineyard::Client& client =
         *dynamic_cast<vineyard::Client*>(fragment->meta().GetClient());
     std::shared_ptr<vertex_map_t> vm =
@@ -507,7 +842,7 @@ class ArrowProjectedFragment
 
     meta.SetTypeName(
         type_name<ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t,
-                                         property_vertex_map_t>>());
+                                         property_vertex_map_t, COMPACT>>());
 
     meta.AddKeyValue("projected_v_label", v_label);
     meta.AddKeyValue("projected_v_property", v_prop);
@@ -521,6 +856,8 @@ class ArrowProjectedFragment
 
     std::shared_ptr<vineyard::NumericArray<int64_t>> ie_offsets_begin,
         ie_offsets_end;
+    std::shared_ptr<vineyard::NumericArray<int64_t>> ie_boffsets_begin,
+        ie_boffsets_end;
 
     size_t nbytes = 0;
     if (fragment->directed()) {
@@ -528,10 +865,28 @@ class ArrowProjectedFragment
           client, fragment->tvnums_[v_label]);
       vineyard::FixedInt64Builder ie_offsets_end_builder(
           client, fragment->tvnums_[v_label]);
-      selectEdgeByNeighborLabel(
-          fragment, v_label, fragment->ie_lists_[v_label][e_label]->GetArray(),
-          fragment->ie_offsets_lists_[v_label][e_label]->GetArray(),
-          ie_offsets_begin_builder.data(), ie_offsets_end_builder.data());
+      std::shared_ptr<vineyard::FixedInt64Builder> ie_boffsets_begin_builder;
+      std::shared_ptr<vineyard::FixedInt64Builder> ie_boffsets_end_builder;
+      if (COMPACT) {
+        ie_boffsets_begin_builder =
+            std::make_shared<vineyard::FixedInt64Builder>(
+                client, fragment->tvnums_[v_label]);
+        ie_boffsets_end_builder = std::make_shared<vineyard::FixedInt64Builder>(
+            client, fragment->tvnums_[v_label]);
+        selectEdgeByNeighborLabel(
+            fragment, v_label,
+            fragment->compact_ie_lists_[v_label][e_label]->GetArray(),
+            fragment->ie_offsets_lists_[v_label][e_label]->GetArray(),
+            fragment->ie_boffsets_lists_[v_label][e_label]->GetArray(),
+            ie_offsets_begin_builder.data(), ie_offsets_end_builder.data(),
+            ie_boffsets_begin_builder->data(), ie_boffsets_end_builder->data());
+      } else {
+        selectEdgeByNeighborLabel(
+            fragment, v_label,
+            fragment->ie_lists_[v_label][e_label]->GetArray(),
+            fragment->ie_offsets_lists_[v_label][e_label]->GetArray(),
+            ie_offsets_begin_builder.data(), ie_offsets_end_builder.data());
+      }
 
       ie_offsets_begin =
           std::dynamic_pointer_cast<vineyard::NumericArray<int64_t>>(
@@ -541,19 +896,49 @@ class ArrowProjectedFragment
               ie_offsets_end_builder.Seal(client));
       nbytes += ie_offsets_begin->nbytes();
       nbytes += ie_offsets_end->nbytes();
+      if (COMPACT) {
+        ie_boffsets_begin =
+            std::dynamic_pointer_cast<vineyard::NumericArray<int64_t>>(
+                ie_boffsets_begin_builder->Seal(client));
+        ie_boffsets_end =
+            std::dynamic_pointer_cast<vineyard::NumericArray<int64_t>>(
+                ie_boffsets_end_builder->Seal(client));
+        nbytes += ie_boffsets_begin->nbytes();
+        nbytes += ie_boffsets_end->nbytes();
+      }
     }
 
     std::shared_ptr<vineyard::NumericArray<int64_t>> oe_offsets_begin,
         oe_offsets_end;
+    std::shared_ptr<vineyard::NumericArray<int64_t>> oe_boffsets_begin,
+        oe_boffsets_end;
     {
       vineyard::FixedInt64Builder oe_offsets_begin_builder(
           client, fragment->tvnums_[v_label]);
       vineyard::FixedInt64Builder oe_offsets_end_builder(
           client, fragment->tvnums_[v_label]);
-      selectEdgeByNeighborLabel(
-          fragment, v_label, fragment->oe_lists_[v_label][e_label]->GetArray(),
-          fragment->oe_offsets_lists_[v_label][e_label]->GetArray(),
-          oe_offsets_begin_builder.data(), oe_offsets_end_builder.data());
+      std::shared_ptr<vineyard::FixedInt64Builder> oe_boffsets_begin_builder;
+      std::shared_ptr<vineyard::FixedInt64Builder> oe_boffsets_end_builder;
+      if (COMPACT) {
+        oe_boffsets_begin_builder =
+            std::make_shared<vineyard::FixedInt64Builder>(
+                client, fragment->tvnums_[v_label]);
+        oe_boffsets_end_builder = std::make_shared<vineyard::FixedInt64Builder>(
+            client, fragment->tvnums_[v_label]);
+        selectEdgeByNeighborLabel(
+            fragment, v_label,
+            fragment->compact_oe_lists_[v_label][e_label]->GetArray(),
+            fragment->oe_offsets_lists_[v_label][e_label]->GetArray(),
+            fragment->oe_boffsets_lists_[v_label][e_label]->GetArray(),
+            oe_offsets_begin_builder.data(), oe_offsets_end_builder.data(),
+            oe_boffsets_begin_builder->data(), oe_boffsets_end_builder->data());
+      } else {
+        selectEdgeByNeighborLabel(
+            fragment, v_label,
+            fragment->oe_lists_[v_label][e_label]->GetArray(),
+            fragment->oe_offsets_lists_[v_label][e_label]->GetArray(),
+            oe_offsets_begin_builder.data(), oe_offsets_end_builder.data());
+      }
 
       oe_offsets_begin =
           std::dynamic_pointer_cast<vineyard::NumericArray<int64_t>>(
@@ -563,14 +948,36 @@ class ArrowProjectedFragment
               oe_offsets_end_builder.Seal(client));
       nbytes += oe_offsets_begin->nbytes();
       nbytes += oe_offsets_end->nbytes();
+      if (COMPACT) {
+        oe_boffsets_begin =
+            std::dynamic_pointer_cast<vineyard::NumericArray<int64_t>>(
+                oe_boffsets_begin_builder->Seal(client));
+        oe_boffsets_end =
+            std::dynamic_pointer_cast<vineyard::NumericArray<int64_t>>(
+                oe_boffsets_end_builder->Seal(client));
+        nbytes += oe_boffsets_begin->nbytes();
+        nbytes += oe_boffsets_end->nbytes();
+      }
     }
 
     if (fragment->directed()) {
       meta.AddMember("ie_offsets_begin", ie_offsets_begin->meta());
       meta.AddMember("ie_offsets_end", ie_offsets_end->meta());
+      meta.AddMember("ie_offsets_base",
+                     fragment->ie_offsets_lists_[v_label][e_label]->meta());
+      if (COMPACT) {
+        meta.AddMember("ie_boffsets_begin", ie_boffsets_begin->meta());
+        meta.AddMember("ie_boffsets_end", ie_boffsets_end->meta());
+      }
     }
     meta.AddMember("oe_offsets_begin", oe_offsets_begin->meta());
     meta.AddMember("oe_offsets_end", oe_offsets_end->meta());
+    meta.AddMember("oe_offsets_base",
+                   fragment->oe_offsets_lists_[v_label][e_label]->meta());
+    if (COMPACT) {
+      meta.AddMember("oe_boffsets_begin", oe_boffsets_begin->meta());
+      meta.AddMember("oe_boffsets_end", oe_boffsets_end->meta());
+    }
 
     meta.SetNBytes(nbytes);
 
@@ -578,7 +985,7 @@ class ArrowProjectedFragment
     VINEYARD_CHECK_OK(client.CreateMetaData(meta, id));
 
     return std::dynamic_pointer_cast<ArrowProjectedFragment<
-        oid_t, vid_t, vdata_t, edata_t, property_vertex_map_t>>(
+        oid_t, vid_t, vdata_t, edata_t, property_vertex_map_t, COMPACT>>(
         client.GetObject(id));
   }
 
@@ -591,8 +998,8 @@ class ArrowProjectedFragment
     vertex_prop_ = meta.GetKeyValue<prop_id_t>("projected_v_property");
     edge_prop_ = meta.GetKeyValue<prop_id_t>("projected_e_property");
 
-    fragment_ = std::make_shared<
-        vineyard::ArrowFragment<oid_t, vid_t, property_vertex_map_t>>();
+    fragment_ = std::make_shared<vineyard::ArrowFragment<
+        oid_t, vid_t, property_vertex_map_t, COMPACT>>();
     fragment_->Construct(meta.GetMemberMeta("arrow_fragment"));
 
     fid_ = fragment_->fid_;
@@ -600,20 +1007,38 @@ class ArrowProjectedFragment
     directed_ = fragment_->directed_;
 
     if (directed_) {
-      vineyard::NumericArray<int64_t> ie_offsets_begin;
+      vineyard::NumericArray<int64_t> ie_offsets_begin, ie_offsets_end,
+          ie_offsets_base;
       ie_offsets_begin.Construct(meta.GetMemberMeta("ie_offsets_begin"));
       ie_offsets_begin_ = ie_offsets_begin.GetArray();
-      vineyard::NumericArray<int64_t> ie_offsets_end;
       ie_offsets_end.Construct(meta.GetMemberMeta("ie_offsets_end"));
       ie_offsets_end_ = ie_offsets_end.GetArray();
+      ie_offsets_base.Construct(meta.GetMemberMeta("ie_offsets_base"));
+      ie_offsets_base_ = ie_offsets_base.GetArray();
+      if (COMPACT) {
+        vineyard::NumericArray<int64_t> ie_boffsets_begin, ie_boffsets_end;
+        ie_boffsets_begin.Construct(meta.GetMemberMeta("ie_boffsets_begin"));
+        ie_boffsets_begin_ = ie_boffsets_begin.GetArray();
+        ie_boffsets_end.Construct(meta.GetMemberMeta("ie_boffsets_end"));
+        ie_boffsets_end_ = ie_boffsets_end.GetArray();
+      }
     }
 
-    vineyard::NumericArray<int64_t> oe_offsets_begin;
+    vineyard::NumericArray<int64_t> oe_offsets_begin, oe_offsets_end,
+        oe_offsets_base;
     oe_offsets_begin.Construct(meta.GetMemberMeta("oe_offsets_begin"));
     oe_offsets_begin_ = oe_offsets_begin.GetArray();
-    vineyard::NumericArray<int64_t> oe_offsets_end;
     oe_offsets_end.Construct(meta.GetMemberMeta("oe_offsets_end"));
     oe_offsets_end_ = oe_offsets_end.GetArray();
+    oe_offsets_base.Construct(meta.GetMemberMeta("oe_offsets_base"));
+    oe_offsets_base_ = oe_offsets_base.GetArray();
+    if (COMPACT) {
+      vineyard::NumericArray<int64_t> oe_boffsets_begin, oe_boffsets_end;
+      oe_boffsets_begin.Construct(meta.GetMemberMeta("oe_boffsets_begin"));
+      oe_boffsets_begin_ = oe_boffsets_begin.GetArray();
+      oe_boffsets_end.Construct(meta.GetMemberMeta("oe_boffsets_end"));
+      oe_boffsets_end_ = oe_boffsets_end.GetArray();
+    }
 
     inner_vertices_ = fragment_->InnerVertices(vertex_label_);
     outer_vertices_ = fragment_->OuterVertices(vertex_label_);
@@ -665,10 +1090,20 @@ class ArrowProjectedFragment
                                     ->chunk(0));
     }
 
-    if (directed_) {
-      ie_ = fragment_->ie_lists_[vertex_label_][edge_label_]->GetArray();
+    if (COMPACT) {
+      if (directed_) {
+        compact_ie_ = fragment_->compact_ie_lists_[vertex_label_][edge_label_]
+                          ->GetArray();
+      }
+      compact_oe_ =
+          fragment_->compact_oe_lists_[vertex_label_][edge_label_]->GetArray();
+
+    } else {
+      if (directed_) {
+        ie_ = fragment_->ie_lists_[vertex_label_][edge_label_]->GetArray();
+      }
+      oe_ = fragment_->oe_lists_[vertex_label_][edge_label_]->GetArray();
     }
-    oe_ = fragment_->oe_lists_[vertex_label_][edge_label_]->GetArray();
 
     vm_ptr_ = std::make_shared<vertex_map_t>();
     vm_ptr_->Construct(meta.GetMemberMeta("arrow_projected_vertex_map"));
@@ -691,7 +1126,17 @@ class ArrowProjectedFragment
       initDestFidList(false, true, odst_, odoffset_);
     }
 
+    initOuterVertexRanges();
+    if (conf.need_mirror_info) {
+      initMirrorInfo();
+    }
+
     if (conf.need_split_edges || conf.need_split_edges_by_fragment) {
+      if (COMPACT) {
+        LOG(ERROR)
+            << "The edge splitter cannot be built on compacted fragment.";
+        return;
+      }
       ie_spliters_ptr_.clear();
       oe_spliters_ptr_.clear();
       if (directed_) {
@@ -710,11 +1155,6 @@ class ArrowProjectedFragment
           oe_spliters_ptr_.push_back(vec.data());
         }
       }
-    }
-
-    initOuterVertexRanges();
-    if (conf.need_mirror_info) {
-      initMirrorInfo();
     }
   }
 
@@ -822,11 +1262,9 @@ class ArrowProjectedFragment
 
   inline bool GetInnerVertex(const oid_t& oid, vertex_t& v) const {
     vid_t gid;
-    if (vm_ptr_->GetGid(internal_oid_t(oid), gid)) {
-      if (vid_parser_.GetFid(gid) == fid_) {
-        v.SetValue(vid_parser_.GetLid(gid));
-        return true;
-      }
+    if (vm_ptr_->GetGid(fid_, internal_oid_t(oid), gid)) {
+      v.SetValue(vid_parser_.GetLid(gid));
+      return true;
     }
     return false;
   }
@@ -908,21 +1346,51 @@ class ArrowProjectedFragment
                                   vid_parser_.GetOffset(v.GetValue()));
   }
 
-  inline adj_list_t GetIncomingAdjList(const vertex_t& v) const {
+  template <bool COMPACT_ = COMPACT>
+  inline typename std::enable_if<!COMPACT_, adj_list_t>::type
+  GetIncomingAdjList(const vertex_t& v) const {
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     return adj_list_t(&ie_ptr_[ie_offsets_begin_ptr_[offset]],
                       &ie_ptr_[ie_offsets_end_ptr_[offset]],
                       edge_data_array_accessor_);
   }
 
-  inline adj_list_t GetOutgoingAdjList(const vertex_t& v) const {
+  template <bool COMPACT_ = COMPACT>
+  inline typename std::enable_if<COMPACT_, compact_adj_list_t>::type
+  GetIncomingAdjList(const vertex_t& v) const {
+    int64_t offset = vid_parser_.GetOffset(v.GetValue());
+    return compact_adj_list_t(
+        &compact_ie_ptr_[ie_boffsets_begin_ptr_[offset]],
+        &compact_ie_ptr_[ie_boffsets_end_ptr_[offset]],
+        ie_offsets_begin_ptr_[offset] - ie_offsets_base_ptr_[offset],
+        ie_offsets_end_ptr_[offset] - ie_offsets_begin_ptr_[offset],
+        edge_data_array_accessor_);
+  }
+
+  template <bool COMPACT_ = COMPACT>
+  inline typename std::enable_if<!COMPACT_, adj_list_t>::type
+  GetOutgoingAdjList(const vertex_t& v) const {
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     return adj_list_t(&oe_ptr_[oe_offsets_begin_ptr_[offset]],
                       &oe_ptr_[oe_offsets_end_ptr_[offset]],
                       edge_data_array_accessor_);
   }
 
-  inline adj_list_t GetIncomingInnerVertexAdjList(const vertex_t& v) const {
+  template <bool COMPACT_ = COMPACT>
+  inline typename std::enable_if<COMPACT_, compact_adj_list_t>::type
+  GetOutgoingAdjList(const vertex_t& v) const {
+    int64_t offset = vid_parser_.GetOffset(v.GetValue());
+    return compact_adj_list_t(
+        &compact_oe_ptr_[oe_boffsets_begin_ptr_[offset]],
+        &compact_oe_ptr_[oe_boffsets_end_ptr_[offset]],
+        oe_offsets_begin_ptr_[offset] - oe_offsets_base_ptr_[offset],
+        oe_offsets_end_ptr_[offset] - oe_offsets_begin_ptr_[offset],
+        edge_data_array_accessor_);
+  }
+
+  template <bool COMPACT_ = COMPACT>
+  inline typename std::enable_if<!COMPACT_, adj_list_t>::type
+  GetIncomingInnerVertexAdjList(const vertex_t& v) const {
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     return adj_list_t(&ie_ptr_[ie_offsets_begin_ptr_[offset]],
                       &ie_ptr_[offset < static_cast<int64_t>(ivnum_)
@@ -931,7 +1399,9 @@ class ArrowProjectedFragment
                       edge_data_array_accessor_);
   }
 
-  inline adj_list_t GetOutgoingInnerVertexAdjList(const vertex_t& v) const {
+  template <bool COMPACT_ = COMPACT>
+  inline typename std::enable_if<!COMPACT_, adj_list_t>::type
+  GetOutgoingInnerVertexAdjList(const vertex_t& v) const {
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     return adj_list_t(&oe_ptr_[oe_offsets_begin_ptr_[offset]],
                       &oe_ptr_[offset < static_cast<int64_t>(ivnum_)
@@ -940,7 +1410,9 @@ class ArrowProjectedFragment
                       edge_data_array_accessor_);
   }
 
-  inline adj_list_t GetIncomingOuterVertexAdjList(const vertex_t& v) const {
+  template <bool COMPACT_ = COMPACT>
+  inline typename std::enable_if<!COMPACT_, adj_list_t>::type
+  GetIncomingOuterVertexAdjList(const vertex_t& v) const {
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     return offset < static_cast<int64_t>(ivnum_)
                ? adj_list_t(&ie_ptr_[ie_spliters_ptr_[0][offset]],
@@ -949,7 +1421,9 @@ class ArrowProjectedFragment
                : adj_list_t();
   }
 
-  inline adj_list_t GetOutgoingOuterVertexAdjList(const vertex_t& v) const {
+  template <bool COMPACT_ = COMPACT>
+  inline typename std::enable_if<!COMPACT_, adj_list_t>::type
+  GetOutgoingOuterVertexAdjList(const vertex_t& v) const {
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     return offset < static_cast<int64_t>(ivnum_)
                ? adj_list_t(&oe_ptr_[oe_spliters_ptr_[0][offset]],
@@ -958,7 +1432,9 @@ class ArrowProjectedFragment
                : adj_list_t();
   }
 
-  inline adj_list_t GetIncomingAdjList(const vertex_t& v, fid_t src_fid) const {
+  template <bool COMPACT_ = COMPACT>
+  inline typename std::enable_if<!COMPACT_, adj_list_t>::type
+  GetIncomingAdjList(const vertex_t& v, fid_t src_fid) const {
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     return offset < static_cast<int64_t>(ivnum_)
                ? adj_list_t(&ie_ptr_[ie_spliters_ptr_[src_fid][offset]],
@@ -967,7 +1443,9 @@ class ArrowProjectedFragment
                : (src_fid == fid_ ? GetIncomingAdjList(v) : adj_list_t());
   }
 
-  inline adj_list_t GetOutgoingAdjList(const vertex_t& v, fid_t dst_fid) const {
+  template <bool COMPACT_ = COMPACT>
+  inline typename std::enable_if<!COMPACT_, adj_list_t>::type
+  GetOutgoingAdjList(const vertex_t& v, fid_t dst_fid) const {
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     return offset < static_cast<int64_t>(ivnum_)
                ? adj_list_t(&oe_ptr_[oe_spliters_ptr_[dst_fid][offset]],
@@ -1010,9 +1488,17 @@ class ArrowProjectedFragment
 
   inline bool directed() const { return directed_; }
 
-  inline const nbr_unit_t* get_out_edges_ptr() const { return oe_ptr_; }
+  template <bool COMPACT_ = COMPACT>
+  inline typename std::enable_if<!COMPACT_, const nbr_unit_t*>::type
+  get_out_edges_ptr() const {
+    return oe_ptr_;
+  }
 
-  inline const nbr_unit_t* get_in_edges_ptr() const { return ie_ptr_; }
+  template <bool COMPACT_ = COMPACT>
+  inline typename std::enable_if<!COMPACT_, const nbr_unit_t*>::type
+  get_in_edges_ptr() const {
+    return ie_ptr_;
+  }
 
   inline const int64_t* get_oe_offsets_begin_ptr() const {
     return oe_offsets_begin_ptr_;
@@ -1039,18 +1525,31 @@ class ArrowProjectedFragment
     return vertex_data_array_accessor_;
   }
 
-  std::shared_ptr<vineyard::ArrowFragment<oid_t, vid_t, property_vertex_map_t>>
+  std::shared_ptr<
+      vineyard::ArrowFragment<oid_t, vid_t, property_vertex_map_t, COMPACT>>
   get_arrow_fragment() {
     return fragment_;
   }
+
+  vineyard::ObjectID vertex_map_id() const {
+    return fragment_->vertex_map_id();
+  }
+
+  bool local_vertex_map() const { return fragment_->local_vertex_map(); }
+
+  bool compact_edges() const { return fragment_->compact_edges(); }
 
  private:
   /**
    * @brief For edges (indicated by nbr_list[begin:end)) of a given vertex,
    *        range of destinations with vertex label `v_label`.
    *
-   * As the CSR is sorted by local_id, we use bisect to find the target
-   * position.
+   * For CSRs that compacted with varint and delta encoding, bisect is not
+   * applicable and a sequential scan is required.
+   *
+   * The bisect version implements the same logic with the sequential one, but
+   * leverage the information that the AdjList is sorted by local id for each
+   * vertices.
    *
    * N.B.: use ref to avoid the shared_ptr copy
    */
@@ -1066,24 +1565,10 @@ class ArrowProjectedFragment
     const nbr_unit_t* left = nbrs + begin;
     const nbr_unit_t* right = nbrs + end;
 
-    // Backup: the original sequentical-scan implementation for easier
-    // understanding the semantics for code readers, as well as debugging
-    // in the future.
-    /*
-    for (i = begin; i != end; ++i) {
-    if (id_parser.GetLabelId(nbrs[i].vid) == v_label) {
-        break;
-      }
-    }
-    for (j = i; j != end; ++j) {
-      if (id_parser.GetLabelId(nbrs[j].vid) != v_label) {
-        break;
-      }
-    }
-    */
-
+    // find the beginning
+    //
+    // https://en.cppreference.com/w/cpp/algorithm/lower_bound
     {
-      // https://en.cppreference.com/w/cpp/algorithm/lower_bound
       const nbr_unit_t *first = left, *last = right;
       size_t count = last - first, step = 0;
       const nbr_unit_t* iter = nullptr;
@@ -1100,6 +1585,7 @@ class ArrowProjectedFragment
       i = first - left + begin;
     }
     {
+      // find the end
       // https://en.cppreference.com/w/cpp/algorithm/upper_bound
       const nbr_unit_t *first = left, *last = right;
       size_t count = last - first, step = 0;
@@ -1119,6 +1605,67 @@ class ArrowProjectedFragment
     return std::make_pair(i, j);
   }
 
+  inline static std::pair<std::pair<int64_t, int64_t>,
+                          std::pair<int64_t, int64_t>>
+  getRangeOfLabel(const std::shared_ptr<property_graph_t>& fragment,
+                  label_id_t v_label,
+                  const std::shared_ptr<arrow::UInt8Array>& nbr_list,
+                  int64_t begin, int64_t end, int64_t bbegin, int64_t bend) {
+    // pre condition: the nbr list is not empty
+    assert(begin < end && bbegin < bend);
+
+    auto& id_parser = fragment->vid_parser_;
+    static constexpr size_t element_size =
+        sizeof(nbr_unit_t) / sizeof(uint32_t);
+    static constexpr int64_t batch_size = VARINT_ENCODING_BATCH_SIZE;
+    nbr_unit_t data_[batch_size];  // NOLINT(runtime/arrays)
+    VID_T prev_vid_ = 0;
+
+    int64_t i = end, j = begin, bi = bbegin, bj = bend;
+    const uint8_t* nbrs = nbr_list->raw_values();
+    const uint8_t* prev_nbrs = nbrs + bbegin;
+
+    for (int64_t k = begin; k < end; k += batch_size) {
+      size_t n = (k + batch_size) < end ? batch_size : (end - k);
+      nbrs = v8dec32(const_cast<unsigned char*>(
+                         reinterpret_cast<const unsigned char*>(prev_nbrs)),
+                     n * element_size, reinterpret_cast<uint32_t*>(data_));
+      // we cannot skip as we need delta decoding to understand the value of vid
+      for (size_t m = 0; m <= n; ++m) {
+        VID_T vid = data_[m].vid + prev_vid_;
+        prev_vid_ = vid;
+        if (i == end) {
+          label_id_t label = id_parser.GetLabelId(vid);
+          if (label == v_label) {
+            i = k + m;
+            // points to the begin of this batch
+            bi = prev_nbrs - nbr_list->raw_values();
+          }
+        }
+        if (i != end && j == begin) {
+          label_id_t label = id_parser.GetLabelId(data_[m].vid);
+          if (label != v_label) {
+            j = k + m;
+            // points to the end of this batch
+            bj = nbrs - nbr_list->raw_values();
+            break;
+          }
+        }
+        if (j != begin) {
+          break;
+        }
+      }
+      if (j != begin) {
+        break;
+      }
+      prev_nbrs = nbrs;  // move to th next batch
+    }
+    if (j == begin) {  // reach the end of this nbr list.
+      j = end;
+    }
+    return std::make_pair(std::make_pair(i, j), std::make_pair(bi, bj));
+  }
+
   /**
    * @brief For each vertex `v` in fragment, select the range of edges
    *        with destination that has label `v_label` in CSR.
@@ -1133,7 +1680,7 @@ class ArrowProjectedFragment
         static_cast<vid_t>(0), fragment->tvnums_[v_label],
         [&](vid_t i) {
           int64_t begin = offset_values[i], end = offset_values[i + 1];
-          if (begin == end) {  // optimzie for vertices that has no edge.
+          if (begin == end) {  // optimize for vertices that has no edge.
             begins[i] = begin;
             ends[i] = end;
           } else {
@@ -1141,6 +1688,37 @@ class ArrowProjectedFragment
                 getRangeOfLabel(fragment, v_label, nbr_list, begin, end);
             begins[i] = range.first;
             ends[i] = range.second;
+          }
+        },
+        std::thread::hardware_concurrency());
+    return {};
+  }
+
+  static boost::leaf::result<void> selectEdgeByNeighborLabel(
+      const std::shared_ptr<property_graph_t>& fragment, label_id_t v_label,
+      const std::shared_ptr<arrow::UInt8Array>& nbr_list,
+      const std::shared_ptr<arrow::Int64Array>& offsets,
+      const std::shared_ptr<arrow::Int64Array>& boffsets, int64_t* begins,
+      int64_t* ends, int64_t* bbegins, int64_t* bends) {
+    const int64_t* offset_values = offsets->raw_values();
+    const int64_t* boffset_values = boffsets->raw_values();
+    vineyard::parallel_for(
+        static_cast<vid_t>(0), fragment->tvnums_[v_label],
+        [&](vid_t i) {
+          int64_t begin = offset_values[i], end = offset_values[i + 1];
+          int64_t bbegin = boffset_values[i], bend = boffset_values[i + 1];
+          if (begin == end) {  // optimize for vertices that has no edge.
+            begins[i] = begin;
+            ends[i] = end;
+            bbegins[i] = bbegin;
+            bends[i] = bend;
+          } else {
+            auto range = getRangeOfLabel(fragment, v_label, nbr_list, begin,
+                                         end, bbegin, bend);
+            begins[i] = range.first.first;
+            ends[i] = range.first.second;
+            bbegins[i] = range.second.first;
+            bends[i] = range.second.second;
           }
         },
         std::thread::hardware_concurrency());
@@ -1194,10 +1772,11 @@ class ArrowProjectedFragment
     }
   }
 
-  void initEdgeSpliters(std::shared_ptr<arrow::FixedSizeBinaryArray> edge_list,
-                        std::shared_ptr<arrow::Int64Array> offsets_begin,
-                        std::shared_ptr<arrow::Int64Array> offsets_end,
-                        std::vector<std::vector<int64_t>>& spliters) {
+  void initEdgeSpliters(
+      const std::shared_ptr<arrow::FixedSizeBinaryArray>& edge_list,
+      const std::shared_ptr<arrow::Int64Array>& offsets_begin,
+      const std::shared_ptr<arrow::Int64Array>& offsets_end,
+      std::vector<std::vector<int64_t>>& spliters) {
     if (!spliters.empty()) {
       return;
     }
@@ -1279,23 +1858,46 @@ class ArrowProjectedFragment
     if (directed_) {
       ie_offsets_begin_ptr_ = ie_offsets_begin_->raw_values();
       ie_offsets_end_ptr_ = ie_offsets_end_->raw_values();
+      ie_offsets_base_ptr_ = ie_offsets_base_->raw_values();
     } else {
       ie_offsets_begin_ptr_ = oe_offsets_begin_->raw_values();
       ie_offsets_end_ptr_ = oe_offsets_end_->raw_values();
+      ie_offsets_base_ptr_ = oe_offsets_base_->raw_values();
     }
     oe_offsets_begin_ptr_ = oe_offsets_begin_->raw_values();
     oe_offsets_end_ptr_ = oe_offsets_end_->raw_values();
+    oe_offsets_base_ptr_ = oe_offsets_base_->raw_values();
+    if (COMPACT) {
+      if (directed_) {
+        ie_boffsets_begin_ptr_ = ie_boffsets_begin_->raw_values();
+        ie_boffsets_end_ptr_ = ie_boffsets_end_->raw_values();
+      } else {
+        ie_boffsets_begin_ptr_ = oe_boffsets_begin_->raw_values();
+        ie_boffsets_end_ptr_ = oe_boffsets_end_->raw_values();
+      }
+      oe_boffsets_begin_ptr_ = oe_boffsets_begin_->raw_values();
+      oe_boffsets_end_ptr_ = oe_boffsets_end_->raw_values();
+    }
 
     vertex_data_array_accessor_.Init(vertex_data_array_);
     ovgid_list_ptr_ = ovgid_list_->raw_values();
     edge_data_array_accessor_.Init(edge_data_array_);
 
-    if (directed_) {
-      ie_ptr_ = reinterpret_cast<const nbr_unit_t*>(ie_->GetValue(0));
+    if (COMPACT) {
+      if (directed_) {
+        compact_ie_ptr_ = compact_ie_->raw_values();
+      } else {
+        compact_ie_ptr_ = compact_oe_->raw_values();
+      }
+      compact_oe_ptr_ = compact_oe_->raw_values();
     } else {
-      ie_ptr_ = reinterpret_cast<const nbr_unit_t*>(oe_->GetValue(0));
+      if (directed_) {
+        ie_ptr_ = reinterpret_cast<const nbr_unit_t*>(ie_->GetValue(0));
+      } else {
+        ie_ptr_ = reinterpret_cast<const nbr_unit_t*>(oe_->GetValue(0));
+      }
+      oe_ptr_ = reinterpret_cast<const nbr_unit_t*>(oe_->GetValue(0));
     }
-    oe_ptr_ = reinterpret_cast<const nbr_unit_t*>(oe_->GetValue(0));
   }
 
   vertex_range_t inner_vertices_;
@@ -1313,12 +1915,19 @@ class ArrowProjectedFragment
 
   prop_id_t vertex_prop_, edge_prop_;
 
-  std::shared_ptr<arrow::Int64Array> ie_offsets_begin_, ie_offsets_end_;
-  const int64_t* ie_offsets_begin_ptr_;
-  const int64_t* ie_offsets_end_ptr_;
-  std::shared_ptr<arrow::Int64Array> oe_offsets_begin_, oe_offsets_end_;
-  const int64_t* oe_offsets_begin_ptr_;
-  const int64_t* oe_offsets_end_ptr_;
+  std::shared_ptr<arrow::Int64Array> ie_offsets_begin_, ie_offsets_end_,
+      ie_offsets_base_;
+  const int64_t *ie_offsets_begin_ptr_, *ie_offsets_end_ptr_,
+      *ie_offsets_base_ptr_;
+  std::shared_ptr<arrow::Int64Array> oe_offsets_begin_, oe_offsets_end_,
+      oe_offsets_base_;
+  const int64_t *oe_offsets_begin_ptr_, *oe_offsets_end_ptr_,
+      *oe_offsets_base_ptr_;
+
+  std::shared_ptr<arrow::Int64Array> ie_boffsets_begin_, ie_boffsets_end_;
+  const int64_t *ie_boffsets_begin_ptr_, *ie_boffsets_end_ptr_;
+  std::shared_ptr<arrow::Int64Array> oe_boffsets_begin_, oe_boffsets_end_;
+  const int64_t *oe_boffsets_begin_ptr_, *oe_boffsets_end_ptr_;
 
   std::shared_ptr<arrow::Array> vertex_data_array_;
   arrow_projected_fragment_impl::TypedArray<VDATA_T>
@@ -1332,14 +1941,17 @@ class ArrowProjectedFragment
   arrow_projected_fragment_impl::TypedArray<EDATA_T> edge_data_array_accessor_;
 
   std::shared_ptr<arrow::FixedSizeBinaryArray> ie_, oe_;
-  const nbr_unit_t* ie_ptr_;
-  const nbr_unit_t* oe_ptr_;
+  const nbr_unit_t *ie_ptr_, *oe_ptr_;
+
+  std::shared_ptr<arrow::UInt8Array> compact_ie_, compact_oe_;
+  const uint8_t *compact_ie_ptr_, *compact_oe_ptr_;
 
   std::shared_ptr<vertex_map_t> vm_ptr_;
 
   vineyard::IdParser<vid_t> vid_parser_;
 
-  std::shared_ptr<vineyard::ArrowFragment<oid_t, vid_t, property_vertex_map_t>>
+  std::shared_ptr<
+      vineyard::ArrowFragment<oid_t, vid_t, property_vertex_map_t, COMPACT>>
       fragment_;
 
   std::vector<fid_t> idst_, odst_, iodst_;
