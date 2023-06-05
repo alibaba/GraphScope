@@ -172,8 +172,8 @@ def internal_type(t):  # The template of vertex map needs special care.
 
 
 def compile_graph():
-    property_frame_template = "vineyard::ArrowFragment<{},{},{}>"
-    projected_frame_template = "gs::ArrowProjectedFragment<{},{},{},{},{}>"
+    property_frame_template = "vineyard::ArrowFragment<{},{},{},false>"
+    projected_frame_template = "gs::ArrowProjectedFragment<{},{},{},{},{},false>"
     flattened_frame_template = "gs::ArrowFlattenedFragment<{},{},{},{}>"
     dynamic_projected_frame_template = "gs::DynamicProjectedFragment<{},{}>"
 
@@ -230,14 +230,14 @@ def compile_cpp_pie_app():
     sv = vertex_map_templates[0].format(internal_type("std::string"), "uint64_t")
 
     # 1. arrow fragment
-    property_template = "vineyard::ArrowFragment<{},{},{}>"
+    property_template = "vineyard::ArrowFragment<{},{},{},false>"
 
     lu = property_template.format("int64_t", "uint64_t", lv)
     su = property_template.format("std::string", "uint64_t", sv)
     # no builtin app can run on the arrow property graph
 
     # 2. projected arrow fragment
-    project_template = "gs::ArrowProjectedFragment<{},{},{},{},{}>"
+    project_template = "gs::ArrowProjectedFragment<{},{},{},{},{},false>"
     psuee = project_template.format(
         "std::string", "uint64_t", "grape::EmptyType", "grape::EmptyType", sv
     )

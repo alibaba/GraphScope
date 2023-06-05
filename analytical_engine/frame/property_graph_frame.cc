@@ -16,6 +16,7 @@
 #include <memory>
 
 #include "vineyard/client/client.h"
+#include "vineyard/common/util/macros.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/loader/fragment_loader_utils.h"
 #include "vineyard/graph/loader/gar_fragment_loader.h"
@@ -42,6 +43,7 @@
 using oid_t = typename _GRAPH_TYPE::oid_t;
 using vid_t = typename _GRAPH_TYPE::vid_t;
 using vertex_map_t = typename _GRAPH_TYPE::vertex_map_t;
+static constexpr bool compact_v = _GRAPH_TYPE::compact_v;
 
 namespace bl = boost::leaf;
 namespace detail {
@@ -82,6 +84,7 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
     gs::rpc::graph::GraphDefPb graph_def;
 
     graph_def.set_key(graph_name);
+    graph_def.set_compact_edges(frag->compact_edges());
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
       graph_def.extension().UnpackTo(&vy_info);
@@ -156,6 +159,7 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
     gs::rpc::graph::GraphDefPb graph_def;
 
     graph_def.set_key(graph_name);
+    graph_def.set_compact_edges(frag->compact_edges());
 
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
@@ -201,8 +205,8 @@ __attribute__((visibility("hidden"))) static bl::result<void> ArchiveGraph(
 #endif
 }
 
-__attribute__((visibility(
-    "hidden"))) static bl::result<std::shared_ptr<gs::IFragmentWrapper>>
+__attribute__((visibility("hidden")))
+bl::result<std::shared_ptr<gs::IFragmentWrapper>>
 ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
                 std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
                 const std::string& dst_graph_name) {
@@ -248,7 +252,8 @@ ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
                         std::string(vineyard::type_name<oid_t>()));
   }
 
-  gs::DynamicToArrowConverter<oid_t, vertex_map_t> converter(comm_spec, client);
+  gs::DynamicToArrowConverter<oid_t, vertex_map_t, compact_v> converter(
+      comm_spec, client);
   BOOST_LEAF_AUTO(arrow_frag, converter.Convert(dynamic_frag));
   VINEYARD_CHECK_OK(client.Persist(arrow_frag->id()));
   BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
@@ -258,6 +263,7 @@ ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
 
   gs::rpc::graph::GraphDefPb graph_def;
   graph_def.set_key(dst_graph_name);
+  graph_def.set_compact_edges(arrow_frag->compact_edges());
   gs::rpc::graph::VineyardInfoPb vy_info;
   if (graph_def.has_extension()) {
     graph_def.extension().UnpackTo(&vy_info);
@@ -303,6 +309,7 @@ ToDynamicFragment(const grape::CommSpec& comm_spec,
   graph_def.set_key(dst_graph_name);
   graph_def.set_directed(dynamic_frag->directed());
   graph_def.set_graph_type(gs::rpc::graph::DYNAMIC_PROPERTY);
+  graph_def.set_compact_edges(false);
   gs::rpc::graph::MutableGraphInfoPb graph_info;
   if (graph_def.has_extension()) {
     graph_def.extension().UnpackTo(&graph_info);
@@ -346,6 +353,7 @@ AddLabelsToGraph(vineyard::ObjectID origin_frag_id,
   gs::rpc::graph::GraphDefPb graph_def;
 
   graph_def.set_key(graph_name);
+  graph_def.set_compact_edges(frag->compact_edges());
 
   gs::rpc::graph::VineyardInfoPb vy_info;
   if (graph_def.has_extension()) {

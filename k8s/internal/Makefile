@@ -42,7 +42,7 @@ GRAPHSCOPE_HOME ?= /usr/local
 INSTALL_PREFIX ?= /opt/graphscope
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.14.5
+VINEYARD_VERSION ?= v0.15.0
 PROFILE ?= release
 CI ?= false
 
@@ -101,6 +101,21 @@ graphscope-darwin-py3:
 		done
 
 graphscope-manylinux2014-py3-nodocker:
+	cd /tmp && \
+	git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d && \
+	cd /tmp/v6d && \
+	git submodule update --init && \
+	mkdir -p build && cd build && \
+	cmake .. \
+		-DCMAKE_INSTALL_PREFIX=/opt/vineyard \
+		-DCMAKE_PREFIX_PATH=/opt/graphscope \
+		-DOPENSSL_ROOT_DIR=/opt/graphscope \
+		-DUSE_EXTERNAL_ETCD_LIBS=OFF \
+		-DBUILD_SHARED_LIBS=ON \
+		-DBUILD_VINEYARD_TESTS=OFF && \
+	make -j$(nproc) && \
+	sudo make install && \
+	sudo rsync -av /opt/vineyard/ ${GRAPHSCOPE_HOME}/ && \
 	cd $(WORKING_DIR)/../.. && \
 	if [[ "${ARCH}" == "aarch64" ]]; then python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
 		export AUDITWHEEL_PLAT=manylinux2014_${ARCH}; \

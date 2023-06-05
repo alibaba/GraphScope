@@ -638,6 +638,7 @@ class OperationExecutor:
                 types_pb2.RETAIN_OID: utils.b_to_attr(True),
                 types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
                 types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
+                types_pb2.COMPACT_EDGES: utils.b_to_attr(False),
             }
             new_op = create_graph(
                 self._session_id,

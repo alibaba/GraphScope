@@ -1111,6 +1111,7 @@ class Session(object):
         generate_eid=True,
         retain_oid=True,
         vertex_map="global",
+        compact_edges=False,
     ):
         return self._wrapper(
             GraphDAGNode(
@@ -1121,6 +1122,7 @@ class Session(object):
                 generate_eid,
                 retain_oid,
                 vertex_map,
+                compact_edges,
             )
         )
 
@@ -1383,7 +1385,7 @@ def set_option(**kwargs):
         # use different default value for `vineyard_shared_memory` for
         # different cluster types in pursuit of better user experience.
         if k == "vineyard_shared_mem":
-            setattr("_local_vineyard_shared_mem", v)
+            setattr(gs_config, "_local_vineyard_shared_mem", v)
 
         # use string as log level
         if k == "log_level" and isinstance(v, int):
@@ -1532,6 +1534,7 @@ def g(
     generate_eid=True,
     retain_oid=True,
     vertex_map="global",
+    compact_edges=False,
 ):
     """Construct a GraphScope graph object on the default session.
 
@@ -1555,7 +1558,13 @@ def g(
         >>> g = graphscope.g() # creating graph on the session "sess"
     """
     return get_default_session().g(
-        incoming_data, oid_type, directed, generate_eid, retain_oid, vertex_map
+        incoming_data,
+        oid_type,
+        directed,
+        generate_eid,
+        retain_oid,
+        vertex_map,
+        compact_edges,
     )
 
 
