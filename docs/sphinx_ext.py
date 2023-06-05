@@ -120,7 +120,6 @@ def _html_page_context(
     if os.environ.get("TAG_VER", None) == "stable":
         version = "stable"
     context["version"] = version
-    context["stable"] = releases[0]
     context["versions"] = ["latest", "stable"] + releases
     context["concat_path"] = concat_path
 
