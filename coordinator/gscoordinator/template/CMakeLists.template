@@ -289,6 +289,10 @@ if (APPLE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif()
 
 set(GRAPH_TYPE "$_graph_type")
+# message("GRAPH_TYPE = ${GRAPH_TYPE}")
+
+set(APP_TYPE "$_app_type")
+# message("APP_TYPE = ${APP_TYPE}")
 
 if (CYTHON_PREGEL_APP)
     file(GLOB_RECURSE FILES_NEED_COMPILE "*.cc")

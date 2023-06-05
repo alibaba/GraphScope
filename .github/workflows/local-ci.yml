@@ -242,11 +242,11 @@ jobs:
         # build graphscope wheels
         cd ${GITHUB_WORKSPACE}/k8s/internal
         # sudo -E -u runner make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope
-        make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com
+        make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope INSTALL_PREFIX=/home/graphscope/graphscope-install REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com
 
         # build client wheels
         # sudo -E -u runner make graphscope-client-py3-package GRAPHSCOPE_HOME=/opt/graphscope
-        make graphscope-client-py3-package GRAPHSCOPE_HOME=/opt/graphscope REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com
+        make graphscope-client-py3-package GRAPHSCOPE_HOME=/opt/graphscope INSTALL_PREFIX=/home/graphscope/graphscope-install REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com
 
         # package
         cd ${GITHUB_WORKSPACE}

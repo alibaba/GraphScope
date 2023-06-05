@@ -196,9 +196,10 @@ Status GraphScopeService::HeartBeat(ServerContext* context,
       // aggregate the is_multigraph status of all fragments.
       for (auto& e : result) {
         auto& graph_def = e.graph_def();
-        bool update =
-            (merged_graph_def.is_multigraph() || graph_def.is_multigraph());
-        merged_graph_def.set_is_multigraph(update);
+        merged_graph_def.set_is_multigraph(merged_graph_def.is_multigraph() ||
+                                           graph_def.is_multigraph());
+        merged_graph_def.set_compact_edges(merged_graph_def.compact_edges() ||
+                                           graph_def.compact_edges());
       }
       op_result->mutable_graph_def()->CopyFrom(merged_graph_def);
       break;

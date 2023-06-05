@@ -92,6 +92,9 @@ message GraphDefPb {
     //   - MutableGraphInfoPb
     google.protobuf.Any extension = 8;
     bool is_multigraph = 9;
+
+    // compact edges
+    bool compact_edges = 10;
 }
 
 message TypeDefPb {

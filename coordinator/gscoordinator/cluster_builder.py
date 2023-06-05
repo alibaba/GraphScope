@@ -54,6 +54,7 @@ class EngineCluster:
         engine_cpu,
         engine_mem,
         engine_pod_node_selector,
+        engine_pod_prefix,
         glog_level,
         image_pull_policy,
         image_pull_secrets,
@@ -80,7 +81,7 @@ class EngineCluster:
         with_mars,
         dataset_proxy,
     ):
-        self._gs_prefix = "gs-engine-"
+        self._gs_prefix = engine_pod_prefix
         self._analytical_prefix = "gs-analytical-"
         self._interactive_frontend_prefix = "gs-interactive-frontend-"
 
@@ -101,7 +102,9 @@ class EngineCluster:
             "app.kubernetes.io/instance": self._instance_id,
             "app.kubernetes.io/version": __version__,
             "app.kubernetes.io/component": "engine",
+            "app.kubernetes.io/engine_selector": self.engine_stateful_set_name,
         }
+
         self._frontend_labels = self._engine_labels.copy()
         self._frontend_labels["app.kubernetes.io/component"] = "frontend"
 
@@ -215,25 +218,6 @@ class EngineCluster:
             for key, value in BASE_MACHINE_ENVS.items()
         ]
         return env
-
-    def get_vineyard_socket_volume(self):
-        name = "vineyard-ipc-socket"
-        volume = kube_client.V1Volume(name=name)
-        if self._vineyard_deployment is None:
-            empty_dir = kube_client.V1EmptyDirVolumeSource()
-            volume.empty_dir = empty_dir
-        else:
-            path = f"/var/run/vineyard-kubernetes/{self._namespace}/{self._vineyard_deployment}"
-            host_path = kube_client.V1HostPathVolumeSource(path=path)
-            host_path.type = "Directory"
-            volume.host_path = host_path
-
-        source_volume_mount = kube_client.V1VolumeMount(
-            name=name, mount_path="/tmp/vineyard_workspace"
-        )
-        destination_volume_mount = source_volume_mount
-
-        return volume, source_volume_mount, destination_volume_mount
 
     def get_shm_volume(self):
         name = "host-shm"
@@ -358,6 +342,20 @@ class EngineCluster:
         container.security_context = kube_client.V1SecurityContext(privileged=True)
         return container
 
+    def get_vineyard_socket_volume_from_vineyard_deployment(self):
+        name = "vineyard-ipc-socket"
+
+        # Notice, the path must be same as the one in vineyardd_types.go
+        # https://github.com/v6d-io/v6d/blob/main/k8s/apis/k8s/v1alpha1/vineyardd_types.go#L125
+        path = f"/var/run/vineyard-kubernetes/{self._namespace}/{self._vineyard_deployment}"
+        host_path = kube_client.V1HostPathVolumeSource(path=path)
+        host_path.type = "Directory"
+        volume = kube_client.V1Volume(name=name, host_path=host_path)
+        volume_mount = kube_client.V1VolumeMount(
+            name=name, mount_path="/tmp/vineyard_workspace"
+        )
+        return volume, volume_mount
+
     def get_engine_pod_spec(self):
         containers = []
         volumes = []
@@ -365,6 +363,14 @@ class EngineCluster:
         shm_volume = self.get_shm_volume()
         volumes = [shm_volume[0]]
         engine_volume_mounts = [shm_volume[2]]
+
+        if self.vineyard_deployment_exists():
+            (
+                volume,
+                volume_mount,
+            ) = self.get_vineyard_socket_volume_from_vineyard_deployment()
+            volumes.append(volume)
+            engine_volume_mounts.append(volume_mount)
 
         if self._volumes and self._volumes is not None:
             udf_volumes = ResourceBuilder.get_user_defined_volumes(self._volumes)

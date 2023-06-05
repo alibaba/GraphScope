@@ -223,9 +223,11 @@ def get_app_sha256(attr, java_class_path: str):
         s.update(f"{graph_type}.{vd_type}".encode("utf-8", errors="ignore"))
         app_sha256 = s.hexdigest()
         logger.info(
-            "app sha256 for app {} with graph {}:{}, is {}".format(
-                java_app_class, app_type, java_app_class, app_sha256
-            )
+            "app sha256 for app %s with graph %s:%s, is %s",
+            java_app_class,
+            app_type,
+            java_app_class,
+            app_sha256,
         )
     else:
         s = hashlib.sha256()
@@ -831,18 +833,18 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
     app_type = parent_op.attr[types_pb2.APP_ALGO].s.decode("utf-8", errors="ignore")
 
     if app_type.startswith("java_pie:") or app_type.startswith("giraph:"):
-        logger.debug("args len: {}".format(len(op.query_args.args)))
+        logger.debug("args length: %s", len(op.query_args.args))
         if len(op.query_args.args) == 1:
             original_json_param = data_types_pb2.StringValue()
             op.query_args.args[0].Unpack(original_json_param)
-            logger.debug("original user param {}".format(original_json_param))
+            logger.debug("original user params: %s", original_json_param)
             user_params = json.loads(original_json_param.value)
             del op.query_args.args[0]
         elif len(op.query_args.args) == 0:
             user_params = {}
         else:
             raise RuntimeError(
-                "Unexpected num of params{}".format(len(op.query_args.args))
+                "Unexpected num of params: {}".format(len(op.query_args.args))
             )
         # we need extra param in first arg.
         user_params["jar_name"] = engine_java_class_path
@@ -860,7 +862,7 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
             user_params["user_app_class"] = app_type[7:]
         else:
             user_params["app_class"] = app_type.split(":")[-1]
-        logger.debug("user params {}".format(json.dumps(user_params)))
+        logger.debug("user params: %s", json.dumps(user_params))
         new_user_param = Any()
         new_user_param.Pack(data_types_pb2.StringValue(value=json.dumps(user_params)))
         op.query_args.args.extend([new_user_param])
@@ -870,7 +872,7 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
         lib_path = parent_op.attr[types_pb2.APP_LIBRARY_PATH].s.decode(
             "utf-8", errors="ignore"
         )
-        logger.info("Java app: Lib path {}".format(lib_path))
+        logger.info("Java app: Lib path: %s", lib_path)
         lib_param.Pack(data_types_pb2.StringValue(value=lib_path))
         op.query_args.args.extend([lib_param])
 
@@ -1451,6 +1453,7 @@ def _parse_java_app_type(java_class_path, real_algo):
     _java_app_type = ""
     _frag_param_str = ""
     _java_inner_context_type = ""
+    _vd_type = ""
     _java_executable = find_java_exe()
     parse_user_app_cmd = [
         _java_executable,
@@ -1496,9 +1499,11 @@ def _parse_java_app_type(java_class_path, real_algo):
             _vd_type = line.split(":")[-1].strip()
     # for giraph app, we manually set java inner ctx type
     logger.info(
-        "Java app type: {}, frag type str: {}, ctx type: {}, vd type {}".format(
-            _java_app_type, _frag_param_str, _java_inner_context_type, _vd_type
-        )
+        "Java app type: %s, frag type str: %s, ctx type: %s, vd type %s",
+        _java_app_type,
+        _frag_param_str,
+        _java_inner_context_type,
+        _vd_type,
     )
     if (
         not _java_app_type
@@ -1566,7 +1571,7 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
     # for algo start with giraph:, we don't find info in meta
     if algo.startswith("giraph:") or algo.startswith("java_pie:"):
         real_algo = algo.split(":")[1]
-        logger.info("codegen app info for java app : {}".format(real_algo))
+        logger.info("codegen app info for java app: %s", real_algo)
         src_header, app_class, vd_type, java_app_template_str = _probe_for_java_app(
             attr, java_class_path, real_algo
         )
@@ -1683,17 +1688,23 @@ def _codegen_graph_info(attr):
             internal_type(oid_type()), vid_type()
         )
 
+    def compact_edges():
+        compact_edges = False
+        if types_pb2.COMPACT_EDGES in attr:
+            compact_edges = attr[types_pb2.COMPACT_EDGES].b
+        return "true" if compact_edges else "false"
+
     graph_type = attr[types_pb2.GRAPH_TYPE].i
     graph_class, graph_header = GRAPH_HEADER_MAP[graph_type]
 
     # graph_type is a literal of graph template in c++ side
     if graph_type == graph_def_pb2.ARROW_PROPERTY:
         # in a format of full qualified name, e.g.
-        # vineyard::ArrowFragment<int64_t, uin64_t, vineyard::ArrowLocalVertexMap<int64_t, uint64_t>>
-        graph_fqn = f"{graph_class}<{oid_type()},{vid_type()},{vertex_map_type()}>"
+        # vineyard::ArrowFragment<int64_t, uin64_t, vineyard::ArrowLocalVertexMap<int64_t, uint64_t>, false>
+        graph_fqn = f"{graph_class}<{oid_type()},{vid_type()},{vertex_map_type()},{compact_edges()}>"
     elif graph_type == graph_def_pb2.ARROW_PROJECTED:
-        # gs::ArrowProjectedFragment<int64_t, uint64_t, double, double,vineyard::ArrowLocalVertexMap<int64_t, uint64_t>>
-        graph_fqn = f"{graph_class}<{oid_type()},{vid_type()},{vdata_type()},{edata_type()},{vertex_map_type()}>"
+        # gs::ArrowProjectedFragment<int64_t, uint64_t, double, double,vineyard::ArrowLocalVertexMap<int64_t, uint64_t>, false>
+        graph_fqn = f"{graph_class}<{oid_type()},{vid_type()},{vdata_type()},{edata_type()},{vertex_map_type()},{compact_edges()}>"  # noqa: E501
     elif graph_type == graph_def_pb2.IMMUTABLE_EDGECUT:
         # grape::ImmutableEdgecutFragment<int64_t, uint32_t, double, double>
         graph_fqn = (
