@@ -17,7 +17,8 @@ use std::sync::Arc;
 
 use global_query::store_api::{Edge, Vertex};
 use global_query::{GlobalGraphQuery, GraphPartitionManager};
-use graph_proxy::{create_gs_store, GrootClusterInfo, GrootMultiPartition};
+use graph_proxy::apis::PegasusClusterInfo;
+use graph_proxy::{create_gs_store, GrootMultiPartition};
 use runtime::initialize_job_assembly;
 use runtime::IRJobAssembly;
 
@@ -60,7 +61,7 @@ where
             column_filter_push_down,
         );
         let partition_info = GrootMultiPartition::new(self.graph_partitioner.clone());
-        let cluster_info = GrootClusterInfo::new(self.graph_partitioner.clone());
+        let cluster_info = PegasusClusterInfo::default();
         initialize_job_assembly(gs_store, Arc::new(partition_info), Arc::new(cluster_info))
     }
 }

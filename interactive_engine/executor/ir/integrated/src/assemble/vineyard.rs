@@ -18,7 +18,8 @@ use std::sync::Arc;
 
 use global_query::store_api::{Edge, Vertex};
 use global_query::{GlobalGraphQuery, GraphPartitionManager};
-use graph_proxy::{create_gs_store, VineyardClusterInfo, VineyardMultiPartition};
+use graph_proxy::apis::PegasusClusterInfo;
+use graph_proxy::{create_gs_store, VineyardMultiPartition};
 use runtime::initialize_job_assembly;
 use runtime::IRJobAssembly;
 
@@ -65,8 +66,11 @@ where
             false,
             false,
         );
-        let partition_info = VineyardMultiPartition::new(self.graph_partitioner.clone());
-        let cluster_info = VineyardClusterInfo::new(self.partition_server_index_mapping.clone());
+        let partition_info = VineyardMultiPartition::new(
+            self.graph_partitioner.clone(),
+            self.partition_server_index_mapping.clone(),
+        );
+        let cluster_info = PegasusClusterInfo::default();
         initialize_job_assembly(gs_store, Arc::new(partition_info), Arc::new(cluster_info))
     }
 }

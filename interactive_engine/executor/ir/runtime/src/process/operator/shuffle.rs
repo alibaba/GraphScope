@@ -27,18 +27,15 @@ use crate::router::Router;
 
 pub struct RecordRouter {
     p: Arc<dyn Router>,
-    num_workers: usize,
     shuffle_key: Option<KeyId>,
 }
 
 impl RecordRouter {
-    pub fn new(
-        p: Arc<dyn Router>, num_workers: usize, shuffle_key: Option<KeyId>,
-    ) -> Result<Self, ParsePbError> {
+    pub fn new(p: Arc<dyn Router>, shuffle_key: Option<KeyId>) -> Result<Self, ParsePbError> {
         if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
-            debug!("Runtime shuffle number of worker {:?} and shuffle key {:?}", num_workers, shuffle_key);
+            debug!("Runtime shuffle key {:?}", shuffle_key);
         }
-        Ok(RecordRouter { p, num_workers, shuffle_key })
+        Ok(RecordRouter { p, shuffle_key })
     }
 }
 
@@ -48,21 +45,19 @@ impl RouteFunction<Record> for RecordRouter {
             match entry.get_type() {
                 EntryType::Vertex => {
                     let id = entry.id();
-                    Ok(self.p.route(&id, self.num_workers)?)
+                    Ok(self.p.route(&id)?)
                 }
                 EntryType::Edge => {
                     let e = entry
                         .as_edge()
                         .ok_or(FnExecError::Unreachable)?;
-                    Ok(self.p.route(&e.src_id, self.num_workers)?)
+                    Ok(self.p.route(&e.src_id)?)
                 }
                 EntryType::Path => {
                     let p = entry
                         .as_graph_path()
                         .ok_or(FnExecError::Unreachable)?;
-                    Ok(self
-                        .p
-                        .route(&p.get_path_end().id(), self.num_workers)?)
+                    Ok(self.p.route(&p.get_path_end().id())?)
                 }
                 // TODO:
                 _ => Ok(0),

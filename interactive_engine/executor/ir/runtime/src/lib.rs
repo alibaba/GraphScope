@@ -27,7 +27,8 @@ extern crate log;
 
 use std::sync::Arc;
 
-use graph_proxy::apis::partitioner::{ClusterInfo, PartitionInfo};
+use graph_proxy::apis::cluster_info::ClusterInfo;
+use graph_proxy::apis::partitioner::PartitionInfo;
 use graph_proxy::apis::{register_graph, ReadGraph};
 
 /// Initialize a job assembly with the given graph, partition info and cluster info.

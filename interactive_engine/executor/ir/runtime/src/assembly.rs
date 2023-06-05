@@ -16,7 +16,8 @@
 use std::convert::TryInto;
 use std::sync::Arc;
 
-use graph_proxy::apis::partitioner::{ClusterInfo, PartitionInfo};
+use graph_proxy::apis::cluster_info::ClusterInfo;
+use graph_proxy::apis::partitioner::PartitionInfo;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
@@ -45,7 +46,7 @@ use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::operator::sort::CompareFunctionGen;
 use crate::process::operator::source::SourceOperator;
 use crate::process::record::{Record, RecordKey};
-use crate::router::{DistributedDataRouter, Router};
+use crate::router::{DefaultRouter, Router};
 
 type RecordMap = Box<dyn MapFunction<Record, Record>>;
 type RecordFilterMap = Box<dyn FilterMapFunction<Record, Record>>;
@@ -77,14 +78,13 @@ impl FnGenerator {
 
     fn gen_source(&self, opr: pb::PhysicalOpr) -> FnGenResult<DynIter<Record>> {
         let worker_id = pegasus::get_current_worker();
-        let source_opr = SourceOperator::new(opr, worker_id.local_peers as usize, self.router.clone())?;
+        let source_opr = SourceOperator::new(opr, self.router.clone())?;
         Ok(source_opr.gen_source(worker_id.index as usize)?)
     }
 
     fn gen_shuffle(&self, res: &pb::repartition::Shuffle) -> FnGenResult<RecordShuffle> {
         let p = self.router.clone();
-        let num_workers = pegasus::get_current_worker().local_peers as usize;
-        let record_router = RecordRouter::new(p, num_workers, res.shuffle_key)?;
+        let record_router = RecordRouter::new(p, res.shuffle_key)?;
         Ok(Box::new(record_router))
     }
 
@@ -159,7 +159,7 @@ impl IRJobAssembly {
     }
 
     pub fn with<P: PartitionInfo, C: ClusterInfo>(p: Arc<P>, c: Arc<C>) -> Self {
-        let default_router = DistributedDataRouter::new(p, c);
+        let default_router = DefaultRouter::new(p, c);
         IRJobAssembly { udf_gen: FnGenerator::new(Arc::new(default_router)) }
     }
 

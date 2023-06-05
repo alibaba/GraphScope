@@ -13,8 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::apis::partitioner::{ClusterInfo, PartitionId, PartitionInfo, ServerId};
-use crate::apis::ID;
+use crate::apis::partitioner::{PartitionId, PartitionInfo, PartitionedData, ServerId};
 use crate::GraphProxyResult;
 
 /// A simple partition utility that one server contains a single graph partition
@@ -23,12 +22,10 @@ pub struct SimplePartition {
 }
 
 impl PartitionInfo for SimplePartition {
-    fn get_partition_id(&self, data: &ID) -> GraphProxyResult<PartitionId> {
-        Ok((*data as usize % self.num_servers) as u32)
+    fn get_partition_id<D: PartitionedData>(&self, data: &D) -> GraphProxyResult<PartitionId> {
+        Ok((data.get_id() as usize % self.num_servers) as u32)
     }
-}
 
-impl ClusterInfo for SimplePartition {
     fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId> {
         Ok(partition_id)
     }

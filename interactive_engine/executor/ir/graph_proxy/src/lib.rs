@@ -20,8 +20,7 @@ extern crate lazy_static;
 pub use adapters::{create_csr_store, create_exp_store, SimplePartition};
 #[cfg(feature = "with_global_query")]
 pub use adapters::{
-    create_gs_store, GraphScopeStore, GrootClusterInfo, GrootMultiPartition, VineyardClusterInfo,
-    VineyardGraphWriter, VineyardMultiPartition,
+    create_gs_store, GraphScopeStore, GrootMultiPartition, VineyardGraphWriter, VineyardMultiPartition,
 };
 pub use errors::{GraphProxyError, GraphProxyResult};
 

@@ -13,20 +13,38 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use super::GraphElement;
+use crate::apis::Edge;
+use crate::apis::Vertex;
 use crate::apis::ID;
 use crate::GraphProxyResult;
 
 pub type PartitionId = u32;
 pub type ServerId = u32;
 
+pub trait PartitionedData {
+    fn get_id(&self) -> ID;
+}
+impl PartitionedData for ID {
+    fn get_id(&self) -> ID {
+        *self
+    }
+}
+impl PartitionedData for Vertex {
+    fn get_id(&self) -> ID {
+        self.id()
+    }
+}
+impl PartitionedData for Edge {
+    fn get_id(&self) -> ID {
+        self.id()
+    }
+}
+
 /// A `PartitionInfo` is used to query the partition information when the data has been partitioned.
 pub trait PartitionInfo: Send + Sync + 'static {
     /// Given the data, return the id of the partition that holds the data.
-    fn get_partition_id(&self, data: &ID) -> GraphProxyResult<PartitionId>;
-}
-
-/// A `ClusterInfo` is used to query the cluster information when the system is running on a cluster.
-pub trait ClusterInfo: Send + Sync + 'static {
+    fn get_partition_id<D: PartitionedData>(&self, data: &D) -> GraphProxyResult<PartitionId>;
     /// Given the partition id, return the id of the server that is able to access the partition.
     fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId>;
 }

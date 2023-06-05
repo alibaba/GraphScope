@@ -19,8 +19,7 @@ use std::sync::Arc;
 use global_query::store_api::{PartitionId, VertexId};
 use global_query::GraphPartitionManager;
 
-use crate::apis::partitioner::{ClusterInfo, PartitionInfo, ServerId};
-use crate::apis::ID;
+use crate::apis::partitioner::{PartitionInfo, PartitionedData, ServerId};
 use crate::{GraphProxyError, GraphProxyResult};
 
 /// A partition utility that one server contains multiple graph partitions for Groot Store
@@ -35,24 +34,11 @@ impl GrootMultiPartition {
 }
 
 impl PartitionInfo for GrootMultiPartition {
-    fn get_partition_id(&self, data: &ID) -> GraphProxyResult<PartitionId> {
+    fn get_partition_id<D: PartitionedData>(&self, data: &D) -> GraphProxyResult<PartitionId> {
         Ok(self
             .graph_partition_manager
-            .get_partition_id(*data as VertexId) as PartitionId)
+            .get_partition_id(data.get_id() as VertexId) as PartitionId)
     }
-}
-
-pub struct GrootClusterInfo {
-    graph_partition_manager: Arc<dyn GraphPartitionManager>,
-}
-
-impl GrootClusterInfo {
-    pub fn new(graph_partition_manager: Arc<dyn GraphPartitionManager>) -> Self {
-        GrootClusterInfo { graph_partition_manager }
-    }
-}
-
-impl ClusterInfo for GrootClusterInfo {
     fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId> {
         self.graph_partition_manager
             .get_server_id(partition_id)
@@ -68,34 +54,25 @@ impl ClusterInfo for GrootClusterInfo {
 /// thus we use graph_partitioner together with partition_server_index_mapping for data routing.
 pub struct VineyardMultiPartition {
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
+    // mapping of partition id -> server_index
+    partition_server_index_mapping: HashMap<PartitionId, ServerId>,
 }
 
 impl VineyardMultiPartition {
-    pub fn new(graph_partition_manager: Arc<dyn GraphPartitionManager>) -> VineyardMultiPartition {
-        VineyardMultiPartition { graph_partition_manager }
+    pub fn new(
+        graph_partition_manager: Arc<dyn GraphPartitionManager>,
+        partition_server_index_mapping: HashMap<PartitionId, ServerId>,
+    ) -> VineyardMultiPartition {
+        VineyardMultiPartition { graph_partition_manager, partition_server_index_mapping }
     }
 }
 
 impl PartitionInfo for VineyardMultiPartition {
-    fn get_partition_id(&self, data: &ID) -> GraphProxyResult<PartitionId> {
+    fn get_partition_id<D: PartitionedData>(&self, data: &D) -> GraphProxyResult<PartitionId> {
         Ok(self
             .graph_partition_manager
-            .get_partition_id(*data as VertexId) as PartitionId)
+            .get_partition_id(data.get_id() as VertexId) as PartitionId)
     }
-}
-
-pub struct VineyardClusterInfo {
-    // mapping of partition id -> server_index
-    partition_server_index_mapping: HashMap<u32, u32>,
-}
-
-impl VineyardClusterInfo {
-    pub fn new(partition_server_index_mapping: HashMap<u32, u32>) -> VineyardClusterInfo {
-        VineyardClusterInfo { partition_server_index_mapping }
-    }
-}
-
-impl ClusterInfo for VineyardClusterInfo {
     fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId> {
         self.partition_server_index_mapping
             .get(&partition_id)

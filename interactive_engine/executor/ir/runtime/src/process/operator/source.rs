@@ -60,7 +60,7 @@ impl Default for SourceOperator {
 }
 
 impl SourceOperator {
-    pub fn new(op: pb::PhysicalOpr, job_workers: usize, partitioner: Arc<dyn Router>) -> FnGenResult<Self> {
+    pub fn new(op: pb::PhysicalOpr, partitioner: Arc<dyn Router>) -> FnGenResult<Self> {
         let op_kind = op.try_into()?;
         match op_kind {
             pb::physical_opr::operator::OpKind::Scan(mut scan) => {
@@ -74,7 +74,7 @@ impl SourceOperator {
                         .collect();
                     if !global_ids.is_empty() {
                         // query by global_ids
-                        source_op.set_src(global_ids, job_workers, partitioner)?;
+                        source_op.set_src(global_ids, partitioner)?;
                         debug!("Runtime source op of indexed scan of global ids {:?}", source_op);
                     } else {
                         // query by indexed_scan
@@ -95,12 +95,10 @@ impl SourceOperator {
     }
 
     /// Assign source vertex ids for each worker to call get_vertex
-    fn set_src(
-        &mut self, ids: Vec<ID>, job_workers: usize, partitioner: Arc<dyn Router>,
-    ) -> ParsePbResult<()> {
+    fn set_src(&mut self, ids: Vec<ID>, partitioner: Arc<dyn Router>) -> ParsePbResult<()> {
         let mut partitions = HashMap::new();
         for id in ids {
-            match partitioner.route(&id, job_workers) {
+            match partitioner.route(&id) {
                 Ok(wid) => {
                     partitions
                         .entry(wid)
@@ -121,6 +119,7 @@ impl SourceOperator {
 impl SourceOperator {
     pub fn gen_source(self, worker_index: usize) -> FnGenResult<Box<dyn Iterator<Item = Record> + Send>> {
         let graph = get_graph().ok_or(FnGenError::NullGraphError)?;
+
         match self.source_type {
             SourceType::Vertex => {
                 let mut v_source = Box::new(std::iter::empty()) as Box<dyn Iterator<Item = Vertex> + Send>;

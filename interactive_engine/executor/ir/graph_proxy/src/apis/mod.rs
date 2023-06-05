@@ -13,11 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+pub mod cluster_info;
 pub mod graph;
 pub mod partitioner;
 pub mod read_graph;
 pub mod write_graph;
 
+pub use cluster_info::*;
 pub use graph::element::{
     Details, DynDetails, Edge, Element, GraphElement, GraphPath, PropKey, PropertyValue, Vertex,
 };
