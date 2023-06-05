@@ -13,8 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use super::GraphElement;
 use crate::apis::Edge;
+use crate::apis::GraphElement;
 use crate::apis::Vertex;
 use crate::apis::ID;
 use crate::GraphProxyResult;

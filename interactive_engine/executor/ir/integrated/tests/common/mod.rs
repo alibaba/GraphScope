@@ -246,4 +246,24 @@ pub mod test {
             Ok((*data as usize % self.num_workers) as u64)
         }
     }
+
+    pub struct TestCluster {}
+
+    impl ClusterInfo for TestCluster {
+        fn get_server_num(&self) -> GraphProxyResult<u32> {
+            Ok(1)
+        }
+
+        fn get_server_index(&self) -> GraphProxyResult<u32> {
+            Ok(0)
+        }
+
+        fn get_local_worker_num(&self) -> GraphProxyResult<u32> {
+            Ok(1)
+        }
+
+        fn get_worker_index(&self) -> GraphProxyResult<u32> {
+            Ok(0)
+        }
+    }
 }

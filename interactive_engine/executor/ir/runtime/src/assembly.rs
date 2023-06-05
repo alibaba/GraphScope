@@ -154,8 +154,8 @@ impl FnGenerator {
 }
 
 impl IRJobAssembly {
-    pub fn new<D: Router>(router: D) -> Self {
-        IRJobAssembly { udf_gen: FnGenerator::new(Arc::new(router)) }
+    pub fn new<D: Router>(router: Arc<D>) -> Self {
+        IRJobAssembly { udf_gen: FnGenerator::new(router) }
     }
 
     pub fn with<P: PartitionInfo, C: ClusterInfo>(p: Arc<P>, c: Arc<C>) -> Self {

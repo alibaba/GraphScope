@@ -32,7 +32,7 @@ pub trait Router: Send + Sync + 'static {
     fn route(&self, data: &ID) -> GraphProxyResult<WorkerId>;
 }
 
-/// A `DefaultRouter` is a simple implementation of `Router` that can be used in most distributed cases.
+/// A `DefaultRouter` is a default implementation of `Router` that can be used in most distributed cases.
 /// For example, suppose our computer server contains 10 servers, each further forking 10 workers for processing queries.
 /// In addition, the graph is partitioned into these 10 servers by the following strategy:
 /// vertex of give ID is placed in the server with id i (0 to 9) i given ID % 10 == i, the vertex's adjacent edges are also placed with the vertex.

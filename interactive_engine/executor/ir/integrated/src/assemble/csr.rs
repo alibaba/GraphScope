@@ -16,7 +16,7 @@
 use std::sync::Arc;
 
 use graph_proxy::{apis::PegasusClusterInfo, create_csr_store, SimplePartition};
-use runtime::IRJobAssembly;
+use runtime::{initialize_job_assembly, IRJobAssembly};
 
 use crate::InitializeJobAssembly;
 
@@ -32,8 +32,9 @@ impl QueryCsrGraph {
 
 impl InitializeJobAssembly for QueryCsrGraph {
     fn initialize_job_assembly(&self) -> IRJobAssembly {
-        create_csr_store();
-        let partitioner = Arc::new(SimplePartition { num_servers: self.num_servers });
-        IRJobAssembly::with(partitioner.clone(), Arc::new(PegasusClusterInfo::default()))
+        let cluster_info = Arc::new(PegasusClusterInfo::default());
+        let csr_store = create_csr_store(cluster_info.clone());
+        let partition_info = Arc::new(SimplePartition { num_servers: self.num_servers });
+        initialize_job_assembly(csr_store, partition_info, cluster_info)
     }
 }

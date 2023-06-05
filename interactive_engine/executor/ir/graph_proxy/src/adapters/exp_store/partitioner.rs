@@ -27,6 +27,6 @@ impl PartitionInfo for SimplePartition {
     }
 
     fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId> {
-        Ok(partition_id)
+        Ok(partition_id as ServerId)
     }
 }

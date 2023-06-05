@@ -21,7 +21,7 @@ mod common;
 mod test {
     use std::sync::Arc;
 
-    use graph_proxy::apis::GraphElement;
+    use graph_proxy::apis::{register_graph, GraphElement};
     use graph_proxy::create_exp_store;
     use graph_store::common::DefaultId;
     use graph_store::ldbc::LDBCVertexParser;
@@ -34,7 +34,8 @@ mod test {
 
     // g.V()
     fn scan_gen(scan_opr_pb: pb::Scan) -> Box<dyn Iterator<Item = Record> + Send> {
-        create_exp_store();
+        let graph = create_exp_store(Arc::new(TestCluster {}));
+        register_graph(graph);
         let source = SourceOperator::new(scan_opr_pb.into(), Arc::new(TestRouter::default())).unwrap();
         source.gen_source(0).unwrap()
     }

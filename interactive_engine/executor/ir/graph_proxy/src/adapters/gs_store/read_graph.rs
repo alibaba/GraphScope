@@ -54,7 +54,7 @@ where
     store: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
     partition_manager: Arc<dyn GraphPartitionManager>,
     server_partitions: Vec<PartitionId>,
-    runtime_info: Arc<dyn ClusterInfo>,
+    cluster_info: Arc<dyn ClusterInfo>,
     row_filter_pushdown: bool,
     column_filter_pushdown: bool,
 }
@@ -63,7 +63,7 @@ where
 pub fn create_gs_store<V, VI, E, EI>(
     store: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
     partition_manager: Arc<dyn GraphPartitionManager>, server_partitions: Vec<PartitionId>,
-    runtime_info: Arc<dyn ClusterInfo>, row_filter_push_down: bool, column_filter_push_down: bool,
+    cluster_info: Arc<dyn ClusterInfo>, row_filter_push_down: bool, column_filter_push_down: bool,
 ) -> Arc<GraphScopeStore<V, VI, E, EI>>
 where
     V: StoreVertex + 'static,
@@ -75,7 +75,7 @@ where
         store,
         partition_manager,
         server_partitions,
-        runtime_info,
+        cluster_info,
         row_filter_pushdown: row_filter_push_down,
         column_filter_pushdown: column_filter_push_down,
     };
@@ -92,7 +92,7 @@ where
     fn scan_vertex(
         &self, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
-        let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.runtime_info)?;
+        let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
             let si = params
@@ -188,7 +188,7 @@ where
     }
 
     fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
-        let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.runtime_info)?;
+        let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
             let si = params
