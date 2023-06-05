@@ -136,15 +136,9 @@ html_static_path = [
 html_logo = "images/logo-h.png"
 
 html_js_files = [
-    "js/readthedocs.js",
-    "js/readthedocs-doc-embed.js",
 ]
 
 html_css_files = [
-    # "css/brands.min.css",    # font-awesome
-    # "css/regular.min.css",    # font-awesome
-    # "css/solid.min.css",    # font-awesome
-    # "css/fontawesome.min.css",    # font-awesome
     "css/custom.css",
     "css/panels.css",
     "css/rst-versions.css",
