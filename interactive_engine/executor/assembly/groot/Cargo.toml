@@ -20,3 +20,8 @@ tokio = { version = "1.24", features = ["macros", "sync"] }
 
 [features]
 column_filter_push_down = ["runtime_integration/column_filter_push_down"]
+
+[profile.dev]
+
+# TODO(siyuan): re-enable debug assertions by addressing the reports for misaligned pointer dereferences https://github.com/rust-lang/rust/pull/98112/
+debug-assertions = false
