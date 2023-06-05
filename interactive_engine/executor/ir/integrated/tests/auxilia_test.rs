@@ -42,7 +42,7 @@ mod test {
     fn source_gen(alias: Option<KeyId>) -> Box<dyn Iterator<Item = Record> + Send> {
         create_exp_store();
         let scan_opr_pb = pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None };
-        let source = SourceOperator::new(scan_opr_pb.into(), 1, Arc::new(TestRouter {})).unwrap();
+        let source = SourceOperator::new(scan_opr_pb.into(), Arc::new(TestRouter::default())).unwrap();
         source.gen_source(0).unwrap()
     }
 

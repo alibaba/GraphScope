@@ -43,15 +43,12 @@ mod test {
 
     // g.V()
     fn source_gen(alias: Option<KeyId>) -> Box<dyn Iterator<Item = Record> + Send> {
-        create_exp_store();
-        let source_opr_pb = pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None };
-        let source = SourceOperator::new(source_opr_pb.into(), 1, Arc::new(TestRouter {})).unwrap();
-        source.gen_source(0).unwrap()
+        source_gen_with_scan_opr(pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None })
     }
 
     fn source_gen_with_scan_opr(scan_opr_pb: pb::Scan) -> Box<dyn Iterator<Item = Record> + Send> {
         create_exp_store();
-        let source = SourceOperator::new(scan_opr_pb.into(), 1, Arc::new(TestRouter {})).unwrap();
+        let source = SourceOperator::new(scan_opr_pb.into(), Arc::new(TestRouter::default())).unwrap();
         source.gen_source(0).unwrap()
     }
 

@@ -23,7 +23,7 @@ pub mod test {
     use std::convert::{TryFrom, TryInto};
     use std::sync::{Arc, Once};
 
-    use graph_proxy::apis::{DynDetails, Edge, Vertex, ID};
+    use graph_proxy::apis::{ClusterInfo, DynDetails, Edge, Vertex, ID};
     use graph_proxy::GraphProxyResult;
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
@@ -231,11 +231,19 @@ pub mod test {
         })
     }
 
-    pub struct TestRouter {}
+    pub struct TestRouter {
+        num_workers: usize,
+    }
+
+    impl Default for TestRouter {
+        fn default() -> Self {
+            TestRouter { num_workers: 1 }
+        }
+    }
 
     impl Router for TestRouter {
-        fn route(&self, data: &i64, job_workers: usize) -> GraphProxyResult<u64> {
-            Ok(((*data as usize) % job_workers) as u64)
+        fn route(&self, data: &i64) -> GraphProxyResult<u64> {
+            Ok((*data as usize % self.num_workers) as u64)
         }
     }
 }
