@@ -76,6 +76,7 @@ header .wording h2 {
   margin: 0 3.5%;
   display: inline-block;
   color: #666;
+  fill: #666;
   min-width: 100px;
   font-size: 18px;
 }
@@ -83,15 +84,18 @@ header .wording h2 {
   display: block;
   margin: 10px auto;
   font-size: 30px;
+  fill: #848484;
   color: #848484;
 }
 #intro-brief .social-icons a:hover,
 #intro-brief .social-icons afocus {
   color: #1F76F0;
+  fill: #1F76F0;
   text-decoration: none;
 }
 #intro-brief .social-icons a:hover i,
 #intro-brief .social-icons afocus i {
+  fill: #1F76F0;
   color: #1F76F0;
 }
 #intro-termynal {
@@ -163,6 +167,7 @@ header .wording h2 {
   font-weight: 300;
 }
 #intro-award .award .desc i {
+  fill: #EFB42A;
   color: #EFB42A;
 }
 @media (max-width: 880px) {
