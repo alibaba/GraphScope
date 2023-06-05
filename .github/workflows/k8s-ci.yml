@@ -225,7 +225,8 @@ jobs:
   build-analytical-java:
     runs-on: [self-hosted, manylinux2014]
     needs: [changes]
-    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    #if: ${{ github.repository == 'alibaba/GraphScope' }}
+    if: false
     steps:
     - uses: actions/checkout@v3
 
