@@ -1,0 +1,1678 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Builtin algorithms" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="reference/networkx/builtin.html" />
+<meta property="og:site_name" content="GraphScope" />
+<meta property="og:image" content="/_images/social_previews/summary_reference_networkx_builtin_15a64949.png" />
+<meta property="og:image:alt" content="" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Functions" href="functions.html" /><link rel="prev" title="Graph Transformation" href="transformation.html" />
+
+    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
+        <title>Builtin algorithms - GraphScope documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/brands.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/regular.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/solid.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/fontawesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/rst-versions.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/theme-toggle.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<!-- Baidu analytics -->
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+<!-- MathJax rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script
+  type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+
+</head>
+  <body>
+    
+  <script>
+    document.body.dataset.theme = "light";
+  </script>
+
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">GraphScope  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/logo-h.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/intro.html">Introducing GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/graph_analytics_workloads.html">Graph Analytics Workloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/graph_interactive_workloads.html">Graph Interactive Workloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/graph_learning_workloads.html">Graph Learning Workloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/design_of_graphscope.html">Design of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/positioning.html">Positioning of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Installation &amp; Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment/install_on_local.html">Install GraphScope on Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on K8s cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment/deploy_graphscope_on_existing_vineyard_cluster.html">Use an existing vineyard cluster with multiple GraphScope sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment/deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Graph Analytical Engine</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/deployment.html">Deployment for GAE</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/overview_and_architecture.html">Overview and Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/key_concepts.html">Key Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/vertex_centric_models.html">Vertex-Centric Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/programming_model_pie.html">Programming Model: PIE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/ingress.html">Ingress: Incrementalize Graph Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/flash.html">Programming Model: FLASH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/networkx_compatibility.html">NetworkX Compatibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/builtin_algorithms.html">Built-in Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/customized_algorithms.html">Customized Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/performance_tuning.html">Performance Tuning</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../analytical_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_run_builtin_algo.html">Tutorial: Running Builtin Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_networkx_operations.html">Tutorial: Graph Operations with NetowrkX APIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_networkx_algorithms.html">Tutorial: Graph Algorithms with NetowrkX APIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_dev_algo_cpp_pie.html">Tutorial: Develop your Algorithm in C++ with PIE Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop Your Algorithms in C++ with FLASH Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_dev_algo_python.html">Tutorial: Develop algorithms in Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_dev_algo_java.html">Tutorial: Develop your Algorithm in Java with PIE Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_run_giraph_apps.html">Tutorial: Run Giraph Applications on GraphScope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_run_graphx_apps.html">Tutorial: Run GraphX Applications on GraphScope</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/dev_and_test.html">Dev and Test</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Graph Interactive Engine</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../interactive_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../interactive_engine/tutorial_ldbc_gremlin.html">Tutorial: LDBC Gremlin</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/design_of_gie.html">Design of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine/faq.html">Frequently Asked Questions (FAQs) for GIE Gremlin Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../learning_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../learning_engine/design_of_gle.html">Design of GLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../learning_engine/graph_sampling.html">Graph Sampling</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../learning_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../learning_engine/tutorial_node_classification_k8s.html">Tutorial: Training a Node Classification Model on K8s Cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../learning_engine/dev_and_test.html">Dev and Test</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Storage Engine</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../storage_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../storage_engine/grin.html">GRIN: Graph Retrieval INterface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../storage_engine/groot.html">Groot: Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../storage_engine/vineyard.html">In-memory immutable graphs on Vineyard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../storage_engine/graphar.html">GraphAr: Standard Graph Data File Format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../storage_engine/gart.html">GART: Bridging the Gap between Relational OLTP and Graph Workloads</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">troubleshooting &amp; utilities</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/how_to_find_logs.html">How to Find logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/monitoring.html">Monitoring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/error_codes.html">Error Codes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development/dev_guide.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/code_style_guide.html">Code Style Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/how_to_test.html">How to Test</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/how_to_contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/how_to_debugging.html">Debugging on local deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/how_to_debugging.html#debugging-on-kubernetes-deployment">Debugging on Kubernetes deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/how_to_debugging.html#commands-for-debugging">Commands for Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/how_to_install_in_offline_mode.html">Install GraphScope in offline mode</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../python_index.html">Python API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.session.html">graphscope.session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.set_option.html">graphscope.set_option</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.get_option.html">graphscope.get_option</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.g.html">graphscope.g</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.gremlin.html">graphscope.gremlin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.graphlearn.html">graphscope.graphlearn</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../graph.html">Graph</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../selector.html">Selector</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.signature.html">graphscope.framework.operation.Operation.signature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.eval.html">graphscope.framework.operation.Operation.eval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.evaluated.html">graphscope.framework.operation.Operation.evaluated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.create_app.html">graphscope.framework.dag_utils.create_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.bind_app.html">graphscope.framework.dag_utils.bind_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.run_app.html">graphscope.framework.dag_utils.run_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.create_graph.html">graphscope.framework.dag_utils.create_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.create_loader.html">graphscope.framework.dag_utils.create_loader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.add_labels_to_graph.html">graphscope.framework.dag_utils.add_labels_to_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.dynamic_to_arrow.html">graphscope.framework.dag_utils.dynamic_to_arrow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.arrow_to_dynamic.html">graphscope.framework.dag_utils.arrow_to_dynamic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.modify_edges.html">graphscope.framework.dag_utils.modify_edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.modify_vertices.html">graphscope.framework.dag_utils.modify_vertices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.report_graph.html">graphscope.framework.dag_utils.report_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.project_arrow_property_graph.html">graphscope.framework.dag_utils.project_arrow_property_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.project_to_simple.html">graphscope.framework.dag_utils.project_to_simple</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.copy_graph.html">graphscope.framework.dag_utils.copy_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.to_directed.html">graphscope.framework.dag_utils.to_directed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.to_undirected.html">graphscope.framework.dag_utils.to_undirected</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.create_graph_view.html">graphscope.framework.dag_utils.create_graph_view</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.clear_graph.html">graphscope.framework.dag_utils.clear_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.clear_edges.html">graphscope.framework.dag_utils.clear_edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.create_subgraph.html">graphscope.framework.dag_utils.create_subgraph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.create_unload_op.html">graphscope.framework.dag_utils.create_unload_op</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.unload_app.html">graphscope.framework.dag_utils.unload_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.unload_graph.html">graphscope.framework.dag_utils.unload_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.unload_context.html">graphscope.framework.dag_utils.unload_context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.context_to_numpy.html">graphscope.framework.dag_utils.context_to_numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.context_to_dataframe.html">graphscope.framework.dag_utils.context_to_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.to_vineyard_tensor.html">graphscope.framework.dag_utils.to_vineyard_tensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.to_vineyard_dataframe.html">graphscope.framework.dag_utils.to_vineyard_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.to_data_sink.html">graphscope.framework.dag_utils.to_data_sink</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.output.html">graphscope.framework.dag_utils.output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.get_context_data.html">graphscope.framework.dag_utils.get_context_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.add_column.html">graphscope.framework.dag_utils.add_column</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.graph_to_numpy.html">graphscope.framework.dag_utils.graph_to_numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.graph_to_dataframe.html">graphscope.framework.dag_utils.graph_to_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.gremlin_query.html">graphscope.framework.dag_utils.gremlin_query</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.declare.html">graphscope.declare</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../interactive.html">Interactive Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learning.html">Graph Learning</a></li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="index.html">NetworkX-style API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="graphs.html">Graph types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="transformation.html">Graph Transformation</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Builtin algorithms</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.info.html">graphscope.nx.classes.function.info</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.create_empty_copy.html">graphscope.nx.classes.function.create_empty_copy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.is_directed.html">graphscope.nx.classes.function.is_directed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.to_directed.html">graphscope.nx.classes.function.to_directed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.to_undirected.html">graphscope.nx.classes.function.to_undirected</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.is_empty.html">graphscope.nx.classes.function.is_empty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.add_star.html">graphscope.nx.classes.function.add_star</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.add_path.html">graphscope.nx.classes.function.add_path</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.add_cycle.html">graphscope.nx.classes.function.add_cycle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.subgraph.html">graphscope.nx.classes.function.subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.induced_subgraph.html">graphscope.nx.classes.function.induced_subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.edge_subgraph.html">graphscope.nx.classes.function.edge_subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.nodes.html">graphscope.nx.classes.function.nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.number_of_nodes.html">graphscope.nx.classes.function.number_of_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.neighbors.html">graphscope.nx.classes.function.neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.all_neighbors.html">graphscope.nx.classes.function.all_neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.non_neighbors.html">graphscope.nx.classes.function.non_neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.common_neighbors.html">graphscope.nx.classes.function.common_neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.edges.html">graphscope.nx.classes.function.edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.number_of_edges.html">graphscope.nx.classes.function.number_of_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.non_edges.html">graphscope.nx.classes.function.non_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.selfloop_edges.html">graphscope.nx.classes.function.selfloop_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.number_of_selfloops.html">graphscope.nx.classes.function.number_of_selfloops</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.nodes_with_selfloops.html">graphscope.nx.classes.function.nodes_with_selfloops</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.is_weighted.html">graphscope.nx.classes.function.is_weighted</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.is_negatively_weighted.html">graphscope.nx.classes.function.is_negatively_weighted</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.freeze.html">graphscope.nx.classes.function.freeze</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.barbell_graph.html">graphscope.nx.generators.classic.barbell_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.binomial_tree.html">graphscope.nx.generators.classic.binomial_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.complete_graph.html">graphscope.nx.generators.classic.complete_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.complete_multipartite_graph.html">graphscope.nx.generators.classic.complete_multipartite_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.circular_ladder_graph.html">graphscope.nx.generators.classic.circular_ladder_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.circulant_graph.html">graphscope.nx.generators.classic.circulant_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.cycle_graph.html">graphscope.nx.generators.classic.cycle_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.dorogovtsev_goltsev_mendes_graph.html">graphscope.nx.generators.classic.dorogovtsev_goltsev_mendes_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.empty_graph.html">graphscope.nx.generators.classic.empty_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.path_graph.html">graphscope.nx.generators.classic.path_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.star_graph.html">graphscope.nx.generators.classic.star_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.full_rary_tree.html">graphscope.nx.generators.classic.full_rary_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.ladder_graph.html">graphscope.nx.generators.classic.ladder_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.lollipop_graph.html">graphscope.nx.generators.classic.lollipop_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.null_graph.html">graphscope.nx.generators.classic.null_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.trivial_graph.html">graphscope.nx.generators.classic.trivial_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.turan_graph.html">graphscope.nx.generators.classic.turan_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.wheel_graph.html">graphscope.nx.generators.classic.wheel_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.expanders.margulis_gabber_galil_graph.html">graphscope.nx.generators.expanders.margulis_gabber_galil_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.expanders.chordal_cycle_graph.html">graphscope.nx.generators.expanders.chordal_cycle_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.expanders.paley_graph.html">graphscope.nx.generators.expanders.paley_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.make_small_graph.html">graphscope.nx.generators.small.make_small_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.LCF_graph.html">graphscope.nx.generators.small.LCF_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.bull_graph.html">graphscope.nx.generators.small.bull_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.chvatal_graph.html">graphscope.nx.generators.small.chvatal_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.cubical_graph.html">graphscope.nx.generators.small.cubical_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.desargues_graph.html">graphscope.nx.generators.small.desargues_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.diamond_graph.html">graphscope.nx.generators.small.diamond_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.dodecahedral_graph.html">graphscope.nx.generators.small.dodecahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.frucht_graph.html">graphscope.nx.generators.small.frucht_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.heawood_graph.html">graphscope.nx.generators.small.heawood_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.house_graph.html">graphscope.nx.generators.small.house_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.house_x_graph.html">graphscope.nx.generators.small.house_x_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.icosahedral_graph.html">graphscope.nx.generators.small.icosahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.krackhardt_kite_graph.html">graphscope.nx.generators.small.krackhardt_kite_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.moebius_kantor_graph.html">graphscope.nx.generators.small.moebius_kantor_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.octahedral_graph.html">graphscope.nx.generators.small.octahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.pappus_graph.html">graphscope.nx.generators.small.pappus_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.petersen_graph.html">graphscope.nx.generators.small.petersen_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.sedgewick_maze_graph.html">graphscope.nx.generators.small.sedgewick_maze_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.tetrahedral_graph.html">graphscope.nx.generators.small.tetrahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.truncated_cube_graph.html">graphscope.nx.generators.small.truncated_cube_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.truncated_tetrahedron_graph.html">graphscope.nx.generators.small.truncated_tetrahedron_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.small.tutte_graph.html">graphscope.nx.generators.small.tutte_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.duplication.duplication_divergence_graph.html">graphscope.nx.generators.duplication.duplication_divergence_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.duplication.partial_duplication_graph.html">graphscope.nx.generators.duplication.partial_duplication_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.degree_seq.configuration_model.html">graphscope.nx.generators.degree_seq.configuration_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.degree_seq.directed_configuration_model.html">graphscope.nx.generators.degree_seq.directed_configuration_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.degree_seq.expected_degree_graph.html">graphscope.nx.generators.degree_seq.expected_degree_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.degree_seq.havel_hakimi_graph.html">graphscope.nx.generators.degree_seq.havel_hakimi_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph.html">graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.degree_seq.degree_sequence_tree.html">graphscope.nx.generators.degree_seq.degree_sequence_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.degree_seq.random_degree_sequence_graph.html">graphscope.nx.generators.degree_seq.random_degree_sequence_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.directed.gn_graph.html">graphscope.nx.generators.directed.gn_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.directed.gnr_graph.html">graphscope.nx.generators.directed.gnr_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.directed.gnc_graph.html">graphscope.nx.generators.directed.gnc_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.directed.random_k_out_graph.html">graphscope.nx.generators.directed.random_k_out_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.directed.scale_free_graph.html">graphscope.nx.generators.directed.scale_free_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.geometric.random_geometric_graph.html">graphscope.nx.generators.geometric.random_geometric_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.geometric.soft_random_geometric_graph.html">graphscope.nx.generators.geometric.soft_random_geometric_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.geometric.geographical_threshold_graph.html">graphscope.nx.generators.geometric.geographical_threshold_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.geometric.waxman_graph.html">graphscope.nx.generators.geometric.waxman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.geometric.thresholded_random_geometric_graph.html">graphscope.nx.generators.geometric.thresholded_random_geometric_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.ego.ego_graph.html">graphscope.nx.generators.ego.ego_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/networkx.generators.stochastic.stochastic_graph.html">networkx.generators.stochastic.stochastic_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/networkx.generators.internet_as_graphs.random_internet_as_graph.html">networkx.generators.internet_as_graphs.random_internet_as_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.intersection.uniform_random_intersection_graph.html">graphscope.nx.generators.intersection.uniform_random_intersection_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.intersection.k_random_intersection_graph.html">graphscope.nx.generators.intersection.k_random_intersection_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.intersection.general_random_intersection_graph.html">graphscope.nx.generators.intersection.general_random_intersection_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.social.karate_club_graph.html">graphscope.nx.generators.social.karate_club_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.social.davis_southern_women_graph.html">graphscope.nx.generators.social.davis_southern_women_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.social.florentine_families_graph.html">graphscope.nx.generators.social.florentine_families_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.social.les_miserables_graph.html">graphscope.nx.generators.social.les_miserables_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.community.caveman_graph.html">graphscope.nx.generators.community.caveman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.community.connected_caveman_graph.html">graphscope.nx.generators.community.connected_caveman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.community.gaussian_random_partition_graph.html">graphscope.nx.generators.community.gaussian_random_partition_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.community.LFR_benchmark_graph.html">graphscope.nx.generators.community.LFR_benchmark_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.community.planted_partition_graph.html">graphscope.nx.generators.community.planted_partition_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.community.random_partition_graph.html">graphscope.nx.generators.community.random_partition_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.community.relaxed_caveman_graph.html">graphscope.nx.generators.community.relaxed_caveman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.community.ring_of_cliques.html">graphscope.nx.generators.community.ring_of_cliques</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.community.stochastic_block_model.html">graphscope.nx.generators.community.stochastic_block_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.community.windmill_graph.html">graphscope.nx.generators.community.windmill_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.spectral_graph_forge.spectral_graph_forge.html">graphscope.nx.generators.spectral_graph_forge.spectral_graph_forge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.trees.random_tree.html">graphscope.nx.generators.trees.random_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.trees.prefix_tree.html">graphscope.nx.generators.trees.prefix_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.nonisomorphic_trees.nonisomorphic_trees.html">graphscope.nx.generators.nonisomorphic_trees.nonisomorphic_trees</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.nonisomorphic_trees.number_of_nonisomorphic_trees.html">graphscope.nx.generators.nonisomorphic_trees.number_of_nonisomorphic_trees</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.triads.triad_graph.html">graphscope.nx.generators.triads.triad_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree.html">graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.joint_degree_seq.joint_degree_graph.html">graphscope.nx.generators.joint_degree_seq.joint_degree_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree.html">graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph.html">graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.mycielski.mycielskian.html">graphscope.nx.generators.mycielski.mycielskian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.mycielski.mycielski_graph.html">graphscope.nx.generators.mycielski.mycielski_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.harary_graph.hnm_harary_graph.html">graphscope.nx.generators.harary_graph.hnm_harary_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.harary_graph.hkn_harary_graph.html">graphscope.nx.generators.harary_graph.hkn_harary_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.sudoku.sudoku_graph.html">graphscope.nx.generators.sudoku.sudoku_graph</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="io.html">Reading graphs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/installation.html">安装</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/getting_started.html">快速上手</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/deployment.html">部署</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/04_loading_graphs.ipynb">载入图数据</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/05_builtin_analytical_algorithms.ipynb">内置的图分析算法</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/06_writing_your_own_algorithms.ipynb">编写自定义图分析算法</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/07_interactive_query_with_gremlin.ipynb">使用查询语言 Gremlin 进行交互式查询</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/08_unsupervised_learning_with_graphsage.ipynb">使用 GraphSage 进行无监督图学习</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/09_unsupervised_learning_with_bipartite_graphsage.ipynb">基于 BipartiteGraphSage 的二部图无监督学习</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/10_supervised_learning_with_gcn.ipynb">使用 GCN 进行有监督图学习</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/11_revisit_classification_on_citation_network_on_k8s.ipynb">基于 Kubernetes 环境再探论文引用网络中的节点分类任务</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/loading_graph.html">载图</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/graph_transformation.html">图的变换操作</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/analytics_engine.html">图分析引擎</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/interactive_engine.html">图交互式分析引擎</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/learning_engine.html">图学习引擎</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/frequently_asked_questions.html">常见问题</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/developer_guide.html">开发者指南</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../zh/index.html#id1">索引</a></li>
+</ul>
+
+</div>
+
+<div class="rst-versions rst-versions-ver" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Read the Docs</span>
+    v: v0.21.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+      
+        
+
+          
+            
+              <dd><a href="../../../latest/index.html">latest</a></dd>
+            
+          
+        
+      
+        
+          
+            
+              <dd><a href="../../../index.html">stable</a></dd>
+            
+          
+
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.21.0/index.html">v0.21.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.20.0/index.html">v0.20.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.19.0/index.html">v0.19.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.18.0/index.html">v0.18.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.17.0/index.html">v0.17.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.16.0/index.html">v0.16.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.15.0/index.html">v0.15.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.14.0/index.html">v0.14.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.13.0/index.html">v0.13.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.12.0/index.html">v0.12.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.11.0/index.html">v0.11.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.10.1/index.html">v0.10.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.10.0/index.html">v0.10.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.9.1/index.html">v0.9.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.9.0/index.html">v0.9.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.8.0/index.html">v0.8.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.7.0/index.html">v0.7.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.6.1/index.html">v0.6.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.6.0/index.html">v0.6.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.5.0/index.html">v0.5.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.4.1/index.html">v0.4.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.4.0/index.html">v0.4.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.3.0/index.html">v0.3.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.2.1/index.html">v0.2.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.2.0/index.html">v0.2.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.1.3/index.html">v0.1.3</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.1.2/index.html">v0.1.2</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.1.1/index.html">v0.1.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.1.0/index.html">v0.1.0</a></dd>
+            
+          
+        
+      
+      
+    </dl>
+  </div>
+</div>
+
+<div class="rst-versions rst-versions-lang shift-up" role="note" aria-label="versions">
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Languages</dt>
+      <dd><a href="../../index.html">en</a></dd>
+      <dd><a href="../../zh/index.html">zh_CN</a></dd>
+    </dl>
+
+    <hr />
+    <small>
+      <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+    </small>
+  </div>
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/reference/networkx/builtin.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <div class="section" id="builtin-algorithms">
+<span id="builtin"></span><h1>Builtin algorithms<a class="headerlink" href="#builtin-algorithms" title="Permalink to this heading">#</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.nx.builtin.hits">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">hits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.hits" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns HITS hubs and authorities values for nodes.</p>
+<p>The HITS algorithm computes two numbers for a node.
+Authorities estimates the node value based on the incoming links.
+Hubs estimates the node value based on outgoing links.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph</p></li>
+<li><p><strong>max_iter</strong> (<em>integer</em><em>, </em><em>optional</em>) – Maximum number of iterations in power method.</p></li>
+<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em>) – Error tolerance used to check convergence in power method iteration.</p></li>
+<li><p><strong>nstart</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Starting value of each node for power method iteration.</p></li>
+<li><p><strong>normalized</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – Normalize results by the sum of all of the values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>(hubs,authorities)</strong> – Two dictionaries keyed by node containing the hub and authority
+values.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>two-tuple of dictionaries</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>PowerIterationFailedConvergence</strong> – If the algorithm fails to converge to the specified tolerance
+    within the specified number of iterations of the power iteration
+    method.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">hits</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<p>The eigenvector calculation is done by the power iteration method
+and has no guarantee of convergence.  The iteration will stop
+after max_iter iterations or an error tolerance of
+number_of_nodes(G)*tol has been reached.</p>
+<p>The HITS algorithm was designed for directed graphs but this
+algorithm does not check if the input graph is directed and will
+execute on undirected graphs.</p>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id1"><span class="brackets">1</span></dt>
+<dd><p>A. Langville and C. Meyer,
+“A survey of eigenvector methods of web information retrieval.”
+<a class="reference external" href="http://citeseer.ist.psu.edu/713792.html">http://citeseer.ist.psu.edu/713792.html</a></p>
+</dd>
+<dt class="label" id="id2"><span class="brackets">2</span></dt>
+<dd><p>Jon Kleinberg,
+Authoritative sources in a hyperlinked environment
+Journal of the ACM 46 (5): 604-32, 1999.
+doi:10.1145/324133.324140.
+http://www.cs.cornell.edu/home/kleinber/auth.pdf.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.nx.builtin.degree_centrality">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">degree_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.degree_centrality" title="Permalink to this definition">#</a></dt>
+<dd><p>Compute the degree centrality for nodes.</p>
+<p>The degree centrality for a node v is the fraction of nodes it
+is connected to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with degree centrality as the value.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../../analytical_engine/builtin_algorithms.html#betweenness_centrality" title="betweenness_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">betweenness_centrality</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">load_centrality</span></code>, <a class="reference internal" href="../../analytical_engine/builtin_algorithms.html#eigenvector_centrality" title="eigenvector_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality</span></code></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>The degree centrality values are normalized by dividing by the maximum
+possible degree in a simple graph n-1 where n is the number of nodes in G.</p>
+<p>For multigraphs or graphs with self loops the maximum degree might
+be higher than n-1 and values of degree centrality greater than 1
+are possible.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.nx.builtin.in_degree_centrality">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">in_degree_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.in_degree_centrality" title="Permalink to this definition">#</a></dt>
+<dd><p>Compute the in-degree centrality for nodes.</p>
+<p>The in-degree centrality for a node v is the fraction of nodes its
+incoming edges are connected to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with in-degree centrality as values.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NetworkXNotImplemented</strong> – If G is undirected.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../../analytical_engine/builtin_algorithms.html#degree_centrality" title="degree_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">degree_centrality</span></code></a>, <a class="reference internal" href="#graphscope.nx.builtin.out_degree_centrality" title="graphscope.nx.builtin.out_degree_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">out_degree_centrality</span></code></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>The degree centrality values are normalized by dividing by the maximum
+possible degree in a simple graph n-1 where n is the number of nodes in G.</p>
+<p>For multigraphs or graphs with self loops the maximum degree might
+be higher than n-1 and values of degree centrality greater than 1
+are possible.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.nx.builtin.out_degree_centrality">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">out_degree_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.out_degree_centrality" title="Permalink to this definition">#</a></dt>
+<dd><p>Compute the out-degree centrality for nodes.</p>
+<p>The out-degree centrality for a node v is the fraction of nodes its
+outgoing edges are connected to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with out-degree centrality as values.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NetworkXNotImplemented</strong> – If G is undirected.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../../analytical_engine/builtin_algorithms.html#degree_centrality" title="degree_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">degree_centrality</span></code></a>, <a class="reference internal" href="#graphscope.nx.builtin.in_degree_centrality" title="graphscope.nx.builtin.in_degree_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">in_degree_centrality</span></code></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>The degree centrality values are normalized by dividing by the maximum
+possible degree in a simple graph n-1 where n is the number of nodes in G.</p>
+<p>For multigraphs or graphs with self loops the maximum degree might
+be higher than n-1 and values of degree centrality greater than 1
+are possible.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.nx.builtin.eigenvector_centrality">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">eigenvector_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.eigenvector_centrality" title="Permalink to this definition">#</a></dt>
+<dd><p>Compute the eigenvector centrality for the graph <cite>G</cite>.</p>
+<p>Eigenvector centrality computes the centrality for a node based on the
+centrality of its neighbors. The eigenvector centrality for node $i$ is
+the $i$-th element of the vector $x$ defined by the equation</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[Ax = \lambda x\]</div>
+</div>
+<p>where $A$ is the adjacency matrix of the graph <cite>G</cite> with eigenvalue
+$lambda$. By virtue of the Perron–Frobenius theorem, there is a unique
+solution $x$, all of whose entries are positive, if $lambda$ is the
+largest eigenvalue of the adjacency matrix $A$ (<a href="#id23"><span class="problematic" id="id3">[2]_</span></a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p></li>
+<li><p><strong>max_iter</strong> (<em>integer</em><em>, </em><em>optional</em><em> (</em><em>default=100</em><em>)</em>) – Maximum number of iterations in power method.</p></li>
+<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default=1.0e-6</em><em>)</em>) – Error tolerance used to check convergence in power method iteration.</p></li>
+<li><p><strong>nstart</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – Starting value of eigenvector iteration for each node.</p></li>
+<li><p><strong>weight</strong> (<em>None</em><em> or </em><em>string</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – If None, all edge weights are considered equal.
+Otherwise holds the name of the edge attribute used as weight.
+In this measure the weight is interpreted as the connection strength.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with eigenvector centrality as the value.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">centrality</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">eigenvector_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">centrality</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+<span class="go">[(0, &#39;0.37&#39;), (1, &#39;0.60&#39;), (2, &#39;0.60&#39;), (3, &#39;0.37&#39;)]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>NetworkXPointlessConcept</strong> – If the graph <cite>G</cite> is the null graph.</p></li>
+<li><p><strong>NetworkXError</strong> – If each value in <cite>nstart</cite> is zero.</p></li>
+<li><p><strong>PowerIterationFailedConvergence</strong> – If the algorithm fails to converge to the specified tolerance
+    within the specified number of iterations of the power iteration
+    method.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality_numpy</span></code>, <a class="reference internal" href="../../analytical_engine/builtin_algorithms.html#id1" title="pagerank"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pagerank</span></code></a>, <a class="reference internal" href="../../analytical_engine/builtin_algorithms.html#hits" title="hits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hits</span></code></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>The measure was introduced by <a href="#id24"><span class="problematic" id="id4">[1]_</span></a> and is discussed in <a href="#id25"><span class="problematic" id="id5">[2]_</span></a>.</p>
+<p>The power iteration method is used to compute the eigenvector and
+convergence is <strong>not</strong> guaranteed. Our method stops after <code class="docutils literal notranslate"><span class="pre">max_iter</span></code>
+iterations or when the change in the computed vector between two
+iterations is smaller than an error tolerance of
+<code class="docutils literal notranslate"><span class="pre">G.number_of_nodes()</span> <span class="pre">*</span> <span class="pre">tol</span></code>. This implementation uses ($A + I$)
+rather than the adjacency matrix $A$ because it shifts the spectrum
+to enable discerning the correct eigenvector even for networks with
+multiple dominant eigenvalues.</p>
+<p>For directed graphs this is “left” eigenvector centrality which corresponds
+to the in-edges in the graph. For out-edges eigenvector centrality
+first reverse the graph with <code class="docutils literal notranslate"><span class="pre">G.reverse()</span></code>.</p>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id6"><span class="brackets">1</span></dt>
+<dd><p>Phillip Bonacich.
+“Power and Centrality: A Family of Measures.”
+<em>American Journal of Sociology</em> 92(5):1170–1182, 1986
+&lt;<a class="reference external" href="http://www.leonidzhukov.net/hse/2014/socialnetworks/papers/Bonacich-Centrality.pdf">http://www.leonidzhukov.net/hse/2014/socialnetworks/papers/Bonacich-Centrality.pdf</a>&gt;</p>
+</dd>
+<dt class="label" id="id7"><span class="brackets">2</span></dt>
+<dd><p>Mark E. J. Newman.
+<em>Networks: An Introduction.</em>
+Oxford University Press, USA, 2010, pp. 169.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.nx.builtin.katz_centrality">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">katz_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.katz_centrality" title="Permalink to this definition">#</a></dt>
+<dd><p>Compute the Katz centrality for the nodes of the graph G.</p>
+<p>Katz centrality computes the centrality for a node based on the centrality
+of its neighbors. It is a generalization of the eigenvector centrality. The
+Katz centrality for node $i$ is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[x_i = \alpha \sum_{j} A_{ij} x_j + \beta,\]</div>
+</div>
+<p>where $A$ is the adjacency matrix of graph G with eigenvalues $lambda$.</p>
+<p>The parameter $beta$ controls the initial centrality and</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\alpha &lt; \frac{1}{\lambda_{\max}}.\]</div>
+</div>
+<p>Katz centrality computes the relative influence of a node within a
+network by measuring the number of the immediate neighbors (first
+degree nodes) and also all other nodes in the network that connect
+to the node under consideration through these immediate neighbors.</p>
+<p>Extra weight can be provided to immediate neighbors through the
+parameter $beta$.  Connections made with distant neighbors
+are, however, penalized by an attenuation factor $alpha$ which
+should be strictly less than the inverse largest eigenvalue of the
+adjacency matrix in order for the Katz centrality to be computed
+correctly. More information is provided in <a href="#id26"><span class="problematic" id="id8">[1]_</span></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Attenuation factor</p></li>
+<li><p><strong>beta</strong> (<em>scalar</em><em> or </em><em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default=1.0</em><em>)</em>) – Weight attributed to the immediate neighborhood. If not a scalar, the
+dictionary must have an value for every node.</p></li>
+<li><p><strong>max_iter</strong> (<em>integer</em><em>, </em><em>optional</em><em> (</em><em>default=1000</em><em>)</em>) – Maximum number of iterations in power method.</p></li>
+<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default=1.0e-6</em><em>)</em>) – Error tolerance used to check convergence in power method iteration.</p></li>
+<li><p><strong>nstart</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Starting value of Katz iteration for each node.</p></li>
+<li><p><strong>normalized</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=True</em><em>)</em>) – If True normalize the resulting values.</p></li>
+<li><p><strong>weight</strong> (<em>None</em><em> or </em><em>string</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – If None, all edge weights are considered equal.
+Otherwise holds the name of the edge attribute used as weight.
+In this measure the weight is interpreted as the connection strength.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with Katz centrality as the value.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>NetworkXError</strong> – If the parameter <cite>beta</cite> is not a scalar but lacks a value for at least
+    one node</p></li>
+<li><p><strong>PowerIterationFailedConvergence</strong> – If the algorithm fails to converge to the specified tolerance
+    within the specified number of iterations of the power iteration
+    method.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">math</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">phi</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span> <span class="o">/</span> <span class="mf">2.0</span>  <span class="c1"># largest eigenvalue of adj matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">centrality</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">katz_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">phi</span> <span class="o">-</span> <span class="mf">0.01</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">centrality</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="go">0 0.37</span>
+<span class="go">1 0.60</span>
+<span class="go">2 0.60</span>
+<span class="go">3 0.37</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">katz_centrality_numpy</span></code>, <a class="reference internal" href="../../analytical_engine/builtin_algorithms.html#eigenvector_centrality" title="eigenvector_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality_numpy</span></code>, <a class="reference internal" href="../../analytical_engine/builtin_algorithms.html#id1" title="pagerank"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pagerank</span></code></a>, <a class="reference internal" href="../../analytical_engine/builtin_algorithms.html#hits" title="hits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hits</span></code></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>Katz centrality was introduced by <a href="#id27"><span class="problematic" id="id9">[2]_</span></a>.</p>
+<p>This algorithm it uses the power method to find the eigenvector
+corresponding to the largest eigenvalue of the adjacency matrix of <code class="docutils literal notranslate"><span class="pre">G</span></code>.
+The parameter <code class="docutils literal notranslate"><span class="pre">alpha</span></code> should be strictly less than the inverse of largest
+eigenvalue of the adjacency matrix for the algorithm to converge.
+You can use <code class="docutils literal notranslate"><span class="pre">max(nx.adjacency_spectrum(G))</span></code> to get $lambda_{max}$ the largest
+eigenvalue of the adjacency matrix.
+The iteration will stop after <code class="docutils literal notranslate"><span class="pre">max_iter</span></code> iterations or an error tolerance of
+<code class="docutils literal notranslate"><span class="pre">number_of_nodes(G)</span> <span class="pre">*</span> <span class="pre">tol</span></code> has been reached.</p>
+<p>When $alpha = 1/lambda_{max}$ and $beta=0$, Katz centrality is the same
+as eigenvector centrality.</p>
+<p>For directed graphs this finds “left” eigenvectors which corresponds
+to the in-edges in the graph. For out-edges Katz centrality
+first reverse the graph with <code class="docutils literal notranslate"><span class="pre">G.reverse()</span></code>.</p>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id10"><span class="brackets">1</span></dt>
+<dd><p>Mark E. J. Newman:
+Networks: An Introduction.
+Oxford University Press, USA, 2010, p. 720.</p>
+</dd>
+<dt class="label" id="id11"><span class="brackets">2</span></dt>
+<dd><p>Leo Katz:
+A New Status Index Derived from Sociometric Index.
+Psychometrika 18(1):39–43, 1953
+<a class="reference external" href="https://link.springer.com/content/pdf/10.1007/BF02289026.pdf">https://link.springer.com/content/pdf/10.1007/BF02289026.pdf</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.nx.builtin.has_path">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">has_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.has_path" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns <em>True</em> if <em>G</em> has a path from <em>source</em> to <em>target</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G</strong> (<em>NetworkX graph</em>) – </p></li>
+<li><p><strong>source</strong> (<em>node</em>) – Starting node for path</p></li>
+<li><p><strong>target</strong> (<em>node</em>) – Ending node for path</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.nx.builtin.average_shortest_path_length">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">average_shortest_path_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.average_shortest_path_length" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the average shortest path length.</p>
+<p>The average shortest path length is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[a =\sum_{s,t \in V} \frac{d(s, t)}{n(n-1)}\]</div>
+</div>
+<p>where <cite>V</cite> is the set of nodes in <cite>G</cite>,
+<cite>d(s, t)</cite> is the shortest path from <cite>s</cite> to <cite>t</cite>,
+and <cite>n</cite> is the number of nodes in <cite>G</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G</strong> (<em>NetworkX graph</em>) – </p></li>
+<li><p><strong>weight</strong> (<em>None</em><em>, </em><em>string</em><em> or </em><em>function</em><em>, </em><em>optional</em><em> (</em><em>default = None</em><em>)</em>) – If None, every edge has weight/distance/cost 1.
+If a string, use this edge attribute as the edge weight.
+Any edge attribute not present defaults to 1.
+If this is a function, the weight of an edge is the value
+returned by the function. The function must accept exactly
+three positional arguments: the two endpoints of an edge and
+the dictionary of edge attributes for that edge.
+The function must return a number.</p></li>
+<li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default = 'unweighted'</em><em> or </em><em>'djikstra'</em><em>)</em>) – The algorithm to use to compute the path lengths.
+Supported options are ‘unweighted’, ‘dijkstra’, ‘bellman-ford’,
+‘floyd-warshall’ and ‘floyd-warshall-numpy’.
+Other method values produce a ValueError.
+The default method is ‘unweighted’ if <cite>weight</cite> is None,
+otherwise the default method is ‘dijkstra’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>NetworkXPointlessConcept</strong> – If <cite>G</cite> is the null graph (that is, the graph on zero nodes).</p></li>
+<li><p><strong>NetworkXError</strong> – If <cite>G</cite> is not connected (or not weakly connected, in the case
+    of a directed graph).</p></li>
+<li><p><strong>ValueError</strong> – If <cite>method</cite> is not among the supported options.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">average_shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+<span class="go">2.0</span>
+</pre></div>
+</div>
+<p>For disconnected graphs, you can compute the average shortest path
+length for each component</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">([(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">)):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">average_shortest_path_length</span><span class="p">(</span><span class="n">C</span><span class="p">))</span>
+<span class="go">1.0</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.nx.builtin.bfs_edges">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">bfs_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.bfs_edges" title="Permalink to this definition">#</a></dt>
+<dd><p>edges in a breadth-first-search starting at source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G</strong> (<em>networkx graph</em>) – </p></li>
+<li><p><strong>source</strong> (<em>node</em>) – Specify starting node for breadth-first search; this function
+iterates over only those edges in the component reachable from
+this node.</p></li>
+<li><p><strong>depth_limit</strong> (<em>int</em><em>, </em><em>optional</em><em>(</em><em>default=len</em><em>(</em><em>G</em><em>)</em><em>)</em>) – Specify the maximum search depth</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>edges</strong> – A list of edges in the breadth-first-search.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>To get the edges in a breadth-first search:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">bfs_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="go">[(0, 1), (1, 2)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">bfs_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">depth_limit</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">[(0, 1)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.nx.builtin.k_core">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">k_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.k_core" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns the k-core of G.</p>
+<p>A k-core is a maximal subgraph that contains nodes of degree k or more.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G</strong> (<em>networkx graph</em>) – A graph or directed graph</p></li>
+<li><p><strong>k</strong> (<em>int</em><em>, </em><em>optional</em>) – The order of the core. If not specified return the main core.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>:class:`VertexDataContext`</strong> (<em>A context with each vertex assigned with a boolean:</em>)</p></li>
+<li><p><em>1 if the vertex satisfies k-core, otherwise 0.</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id12"><span class="brackets">1</span></dt>
+<dd><p>An O(m) Algorithm for Cores Decomposition of Networks
+Vladimir Batagelj and Matjaz Zaversnik,  2003.
+<a class="reference external" href="https://arxiv.org/abs/cs.DS/0310049">https://arxiv.org/abs/cs.DS/0310049</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.nx.builtin.clustering">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.clustering" title="Permalink to this definition">#</a></dt>
+<dd><p>Compute the clustering coefficient for nodes.</p>
+<p>For unweighted graphs, the clustering of a node <span class="math notranslate nohighlight">\(u\)</span>
+is the fraction of possible triangles through that node that exist,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[c_u = \frac{2 T(u)}{deg(u)(deg(u)-1)},\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(T(u)\)</span> is the number of triangles through node <span class="math notranslate nohighlight">\(u\)</span> and
+<span class="math notranslate nohighlight">\(deg(u)\)</span> is the degree of <span class="math notranslate nohighlight">\(u\)</span>.</p>
+<p>For weighted graphs, there are several ways to define clustering <a href="#id28"><span class="problematic" id="id13">[1]_</span></a>.
+the one used here is defined
+as the geometric average of the subgraph edge weights <a href="#id29"><span class="problematic" id="id14">[2]_</span></a>,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[c_u = \frac{1}{deg(u)(deg(u)-1))}
+      \sum_{vw} (\hat{w}_{uv} \hat{w}_{uw} \hat{w}_{vw})^{1/3}.\]</div>
+</div>
+<p>The edge weights <span class="math notranslate nohighlight">\(\hat{w}_{uv}\)</span> are normalized by the maximum weight
+in the network <span class="math notranslate nohighlight">\(\hat{w}_{uv} = w_{uv}/\max(w)\)</span>.</p>
+<p>The value of <span class="math notranslate nohighlight">\(c_u\)</span> is assigned to 0 if <span class="math notranslate nohighlight">\(deg(u) &lt; 2\)</span>.</p>
+<p>Additionally, this weighted definition has been generalized to support negative edge weights <a class="footnote-reference brackets" href="#id19" id="id15">3</a>.</p>
+<p>For directed graphs, the clustering is similarly defined as the fraction
+of all possible directed triangles or geometric average of the subgraph
+edge weights for unweighted and weighted directed graph respectively <a class="footnote-reference brackets" href="#id20" id="id16">4</a>.</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[c_u = \frac{2}{deg^{tot}(u)(deg^{tot}(u)-1) - 2deg^{\leftrightarrow}(u)}
+      T(u),\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(T(u)\)</span> is the number of directed triangles through node
+<span class="math notranslate nohighlight">\(u\)</span>, <span class="math notranslate nohighlight">\(deg^{tot}(u)\)</span> is the sum of in degree and out degree of
+<span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(deg^{\leftrightarrow}(u)\)</span> is the reciprocal degree of
+<span class="math notranslate nohighlight">\(u\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G</strong> (<em>graph</em>) – </p></li>
+<li><p><strong>nodes</strong> (<em>container</em><em> of </em><em>nodes</em><em>, </em><em>optional</em><em> (</em><em>default=all nodes in G</em><em>)</em>) – Compute clustering for nodes in this container.</p></li>
+<li><p><strong>weight</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – The edge attribute that holds the numerical value used as a weight.
+If None, then each edge has weight 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>out</strong> – Clustering coefficient at specified nodes</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float, or dictionary</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">clustering</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">clustering</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+<span class="go">{0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<p>Self loops are ignored.</p>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id17"><span class="brackets">1</span></dt>
+<dd><p>Generalizations of the clustering coefficient to weighted
+complex networks by J. Saramäki, M. Kivelä, J.-P. Onnela,
+K. Kaski, and J. Kertész, Physical Review E, 75 027105 (2007).
+<a class="reference external" href="http://jponnela.com/web_documents/a9.pdf">http://jponnela.com/web_documents/a9.pdf</a></p>
+</dd>
+<dt class="label" id="id18"><span class="brackets">2</span></dt>
+<dd><p>Intensity and coherence of motifs in weighted complex
+networks by J. P. Onnela, J. Saramäki, J. Kertész, and K. Kaski,
+Physical Review E, 71(6), 065103 (2005).</p>
+</dd>
+<dt class="label" id="id19"><span class="brackets"><a class="fn-backref" href="#id15">3</a></span></dt>
+<dd><p>Generalization of Clustering Coefficients to Signed Correlation Networks
+by G. Costantini and M. Perugini, PloS one, 9(2), e88669 (2014).</p>
+</dd>
+<dt class="label" id="id20"><span class="brackets"><a class="fn-backref" href="#id16">4</a></span></dt>
+<dd><p>Clustering in complex directed networks by G. Fagiolo,
+Physical Review E, 76(2), 026107 (2007).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.nx.builtin.triangles">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">triangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.triangles" title="Permalink to this definition">#</a></dt>
+<dd><p>Compute the number of triangles.</p>
+<p>Finds the number of triangles that include a node as one vertex.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p></li>
+<li><p><strong>nodes</strong> (<em>container</em><em> of </em><em>nodes</em><em>, </em><em>optional</em><em> (</em><em>default= all nodes in G</em><em>)</em>) – Compute triangles for nodes in this container.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>out</strong> – Number of triangles keyed by node label.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="go">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+<span class="go">{0: 6, 1: 6, 2: 6, 3: 6, 4: 6}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+<span class="go">[6, 6]</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<p>When computing triangles for the entire graph each triangle is counted
+three times, once at each node.  Self loops are ignored.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.nx.builtin.average_clustering">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">average_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_zeros</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.average_clustering" title="Permalink to this definition">#</a></dt>
+<dd><p>Compute the average clustering coefficient for the graph G.</p>
+<p>The clustering coefficient for the graph is the average,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[C = \frac{1}{n}\sum_{v \in G} c_v,\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(n\)</span> is the number of nodes in <cite>G</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G</strong> (<em>graph</em>) – </p></li>
+<li><p><strong>nodes</strong> (<em>container</em><em> of </em><em>nodes</em><em>, </em><em>optional</em><em> (</em><em>default=all nodes in G</em><em>)</em>) – Compute average clustering for nodes in this container.</p></li>
+<li><p><strong>weight</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – The edge attribute that holds the numerical value used as a weight.
+If None, then each edge has weight 1.</p></li>
+<li><p><strong>count_zeros</strong> (<em>bool</em>) – If False include only the nodes with nonzero clustering in the average.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>avg</strong> – Average clustering</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">average_clustering</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<p>This is a space saving routine; it might be faster
+to use the clustering function to get a list and then take the average.</p>
+<p>Self loops are ignored.</p>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id21"><span class="brackets">1</span></dt>
+<dd><p>Generalizations of the clustering coefficient to weighted
+complex networks by J. Saramäki, M. Kivelä, J.-P. Onnela,
+K. Kaski, and J. Kertész, Physical Review E, 75 027105 (2007).
+<a class="reference external" href="http://jponnela.com/web_documents/a9.pdf">http://jponnela.com/web_documents/a9.pdf</a></p>
+</dd>
+<dt class="label" id="id22"><span class="brackets">2</span></dt>
+<dd><p>Marcus Kaiser,  Mean clustering coefficients: the role of isolated
+nodes and leafs on clustering measures for small-world networks.
+<a class="reference external" href="https://arxiv.org/abs/0802.2512">https://arxiv.org/abs/0802.2512</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="functions.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Functions</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="transformation.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Graph Transformation</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2020-2023, DAMO Academy, Alibaba Inc.
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link fa fa-solid fa-github fa-2x" href="https://github.com/alibaba/GraphScope" aria-label="GitHub"></a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Builtin algorithms</a><ul>
+<li><a class="reference internal" href="#graphscope.nx.builtin.hits"><code class="docutils literal notranslate"><span class="pre">hits()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.builtin.degree_centrality"><code class="docutils literal notranslate"><span class="pre">degree_centrality()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.builtin.in_degree_centrality"><code class="docutils literal notranslate"><span class="pre">in_degree_centrality()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.builtin.out_degree_centrality"><code class="docutils literal notranslate"><span class="pre">out_degree_centrality()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.builtin.eigenvector_centrality"><code class="docutils literal notranslate"><span class="pre">eigenvector_centrality()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.builtin.katz_centrality"><code class="docutils literal notranslate"><span class="pre">katz_centrality()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.builtin.has_path"><code class="docutils literal notranslate"><span class="pre">has_path()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.builtin.average_shortest_path_length"><code class="docutils literal notranslate"><span class="pre">average_shortest_path_length()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.builtin.bfs_edges"><code class="docutils literal notranslate"><span class="pre">bfs_edges()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.builtin.k_core"><code class="docutils literal notranslate"><span class="pre">k_core()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.builtin.clustering"><code class="docutils literal notranslate"><span class="pre">clustering()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.builtin.triangles"><code class="docutils literal notranslate"><span class="pre">triangles()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.builtin.average_clustering"><code class="docutils literal notranslate"><span class="pre">average_clustering()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/scripts/furo.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/readthedocs.js"></script>
+    <script src="../../_static/js/readthedocs-doc-embed.js"></script>
+    </body>
+</html>
