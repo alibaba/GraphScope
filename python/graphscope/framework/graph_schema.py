@@ -73,7 +73,7 @@ class Property:
             "id": self.id,
             "type": graph_def_pb2.DataTypePb.Name(self.data_type),
             "is_primary_key": self.is_primary_key,
-            "comment": self._comment,
+            "comment": self.comment,
         }
 
 
