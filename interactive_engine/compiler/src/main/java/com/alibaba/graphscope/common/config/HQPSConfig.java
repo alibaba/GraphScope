@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.client;
+package com.alibaba.graphscope.common.config;
 
-import com.alibaba.pegasus.RpcChannel;
+public class HQPSConfig {
+    public static final Config<String> HQPS_URIS =
+            Config.stringConfig("hqps.uris", "http://localhost:8080");
 
-import java.util.List;
-
-public interface RpcChannelFetcher {
-    List<RpcChannel> fetch();
-
-    // dynamic channel need update with the changes of host access url
-    boolean isDynamic();
+    public static final Config<Long> HQPS_HTTP_TIMEOUT =
+            Config.longConfig("hqps.http.timeout", 6000000l);
 }

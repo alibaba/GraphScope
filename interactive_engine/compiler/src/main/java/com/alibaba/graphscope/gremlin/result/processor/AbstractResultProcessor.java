@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.result.processor;
 
-import com.alibaba.graphscope.common.client.ResultParser;
+import com.alibaba.graphscope.common.result.ResultParser;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 
@@ -36,7 +36,9 @@ import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractResultProcessor extends StandardOpProcessor
