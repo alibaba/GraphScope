@@ -1,0 +1,5 @@
+user-agent: *
+disallow:
+
+Sitemap: https://graphscope.io/sitemap.txt
+Sitemap: https://graphscope.io/blog/feed.xml
