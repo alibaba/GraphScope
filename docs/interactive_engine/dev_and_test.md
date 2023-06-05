@@ -27,6 +27,12 @@ Now you are ready to build the GIE engine (on vineyard store) with the following
 ```
 You can find the built artifacts in `interactive_engine/assembly/target/graphscope`.
 
+You could install it to a location by
+
+```bash
+./gs make interactive-install --storage-type=vineyard --install-prefix /opt/graphscope
+```
+
 ## Test GIE with Vineyard Store on Local
 You could test the GIE engine on vineyard store with the following command:
 ```bash
