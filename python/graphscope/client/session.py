@@ -1148,8 +1148,9 @@ class Session(object):
         Also, if you want to store graphs of different sessions to the same pv,
         you'd better to create different pvc for different sessions at first.
 
-        Notice, before calling this function, you should make sure that the
-        pvc is bound to the pv and the pv's capacity is enough to store the
+        Notice, before calling this function, the KUBECONFIG environment variable
+        should be set to the path of your kubeconfig file. And you should make sure
+        that the pvc is bound to the pv and the pv's capacity is enough to store the
         graphs.
 
         The method uses the vineyardctl to create a kubernetes job to serialize
@@ -1174,8 +1175,8 @@ class Session(object):
             if isinstance(object, Graph):
                 object_ids.append(object.vineyard_id)
             else:
-                object_ids.append(object)
-        object_ids = ",".join(object_ids)
+                object_ids.append(vineyard.ObjectID(object))
+        object_ids = ",".join(repr(id) for id in object_ids)
         vineyard_deployment_name = self._config_params["k8s_vineyard_deployment"]
         namespace = self._config_params["k8s_namespace"]
         self._check_vineyard_deployment_exists(vineyard_deployment_name, namespace)
@@ -1188,13 +1189,15 @@ class Session(object):
             vineyard_deployment_namespace=namespace,
             namespace=namespace,
             path=path,
-            objectids=",".join(object_ids),
+            objectids=object_ids,
             pvc_name=pvc_name,
         )
 
     def restore_from_pvc(self, path: str, pvc_name: str):
         """
         Restores the graphs from the given path in the given PVC.
+        Notice, before calling this function, the KUBECONFIG environment variable
+        should be set to the path of your kubeconfig file.
 
         Args:
             path: The path in the pv to which the pvc is bound.
