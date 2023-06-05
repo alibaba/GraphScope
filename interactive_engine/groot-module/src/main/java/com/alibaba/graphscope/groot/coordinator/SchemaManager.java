@@ -124,7 +124,13 @@ public class SchemaManager {
             String sessionId,
             DdlRequestBatch ddlRequestBatch,
             CompletionCallback<Long> callback) {
-        logger.info("submitBatchDdl requestId [" + requestId + "], sessionId [" + sessionId + "]");
+        logger.info(
+                "submitBatchDdl requestId ["
+                        + requestId
+                        + "], sessionId ["
+                        + sessionId
+                        + "]. Request Body: "
+                        + ddlRequestBatch.toProto().toString());
         if (!ready) {
             callback.onError(new IllegalStateException("SchemaManager is recovering"));
             return;
