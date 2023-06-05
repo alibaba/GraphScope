@@ -108,7 +108,6 @@ and the vineyard store that offers efficient in-memory data transfers.
    development/how_to_test
    .. development/how_to_debug
    development/how_to_contribute
- 
 
 .. toctree::
    :maxdepth: 1
