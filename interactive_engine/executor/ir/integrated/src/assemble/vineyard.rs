@@ -59,10 +59,12 @@ where
     EI: Iterator<Item = E> + Send + 'static,
 {
     fn initialize_job_assembly(&self) -> IRJobAssembly {
+        let cluster_info = Arc::new(PegasusClusterInfo::default());
         let gs_store = create_gs_store(
             self.graph_query.clone(),
             self.graph_partitioner.clone(),
             self.computed_process_partition_list.clone(),
+            cluster_info.clone(),
             false,
             false,
         );
@@ -70,7 +72,6 @@ where
             self.graph_partitioner.clone(),
             self.partition_server_index_mapping.clone(),
         );
-        let cluster_info = PegasusClusterInfo::default();
-        initialize_job_assembly(gs_store, Arc::new(partition_info), Arc::new(cluster_info))
+        initialize_job_assembly(gs_store, Arc::new(partition_info), cluster_info)
     }
 }

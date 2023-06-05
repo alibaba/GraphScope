@@ -31,6 +31,7 @@ use ir_common::{KeyId, LabelId, NameOrId, OneOrMany};
 
 use crate::adapters::gs_store::details::{LazyEdgeDetails, LazyVertexDetails};
 use crate::apis::graph::PKV;
+use crate::apis::ClusterInfo;
 use crate::apis::{from_fn, Direction, DynDetails, Edge, QueryParams, ReadGraph, Statement, Vertex, ID};
 use crate::utils::expr::eval_pred::PEvaluator;
 use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit};
@@ -53,6 +54,7 @@ where
     store: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
     partition_manager: Arc<dyn GraphPartitionManager>,
     server_partitions: Vec<PartitionId>,
+    runtime_info: Arc<dyn ClusterInfo>,
     row_filter_pushdown: bool,
     column_filter_pushdown: bool,
 }
@@ -61,7 +63,7 @@ where
 pub fn create_gs_store<V, VI, E, EI>(
     store: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
     partition_manager: Arc<dyn GraphPartitionManager>, server_partitions: Vec<PartitionId>,
-    row_filter_push_down: bool, column_filter_push_down: bool,
+    runtime_info: Arc<dyn ClusterInfo>, row_filter_push_down: bool, column_filter_push_down: bool,
 ) -> Arc<GraphScopeStore<V, VI, E, EI>>
 where
     V: StoreVertex + 'static,
@@ -73,6 +75,7 @@ where
         store,
         partition_manager,
         server_partitions,
+        runtime_info,
         row_filter_pushdown: row_filter_push_down,
         column_filter_pushdown: column_filter_push_down,
     };
@@ -89,7 +92,7 @@ where
     fn scan_vertex(
         &self, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
-        let worker_partitions = assign_worker_partitions(&self.server_partitions);
+        let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.runtime_info)?;
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
             let si = params
@@ -185,7 +188,7 @@ where
     }
 
     fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
-        let worker_partitions = assign_worker_partitions(&self.server_partitions);
+        let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.runtime_info)?;
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
             let si = params
@@ -707,13 +710,11 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
 /// Given all the partitions,
 /// return the partition_list that current worker is going to scan.
 #[inline]
-fn assign_worker_partitions(query_partitions: &Vec<u32>) -> Vec<PartitionId> {
-    let workers_num = pegasus::get_current_worker_checked()
-        .map(|worker| worker.local_peers)
-        .unwrap_or(1);
-    let worker_idx = pegasus::get_current_worker_checked()
-        .map(|worker| worker.index % workers_num)
-        .unwrap_or(0);
+fn assign_worker_partitions(
+    query_partitions: &Vec<u32>, cluster_info: &Arc<dyn ClusterInfo>,
+) -> GraphProxyResult<Vec<PartitionId>> {
+    let workers_num = cluster_info.get_local_worker_num()?;
+    let worker_idx = cluster_info.get_worker_index()?;
     let mut worker_partition_list = vec![];
     for pid in query_partitions {
         if *pid % workers_num == worker_idx {
@@ -724,7 +725,7 @@ fn assign_worker_partitions(query_partitions: &Vec<u32>) -> Vec<PartitionId> {
         "workers_num {:?}, worker_idx: {:?},  worker_partition_list {:?}",
         workers_num, worker_idx, worker_partition_list
     );
-    worker_partition_list
+    Ok(worker_partition_list)
 }
 
 /// Transform type of ids to PartitionLabeledVertexIds as required by graphscope store,

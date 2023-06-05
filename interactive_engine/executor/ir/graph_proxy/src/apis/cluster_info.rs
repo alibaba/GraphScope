@@ -13,8 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use pegasus::WorkerId as PegasusWorkerId;
-
 use crate::{GraphProxyError, GraphProxyResult};
 
 /// A `ClusterInfo` is used to query the cluster information when the system is running on a cluster.
@@ -29,41 +27,33 @@ pub trait ClusterInfo: Send + Sync + 'static {
     fn get_worker_index(&self) -> GraphProxyResult<u32>;
 }
 
-pub struct PegasusClusterInfo {
-    info: Option<PegasusWorkerId>,
-}
-
-impl Default for PegasusClusterInfo {
-    fn default() -> Self {
-        let pegasus_info = pegasus::get_current_worker_checked();
-        Self { info: pegasus_info }
-    }
-}
+#[derive(Default)]
+pub struct PegasusClusterInfo {}
 
 impl ClusterInfo for PegasusClusterInfo {
     fn get_server_num(&self) -> GraphProxyResult<u32> {
-        self.info
+        pegasus::get_current_worker_checked()
             .as_ref()
             .map(|info| info.servers)
             .ok_or(GraphProxyError::cluster_info_missing("server number"))
     }
 
     fn get_server_index(&self) -> GraphProxyResult<u32> {
-        self.info
+        pegasus::get_current_worker_checked()
             .as_ref()
             .map(|info| info.server_index)
             .ok_or(GraphProxyError::cluster_info_missing("server index"))
     }
 
     fn get_local_worker_num(&self) -> GraphProxyResult<u32> {
-        self.info
+        pegasus::get_current_worker_checked()
             .as_ref()
             .map(|info| info.local_peers)
             .ok_or(GraphProxyError::cluster_info_missing("local worker number"))
     }
 
     fn get_worker_index(&self) -> GraphProxyResult<u32> {
-        self.info
+        pegasus::get_current_worker_checked()
             .as_ref()
             .map(|info| info.index)
             .ok_or(GraphProxyError::cluster_info_missing("worker index"))

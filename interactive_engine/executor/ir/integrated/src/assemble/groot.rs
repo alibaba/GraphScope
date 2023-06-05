@@ -52,16 +52,18 @@ where
         #[cfg(feature = "column_filter_push_down")]
         let column_filter_push_down = true;
 
+        let cluster_info = Arc::new(PegasusClusterInfo::default());
         let gs_store = create_gs_store(
             self.graph_query.clone(),
             self.graph_partitioner.clone(),
             self.graph_partitioner
                 .get_process_partition_list(),
+            cluster_info.clone(),
             true,
             column_filter_push_down,
         );
         let partition_info = GrootMultiPartition::new(self.graph_partitioner.clone());
-        let cluster_info = PegasusClusterInfo::default();
-        initialize_job_assembly(gs_store, Arc::new(partition_info), Arc::new(cluster_info))
+
+        initialize_job_assembly(gs_store, Arc::new(partition_info), cluster_info)
     }
 }
