@@ -113,6 +113,7 @@ class Label:
 
     def set_comment(self, comment):
         self._comment = comment
+        return self
 
     @property
     def id(self) -> int:
