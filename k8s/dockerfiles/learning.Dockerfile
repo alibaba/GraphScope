@@ -40,3 +40,5 @@ RUN sudo chmod a+wrx /tmp
 
 COPY --from=builder /home/graphscope/install /opt/graphscope/
 RUN python3 -m pip install --no-cache-dir /opt/graphscope/*.whl && sudo rm -rf /opt/graphscope/*.whl
+
+ENV PATH=${PATH}:/home/graphscope/.local/bin
