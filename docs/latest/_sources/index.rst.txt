@@ -62,6 +62,7 @@ and the vineyard store that offers efficient in-memory data transfers.
 
    interactive_engine/getting_started
    interactive_engine/deployment
+   interactive_engine/tinkerpop_eco
    interactive_engine/guide_and_examples
    interactive_engine/design_of_gie
    interactive_engine/supported_gremlin_steps
@@ -107,7 +108,6 @@ and the vineyard store that offers efficient in-memory data transfers.
    development/how_to_test
    .. development/how_to_debug
    development/how_to_contribute
- 
 
 .. toctree::
    :maxdepth: 1

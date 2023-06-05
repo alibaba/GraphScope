@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header no-cover">
+    <nav class="main-nav overlay clearfix">
+        
+        <a class="back-button icon-arrow-left" href="https://graphscope.io">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+    <div class="vertical">
+        <div class="main-header-content inner">
+
+            <h1 class="page-title">
+                <!-- <img src="assets/images/logo-notext.png" alt="GraphScope Logo" /> -->
+                GraphScope <span class="site-title">Blog</span>
+            </h1>
+            <!-- <h2 class="page-description">
+                 graphscope blog. 
+            </h2> -->
+        </div>
+    </div>
+    <a class="scroll-down icon-arrow-left" href="#content" data-offset="-45"><span class="hidden">Scroll Down</span></a>
+</header>
+
+
+<main id="content" class="content" role="main">
+
+
+    <div class="extra-pagination inner">
+        <nav class="pagination" role="pagination">
+    
+        
+            <a class="newer-posts" href="/" title="Previous Page">&laquo; Newer Posts</a>
+        
+    
+    <span class="page-number"> Page 2 of 2 </span>
+     
+</nav>
+    </div>
+
+    
+
+    <article class="post">
+        <header class="post-header">
+            <h2 class="post-title"><a href="/blog/tech/2021/08/05/GAIA-Deep-Dive-Bounded-Memory-Execution-and-Early-Stop-Optimization-for-Efficient-Graph-Traversal-at-Scale.html">GAIA Deep Dive: Bounded-Memory Execution and Early-Stop Optimization for Efficient Graph Traversal at Scale</a></h2>
+        </header>
+        <section class="post-excerpt">
+            <p><img src="/blog/assets/images/gaia.png" alt="knife" />
+<a href="https://graphscope.io/blog/tech/2021/04/29/Introducing-gaia-a-scalable-engine-for-gremlin-the-sql-for-graphs.html">Last time</a>, we presented an overview of the GAIA engine for scaling Gremlin for large distributed graphs. In contrast to other, existing batch-oriented big graph processing systems, such as <a href="https://research.google/pubs/pub37252">Google Pregel</a>, <a href="https://giraph.apache.org/">Apache Giraph</a>, <a href="https://github.com/jegonzal/PowerGraph">GraphLab PowerGraph</a>, and <a href="https://spark.apache.org/graphx/">Apache Spark GraphX</a>, GAIA focuses on low-latency graph traversal at scale. Achieving this goal requires a different distributed infrastructure. Today, we continue to explain why with highlighting two unique and key features of GAIA.</p>
+ <a class="read-more" href="/blog/tech/2021/08/05/GAIA-Deep-Dive-Bounded-Memory-Execution-and-Early-Stop-Optimization-for-Efficient-Graph-Traversal-at-Scale.html">&raquo;</a>
+        </section>
+        <footer class="post-meta">
+            
+            <img class="author-thumb" src="/blog/assets/images/profile.png"
+                alt="Author's profile picture" nopin="nopin" />
+            GSTeam@Alibaba
+            
+            
+            on Tech
+            
+            <time class="post-date" datetime=" 2021-08-05">
+                05 Aug 2021
+            </time>
+        </footer>
+    </article>
+
+    
+
+    <article class="post">
+        <header class="post-header">
+            <h2 class="post-title"><a href="/blog/releasenotes/2021/06/15/release-notes-0.5.0.html">Release Notes: v0.5.0</a></h2>
+        </header>
+        <section class="post-excerpt">
+            <p><img src="/blog/assets/images/release_note_t.png" alt="release-note" />
+We are glad to announce the GraphScope 0.5 release. As the first step towards the ease of deployment in production, this major release includes two new features, namely <strong>a persistent graph store</strong> to enable a “service mode” for real-time graph computing, and <strong>lazy evaluation</strong> of GraphScope programs–an execution strategy which delays the execution of a GraphScope program until later when needed for efficiency. In addition, we improve the compatibility with NetworkX.
+​
+We highlight the following improvements included in this release:
+​</p>
+<ol>
+  <li>GraphScope-Store: A persistent store for mutable graphs. Currently, it has supported the following features/functions:</li>
+</ol>
+ <a class="read-more" href="/blog/releasenotes/2021/06/15/release-notes-0.5.0.html">&raquo;</a>
+        </section>
+        <footer class="post-meta">
+            
+            <img class="author-thumb" src="/blog/assets/images/profile.png"
+                alt="Author's profile picture" nopin="nopin" />
+            GSTeam@Alibaba
+            
+            
+            on ReleaseNotes
+            
+            <time class="post-date" datetime=" 2021-06-15">
+                15 Jun 2021
+            </time>
+        </footer>
+    </article>
+
+    
+
+    <article class="post">
+        <header class="post-header">
+            <h2 class="post-title"><a href="/blog/tech/2021/05/29/Towards-a-Swiss-Army-Knife-for-a-Continuous-Life-Cycle-of-Big-Graph-Analytics.html">Towards a Swiss Army Knife for a Continuous Life Cycle of Big Graph Analytics</a></h2>
+        </header>
+        <section class="post-excerpt">
+            <p><img src="/blog/assets/images/knife.png" alt="knife" />
+In this post, we will present a high-level road-map of the GraphScope project with highlighting new exciting features coming in the v0.5 release.</p>
+ <a class="read-more" href="/blog/tech/2021/05/29/Towards-a-Swiss-Army-Knife-for-a-Continuous-Life-Cycle-of-Big-Graph-Analytics.html">&raquo;</a>
+        </section>
+        <footer class="post-meta">
+            
+            <img class="author-thumb" src="/blog/assets/images/profile.png"
+                alt="Author's profile picture" nopin="nopin" />
+            GSTeam@Alibaba
+            
+            
+            on Tech
+            
+            <time class="post-date" datetime=" 2021-05-29">
+                29 May 2021
+            </time>
+        </footer>
+    </article>
+
+    
+
+    <article class="post">
+        <header class="post-header">
+            <h2 class="post-title"><a href="/blog/releasenotes/2021/05/10/release-notes-0.4.0.html">Release Notes: v0.4.0</a></h2>
+        </header>
+        <section class="post-excerpt">
+            <p><img src="/blog/assets/images/release_note_t.png" alt="release-note" />
+Today, we’re announcing the availability of GraphScope v0.4.0. This release focuses on
+ the compatibility improvement with <a href="https://networkx.org/">NetworkX</a>, with the aim of allowing users to
+ develop graph applications on large-scale graphs in a distributed environment just
+ like doing this on a single machine. In addition, this release improves the
+ experience of standalone deployment.</p>
+ <a class="read-more" href="/blog/releasenotes/2021/05/10/release-notes-0.4.0.html">&raquo;</a>
+        </section>
+        <footer class="post-meta">
+            
+            <img class="author-thumb" src="/blog/assets/images/profile.png"
+                alt="Author's profile picture" nopin="nopin" />
+            GSTeam@Alibaba
+            
+            
+            on ReleaseNotes
+            
+            <time class="post-date" datetime=" 2021-05-10">
+                10 May 2021
+            </time>
+        </footer>
+    </article>
+
+    
+
+    <article class="post">
+        <header class="post-header">
+            <h2 class="post-title"><a href="/blog/tech/2021/04/29/Introducing-gaia-a-scalable-engine-for-gremlin-the-sql-for-graphs.html">Introducing GAIA: A Scalable Engine for Gremlin – the SQL for Graphs</a></h2>
+        </header>
+        <section class="post-excerpt">
+            <p><img src="/blog/assets/images/gaia.png" alt="gaia" />
+GAIA extends GraphScope with <a href="https://tinkerpop.apache.org/gremlin.html">Gremlin</a>, the industry’s de facto standard property graph query language defined and maintained by <a href="http://tinkerpop.apache.org/">the Apache TinkerPop project</a>, which is widely adopted by popular graph database vendors such as <a href="https://neo4j.com/">Neo4j</a>, <a href="https://www.orientdb.org/">OrientDB</a>, <a href="https://janusgraph.org/">JanusGraph</a>, <a href="https://azure.microsoft.com/en-us/services/cosmos-db/">Microsoft Cosmos DB</a>, and <a href="https://aws.amazon.com/neptune/">Amazon Neptune</a>. GAIA is the first open-source implementation of Gremlin in a distributed or big-data environment in the industry.</p>
+ <a class="read-more" href="/blog/tech/2021/04/29/Introducing-gaia-a-scalable-engine-for-gremlin-the-sql-for-graphs.html">&raquo;</a>
+        </section>
+        <footer class="post-meta">
+            
+            <img class="author-thumb" src="/blog/assets/images/profile.png"
+                alt="Author's profile picture" nopin="nopin" />
+            GSTeam@Alibaba
+            
+            
+            on Tech
+            
+            <time class="post-date" datetime=" 2021-04-29">
+                29 Apr 2021
+            </time>
+        </footer>
+    </article>
+
+    
+
+    <article class="post">
+        <header class="post-header">
+            <h2 class="post-title"><a href="/blog/releasenotes/2021/04/11/release-notes-0.3.0.html">Release Notes: v0.3.0</a></h2>
+        </header>
+        <section class="post-excerpt">
+            <p><img src="/blog/assets/images/release_note_t.png" alt="release-note" />
+GraphScope v0.3.0 is released as scheduled. This release includes new features and major updates for  frontend APIs for graph manipulation, integration with other systems as well as code optimization for some operators. Another direction we are working on is to ease the deployment of GraphScope with/without Kubernetes.</p>
+ <a class="read-more" href="/blog/releasenotes/2021/04/11/release-notes-0.3.0.html">&raquo;</a>
+        </section>
+        <footer class="post-meta">
+            
+            <img class="author-thumb" src="/blog/assets/images/profile.png"
+                alt="Author's profile picture" nopin="nopin" />
+            GSTeam@Alibaba
+            
+            
+            on ReleaseNotes
+            
+            <time class="post-date" datetime=" 2021-04-11">
+                11 Apr 2021
+            </time>
+        </footer>
+    </article>
+
+    
+
+    <article class="post">
+        <header class="post-header">
+            <h2 class="post-title"><a href="/blog/tech/2021/03/25/a-review-of-programming-models-for-parallel-graph-processing.html">A Review of Programming Models for Parallel Graph Processing</a></h2>
+        </header>
+        <section class="post-excerpt">
+            <p><img src="/blog/assets/images/programing-models.jpg" alt="programing-models" />
+To explore underlying insights hidden in graph data, many graph analytics algorithms, e.g., PageRank and single source shortest paths (the Dijkstra’s algorithm), have been designed to solve different problems.</p>
+ <a class="read-more" href="/blog/tech/2021/03/25/a-review-of-programming-models-for-parallel-graph-processing.html">&raquo;</a>
+        </section>
+        <footer class="post-meta">
+            
+            <img class="author-thumb" src="/blog/assets/images/profile.png"
+                alt="Author's profile picture" nopin="nopin" />
+            GSTeam@Alibaba
+            
+            
+            on Tech
+            
+            <time class="post-date" datetime=" 2021-03-25">
+                25 Mar 2021
+            </time>
+        </footer>
+    </article>
+
+    
+
+    <article class="post">
+        <header class="post-header">
+            <h2 class="post-title"><a href="/blog/newsroom/2021/02/01/introducing-graphscope-playground.html">Introducing GraphScope Playground</a></h2>
+        </header>
+        <section class="post-excerpt">
+            <p><img src="/blog/assets/images/try-record.gif" alt="try-record.gif" /> 
+Today we released <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.2.0">GraphScope 0.2.0</a>.  With this release, we are happy to introduce <a href="http://try.graphscope.app/">GraphScope Playground</a>, a hosted JupyterLab with GraphScope ready out-of-the-box. Now you can get started with GraphScope straight away in your browser without any hassle for setting it up.</p>
+ <a class="read-more" href="/blog/newsroom/2021/02/01/introducing-graphscope-playground.html">&raquo;</a>
+        </section>
+        <footer class="post-meta">
+            
+            <img class="author-thumb" src="/blog/assets/images/profile.png"
+                alt="Author's profile picture" nopin="nopin" />
+            GSTeam@Alibaba
+            
+            
+            on Newsroom
+            
+            <time class="post-date" datetime=" 2021-02-01">
+                01 Feb 2021
+            </time>
+        </footer>
+    </article>
+
+    
+
+    <article class="post">
+        <header class="post-header">
+            <h2 class="post-title"><a href="/blog/releasenotes/2021/02/01/release-notes-0.2.0.html">Release Notes: v0.2.0</a></h2>
+        </header>
+        <section class="post-excerpt">
+            <p><img src="/blog/assets/images/release_note_t.png" alt="release-note" />
+The GraphScope team is pleased to announce the 0.2.0 release after two-months development.
+The 0.2.0 release is focused on better getting started experience for end-users and we have
+make a lot of improvements since the last minor release. We have improved our documentation
+a lot, and made the kubernetes integration work for more settings. We have also brought the
+support for various I/O to make GraphScope suitable for more production environments.</p>
+ <a class="read-more" href="/blog/releasenotes/2021/02/01/release-notes-0.2.0.html">&raquo;</a>
+        </section>
+        <footer class="post-meta">
+            
+            <img class="author-thumb" src="/blog/assets/images/profile.png"
+                alt="Author's profile picture" nopin="nopin" />
+            GSTeam@Alibaba
+            
+            
+            on ReleaseNotes
+            
+            <time class="post-date" datetime=" 2021-02-01">
+                01 Feb 2021
+            </time>
+        </footer>
+    </article>
+
+    
+
+    <article class="post">
+        <header class="post-header">
+            <h2 class="post-title"><a href="/blog/newsroom/2020/12/07/say-hello-to-graphscope.html">Say Hello to GraphScope!</a></h2>
+        </header>
+        <section class="post-excerpt">
+            <p><img src="/blog/assets/images/releasing.png" alt="graphscope-releasing" />
+The source code of GraphScope is released today!</p>
+ <a class="read-more" href="/blog/newsroom/2020/12/07/say-hello-to-graphscope.html">&raquo;</a>
+        </section>
+        <footer class="post-meta">
+            
+            <img class="author-thumb" src="/blog/assets/images/profile.png"
+                alt="Author's profile picture" nopin="nopin" />
+            GSTeam@Alibaba
+            
+            
+            on Newsroom
+            
+            <time class="post-date" datetime=" 2020-12-07">
+                07 Dec 2020
+            </time>
+        </footer>
+    </article>
+
+    
+
+    <nav class="pagination" role="pagination">
+    
+        
+            <a class="newer-posts" href="/" title="Previous Page">&laquo; Newer Posts</a>
+        
+    
+    <span class="page-number"> Page 2 of 2 </span>
+     
+</nav>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2023 &bull; All rights reserved.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+    
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+</body>
+</html>
