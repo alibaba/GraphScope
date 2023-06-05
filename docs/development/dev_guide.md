@@ -80,7 +80,7 @@ You may find the guides for building and testing each engine as below.
 
 - [Build and test analytical engine](../analytical_engine/dev_and_test.md)
 - [Build and test interactive engine](../interactive_engine/dev_and_test.md)
-- [Build and test learning engine](../interactive_engine/dev_and_test.md)
+- [Build and test learning engine](../learning_engine/dev_and_test.md)
 
 ### Build Coordinator
 
