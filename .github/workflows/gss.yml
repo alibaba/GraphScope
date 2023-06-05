@@ -83,6 +83,7 @@ jobs:
     - name: Gremlin Tests with Column Filter Push Down
       run: |
         . ${HOME}/.graphscope_env
+        sleep 3600
         cd interactive_engine/groot-server
         mvn test -P gremlin-test
 
