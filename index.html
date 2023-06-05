@@ -31,15 +31,8 @@
     <!-- Bootstrap Core CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Custom Fonts -->
-    <link href="vendor/fontawesome/css/all.min.css" rel="stylesheet" type="text/css">
-    <link
-        href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800'
-        rel='stylesheet' type='text/css'>
-    <link href="https://fonts.googleapis.com/css?family=Fira+Mono">
-
     <!-- Theme CSS -->
-    <link href="css/style-115f6e6125.min.css" rel="stylesheet">
+    <link href="css/style-4f9a969b46.min.css" rel="stylesheet">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -117,7 +110,7 @@
     <section class="intro-section gray-section" id="intro-brief">
         <div class="section-content">
             <div class="section-content-inner text-center">
-                <img src="./img/logo.png" id="intro-logo" />
+                <img src="./img/logo.png" id="intro-logo" alt="graphscope logo"/>
                 <h3>What is GraphScope</h3>
                 <p>
                     GraphScope is a unified distributed graph computing platform that provides a one-stop environment
@@ -128,13 +121,23 @@
                     respectively, and the vineyard store that offers efficient in-memory data transfers.
                 </p>
                 <p class="social-icons">
-                    <a href="https://slack.graphscope.io" target="_blank"><i class="fab fa-slack"></i>Slack</a>
+                    <a href="https://slack.graphscope.io" target="_blank">
+                        <i class="fab">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M94.12 315.1c0 25.9-21.16 47.06-47.06 47.06S0 341 0 315.1c0-25.9 21.16-47.06 47.06-47.06h47.06v47.06zm23.72 0c0-25.9 21.16-47.06 47.06-47.06s47.06 21.16 47.06 47.06v117.84c0 25.9-21.16 47.06-47.06 47.06s-47.06-21.16-47.06-47.06V315.1zm47.06-188.98c-25.9 0-47.06-21.16-47.06-47.06S139 32 164.9 32s47.06 21.16 47.06 47.06v47.06H164.9zm0 23.72c25.9 0 47.06 21.16 47.06 47.06s-21.16 47.06-47.06 47.06H47.06C21.16 243.96 0 222.8 0 196.9s21.16-47.06 47.06-47.06H164.9zm188.98 47.06c0-25.9 21.16-47.06 47.06-47.06 25.9 0 47.06 21.16 47.06 47.06s-21.16 47.06-47.06 47.06h-47.06V196.9zm-23.72 0c0 25.9-21.16 47.06-47.06 47.06-25.9 0-47.06-21.16-47.06-47.06V79.06c0-25.9 21.16-47.06 47.06-47.06 25.9 0 47.06 21.16 47.06 47.06V196.9zM283.1 385.88c25.9 0 47.06 21.16 47.06 47.06 0 25.9-21.16 47.06-47.06 47.06-25.9 0-47.06-21.16-47.06-47.06v-47.06h47.06zm0-23.72c-25.9 0-47.06-21.16-47.06-47.06 0-25.9 21.16-47.06 47.06-47.06h117.84c25.9 0 47.06 21.16 47.06 47.06 0 25.9-21.16 47.06-47.06 47.06H283.1z"/></svg>
+                        </i>Slack</a>
                     <a href="https://graphscope.oss-cn-beijing.aliyuncs.com/graphscope_whitepaper.pdf"
-                        target="_blank"><i class="far fa-file-pdf"></i>Whitepaper</a>
-                    <a href="https://github.com/alibaba/GraphScope/discussions" target="_blank"><i
-                            class="far fa-comments"></i>Discussions</a>
-                    <a href="https://github.com/alibaba/GraphScope" target="_blank"><i
-                            class="fab fa-github"></i>Github</a>
+                        target="_blank">
+                        <i class="fab">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M0 64C0 28.7 28.7 0 64 0H224V128c0 17.7 14.3 32 32 32H384V304H176c-35.3 0-64 28.7-64 64V512H64c-35.3 0-64-28.7-64-64V64zm384 64H256V0L384 128zM176 352h32c30.9 0 56 25.1 56 56s-25.1 56-56 56H192v32c0 8.8-7.2 16-16 16s-16-7.2-16-16V448 368c0-8.8 7.2-16 16-16zm32 80c13.3 0 24-10.7 24-24s-10.7-24-24-24H192v48h16zm96-80h32c26.5 0 48 21.5 48 48v64c0 26.5-21.5 48-48 48H304c-8.8 0-16-7.2-16-16V368c0-8.8 7.2-16 16-16zm32 128c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H320v96h16zm80-112c0-8.8 7.2-16 16-16h48c8.8 0 16 7.2 16 16s-7.2 16-16 16H448v32h32c8.8 0 16 7.2 16 16s-7.2 16-16 16H448v48c0 8.8-7.2 16-16 16s-16-7.2-16-16V432 368z"/></svg>
+                        </i>Whitepaper</a>
+                    <a href="https://github.com/alibaba/GraphScope/discussions" target="_blank">
+                        <i class="fab">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 640 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M208 352c114.9 0 208-78.8 208-176S322.9 0 208 0S0 78.8 0 176c0 38.6 14.7 74.3 39.6 103.4c-3.5 9.4-8.7 17.7-14.2 24.7c-4.8 6.2-9.7 11-13.3 14.3c-1.8 1.6-3.3 2.9-4.3 3.7c-.5 .4-.9 .7-1.1 .8l-.2 .2 0 0 0 0C1 327.2-1.4 334.4 .8 340.9S9.1 352 16 352c21.8 0 43.8-5.6 62.1-12.5c9.2-3.5 17.8-7.4 25.3-11.4C134.1 343.3 169.8 352 208 352zM448 176c0 112.3-99.1 196.9-216.5 207C255.8 457.4 336.4 512 432 512c38.2 0 73.9-8.7 104.7-23.9c7.5 4 16 7.9 25.2 11.4c18.3 6.9 40.3 12.5 62.1 12.5c6.9 0 13.1-4.5 15.2-11.1c2.1-6.6-.2-13.8-5.8-17.9l0 0 0 0-.2-.2c-.2-.2-.6-.4-1.1-.8c-1-.8-2.5-2-4.3-3.7c-3.6-3.3-8.5-8.1-13.3-14.3c-5.5-7-10.7-15.4-14.2-24.7c24.9-29 39.6-64.7 39.6-103.4c0-92.8-84.9-168.9-192.6-175.5c.4 5.1 .6 10.3 .6 15.5z"/></svg>
+                        </i>Discussions</a>
+                    <a href="https://github.com/alibaba/GraphScope" target="_blank">
+                        <i class="fab ">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+                        </i>Github</a>
                 </p>
             </div>
         </div>
@@ -149,7 +152,7 @@
                 <div class="col-lg-3 col-md-3 text-center">
                     <div class="feature-box">
                         <div class="text-primary sr-icons">
-                            <img class="feature-icon" src="img/shuttle.png" />
+                            <img class="feature-icon" src="img/shuttle.png" alt="graphscope features, high-performance" />
                         </div>
                         <h3>High Performance</h3>
                         <p class="text-muted">
@@ -159,7 +162,7 @@
                 <div class="col-lg-3 col-md-3 text-center">
                     <div class="feature-box">
                         <div class="text-primary sr-icons">
-                            <img class="feature-icon" src="img/power-station.png" />
+                            <img class="feature-icon" src="img/power-station.png" alt="graphscope features, one-stop processing"/>
                         </div>
                         <h3>One-Stop Processing</h3>
                         <p class="text-muted"> Performing diverse parallel graph operations in a cluster in one unified
@@ -169,7 +172,7 @@
                 <div class="col-lg-3 col-md-3 text-center">
                     <div class="feature-box">
                         <div class="text-primary sr-icons">
-                            <img class="feature-icon" src="img/cloud.png" />
+                            <img class="feature-icon" src="img/cloud.png" alt="graphscope features, cloud-native"/>
                         </div>
                         <h3>Cloud Native</h3>
                         <p class="text-muted">Fully integrated with Kubernetes for processing big graphs across
@@ -179,7 +182,7 @@
                 <div class="col-lg-3 col-md-3 text-center">
                     <div class="feature-box">
                         <div class="text-primary sr-icons">
-                            <img class="feature-icon" src="img/puzzle.png" />
+                            <img class="feature-icon" src="img/puzzle.png" alt="graphscope features, easy to use"/>
                         </div>
                         <h3>Easy to Use</h3>
                         <p class="text-muted"> Making distributed graph computing as easy
@@ -227,7 +230,7 @@
                 <div id="owl-slides" class="owl-carousel">
                     <a href="blog/tech/2023/06/01/How-to-Run-GraphScope-on-Kubernetes-Cluster.html" class="link-2-post">
                         <div class="item app-card">
-                            <img src="blog/assets/images/2023-06-01-title-picture.png" />
+                            <img src="blog/assets/images/2023-06-01-title-picture.png" alt="blog: How to Run GraphScope on Kubernetes Cluster"/>
                             <div class="desc">
                                 <h2>How to Run GraphScope on Kubernetes Cluster</h2>
                                 <p> In this post, we will show how to deploy GraphScope on kubernetes cluster, the details of work behind the deployment, and how to build custom images from source code.
@@ -238,7 +241,7 @@
                     </a>
                     <a href="blog/tech/2023/05/31/How-to-Play-GraphScope-Locally.html" class="link-2-post">
                         <div class="item app-card">
-                            <img src="blog/assets/images/2023-05-31-title-picture.jpg" />
+                            <img src="blog/assets/images/2023-05-31-title-picture.jpg" alt="blog: How to Run and Develop GraphScope Locally"/>
                             <div class="desc">
                                 <h2>How to Run and Develop GraphScope Locally</h2>
                                 <p>In this post, we will detail two ways to install GraphScope locally: 1) directly install the published binary package through pip; 2) compile and build the latest version of GraphScope from source code.</p>
@@ -248,7 +251,7 @@
                     </a>
                     <a href="blog/tech/2023/05/25/Categories-Languages-and-Systems-of-Graph-Computing.html" class="link-2-post">
                         <div class="item app-card">
-                            <img src="blog/assets/images/2023-05-25-graph-computing.png" />
+                            <img src="blog/assets/images/2023-05-25-graph-computing.png" alt="blog: Categories, Languages, and Systems of Graph Computing"/>
                             <div class="desc">
                                 <h2> Categories, Languages, and Systems of Graph Computing </h2>
                                 <p> In this post, we will introduce the categories, languages, and systems of graph computing.</p>
@@ -274,23 +277,23 @@
                 <a href="publications.html" class="btn btn-primary btn-xl page-scroll">View our publications</a> 
                 <div>
                     <div class="award" id="award-sigmod">
-                        <img src="img/awards-sigmod-g.png" />
-                        <div class="desc"><i class="fas fa-trophy"></i>
+                        <img src="img/awards-sigmod-g.png" alt="graphscope awards, best paper award sigmod 2017" />
+                        <div class="desc"><i class="fas fa-trophy"><svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 576 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M400 0H176c-26.5 0-48.1 21.8-47.1 48.2c.2 5.3 .4 10.6 .7 15.8H24C10.7 64 0 74.7 0 88c0 92.6 33.5 157 78.5 200.7c44.3 43.1 98.3 64.8 138.1 75.8c23.4 6.5 39.4 26 39.4 45.6c0 20.9-17 37.9-37.9 37.9H192c-17.7 0-32 14.3-32 32s14.3 32 32 32H384c17.7 0 32-14.3 32-32s-14.3-32-32-32H357.9C337 448 320 431 320 410.1c0-19.6 15.9-39.2 39.4-45.6c39.9-11 93.9-32.7 138.2-75.8C542.5 245 576 180.6 576 88c0-13.3-10.7-24-24-24H446.4c.3-5.2 .5-10.4 .7-15.8C448.1 21.8 426.5 0 400 0zM48.9 112h84.4c9.1 90.1 29.2 150.3 51.9 190.6c-24.9-11-50.8-26.5-73.2-48.3c-32-31.1-58-76-63-142.3zM464.1 254.3c-22.4 21.8-48.3 37.3-73.2 48.3c22.7-40.3 42.8-100.5 51.9-190.6h84.4c-5.1 66.3-31.1 111.2-63 142.3z"/></svg></i>
                             Best Paper Award</div>
                     </div>
                     <div class="award" id="award-vldb">
-                        <img src="img/awards-vldb2017.png" />
-                        <div class="desc"><i class="fas fa-trophy"></i>
-                            Best Paper Award</div>
+                        <img src="img/awards-vldb2017.png" alt="graphscope awards, best demo award vldb 2017"/>
+                        <div class="desc"><i class="fas fa-trophy"><svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 576 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M400 0H176c-26.5 0-48.1 21.8-47.1 48.2c.2 5.3 .4 10.6 .7 15.8H24C10.7 64 0 74.7 0 88c0 92.6 33.5 157 78.5 200.7c44.3 43.1 98.3 64.8 138.1 75.8c23.4 6.5 39.4 26 39.4 45.6c0 20.9-17 37.9-37.9 37.9H192c-17.7 0-32 14.3-32 32s14.3 32 32 32H384c17.7 0 32-14.3 32-32s-14.3-32-32-32H357.9C337 448 320 431 320 410.1c0-19.6 15.9-39.2 39.4-45.6c39.9-11 93.9-32.7 138.2-75.8C542.5 245 576 180.6 576 88c0-13.3-10.7-24-24-24H446.4c.3-5.2 .5-10.4 .7-15.8C448.1 21.8 426.5 0 400 0zM48.9 112h84.4c9.1 90.1 29.2 150.3 51.9 190.6c-24.9-11-50.8-26.5-73.2-48.3c-32-31.1-58-76-63-142.3zM464.1 254.3c-22.4 21.8-48.3 37.3-73.2 48.3c22.7-40.3 42.8-100.5 51.9-190.6h84.4c-5.1 66.3-31.1 111.2-63 142.3z"/></svg></i>
+                            Best Demo Award</div>
                     </div>
                     <div class="award" id="award-sail">
-                        <img src="img/awards-sail.png" />
-                        <div class="desc"><i class="fas fa-trophy"></i>
+                        <img src="img/awards-sail.png" alt="graphscope awards, sail, super AI leader award"/>
+                        <div class="desc"><i class="fas fa-trophy"><svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 576 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M400 0H176c-26.5 0-48.1 21.8-47.1 48.2c.2 5.3 .4 10.6 .7 15.8H24C10.7 64 0 74.7 0 88c0 92.6 33.5 157 78.5 200.7c44.3 43.1 98.3 64.8 138.1 75.8c23.4 6.5 39.4 26 39.4 45.6c0 20.9-17 37.9-37.9 37.9H192c-17.7 0-32 14.3-32 32s14.3 32 32 32H384c17.7 0 32-14.3 32-32s-14.3-32-32-32H357.9C337 448 320 431 320 410.1c0-19.6 15.9-39.2 39.4-45.6c39.9-11 93.9-32.7 138.2-75.8C542.5 245 576 180.6 576 88c0-13.3-10.7-24-24-24H446.4c.3-5.2 .5-10.4 .7-15.8C448.1 21.8 426.5 0 400 0zM48.9 112h84.4c9.1 90.1 29.2 150.3 51.9 190.6c-24.9-11-50.8-26.5-73.2-48.3c-32-31.1-58-76-63-142.3zM464.1 254.3c-22.4 21.8-48.3 37.3-73.2 48.3c22.7-40.3 42.8-100.5 51.9-190.6h84.4c-5.1 66.3-31.1 111.2-63 142.3z"/></svg></i>
                             Super AI Leader Award</div>
                     </div>
                     <div class="award" id="award-vldb-2">
-                        <img src="img/awards-vldb2020.png" />
-                        <div class="desc"><i class="fas fa-trophy"></i>
+                        <img src="img/awards-vldb2020.png" alt="graphscope awards, best paper award, vldb2020"/>
+                        <div class="desc"><i class="fas fa-trophy"><svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 576 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M400 0H176c-26.5 0-48.1 21.8-47.1 48.2c.2 5.3 .4 10.6 .7 15.8H24C10.7 64 0 74.7 0 88c0 92.6 33.5 157 78.5 200.7c44.3 43.1 98.3 64.8 138.1 75.8c23.4 6.5 39.4 26 39.4 45.6c0 20.9-17 37.9-37.9 37.9H192c-17.7 0-32 14.3-32 32s14.3 32 32 32H384c17.7 0 32-14.3 32-32s-14.3-32-32-32H357.9C337 448 320 431 320 410.1c0-19.6 15.9-39.2 39.4-45.6c39.9-11 93.9-32.7 138.2-75.8C542.5 245 576 180.6 576 88c0-13.3-10.7-24-24-24H446.4c.3-5.2 .5-10.4 .7-15.8C448.1 21.8 426.5 0 400 0zM48.9 112h84.4c9.1 90.1 29.2 150.3 51.9 190.6c-24.9-11-50.8-26.5-73.2-48.3c-32-31.1-58-76-63-142.3zM464.1 254.3c-22.4 21.8-48.3 37.3-73.2 48.3c22.7-40.3 42.8-100.5 51.9-190.6h84.4c-5.1 66.3-31.1 111.2-63 142.3z"/></svg></i>
                             Best Paper Award</div>
                     </div>
                 </div>
