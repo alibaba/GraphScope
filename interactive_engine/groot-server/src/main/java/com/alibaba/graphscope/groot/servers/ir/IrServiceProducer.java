@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.groot.servers.ir;
 
-import com.alibaba.graphscope.common.client.RpcChannelFetcher;
+import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.compiler.api.schema.SchemaFetcher;
@@ -55,7 +55,7 @@ public class IrServiceProducer implements ComputeServiceProducer {
             SchemaFetcher schemaFetcher, ChannelManager channelManager) {
         int executorCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         int port = GremlinConfig.GREMLIN_PORT.get(configs);
-        RpcChannelFetcher channelFetcher =
+        ChannelFetcher channelFetcher =
                 new RpcChannelManagerFetcher(channelManager, executorCount, RoleType.GAIA_RPC);
         com.alibaba.graphscope.common.config.Configs irConfigs = getConfigs();
         IrMetaFetcher irMetaFetcher = new GrootMetaFetcher(schemaFetcher);
