@@ -21,5 +21,5 @@ public class HQPSConfig {
             Config.stringConfig("hqps.uris", "http://localhost:8080");
 
     public static final Config<Long> HQPS_HTTP_TIMEOUT =
-            Config.longConfig("hqps.http.timeout", 6000000l);
+            Config.longConfig("hqps.http.timeout", 6000000L);
 }
