@@ -321,6 +321,8 @@ message PathExpand {
      EndV = 0;
      // all vertices of this path are required for this expansion.
      AllV = 1;
+     // all vertices and edges of this path are required for this expansion.
+     AllVE = 2;
   }
   // A path expansion has a base expansion
   ExpandBase base = 1;
