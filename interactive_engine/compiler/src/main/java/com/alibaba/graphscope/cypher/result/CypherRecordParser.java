@@ -54,7 +54,10 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     public List<AnyValue> parseFrom(IrResult.Record record) {
         Preconditions.checkArgument(
                 record.getColumnsCount() == outputType.getFieldCount(),
-                "column size of results should be consistent with output type");
+                "column size of results "
+                        + record.getColumnsCount()
+                        + " should be consistent with output type "
+                        + outputType.getFieldCount());
         List<AnyValue> columns = new ArrayList<>(record.getColumnsCount());
         for (int i = 0; i < record.getColumnsCount(); i++) {
             IrResult.Column column = record.getColumns(i);

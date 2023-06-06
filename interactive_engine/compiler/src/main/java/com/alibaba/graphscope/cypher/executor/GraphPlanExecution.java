@@ -36,6 +36,7 @@ import org.neo4j.kernel.impl.query.QuerySubscriber;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GraphPlanExecution<C> implements StatementResults.SubscribableExecution {
     private final ExecutionClient<C> client;
@@ -77,7 +78,9 @@ public class GraphPlanExecution<C> implements StatementResults.SubscribableExecu
                 }
                 inputs.addAll(cur.getInputs());
             }
-            return new RelRecordType(StructKind.FULLY_QUALIFIED, outputFields);
+            return new RelRecordType(
+                    StructKind.FULLY_QUALIFIED,
+                    outputFields.stream().distinct().collect(Collectors.toList()));
         } else {
             return logicalPlan.getProcedureCall().getType();
         }

@@ -100,7 +100,7 @@ public class MatchTest {
     }
 
     @Test
-    public void match_7_test() {
+    public void match_5_test() {
         RelNode project = Utils.eval("Match (a:person {id: 2l}) Return a").build();
         GraphLogicalSource source = (GraphLogicalSource) project.getInput(0);
         RexCall condition = (RexCall) source.getFilters().get(0);

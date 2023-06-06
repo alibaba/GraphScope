@@ -146,7 +146,7 @@
     <scala.maven.version>3.2.2</scala.maven.version>
     <cobertura.maven.version>2.7</cobertura.maven.version>
     <noe4j.version>4.4.0</noe4j.version>
-    <snake.yaml.version>2.0</snake.yaml.version>
+    <snake.yaml.version>1.32</snake.yaml.version>
   </properties>
 
   <dependencyManagement>
@@ -279,6 +279,12 @@
         <groupId>org.apache.tinkerpop</groupId>
         <artifactId>gremlin-server</artifactId>
         <version>${tinkerpop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.tinkerpop</groupId>

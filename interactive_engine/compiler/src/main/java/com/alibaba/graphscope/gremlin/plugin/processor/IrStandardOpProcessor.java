@@ -33,7 +33,6 @@ import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
-import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngineFactory;
@@ -89,12 +88,10 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected Configs configs;
     protected PlannerConfig plannerConfig;
     protected RpcClient rpcClient;
-    protected IrMetaFetcher irMetaFetcher;
     protected IrMetaQueryCallback metaQueryCallback;
 
     public IrStandardOpProcessor(
             Configs configs,
-            IrMetaFetcher irMetaFetcher,
             ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
             Graph graph,
@@ -103,7 +100,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.g = g;
         this.configs = configs;
         this.plannerConfig = PlannerConfig.create(this.configs);
-        this.irMetaFetcher = irMetaFetcher;
         this.rpcClient =
                 new RpcClient(
                         PegasusConfig.PEGASUS_GRPC_TIMEOUT.get(this.configs), fetcher.fetch());

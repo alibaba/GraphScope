@@ -227,7 +227,7 @@
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>libs/</classpathPrefix>
                             <mainClass>
-                                com.alibaba.graphscope.cypher.service.CypherServiceMain
+                                com.alibaba.graphscope.GraphServiceMain
                             </mainClass>
                         </manifest>
                     </archive>

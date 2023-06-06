@@ -53,16 +53,7 @@ run:
 	  -Dgraph.schema=${graph.schema} \
 	  -Dgraph.store=${graph.store} \
 	  -Dpegasus.hosts=${pegasus.hosts} \
-	  com.alibaba.graphscope.gremlin.service.GraphServiceMain
-
-cypher_run:
-	cd $(CUR_DIR) && $(java) \
-	  -cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
-	  -Djna.library.path=../executor/ir/target/release \
-	  -Dgraph.schema=${graph.schema} \
-	  -Dgraph.store=${graph.store} \
-	  -Dpegasus.hosts=${pegasus.hosts} \
-	 com.alibaba.graphscope.cypher.service.CypherServiceMain 
+	  com.alibaba.graphscope.GraphServiceMain
 
 # start rpc server
 # make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json 

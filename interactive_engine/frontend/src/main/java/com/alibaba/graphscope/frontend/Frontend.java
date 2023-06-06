@@ -1,12 +1,11 @@
 package com.alibaba.graphscope.frontend;
 
-import com.alibaba.graphscope.common.client.HostsChannelFetcher;
-import com.alibaba.graphscope.common.client.RpcChannelFetcher;
+import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
+import com.alibaba.graphscope.common.client.channel.HostsRpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
-import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.gremlin.service.IrGremlinServer;
 
@@ -30,16 +29,15 @@ public class Frontend implements AutoCloseable {
     }
 
     public void start() throws Exception {
-        logger.info("Configs {}", configs.toString());
+        logger.debug("Configs {}", configs.toString());
         String vineyardSchemaPath = GraphConfig.GRAPH_SCHEMA.get(configs);
-        logger.info("Read schema from vineyard schema file {}", vineyardSchemaPath);
-        IrMetaFetcher irMetaFetcher = new VineyardMetaFetcher(vineyardSchemaPath);
-        RpcChannelFetcher channelFetcher = new HostsChannelFetcher(configs);
+        logger.debug("Read schema from vineyard schema file {}", vineyardSchemaPath);
+        ChannelFetcher channelFetcher = new HostsRpcChannelFetcher(configs);
         int port = FrontendConfig.FRONTEND_SERVICE_PORT.get(configs);
-        IrMetaQueryCallback queryCallback = new IrMetaQueryCallback(irMetaFetcher);
+        IrMetaQueryCallback queryCallback =
+                new IrMetaQueryCallback(new VineyardMetaFetcher(vineyardSchemaPath));
         server = new IrGremlinServer(port);
-        server.start(
-                configs, irMetaFetcher, channelFetcher, queryCallback, TestGraphFactory.VINEYARD);
+        server.start(configs, channelFetcher, queryCallback, TestGraphFactory.VINEYARD);
     }
 
     @Override
