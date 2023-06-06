@@ -44,6 +44,7 @@ jobs:
         df -h
         make analytical CI=false VERSION=${SHORT_SHA}
         df -h
+        # skip build analytical-java
         # make analytical-java CI=false VERSION=${SHORT_SHA}
         make interactive-frontend CI=false VERSION=${SHORT_SHA}
         df -h
@@ -68,13 +69,15 @@ jobs:
         # graphscope image
         sudo docker tag graphscope/coordinator:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker tag graphscope/analytical:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical:${tag}
-        sudo docker tag graphscope/analytical-java:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
+        # skip build analytical-java
+        # sudo docker tag graphscope/analytical-java:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
         sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
 
         sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
+        # skip build analytical-java
         # Don't push analytical-java, since it's relatively large and not used at this moment.
         # sudo docker push ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
@@ -106,14 +109,16 @@ jobs:
         # graphscope image
         sudo docker tag graphscope/coordinator:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker tag graphscope/analytical:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical:${tag}
-        sudo docker tag graphscope/analytical-java:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
+        # skip build analytical-java
+        # sudo docker tag graphscope/analytical-java:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
         sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
-        
+
         sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
+        # skip build analytical-java
+        # sudo docker push ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
@@ -128,14 +133,16 @@ jobs:
         tag=latest
         sudo docker tag graphscope/coordinator:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker tag graphscope/analytical:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical:${tag}
-        sudo docker tag graphscope/analytical-java:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
+        # skip build analytical-java
+        # sudo docker tag graphscope/analytical-java:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
         sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
-        
+
         sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
+        # skip build analytical-java
+        # sudo docker push ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
