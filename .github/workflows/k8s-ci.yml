@@ -225,7 +225,8 @@ jobs:
   build-analytical-java:
     runs-on: [self-hosted, manylinux2014]
     needs: [changes]
-    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    #if: ${{ github.repository == 'alibaba/GraphScope' }}
+    if: false
     steps:
     - uses: actions/checkout@v3
 
@@ -513,6 +514,7 @@ jobs:
           export GS_TAG=${SHORT_SHA}
 
           cd ${GITHUB_WORKSPACE}/python
+          export PATH=${HOME}/.local/bin:${PATH}
 
           python3 -m pytest --ignore=./graphscope/tests/kubernetes/test_store_service.py \
                           --cov=graphscope --cov-config=.coveragerc --cov-report=xml \

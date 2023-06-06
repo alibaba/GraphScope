@@ -523,7 +523,15 @@ cyan_underlined() { print_in_color "\e[4;36m" "$*"; }
 
 # src/lib/get_os_version.sh
 get_os_version() {
-  if [ -f /etc/os-release ]; then
+  if [ -f /etc/centos-release ]; then
+    # Older Red Hat, CentOS, Alibaba Cloud Linux etc.
+    PLATFORM=CentOS
+    OS_VERSION=$(sed 's/.* \([0-9]\).*/\1/' < /etc/centos-release)
+    if grep -q "Alibaba Cloud Linux" /etc/centos-release; then
+      PLATFORM="Aliyun_based_on_CentOS"
+      OS_VERSION=$(rpm -E %{rhel})
+    fi
+  elif [ -f /etc/os-release ]; then
     # freedesktop.org and systemd
     . /etc/os-release
     PLATFORM="${NAME}"
@@ -541,10 +549,6 @@ get_os_version() {
     # Older Debian/Ubuntu/etc.
     PLATFORM=Debian
     OS_VERSION=$(cat /etc/debian_version)
-  elif [ -f /etc/centos-release ]; then
-    # Older Red Hat, CentOS, etc.
-    PLATFORM=CentOS
-    OS_VERSION=$(sed 's/.* \([0-9]\).*/\1/' < /etc/centos-release)
   else
     # Fall back to uname, e.g. "Linux <version>", also works for BSD, Darwin, etc.
     PLATFORM=$(uname -s)
@@ -1490,8 +1494,8 @@ gs_install_deps_command() {
   fi
 
   check_os_compatibility() {
-    if [[ "${OS_PLATFORM}" != *"Ubuntu"* && "${OS_PLATFORM}" != *"CentOS"* && "${OS_PLATFORM}" != *"Darwin"* ]]; then
-      err "The script is only support platforms of Ubuntu/CentOS/macOS"
+    if [[ "${OS_PLATFORM}" != *"Ubuntu"* && "${OS_PLATFORM}" != *"CentOS"* && "${OS_PLATFORM}" != *"Darwin"* && "${OS_PLATFORM}" != *"Aliyun"* ]];  then
+      err "The script is only support platforms of Ubuntu/CentOS/macOS/AliyunOS"
       exit 1
     fi
 
@@ -1641,17 +1645,22 @@ gs_install_deps_command() {
     if [[ "${OS_PLATFORM}" == *"Ubuntu"* ]]; then
       ${SUDO} apt-get update -y
       DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC ${SUDO} apt-get install -y ${BASIC_PACKAGES_UBUNTU[*]}
-    elif [[ "${OS_PLATFORM}" == *"CentOS"* ]]; then
+    elif [[ "${OS_PLATFORM}" == *"CentOS"* || "${OS_PLATFORM}" == *"Aliyun"* ]]; then
       if [[ "${OS_VERSION}" -eq "7" ]]; then
         ${SUDO} yum install -y ${BASIC_PACKAGES_CENTOS_7[*]}
         ${SUDO} yum install -y ${ADDITIONAL_PACKAGES_CENTOS_7[*]}
       else
-        sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-        sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-        ${SUDO} yum install -y 'dnf-command(config-manager)'
-        ${SUDO} dnf install -y epel-release
+        if [[ "${OS_PLATFORM}" == *"Aliyun"* ]]; then 
+          ${SUDO} yum install -y 'dnf-command(config-manager)'
+          ${SUDO} dnf install -y epel-release --allowerasing
+        else
+          sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+          sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+          ${SUDO} yum install -y 'dnf-command(config-manager)'
+          ${SUDO} dnf install -y epel-release
+          ${SUDO} dnf config-manager --set-enabled powertools
+        fi
         ${SUDO} dnf config-manager --set-enabled epel
-        ${SUDO} dnf config-manager --set-enabled powertools
         ${SUDO} yum install -y ${BASIC_PACKAGES_CENTOS_8[*]}
         ${SUDO} yum install -y ${ADDITIONAL_PACKAGES_CENTOS_8[*]}
       fi

@@ -39,6 +39,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    deployment/install_on_local
    deployment/deploy_graphscope_on_self_managed_k8s
    deployment/deploy_with_existing_vineyard_cluster
+   deployment/persistent_storage_of_graphs_on_k8s
    .. deployment/deploy_graphscope_on_clouds
    deployment/deploy_graphscope_with_helm
    deployment/install_in_offline_env
@@ -108,7 +109,6 @@ and the vineyard store that offers efficient in-memory data transfers.
    development/how_to_test
    .. development/how_to_debug
    development/how_to_contribute
- 
 
 .. toctree::
    :maxdepth: 1

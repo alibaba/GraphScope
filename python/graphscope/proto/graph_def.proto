@@ -103,6 +103,7 @@ message TypeDefPb {
     LabelIdPb label_id = 3;
     TypeEnumPb type_enum = 4;
     repeated PropertyDefPb props = 5;
+    string comment = 6;
 }
 
 message LabelIdPb {

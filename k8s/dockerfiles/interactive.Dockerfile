@@ -87,4 +87,4 @@ RUN python3 -m pip install --no-cache-dir vineyard vineyard-io --user
 USER graphscope
 WORKDIR /home/graphscope
 
-
+ENV PATH=${PATH}:/home/graphscope/.local/bin

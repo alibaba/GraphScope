@@ -38,6 +38,8 @@ RUN sudo chmod a+wrx /tmp
 USER graphscope
 WORKDIR /home/graphscope
 
+ENV PATH=${PATH}:/home/graphscope/.local/bin
+
 # init log directory
 RUN sudo mkdir /var/log/graphscope \
   && sudo chown -R $(id -u):$(id -g) /var/log/graphscope

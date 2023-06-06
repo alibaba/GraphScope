@@ -54,7 +54,7 @@ RUN sudo chmod a+wrx /tmp
 USER graphscope
 WORKDIR /home/graphscope
 
-ENV PATH ${PATH}:/home/graphscope/.local/bin:/opt/graphscope/bin
+ENV PATH=${PATH}:/home/graphscope/.local/bin
 
 COPY --from=builder /home/graphscope/install /opt/graphscope/
 RUN python3 -m pip install --user --no-cache-dir /opt/graphscope/*.whl && sudo rm -rf /opt/graphscope/*.whl
