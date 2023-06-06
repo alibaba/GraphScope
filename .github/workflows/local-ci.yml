@@ -235,7 +235,7 @@ jobs:
 
     - name: Build Wheels
       run: |
-        # sleep infinity
+        sleep infinity
         git submodule update --init
         cd ${GITHUB_WORKSPACE}/learning_engine/graph-learn && git submodule update --init third_party/pybind11
 
