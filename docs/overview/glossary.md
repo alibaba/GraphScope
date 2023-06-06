@@ -75,7 +75,7 @@ Repo: https://github.com/v6d-io/v6d
 
 
 #### GIE
-GraphScope Interactive Engine, or GIE for short, utilizes Pegasus to enable parallel execution in distribution.
+GraphScope Interactive Engine, or GIE for short, utilizes Gaia (or Pegasus) to enable parallel execution in distribution.
 It offers storage options consisting of the immutable, in-memory [v6d](../interactive_engine/deployment.md)
 and the mutable, persistent [groot](../storage_engine/groot.md). GIE can process queries using
 [Tinkerpop's Gremlin language](../interactive_engine/tinkerpop_eco.md), with support for
@@ -83,19 +83,21 @@ and the mutable, persistent [groot](../storage_engine/groot.md). GIE can process
 a sophisticated [Intermediate Representation (IR) Layer](../interactive_engine/design_of_gie.md) that
 dissociates the query languages from the computing engines and stores.
 
-#### Pegasus, or GAIA
-
-Pegasus is a distributed data-parallel compute engine based on the cyclic dataflow computation model, which
+#### GAIA
+Gaia is a distributed data-parallel compute engine based on the cyclic dataflow computation model, which
 has been employed by GIE to support large-scale interactive graph queries.
-Pegasus serves as the computation engine, lying at the core of the GraphScope system. Users can construct
+Gaia serves as the computation engine, lying at the core of the GraphScope system. Users can construct
 the computation via a directed acyclic graph (DAG), and easily run the job on their laptop or even a
 distributed environment across a cluster of computers. Note that cycle can be introduced via the loop
 control flow, while the whole loop contexts will be wrapped in a scope within which the cycle is
-completely hidden from the users. Scope is a unique concept of Pegasus to handle complex control flow
+completely hidden from the users. Scope is a unique concept of Gaia to handle complex control flow
 such as loop and conditional. In addition, it is also the key to many application-level primitives,
 e.g. correlated subtask, as well as advanced scheduling techniques, e.g. early-stop mechanism.
 
 Read more: [Paper on NSDI 2021](https://www.usenix.org/system/files/nsdi21-qian.pdf)
+
+#### Pegasus
+A legacy name of Gaia, for which we use Gaia and Pegasus interchangeably in the project.
 
 #### Ingress
 
@@ -104,11 +106,6 @@ Ingress is an automated system for incremental graph processing. It is able to i
 Ingress is planned to be integrated into GraphScope, as an incrementalization module in the analytical engine(GAE).
 
 Read more: [Paper on VLDB2021](http://vldb.org/pvldb/vol14/p1613-gong.pdf)
-
-#### Pegasus
-
-The code name of runtime engine under the GAIA.
-TODO(Robin): Add this.
 
 #### PIE-model
 
