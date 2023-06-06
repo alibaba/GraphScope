@@ -240,7 +240,7 @@ impl ReadGraph for ExpStore {
             .store
             .count_all_vertices(label_ids.as_ref());
         let partial_count = count / workers_num as usize;
-        let take_count = if (worker_idx + 1) == workers_num {
+        let take_count = if (worker_idx + 1) % workers_num == 0 {
             // the last part
             count - partial_count * (workers_num as usize - 1)
         } else {
@@ -250,7 +250,7 @@ impl ReadGraph for ExpStore {
         let result = self
             .store
             .get_all_vertices(label_ids.as_ref())
-            .skip(worker_idx as usize * partial_count)
+            .skip((worker_idx % workers_num) as usize * partial_count)
             .take(take_count)
             .map(move |v| to_runtime_vertex(v, props.clone()));
 
@@ -276,7 +276,7 @@ impl ReadGraph for ExpStore {
         let workers_num = self.cluster_info.get_local_worker_num()?;
         let count = self.store.count_all_edges(label_ids.as_ref());
         let partial_count = count / workers_num as usize;
-        let take_count = if (worker_idx + 1) == workers_num {
+        let take_count = if (worker_idx + 1) % workers_num == 0 {
             count - partial_count * (workers_num as usize - 1)
         } else {
             partial_count
@@ -285,7 +285,7 @@ impl ReadGraph for ExpStore {
         let result = self
             .store
             .get_all_edges(label_ids.as_ref())
-            .skip(worker_idx as usize * partial_count)
+            .skip((worker_idx % workers_num) as usize * partial_count)
             .take(take_count)
             .map(move |v| to_runtime_edge(v, props.clone()));
 

@@ -717,7 +717,7 @@ fn assign_worker_partitions(
     let worker_idx = cluster_info.get_worker_index()?;
     let mut worker_partition_list = vec![];
     for pid in query_partitions {
-        if *pid % workers_num == worker_idx {
+        if *pid % workers_num == worker_idx % workers_num {
             worker_partition_list.push(*pid as PartitionId)
         }
     }
