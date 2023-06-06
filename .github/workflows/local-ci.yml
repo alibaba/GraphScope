@@ -233,9 +233,14 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-
 
+    - name: Install java 11 (TODO(siyuan) Remove after newer wheel image are released)
+      run: |
+        sudo yum install java-11-openjdk
+        sudo yum remove java-1.8.0-openjdk-devel java-1.8.0-openjdk java-1.8.0-openjdk-headless -y
+
     - name: Build Wheels
       run: |
-        sleep infinity
+        #sleep infinity
         git submodule update --init
         cd ${GITHUB_WORKSPACE}/learning_engine/graph-learn && git submodule update --init third_party/pybind11
 
