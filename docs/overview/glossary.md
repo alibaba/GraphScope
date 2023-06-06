@@ -15,7 +15,7 @@ Learn more: [Paper on ICDE2023](#), [Doc](https://graphscope.io/docs/latest/anal
 
 the code name of analytical engine in GraphScope. It was first indroduced in the SIGMOD2017 paper, represents <u>GRA</u>ph <u>P</u>arallel processing <u>E</u>ngine. The analytical engine inherits the design proposed in this paper.
 
-The core part of GRAPE is opensourced at https://github.com/alibaba/libgrape-lite, which is a dependency and serves as the analytical engine in GraphScope. 
+The core part of GRAPE is opensourced at https://github.com/alibaba/libgrape-lite, which is a dependency and serves as the analytical engine in GraphScope.
 
 Read more: [Best Paper on SIGMOD2017](https://homepages.inf.ed.ac.uk/wenfei/papers/sigmod17-GRAPE.pdf), [Design of GAE](https://graphscope.io/docs/latest/analytical_engine/design_of_gae.html)
 
@@ -46,7 +46,7 @@ Repo: https://github.com/alibaba/GraphAr
 
 #### Groot
 
-Groot is the code name of the persistent storage in GraphScope. It was named after the tree Groot in the movie "Guardians of the Galaxy". The name "g-root" also indicates the fundamental role of the storage component in the graph system. 
+Groot is the code name of the persistent storage in GraphScope. It was named after the tree Groot in the movie "Guardians of the Galaxy". The name "g-root" also indicates the fundamental role of the storage component in the graph system.
 
 [Read more](https://graphscope.io/docs/latest/storage_engine/groot.html)
 
@@ -62,21 +62,40 @@ Read more: [Paper on ICDE2023](#), [Code](https://github.com/alibaba/libgrape-li
 
 #### MaxGraph (deprecated)
 
-MaxGraph is the deprecated interactive engine in GraphScope. It was replaced by a new designed engine GAIA with multiple query language (e.g., Gremlin/Cypher...) support. 
+MaxGraph is the deprecated interactive engine in GraphScope. It was replaced by a new designed engine GAIA with multiple query language (e.g., Gremlin/Cypher...) support.
 
 
 #### Vineyard, or v6d
 
-Vineyard is the code name of the immutable memory mangement. Its name suggests it was a underlying component of GRAPE.
+Vineyard is the code name of the immutable memory management. Its name suggests it was a underlying component of GRAPE.
 
 Vineyard (v6d) is an innovative in-memory immutable data manager that offers out-of-the-box high-level abstractions and zero-copy in-memory sharing for distributed data in various big data tasks, such as graph analytics (e.g., GraphScope), numerical computing (e.g., Mars), and machine learning. It is a CNCF sandbox project.
 
 Repo: https://github.com/v6d-io/v6d
 
 
-#### GAIA
+#### GIE
+GraphScope Interactive Engine, or GIE for short, utilizes Pegasus to enable parallel execution in distribution.
+It offers storage options consisting of the immutable, in-memory [v6d](../interactive_engine/deployment.md)
+and the mutable, persistent [groot](../storage_engine/groot.md). GIE can process queries using
+[Tinkerpop's Gremlin language](../interactive_engine/tinkerpop_eco.md), with support for
+[Neo4j's openCypher](https://opencypher.org/) to come soon. The capabilities of GIE are amplified by
+a sophisticated [Intermediate Representation (IR) Layer](../interactive_engine/design_of_gie.md) that
+dissociates the query languages from the computing engines and stores.
 
-TODO(Robin): Add this.
+#### Pegasus, or GAIA
+
+Pegasus is a distributed data-parallel compute engine based on the cyclic dataflow computation model, which
+has been employed by GIE to support large-scale interactive graph queries.
+Pegasus serves as the computation engine, lying at the core of the GraphScope system. Users can construct
+the computation via a directed acyclic graph (DAG), and easily run the job on their laptop or even a
+distributed environment across a cluster of computers. Note that cycle can be introduced via the loop
+control flow, while the whole loop contexts will be wrapped in a scope within which the cycle is
+completely hidden from the users. Scope is a unique concept of Pegasus to handle complex control flow
+such as loop and conditional. In addition, it is also the key to many application-level primitives,
+e.g. correlated subtask, as well as advanced scheduling techniques, e.g. early-stop mechanism.
+
+Read more: [Paper on NSDI 2021](https://www.usenix.org/system/files/nsdi21-qian.pdf)
 
 #### Ingress
 
