@@ -34,6 +34,7 @@ import uuid
 import warnings
 
 try:
+    import vineyard
     from kubernetes import client as kube_client
     from kubernetes import config as kube_config
 except ImportError:
@@ -61,6 +62,7 @@ from graphscope.framework.graph import GraphDAGNode
 from graphscope.framework.operation import Operation
 from graphscope.framework.utils import decode_dataframe
 from graphscope.framework.utils import decode_numpy
+from graphscope.framework.utils import random_string
 from graphscope.interactive.query import InteractiveQuery
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import message_pb2
@@ -585,6 +587,10 @@ class Session(object):
             "show_log",
             "log_level",
         )
+
+        # the mapping table from old vineyard object id to new vineyard object id
+        self._vineyard_object_mapping_table = {}
+
         saved_locals = locals()
         for param in self._accessable_params:
             self._config_params[param] = saved_locals[param]
@@ -1024,15 +1030,7 @@ class Session(object):
             ):
                 api_client = self._config_params["k8s_client_config"]
             else:
-                try:
-                    api_client = resolve_api_client(
-                        self._config_params["k8s_client_config"]
-                    )
-                except kube_config.ConfigException as e:
-                    raise RuntimeError(
-                        "Kubernetes environment not found, you may want to"
-                        ' launch session locally with param cluster_type="hosts"'
-                    ) from e
+                api_client = self._get_api_client()
             self._launcher = KubernetesClusterLauncher(
                 api_client=api_client,
                 **self._config_params,
@@ -1103,6 +1101,154 @@ class Session(object):
         """Get configuration of the session."""
         return self._config_params
 
+    def _get_api_client(self):
+        try:
+            api_client = resolve_api_client(self._config_params["k8s_client_config"])
+        except kube_config.ConfigException as e:
+            raise RuntimeError(
+                "Kubernetes environment not found, you may want to"
+                ' launch session locally with param cluster_type="hosts"'
+            ) from e
+        return api_client
+
+    def _check_pvc_exists(self, pvc_name, pvc_namespace):
+        api_client = self._get_api_client()
+        _core_api = kube_client.CoreV1Api(api_client)
+        try:
+            _core_api.read_namespaced_persistent_volume_claim(
+                name=pvc_name,
+                namespace=pvc_namespace,
+            )
+        except kube_client.rest.ApiException as e:
+            raise RuntimeError(
+                f"PVC {pvc_name} not found in namespace {pvc_namespace}"
+            ) from e
+
+    def _check_vineyard_deployment_exists(
+        self, vineyard_deployment_name, vineyard_deployment_namespace
+    ):
+        api_client = self._get_api_client()
+        _app_api = kube_client.AppsV1Api(api_client)
+        try:
+            _app_api.read_namespaced_deployment(
+                name=vineyard_deployment_name,
+                namespace=vineyard_deployment_namespace,
+            )
+        except kube_client.rest.ApiException as e:
+            if e.status == 404:
+                raise RuntimeError(
+                    f"Vineyard deployment {vineyard_deployment_name} not found in namespace {vineyard_deployment_namespace}"
+                ) from e
+            else:
+                raise e
+
+    def store_to_pvc(self, graphIDs, path: str, pvc_name: str):
+        """
+        Stores the given graph IDs to the given path with the given PVC.
+        Also, if you want to store graphs of different sessions to the same pv,
+        you'd better to create different pvc for different sessions at first.
+
+        Notice, before calling this function, the KUBECONFIG environment variable
+        should be set to the path of your kubeconfig file. And you should make sure
+        that the pvc is bound to the pv and the pv's capacity is enough to store the
+        graphs.
+
+        The method uses the vineyardctl to create a kubernetes job to serialize
+        the selected graphs. For more information, see the vineyardctl documentation.
+
+        https://github.com/v6d-io/v6d/tree/main/k8s/cmd#vineyardctl-deploy-backup-job
+
+        Args:
+            graph_ids: The list of graph IDs to store.
+                       Supported types:
+                       - list: list of vineyard.ObjectID or graphscope.Graph
+            path: The path in the pv to which the pvc is bound.
+            pvc_name: The name of the PVC.
+
+        Raises:
+            RuntimeError: If the cluster type is not Kubernetes.
+        """
+        if self._cluster_type != types_pb2.K8S:
+            raise RuntimeError("Only support kubernetes cluster")
+        object_ids = []
+        for object in graphIDs:
+            if isinstance(object, Graph):
+                object_ids.append(object.vineyard_id)
+            else:
+                object_ids.append(vineyard.ObjectID(object))
+        object_ids = ",".join(repr(id) for id in object_ids)
+        vineyard_deployment_name = self._config_params["k8s_vineyard_deployment"]
+        namespace = self._config_params["k8s_namespace"]
+        self._check_vineyard_deployment_exists(vineyard_deployment_name, namespace)
+        self._check_pvc_exists(pvc_name, namespace)
+        # The next function will create a kubernetes job for backuping
+        # the specific graphIDs to the specific path of the specific pvc
+        vineyard.deploy.vineyardctl.deploy.backup_job(
+            backup_name="vineyard-backup-" + random_string(6),
+            vineyard_deployment_name=vineyard_deployment_name,
+            vineyard_deployment_namespace=namespace,
+            namespace=namespace,
+            path=path,
+            objectids=object_ids,
+            pvc_name=pvc_name,
+        )
+
+    def restore_from_pvc(self, path: str, pvc_name: str):
+        """
+        Restores the graphs from the given path in the given PVC.
+        Notice, before calling this function, the KUBECONFIG environment variable
+        should be set to the path of your kubeconfig file.
+
+        Args:
+            path: The path in the pv to which the pvc is bound.
+            pvc_name: The name of the PVC.
+
+        Raises:
+            RuntimeError: If the cluster type is not Kubernetes.
+        """
+        if self._cluster_type != types_pb2.K8S:
+            raise RuntimeError("Only support kubernetes cluster")
+        vineyard_deployment_name = self._config_params["k8s_vineyard_deployment"]
+        namespace = self._config_params["k8s_namespace"]
+        self._check_vineyard_deployment_exists(vineyard_deployment_name, namespace)
+        self._check_pvc_exists(pvc_name, namespace)
+        random_suffix = random_string(6)
+        vineyard.deploy.vineyardctl.deploy.recover_job(
+            recover_name="vineyard-recover-" + random_suffix,
+            vineyard_deployment_name=vineyard_deployment_name,
+            vineyard_deployment_namespace=namespace,
+            namespace=namespace,
+            recover_path=path,
+            pvc_name=pvc_name,
+        )
+
+        api_client = self._get_api_client()
+        _core_api = kube_client.CoreV1Api(api_client)
+        try:
+            config_map = _core_api.read_namespaced_config_map(
+                name="vineyard-recover-" + random_suffix + "-mapping-table",
+                namespace=namespace,
+            )
+        except kube_client.rest.ApiException as e:
+            if e.status == 404:
+                raise RuntimeError(
+                    f"ConfigMap vineyard-recover-{random_suffix}-mapping-table not found in namespace {namespace}"
+                ) from e
+            else:
+                raise e
+
+        # parse configmap data to the self._vineyard_object_mapping_table
+        self._vineyard_object_mapping_table = config_map.data
+
+    def get_vineyard_object_mapping_table(self):
+        """
+        Get the vineyard object mapping table
+        from the old object id to new object id
+        during storing and restoring graph to pvc
+        on the kubernetes cluster.
+        """
+        return self._vineyard_object_mapping_table
+
     def g(
         self,
         incoming_data=None,
@@ -1113,6 +1259,16 @@ class Session(object):
         vertex_map="global",
         compact_edges=False,
     ):
+        if (
+            isinstance(incoming_data, vineyard.ObjectID)
+            and repr(vineyard.ObjectID(incoming_data))
+            in self._vineyard_object_mapping_table
+        ):
+            graph_vineyard_id = self._vineyard_object_mapping_table[
+                repr(vineyard.ObjectID(incoming_data))
+            ]
+            logger.info("Restore graph from original graph: %s", graph_vineyard_id)
+            incoming_data = vineyard.ObjectID(graph_vineyard_id)
         return self._wrapper(
             GraphDAGNode(
                 self,
