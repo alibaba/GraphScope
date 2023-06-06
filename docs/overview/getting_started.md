@@ -237,8 +237,8 @@ print(ret.to_dataframe(selector={'id': 'v.id', 'distance': 'r'})
 ````
 
 ## Graph Interactive Query Quick Start
-The installed `graphscope` package allows you to easily interact with a graph on your local machine.
-All you need is to create the `gremlin` instance, through which all gremlin queries can be submitted.
+With the `graphscope` package already installed, you can effortlessly engage with a graph on your local machine.
+You simply need to create the `gremlin` instance to serve as the conduit for submitting all Gremlin queries.
 
 ````{dropdown} Example: Run Interactive Queries in GraphScope
 ```python
