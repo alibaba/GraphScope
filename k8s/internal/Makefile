@@ -19,6 +19,11 @@ endif
 
 # x86_64 or arm64
 ARCH := $(shell uname -m)
+ifeq ($(ARCH), arm64)
+	MACOS_WHEEL_VERSION := 12_0
+else
+	MACOS_WHEEL_VERSION := 11_0
+endif
 
 BUILD_PROGRESS    = auto
 
@@ -37,7 +42,7 @@ GRAPHSCOPE_HOME ?= /usr/local
 INSTALL_PREFIX ?= /opt/graphscope
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.14.5
+VINEYARD_VERSION ?= v0.15.0
 PROFILE ?= release
 CI ?= false
 
@@ -69,34 +74,37 @@ graphscope-darwin-py3:
 		export INSTALL_PREFIX=/opt/graphscope && \
 		for _ in {1..5}; do if make INSTALL_PREFIX=${INSTALL_PREFIX}; then break; fi; done && \
 		for _ in {1..5}; do if $(MAKE_INSTALL_COMMAND); then break; fi; done && \
-		sudo cp -rs ${INSTALL_PREFIX}/* /usr/local/ && \
+		(sudo cp -rs ${INSTALL_PREFIX}/* /usr/local/ || true) && \
 		python3 $(WORKING_DIR)/../utils/precompile.py --graph --app
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
-		export GRAPHSCOPE_HOME=/usr/local && \
+		if [[ "${ARCH}" == "arm64" ]]; then export GRAPHSCOPE_HOME=/opt/homebrew; else export GRAPHSCOPE_HOME=/usr/local; fi && \
 		rm -rf build dist/*.whl || true && \
 		sudo strip -s $(WORKING_DIR)/../../analytical_engine/exported_symbols_osx.lds ${INSTALL_PREFIX}/bin/grape_engine || true && \
 		sudo strip ${INSTALL_PREFIX}/bin/gaia_executor && \
 		export DYLD_LIBRARY_PATH=/usr/local/lib:$$DYLD_LIBRARY_PATH && \
 		install_name_tool -add_rpath /usr/local/lib ${INSTALL_PREFIX}/bin/gaia_executor && \
-		package_name=gs-include python3 setup.py bdist_wheel --plat=macosx_10_9_${ARCH} && \
+		package_name=gs-include python3 setup.py bdist_wheel --plat=macosx_${MACOS_WHEEL_VERSION}_${ARCH} && \
 		rm -rf build && \
-		package_name=gs-apps python3 setup.py bdist_wheel --plat=macosx_10_9_${ARCH} && \
+		package_name=gs-apps python3 setup.py bdist_wheel --plat=macosx_${MACOS_WHEEL_VERSION}_${ARCH} && \
 		rm -rf build && \
-		package_name=gs-engine python3 setup.py bdist_wheel --plat=macosx_10_9_${ARCH} && \
+		package_name=gs-engine python3 setup.py bdist_wheel --plat=macosx_${MACOS_WHEEL_VERSION}_${ARCH} && \
 		rm -rf build && \
-		package_name=gs-coordinator python3 setup.py bdist_wheel --plat=macosx_10_9_${ARCH} && \
+		package_name=gs-coordinator python3 setup.py bdist_wheel --plat=macosx_${MACOS_WHEEL_VERSION}_${ARCH} && \
 		rm -rf build && \
-		package_name=graphscope python3 setup.py bdist_wheel --plat=macosx_10_9_${ARCH} && \
+		package_name=graphscope python3 setup.py bdist_wheel --plat=macosx_${MACOS_WHEEL_VERSION}_${ARCH} && \
 		pip3 install delocate && \
 		for wheel in `ls dist/*.whl`; do \
 			delocate-listdeps -a -d $$wheel; \
 			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
 		done
-# TODO(siyuan): Remove the sed
+
 graphscope-manylinux2014-py3-nodocker:
 	cd $(WORKING_DIR)/../.. && \
+	if [[ "${ARCH}" == "aarch64" ]]; then python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
+		export AUDITWHEEL_PLAT=manylinux2014_${ARCH}; \
+		python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; fi && \
 	for _ in {1..5}; do if make INSTALL_PREFIX=${INSTALL_PREFIX}; then break; fi; done && \
 	for _ in {1..5}; do if $(MAKE_INSTALL_COMMAND); then break; fi; done && \
 	if [ ${INSTALL_PREFIX} != ${GRAPHSCOPE_HOME} ]; then sudo cp -rsn ${INSTALL_PREFIX}/* ${GRAPHSCOPE_HOME}/; fi && \
@@ -145,32 +153,58 @@ graphscope-client-manylinux2014-py3-nodocker:
 	cmake -DKNN=OFF -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
 	make graphlearn_shared -j`nproc` && \
 	export LD_LIBRARY_PATH=$(WORKING_DIR)/../../learning_engine/graph-learn/graphlearn/built/lib:$$LD_LIBRARY_PATH && \
+	if [[ "${ARCH}" == "aarch64" ]]; then export AUDITWHEEL_PLAT=manylinux2014_${ARCH}; fi && \
 	for py in cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311; do \
 		cd $(WORKING_DIR)/../../python; \
 		export PATH=/opt/python/$$py/bin:$$PATH; \
 		python3 -m pip install -U pip; \
-		if [ "$$py" == "cp311-cp311" ]; then \
-			python3 -m pip install "numpy" "pandas" "grpcio" "grpcio-tools" wheel "auditwheel==5.0.0"; \
-		elif [ "$$py" == "cp310-cp310" ]; then \
-			 python3 -m pip install "numpy==1.21.6" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
-		elif [ "$$py" == "cp39-cp39" ]; then \
-			python3 -m pip install "numpy==1.19.3" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
+		if [[ "$$py" == "cp311-cp311" ]]; then \
+			if [[ "${ARCH}" == "aarch64" ]]; then \
+				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
+				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
+			else \
+				python3 -m pip install "grpcio" "grpcio-tools"; \
+			fi; \
+			python3 -m pip install mypy-protobuf "numpy==1.23.2" "pandas" wheel "auditwheel==5.0.0"; \
+		elif [[ "$$py" == "cp310-cp310" ]]; then \
+			if [[ "${ARCH}" == "aarch64" ]]; then \
+				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
+				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
+			else \
+				python3 -m pip install "grpcio>=1.49" "grpcio-tools>=1.49"; \
+			fi; \
+			python3 -m pip install mypy-protobuf "numpy==1.21.2" "pandas" wheel "auditwheel==5.0.0"; \
+		elif [[ "$$py" == "cp39-cp39" ]]; then \
+			if [[ "${ARCH}" == "aarch64" ]]; then \
+				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
+				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
+			else \
+				python3 -m pip install "grpcio>=1.49" "grpcio-tools>=1.49"; \
+			fi; \
+			python3 -m pip install mypy-protobuf "numpy==1.19.3" "pandas" wheel "auditwheel==5.0.0"; \
 		else \
-			python3 -m pip install "numpy==1.18.5" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
+			if [[ "${ARCH}" == "aarch64" ]]; then \
+				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
+				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
+			else \
+				python3 -m pip install "grpcio>=1.49" "grpcio-tools>=1.49"; \
+			fi; \
+			python3 -m pip install mypy-protobuf "numpy" "pandas" wheel "auditwheel==5.0.0"; \
 		fi; \
 		sudo rm -rf build; \
 		sudo rm -rf dist/*.whl; \
 		python3 setup.py bdist_wheel; \
 		cd dist; \
-		auditwheel repair ./*.whl; \
+		auditwheel repair ./*.whl --plat=manylinux2014_${ARCH}; \
 	done
 
 graphscope-client-darwin-py3:
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
-		git submodule update --init third_party/pybind11 && \
+		(git submodule update --init third_party/pybind11 || true) && \
 		export GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} && \
 		cd graphlearn && \
-		rm -rf cmake-build && \
+		sudo rm -rf cmake-build && \
+		sudo rm -rf src/generated && \
 		mkdir -p cmake-build && \
 		cd cmake-build && \
 		cmake -DKNN=OFF -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
@@ -179,15 +213,25 @@ graphscope-client-darwin-py3:
 		cd $(WORKING_DIR)/../../python && \
 		py=$$(python3 -V 2>&1 | awk '{print $$2}' | awk -F '.' '{print $$1$$2}') && \
 		pip3 install -U pip && \
-		if [ "$$py" == "311" ]; then \
-			pip3 install "numpy" "pandas" "grpcio" "grpcio-tools" delocate wheel; \
-		elif [ "$$py" == "310" ]; then \
-			pip3 install "numpy==1.21.6" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+		if [[ "$$py" == "311" ]]; then \
+			pip3 install mypy-protobuf "numpy==1.23.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+		elif [[ "$$py" == "310" ]]; then \
+			pip3 install mypy-protobuf "numpy==1.21.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+		elif [[ "$$py" == "cp39-cp39" ]]; then \
+			if [[ "${ARCH}" == "arm64" ]]; then \
+				pip3 install mypy-protobuf "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+			else \
+				pip3 install mypy-protobuf "numpy==1.19.3" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+			fi; \
 		else \
-			pip3 install "numpy==1.18.5" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+			if [[ "${ARCH}" == "arm64" ]]; then \
+				pip3 install mypy-protobuf "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+			else \
+				pip3 install mypy-protobuf "numpy==1.18.5" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+			fi; \
 		fi; \
 		rm -rf build dist/*.whl || true && \
-		python3 setup.py bdist_wheel --plat=macosx_10_9_${ARCH} && \
+		python3 setup.py bdist_wheel --plat=macosx_${MACOS_WHEEL_VERSION}_${ARCH} && \
 		for wheel in `ls dist/*.whl`; do \
 			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
 		done

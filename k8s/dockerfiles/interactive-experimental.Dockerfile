@@ -37,3 +37,4 @@ RUN sudo chown -R graphscope:graphscope /opt/graphscope
 USER graphscope
 WORKDIR /home/graphscope
 
+ENV PATH=${PATH}:/home/graphscope/.local/bin

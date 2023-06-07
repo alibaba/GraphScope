@@ -18,9 +18,11 @@ rpc.target:=start_rpc_server
 
 target.revision:=0.0.1-SNAPSHOT
 
+QUIET_OPT := --quiet
+
 build:
 	cd $(CUR_DIR)/.. && \
-		mvn clean install -DskipTests -Drevision=${target.revision} -Pexperimental --quiet && \
+		mvn clean install -DskipTests -Drevision=${target.revision} -Pexperimental ${QUIET_OPT} && \
 		cd $(CUR_DIR)/../executor/ir/integrated && cargo build --release --bin $(rpc.target)
 
 clean:

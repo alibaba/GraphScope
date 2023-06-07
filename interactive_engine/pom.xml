@@ -20,6 +20,9 @@
     </profile>
     <profile>
       <id>graphscope</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
       <properties>
         <rust.compile.target>v6d</rust.compile.target>
       </properties>
@@ -37,12 +40,13 @@
       <id>groot</id>
       <properties>
         <rust.compile.target>groot</rust.compile.target>
+        <scala.version>2.13.9</scala.version>
       </properties>
       <modules>
         <module>assembly</module>
         <module>common</module>
-        <module>executor</module>
         <module>data-load-tool</module>
+        <module>executor</module>
         <module>groot-module</module>
         <module>groot-server</module>
         <module>lgraph</module>
@@ -53,24 +57,15 @@
       </modules>
     </profile>
     <profile>
-      <id>default</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
+      <id>groot-data-load</id>
+      <properties>
+        <scala.version>2.12.10</scala.version>
+      </properties>
       <modules>
-        <module>assembly</module>
         <module>common</module>
         <module>data-load-tool</module>
-        <module>executor</module>
-        <module>frontend</module>
-        <module>groot-module</module>
-        <module>groot-server</module>
-        <module>lgraph</module>
         <module>sdk</module>
         <module>sdk-common</module>
-        <module>tests</module>
-        <module>executor/engine/pegasus/clients/java/client</module>
-        <module>compiler</module>
       </modules>
     </profile>
   </profiles>
@@ -98,13 +93,15 @@
     <protoc.version>3.21.12</protoc.version>
     <protobuf.version>3.21.12</protobuf.version>
     <grpc.version>1.51.1</grpc.version>
+    <netty.version>4.1.79.Final</netty.version>
     <jna.version>5.7.0</jna.version>
     <junit.version>4.13.2</junit.version>
     <junit.jupiter.version>5.6.3</junit.jupiter.version>
     <testng.version>6.9.9</testng.version>
     <mockito.version>4.0.0</mockito.version>
     <rocksdb.version>5.15.10</rocksdb.version>
-    <metrics.core.version>3.2.5</metrics.core.version>
+    <metrics.core.version>4.2.18</metrics.core.version>
+    <jgrapht.version>1.5.1</jgrapht.version>
     <skip.tests>true</skip.tests>
     <flatten.maven.plugin>1.1.0</flatten.maven.plugin>
     <javax.annotation.version>1.2</javax.annotation.version>
@@ -119,12 +116,15 @@
     <commons.io.version>2.11.0</commons.io.version>
     <calcite.version>1.32.0</calcite.version>
     <immutables.version>2.9.3</immutables.version>
-    <!-- OSS SDK requires httpclient version to be 4.4.1, related links: https://www.alibabacloud.com/help/zh/object-storage-service/latest/java-faq?spm=a2c63.p38356.0.0.69a63c6bXPt34F-->
-    <httpcomponents.version>4.4.1</httpcomponents.version>
     <kryo.version>4.0.2</kryo.version>
     <antlr4.version>4.9.1</antlr4.version>
-    <aliyun.oss.version>3.14.1</aliyun.oss.version>
+
+    <aliyun.oss.version>3.16.3</aliyun.oss.version>
+    <!-- httpcomponents version should aligh with version of OSS SDK -->
+    <httpcomponents.version>4.5.13</httpcomponents.version>
+
     <odps.sdk.public.version>0.36.4-public</odps.sdk.public.version>
+    <cupid.sdk.version>3.3.8-public</cupid.sdk.version>
     <scala.version>2.12.10</scala.version>
     <scala.binary.version>2.12</scala.binary.version>
     <spark.version>3.1.1</spark.version>
@@ -151,12 +151,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>com.alibaba</groupId>
-        <artifactId>fastjson</artifactId>
-        <version>2.0.20</version>
-      </dependency>
-
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
         <artifactId>interactive-common</artifactId>
@@ -307,7 +301,7 @@
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-all</artifactId>
-        <version>4.1.79.Final</version>
+        <version>${netty.version}</version>
       </dependency>
 
       <!-- Spark and Scala -->
@@ -340,15 +334,27 @@
 
       <dependency>
         <groupId>com.aliyun.odps</groupId>
+        <artifactId>odps-sdk-core</artifactId>
+        <version>${odps.sdk.public.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.aliyun.odps</groupId>
         <artifactId>odps-sdk-mapred</artifactId>
         <version>${odps.sdk.public.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.aliyun.odps</groupId>
+        <artifactId>cupid-sdk</artifactId>
+        <version>${cupid.sdk.version}</version>
       </dependency>
 
       <!-- Bill of Materials -->
       <dependency>
         <groupId>com.fasterxml.jackson</groupId>
         <artifactId>jackson-bom</artifactId>
-        <version>2.14.1</version>
+        <version>${jackson.version}</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -364,7 +370,7 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-bom</artifactId>
-        <version>1.51.1</version>
+        <version>${grpc.version}</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -506,6 +512,11 @@
         <groupId>org.apache.kafka</groupId>
         <artifactId>kafka_2.13</artifactId>
         <version>${kafka.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jgrapht</groupId>
+        <artifactId>jgrapht-core</artifactId>
+        <version>${jgrapht.version}</version>
       </dependency>
 
       <dependency>
@@ -687,6 +698,20 @@
             <phase>clean</phase>
             <goals>
               <goal>clean</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-help-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>show-profiles</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>active-profiles</goal>
             </goals>
           </execution>
         </executions>

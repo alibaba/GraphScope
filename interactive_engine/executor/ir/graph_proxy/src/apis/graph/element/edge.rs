@@ -178,7 +178,7 @@ impl Hash for Edge {
 
 impl PartialEq for Edge {
     fn eq(&self, other: &Self) -> bool {
-        self.id() == other.id()
+        self.id == other.id && self.src_id == other.src_id && self.dst_id == other.dst_id
     }
 }
 

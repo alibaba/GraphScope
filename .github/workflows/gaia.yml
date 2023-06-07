@@ -63,8 +63,7 @@ jobs:
 
     - name: Ir Unit Test
       run: |
-        # TODO(siyuan): fix this zstd symbol link error
-        # cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && make test
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && make test
 
     - name: CommonType Unit Test
       run: |
@@ -86,7 +85,7 @@ jobs:
     - name: Ir Integration Pattern Test on Experimental Store
       run: |
         cd ${GITHUB_WORKSPACE}
-        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git /tmp/gstest
         cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_exprimental_pattern_ci.sh
 
     - name: Ir Integration Test on Csr Store

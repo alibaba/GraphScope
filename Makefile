@@ -34,6 +34,9 @@ ifeq ($(UNAME),Darwin)
 	SUFFIX := dylib
 endif
 
+# x86_64 or aarch64
+ARCH := $(shell uname -m)
+
 VERSION := $(shell cat $(WORKING_DIR)/VERSION)
 
 ## Common
@@ -53,6 +56,8 @@ clean:
 
 	cd $(INTERACTIVE_DIR) && mvn clean || true
 	# TODO: use maven clean to clean ir target
+	rm -rf $(INTERACTIVE_DIR)/executor/assembly/v6d/target
+	rm -rf $(INTERACTIVE_DIR)/executor/assembly/groot/target
 	rm -rf $(INTERACTIVE_DIR)/executor/ir/target
 
 	rm -rf $(LEARNING_BUILD_DIR) $(LEARNING_DIR)/proto/*.h $(LEARNING_DIR)/proto/*.cc
@@ -69,15 +74,16 @@ clean:
 client: learning
 	cd $(CLIENT_DIR) && \
 	python3 -m pip install -r requirements.txt -r requirements-dev.txt --user && \
-	python3 setup.py build_ext --inplace --user
-	python3 -m pip install --user --editable $(CLIENT_DIR)
+	export PATH=$(PATH):$(HOME)/.local/bin && \
+	python3 setup.py build_ext --inplace --user && \
+	python3 -m pip install --user --no-build-isolation --editable $(CLIENT_DIR) && \
 	rm -rf $(CLIENT_DIR)/*.egg-info
 
 coordinator: client
 	cd $(COORDINATOR_DIR) && \
 	python3 -m pip install -r requirements.txt -r requirements-dev.txt --user && \
-	python3 setup.py build_builtin
-	python3 -m pip install --user --editable $(COORDINATOR_DIR)
+	python3 setup.py build_builtin && \
+	python3 -m pip install --user --editable $(COORDINATOR_DIR) && \
 	rm -rf $(COORDINATOR_DIR)/*.egg-info
 
 # We deliberately make $(ENGINE) depends on a file, and $(ENGINE)-install depends on $(ENGINE),
@@ -135,7 +141,7 @@ interactive: $(INTERACTIVE_DIR)/assembly/target/graphscope.tar.gz
 
 $(INTERACTIVE_DIR)/assembly/target/graphscope.tar.gz:
 	cd $(INTERACTIVE_DIR) && \
-	mvn package -DskipTests -Drust.compile.mode=$(BUILD_TYPE) -P graphscope,graphscope-assembly -Drevision=$(VERSION) --quiet
+	mvn package -DskipTests -Drust.compile.mode=$(BUILD_TYPE) -P graphscope -Drevision=$(VERSION) --quiet
 
 learning-install: learning
 	mkdir -p $(INSTALL_PREFIX)
@@ -143,8 +149,8 @@ learning-install: learning
 learning: $(LEARNING_DIR)/graphlearn/built/lib/libgraphlearn_shared.$(SUFFIX)
 
 $(LEARNING_DIR)/graphlearn/built/lib/libgraphlearn_shared.$(SUFFIX):
-	git submodule update --init
-	cd $(LEARNING_DIR) && git submodule update --init third_party/pybind11
+	(git submodule update --init || true)
+	cd $(LEARNING_DIR) && (git submodule update --init third_party/pybind11 || true)
 	mkdir -p $(LEARNING_BUILD_DIR)
 	cd $(LEARNING_BUILD_DIR) && \
 	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) \

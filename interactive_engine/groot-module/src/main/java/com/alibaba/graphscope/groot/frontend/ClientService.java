@@ -337,6 +337,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
         AtomicInteger counter = new AtomicInteger(storeCount);
         AtomicBoolean finished = new AtomicBoolean(false);
         for (int i = 0; i < storeCount; i++) {
+            logger.info("Store [" + i + "] started to ingest...");
             this.storeIngestor.ingest(
                     i,
                     dataPath,

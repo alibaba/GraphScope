@@ -193,7 +193,7 @@ challenges in the following ways:
     large-scale graph, GraphScope automatically partitions the whole graph into 
     several subgraphs (fragments) distributed into multiple machines in a cluster. 
     Meanwhile, GraphScope provides user-friendly interfaces for loading graphs 
-    to allow users to manage graph data easily. More detials about how to manage 
+    to allow users to manage graph data easily. More details about how to manage 
     large-scale graphs can refer to [this](https://graphscope.io/docs/latest/graph_formats.html).
     GLE performs graph-related computations, such as distributed graph sampling and feature 
     collection, on this distributed graph storage.

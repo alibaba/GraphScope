@@ -55,7 +55,7 @@ GAE also supports incremental computation over graph data via the [Ingress](http
 
 GAE provides C++, Python and Java SDKs for graph applications, where users can freely choose programming models, programming languages, and computation patterns (batch computation or incremental computation) to develop their own applications. GAE of GraphScope also provides [20 graph analytics algorithms](https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html) as built-in algorithms, and users can directly invoke them. GraphScope is compatible with NetworkX APIs, and thus diverse kinds of [built-in algorithms in NetworkX](https://networkx.org/documentation/stable/reference/algorithms/index.html) can also be directly invoked by users. In total, over 100 build-in graph analytical algorithms can be directly executed over GraphScope. Additionally, the support for the Pregel model has been implemented in GAE, and graph algorithms implemented in Giraph or GraphX can also be directly run on GAE. Please refer to the following tutorials on how to run NetworkX/Giraph/GraphX applications on GAE.
 
-- [Tutorial: Graph Operations with NetowrkX APIs](https://graphscope.io/docs/latest/analytical_engine/tutorial_networkx_operations.html)
-- [Tutorial: Graph Algorithms with NetowrkX APIs](https://graphscope.io/docs/latest/analytical_engine/tutorial_networkx_algorithms.html)
+- [Tutorial: Graph Operations with NetworkX APIs](https://graphscope.io/docs/latest/analytical_engine/tutorial_networkx_operations.html)
+- [Tutorial: Graph Algorithms with NetworkX APIs](https://graphscope.io/docs/latest/analytical_engine/tutorial_networkx_algorithms.html)
 - [Tutorial: Run Giraph Applications on GraphScope](https://graphscope.io/docs/latest/analytical_engine/tutorial_run_giraph_apps.html)
 - [Tutorial: Run GraphX Applications on GraphScope](https://graphscope.io/docs/latest/analytical_engine/tutorial_run_graphx_apps.html)

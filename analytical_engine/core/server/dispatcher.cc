@@ -50,7 +50,9 @@ Dispatcher::Dispatcher(const grape::CommSpec& comm_spec)
   auto publisher = comm_spec_.worker_id() == grape::kCoordinatorRank;
   // we use blocking queue as synchronizer
   if (publisher) {
+    cmd_queue_.SetProducerNum(1);
     cmd_queue_.SetLimit(1);
+    result_queue_.SetProducerNum(1);
     result_queue_.SetLimit(1);
   }
 }
@@ -71,12 +73,22 @@ void Dispatcher::Start() {
   }
 }
 
-void Dispatcher::Stop() { running_ = false; }
+void Dispatcher::Stop() {
+  running_ = false;
+  if (!cmd_queue_.End()) {
+    cmd_queue_.DecProducerNum();
+  }
+  if (!result_queue_.End()) {
+    result_queue_.DecProducerNum();
+  }
+}
 
 std::vector<DispatchResult> Dispatcher::Dispatch(
     std::shared_ptr<CommandDetail> cmd) {
-  cmd_queue_.Push(cmd);
-  return result_queue_.Pop();
+  cmd_queue_.Put(cmd);
+  std::vector<DispatchResult> results;
+  result_queue_.Get(results);
+  return results;
 }
 
 void Dispatcher::Subscribe(std::shared_ptr<Subscriber> subscriber) {
@@ -178,7 +190,10 @@ void Dispatcher::subscriberPreprocessCmd(rpc::OperationType type,
 void Dispatcher::publisherLoop() {
   CHECK_EQ(comm_spec_.worker_id(), grape::kCoordinatorRank);
   while (running_) {
-    auto cmd = cmd_queue_.Pop();
+    std::shared_ptr<CommandDetail> cmd;
+    if (!cmd_queue_.Get(cmd)) {
+      break;
+    }
     grape::sync_comm::Bcast(cmd->type, grape::kCoordinatorRank, MPI_COMM_WORLD);
     publisherPreprocessCmd(cmd);
     // process local event
@@ -188,7 +203,7 @@ void Dispatcher::publisherLoop() {
     results[0] = std::move(*r);
     vineyard::_GatherR(results, comm_spec_.comm());
 
-    result_queue_.Push(std::move(results));
+    result_queue_.Put(std::move(results));
   }
 }
 

@@ -5,8 +5,32 @@ This document describes how to build GraphScope from source code.
 ## Dev Environment
 
 To build GraphScope from source code, you need to prepare a development environment with many dependencies and 
-build toolchains. You have two options to prepare the development environment, install all tools and dependencies 
-on your local machine, or build it in our provided docker image.
+build toolchains. You using the following ways to prepare the development environment
+  - Use our provided [dev container](https://code.visualstudio.com/docs/devcontainers/containers)
+  - Install all tools and dependencies on your local machine
+
+We strongly recommend you to use the dev containers to develop and test. 
+
+### Develop with dev containers.
+
+We provided a docker image `graphscope-dev` with all tools and dependencies included.
+Additionally, the [devcontainer.json](https://github.com/alibaba/GraphScope/blob/main/.devcontainer/devcontainer.json) allows to quickly setup
+a develop environment within Visual Studio Code.
+
+By using dev containers, developers can ensure that their development environment is consistent across different machines and operating systems, 
+making it easier to collaborate with others and maintain a stable development environment.
+
+To use the dev containers for GraphScope development, you can follow these steps:
+
+1. Install Docker on your machine if you haven't already. Or install on the remote machine if you prefer to develop remotely.
+2. Clone the GraphScope repository.
+3. Open Visual Studio Code and navigate to the GraphScope repository.
+4. If you have the Remote Development extension installed, you can click on the green icon in the bottom left corner of the window and select "Remote-Containers: Reopen in Container". If you don't have the extension installed, you can install it from the Visual Studio Code marketplace.
+5. If you can't see the `Reopen in Container` prompt, you could hit `Command + Shift + P` (macOS) or `Ctrl + Shift + P` (Windows, Linux) and type `Reopen in Container`.
+6. Once the container is built, you can open a terminal within Visual Studio Code.
+7. You could customize the `devcontainer.json` to suit your own needs. Once you have made your changes, you could rebuild the container with your customizations.
+
+
 
 ### Install deps on local 
 
@@ -21,32 +45,6 @@ To install all dependencies on your local, use the GraphScope command-line utili
 
 You could download the `gs` directly or clone the [GraphScope](https://github.com/alibaba/GraphScope) to local, the `gs` is located in the root directory of GraphScope.
 
-### Dev on docker container
-
-We provided a docker image `graphscope-dev` with all tools and dependices included.
-If you want to mount your local repository to the container, then you could choose to mount a volume:
-
-    ```bash
-    # Use a mirror in HK aliyun to speed up the download if in need.
-    export REGISTRY=registry.cn-hongkong.aliyuncs.com
-    docker run --name dev -it --shm-size=4096m -v`pwd`/GraphScope:/work/GraphScope $REGISTRY/graphscope/graphscope-dev:latest
-    ```
-
-    The local path is mounted to `/work/GraphScope` in the running container.
-
-Or if you prefer not to mount volume, and clone the repo later:
-
-    ```bash
-    export REGISTRY=registry.cn-hongkong.aliyuncs.com
-    docker run --name dev -it --shm-size=4096m $REGISTRY/graphscope/graphscope-dev:latest
-    ```
-
-    ```bash
-    # inside the container
-    git clone https://github.com/GraphScope
-    ```
-Since we are going to build GraphScope and load graphs within the container, here we assign `shm-size` of 4G, which refers to the amount of shared memory
- allocated to a docker container. More options about `docker` command can be found [here](https://docs.docker.com/engine/reference/commandline/cli/).
 
 
 ## Build All Targets for GraphScope
@@ -82,7 +80,7 @@ You may find the guides for building and testing each engine as below.
 
 - [Build and test analytical engine](../analytical_engine/dev_and_test.md)
 - [Build and test interactive engine](../interactive_engine/dev_and_test.md)
-- [Build and test learning engine](../interactive_engine/dev_and_test.md)
+- [Build and test learning engine](../learning_engine/dev_and_test.md)
 
 ### Build Coordinator
 

@@ -22,20 +22,13 @@ import com.alibaba.graphscope.groot.store.external.ExternalStorage;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 import com.sun.jna.Pointer;
 
-import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class JnaGraphStore implements GraphPartition {
     private static final Logger logger = LoggerFactory.getLogger(JnaGraphStore.class);
@@ -110,74 +103,11 @@ public class JnaGraphStore implements GraphPartition {
 
     @Override
     public void ingestExternalFile(ExternalStorage storage, String sstPath) throws IOException {
-        String[] items = sstPath.split("\\/");
+        String[] items = sstPath.split("/");
         String unique_path = items[items.length - 2];
         String sstName = sstPath.substring(sstPath.lastIndexOf('/') + 1);
         String sstLocalPath = downloadPath.toString() + "/" + unique_path + "/" + sstName;
-        URI uri = URI.create(sstPath);
-        String scheme = uri.getScheme();
-        if ("oss".equals(scheme)) {
-            String chkPath = sstPath.substring(0, sstPath.length() - ".sst".length()) + ".chk";
-            String chkName = sstName.substring(0, sstName.length() - ".sst".length()) + ".chk";
-            String chkLocalPath = downloadPath.toString() + "/" + unique_path + "/" + chkName;
-
-            storage.downloadData(chkPath, chkLocalPath);
-            File chkFile = new File(chkLocalPath);
-            byte[] chkData = new byte[(int) chkFile.length()];
-            try {
-                FileInputStream fis = new FileInputStream(chkFile);
-                fis.read(chkData);
-                fis.close();
-            } catch (FileNotFoundException e) {
-                throw new IOException(e);
-            } catch (IOException e) {
-                throw e;
-            }
-            String[] chkArray = new String(chkData).split(",");
-            if ("0".equals(chkArray[0])) {
-                return;
-            }
-            String chkMD5Value = chkArray[1];
-            storage.downloadData(sstPath, sstLocalPath);
-            String sstMD5Value = getFileMD5(sstLocalPath);
-            if (!chkMD5Value.equals(sstMD5Value)) {
-                throw new IOException("CheckSum failed for " + sstPath);
-            } else {
-                // The .chk file are now useless
-                chkFile.delete();
-            }
-        } else if ("hdfs".equals(scheme)) {
-            storage.downloadData(sstPath, sstLocalPath);
-        } else {
-            throw new IllegalArgumentException(
-                    "external storage scheme [" + scheme + "] not supported");
-        }
-    }
-
-    public String getFileMD5(String fileName) throws IOException {
-        FileInputStream fis = null;
-        try {
-            MessageDigest MD5 = MessageDigest.getInstance("MD5");
-            fis = new FileInputStream(fileName);
-            byte[] buffer = new byte[8192];
-            int length;
-            while ((length = fis.read(buffer)) != -1) {
-                MD5.update(buffer, 0, length);
-            }
-            return new String(Hex.encodeHex(MD5.digest()));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IOException(e);
-        } catch (IOException e) {
-            throw e;
-        } finally {
-            try {
-                if (fis != null) {
-                    fis.close();
-                }
-            } catch (IOException e) {
-                throw e;
-            }
-        }
+        storage.downloadData(sstPath, sstLocalPath);
     }
 
     @Override

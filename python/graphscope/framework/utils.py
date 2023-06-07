@@ -66,7 +66,7 @@ class PipeWatcher(object):
                         self._sink.flush()
                         if not self._drop:
                             self._lines.put(line)
-                    except:  # noqa: E722
+                    except:  # noqa: E722, pylint: disable=bare-except
                         pass
 
         self._polling_thread = threading.Thread(target=read_and_poll, args=(self,))
@@ -197,22 +197,31 @@ def get_free_port(host="localhost", port_range=(32768, 64999)):
             return port
 
 
-def find_java():
-    java_exec = ""
+# Find the executables of java family such as java, javac, jar.
+# If JAVA_HOME is set, use that,
+# otherwise use the executable on the PATH.
+def find_java_exe(exe_name="java"):
+    exe = None
     if "JAVA_HOME" in os.environ:
-        java_exec = os.path.expandvars("$JAVA_HOME/bin/java")
-    if not java_exec:
-        java_exec = shutil.which("java")
-    if not java_exec:
-        raise RuntimeError("java command not found.")
-    return java_exec
+        exe = os.path.expandvars(f"$JAVA_HOME/bin/{exe_name}")
+    if exe is None:
+        exe = shutil.which(exe_name)
+    if exe is None:
+        raise RuntimeError(f"{exe_name} command not found.")
+    return exe
 
 
 def get_java_version():
-    java_exec = find_java()
-    pattern = r'"(\d+\.\d+\.\d+).*"'
-    version = subprocess.check_output([java_exec, "-version"], stderr=subprocess.STDOUT)
-    return re.search(pattern, version.decode("utf-8", errors="ignore")).groups()[0]
+    # Use javac to get the version of java since its output is more stable
+    # in format of "javac 1.8.0_265" or "19.0.2"
+    # so we need to capture both the major and minor version
+    javac = find_java_exe("javac")
+    output = subprocess.run([javac, "-version"], capture_output=True, text=True).stdout
+    match = re.search(r"javac (\d+\.\d+)", output)
+    if match:
+        return match.group(1)
+    else:
+        return None
 
 
 def get_platform_info():

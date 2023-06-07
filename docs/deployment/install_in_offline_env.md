@@ -1,4 +1,4 @@
-# Install GraphScope in offline mode
+# Install GraphScope in offline environment
 
 Some users may face the problem that they need to install GraphScope on an environment that has no internet access.
 

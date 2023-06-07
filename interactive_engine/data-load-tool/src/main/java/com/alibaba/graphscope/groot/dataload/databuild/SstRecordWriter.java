@@ -18,11 +18,10 @@ package com.alibaba.graphscope.groot.dataload.databuild;
 import org.rocksdb.*;
 
 import java.io.IOException;
-import java.util.*;
 
 public class SstRecordWriter {
-    private SstFileWriter sstFileWriter;
-    private String charSet;
+    private final SstFileWriter sstFileWriter;
+    private final String charSet;
     private boolean isEmpty;
 
     public SstRecordWriter(String fileName, String charSet) throws IOException {
@@ -30,8 +29,8 @@ public class SstRecordWriter {
         this.charSet = charSet;
         Options options = new Options();
         options.setCreateIfMissing(true)
-                .setWriteBufferSize(512 << 20)
-                .setMaxWriteBufferNumber(8)
+                .setWriteBufferSize(64 << 20)
+                .setMaxWriteBufferNumber(4)
                 .setTargetFileSizeBase(512 << 20);
         this.sstFileWriter = new SstFileWriter(new EnvOptions(), options);
         try {
@@ -42,12 +41,12 @@ public class SstRecordWriter {
     }
 
     public void write(String key, String value) throws IOException {
-        this.isEmpty = false;
         try {
             sstFileWriter.put(key.getBytes(charSet), value.getBytes(charSet));
         } catch (RocksDBException e) {
             throw new IOException(e);
         }
+        this.isEmpty = false;
     }
 
     public boolean empty() {

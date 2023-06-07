@@ -65,7 +65,7 @@ impl<T> RcPointer<T> {
 
     #[cfg(nightly)]
     pub fn new(item: T) -> Self {
-        let ptr = Box::into_raw_non_null(box item);
+        let ptr = Box::into_raw_non_null(Box::new(item));
         RcPointer { ptr, count: Arc::new(AtomicUsize::new(1)) }
     }
 }

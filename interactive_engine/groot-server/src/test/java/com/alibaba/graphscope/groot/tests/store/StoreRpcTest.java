@@ -65,7 +65,7 @@ public class StoreRpcTest {
     @Test
     void testStoreWriteService() throws InterruptedException {
         WriterAgent writerAgent = mock(WriterAgent.class);
-        when(writerAgent.writeStore(any())).thenReturn(true);
+        when(writerAgent.writeStore2(any())).thenReturn(true);
         StoreWriteService storeWriteService = new StoreWriteService(writerAgent);
         StreamObserver observer = mock(StreamObserver.class);
         storeWriteService.writeStore(WriteStoreRequest.newBuilder().build(), observer);

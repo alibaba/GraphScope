@@ -4,6 +4,7 @@ grpcio>=1.49
 grpcio-tools>=1.49
 kubernetes>=24.2.0
 msgpack
+mypy-protobuf>=3.4.0
 nest_asyncio
 networkx==2.8.0;python_version>="3.8"
 networkx==2.6.0;python_version<"3.8"
@@ -19,6 +20,6 @@ ujson;python_version>="3.11"
 PyYAML
 rich
 tqdm
-vineyard>=0.14;sys_platform!="win32"
-vineyard-io>=0.14;sys_platform!="win32"
+vineyard>=0.15.0;sys_platform!="win32"
+vineyard-io>=0.15.0;sys_platform!="win32"
 

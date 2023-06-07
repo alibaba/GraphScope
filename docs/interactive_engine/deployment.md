@@ -1,26 +1,19 @@
 # Standalone Deployment for GIE
 
-We have demonstrated [how to execute interactive queries](./getting_started.md) easily by installing Graphscope via `pip` on a local machine. However, in real-life applications, graphs are often too large to fit on a single machine. In such cases, Graphscope can be deployed on a cluster, such as a [self-managed k8s cluster](../deploy_graphscope_on_self_managed_k8s.md), for processing large-scale graphs. But you may wonder, "what if I only need the GIE engine and not the whole package that includes GAE and GLE?" This tutorial will walk you through the process of standalone deployment of GIE on a self-managed k8s cluster.
+We have demonstrated [how to execute interactive queries](./getting_started.md) easily by installing Graphscope via `pip` on a local machine. However, in real-life applications, graphs are often too large to fit on a single machine. In such cases, Graphscope can be deployed on a cluster, such as a [self-managed k8s cluster](../deploy_graphscope_on_self_managed_k8s.md), for processing large-scale graphs. But you may wonder, "what if I only need the GIE engine and not the whole package of GraphScope?" This tutorial will walk you through the process of standalone deployment of GIE on a self-managed k8s cluster.
 
 Throughout the tutorial, we assume all machines are running Linux system.
 We do not guarantee that it works as smoothly as Linux on the other platform.
 For your reference, we've tested the tutorial on Ubuntu 20.04.
 
-## The K8s Cluster
-If you do not have a K8s cluster to work on, don't worry. We have three simple ways for you to create one and get started with the deployment:
+## Prerequisites
 
-- Use a K8s cluster from Cloud Providers like [ACK](https://www.aliyun.com/product/kubernetes) from Alibaba Cloud.
-- Create a K8s cluster using [kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/).
-- Create a local K8s cluster using [minikube](https://minikube.sigs.k8s.io/docs/start/):
-  ```Bash
-  # Install `minikube` on your platform
-  # Recommend using `none` driver on a Linux machine to free from loading image to control plane.
-  # Check https://minikube.sigs.k8s.io/docs/handbook/pushing/ for details.
-  minikube start --driver=none
-  ```
-- Use a local k8s cluster in [docker desktop](https://docs.docker.com/desktop/kubernetes/).
+- Kubernetes Cluster
+- Python >= 3.9
 
-To learn more about the creation of a k8s cluster, please refer to the [official guide](https://kubernetes.io/zh-cn/docs/tutorials/kubernetes-basics/create-cluster/).
+To get started, you need to prepare a Kubernetes Cluster to continue.
+
+Incase you doesn't have one, you could refer to the instruction of [create kubernetes cluster](../deployment/deploy_graphscope_on_self_managed_k8s.md#prepare-a-kubernetes-cluster).
 
 
 ## Deploy Your First GIE Service
@@ -77,63 +70,19 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
    You should see the `[YOUR_RELEASE_NAME]-gie-standalone-frontend-0` and `[YOUR_RELEASE_NAME]-gie-standalone-store-0` pods running.
 
 - Get the endpoint of the GIE Frontend service:
-   ```
+   ```bash
    kubectl describe svc [YOUR_RELEASE_NAME]-gie-standalone-frontend \
    | grep "Endpoints:" | awk -F' ' '{print $2}'
    ```
    You should see the GIE Frontend service endpoint as `<ip>:<gremlinPort>`.
 
-- Connect to the GIE frontend service using the official Python SDK or Gremlin console.
-  - From Python SDK.
-   ```Python
-   import sys
-   from gremlin_python import statics
-   from gremlin_python.structure.graph import Graph
-   from gremlin_python.process.graph_traversal import __
-   from gremlin_python.process.strategies import *
-   from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
-
-   graph = Graph()
-   gremlin_endpoint = # the endpoint you've obtained from step 6.
-   remoteConn = DriverRemoteConnection('ws://' + gremlin_endpoint + '/gremlin','g')
-   g = graph.traversal().withRemote(remoteConn)
-
-   res = g.V().count().next()
-   assert res == 6
-   ```
-
-  - From Gremlin Console.
-
-   Download Gremlin console and unpack to your local directory.
-   ```bash
-   curl -LO https://dlcdn.apache.org/tinkerpop/3.6.2/apache-tinkerpop-gremlin-console-3.6.2-bin.zip && \
-   unzip apache-tinkerpop-gremlin-console-3.6.2-bin.zip && \
-   cd apache-tinkerpop-gremlin-console-3.6.2
-   ```
-
-   Modify the `hosts` and `port` in `conf/remote.yaml` to the GIE Frontend Service endpoint.
-   Then open the Gremlin console
-   ```bash
-   chmod +x bin/gremlin.sh
-   bin/gremlin.sh
-   ```
-
-   Type in the following:
-   ```bash
-   gremlin> :remote connect tinkerpop.server conf/remote.yaml
-   gremlin> :remote console
-   gremlin> g.V().count()
-   ==> 6
-   gremlin>
-   ```
-
-   You are now ready to submit any Gremlin queries via either the Python SDK or Gremlin console.
+- Connect to the GIE frontend service using the Tinkerpop's official SDKs or Gremlin console, which
+can be found [here](./tinkerpop_eco.md).
 
 ## Remove the GIE Service
 ```bash
    helm uninstall [YOUR_RELEASE_NAME]
 ```
-
 
 ## Using Your Own Data
 Currently, a single instance of GIE can only handle one set of graph data. This means that you must

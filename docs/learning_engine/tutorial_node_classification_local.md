@@ -33,7 +33,7 @@ from graphscope.learning.examples.tf.trainer import LocalTrainer
 gs.set_option(show_log=True)
 
 # load the obgn-mag graph as example.
-g = load_ogbn_mag()
+graph = load_ogbn_mag()
 
 # print the schema of the graph
 print(graph)
@@ -109,7 +109,7 @@ lg = sess.graphlearn(
 ## Train the Model
 ```python
 train(lg, node_type="paper", edge_type="cites",
-          class_num=349,  # output dimension
-          features_num=128,  # input dimension
-)
+      class_num=349,  # output dimension
+      features_num=128,  # input dimension
+      )
 ```

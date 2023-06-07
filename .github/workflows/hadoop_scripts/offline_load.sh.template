@@ -1,7 +1,0 @@
-#!/bin/bash
-
-BASE_DIR=$(dirname "$0")
-
-GROOT=GROOT_HOME
-/tmp/hadoop-2.10.1/bin/hadoop jar $GROOT/loader/data-load-tool-0.0.1-SNAPSHOT.jar com.alibaba.graphscope.groot.dataload.databuild.OfflineBuild $BASE_DIR/databuild.config
-

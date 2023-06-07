@@ -20,7 +20,7 @@
       </activation>
     </profile>
     <profile>
-      <id>graphscope-assembly</id>
+      <id>graphscope</id>
       <build>
         <plugins>
           <plugin>
@@ -49,7 +49,7 @@
       </dependencies>
     </profile>
     <profile>
-      <id>groot-assembly</id>
+      <id>groot</id>
       <build>
         <plugins>
           <plugin>
@@ -72,17 +72,17 @@
         </dependency>
         <dependency>
           <groupId>com.alibaba.graphscope</groupId>
-          <artifactId>data-load-tool</artifactId>
-          <version>${project.version}</version>
-        </dependency>
-        <dependency>
-          <groupId>com.alibaba.graphscope</groupId>
           <artifactId>executor</artifactId>
           <version>${project.version}</version>
         </dependency>
         <dependency>
           <groupId>com.alibaba.graphscope</groupId>
           <artifactId>c-end-lgraph</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>com.alibaba.graphscope</groupId>
+          <artifactId>data-load-tool</artifactId>
           <version>${project.version}</version>
         </dependency>
       </dependencies>

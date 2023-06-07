@@ -16,8 +16,10 @@
 
 package com.alibaba.graphscope.gremlin.integration.result;
 
+import com.alibaba.graphscope.common.config.Configs;
+
 import java.util.Map;
 
 public interface GraphProperties {
-    Map<String, Object> getProperties();
+    Map<String, Object> getProperties(Configs configs);
 }

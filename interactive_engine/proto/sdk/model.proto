@@ -112,6 +112,7 @@ message TypeDefPb {
   LabelIdPb labelId = 3;
   TypeEnumPb typeEnum = 4;
   repeated PropertyDefPb props = 5;
+  string comment = 6;
 }
 
 message PropertyDefPb {

@@ -17,6 +17,7 @@ package com.alibaba.graphscope.groot.dataload.databuild;
 
 import com.alibaba.graphscope.compiler.api.exception.PropertyDefNotFoundException;
 import com.alibaba.graphscope.compiler.api.schema.*;
+import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
 import com.alibaba.graphscope.sdkcommon.schema.PropertyValue;
 import com.aliyun.odps.data.Record;
@@ -33,8 +34,6 @@ import java.util.*;
 
 public class DataBuildMapperOdps extends MapperBase {
     private static final Logger logger = LoggerFactory.getLogger(DataBuildMapperOdps.class);
-    public static final SimpleDateFormat SRC_FMT =
-            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     public static final SimpleDateFormat DST_FMT = new SimpleDateFormat("yyyyMMddHHmmssSSS");
     public static String charSet = "ISO8859-1";
 
@@ -42,22 +41,24 @@ public class DataBuildMapperOdps extends MapperBase {
     private DataEncoder dataEncoder;
     private Map<String, ColumnMappingInfo> fileToColumnMappingInfo;
 
-    private ObjectMapper objectMapper;
     private Record outKey;
     private Record outVal;
 
     @Override
     public void setup(TaskContext context) throws IOException {
-        this.outKey = context.createMapOutputKeyRecord();
-        this.outVal = context.createMapOutputValueRecord();
+        outKey = context.createMapOutputKeyRecord();
+        outVal = context.createMapOutputValueRecord();
 
-        this.objectMapper = new ObjectMapper();
-        String schemaJson = context.getJobConf().get(OfflineBuildOdps.SCHEMA_JSON);
-        this.graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
-        this.dataEncoder = new DataEncoder(this.graphSchema);
-        String columnMappingsJson = context.getJobConf().get(OfflineBuildOdps.COLUMN_MAPPINGS);
-        this.fileToColumnMappingInfo =
-                this.objectMapper.readValue(
+        String metaData = context.getJobConf().get(DataLoadConfig.META_INFO);
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, String> metaMap =
+                objectMapper.readValue(metaData, new TypeReference<Map<String, String>>() {});
+        String schemaJson = metaMap.get(DataLoadConfig.SCHEMA_JSON);
+        graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
+        dataEncoder = new DataEncoder(graphSchema);
+        String columnMappingsJson = metaMap.get(DataLoadConfig.COLUMN_MAPPINGS);
+        fileToColumnMappingInfo =
+                objectMapper.readValue(
                         columnMappingsJson, new TypeReference<Map<String, ColumnMappingInfo>>() {});
         DST_FMT.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
     }
@@ -67,7 +68,10 @@ public class DataBuildMapperOdps extends MapperBase {
         String tableName = context.getInputTableInfo().getTableName();
         ColumnMappingInfo columnMappingInfo = this.fileToColumnMappingInfo.get(tableName);
         if (columnMappingInfo == null) {
-            logger.warn("Mapper: ignore [{}]", tableName);
+            logger.warn(
+                    "Mapper: ignore [{}], table info is [{}]",
+                    tableName,
+                    context.getInputTableInfo());
             return;
         }
 
@@ -157,7 +161,7 @@ public class DataBuildMapperOdps extends MapperBase {
                                         + "] -> ["
                                         + propertyId
                                         + "], data ["
-                                        + items
+                                        + Arrays.toString(items)
                                         + "]");
                     }
                     DataType dataType = propertyDef.getDataType();

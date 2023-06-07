@@ -76,7 +76,7 @@ jobs:
         export RUSTC_WRAPPER=/usr/local/bin/sccache
         sccache --start-server
         cd ${GITHUB_WORKSPACE}/interactive_engine
-        mvn clean install -P groot,groot-assembly -Drust.compile.mode=debug -DskipTests -Dgroot.compile.feature="column_filter_push_down" --quiet
+        mvn clean install -P groot -Drust.compile.mode=debug -DskipTests -Dgroot.compile.feature="column_filter_push_down" --quiet
 
         sccache --show-stats
 
@@ -92,7 +92,7 @@ jobs:
         export SCCACHE_DIR=~/.cache/sccache
         export RUSTC_WRAPPER=/usr/local/bin/sccache
         cd ${GITHUB_WORKSPACE}/interactive_engine
-        mvn clean install -P groot,groot-assembly -Drust.compile.mode=debug -DskipTests --quiet
+        mvn clean install -P groot -Drust.compile.mode=debug -DskipTests --quiet
 
         sccache --show-stats
 
@@ -105,15 +105,17 @@ jobs:
     - name: Upload tools for helm test to Artifact
       uses: actions/upload-artifact@v3
       with:
-        name: groot.tar.gz
-        path: interactive_engine/assembly/target/groot.tar.gz
+        name: groot
+        path: |
+          interactive_engine/assembly/target/groot.tar.gz
+          interactive_engine/data-load-tool/target/data-load-tool-0.0.1-SNAPSHOT.jar
         retention-days: 5
 
   helm-test:
     runs-on: [self-hosted, ubuntu2004]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [gremlin-test]
-    environment:
+    env:
       JAVA_HOME: /usr/lib/jvm/default-java
       GS_TEST_DIR: ${{ github.workspace }}/gstest
     steps:
@@ -130,7 +132,7 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: groot.tar.gz
+        name: groot
         path: artifacts
 
     - name: Set GITHUB_ENV
@@ -140,8 +142,28 @@ jobs:
 
     - name: Prepare Image
       run: |
+        ls -la artifacts/*/*
+        mv artifacts/assembly/target/groot.tar.gz artifacts/
+        mv artifacts/data-load-tool/target/data-load-tool-0.0.1-SNAPSHOT.jar artifacts/
         docker build -t ${{ env.GSS_IMAGE }}:${SHORT_SHA} \
                 -f .github/workflows/docker/graphscope-store.Dockerfile .
+
+    - name: Prepare the log directory
+      run: |
+        # create the helm installation log directory
+        mkdir -p ${{ github.workspace }}/k8s-ci-helm-installation-logs
+
+        # create the demo fresh of helm installation log directory
+        mkdir -p ${{ github.workspace }}/k8s-ci-demo-fresh-of-helm-installation-logs
+
+        # create the demo script of helm installation with pv log directory
+        mkdir -p ${{ github.workspace }}/k8s-ci-demo-script-of-helm-installation-with-pv-logs
+
+        # create the helm test of helm installation with pv log directory
+        mkdir -p ${{ github.workspace }}/k8s-ci-helm-test-of-helm-installation-with-pv-logs
+
+        # create the demo after restart of helm installation with pv log directory
+        mkdir -p ${{ github.workspace }}/k8s-ci-demo-after-restart-of-helm-installation-with-pv-logs
 
     - name: Setup SSH
       run: |
@@ -151,12 +173,8 @@ jobs:
         echo "StrictHostKeyChecking no" >> ~/.ssh/config
         sudo /etc/init.d/ssh start
 
-    - name: Python Test with Helm Deployment
+    - name: Create the kubernetes cluster
       run: |
-        # groot.tar.gz is needed for offline_load.sh
-        # see .github/workflows/hadoop_scripts/offline_load.sh.template
-        pushd artifacts
-        tar -zxf ./groot.tar.gz
         # download gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
@@ -165,6 +183,16 @@ jobs:
 
         minikube image load ${{ env.GSS_IMAGE }}:${SHORT_SHA}
 
+    - name: Start to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        SHOW_TIMESTAMPS: 'true'
+        OUTPUT_DIR: ${{ github.workspace }}/helm-installation-logs
+        NAMESPACES: "gs*,default"
+        MODE: start
+
+    - name: Install graphscope-store with helm
+      run: |
         # update helm dependency
         cd ${GITHUB_WORKSPACE}/charts/graphscope-store
         helm dependency update
@@ -173,23 +201,19 @@ jobs:
         cd ${GITHUB_WORKSPACE}/charts
         helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
         helm test ci --timeout 5m0s
-        mkdir -p ${{ github.workspace }}/helm-deployment-logs
 
-    - name: Export kubernetes logs
-      uses: dashanji/kubernetes-log-export-action@v3
-      if: ${{ failure() }}
+    - name: Stop to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        MODE: stop
+
+    - name: Start to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
       env:
         SHOW_TIMESTAMPS: 'true'
-        OUTPUT_DIR: ${{ github.workspace }}/helm-deployment-logs
-        # use wildcard here to match the namespaces that you want to export logs
-        NAMESPACES: default
-
-    - name: upload the k8s logs to artifact
-      uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
-      with:
-        name: helm-deployment-logs
-        path: ${{ github.workspace }}/helm-deployment-logs
+        OUTPUT_DIR: ${{ github.workspace }}/demo-fresh-of-helm-installation-logs
+        NAMESPACES: "gs*,default"
+        MODE: start
 
     - name: Test the helm deployment
       run: |
@@ -204,9 +228,10 @@ jobs:
         ./prepare_hadoop.sh /tmp/hadoop-2.10.1
         export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
 
-        REPLACE_STR=${GITHUB_WORKSPACE}/artifacts/groot
-        sed s/GROOT_HOME/${REPLACE_STR//\//\\/}/ offline_load.sh.template > offline_load.sh
-        chmod +x offline_load.sh
+        # data-load-tool is needed for offline_load.sh
+        # see .github/workflows/hadoop_scripts/offline_load.sh
+
+        export LOADER_DIR=${GITHUB_WORKSPACE}/artifacts
         export LOAD_DATA_SCRIPT=${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts/offline_load.sh
         sed s/GRAPH_ENDPOINT/$NODE_IP:$GRPC_PORT/ databuild.config.template > databuild.config
 
@@ -221,35 +246,78 @@ jobs:
         python3 -m pip install pytest-cov --user
         python3 setup.py build_proto
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_fresh
+
+    - name: Stop to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        MODE: stop
+
+    - name: Start to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        SHOW_TIMESTAMPS: 'true'
+        OUTPUT_DIR: ${{ github.workspace }}/demo-script-of-helm-installation-with-pv-logs
+        NAMESPACES: "gs*,default"
+        MODE: start
+
+    - name: restart helm and run demo with the PersistentVolume
+      run: |
         # restart helm and run demo with the PersistentVolume
         helm uninstall ci
         sleep 30
         cd ${GITHUB_WORKSPACE}/charts
         helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
-        mkdir -p ${{ github.workspace }}/helm-deployment-with-pv-logs
 
-    - name: Export kubernetes logs
-      uses: dashanji/kubernetes-log-export-action@v3
-      if: ${{ failure() }}
+    - name: Stop to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        MODE: stop
+
+    - name: Start to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
       env:
         SHOW_TIMESTAMPS: 'true'
-        OUTPUT_DIR: ${{ github.workspace }}/helm-deployment-logs
-        # use wildcard here to match the namespaces that you want to export logs
-        NAMESPACES: default
+        OUTPUT_DIR: ${{ github.workspace }}/helm-test-of-helm-installation-with-pv-logs
+        NAMESPACES: "gs*,default"
+        MODE: start
 
-    - name: upload the k8s logs to artifact
-      uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
-      with:
-        name: helm-deployment-logs
-        path: ${{ github.workspace }}/helm-deployment-logs
-
-    - name: Python Test with Helm Deployment and PersistentVolume
+    - name: Helm Test with Helm Deployment and PersistentVolume
       run: |
         # helm test and python test on the restarted store
         export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
         export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
         helm test ci --timeout 10m0s
+
+    - name: Stop to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        MODE: stop
+
+    - name: Start to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        SHOW_TIMESTAMPS: 'true'
+        OUTPUT_DIR: ${{ github.workspace }}/demo-after-restart-of-helm-installation-with-pv-logs
+        NAMESPACES: "gs*,default"
+        MODE: start
+
+    - name: Python Test with Helm Deployment and PersistentVolume
+      run: |
+        export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
+        export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)
+        export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_after_restart
+
+    - name: upload the k8s logs to artifact
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: k8s-test-logs
+        path: ${{ github.workspace }}/k8s-ci-*-logs
+
+    - name: Stop to export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        MODE: stop

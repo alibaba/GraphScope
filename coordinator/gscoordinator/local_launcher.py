@@ -1,3 +1,21 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# Copyright 2020-2023 Alibaba Group Holding Limited. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import base64
 import json
 import logging
@@ -7,6 +25,7 @@ import socket
 import subprocess
 import sys
 import time
+from typing import List
 
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
@@ -174,10 +193,8 @@ class LocalLauncher(AbstractLauncher):
         )
 
     def create_interactive_instance(self, object_id: int, schema_path: str):
-        # check java version
         try:
-            java_version = get_java_version()
-            logger.info("Java version: %s", java_version)
+            logger.info("Java version: %s", get_java_version())
         except:  # noqa: E722
             logger.exception("Cannot get version of java")
 
@@ -481,7 +498,8 @@ class LocalLauncher(AbstractLauncher):
         stdout_watcher.drop(True)
         stdout_watcher.suppress(not logger.isEnabledFor(logging.DEBUG))
         logger.info(
-            "Vineyardd is ready, ipc socket is {0}".format(self._vineyard_socket)
+            "Vineyardd is ready, ipc socket is %s",
+            self._vineyard_socket,
         )
 
     def close_etcd(self):
@@ -502,11 +520,11 @@ class LocalLauncher(AbstractLauncher):
         dir = os.path.dirname(path)
         for host in self.hosts.split(","):
             if host not in ("localhost", "127.0.0.1"):
-                logger.debug(run_command(f"ssh {host} mkdir -p {dir}"))
-                logger.debug(run_command(f"scp -r {path} {host}:{path}"))
+                logger.debug(run_command(f"ssh {host} mkdir -p {dir}"))  # noqa: G004
+                logger.debug(run_command(f"scp -r {path} {host}:{path}"))  # noqa: G004
 
     @staticmethod
-    def find_etcd() -> [str]:
+    def find_etcd() -> List[str]:
         etcd = shutil.which("etcd")
         if etcd is None:
             etcd = [sys.executable, "-m", "etcd_distro.etcd"]

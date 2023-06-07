@@ -6,9 +6,9 @@ ps -ef | grep "start_rpc_server" |  awk '{print $2}' | xargs kill -9
 sleep 3
 # start engine service and load ldbc graph
 cd ${base_dir}/../executor/ir/target/release &&
-RUST_LOG=info DATA_PATH=${base_dir}/../../gstest/ldbc_graph_exp_bin PARTITION_ID=0 ./start_rpc_server --config ${base_dir}/../executor/ir/integrated/config/distributed/server_0 &
+RUST_LOG=info DATA_PATH=/tmp/gstest/ldbc_graph_exp_bin PARTITION_ID=0 ./start_rpc_server --config ${base_dir}/../executor/ir/integrated/config/distributed/server_0 &
 cd ${base_dir}/../executor/ir/target/release &&
-RUST_LOG=info DATA_PATH=${base_dir}/../../gstest/ldbc_graph_exp_bin PARTITION_ID=1 ./start_rpc_server --config ${base_dir}/../executor/ir/integrated/config/distributed/server_1 &
+RUST_LOG=info DATA_PATH=/tmp/gstest/ldbc_graph_exp_bin PARTITION_ID=1 ./start_rpc_server --config ${base_dir}/../executor/ir/integrated/config/distributed/server_1 &
 sleep 10
 # start compiler service
 cd ${base_dir} && make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json pegasus.hosts:=127.0.0.1:1234,127.0.0.1:1235 &

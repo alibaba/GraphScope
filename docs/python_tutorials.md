@@ -11,7 +11,7 @@ All tutorials are listed as follows:
 
 - [Node Classification on citation network](https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/01_node_classification_on_citation.ipynb)
 
-- [Graph Manipulations with NetowrkX Compatible APIs](https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/02_graph_manipulations_with_networkx_compatible_apis.ipynb)
+- [Graph Manipulations with NetworkX Compatible APIs](https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/02_graph_manipulations_with_networkx_compatible_apis.ipynb)
 
 
 - [Run GraphScope like NetworkX](https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/03_run_graphscope_like_networkx.ipynb)

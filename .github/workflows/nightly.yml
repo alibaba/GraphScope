@@ -43,15 +43,17 @@ jobs:
         fi
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
-        ./gs install-deps dev --v6d-version v0.14.5
+        ./gs install-deps dev --v6d-version v0.15.0
 
     - name: Setup tmate session
-      if: false 
+      if: false
       uses: mxschmitt/action-tmate@v2
 
     - name: Build GraphScope
       run: |
         . ${HOME}/.graphscope_env
+        # fixes nightly CI
+        export PATH=/Users/runner/Library/Python/3.11/bin:$PATH
         make install INSTALL_PREFIX=/opt/graphscope
 
     - name: Run Python Test

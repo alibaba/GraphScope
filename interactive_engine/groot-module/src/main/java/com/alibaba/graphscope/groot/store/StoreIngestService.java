@@ -60,7 +60,7 @@ public class StoreIngestService extends StoreIngestGrpc.StoreIngestImplBase {
             StoreClearIngestRequest request,
             StreamObserver<StoreClearIngestResponse> responseObserver) {
         try {
-            this.storeService.clearIngest();
+            this.storeService.clearIngest(request.getDataPath());
             responseObserver.onNext(StoreClearIngestResponse.newBuilder().build());
             responseObserver.onCompleted();
         } catch (IOException e) {

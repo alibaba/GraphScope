@@ -98,6 +98,9 @@ public class PropertyValue {
         if (valObject != null) {
             return valObject;
         }
+        if (dataType == DataType.UNKNOWN) {
+            return null;
+        }
         this.valObject = SerdeUtils.bytesToObject(this.dataType, this.valBytes);
         return valObject;
     }
