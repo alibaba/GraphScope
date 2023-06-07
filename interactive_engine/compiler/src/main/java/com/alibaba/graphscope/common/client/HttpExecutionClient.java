@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.HiactorConfig;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gaia.proto.StoredProcedure;
 import com.google.common.collect.Lists;
@@ -44,6 +45,8 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
     private static final Logger logger = LoggerFactory.getLogger(HttpExecutionClient.class);
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String TEXT_PLAIN = "text/plain;charset=UTF-8";
+    private static final String INTERACTIVE_QUERY_PATH = "/interactive/query";
+    private static final String INTERACTIVE_ADHOC_QUERY_PATH = "/interactive/adhoc_query";
     private final HttpClient httpClient;
 
     public HttpExecutionClient(Configs graphConfig, ChannelFetcher<URI> channelFetcher) {
@@ -62,7 +65,7 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
         for (URI httpURI : channelFetcher.fetch()) {
             HttpRequest httpRequest =
                     HttpRequest.newBuilder()
-                            .uri(httpURI)
+                            .uri(resolvePath(httpURI, request))
                             .headers(CONTENT_TYPE, TEXT_PLAIN)
                             .POST(
                                     HttpRequest.BodyPublishers.ofByteArray(
@@ -108,6 +111,17 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                         listener.onError(exception);
                     }
                 });
+    }
+
+    private URI resolvePath(URI original, ExecutionRequest request) {
+        LogicalPlan logicalPlan = request.getRequestLogical();
+        if (logicalPlan.getRegularQuery() != null) {
+            return original.resolve(INTERACTIVE_ADHOC_QUERY_PATH);
+        } else if (logicalPlan.getProcedureCall() != null) {
+            return original.resolve(INTERACTIVE_QUERY_PATH);
+        } else {
+            throw new IllegalArgumentException("the request can not be sent to the remote service");
+        }
     }
 
     @Override
