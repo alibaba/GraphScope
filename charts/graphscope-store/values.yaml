@@ -25,7 +25,7 @@ image:
   registry: registry.cn-hongkong.aliyuncs.com
   repository: graphscope/graphscope-store
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "0.22.0"
   digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -82,10 +82,7 @@ store:
     type: ClusterIP
     ## Service port
     ##
-    port: 55555
-    graph: 55556
-    query: 55557
-    engine: 55558
+    engine: 55556
     gaiaRpc: 60000
     gaiaEngine: 60001
 
@@ -336,7 +333,7 @@ commonAnnotations: {}
 
 ## Configure extra options for containers' liveness, readiness and startup probes
 livenessProbe:
-  enabled: true
+  enabled: false
   initialDelaySeconds: 10
   timeoutSeconds: 5
   failureThreshold: 3
@@ -344,7 +341,7 @@ livenessProbe:
   successThreshold: 1
 
 readinessProbe:
-  enabled: true
+  enabled: false
   initialDelaySeconds: 5
   failureThreshold: 6
   timeoutSeconds: 5

@@ -129,16 +129,10 @@ spec:
             - name: KAFKA_SERVERS
               value: {{ include "graphscope-store.kafka.brokerlist" . }}
           ports:
-            - name: port
-              containerPort: 55555
             - name: service-port
               containerPort: 55556
             - name: gremlin
               containerPort: 12312
-            - name: gaia-rpc
-              containerPort: 60000
-            - name: gaia-engine
-              containerPort: 60001
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.livenessProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
