@@ -22,8 +22,13 @@ import org.apache.calcite.rel.type.RelDataType;
 
 import java.util.List;
 
+/**
+ * parse record returning from remote engine service
+ * @param <T>
+ */
 public interface RecordParser<T> {
     List<T> parseFrom(IrResult.Record record);
 
+    // schema of returning data
     RelDataType schema();
 }

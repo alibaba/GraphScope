@@ -18,6 +18,9 @@ package com.alibaba.graphscope.common.client.type;
 
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 
+/**
+ * request to submit to remote engine service
+ */
 public class ExecutionRequest {
     private final long requestId;
     private final String requestName;

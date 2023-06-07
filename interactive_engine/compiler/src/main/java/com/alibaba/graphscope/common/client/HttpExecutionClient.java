@@ -20,9 +20,9 @@ import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.config.HQPSConfig;
-import com.alibaba.graphscope.gaia.proto.Hqps;
+import com.alibaba.graphscope.common.config.HiactorConfig;
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.alibaba.graphscope.gaia.proto.StoredProcedure;
 import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -37,6 +37,9 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * http client to send request to hqps engine service
+ */
 public class HttpExecutionClient extends ExecutionClient<URI> {
     private static final Logger logger = LoggerFactory.getLogger(HttpExecutionClient.class);
     private static final String CONTENT_TYPE = "Content-Type";
@@ -48,7 +51,7 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
         this.httpClient =
                 HttpClient.newBuilder()
                         .connectTimeout(
-                                Duration.ofMillis(HQPSConfig.HQPS_HTTP_TIMEOUT.get(graphConfig)))
+                                Duration.ofMillis(HiactorConfig.HIACTOR_TIMEOUT.get(graphConfig)))
                         .build();
     }
 
@@ -65,7 +68,6 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                                     HttpRequest.BodyPublishers.ofByteArray(
                                             (byte[]) request.getRequestPhysical().build()))
                             .build();
-            // todo: synchronous call will block compiler thread
             CompletableFuture<HttpResponse<byte[]>> responseFuture =
                     httpClient
                             .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofByteArray())
@@ -75,8 +77,9 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                                             listener.onError(exception);
                                         }
                                         try {
-                                            Hqps.HighQPSResults results =
-                                                    Hqps.HighQPSResults.parseFrom(bytes.body());
+                                            StoredProcedure.StoredProcedureResults results =
+                                                    StoredProcedure.StoredProcedureResults
+                                                            .parseFrom(bytes.body());
                                             for (IrResult.Results irResult :
                                                     results.getResultsList()) {
                                                 listener.onNext(irResult.getRecord());

@@ -29,6 +29,9 @@ import com.alibaba.pegasus.service.protocol.PegasusClient;
 
 import io.grpc.Status;
 
+/**
+ * rpc client to send request to pegasus engine service
+ */
 public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
     private final Configs graphConfig;
     private final RpcClient rpcClient;

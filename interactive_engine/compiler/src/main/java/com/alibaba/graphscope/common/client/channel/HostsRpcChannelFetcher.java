@@ -24,6 +24,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * rpc implementation of {@link ChannelFetcher}, init rpc from local config
+ */
 public class HostsRpcChannelFetcher implements ChannelFetcher<RpcChannel> {
     private Configs config;
 

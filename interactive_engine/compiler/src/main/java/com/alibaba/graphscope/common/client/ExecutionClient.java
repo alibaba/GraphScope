@@ -20,6 +20,10 @@ import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 
+/**
+ * client to submit request to remote engine service
+ * @param <C>
+ */
 public abstract class ExecutionClient<C> {
     protected final ChannelFetcher<C> channelFetcher;
 

@@ -16,14 +16,13 @@
 
 package com.alibaba.graphscope.common.ir.runtime;
 
-import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * define interfaces to build a physical plan, {@link FfiPhysicalBuilder} is one of implementations
- * @param <R>
+ * build physical plan from logical plan
+ * @param <R> is the actual type of physical plan
  */
 public abstract class PhysicalBuilder<R> implements AutoCloseable {
     protected final LogicalPlan logicalPlan;

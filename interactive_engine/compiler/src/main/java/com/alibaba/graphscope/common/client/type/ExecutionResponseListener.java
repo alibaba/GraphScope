@@ -18,6 +18,9 @@ package com.alibaba.graphscope.common.client.type;
 
 import com.alibaba.graphscope.gaia.proto.IrResult;
 
+/**
+ * listener to handle response from remote engine service
+ */
 public interface ExecutionResponseListener {
     void onNext(IrResult.Record record);
 

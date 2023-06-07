@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.client.channel;
+package com.alibaba.graphscope.common.config;
 
-import java.util.List;
+public class HiactorConfig {
+    public static final Config<String> HIACTOR_HOSTS =
+            Config.stringConfig("hiactor.hosts", "localhost:8080");
 
-/**
- * fetch channel from remote
- * @param <T>
- */
-public interface ChannelFetcher<T> {
-    List<T> fetch();
+    public static final Config<Long> HIACTOR_TIMEOUT =
+            Config.longConfig("hiactor.timeout", 6000000L);
 }

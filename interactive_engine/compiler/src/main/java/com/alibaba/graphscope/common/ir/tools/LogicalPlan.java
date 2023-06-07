@@ -23,6 +23,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
+/**
+ * logical plan for a query which can be a regular query or a procedure call
+ */
 public class LogicalPlan {
     private @Nullable RelNode regularQuery;
     private @Nullable RexNode procedureCall;
