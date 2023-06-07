@@ -23,7 +23,7 @@ pub struct SimplePartition {
 
 impl PartitionInfo for SimplePartition {
     fn get_partition_id<D: PartitionedData>(&self, data: &D) -> GraphProxyResult<PartitionId> {
-        Ok((data.get_id() as usize % self.num_servers) as u32)
+        Ok((data.get_partition_key_id() as usize % self.num_servers) as u32)
     }
 
     fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId> {

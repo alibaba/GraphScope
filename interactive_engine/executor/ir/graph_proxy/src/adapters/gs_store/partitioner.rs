@@ -37,7 +37,7 @@ impl PartitionInfo for GrootMultiPartition {
     fn get_partition_id<D: PartitionedData>(&self, data: &D) -> GraphProxyResult<PartitionId> {
         Ok(self
             .graph_partition_manager
-            .get_partition_id(data.get_id() as VertexId) as PartitionId)
+            .get_partition_id(data.get_partition_key_id() as VertexId) as PartitionId)
     }
     fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId> {
         self.graph_partition_manager
@@ -71,7 +71,7 @@ impl PartitionInfo for VineyardMultiPartition {
     fn get_partition_id<D: PartitionedData>(&self, data: &D) -> GraphProxyResult<PartitionId> {
         Ok(self
             .graph_partition_manager
-            .get_partition_id(data.get_id() as VertexId) as PartitionId)
+            .get_partition_id(data.get_partition_key_id() as VertexId) as PartitionId)
     }
     fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId> {
         self.partition_server_index_mapping

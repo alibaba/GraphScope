@@ -19,25 +19,31 @@ use crate::apis::Vertex;
 use crate::apis::ID;
 use crate::GraphProxyResult;
 
-pub type PartitionId = u32;
+/// The server id is used to identify the server that is able to access the partition.
 pub type ServerId = u32;
+/// The partition id is used to identify the partition that holds the data.
+pub type PartitionId = u32;
+/// The partition key id is used to identify key of the data that is used for partitioning.
+pub type PartitionKeyId = u64;
 
 pub trait PartitionedData {
-    fn get_id(&self) -> ID;
+    /// To obtain the key's id of the data that is used for partitioning.
+    fn get_partition_key_id(&self) -> PartitionKeyId;
 }
+
 impl PartitionedData for ID {
-    fn get_id(&self) -> ID {
-        *self
+    fn get_partition_key_id(&self) -> PartitionKeyId {
+        *self as PartitionKeyId
     }
 }
 impl PartitionedData for Vertex {
-    fn get_id(&self) -> ID {
-        self.id()
+    fn get_partition_key_id(&self) -> PartitionKeyId {
+        self.id() as PartitionKeyId
     }
 }
 impl PartitionedData for Edge {
-    fn get_id(&self) -> ID {
-        self.id()
+    fn get_partition_key_id(&self) -> PartitionKeyId {
+        self.src_id as PartitionKeyId
     }
 }
 
