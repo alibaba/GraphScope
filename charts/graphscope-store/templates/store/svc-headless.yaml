@@ -16,7 +16,7 @@ spec:
   type: ClusterIP
   clusterIP: None
   publishNotReadyAddresses: true
-  ports:q
+  ports:
     - name: engine
       port: {{ .Values.store.service.engine }}
       targetPort: engine
