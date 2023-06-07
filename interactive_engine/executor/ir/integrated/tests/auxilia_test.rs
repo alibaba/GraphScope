@@ -25,7 +25,6 @@ mod test {
     use dyn_type::Object;
     use graph_proxy::apis::register_graph;
     use graph_proxy::apis::GraphElement;
-    use graph_proxy::apis::PegasusClusterInfo;
     use graph_proxy::create_exp_store;
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::physical as pb;

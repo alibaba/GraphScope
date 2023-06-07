@@ -23,8 +23,10 @@ pub mod test {
     use std::convert::{TryFrom, TryInto};
     use std::sync::{Arc, Once};
 
-    use graph_proxy::apis::{ClusterInfo, DynDetails, Edge, Vertex, ID};
-    use graph_proxy::GraphProxyResult;
+    use graph_proxy::apis::{
+        register_graph, ClusterInfo, DynDetails, Edge, PegasusClusterInfo, Vertex, ID,
+    };
+    use graph_proxy::{create_exp_store, GraphProxyResult, SimplePartition};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
@@ -41,7 +43,6 @@ pub mod test {
     use runtime::process::record::Record;
     use runtime::router::Router;
     use runtime::IRJobAssembly;
-    use runtime_integration::{InitializeJobAssembly, QueryExpGraph};
 
     pub const TAG_A: KeyId = 0;
     pub const TAG_B: KeyId = 1;
@@ -60,7 +61,7 @@ pub mod test {
     static INIT: Once = Once::new();
 
     lazy_static! {
-        static ref FACTORY: IRJobAssembly = initialize_job_assembly();
+        static ref FACTORY: IRJobAssembly<SimplePartition, PegasusClusterInfo> = initialize_job_assembly();
     }
 
     pub fn initialize() {
@@ -81,9 +82,12 @@ pub mod test {
         }
     }
 
-    fn initialize_job_assembly() -> IRJobAssembly {
-        let query_exp_graph = QueryExpGraph::new(1);
-        query_exp_graph.initialize_job_assembly()
+    fn initialize_job_assembly() -> IRJobAssembly<SimplePartition, PegasusClusterInfo> {
+        let cluster_info = Arc::new(PegasusClusterInfo::default());
+        let exp_store = create_exp_store(cluster_info.clone());
+        register_graph(exp_store);
+        let partition_info = Arc::new(SimplePartition { num_servers: 1 });
+        IRJobAssembly::with(partition_info, cluster_info)
     }
 
     pub fn submit_query(job_req: JobRequest, num_workers: u32) -> ResultStream<Vec<u8>> {
@@ -242,6 +246,8 @@ pub mod test {
     }
 
     impl Router for TestRouter {
+        type P = SimplePartition;
+        type C = PegasusClusterInfo;
         fn route(&self, data: &i64) -> GraphProxyResult<u64> {
             Ok((*data as usize % self.num_workers) as u64)
         }
