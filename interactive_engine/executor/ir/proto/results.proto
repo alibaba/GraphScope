@@ -87,7 +87,7 @@ message Results {
   }
 }
 
-message HiactorResults {
+message CollectiveResults {
   // may be add schema here.
   repeated Results results = 1;
 }

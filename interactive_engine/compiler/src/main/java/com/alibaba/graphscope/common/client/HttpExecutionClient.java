@@ -79,8 +79,9 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                                             listener.onError(exception);
                                         }
                                         try {
-                                            IrResult.HiactorResults results =
-                                                    IrResult.HiactorResults.parseFrom(bytes.body());
+                                            IrResult.CollectiveResults results =
+                                                    IrResult.CollectiveResults.parseFrom(
+                                                            bytes.body());
                                             for (IrResult.Results irResult :
                                                     results.getResultsList()) {
                                                 listener.onNext(irResult.getRecord());
