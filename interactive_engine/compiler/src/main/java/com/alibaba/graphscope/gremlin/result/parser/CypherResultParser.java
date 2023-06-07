@@ -16,11 +16,11 @@
 
 package com.alibaba.graphscope.gremlin.result.parser;
 
-import com.alibaba.graphscope.common.client.ResultParser;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphPxdElementType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
+import com.alibaba.graphscope.common.result.ResultParser;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;

@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.integration.processor;
 
-import com.alibaba.graphscope.common.client.RpcChannelFetcher;
+import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
@@ -58,7 +58,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
     public IrTestOpProcessor(
             Configs configs,
             IrMetaFetcher irMetaFetcher,
-            RpcChannelFetcher fetcher,
+            ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
             Graph graph,
             GraphTraversalSource g,
@@ -115,11 +115,6 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                 .create());
                 return null;
         }
-    }
-
-    @Override
-    public void close() throws Exception {
-        this.broadcastProcessor.close();
     }
 
     private String getScript(Bytecode byteCode) {

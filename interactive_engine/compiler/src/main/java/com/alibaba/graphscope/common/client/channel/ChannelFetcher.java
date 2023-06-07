@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.client;
-
-import com.alibaba.pegasus.service.protocol.PegasusClient;
+package com.alibaba.graphscope.common.client.channel;
 
 import java.util.List;
 
-public interface ResultParser {
-    List<Object> parseFrom(PegasusClient.JobResponse response);
+/**
+ * fetch channel from remote
+ * @param <T>
+ */
+public interface ChannelFetcher<T> {
+    List<T> fetch();
 }
