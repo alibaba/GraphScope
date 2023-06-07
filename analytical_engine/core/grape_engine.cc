@@ -199,6 +199,9 @@ class RedirectLogSink : public google::LogSink {
 };
 
 int main(int argc, char* argv[]) {
+  // set RDMAV_FORK_SAFE to avoid the openmpi error, see also #2812
+  setenv("RDMAV_FORK_SAFE", "1", 0);
+
   int exit_code = 0;
   // not output any log to stderr by glog.
   FLAGS_stderrthreshold = std::numeric_limits<int>::max();
