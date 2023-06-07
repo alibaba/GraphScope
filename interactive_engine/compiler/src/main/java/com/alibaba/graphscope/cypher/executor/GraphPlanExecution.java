@@ -54,6 +54,7 @@ public class GraphPlanExecution<C> implements StatementResults.SubscribableExecu
                     new ExecutionRequest(
                             this.planSummary.getId(),
                             this.planSummary.getName(),
+                            this.planSummary.getLogicalPlan(),
                             this.planSummary.getPhysicalBuilder());
             CypherRecordProcessor recordProcessor =
                     new CypherRecordProcessor(
