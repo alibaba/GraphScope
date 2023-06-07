@@ -74,6 +74,11 @@ public class MatchTest {
                 match.explain().trim());
     }
 
+    // for the sentence `(a:person)-[b:knows*1..3]-(c:person)`:
+    // b is a path_expand operator, expand base should be `knows` type, getV base should be any
+    // vertex types adjacent to knows (currently we have not implemented type inference based on
+    // graph schema, so all vertex types are considered here)
+    // c is a getV operator which should be `person` type
     @Test
     public void match_4_test() {
         RelNode match =
@@ -89,8 +94,8 @@ public class MatchTest {
                     + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[knows]}], alias=[DEFAULT], fusedFilter=[[=(DEFAULT.weight,"
                     + " 1.0E0)]], opt=[OUT])\n"
-                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[DEFAULT], opt=[END])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[DEFAULT], opt=[END])\n"
                     + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[EndV],"
                     + " alias=[b])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"

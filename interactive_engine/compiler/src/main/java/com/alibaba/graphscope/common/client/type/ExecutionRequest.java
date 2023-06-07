@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.client.type;
 
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 
 /**
  * request to submit to remote engine service
@@ -24,11 +25,17 @@ import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 public class ExecutionRequest {
     private final long requestId;
     private final String requestName;
+    private final LogicalPlan requestLogical;
     private final PhysicalBuilder requestPhysical;
 
-    public ExecutionRequest(long requestId, String requestName, PhysicalBuilder requestPhysical) {
+    public ExecutionRequest(
+            long requestId,
+            String requestName,
+            LogicalPlan requestLogical,
+            PhysicalBuilder requestPhysical) {
         this.requestId = requestId;
         this.requestName = requestName;
+        this.requestLogical = requestLogical;
         this.requestPhysical = requestPhysical;
     }
 
@@ -38,6 +45,10 @@ public class ExecutionRequest {
 
     public String getRequestName() {
         return requestName;
+    }
+
+    public LogicalPlan getRequestLogical() {
+        return requestLogical;
     }
 
     public PhysicalBuilder getRequestPhysical() {
