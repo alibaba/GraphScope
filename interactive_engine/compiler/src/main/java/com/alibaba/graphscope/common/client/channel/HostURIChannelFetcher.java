@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.common.client.channel;
 
 import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.config.HQPSConfig;
+import com.alibaba.graphscope.common.config.HiactorConfig;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
  * http implementation of {@link ChannelFetcher}, init http from local config
  */
 public class HostURIChannelFetcher implements ChannelFetcher<URI> {
+    private static final String schema = "http";
     private Configs graphConfig;
 
     public HostURIChannelFetcher(Configs graphConfig) {
@@ -36,10 +37,10 @@ public class HostURIChannelFetcher implements ChannelFetcher<URI> {
 
     @Override
     public List<URI> fetch() {
-        String hosts = HQPSConfig.HQPS_URIS.get(graphConfig);
+        String hosts = HiactorConfig.HIACTOR_HOSTS.get(graphConfig);
         String[] hostsArr = hosts.split(",");
         return Arrays.asList(hostsArr).stream()
-                .map(k -> URI.create(k))
+                .map(k -> URI.create(schema + "://" + k))
                 .collect(Collectors.toList());
     }
 }

@@ -16,10 +16,10 @@
 
 package com.alibaba.graphscope.common.config;
 
-public class HQPSConfig {
-    public static final Config<String> HQPS_URIS =
-            Config.stringConfig("hqps.uris", "http://localhost:8080");
+public class HiactorConfig {
+    public static final Config<String> HIACTOR_HOSTS =
+            Config.stringConfig("hiactor.hosts", "localhost:8080");
 
-    public static final Config<Long> HQPS_HTTP_TIMEOUT =
-            Config.longConfig("hqps.http.timeout", 6000000L);
+    public static final Config<Long> HIACTOR_TIMEOUT =
+            Config.longConfig("hiactor.timeout", 6000000L);
 }
