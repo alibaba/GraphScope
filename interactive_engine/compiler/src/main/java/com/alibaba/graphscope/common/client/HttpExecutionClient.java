@@ -23,7 +23,6 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.HiactorConfig;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.gaia.proto.IrResult;
-import com.alibaba.graphscope.gaia.proto.StoredProcedure;
 import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -80,9 +79,8 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                                             listener.onError(exception);
                                         }
                                         try {
-                                            StoredProcedure.StoredProcedureResults results =
-                                                    StoredProcedure.StoredProcedureResults
-                                                            .parseFrom(bytes.body());
+                                            IrResult.HiactorResults results =
+                                                    IrResult.HiactorResults.parseFrom(bytes.body());
                                             for (IrResult.Results irResult :
                                                     results.getResultsList()) {
                                                 listener.onNext(irResult.getRecord());
