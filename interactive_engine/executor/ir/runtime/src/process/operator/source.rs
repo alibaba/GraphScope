@@ -19,7 +19,8 @@ use std::sync::Arc;
 
 use dyn_type::Object;
 use graph_proxy::apis::graph::PKV;
-use graph_proxy::apis::{get_graph, Edge, QueryParams, Vertex, ID};
+use graph_proxy::apis::partitioner::PartitionInfo;
+use graph_proxy::apis::{get_graph, ClusterInfo, Edge, QueryParams, Vertex, ID};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::physical as pb;
@@ -60,7 +61,9 @@ impl Default for SourceOperator {
 }
 
 impl SourceOperator {
-    pub fn new(op: pb::PhysicalOpr, partitioner: Arc<dyn Router>) -> FnGenResult<Self> {
+    pub fn new<P: PartitionInfo, C: ClusterInfo>(
+        op: pb::PhysicalOpr, partitioner: Arc<dyn Router<P = P, C = C>>,
+    ) -> FnGenResult<Self> {
         let op_kind = op.try_into()?;
         match op_kind {
             pb::physical_opr::operator::OpKind::Scan(mut scan) => {
@@ -95,7 +98,9 @@ impl SourceOperator {
     }
 
     /// Assign source vertex ids for each worker to call get_vertex
-    fn set_src(&mut self, ids: Vec<ID>, partitioner: Arc<dyn Router>) -> ParsePbResult<()> {
+    fn set_src<P: PartitionInfo, C: ClusterInfo>(
+        &mut self, ids: Vec<ID>, partitioner: Arc<dyn Router<P = P, C = C>>,
+    ) -> ParsePbResult<()> {
         let mut partitions = HashMap::new();
         for id in ids {
             match partitioner.route(&id) {

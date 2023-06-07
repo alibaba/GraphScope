@@ -60,19 +60,29 @@ type RecordKeySelector = Box<dyn KeyFunction<Record, RecordKey, Record>>;
 type RecordGroup = Box<dyn GroupGen<Record, RecordKey, Record>>;
 type RecordFold = Box<dyn FoldGen<u64, Record>>;
 
-pub struct IRJobAssembly {
-    udf_gen: FnGenerator,
+pub struct IRJobAssembly<P: PartitionInfo, C: ClusterInfo> {
+    udf_gen: FnGenerator<P, C>,
 }
 
-#[derive(Clone)]
-struct FnGenerator {
-    router: Arc<dyn Router>,
+struct FnGenerator<P: PartitionInfo, C: ClusterInfo> {
+    router: Arc<dyn Router<P = P, C = C>>,
+}
+
+impl<P: PartitionInfo, C: ClusterInfo> Clone for FnGenerator<P, C> {
+    fn clone(&self) -> Self {
+        Self { router: self.router.clone() }
+    }
 }
 
 /// An UDF generator for physical operators,
 /// which generates the udf that can be executed by the engine.
-impl FnGenerator {
-    fn new(router: Arc<dyn Router>) -> Self {
+impl<P: PartitionInfo, C: ClusterInfo> FnGenerator<P, C> {
+    fn new(router: Arc<dyn Router<P = P, C = C>>) -> Self {
+        FnGenerator { router }
+    }
+
+    fn with(partition_info: Arc<P>, cluster_info: Arc<C>) -> Self {
+        let router = Arc::new(DefaultRouter::new(partition_info, cluster_info));
         FnGenerator { router }
     }
 
@@ -153,14 +163,15 @@ impl FnGenerator {
     }
 }
 
-impl IRJobAssembly {
-    pub fn new<D: Router>(router: Arc<D>) -> Self {
-        IRJobAssembly { udf_gen: FnGenerator::new(router) }
+impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
+    pub fn new(router: Arc<dyn Router<P = P, C = C>>) -> Self {
+        let udf_gen = FnGenerator::new(router);
+        IRJobAssembly { udf_gen }
     }
 
-    pub fn with<P: PartitionInfo, C: ClusterInfo>(p: Arc<P>, c: Arc<C>) -> Self {
-        let default_router = DefaultRouter::new(p, c);
-        IRJobAssembly { udf_gen: FnGenerator::new(Arc::new(default_router)) }
+    pub fn with(partition_info: Arc<P>, cluster_info: Arc<C>) -> Self {
+        let udf_gen = FnGenerator::with(partition_info, cluster_info);
+        IRJobAssembly { udf_gen }
     }
 
     fn install(
@@ -609,7 +620,7 @@ impl IRJobAssembly {
     }
 }
 
-impl JobAssembly<Record> for IRJobAssembly {
+impl<P: PartitionInfo, C: ClusterInfo> JobAssembly<Record> for IRJobAssembly<P, C> {
     fn assemble(&self, plan: &JobDesc, worker: &mut Worker<Record, Vec<u8>>) -> Result<(), BuildJobError> {
         worker.dataflow(move |input, output| {
             let physical_plan = decode::<pb::PhysicalPlan>(&plan.plan)?;

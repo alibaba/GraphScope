@@ -28,6 +28,8 @@ pub type WorkerId = u64;
 /// we can implement the corresponding `route` function to guide the system to transfer the data to a proper destination worker.
 
 pub trait Router: Send + Sync + 'static {
+    type P: PartitionInfo;
+    type C: ClusterInfo;
     /// a route function that given the data, return the worker id that is going to do the query.
     fn route(&self, data: &ID) -> GraphProxyResult<WorkerId>;
 }
@@ -52,6 +54,8 @@ impl<P: PartitionInfo, C: ClusterInfo> DefaultRouter<P, C> {
 }
 
 impl<P: PartitionInfo, C: ClusterInfo> Router for DefaultRouter<P, C> {
+    type P = P;
+    type C = C;
     fn route(&self, data: &ID) -> GraphProxyResult<WorkerId> {
         let partition_id = self.partition_info.get_partition_id(data)?;
         let server_id = self

@@ -33,20 +33,19 @@ use graph_proxy::apis::partitioner::PartitionInfo;
 use graph_proxy::apis::{register_graph, ReadGraph};
 
 /// Initialize a job assembly with the given graph, partition info and cluster info.
-/// This is usually used in a distributed environment.
+/// IRJobAssembly provides a `DefaultRouter`, which is a default implementation of `Router` that can be used in most distributed environment.
 pub fn initialize_job_assembly<G: ReadGraph + 'static, P: PartitionInfo, C: ClusterInfo>(
     graph: Arc<G>, partition_info: Arc<P>, cluster_info: Arc<C>,
-) -> IRJobAssembly {
+) -> IRJobAssembly<P, C> {
     register_graph(graph);
     let job_assembly = IRJobAssembly::with(partition_info, cluster_info);
     job_assembly
 }
 
-/// Initialize a job assembly with the given graph and router.
-/// This can be used in a standalone environment, with the router implemented without partition or cluster info.
-pub fn initialize_job_assembly_with_router<G: ReadGraph + 'static, R: Router>(
-    graph: Arc<G>, router: Arc<R>,
-) -> IRJobAssembly {
+// /// Initialize a job assembly with the given graph and router.
+pub fn initialize_job_assembly_with_router<G: ReadGraph + 'static, P: PartitionInfo, C: ClusterInfo>(
+    graph: Arc<G>, router: Arc<dyn Router<P = P, C = C>>,
+) -> IRJobAssembly<P, C> {
     register_graph(graph);
     let job_assembly = IRJobAssembly::new(router);
     job_assembly

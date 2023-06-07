@@ -15,7 +15,8 @@
 
 use std::sync::Arc;
 
-use graph_proxy::apis::GraphElement;
+use graph_proxy::apis::partitioner::PartitionInfo;
+use graph_proxy::apis::{ClusterInfo, GraphElement};
 use ir_common::error::ParsePbError;
 use ir_common::KeyId;
 use pegasus::api::function::{FnResult, RouteFunction};
@@ -25,13 +26,13 @@ use crate::process::entry::{Entry, EntryType};
 use crate::process::record::Record;
 use crate::router::Router;
 
-pub struct RecordRouter {
-    p: Arc<dyn Router>,
+pub struct RecordRouter<P: PartitionInfo, C: ClusterInfo> {
+    p: Arc<dyn Router<P = P, C = C>>,
     shuffle_key: Option<KeyId>,
 }
 
-impl RecordRouter {
-    pub fn new(p: Arc<dyn Router>, shuffle_key: Option<KeyId>) -> Result<Self, ParsePbError> {
+impl<P: PartitionInfo, C: ClusterInfo> RecordRouter<P, C> {
+    pub fn new(p: Arc<dyn Router<P = P, C = C>>, shuffle_key: Option<KeyId>) -> Result<Self, ParsePbError> {
         if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime shuffle key {:?}", shuffle_key);
         }
@@ -39,7 +40,7 @@ impl RecordRouter {
     }
 }
 
-impl RouteFunction<Record> for RecordRouter {
+impl<P: PartitionInfo, C: ClusterInfo> RouteFunction<Record> for RecordRouter<P, C> {
     fn route(&self, t: &Record) -> FnResult<u64> {
         if let Some(entry) = t.get(self.shuffle_key.clone()) {
             match entry.get_type() {

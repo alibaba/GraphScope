@@ -15,9 +15,9 @@ structopt = "0.3"
 lru_time_cache = "0.11"
 dotproperties = "0.1.0"
 tokio = { version = "1.24", features = ["macros", "sync"] }
-
 global_query = { path = "../../store/global_query" , features = ["with_v6d"] }
 pegasus = { path = "../../engine/pegasus/pegasus", package = "pegasus" }
 pegasus_network = { path = "../../engine/pegasus/network" }
 pegasus_server = { path = "../../engine/pegasus/server" }
-runtime_integration =  { path = "../../ir/integrated", features = ["with_global_query", "with_v6d"] }
+runtime = {path = "../../ir/runtime"}
+graph_proxy = {path = "../../ir/graph_proxy", features = ["with_global_query", "with_v6d"]}
