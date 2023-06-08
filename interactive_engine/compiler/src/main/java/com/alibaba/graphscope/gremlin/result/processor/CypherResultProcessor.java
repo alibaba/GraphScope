@@ -17,6 +17,8 @@
 package com.alibaba.graphscope.gremlin.result.processor;
 
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.gremlin.result.parser.CypherResultParser;
 import com.google.common.collect.Lists;
 
@@ -29,11 +31,12 @@ import org.apache.tinkerpop.gremlin.server.Context;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CypherResultProcessor extends AbstractResultProcessor {
 
-    public CypherResultProcessor(Context context, RelNode topNode) {
-        super(context, new CypherResultParser(getOutputDataType(topNode)));
+    public CypherResultProcessor(Context context, GraphPlanner.Summary summary) {
+        super(context, new CypherResultParser(getOutputType(summary.getLogicalPlan())));
     }
 
     @Override
@@ -41,17 +44,23 @@ public class CypherResultProcessor extends AbstractResultProcessor {
         // do nothing
     }
 
-    private static RelDataType getOutputDataType(RelNode topNode) {
-        List<RelNode> inputQueue = Lists.newArrayList(topNode);
-        List<RelDataTypeField> outputFields = new ArrayList<>();
-        while (!inputQueue.isEmpty()) {
-            RelNode cur = inputQueue.remove(0);
-            outputFields.addAll(cur.getRowType().getFieldList());
-            if (AliasInference.removeAlias(cur)) {
-                break;
+    private static RelDataType getOutputType(LogicalPlan logicalPlan) {
+        if (logicalPlan.getRegularQuery() != null) {
+            List<RelNode> inputs = Lists.newArrayList(logicalPlan.getRegularQuery());
+            List<RelDataTypeField> outputFields = new ArrayList<>();
+            while (!inputs.isEmpty()) {
+                RelNode cur = inputs.remove(0);
+                outputFields.addAll(cur.getRowType().getFieldList());
+                if (AliasInference.removeAlias(cur)) {
+                    break;
+                }
+                inputs.addAll(cur.getInputs());
             }
-            inputQueue.addAll(cur.getInputs());
+            return new RelRecordType(
+                    StructKind.FULLY_QUALIFIED,
+                    outputFields.stream().distinct().collect(Collectors.toList()));
+        } else {
+            return logicalPlan.getProcedureCall().getType();
         }
-        return new RelRecordType(StructKind.FULLY_QUALIFIED, outputFields);
     }
 }

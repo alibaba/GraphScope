@@ -14,24 +14,13 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.schema;
+package com.alibaba.graphscope.common.antlr4;
 
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
-
-import org.apache.calcite.schema.Statistic;
-
-import java.util.List;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 /**
- * Extends {@link GraphSchema} to add {@link Statistic}
+ * parse DSL statement to antlr tree
  */
-public interface StatisticSchema extends GraphSchema {
-    // get meta for CBO
-    Statistic getStatistic(List<String> tableName);
-
-    // if the property name need to be converted to id
-    boolean isColumnId();
-
-    // schema json for ir core
-    String schemaJson();
+public interface Antlr4Parser {
+    ParseTree parse(String statement);
 }

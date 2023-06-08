@@ -38,8 +38,7 @@ public class Frontend implements AutoCloseable {
         int port = FrontendConfig.FRONTEND_SERVICE_PORT.get(configs);
         IrMetaQueryCallback queryCallback = new IrMetaQueryCallback(irMetaFetcher);
         server = new IrGremlinServer(port);
-        server.start(
-                configs, irMetaFetcher, channelFetcher, queryCallback, TestGraphFactory.VINEYARD);
+        server.start(configs, channelFetcher, queryCallback, TestGraphFactory.VINEYARD);
     }
 
     @Override

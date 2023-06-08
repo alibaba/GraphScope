@@ -21,37 +21,23 @@ import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import java.util.Objects;
 
 public class IrMeta {
+    private final SnapshotId snapshotId;
     private StatisticSchema schema;
-    private String schemaJson;
 
-    private long snapshotId;
-    private boolean acquireSnapshot;
-
-    public IrMeta(StatisticSchema schema, String schemaJson) {
-        this.schema = Objects.requireNonNull(schema);
-        this.schemaJson = Objects.requireNonNull(schemaJson);
+    public IrMeta(StatisticSchema schema) {
+        this(SnapshotId.createEmpty(), schema);
     }
 
-    public IrMeta(StatisticSchema schema, String schemaJson, long snapshotId) {
-        this.schema = schema;
-        this.schemaJson = schemaJson;
-        this.snapshotId = snapshotId;
-        this.acquireSnapshot = true;
+    public IrMeta(SnapshotId snapshotId, StatisticSchema schema) {
+        this.snapshotId = Objects.requireNonNull(snapshotId);
+        this.schema = Objects.requireNonNull(schema);
     }
 
     public StatisticSchema getSchema() {
         return schema;
     }
 
-    public String getSchemaJson() {
-        return schemaJson;
-    }
-
-    public long getSnapshotId() {
+    public SnapshotId getSnapshotId() {
         return snapshotId;
-    }
-
-    public boolean isAcquireSnapshot() {
-        return acquireSnapshot;
     }
 }

@@ -19,6 +19,7 @@ package com.alibaba.graphscope.groot.servers.ir;
 import com.alibaba.graphscope.common.ir.schema.GraphSchemaWrapper;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
+import com.alibaba.graphscope.common.store.SnapshotId;
 import com.alibaba.graphscope.compiler.api.schema.*;
 import com.alibaba.graphscope.groot.common.util.IrSchemaParser;
 
@@ -45,9 +46,8 @@ public class GrootMetaFetcher implements IrMetaFetcher {
                 && (snapshotId = pair.getRight()) != null) {
             return Optional.of(
                     new IrMeta(
-                            new GraphSchemaWrapper(schema, true),
-                            parser.parse(schema),
-                            snapshotId));
+                            new SnapshotId(true, snapshotId),
+                            new GraphSchemaWrapper(schema, parser.parse(schema), true)));
         } else {
             return Optional.empty();
         }
