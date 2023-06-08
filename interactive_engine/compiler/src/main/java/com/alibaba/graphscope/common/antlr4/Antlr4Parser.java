@@ -18,6 +18,9 @@ package com.alibaba.graphscope.common.antlr4;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 
+/**
+ * parse DSL statement to antlr tree
+ */
 public interface Antlr4Parser {
     ParseTree parse(String statement);
 }

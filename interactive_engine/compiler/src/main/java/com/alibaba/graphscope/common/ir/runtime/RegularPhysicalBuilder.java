@@ -24,6 +24,11 @@ import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelVisitor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * build physical plan from logical plan of a regular query
+ * @param <T>
+ * @param <R>
+ */
 public abstract class RegularPhysicalBuilder<T, R> extends PhysicalBuilder<R> {
     protected RelShuttle relShuttle;
 
