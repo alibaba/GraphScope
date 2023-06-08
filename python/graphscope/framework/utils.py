@@ -66,7 +66,7 @@ class PipeWatcher(object):
                         self._sink.flush()
                         if not self._drop:
                             self._lines.put(line)
-                    except:  # noqa: E722
+                    except:  # noqa: E722, pylint: disable=bare-except
                         pass
 
         self._polling_thread = threading.Thread(target=read_and_poll, args=(self,))

@@ -8,7 +8,7 @@ public class AppScannerTest {
     @Test
     public void test1() {
         String graphString =
-                "gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t,vineyard::ArrowVertexMap<int64_t,uint64_t>>";
+                "gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t,vineyard::ArrowVertexMap<int64_t,uint64_t>,true>";
         String[] res = GraphScopeAppScanner.parseGraphTemplateStr(graphString);
         Assert.assertEquals(5, res.length);
         Assert.assertEquals("gs::ArrowProjectedFragment", res[0]);

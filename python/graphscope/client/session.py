@@ -34,6 +34,7 @@ import uuid
 import warnings
 
 try:
+    import vineyard
     from kubernetes import client as kube_client
     from kubernetes import config as kube_config
 except ImportError:
@@ -61,6 +62,7 @@ from graphscope.framework.graph import GraphDAGNode
 from graphscope.framework.operation import Operation
 from graphscope.framework.utils import decode_dataframe
 from graphscope.framework.utils import decode_numpy
+from graphscope.framework.utils import random_string
 from graphscope.interactive.query import InteractiveQuery
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import message_pb2
@@ -315,6 +317,7 @@ class Session(object):
         k8s_engine_pod_node_selector=gs_config.k8s_engine_pod_node_selector,
         k8s_volumes=gs_config.k8s_volumes,
         k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
+        k8s_deploy_mode=gs_config.k8s_deploy_mode,
         timeout_seconds=gs_config.timeout_seconds,
         dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
         enabled_engines=gs_config.enabled_engines,
@@ -483,6 +486,10 @@ class Session(object):
                 Expect this value to be greater than 5 (heartbeat interval).
                 Disable dangling check by setting -1.
 
+            k8s_deploy_mode (str, optional): the deploy mode of engines on the kubernetes cluster. Default to eager.
+                eager: create all engine pods at once
+                lazy: create engine pods when called
+
             k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.
 
             **kw (dict, optional): Other optional parameters will be put to :code:`**kw`.
@@ -569,6 +576,7 @@ class Session(object):
             "reconnect",
             "k8s_volumes",
             "k8s_waiting_for_delete",
+            "k8s_deploy_mode",
             "timeout_seconds",
             "dangling_timeout_seconds",
             "with_mars",
@@ -579,6 +587,10 @@ class Session(object):
             "show_log",
             "log_level",
         )
+
+        # the mapping table from old vineyard object id to new vineyard object id
+        self._vineyard_object_mapping_table = {}
+
         saved_locals = locals()
         for param in self._accessable_params:
             self._config_params[param] = saved_locals[param]
@@ -614,6 +626,7 @@ class Session(object):
                     ","
                 )
             )
+
             for item in engines:
                 if item not in valid_engines:
                     raise ValueError(
@@ -641,17 +654,7 @@ class Session(object):
         if kw:
             raise ValueError("Value not recognized: ", list(kw.keys()))
 
-        if self._config_params["addr"]:
-            logger.info(
-                "Connecting graphscope session with address: %s",
-                self._config_params["addr"],
-            )
-        else:
-            logger.info(
-                "Initializing graphscope session with parameters: %s",
-                self._config_params,
-            )
-
+        self._log_session_info()
         self._closed = False
 
         # coordinator service endpoint
@@ -712,6 +715,18 @@ class Session(object):
     @property
     def dag(self):
         return self._dag
+
+    def _log_session_info(self):
+        if self._config_params["addr"]:
+            logger.info(
+                "Connecting graphscope session with address: %s",
+                self._config_params["addr"],
+            )
+        else:
+            logger.info(
+                "Initializing graphscope session with parameters: %s",
+                self._config_params,
+            )
 
     def _load_config(self, path, silent=True):
         config_path = os.path.expandvars(os.path.expanduser(path))
@@ -1004,21 +1019,18 @@ class Session(object):
             # try to connect to exist coordinator
             self._coordinator_endpoint = self._config_params["addr"]
         elif self._cluster_type == types_pb2.K8S:
+            # if users only provide kube_config file path
+            if isinstance(self._config_params["k8s_client_config"], str):
+                self._config_params["k8s_client_config"] = {
+                    "config_file": self._config_params["k8s_client_config"]
+                }
             if isinstance(
                 self._config_params["k8s_client_config"],
                 kube_client.api_client.ApiClient,
             ):
                 api_client = self._config_params["k8s_client_config"]
             else:
-                try:
-                    api_client = resolve_api_client(
-                        self._config_params["k8s_client_config"]
-                    )
-                except kube_config.ConfigException as e:
-                    raise RuntimeError(
-                        "Kubernetes environment not found, you may want to"
-                        ' launch session locally with param cluster_type="hosts"'
-                    ) from e
+                api_client = self._get_api_client()
             self._launcher = KubernetesClusterLauncher(
                 api_client=api_client,
                 **self._config_params,
@@ -1089,6 +1101,154 @@ class Session(object):
         """Get configuration of the session."""
         return self._config_params
 
+    def _get_api_client(self):
+        try:
+            api_client = resolve_api_client(self._config_params["k8s_client_config"])
+        except kube_config.ConfigException as e:
+            raise RuntimeError(
+                "Kubernetes environment not found, you may want to"
+                ' launch session locally with param cluster_type="hosts"'
+            ) from e
+        return api_client
+
+    def _check_pvc_exists(self, pvc_name, pvc_namespace):
+        api_client = self._get_api_client()
+        _core_api = kube_client.CoreV1Api(api_client)
+        try:
+            _core_api.read_namespaced_persistent_volume_claim(
+                name=pvc_name,
+                namespace=pvc_namespace,
+            )
+        except kube_client.rest.ApiException as e:
+            raise RuntimeError(
+                f"PVC {pvc_name} not found in namespace {pvc_namespace}"
+            ) from e
+
+    def _check_vineyard_deployment_exists(
+        self, vineyard_deployment_name, vineyard_deployment_namespace
+    ):
+        api_client = self._get_api_client()
+        _app_api = kube_client.AppsV1Api(api_client)
+        try:
+            _app_api.read_namespaced_deployment(
+                name=vineyard_deployment_name,
+                namespace=vineyard_deployment_namespace,
+            )
+        except kube_client.rest.ApiException as e:
+            if e.status == 404:
+                raise RuntimeError(
+                    f"Vineyard deployment {vineyard_deployment_name} not found in namespace {vineyard_deployment_namespace}"
+                ) from e
+            else:
+                raise e
+
+    def store_to_pvc(self, graphIDs, path: str, pvc_name: str):
+        """
+        Stores the given graph IDs to the given path with the given PVC.
+        Also, if you want to store graphs of different sessions to the same pv,
+        you'd better to create different pvc for different sessions at first.
+
+        Notice, before calling this function, the KUBECONFIG environment variable
+        should be set to the path of your kubeconfig file. And you should make sure
+        that the pvc is bound to the pv and the pv's capacity is enough to store the
+        graphs.
+
+        The method uses the vineyardctl to create a kubernetes job to serialize
+        the selected graphs. For more information, see the vineyardctl documentation.
+
+        https://github.com/v6d-io/v6d/tree/main/k8s/cmd#vineyardctl-deploy-backup-job
+
+        Args:
+            graph_ids: The list of graph IDs to store.
+                       Supported types:
+                       - list: list of vineyard.ObjectID or graphscope.Graph
+            path: The path in the pv to which the pvc is bound.
+            pvc_name: The name of the PVC.
+
+        Raises:
+            RuntimeError: If the cluster type is not Kubernetes.
+        """
+        if self._cluster_type != types_pb2.K8S:
+            raise RuntimeError("Only support kubernetes cluster")
+        object_ids = []
+        for object in graphIDs:
+            if isinstance(object, Graph):
+                object_ids.append(object.vineyard_id)
+            else:
+                object_ids.append(vineyard.ObjectID(object))
+        object_ids = ",".join(repr(id) for id in object_ids)
+        vineyard_deployment_name = self._config_params["k8s_vineyard_deployment"]
+        namespace = self._config_params["k8s_namespace"]
+        self._check_vineyard_deployment_exists(vineyard_deployment_name, namespace)
+        self._check_pvc_exists(pvc_name, namespace)
+        # The next function will create a kubernetes job for backuping
+        # the specific graphIDs to the specific path of the specific pvc
+        vineyard.deploy.vineyardctl.deploy.backup_job(
+            backup_name="vineyard-backup-" + random_string(6),
+            vineyard_deployment_name=vineyard_deployment_name,
+            vineyard_deployment_namespace=namespace,
+            namespace=namespace,
+            path=path,
+            objectids=object_ids,
+            pvc_name=pvc_name,
+        )
+
+    def restore_from_pvc(self, path: str, pvc_name: str):
+        """
+        Restores the graphs from the given path in the given PVC.
+        Notice, before calling this function, the KUBECONFIG environment variable
+        should be set to the path of your kubeconfig file.
+
+        Args:
+            path: The path in the pv to which the pvc is bound.
+            pvc_name: The name of the PVC.
+
+        Raises:
+            RuntimeError: If the cluster type is not Kubernetes.
+        """
+        if self._cluster_type != types_pb2.K8S:
+            raise RuntimeError("Only support kubernetes cluster")
+        vineyard_deployment_name = self._config_params["k8s_vineyard_deployment"]
+        namespace = self._config_params["k8s_namespace"]
+        self._check_vineyard_deployment_exists(vineyard_deployment_name, namespace)
+        self._check_pvc_exists(pvc_name, namespace)
+        random_suffix = random_string(6)
+        vineyard.deploy.vineyardctl.deploy.recover_job(
+            recover_name="vineyard-recover-" + random_suffix,
+            vineyard_deployment_name=vineyard_deployment_name,
+            vineyard_deployment_namespace=namespace,
+            namespace=namespace,
+            recover_path=path,
+            pvc_name=pvc_name,
+        )
+
+        api_client = self._get_api_client()
+        _core_api = kube_client.CoreV1Api(api_client)
+        try:
+            config_map = _core_api.read_namespaced_config_map(
+                name="vineyard-recover-" + random_suffix + "-mapping-table",
+                namespace=namespace,
+            )
+        except kube_client.rest.ApiException as e:
+            if e.status == 404:
+                raise RuntimeError(
+                    f"ConfigMap vineyard-recover-{random_suffix}-mapping-table not found in namespace {namespace}"
+                ) from e
+            else:
+                raise e
+
+        # parse configmap data to the self._vineyard_object_mapping_table
+        self._vineyard_object_mapping_table = config_map.data
+
+    def get_vineyard_object_mapping_table(self):
+        """
+        Get the vineyard object mapping table
+        from the old object id to new object id
+        during storing and restoring graph to pvc
+        on the kubernetes cluster.
+        """
+        return self._vineyard_object_mapping_table
+
     def g(
         self,
         incoming_data=None,
@@ -1097,7 +1257,18 @@ class Session(object):
         generate_eid=True,
         retain_oid=True,
         vertex_map="global",
+        compact_edges=False,
     ):
+        if (
+            isinstance(incoming_data, vineyard.ObjectID)
+            and repr(vineyard.ObjectID(incoming_data))
+            in self._vineyard_object_mapping_table
+        ):
+            graph_vineyard_id = self._vineyard_object_mapping_table[
+                repr(vineyard.ObjectID(incoming_data))
+            ]
+            logger.info("Restore graph from original graph: %s", graph_vineyard_id)
+            incoming_data = vineyard.ObjectID(graph_vineyard_id)
         return self._wrapper(
             GraphDAGNode(
                 self,
@@ -1107,6 +1278,7 @@ class Session(object):
                 generate_eid,
                 retain_oid,
                 vertex_map,
+                compact_edges,
             )
         )
 
@@ -1347,6 +1519,7 @@ def set_option(**kwargs):
         - k8s_waiting_for_delete
         - timeout_seconds
         - dataset_download_retries
+        - k8s_deploy_mode
 
     Args:
         kwargs: dict
@@ -1368,7 +1541,13 @@ def set_option(**kwargs):
         # use different default value for `vineyard_shared_memory` for
         # different cluster types in pursuit of better user experience.
         if k == "vineyard_shared_mem":
-            setattr("_local_vineyard_shared_mem", v)
+            setattr(gs_config, "_local_vineyard_shared_mem", v)
+
+        # use string as log level
+        if k == "log_level" and isinstance(v, int):
+            level = logging.getLevelName(v)
+            if " " not in level:  # invalid number will returns "Level xxx"
+                setattr(gs_config, k, level.upper())
 
     GSLogger.update()
 
@@ -1407,6 +1586,7 @@ def get_option(key):
         - k8s_waiting_for_delete
         - timeout_seconds
         - dataset_download_retries
+        - k8s_deploy_mode
 
     Args:
         key: str
@@ -1510,6 +1690,7 @@ def g(
     generate_eid=True,
     retain_oid=True,
     vertex_map="global",
+    compact_edges=False,
 ):
     """Construct a GraphScope graph object on the default session.
 
@@ -1533,7 +1714,13 @@ def g(
         >>> g = graphscope.g() # creating graph on the session "sess"
     """
     return get_default_session().g(
-        incoming_data, oid_type, directed, generate_eid, retain_oid, vertex_map
+        incoming_data,
+        oid_type,
+        directed,
+        generate_eid,
+        retain_oid,
+        vertex_map,
+        compact_edges,
     )
 
 

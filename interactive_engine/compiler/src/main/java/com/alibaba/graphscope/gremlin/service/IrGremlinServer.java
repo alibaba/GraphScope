@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.service;
 
-import com.alibaba.graphscope.common.client.RpcChannelFetcher;
+import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
@@ -69,7 +69,7 @@ public class IrGremlinServer implements AutoCloseable {
     public void start(
             Configs configs,
             IrMetaFetcher irMetaFetcher,
-            RpcChannelFetcher fetcher,
+            ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
             GraphProperties testGraph)
             throws Exception {

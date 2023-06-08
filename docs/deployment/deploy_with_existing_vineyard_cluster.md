@@ -1,4 +1,4 @@
-# Use an existing vineyard cluster with multiple GraphScope sessions
+# Depoly with Existing Vineyard Cluster
 
 If you have already deployed a vineyard cluster, you can easily deploy GraphScope on the existing cluster and reuse the vineyard data such as graph with several GraphScope sessions. This will allow you to load a graph to the existing vineyard cluster and then reuse it with multiple GraphScope sessions, without needing to deploy a separate vineyard cluster for each session.
 

@@ -89,6 +89,7 @@ class PregelContext
  * @tparam COMPUTE_CONTEXT_T
  */
 template <typename OID_T, typename VID_T, typename VERTEX_MAP_T,
+          /* bool COMPACT, */  // TODO(tao): support compact CSR
           typename COMPUTE_CONTEXT_T>
 class PregelContext<vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>,
                     COMPUTE_CONTEXT_T>

@@ -114,6 +114,11 @@ class GSConfig(object):
     # support resource preemption or resource guarantee
     preemptive = True
 
+    # the deploy mode of engines on the kubernetes cluster, default to eager
+    # eager: create all engine pods at once
+    # lazy: create engine pods when called
+    k8s_deploy_mode = "eager"
+
     k8s_waiting_for_delete = False
     num_workers = 2
     show_log = False

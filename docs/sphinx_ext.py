@@ -19,31 +19,39 @@
 import os
 import shutil
 import subprocess
+from typing import Dict, Any, List
 
 import sphinx
+import sphinx.application
 from sphinx import addnodes
-from sphinx.builders.html import StandaloneHTMLBuilder
 from sphinx.environment.adapters.toctree import TocTree
 
+from furo.navigation import get_navigation_tree
 
-def resolve_git_tags():
+
+def resolve_git_tags(maximum_recent_versions=4):
+    git = shutil.which("git")
+    if git is None:
+        return "latest", []
     try:
         head = subprocess.check_output(
-            [shutil.which("git"), "describe", "--exact-match", "--tags", "HEAD"],
+            [git, "describe", "--exact-match", "--tags", "HEAD"],
             stderr=subprocess.DEVNULL,
         )
         head = head.decode("utf-8", errors="ignore").strip()
     except:
         head = "latest"
     releases = (
-        subprocess.check_output(
-            [shutil.which("git"), "tag", "--list", "--sort=-creatordate"]
-        )
+        subprocess.check_output([git, "tag", "--list", "--sort=-creatordate"])
         .decode("utf-8", errors="ignore")
         .strip()
         .split()
     )
+    releases = [r for r in releases if r.startswith("v")][0:maximum_recent_versions]
     return head, releases
+
+
+current_version, releases = resolve_git_tags()
 
 
 def concat_path(page, base):
@@ -79,41 +87,50 @@ class TocTreeExt(TocTree):
         return result
 
 
-class StandaloneHTMLBuilderExt(StandaloneHTMLBuilder):
-    """Extend the standard `StandaloneHTMLBuilder` with a `toctree_for` derivate in
-    context to creating toctrees for zh_CN documentations.
-    """
-
-    def _get_local_toctree_ext(self, master_doc, pagename, collapse, **kwargs):
-        if "includehidden" not in kwargs:
-            kwargs["includehidden"] = False
-        if kwargs.get("maxdepth") == "":
-            kwargs.pop("maxdepth")
-        return self.render_partial(
-            TocTreeExt(self.env).get_local_toctree_for(
-                master_doc, pagename, self, collapse, **kwargs
-            )
-        )["fragment"]
-
-    def handle_page(self, pagename, *args, **kwargs):
-        version, releases = resolve_git_tags()
-        if os.environ.get("TAG_VER", None) == "stable":
-            version = "stable"
-        self.globalcontext["version"] = version
-        # self.globalcontext['stable'] = releases[0]
-        self.globalcontext["versions"] = ["latest", "stable"] + releases
-
-        self.globalcontext["concat_path"] = concat_path
-        self.globalcontext[
-            "toctree_for"
-        ] = lambda master_doc, **kwargs: self._get_local_toctree_ext(
-            master_doc, pagename, **kwargs
+def _compute_navigation_tree(
+    app: sphinx.application.Sphinx, pagename: str, context: Dict[str, Any]
+) -> str:
+    toctree = TocTreeExt(app.builder.env)
+    if "zh" in pagename:
+        master_doc = "zh/index"
+    else:
+        master_doc = "index"
+    toctree_html = app.builder.render_partial(
+        toctree.get_local_toctree_for(
+            master_doc,
+            docname=pagename,
+            builder=app.builder,
+            collapse=False,
+            titles_only=True,
+            maxdepth=-1,
+            includehidden=False,
         )
-        return super(StandaloneHTMLBuilderExt, self).handle_page(
-            pagename, *args, **kwargs
-        )
+    )["fragment"]
+    return get_navigation_tree(toctree_html)
 
 
-def setup(app):
-    app.add_builder(StandaloneHTMLBuilderExt, override=True)
-    return {"version": sphinx.__display_version__, "parallel_read_safe": True}
+def _html_page_context(
+    app: sphinx.application.Sphinx,
+    pagename: str,
+    templatename: str,
+    context: Dict[str, Any],
+    doctree: Any,
+):
+    version = current_version
+    if os.environ.get("TAG_VER", None) == "stable":
+        version = "stable"
+    context["version"] = version
+    context["versions"] = ["latest", "stable"] + releases
+    context["concat_path"] = concat_path
+
+    # customize toctree for en/zh_CN docs
+    context["furo_navigation_tree"] = _compute_navigation_tree(app, pagename, context)
+
+
+def setup(app: sphinx.application.Sphinx) -> Dict[str, Any]:
+    app.connect("html-page-context", _html_page_context, priority=1000)
+    return {
+        "version": sphinx.__display_version__,
+        "parallel_read_safe": True,
+        "parallel_write_safe": True,
+    }

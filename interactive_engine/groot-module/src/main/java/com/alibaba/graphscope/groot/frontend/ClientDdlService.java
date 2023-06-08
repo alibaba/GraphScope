@@ -28,6 +28,8 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Set;
 
 public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
@@ -47,9 +49,9 @@ public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
     public void batchSubmit(
             BatchSubmitRequest request, StreamObserver<BatchSubmitResponse> responseObserver) {
         try {
-            int formatVersion = request.getFormatVersion();
             boolean simple = request.getSimpleResponse();
             DdlRequestBatch.Builder builder = DdlRequestBatch.newBuilder();
+            logger.info("Received DDL request: " + request.toString());
             for (BatchSubmitRequest.DDLRequest ddlRequest : request.getValueList()) {
                 switch (ddlRequest.getValueCase()) {
                     case CREATE_VERTEX_TYPE_REQUEST:
@@ -126,8 +128,11 @@ public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
                         responseObserver.onCompleted();
                     });
         } catch (Exception e) {
-            responseObserver.onError(
-                    Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            String trace = sw.toString();
+            logger.error("Exception occurred when processing batch DDL request", e);
+            responseObserver.onError(Status.INTERNAL.withDescription(trace).asRuntimeException());
         }
     }
 
@@ -178,6 +183,7 @@ public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
         TypeDefPb.Builder builder = TypeDefPb.newBuilder();
         builder.setVersionId(typeDef.getVersionId());
         builder.setLabel(typeDef.getLabel());
+        builder.setComment(typeDef.getComment());
         builder.setLabelId(LabelIdPb.newBuilder().setId(typeDef.getLabelId()).build());
         switch (typeDef.getTypeEnum()) {
             case VERTEX:
@@ -216,6 +222,7 @@ public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
     private TypeDef parseTypeDefPb(TypeDefPb typeDefPb) {
         TypeDef.Builder builder = TypeDef.newBuilder();
         builder.setLabel(typeDefPb.getLabel());
+        builder.setComment(typeDefPb.getComment());
         TypeEnumPb typeEnumPb = typeDefPb.getTypeEnum();
         switch (typeEnumPb) {
             case VERTEX:

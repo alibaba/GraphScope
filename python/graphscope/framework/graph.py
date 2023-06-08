@@ -54,7 +54,16 @@ class GraphInterface(metaclass=ABCMeta):
 
     def __init__(self):
         self._session = None
-        self._directed = False
+        self._directed = True
+        self._generate_eid = True
+        self._retain_oid = True
+        self._oid_type = "int64"
+        self._vertex_map = graph_def_pb2.GLOBAL_VERTEX_MAP
+        self._compact_edges = False
+
+    @property
+    def session_id(self):
+        raise NotImplementedError
 
     @abstractmethod
     def add_column(self, results, selector):
@@ -89,6 +98,7 @@ class GraphInterface(metaclass=ABCMeta):
     def save_to(self, path, **kwargs):
         raise NotImplementedError
 
+    @classmethod
     def load_from(cls, path, sess, **kwargs):
         raise NotImplementedError
 
@@ -189,6 +199,7 @@ class GraphInterface(metaclass=ABCMeta):
         config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(False)
         config[types_pb2.IS_FROM_GAR] = utils.b_to_attr(False)
         config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(self._vertex_map)
+        config[types_pb2.COMPACT_EDGES] = utils.b_to_attr(self._compact_edges)
         return dag_utils.create_graph(
             self.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=None, attrs=config
         )
@@ -231,7 +242,8 @@ class GraphDAGNode(DAGNode, GraphInterface):
         directed=True,
         generate_eid=True,
         retain_oid=True,
-        vertex_map="global",
+        vertex_map: Union[str, int] = "global",
+        compact_edges=False,
     ):
         """Construct a :class:`GraphDAGNode` object.
 
@@ -247,11 +259,13 @@ class GraphDAGNode(DAGNode, GraphInterface):
 
             oid_type: (str, optional): Type of vertex original id. Defaults to "int64".
             directed: (bool, optional): Directed graph or not. Defaults to True.
-            generate_eid: (bool, optional): Generate id for each edge when setted True. Defaults to True.
-            retain_oid: (bool, optional): Keep original ID in vertex table when setted True. Defaults to True.
+            generate_eid: (bool, optional): Generate id for each edge when set True. Defaults to True.
+            retain_oid: (bool, optional): Keep original ID in vertex table when set True. Defaults to True.
             vertex_map (str, optional): Indicate use global vertex map or local vertex map. Can be "global" or "local".
                 Defaults to global.
-
+            compact_edges (bool, optional): Compact edges (CSR) using varint and delta encoding. Defaults to False.
+                Note that compact edges helps to half the memory usage of edges in graph data structure, but may cause
+                at most 10%~20% performance degeneration in some algorithms.
         """
 
         super().__init__()
@@ -265,6 +279,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         self._retain_oid = retain_oid
         self._graph_type = graph_def_pb2.ARROW_PROPERTY
         self._vertex_map = utils.vertex_map_type_to_enum(vertex_map)
+        self._compact_edges = compact_edges
 
         # list of pair <parent_op_key, VertexLabel/EdgeLabel>
         self._unsealed_vertices_and_edges = list()
@@ -326,6 +341,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._generate_eid,
             self._retain_oid,
             self._vertex_map,
+            self._compact_edges,
         )
         graph_dag_node._base_graph = self
         return graph_dag_node
@@ -438,6 +454,16 @@ class GraphDAGNode(DAGNode, GraphInterface):
             :class:`graphscope.framework.graph.GraphDAGNode`:
                 A new graph with vertex added, evaluated in eager mode.
         """
+        if self._vertex_map == graph_def_pb2.LOCAL_VERTEX_MAP:
+            raise ValueError(
+                "Cannot incrementally add vertices to graphs with local vertex map, "
+                "please use `graphscope.load_from()` instead."
+            )
+        if self._compact_edges:
+            raise ValueError(
+                "Cannot incrementally add vertices to graphs with compacted edges, "
+                "please use `graphscope.load_from()` instead."
+            )
         if label in self._v_labels:
             raise ValueError(f"Label {label} already existed in graph.")
         if not self._v_labels and self._e_labels:
@@ -468,6 +494,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._generate_eid,
             self._retain_oid,
             self._vertex_map,
+            self._compact_edges,
         )
         graph_dag_node._v_labels = v_labels
         graph_dag_node._e_labels = self._e_labels
@@ -520,6 +547,11 @@ class GraphDAGNode(DAGNode, GraphInterface):
             :class:`graphscope.framework.graph.GraphDAGNode`:
                 A new graph with edge added, evaluated in eager mode.
         """
+        if self._compact_edges:
+            raise ValueError(
+                "Cannot incrementally add edges to graphs with compacted edges, "
+                "please use `graphscope.load_from()` instead."
+            )
         if src_label is None and dst_label is None:
             check_argument(
                 len(self._v_labels) <= 1,
@@ -623,6 +655,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._generate_eid,
             self._retain_oid,
             self._vertex_map,
+            self._compact_edges,
         )
         graph_dag_node._v_labels = v_labels
         graph_dag_node._e_labels = e_labels
@@ -660,7 +693,12 @@ class GraphDAGNode(DAGNode, GraphInterface):
             results._check_selector(value)
         selector = json.dumps(selector)
         op = dag_utils.add_column(self, results, selector)
-        graph_dag_node = GraphDAGNode(self._session, op, vertex_map=self._vertex_map)
+        graph_dag_node = GraphDAGNode(
+            self._session,
+            op,
+            vertex_map=self._vertex_map,
+            compact_edges=self._compact_edges,
+        )
         graph_dag_node._base_graph = self
         return graph_dag_node
 
@@ -726,6 +764,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._generate_eid,
             self._retain_oid,
             self._vertex_map,
+            self._compact_edges,
         )
         graph_dag_node._base_graph = self
         return graph_dag_node
@@ -774,6 +813,7 @@ class Graph(GraphInterface):
         self._detached = False
 
         self._vertex_map = graph_node._vertex_map
+        self._compact_edges = graph_node._compact_edges
 
         self._interactive_instance_list = []
         self._learning_instance_list = []
@@ -790,6 +830,7 @@ class Graph(GraphInterface):
         self._key = graph_def.key
         self._directed = graph_def.directed
         self._is_multigraph = graph_def.is_multigraph
+        self._compact_edges = graph_def.compact_edges
         vy_info = graph_def_pb2.VineyardInfoPb()
         graph_def.extension.Unpack(vy_info)
         self._vineyard_id = vy_info.vineyard_id
@@ -859,14 +900,13 @@ class Graph(GraphInterface):
         edata_type = utils.data_type_to_cpp(self._schema.edata_type)
         vertex_map_type = utils.vertex_map_type_to_cpp(self._vertex_map)
         vertex_map_type = f"{vertex_map_type}<{oid_type},{vid_type}>"
+        compact_type = "true" if self._compact_edges else "false"
         if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            template = (
-                f"vineyard::ArrowFragment<{oid_type},{vid_type},{vertex_map_type}>"
-            )
+            template = f"vineyard::ArrowFragment<{oid_type},{vid_type},{vertex_map_type},{compact_type}>"
         elif self._graph_type == graph_def_pb2.ARROW_PROJECTED:
-            template = f"gs::ArrowProjectedFragment<{oid_type},{vid_type},{vdata_type},{edata_type},{vertex_map_type}>"
+            template = f"gs::ArrowProjectedFragment<{oid_type},{vid_type},{vdata_type},{edata_type},{vertex_map_type},{compact_type}>"  # noqa: E501
         elif self._graph_type == graph_def_pb2.ARROW_FLATTENED:
-            template = f"ArrowFlattenedFragmen<{oid_type},{vid_type},{vdata_type},{edata_type}>"
+            template = f"ArrowFlattenedFragment<{oid_type},{vid_type},{vdata_type},{edata_type},{compact_type}>"
         elif self._graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
             template = f"gs::DynamicProjectedFragment<{vdata_type},{edata_type}>"
         else:

@@ -14,7 +14,6 @@
 //! limitations under the License.
 
 use std::fmt;
-use std::sync::atomic::{AtomicPtr, Ordering};
 
 use ahash::HashMap;
 use dyn_type::Object;
@@ -69,7 +68,7 @@ where
     // Specifically, in graphscope store, None means we do not need any property,
     // and Some(vec![]) means we need all properties
     prop_keys: Option<Vec<NameOrId>>,
-    inner: AtomicPtr<V>,
+    inner: V,
 }
 
 impl<V> LazyVertexDetails<V>
@@ -77,17 +76,7 @@ where
     V: StoreVertex + 'static,
 {
     pub fn new(v: V, prop_keys: Option<Vec<NameOrId>>) -> Self {
-        let ptr = Box::into_raw(Box::new(v));
-        LazyVertexDetails { prop_keys, inner: AtomicPtr::new(ptr) }
-    }
-
-    fn get_vertex_ptr(&self) -> Option<*mut V> {
-        let ptr = self.inner.load(Ordering::SeqCst);
-        if ptr.is_null() {
-            None
-        } else {
-            Some(ptr)
-        }
+        LazyVertexDetails { prop_keys, inner: v }
     }
 }
 
@@ -98,7 +87,7 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("gs_store LazyVertexDetails")
             .field("properties", &self.prop_keys)
-            .field("inner", &self.inner)
+            // .field("inner", &self.inner)
             .finish()
     }
 }
@@ -109,15 +98,9 @@ where
 {
     fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
         if let NameOrId::Id(key) = key {
-            if let Some(ptr) = self.get_vertex_ptr() {
-                unsafe {
-                    (*ptr)
-                        .get_property(*key as PropId)
-                        .map(|prop| PropertyValue::Owned(encode_runtime_prop_val(prop)))
-                }
-            } else {
-                None
-            }
+            self.inner
+                .get_property(*key as PropId)
+                .map(|prop| PropertyValue::Owned(encode_runtime_prop_val(prop)))
         } else {
             info!("Have not support getting property by prop_name in gs_store yet");
             None
@@ -125,18 +108,12 @@ where
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        if let Some(ptr) = self.get_vertex_ptr() {
-            unsafe {
-                Some(
-                    (*ptr)
-                        .get_properties()
-                        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
-                        .collect(),
-                )
-            }
-        } else {
-            None
-        }
+        Some(
+            self.inner
+                .get_properties()
+                .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
+                .collect(),
+        )
     }
 
     fn get_property_keys(&self) -> Option<Vec<NameOrId>> {
@@ -157,20 +134,6 @@ where
     }
 }
 
-impl<V> Drop for LazyVertexDetails<V>
-where
-    V: StoreVertex + 'static,
-{
-    fn drop(&mut self) {
-        let ptr = self.inner.load(Ordering::SeqCst);
-        if !ptr.is_null() {
-            unsafe {
-                std::ptr::drop_in_place(ptr);
-            }
-        }
-    }
-}
-
 /// LazyEdgeDetails is used for local property fetching optimization.
 /// That is, the required properties will not be materialized until LazyEdgeDetails need to be shuffled.
 #[allow(dead_code)]
@@ -183,7 +146,7 @@ where
     // Specifically, in graphscope store, None means we do not need any property,
     // and Some(vec![]) means we need all properties
     prop_keys: Option<Vec<NameOrId>>,
-    inner: AtomicPtr<E>,
+    inner: E,
 }
 
 impl<E> LazyEdgeDetails<E>
@@ -191,17 +154,7 @@ where
     E: StoreEdge + 'static,
 {
     pub fn new(e: E, prop_keys: Option<Vec<NameOrId>>) -> Self {
-        let ptr = Box::into_raw(Box::new(e));
-        LazyEdgeDetails { prop_keys, inner: AtomicPtr::new(ptr) }
-    }
-
-    fn get_edge_ptr(&self) -> Option<*mut E> {
-        let ptr = self.inner.load(Ordering::SeqCst);
-        if ptr.is_null() {
-            None
-        } else {
-            Some(ptr)
-        }
+        LazyEdgeDetails { prop_keys, inner: e }
     }
 }
 
@@ -212,7 +165,6 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("gs_store LazyEdgeDetails")
             .field("properties", &self.prop_keys)
-            .field("inner", &self.inner)
             .finish()
     }
 }
@@ -223,15 +175,9 @@ where
 {
     fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
         if let NameOrId::Id(key) = key {
-            if let Some(ptr) = self.get_edge_ptr() {
-                unsafe {
-                    (*ptr)
-                        .get_property(*key as PropId)
-                        .map(|prop| PropertyValue::Owned(encode_runtime_prop_val(prop)))
-                }
-            } else {
-                None
-            }
+            self.inner
+                .get_property(*key as PropId)
+                .map(|prop| PropertyValue::Owned(encode_runtime_prop_val(prop)))
         } else {
             info!("Have not support getting property by prop_name in gs_store yet");
             None
@@ -240,18 +186,12 @@ where
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         // the case of get_all_properties from vertex;
-        if let Some(ptr) = self.get_edge_ptr() {
-            unsafe {
-                Some(
-                    (*ptr)
-                        .get_properties()
-                        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
-                        .collect(),
-                )
-            }
-        } else {
-            None
-        }
+        Some(
+            self.inner
+                .get_properties()
+                .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
+                .collect(),
+        )
     }
 
     fn get_property_keys(&self) -> Option<Vec<NameOrId>> {
@@ -269,19 +209,5 @@ where
 
     fn as_any_ref(&self) -> &dyn Any {
         self
-    }
-}
-
-impl<E> Drop for LazyEdgeDetails<E>
-where
-    E: StoreEdge + 'static,
-{
-    fn drop(&mut self) {
-        let ptr = self.inner.load(Ordering::SeqCst);
-        if !ptr.is_null() {
-            unsafe {
-                std::ptr::drop_in_place(ptr);
-            }
-        }
     }
 }

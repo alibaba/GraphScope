@@ -172,7 +172,7 @@ public class MaxNode extends NodeBase {
                 throw new GrootException(e);
             }
         }
-        logger.info("maxnode started");
+        logger.info("MaxNode started");
     }
 
     @Override

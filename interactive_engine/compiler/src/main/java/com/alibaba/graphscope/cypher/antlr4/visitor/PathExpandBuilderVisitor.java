@@ -17,6 +17,8 @@
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
 import com.alibaba.graphscope.common.ir.tools.config.ExpandConfig;
+import com.alibaba.graphscope.common.ir.tools.config.GetVConfig;
+import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
 import com.alibaba.graphscope.common.ir.tools.config.PathExpandConfig;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
@@ -52,7 +54,10 @@ public class PathExpandBuilderVisitor extends CypherGSBaseVisitor<PathExpandConf
     @Override
     public PathExpandConfig.Builder visitOC_NodePattern(CypherGSParser.OC_NodePatternContext ctx) {
         // set getV base in path_expand
-        return builder.getV(Utils.getVConfig(ctx));
+        GetVConfig getVConfig = Utils.getVConfig(ctx);
+        // labelConfig is set to default, to get all vertex labels adjacent to the edge
+        // alias is set to null for it will never be used
+        return builder.getV(new GetVConfig(getVConfig.getOpt(), LabelConfig.DEFAULT));
     }
 
     @Override

@@ -95,6 +95,7 @@ class KubernetesClusterLauncher(Launcher):
         timeout_seconds=600,
         dangling_timeout_seconds=None,
         k8s_waiting_for_delete=False,
+        k8s_deploy_mode=None,
         with_dataset=False,
         **kwargs,
     ):
@@ -434,6 +435,14 @@ class KubernetesClusterLauncher(Launcher):
                     f"{self.base64_encode(json.dumps(self._saved_locals['k8s_engine_pod_node_selector']))}",
                 ]
             )
+
+        if self._saved_locals["k8s_deploy_mode"] is not None:
+            args.extend(
+                [
+                    "--k8s_deploy_mode",
+                    str(self._saved_locals["k8s_deploy_mode"]),
+                ]
+            )
         print(args)
         return args
 
@@ -465,6 +474,7 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._namespace,
             name=self._coordinator_name,
+            pods_watcher=self._coordinator_pods_watcher,
             timeout_seconds=self._saved_locals["timeout_seconds"],
         ):
             self._coordinator_pods_watcher.stop()
@@ -536,13 +546,11 @@ class KubernetesClusterLauncher(Launcher):
                 "Coordinator pod start successful with address %s, connecting to service ...",
                 self._coordinator_endpoint,
             )
-        except Exception as e:
+        except Exception:
             time.sleep(1)
             self._dump_coordinator_failed_status()
             self.stop()
-            raise K8sError(
-                "Error when launching Coordinator on kubernetes cluster"
-            ) from e
+            raise
 
     def stop(self, wait=False):
         """Stop graphscope instance on kubernetes cluster.

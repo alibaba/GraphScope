@@ -26,7 +26,7 @@
 package com.alibaba.graphscope.gremlin.plugin.processor;
 
 import com.alibaba.graphscope.common.IrPlan;
-import com.alibaba.graphscope.common.client.*;
+import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.config.PlannerConfig;
@@ -52,6 +52,7 @@ import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.result.processor.CypherResultProcessor;
 import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
+import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.common.collect.ImmutableList;
@@ -108,7 +109,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected GraphTraversalSource g;
     protected Configs configs;
     protected PlannerConfig plannerConfig;
-    protected RpcBroadcastProcessor broadcastProcessor;
+    /**
+     * todo: replace with {@link com.alibaba.graphscope.common.client.ExecutionClient} after unifying Gremlin into the Calcite stack
+     */
+    protected RpcClient rpcClient;
+
     protected IrMetaFetcher irMetaFetcher;
     protected IrMetaQueryCallback metaQueryCallback;
 
@@ -117,7 +122,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     public IrStandardOpProcessor(
             Configs configs,
             IrMetaFetcher irMetaFetcher,
-            RpcChannelFetcher fetcher,
+            ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
             Graph graph,
             GraphTraversalSource g) {
@@ -126,7 +131,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.configs = configs;
         this.plannerConfig = PlannerConfig.create(this.configs);
         this.irMetaFetcher = irMetaFetcher;
-        this.broadcastProcessor = new RpcBroadcastProcessor(fetcher);
+        this.rpcClient =
+                new RpcClient(PegasusConfig.PEGASUS_GRPC_TIMEOUT.get(configs), fetcher.fetch());
         this.metaQueryCallback = metaQueryCallback;
 
         RexBuilder rexBuilder = new RexBuilder(new JavaTypeFactoryImpl());
@@ -430,7 +436,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         .setAll(PegasusClient.Empty.newBuilder().build())
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();
-        broadcastProcessor.broadcast(request, resultProcessor);
+        this.rpcClient.submit(request, resultProcessor);
     }
 
     protected void processRelNode(
@@ -482,7 +488,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                 .setAll(PegasusClient.Empty.newBuilder().build())
                                 .build();
                 request = request.toBuilder().setConf(jobConfig).build();
-                broadcastProcessor.broadcast(request, resultProcessor);
+                this.rpcClient.submit(request, resultProcessor);
             }
         }
     }
@@ -540,6 +546,13 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         } else {
             // return HepPlanner with empty rules if optimization is turned off
             return new HepPlanner(HepProgram.builder().build());
+        }
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (this.rpcClient != null) {
+            this.rpcClient.shutdown();
         }
     }
 }

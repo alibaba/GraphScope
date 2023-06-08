@@ -40,12 +40,13 @@
       <id>groot</id>
       <properties>
         <rust.compile.target>groot</rust.compile.target>
+        <scala.version>2.13.9</scala.version>
       </properties>
       <modules>
         <module>assembly</module>
         <module>common</module>
-        <module>executor</module>
         <module>data-load-tool</module>
+        <module>executor</module>
         <module>groot-module</module>
         <module>groot-server</module>
         <module>lgraph</module>
@@ -57,6 +58,9 @@
     </profile>
     <profile>
       <id>groot-data-load</id>
+      <properties>
+        <scala.version>2.12.10</scala.version>
+      </properties>
       <modules>
         <module>common</module>
         <module>data-load-tool</module>
@@ -96,7 +100,8 @@
     <testng.version>6.9.9</testng.version>
     <mockito.version>4.0.0</mockito.version>
     <rocksdb.version>5.15.10</rocksdb.version>
-    <metrics.core.version>3.2.5</metrics.core.version>
+    <metrics.core.version>4.2.18</metrics.core.version>
+    <jgrapht.version>1.5.1</jgrapht.version>
     <skip.tests>true</skip.tests>
     <flatten.maven.plugin>1.1.0</flatten.maven.plugin>
     <javax.annotation.version>1.2</javax.annotation.version>
@@ -500,6 +505,11 @@
         <artifactId>kafka_2.13</artifactId>
         <version>${kafka.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.jgrapht</groupId>
+        <artifactId>jgrapht-core</artifactId>
+        <version>${jgrapht.version}</version>
+      </dependency>
 
       <dependency>
         <groupId>com.esotericsoftware</groupId>
@@ -562,9 +572,9 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${maven.compile.version}</version>
           <configuration>
-            <source>1.8</source>
-            <target>1.8</target>
-        </configuration>
+            <source>11</source>
+            <target>11</target>
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>

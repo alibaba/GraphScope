@@ -261,7 +261,7 @@ else()
 endif()
 
 # find vineyard after arrow to avoid duplicate target names
-find_package(vineyard 0.13.0 REQUIRED)
+find_package(vineyard 0.14.8 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -413,6 +413,7 @@ if (BUILD_TESTS)
     endmacro()
 
     add_vineyard_app(run_vy_app SRCS test/run_vy_app.cc)
+    add_vineyard_app(run_vy_app_compact SRCS test/run_vy_app_compact.cc)
     add_vineyard_app(run_vy_app_local_vm SRCS test/run_vy_app_local_vm.cc)
 
     add_vineyard_app(run_load_from_stream SRCS test/run_load_from_stream.cc)
@@ -451,7 +452,7 @@ if (BUILD_TESTS)
     endif ()
 endif ()
 
-# Cpplint
+# cpplint
 file(GLOB_RECURSE FILES_NEED_LINT
         "apps/*.cc"
         "apps/*.h"

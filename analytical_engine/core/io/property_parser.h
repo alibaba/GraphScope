@@ -131,12 +131,14 @@ struct Graph {
   bool directed;
   bool generate_eid;
   bool retain_oid;
+  bool compact_edges;
 
   std::string SerializeToString() const {
     std::stringstream ss;
     ss << "directed: " << directed << "\n";
     ss << "generate_eid: " << generate_eid << "\n";
     ss << "retain_oid: " << retain_oid << "\n";
+    ss << "compact_edges: " << compact_edges << "\n";
     for (auto& v : vertices) {
       ss << v->SerializeToString();
     }
@@ -282,11 +284,13 @@ inline bl::result<std::shared_ptr<detail::Graph>> ParseCreatePropertyGraph(
   BOOST_LEAF_AUTO(directed, params.Get<bool>(rpc::DIRECTED));
   BOOST_LEAF_AUTO(generate_eid, params.Get<bool>(rpc::GENERATE_EID));
   BOOST_LEAF_AUTO(retain_oid, params.Get<bool>(rpc::RETAIN_OID));
+  BOOST_LEAF_AUTO(compact_edges, params.Get<bool>(rpc::COMPACT_EDGES, false));
 
   auto graph = std::make_shared<detail::Graph>();
   graph->directed = directed;
   graph->generate_eid = generate_eid;
   graph->retain_oid = retain_oid;
+  graph->compact_edges = compact_edges;
 
   const auto& large_attr = params.GetLargeAttr();
   for (const auto& item : large_attr.chunk_list().items()) {

@@ -532,6 +532,39 @@ def p2p_property_graph_undirected_local_vm_int32(graphscope_session):
 
 
 @pytest.fixture(scope="module")
+def p2p_property_graph_undirected_compact(graphscope_session):
+    g = graphscope_session.load_from(
+        edges={
+            "knows": [
+                (
+                    Loader(
+                        "{}/p2p-31_property_e_0".format(property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["dist"],
+                    ("src_id", "person"),
+                    ("dst_id", "person"),
+                ),
+            ],
+        },
+        vertices={
+            "person": Loader(
+                "{}/p2p-31_property_v_0".format(property_dir),
+                header_row=True,
+                delimiter=",",
+            ),
+        },
+        generate_eid=False,
+        retain_oid=True,
+        directed=False,
+        compact_edges=True,
+    )
+    yield g
+    del g
+
+
+@pytest.fixture(scope="module")
 def p2p_project_directed_graph(p2p_property_graph):
     pg = p2p_property_graph.project(
         vertices={"person": ["weight"]}, edges={"knows": ["dist"]}

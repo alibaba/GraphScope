@@ -477,7 +477,8 @@ template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T,
               typename vineyard::InternalType<OID_T>::type, VID_T>>
 class ArrowFlattenedFragment {
  public:
-  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>;
+  // TODO(tao): ArrowFragment with compact edges cannot be flattened.
+  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T, false>;
   using oid_t = OID_T;
   using vid_t = VID_T;
   using internal_oid_t = typename vineyard::InternalType<oid_t>::type;

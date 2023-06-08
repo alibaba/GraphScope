@@ -31,6 +31,7 @@ public class TypeDef implements GraphElement {
 
     private String label;
     private LabelId labelId;
+    private String comment = "";
 
     private List<PropertyDef> properties;
     private List<Integer> pkIdxs;
@@ -43,11 +44,13 @@ public class TypeDef implements GraphElement {
             int versionId,
             String label,
             LabelId labelId,
-            List<PropertyDef> properties) {
+            List<PropertyDef> properties,
+            String comment) {
         this.typeEnum = typeEnum;
         this.versionId = versionId;
         this.label = label;
         this.labelId = labelId;
+        this.comment = comment;
         this.properties = new ArrayList<>(properties);
         this.pkIdxs = new ArrayList<>();
         this.nameToIdx = new HashMap<>();
@@ -96,6 +99,10 @@ public class TypeDef implements GraphElement {
         return labelId.getId();
     }
 
+    public String getComment() {
+        return comment;
+    }
+
     public LabelId getTypeLabelId() {
         return labelId;
     }
@@ -141,7 +148,8 @@ public class TypeDef implements GraphElement {
             propertyDefs.add(PropertyDef.parseProto(propertyDefPb));
         }
         TypeEnum typeEnum = TypeEnum.parseProto(proto.getTypeEnum());
-        return new TypeDef(typeEnum, versionId, label, labelId, propertyDefs);
+        String comment = proto.getComment();
+        return new TypeDef(typeEnum, versionId, label, labelId, propertyDefs, comment);
     }
 
     public TypeDefPb toProto() {
@@ -153,6 +161,7 @@ public class TypeDef implements GraphElement {
             builder.addProps(property.toProto());
         }
         builder.setTypeEnum(typeEnum.toProto());
+        builder.setComment(comment);
         return builder.build();
     }
 
@@ -165,6 +174,7 @@ public class TypeDef implements GraphElement {
         if (typeEnum != null) {
             builder.setTypeEnum(typeEnum.toProto());
         }
+        builder.setComment(comment);
         return builder.build();
     }
 
@@ -197,6 +207,7 @@ public class TypeDef implements GraphElement {
         private LabelId labelId;
         private List<PropertyDef> properties = new ArrayList<>();
         private TypeEnum typeEnum;
+        private String comment = "";
 
         private Builder() {}
 
@@ -206,6 +217,7 @@ public class TypeDef implements GraphElement {
             this.labelId = typeDef.getTypeLabelId();
             this.properties = typeDef.getProperties();
             this.typeEnum = typeDef.typeEnum;
+            this.comment = typeDef.getComment();
         }
 
         public Builder setLabel(String label) {
@@ -233,8 +245,13 @@ public class TypeDef implements GraphElement {
             return this;
         }
 
+        public Builder setComment(String comment) {
+            this.comment = comment;
+            return this;
+        }
+
         public TypeDef build() {
-            return new TypeDef(typeEnum, versionId, label, labelId, properties);
+            return new TypeDef(typeEnum, versionId, label, labelId, properties, comment);
         }
     }
 }

@@ -81,3 +81,5 @@ RUN chmod +x /opt/graphscope/bin/*
 
 USER graphscope
 WORKDIR /home/graphscope
+
+ENV PATH=${PATH}:/home/graphscope/.local/bin

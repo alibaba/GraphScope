@@ -1,22 +1,24 @@
-/**
+/*
  * Copyright 2020 Alibaba Group Holding Limited.
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.alibaba.pegasus;
 
 import com.alibaba.pegasus.builder.JobBuilder;
-import com.alibaba.pegasus.intf.CloseableIterator;
+import com.alibaba.pegasus.common.StreamIterator;
+import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobConfig;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
@@ -28,27 +30,12 @@ import io.grpc.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class ClientExample {
     private static final Logger logger = LoggerFactory.getLogger(ClientExample.class);
-
-    private static void process(JobResponse response) {
-        ByteString data = response.getResp();
-        ArrayList<Long> res = toLongArray(data.toByteArray(), data.size());
-        logger.info(
-                "got one response: job id {}, array size {}, job data {}",
-                response.getJobId(),
-                res.size(),
-                res.toString());
-    }
-
-    private static void finish() {
-        logger.info("finish process");
-    }
 
     private static void error(Status status) {
         logger.error("on error {}", status.toString());
@@ -112,7 +99,7 @@ public class ClientExample {
         List<RpcChannel> channels = new ArrayList<>();
         channels.add(rpcChannel0);
         channels.add(rpcChannel1);
-        RpcClient rpcClient = new RpcClient(channels);
+        RpcClient rpcClient = new RpcClient(600000, channels);
 
         logger.info("Will try to send request");
         JobConfig confPb =
@@ -134,26 +121,34 @@ public class ClientExample {
                 .sink(getSink());
 
         JobRequest req = jobBuilder.build();
-        CloseableIterator<JobResponse> iterator = rpcClient.submit(req);
-        // process response
-        try {
-            while (iterator.hasNext()) {
-                JobResponse response = iterator.next();
-                process(response);
-            }
-        } catch (Exception e) {
-            if (iterator != null) {
-                try {
-                    iterator.close();
-                } catch (IOException ioe) {
-                    // Ignore
-                }
-            }
-            error(Status.fromThrowable(e));
-            throw e;
-        }
-        finish();
 
+        StreamIterator<JobResponse> resultIterator = new StreamIterator();
+        rpcClient.submit(
+                req,
+                new ResultProcessor() {
+                    @Override
+                    public void process(JobResponse response) {
+                        try {
+                            resultIterator.putData(response);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void finish() {
+                        try {
+                            resultIterator.finish();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void error(Status status) {
+                        resultIterator.fail(status.getCause());
+                    }
+                });
         rpcClient.shutdown();
     }
 }
