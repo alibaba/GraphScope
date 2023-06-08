@@ -55,6 +55,7 @@ impl GraphPath {
                 PathOpt::Arbitrary => GraphPath::AllV(vec![entry]),
                 PathOpt::Simple => GraphPath::SimpleAllV(vec![entry]),
             },
+            ResultOpt::AllVe => todo!(),
         }
     }
 

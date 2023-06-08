@@ -49,10 +49,21 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                 input.append(vertex, self.alias.clone());
                 Ok(Some(input))
             } else if let Some(graph_path) = entry.as_graph_path() {
-                // TODO: we do not check VOpt here, and we treat all cases as to get the end vertex of the path.
-                let path_end = graph_path.get_path_end().clone();
-                input.append(path_end, self.alias.clone());
-                Ok(Some(input))
+                // we check VOpt here,
+                // for `Other`, we treat it as to get_other_id() in the Edge within the Path
+                // for `End`, we treat it as to get EndV() in the Path
+                match self.opt {
+                    VOpt::Other => todo!(),
+                    VOpt::End => {
+                        let path_end = graph_path.get_path_end().clone();
+                        input.append(path_end, self.alias.clone());
+                        Ok(Some(input))
+                    }
+                    _ => Err(FnExecError::unsupported_error(&format!(
+                        "Wired opt in GetVertexOperator for GraphPath: {:?}",
+                        self.opt
+                    )))?,
+                }
             } else {
                 Err(FnExecError::unexpected_data_error(
                     "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry",
