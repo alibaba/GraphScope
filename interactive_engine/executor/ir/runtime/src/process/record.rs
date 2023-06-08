@@ -75,10 +75,10 @@ impl Record {
         }
     }
 
-    pub fn get_mut(&mut self, tag: Option<&KeyId>) -> Option<&mut dyn Entry> {
+    pub fn get_mut(&mut self, tag: Option<KeyId>) -> Option<&mut dyn Entry> {
         if let Some(tag) = tag {
             self.columns
-                .get_mut(*tag as usize)
+                .get_mut(tag as usize)
                 .map(|e| e.get_mut())
                 .unwrap_or(None)
         } else {

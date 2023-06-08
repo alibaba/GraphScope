@@ -56,7 +56,7 @@ impl GetVertexOperator {
 
 impl FilterMapFunction<Record, Record> for GetVertexOperator {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
-        if let Some(entry) = input.get_mut(self.start_tag.as_ref()) {
+        if let Some(entry) = input.get(self.start_tag) {
             if let Some(e) = entry.as_edge() {
                 let (id, label) = match self.opt {
                     VOpt::Start => (e.src_id, e.get_src_label()),
@@ -72,7 +72,9 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                     Ok(None)
                 }
             } else if let Some(_) = entry.as_graph_path() {
-                let graph_path = entry
+                let graph_path = input
+                    .get_mut(self.start_tag)
+                    .unwrap()
                     .as_any_mut()
                     .downcast_mut::<GraphPath>()
                     .ok_or(FnExecError::unexpected_data_error(&format!("entry is not a path in GetV")))?;
