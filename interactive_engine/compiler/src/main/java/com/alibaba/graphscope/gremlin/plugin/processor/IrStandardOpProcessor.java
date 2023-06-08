@@ -91,6 +91,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
      * todo: replace with {@link com.alibaba.graphscope.common.client.ExecutionClient} after unifying Gremlin into the Calcite stack
      */
     protected RpcClient rpcClient;
+
     protected IrMetaQueryCallback metaQueryCallback;
 
     public IrStandardOpProcessor(

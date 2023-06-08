@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
+import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.gremlin.Utils;
 
 import org.neo4j.collection.Dependencies;
@@ -49,14 +50,13 @@ public class CypherBootstrapper extends CommunityBootstrapper {
 
     public CypherBootstrapper(
             Configs graphConfig,
-            Antlr4Parser cypherParser,
             GraphPlanner graphPlanner,
             IrMetaQueryCallback queryCallback,
             ExecutionClient client) {
         this.client = client;
         this.externalDependencies =
                 createExternalDependencies(
-                        graphConfig, cypherParser, graphPlanner, queryCallback, client);
+                        graphConfig, new CypherAntlr4Parser(), graphPlanner, queryCallback, client);
         this.externalClassTypes =
                 Arrays.asList(
                         Configs.class,

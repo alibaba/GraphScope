@@ -24,4 +24,11 @@ import java.util.List;
  */
 public interface ChannelFetcher<T> {
     List<T> fetch();
+
+    Type getType();
+
+    enum Type {
+        RPC,
+        HTTP
+    }
 }

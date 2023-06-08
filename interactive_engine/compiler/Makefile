@@ -55,7 +55,7 @@ run:
 	  -Dgraph.schema=${graph.schema} \
 	  -Dgraph.store=${graph.store} \
 	  -Dpegasus.hosts=${pegasus.hosts} \
-	  com.alibaba.graphscope.GraphServiceMain
+	  com.alibaba.graphscope.GraphServer
 
 # start rpc server
 # make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json 

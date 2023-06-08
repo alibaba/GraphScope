@@ -227,7 +227,7 @@
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>libs/</classpathPrefix>
                             <mainClass>
-                                com.alibaba.graphscope.GraphServiceMain
+                                com.alibaba.graphscope.GraphServer
                             </mainClass>
                         </manifest>
                     </archive>

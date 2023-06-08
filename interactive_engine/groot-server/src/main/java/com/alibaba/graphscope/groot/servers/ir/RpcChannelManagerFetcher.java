@@ -44,4 +44,9 @@ public class RpcChannelManagerFetcher implements ChannelFetcher<RpcChannel> {
         }
         return channels;
     }
+
+    @Override
+    public Type getType() {
+        return Type.RPC;
+    }
 }
