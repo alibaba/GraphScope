@@ -37,6 +37,22 @@ A simpler option is to use the `gremlin` object for submitting Gremlin queries t
 See [Gremlin-Java](https://tinkerpop.apache.org/docs/current/reference/#gremlin-java) for connecting Gremlin
 within the Java language.
 
+Here is an example to guide you how to collect results in a streaming way by java sdk.
+```java
+Cluster cluster = Cluster.build()
+         .addContactPoint("localhost") // use your host ip
+         .port(8182) // use your port
+         .create();
+Client client = cluster.connect();
+ResultSet resultSet = client.submit("g.V()"); // use your query
+Iterator<Result> results = resultSet.iterator();
+while(results.hasNext()) {
+   display(results.next()); // display each result in your way
+}
+client.close();
+cluster.close();
+```
+
 ## Gremlin Console
 1. Download Gremlin console and unpack to your local directory.
    ```bash
