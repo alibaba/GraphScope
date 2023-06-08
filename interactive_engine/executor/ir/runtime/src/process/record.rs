@@ -16,7 +16,7 @@
 use std::borrow::BorrowMut;
 use std::hash::Hash;
 
-use graph_proxy::apis::{GraphPath, Vertex};
+use graph_proxy::apis::{Edge, GraphPath, Vertex};
 use graph_proxy::utils::expr::eval::Context;
 use ir_common::{KeyId, NameOrId};
 use pegasus::api::function::DynIter;
@@ -63,13 +63,6 @@ impl Record {
         self.curr = entry;
     }
 
-    pub fn get_column_mut(&mut self, tag: &KeyId) -> Option<&mut dyn Entry> {
-        self.columns
-            .get_mut(*tag as usize)
-            .map(|e| e.get_mut())
-            .unwrap_or(None)
-    }
-
     pub fn get_columns_mut(&mut self) -> &mut VecMap<DynEntry> {
         self.columns.borrow_mut()
     }
@@ -79,6 +72,20 @@ impl Record {
             self.columns.get(tag as usize)
         } else {
             self.curr.as_ref()
+        }
+    }
+
+    pub fn get_mut(&mut self, tag: Option<&KeyId>) -> Option<&mut dyn Entry> {
+        if let Some(tag) = tag {
+            self.columns
+                .get_mut(*tag as usize)
+                .map(|e| e.get_mut())
+                .unwrap_or(None)
+        } else {
+            self.curr
+                .as_mut()
+                .map(|e| e.get_mut())
+                .unwrap_or(None)
         }
     }
 
@@ -202,10 +209,16 @@ impl<E: Entry + 'static> Iterator for RecordPathExpandIter<E> {
         loop {
             match self.children.next() {
                 Some(mut elem) => {
-                    // currently, we only support GraphPath containing vertices.
+                    // currently, we support GraphPath containing vertices or edges.
                     if let Some(vertex) = elem.as_any_mut().downcast_mut::<Vertex>() {
                         let v = std::mem::replace(vertex, Default::default());
                         if curr_path.append(v) {
+                            record.append(curr_path, None);
+                            return Some(record);
+                        }
+                    } else if let Some(edge) = elem.as_any_mut().downcast_mut::<Edge>() {
+                        let e = std::mem::replace(edge, Default::default());
+                        if curr_path.append(e) {
                             record.append(curr_path, None);
                             return Some(record);
                         }

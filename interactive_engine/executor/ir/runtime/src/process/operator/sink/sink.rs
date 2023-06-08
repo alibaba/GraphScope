@@ -17,6 +17,7 @@ use std::borrow::BorrowMut;
 use std::collections::HashMap;
 
 use dyn_type::Object;
+use graph_proxy::apis::VertexOrEdge;
 use graph_proxy::apis::{Edge, Element, GraphElement, GraphPath, Vertex, ID};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::sink_default::MetaType;
@@ -188,10 +189,20 @@ impl RecordSinkEncoder {
         }
     }
 
-    fn vertex_or_edge_to_pb(&self, vertex_or_edge: &Vertex) -> result_pb::graph_path::VertexOrEdge {
-        let vertex_pb = self.vertex_to_pb(vertex_or_edge);
-        result_pb::graph_path::VertexOrEdge {
-            inner: Some(result_pb::graph_path::vertex_or_edge::Inner::Vertex(vertex_pb)),
+    fn vertex_or_edge_to_pb(&self, vertex_or_edge: &VertexOrEdge) -> result_pb::graph_path::VertexOrEdge {
+        match vertex_or_edge {
+            VertexOrEdge::V(v) => {
+                let vertex_pb = self.vertex_to_pb(v);
+                result_pb::graph_path::VertexOrEdge {
+                    inner: Some(result_pb::graph_path::vertex_or_edge::Inner::Vertex(vertex_pb)),
+                }
+            }
+            VertexOrEdge::E(e) => {
+                let edge_pb = self.edge_to_pb(e);
+                result_pb::graph_path::VertexOrEdge {
+                    inner: Some(result_pb::graph_path::vertex_or_edge::Inner::Edge(edge_pb)),
+                }
+            }
         }
     }
 

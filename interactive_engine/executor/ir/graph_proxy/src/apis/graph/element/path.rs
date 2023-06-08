@@ -13,7 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::any::Any;
 use std::cmp::Ordering;
 use std::convert::{TryFrom, TryInto};
 use std::hash::{Hash, Hasher};
@@ -26,47 +25,81 @@ use ir_common::generated::algebra::path_expand::ResultOpt;
 use ir_common::generated::results as result_pb;
 use ir_common::{LabelId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
-use pegasus_common::downcast::*;
+use pegasus_common::downcast::Any;
+use pegasus_common::downcast::AsAny;
 use pegasus_common::impl_as_any;
 
-use crate::apis::{Element, GraphElement, PropertyValue, Vertex, ID};
+use crate::apis::{Edge, Element, GraphElement, PropertyValue, Vertex, ID};
+
+#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
+pub enum VertexOrEdge {
+    V(Vertex),
+    E(Edge),
+}
+
+impl From<Vertex> for VertexOrEdge {
+    fn from(v: Vertex) -> Self {
+        Self::V(v)
+    }
+}
+
+impl From<Edge> for VertexOrEdge {
+    fn from(e: Edge) -> Self {
+        Self::E(e)
+    }
+}
+
+impl VertexOrEdge {
+    pub fn as_vertex(&self) -> Option<&Vertex> {
+        match self {
+            VertexOrEdge::V(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    pub fn as_edge(&self) -> Option<&Edge> {
+        match self {
+            VertexOrEdge::E(e) => Some(e),
+            _ => None,
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub enum GraphPath {
-    AllV(Vec<Vertex>),
-    SimpleAllV(Vec<Vertex>),
-    EndV((Vertex, usize)),
-    SimpleEndV((Vertex, Vec<ID>)),
+    AllV(Vec<VertexOrEdge>),
+    SimpleAllV(Vec<VertexOrEdge>),
+    EndV((VertexOrEdge, usize)),
+    SimpleEndV((VertexOrEdge, Vec<ID>)),
 }
 
-impl_as_any!(GraphPath);
-
 impl GraphPath {
-    pub fn new(entry: Vertex, path_opt: PathOpt, result_opt: ResultOpt) -> Self {
+    pub fn new<E: Into<VertexOrEdge>>(entry: E, path_opt: PathOpt, result_opt: ResultOpt) -> Self {
         match result_opt {
             ResultOpt::EndV => match path_opt {
-                PathOpt::Arbitrary => GraphPath::EndV((entry, 1)),
+                PathOpt::Arbitrary => GraphPath::EndV((entry.into(), 1)),
                 PathOpt::Simple => {
+                    let entry = entry.into();
                     let id = entry.id();
                     GraphPath::SimpleEndV((entry, vec![id]))
                 }
             },
-            ResultOpt::AllV => match path_opt {
-                PathOpt::Arbitrary => GraphPath::AllV(vec![entry]),
-                PathOpt::Simple => GraphPath::SimpleAllV(vec![entry]),
+            ResultOpt::AllV | ResultOpt::AllVe => match path_opt {
+                PathOpt::Arbitrary => GraphPath::AllV(vec![entry.into()]),
+                PathOpt::Simple => GraphPath::SimpleAllV(vec![entry.into()]),
             },
-            ResultOpt::AllVe => todo!(),
         }
     }
 
     // append an entry and return the flag of whether the entry has been appended or not.
-    pub fn append(&mut self, entry: Vertex) -> bool {
+    pub fn append<E: Into<VertexOrEdge>>(&mut self, entry: E) -> bool {
         match self {
             GraphPath::AllV(ref mut path) => {
-                path.push(entry);
+                path.push(entry.into());
                 true
             }
             GraphPath::SimpleAllV(ref mut path) => {
+                let entry = entry.into();
                 if path.contains(&entry) {
                     false
                 } else {
@@ -75,33 +108,87 @@ impl GraphPath {
                 }
             }
             GraphPath::EndV((ref mut e, ref mut weight)) => {
-                *e = entry;
+                *e = entry.into();
                 *weight += 1;
                 true
             }
             GraphPath::SimpleEndV((ref mut e, ref mut path)) => {
+                let entry = entry.into();
                 if path.contains(&entry.id()) {
                     false
                 } else {
                     path.push(entry.id());
-                    *e = entry;
+                    *e = entry.into();
                     true
                 }
             }
         }
     }
 
-    pub fn get_path_end(&self) -> &Vertex {
+    pub fn get_path_end(&self) -> &VertexOrEdge {
         match self {
             GraphPath::AllV(ref p) | GraphPath::SimpleAllV(ref p) => p.last().unwrap(),
             GraphPath::EndV((ref e, _)) | GraphPath::SimpleEndV((ref e, _)) => e,
         }
     }
 
-    pub fn take_path(self) -> Option<Vec<Vertex>> {
+    pub fn take_path(self) -> Option<Vec<VertexOrEdge>> {
         match self {
             GraphPath::AllV(p) | GraphPath::SimpleAllV(p) => Some(p),
             GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
+        }
+    }
+}
+
+impl Element for VertexOrEdge {
+    fn as_graph_element(&self) -> Option<&dyn GraphElement> {
+        match self {
+            VertexOrEdge::V(v) => v.as_graph_element(),
+            VertexOrEdge::E(e) => e.as_graph_element(),
+        }
+    }
+
+    fn len(&self) -> usize {
+        match self {
+            VertexOrEdge::V(v) => v.len(),
+            VertexOrEdge::E(e) => e.len(),
+        }
+    }
+
+    fn as_borrow_object(&self) -> BorrowObject {
+        match self {
+            VertexOrEdge::V(v) => v.as_borrow_object(),
+            VertexOrEdge::E(e) => e.as_borrow_object(),
+        }
+    }
+}
+
+impl GraphElement for VertexOrEdge {
+    fn id(&self) -> ID {
+        match self {
+            VertexOrEdge::V(v) => v.id(),
+            VertexOrEdge::E(e) => e.id(),
+        }
+    }
+
+    fn label(&self) -> Option<LabelId> {
+        match self {
+            VertexOrEdge::V(v) => v.label(),
+            VertexOrEdge::E(e) => e.label(),
+        }
+    }
+
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
+        match self {
+            VertexOrEdge::V(v) => v.get_property(key),
+            VertexOrEdge::E(e) => e.get_property(key),
+        }
+    }
+
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
+        match self {
+            VertexOrEdge::V(v) => v.get_all_properties(),
+            VertexOrEdge::E(e) => e.get_all_properties(),
         }
     }
 }
@@ -162,7 +249,6 @@ impl PartialEq for GraphPath {
         }
     }
 }
-
 impl PartialOrd for GraphPath {
     // We define partial_cmp by structure, ignoring path weight
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
@@ -176,6 +262,39 @@ impl PartialOrd for GraphPath {
             | (GraphPath::SimpleEndV((p1, _)), GraphPath::EndV((p2, _)))
             | (GraphPath::SimpleEndV((p1, _)), GraphPath::SimpleEndV((p2, _))) => p1.partial_cmp(p2),
             _ => None,
+        }
+    }
+}
+
+impl Encode for VertexOrEdge {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        match self {
+            VertexOrEdge::V(v) => {
+                writer.write_u8(0)?;
+                v.write_to(writer)?;
+            }
+            VertexOrEdge::E(e) => {
+                writer.write_u8(1)?;
+                e.write_to(writer)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for VertexOrEdge {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let e = reader.read_u8()?;
+        match e {
+            0 => {
+                let v = <Vertex>::read_from(reader)?;
+                Ok(VertexOrEdge::V(v))
+            }
+            1 => {
+                let e = <Edge>::read_from(reader)?;
+                Ok(VertexOrEdge::E(e))
+            }
+            _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
     }
 }
@@ -211,20 +330,20 @@ impl Decode for GraphPath {
         let opt = reader.read_u8()?;
         match opt {
             0 => {
-                let path = <Vec<Vertex>>::read_from(reader)?;
+                let path = <Vec<VertexOrEdge>>::read_from(reader)?;
                 Ok(GraphPath::AllV(path))
             }
             1 => {
-                let vertex_or_edge = <Vertex>::read_from(reader)?;
+                let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
                 let weight = <u64>::read_from(reader)? as usize;
                 Ok(GraphPath::EndV((vertex_or_edge, weight)))
             }
             2 => {
-                let path = <Vec<Vertex>>::read_from(reader)?;
+                let path = <Vec<VertexOrEdge>>::read_from(reader)?;
                 Ok(GraphPath::SimpleAllV(path))
             }
             3 => {
-                let vertex_or_edge = <Vertex>::read_from(reader)?;
+                let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
                 let path = <Vec<ID>>::read_from(reader)?;
                 Ok(GraphPath::SimpleEndV((vertex_or_edge, path)))
             }
@@ -233,7 +352,7 @@ impl Decode for GraphPath {
     }
 }
 
-impl TryFrom<result_pb::graph_path::VertexOrEdge> for Vertex {
+impl TryFrom<result_pb::graph_path::VertexOrEdge> for VertexOrEdge {
     type Error = ParsePbError;
     fn try_from(e: result_pb::graph_path::VertexOrEdge) -> Result<Self, Self::Error> {
         let vertex_or_edge = e
@@ -242,10 +361,11 @@ impl TryFrom<result_pb::graph_path::VertexOrEdge> for Vertex {
         match vertex_or_edge {
             result_pb::graph_path::vertex_or_edge::Inner::Vertex(v) => {
                 let vertex = v.try_into()?;
-                Ok(vertex)
+                Ok(VertexOrEdge::V(vertex))
             }
-            result_pb::graph_path::vertex_or_edge::Inner::Edge(_) => {
-                Err(ParsePbError::Unsupported("Path with edges".to_string()))
+            result_pb::graph_path::vertex_or_edge::Inner::Edge(e) => {
+                let edge = e.try_into()?;
+                Ok(VertexOrEdge::E(edge))
             }
         }
     }
@@ -266,10 +386,10 @@ impl TryFrom<result_pb::GraphPath> for GraphPath {
 impl Hash for GraphPath {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
-            GraphPath::AllV(p) => p.hash(state),
-            GraphPath::SimpleAllV(p) => p.hash(state),
-            GraphPath::EndV((e, _)) => e.hash(state),
-            GraphPath::SimpleEndV((e, _)) => e.hash(state),
+            GraphPath::AllV(p) | GraphPath::SimpleAllV(p) => p.hash(state),
+            GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _)) => e.hash(state),
         }
     }
 }
+
+impl_as_any!(GraphPath);
