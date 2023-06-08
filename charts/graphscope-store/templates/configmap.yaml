@@ -103,9 +103,9 @@ data:
     pegasus_hosts=""
     i=0
     while [ $i -ne $STORE_COUNT ]; do
-    pod=`echo $DNS_NAME_PREFIX_STORE | sed -e "s/{}/$i/g"`
-    # 60001 is fixed gaia engine port
-    pegasus_hosts="${pegasus_hosts},${pod}:60001"
+      pod=`echo $DNS_NAME_PREFIX_STORE | sed -e "s/{}/$i/g"`
+      # 60001 is fixed gaia engine port
+      pegasus_hosts="${pegasus_hosts},${pod}:60001"
       i=$(($i+1))
     done
     pegasus_hosts=${pegasus_hosts:1}
@@ -120,7 +120,7 @@ data:
               -e "s/STORE/${DNS_NAME_PREFIX_STORE}/g" \
               -e "s/PEGASUS_HOSTS/${pegasus_hosts}/g" \
               -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/groot/conf/log4rs.yml@g" \
-    /etc/groot/groot.config.tpl | sudo tee /etc/groot/groot.config
+    /etc/groot/groot.config.tpl | sudo tee -a /etc/groot/groot.config
 
     export LOG_NAME=graphscope-store
     export GROOT_CONF_FILE=/etc/groot/groot.config
