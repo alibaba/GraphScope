@@ -13,16 +13,57 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::apis::Edge;
+use crate::apis::GraphElement;
+use crate::apis::GraphPath;
+use crate::apis::Vertex;
 use crate::apis::ID;
 use crate::GraphProxyResult;
 
-pub trait Partitioner: Send + Sync + 'static {
-    /// Given the element id and job_workers (number of worker per server),
-    /// return the id of worker that is going to process
-    fn get_partition(&self, id: &ID, job_workers: usize) -> GraphProxyResult<u64>;
-    /// Given job_workers (number of worker per server) and worker_id (worker index),
-    /// return the partition list that the worker is going to process
-    fn get_worker_partitions(
-        &self, job_workers: usize, worker_id: u32,
-    ) -> GraphProxyResult<Option<Vec<u64>>>;
+/// The server id is used to identify the server that is able to access the partition.
+pub type ServerId = u32;
+/// The partition id is used to identify the partition that holds the data.
+pub type PartitionId = u32;
+/// The partition key id is used to identify key of the data that is used for partitioning.
+pub type PartitionKeyId = u64;
+
+pub trait PartitionedData {
+    /// To obtain the key's id of the data that is used for partitioning.
+    fn get_partition_key_id(&self) -> PartitionKeyId;
+}
+
+impl PartitionedData for ID {
+    fn get_partition_key_id(&self) -> PartitionKeyId {
+        *self as PartitionKeyId
+    }
+}
+impl PartitionedData for Vertex {
+    fn get_partition_key_id(&self) -> PartitionKeyId {
+        self.id() as PartitionKeyId
+    }
+}
+impl PartitionedData for Edge {
+    fn get_partition_key_id(&self) -> PartitionKeyId {
+        self.src_id as PartitionKeyId
+    }
+}
+
+impl PartitionedData for GraphPath {
+    fn get_partition_key_id(&self) -> PartitionKeyId {
+        self.get_path_end().id() as PartitionKeyId
+    }
+}
+
+impl PartitionedData for PartitionKeyId {
+    fn get_partition_key_id(&self) -> PartitionKeyId {
+        *self
+    }
+}
+
+/// A `PartitionInfo` is used to query the partition information when the data has been partitioned.
+pub trait PartitionInfo: Send + Sync + 'static {
+    /// Given the data, return the id of the partition that holds the data.
+    fn get_partition_id<D: PartitionedData>(&self, data: &D) -> GraphProxyResult<PartitionId>;
+    /// Given the partition id, return the id of the server that is able to access the partition.
+    fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId>;
 }
