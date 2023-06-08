@@ -291,7 +291,7 @@
                                 {
                                   "prop_id": {
                                     "item": {
-                                      "Id": -1
+                                      "Name": "id"
                                     }
                                   },
                                   "type": 2
@@ -299,7 +299,7 @@
                                 {
                                   "prop_id": {
                                     "item": {
-                                      "Id": -1
+                                      "Name": "name"
                                     }
                                   },
                                   "type": 4
@@ -307,7 +307,7 @@
                                 {
                                   "prop_id": {
                                     "item": {
-                                      "Id": -1
+                                      "Name": "age"
                                     }
                                   },
                                   "type": 1
