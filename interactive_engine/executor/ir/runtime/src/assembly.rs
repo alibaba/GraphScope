@@ -16,7 +16,8 @@
 use std::convert::TryInto;
 use std::sync::Arc;
 
-use graph_proxy::apis::Partitioner;
+use graph_proxy::apis::cluster_info::ClusterInfo;
+use graph_proxy::apis::partitioner::PartitionInfo;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
@@ -45,6 +46,7 @@ use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::operator::sort::CompareFunctionGen;
 use crate::process::operator::source::SourceOperator;
 use crate::process::record::{Record, RecordKey};
+use crate::router::{DefaultRouter, Router};
 
 type RecordMap = Box<dyn MapFunction<Record, Record>>;
 type RecordFilterMap = Box<dyn FilterMapFunction<Record, Record>>;
@@ -58,37 +60,41 @@ type RecordKeySelector = Box<dyn KeyFunction<Record, RecordKey, Record>>;
 type RecordGroup = Box<dyn GroupGen<Record, RecordKey, Record>>;
 type RecordFold = Box<dyn FoldGen<u64, Record>>;
 
-pub struct IRJobAssembly {
-    udf_gen: FnGenerator,
+pub struct IRJobAssembly<P: PartitionInfo, C: ClusterInfo> {
+    udf_gen: FnGenerator<P, C>,
 }
 
-#[derive(Clone)]
-struct FnGenerator {
-    partitioner: Arc<dyn Partitioner>,
+struct FnGenerator<P: PartitionInfo, C: ClusterInfo> {
+    router: Arc<dyn Router<P = P, C = C>>,
+}
+
+impl<P: PartitionInfo, C: ClusterInfo> Clone for FnGenerator<P, C> {
+    fn clone(&self) -> Self {
+        Self { router: self.router.clone() }
+    }
 }
 
 /// An UDF generator for physical operators,
 /// which generates the udf that can be executed by the engine.
-impl FnGenerator {
-    fn new(partitioner: Arc<dyn Partitioner>) -> Self {
-        FnGenerator { partitioner }
+impl<P: PartitionInfo, C: ClusterInfo> FnGenerator<P, C> {
+    fn new(router: Arc<dyn Router<P = P, C = C>>) -> Self {
+        FnGenerator { router }
+    }
+
+    fn with(partition_info: Arc<P>, cluster_info: Arc<C>) -> Self {
+        let router = Arc::new(DefaultRouter::new(partition_info, cluster_info));
+        FnGenerator { router }
     }
 
     fn gen_source(&self, opr: pb::PhysicalOpr) -> FnGenResult<DynIter<Record>> {
         let worker_id = pegasus::get_current_worker();
-        let source_opr = SourceOperator::new(
-            opr,
-            worker_id.local_peers as usize,
-            worker_id.index,
-            self.partitioner.clone(),
-        )?;
+        let source_opr = SourceOperator::new(opr, self.router.clone())?;
         Ok(source_opr.gen_source(worker_id.index as usize)?)
     }
 
     fn gen_shuffle(&self, res: &pb::repartition::Shuffle) -> FnGenResult<RecordShuffle> {
-        let p = self.partitioner.clone();
-        let num_workers = pegasus::get_current_worker().local_peers as usize;
-        let record_router = RecordRouter::new(p, num_workers, res.shuffle_key)?;
+        let p = self.router.clone();
+        let record_router = RecordRouter::new(p, res.shuffle_key)?;
         Ok(Box::new(record_router))
     }
 
@@ -157,9 +163,15 @@ impl FnGenerator {
     }
 }
 
-impl IRJobAssembly {
-    pub fn new<D: Partitioner>(partitioner: D) -> Self {
-        IRJobAssembly { udf_gen: FnGenerator::new(Arc::new(partitioner)) }
+impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
+    pub fn new(router: Arc<dyn Router<P = P, C = C>>) -> Self {
+        let udf_gen = FnGenerator::new(router);
+        IRJobAssembly { udf_gen }
+    }
+
+    pub fn with(partition_info: Arc<P>, cluster_info: Arc<C>) -> Self {
+        let udf_gen = FnGenerator::with(partition_info, cluster_info);
+        IRJobAssembly { udf_gen }
     }
 
     fn install(
@@ -608,7 +620,7 @@ impl IRJobAssembly {
     }
 }
 
-impl JobAssembly<Record> for IRJobAssembly {
+impl<P: PartitionInfo, C: ClusterInfo> JobAssembly<Record> for IRJobAssembly<P, C> {
     fn assemble(&self, plan: &JobDesc, worker: &mut Worker<Record, Vec<u8>>) -> Result<(), BuildJobError> {
         worker.dataflow(move |input, output| {
             let physical_plan = decode::<pb::PhysicalPlan>(&plan.plan)?;

@@ -15,7 +15,6 @@
 //!
 
 use std::ffi::CStr;
-use std::net::{SocketAddr, ToSocketAddrs};
 use std::os::raw::{c_char, c_void};
 use std::sync::Arc;
 
