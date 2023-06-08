@@ -19,7 +19,7 @@ use std::sync::Arc;
 
 use dyn_type::Object;
 use graph_proxy::apis::graph::PKV;
-use graph_proxy::apis::partitioner::PartitionInfo;
+use graph_proxy::apis::partitioner::{PartitionInfo, PartitionedData};
 use graph_proxy::apis::{get_graph, ClusterInfo, Edge, QueryParams, Vertex, ID};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
@@ -103,7 +103,7 @@ impl SourceOperator {
     ) -> ParsePbResult<()> {
         let mut partitions = HashMap::new();
         for id in ids {
-            match partitioner.route(&id) {
+            match partitioner.route(id.get_partition_key_id()) {
                 Ok(wid) => {
                     partitions
                         .entry(wid)

@@ -15,13 +15,12 @@
 
 use std::sync::Arc;
 
-use graph_proxy::apis::partitioner::PartitionInfo;
-use graph_proxy::apis::{ClusterInfo, GraphElement};
+use graph_proxy::apis::partitioner::{PartitionInfo, PartitionedData};
+use graph_proxy::apis::ClusterInfo;
 use ir_common::error::ParsePbError;
 use ir_common::KeyId;
 use pegasus::api::function::{FnResult, RouteFunction};
 
-use crate::error::FnExecError;
 use crate::process::entry::{Entry, EntryType};
 use crate::process::record::Record;
 use crate::router::Router;
@@ -44,22 +43,21 @@ impl<P: PartitionInfo, C: ClusterInfo> RouteFunction<Record> for RecordRouter<P,
     fn route(&self, t: &Record) -> FnResult<u64> {
         if let Some(entry) = t.get(self.shuffle_key.clone()) {
             match entry.get_type() {
-                EntryType::Vertex => {
-                    let id = entry.id();
-                    Ok(self.p.route(&id)?)
-                }
-                EntryType::Edge => {
-                    let e = entry
-                        .as_edge()
-                        .ok_or(FnExecError::Unreachable)?;
-                    Ok(self.p.route(&e.src_id)?)
-                }
-                EntryType::Path => {
-                    let p = entry
+                EntryType::Vertex => Ok(self.p.route(
+                    entry
+                        .as_vertex()
+                        .unwrap()
+                        .get_partition_key_id(),
+                )?),
+                EntryType::Edge => Ok(self
+                    .p
+                    .route(entry.as_edge().unwrap().get_partition_key_id())?),
+                EntryType::Path => Ok(self.p.route(
+                    entry
                         .as_graph_path()
-                        .ok_or(FnExecError::Unreachable)?;
-                    Ok(self.p.route(&p.get_path_end().id())?)
-                }
+                        .unwrap()
+                        .get_partition_key_id(),
+                )?),
                 // TODO:
                 _ => Ok(0),
             }

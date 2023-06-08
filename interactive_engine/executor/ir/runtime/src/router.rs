@@ -16,8 +16,7 @@
 use std::sync::Arc;
 
 use graph_proxy::apis::cluster_info::ClusterInfo;
-use graph_proxy::apis::partitioner::PartitionInfo;
-use graph_proxy::apis::ID;
+use graph_proxy::apis::partitioner::{PartitionInfo, PartitionKeyId};
 use graph_proxy::GraphProxyResult;
 
 pub type WorkerId = u64;
@@ -31,7 +30,7 @@ pub trait Router: Send + Sync + 'static {
     type P: PartitionInfo;
     type C: ClusterInfo;
     /// a route function that given the data, return the worker id that is going to do the query.
-    fn route(&self, data: &ID) -> GraphProxyResult<WorkerId>;
+    fn route(&self, data: PartitionKeyId) -> GraphProxyResult<WorkerId>;
 }
 
 /// A `DefaultRouter` is a default implementation of `Router` that can be used in most distributed cases.
@@ -56,13 +55,13 @@ impl<P: PartitionInfo, C: ClusterInfo> DefaultRouter<P, C> {
 impl<P: PartitionInfo, C: ClusterInfo> Router for DefaultRouter<P, C> {
     type P = P;
     type C = C;
-    fn route(&self, data: &ID) -> GraphProxyResult<WorkerId> {
-        let partition_id = self.partition_info.get_partition_id(data)?;
+    fn route(&self, data: PartitionKeyId) -> GraphProxyResult<WorkerId> {
+        let partition_id = self.partition_info.get_partition_id(&data)?;
         let server_id = self
             .partition_info
             .get_server_id(partition_id)?;
         let local_worker_num = self.cluster_info.get_local_worker_num()?;
-        let random_worker_index = *data as u32 % local_worker_num;
+        let random_worker_index = data as u32 % local_worker_num;
         Ok((server_id * local_worker_num + random_worker_index) as WorkerId)
     }
 }

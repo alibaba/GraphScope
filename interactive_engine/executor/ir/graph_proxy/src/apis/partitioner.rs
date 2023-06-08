@@ -15,6 +15,7 @@
 
 use crate::apis::Edge;
 use crate::apis::GraphElement;
+use crate::apis::GraphPath;
 use crate::apis::Vertex;
 use crate::apis::ID;
 use crate::GraphProxyResult;
@@ -44,6 +45,18 @@ impl PartitionedData for Vertex {
 impl PartitionedData for Edge {
     fn get_partition_key_id(&self) -> PartitionKeyId {
         self.src_id as PartitionKeyId
+    }
+}
+
+impl PartitionedData for GraphPath {
+    fn get_partition_key_id(&self) -> PartitionKeyId {
+        self.get_path_end().id() as PartitionKeyId
+    }
+}
+
+impl PartitionedData for PartitionKeyId {
+    fn get_partition_key_id(&self) -> PartitionKeyId {
+        *self
     }
 }
 

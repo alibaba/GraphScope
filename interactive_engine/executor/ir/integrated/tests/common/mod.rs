@@ -23,6 +23,7 @@ pub mod test {
     use std::convert::{TryFrom, TryInto};
     use std::sync::{Arc, Once};
 
+    use graph_proxy::apis::partitioner::PartitionKeyId;
     use graph_proxy::apis::{
         register_graph, ClusterInfo, DynDetails, Edge, PegasusClusterInfo, Vertex, ID,
     };
@@ -248,8 +249,8 @@ pub mod test {
     impl Router for TestRouter {
         type P = SimplePartition;
         type C = PegasusClusterInfo;
-        fn route(&self, data: &i64) -> GraphProxyResult<u64> {
-            Ok((*data as usize % self.num_workers) as u64)
+        fn route(&self, data: PartitionKeyId) -> GraphProxyResult<u64> {
+            Ok((data as usize % self.num_workers) as u64)
         }
     }
 
