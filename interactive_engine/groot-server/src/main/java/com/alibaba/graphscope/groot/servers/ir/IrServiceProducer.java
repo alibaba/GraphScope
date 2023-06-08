@@ -74,11 +74,7 @@ public class IrServiceProducer implements ComputeServiceProducer {
                 try {
                     logger.info("Starting Gremlin service at port {}", port);
                     irGremlinServer.start(
-                            irConfigs,
-                            irMetaFetcher,
-                            channelFetcher,
-                            queryManager,
-                            TestGraphFactory.GROOT);
+                            irConfigs, channelFetcher, queryManager, TestGraphFactory.GROOT);
 
                     queryManager.start();
                 } catch (Exception e) {

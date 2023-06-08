@@ -26,6 +26,9 @@ oC_Statement
       :  oC_Query ;
 
 oC_Query
+     :  oC_RegularQuery ;
+
+oC_RegularQuery
      :  oC_Match ( SP? oC_With )* ( SP oC_Return ) ;
 
 oC_Match

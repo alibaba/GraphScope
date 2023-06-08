@@ -599,7 +599,7 @@ public class IrPlan implements Closeable {
     }
 
     public IrPlan(IrMeta meta, InterOpCollection opCollection) {
-        irCoreLib.setSchema(meta.getSchemaJson());
+        irCoreLib.setSchema(meta.getSchema().schemaJson());
         this.ptrPlan = irCoreLib.initLogicalPlan();
         // add snapshot to QueryParams
         for (InterOpBase op : opCollection.unmodifiableCollection()) {
@@ -611,7 +611,7 @@ public class IrPlan implements Closeable {
             } else if (op instanceof GetVOp && ((GetVOp) op).getParams().isPresent()) {
                 params = ((GetVOp) op).getParams().get();
             }
-            if (params != null && meta.isAcquireSnapshot()) {
+            if (params != null && meta.getSnapshotId().isAcquired()) {
                 params.addExtraParams(
                         QueryParams.SNAPSHOT_CONFIG_NAME, String.valueOf(meta.getSnapshotId()));
             }

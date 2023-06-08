@@ -35,8 +35,8 @@ public class ExperimentalMetaFetcher implements IrMetaFetcher {
                         new GraphSchemaWrapper(
                                 com.alibaba.graphscope.common.ir.schema.Utils.buildSchemaFromJson(
                                         schemaJson),
-                                false),
-                        schemaJson);
+                                schemaJson,
+                                false));
     }
 
     @Override
