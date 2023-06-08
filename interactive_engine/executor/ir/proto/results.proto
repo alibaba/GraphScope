@@ -86,3 +86,8 @@ message Results {
     Record record = 1;
   }
 }
+
+message CollectiveResults {
+  // may be add schema here.
+  repeated Results results = 1;
+}

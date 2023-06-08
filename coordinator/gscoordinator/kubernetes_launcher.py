@@ -962,7 +962,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def _create_services(self):
         self._create_engine_stateful_set()
         if self._with_interactive:
-            self._create_frontend_deployment()
+            self._create_frontend_deployment(owner_references=self._owner_references)
             # self._create_frontend_service()
         if self._with_mars:
             # scheduler used by Mars
