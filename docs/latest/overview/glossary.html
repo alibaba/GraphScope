@@ -230,6 +230,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="../deployment/install_on_local.html">Install GraphScope on Local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy on K8s Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_with_existing_vineyard_cluster.html">Depoly with Existing Vineyard Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/persistent_storage_of_graphs_on_k8s.html">Persistent storage of graphs on the Kubernetes cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/install_in_offline_env.html">Install GraphScope in offline environment</a></li>
 </ul>
@@ -554,6 +555,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.22.0/index.html">
+                
+                  v0.22.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.21.0/index.html">
                 
                   v0.21.0
@@ -581,18 +594,6 @@ MathJax = {
               <dd><a href="../../v0.19.0/index.html">
                 
                   v0.19.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.18.0/index.html">
-                
-                  v0.18.0
                 
               </a></dd>
             
@@ -708,24 +709,42 @@ MathJax = {
 </div>
 <div class="section" id="vineyard-or-v6d">
 <h2>Vineyard, or v6d<a class="headerlink" href="#vineyard-or-v6d" title="Permalink to this heading">#</a></h2>
-<p>Vineyard is the code name of the immutable memory mangement. Its name suggests it was a underlying component of GRAPE.</p>
+<p>Vineyard is the code name of the immutable memory management. Its name suggests it was a underlying component of GRAPE.</p>
 <p>Vineyard (v6d) is an innovative in-memory immutable data manager that offers out-of-the-box high-level abstractions and zero-copy in-memory sharing for distributed data in various big data tasks, such as graph analytics (e.g., GraphScope), numerical computing (e.g., Mars), and machine learning. It is a CNCF sandbox project.</p>
 <p>Repo: <a class="reference external" href="https://github.com/v6d-io/v6d">https://github.com/v6d-io/v6d</a></p>
 </div>
+<div class="section" id="gie">
+<h2>GIE<a class="headerlink" href="#gie" title="Permalink to this heading">#</a></h2>
+<p>GraphScope Interactive Engine, or GIE for short, utilizes Gaia (or Pegasus) to enable parallel execution in distribution.
+It offers storage options consisting of the immutable, in-memory <a class="reference internal" href="../interactive_engine/deployment.html"><span class="std std-doc">v6d</span></a>
+and the mutable, persistent <a class="reference internal" href="../storage_engine/groot.html"><span class="std std-doc">groot</span></a>. GIE can process queries using
+<a class="reference internal" href="../interactive_engine/tinkerpop_eco.html"><span class="std std-doc">Tinkerpop’s Gremlin language</span></a>, with support for
+<a class="reference external" href="https://opencypher.org/">Neo4j’s openCypher</a> to come soon. The capabilities of GIE are amplified by
+a sophisticated <a class="reference internal" href="../interactive_engine/design_of_gie.html"><span class="std std-doc">Intermediate Representation (IR) Layer</span></a> that
+dissociates the query languages from the computing engines and stores.</p>
+</div>
 <div class="section" id="gaia">
 <h2>GAIA<a class="headerlink" href="#gaia" title="Permalink to this heading">#</a></h2>
-<p>TODO(Robin): Add this.</p>
+<p>Gaia is a distributed data-parallel compute engine based on the cyclic dataflow computation model, which
+has been employed by GIE to support large-scale interactive graph queries.
+Gaia serves as the computation engine, lying at the core of the GraphScope system. Users can construct
+the computation via a directed acyclic graph (DAG), and easily run the job on their laptop or even a
+distributed environment across a cluster of computers. Note that cycle can be introduced via the loop
+control flow, while the whole loop contexts will be wrapped in a scope within which the cycle is
+completely hidden from the users. Scope is a unique concept of Gaia to handle complex control flow
+such as loop and conditional. In addition, it is also the key to many application-level primitives,
+e.g. correlated subtask, as well as advanced scheduling techniques, e.g. early-stop mechanism.</p>
+<p>Read more: <a class="reference external" href="https://www.usenix.org/system/files/nsdi21-qian.pdf">Paper on NSDI 2021</a></p>
+</div>
+<div class="section" id="pegasus">
+<h2>Pegasus<a class="headerlink" href="#pegasus" title="Permalink to this heading">#</a></h2>
+<p>A legacy name of Gaia, for which we use Gaia and Pegasus interchangeably in the project.</p>
 </div>
 <div class="section" id="ingress">
 <h2>Ingress<a class="headerlink" href="#ingress" title="Permalink to this heading">#</a></h2>
 <p>Ingress is an automated system for incremental graph processing. It is able to incrementalize batch vertex-centric algorithms into their incremental counterparts as a whole, without the need of redesigned logic or data structures from users. Underlying Ingress is an automated incrementalization framework equipped with four different memoization policies, to support all kinds of vertex-centric computations with optimized memory utilization.</p>
 <p>Ingress is planned to be integrated into GraphScope, as an incrementalization module in the analytical engine(GAE).</p>
 <p>Read more: <a class="reference external" href="http://vldb.org/pvldb/vol14/p1613-gong.pdf">Paper on VLDB2021</a></p>
-</div>
-<div class="section" id="pegasus">
-<h2>Pegasus<a class="headerlink" href="#pegasus" title="Permalink to this heading">#</a></h2>
-<p>The code name of runtime engine under the GAIA.
-TODO(Robin): Add this.</p>
 </div>
 <div class="section" id="pie-model">
 <h2>PIE-model<a class="headerlink" href="#pie-model" title="Permalink to this heading">#</a></h2>
@@ -802,9 +821,10 @@ TODO(Robin): Add this.</p>
 <li><a class="reference internal" href="#gum">GUM</a></li>
 <li><a class="reference internal" href="#maxgraph-deprecated">MaxGraph (deprecated)</a></li>
 <li><a class="reference internal" href="#vineyard-or-v6d">Vineyard, or v6d</a></li>
+<li><a class="reference internal" href="#gie">GIE</a></li>
 <li><a class="reference internal" href="#gaia">GAIA</a></li>
-<li><a class="reference internal" href="#ingress">Ingress</a></li>
 <li><a class="reference internal" href="#pegasus">Pegasus</a></li>
+<li><a class="reference internal" href="#ingress">Ingress</a></li>
 <li><a class="reference internal" href="#pie-model">PIE-model</a></li>
 </ul>
 </li>

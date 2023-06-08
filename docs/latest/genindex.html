@@ -218,6 +218,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="deployment/install_on_local.html">Install GraphScope on Local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy on K8s Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment/deploy_with_existing_vineyard_cluster.html">Depoly with Existing Vineyard Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment/persistent_storage_of_graphs_on_k8s.html">Persistent storage of graphs on the Kubernetes cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment/install_in_offline_env.html">Install GraphScope in offline environment</a></li>
 </ul>
@@ -542,6 +543,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.22.0/index.html">
+                
+                  v0.22.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.21.0/index.html">
                 
                   v0.21.0
@@ -569,18 +582,6 @@ MathJax = {
               <dd><a href="../v0.19.0/index.html">
                 
                   v0.19.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.18.0/index.html">
-                
-                  v0.18.0
                 
               </a></dd>
             
@@ -1236,6 +1237,8 @@ MathJax = {
 </li>
         <li><a href="reference/generated/graphscope.get_option.html#graphscope.get_option">get_option() (in module graphscope)</a>
 </li>
+        <li><a href="reference/session.html#graphscope.Session.get_vineyard_object_mapping_table">get_vineyard_object_mapping_table() (graphscope.Session method)</a>
+</li>
         <li><a href="reference/networkx/generated/graphscope.nx.generators.directed.gn_graph.html#graphscope.nx.generators.directed.gn_graph">gn_graph() (in module graphscope.nx.generators.directed)</a>
 </li>
         <li><a href="reference/networkx/generated/graphscope.nx.generators.directed.gnc_graph.html#graphscope.nx.generators.directed.gnc_graph">gnc_graph() (in module graphscope.nx.generators.directed)</a>
@@ -1666,10 +1669,10 @@ MathJax = {
 </li>
         <li><a href="reference/analytical_engine_index.html#_CPPv4NK2gs22ArrowProjectedFragment21OuterVertexGid2VertexERK5vid_tR8vertex_t">gs::ArrowProjectedFragment::OuterVertexGid2Vertex (C++ function)</a>
 </li>
-        <li><a href="reference/analytical_engine_index.html#_CPPv4NK2gs22ArrowProjectedFragment13OuterVerticesE5fid_t">gs::ArrowProjectedFragment::OuterVertices (C++ function)</a>, <a href="reference/analytical_engine_index.html#_CPPv4NK2gs22ArrowProjectedFragment13OuterVerticesEv">[1]</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="reference/analytical_engine_index.html#_CPPv4NK2gs22ArrowProjectedFragment13OuterVerticesE5fid_t">gs::ArrowProjectedFragment::OuterVertices (C++ function)</a>, <a href="reference/analytical_engine_index.html#_CPPv4NK2gs22ArrowProjectedFragment13OuterVerticesEv">[1]</a>
+</li>
         <li><a href="reference/analytical_engine_index.html#_CPPv4N2gs22ArrowProjectedFragment15PrepareToRunAppERKN5grape8CommSpecEN5grape11PrepareConfE">gs::ArrowProjectedFragment::PrepareToRunApp (C++ function)</a>
 </li>
         <li><a href="reference/analytical_engine_index.html#_CPPv4N2gs22ArrowProjectedFragment7ProjectENSt10shared_ptrIN8vineyard13ArrowFragmentI5oid_t5vid_t21property_vertex_map_t7COMPACTEEEERK10label_id_tRK9prop_id_tRK10label_id_tRK9prop_id_t">gs::ArrowProjectedFragment::Project (C++ function)</a>
@@ -2581,14 +2584,14 @@ MathJax = {
           <li><a href="reference/networkx/graphs.html#graphscope.nx.Graph.remove_edge">(graphscope.nx.Graph method)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.remove_edges_from">remove_edges_from() (graphscope.nx.DiGraph method)</a>
 
         <ul>
           <li><a href="reference/networkx/graphs.html#graphscope.nx.Graph.remove_edges_from">(graphscope.nx.Graph method)</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.remove_node">remove_node() (graphscope.nx.DiGraph method)</a>
 
         <ul>
@@ -2602,6 +2605,8 @@ MathJax = {
 </li>
         </ul></li>
         <li><a href="reference/generated/graphscope.framework.dag_utils.report_graph.html#graphscope.framework.dag_utils.report_graph">report_graph() (in module graphscope.framework.dag_utils)</a>
+</li>
+        <li><a href="reference/session.html#graphscope.Session.restore_from_pvc">restore_from_pvc() (graphscope.Session method)</a>
 </li>
         <li><a href="reference/context.html#graphscope.framework.context.ResultDAGNode">ResultDAGNode (class in graphscope.framework.context)</a>
 </li>
@@ -2722,6 +2727,8 @@ MathJax = {
         <li><a href="reference/networkx/generated/graphscope.nx.generators.community.stochastic_block_model.html#graphscope.nx.generators.community.stochastic_block_model">stochastic_block_model() (in module graphscope.nx.generators.community)</a>
 </li>
         <li><a href="reference/networkx/generated/networkx.generators.stochastic.stochastic_graph.html#networkx.generators.stochastic.stochastic_graph">stochastic_graph() (in module networkx.generators.stochastic)</a>
+</li>
+        <li><a href="reference/session.html#graphscope.Session.store_to_pvc">store_to_pvc() (graphscope.Session method)</a>
 </li>
         <li><a href="reference/interactive.html#graphscope.interactive.query.InteractiveQuery.subgraph">subgraph() (graphscope.interactive.query.InteractiveQuery method)</a>
 

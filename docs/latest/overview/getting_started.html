@@ -230,6 +230,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="../deployment/install_on_local.html">Install GraphScope on Local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy on K8s Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_with_existing_vineyard_cluster.html">Depoly with Existing Vineyard Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/persistent_storage_of_graphs_on_k8s.html">Persistent storage of graphs on the Kubernetes cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/install_in_offline_env.html">Install GraphScope in offline environment</a></li>
 </ul>
@@ -554,6 +555,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.22.0/index.html">
+                
+                  v0.22.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.21.0/index.html">
                 
                   v0.21.0
@@ -581,18 +594,6 @@ MathJax = {
               <dd><a href="../../v0.19.0/index.html">
                 
                   v0.19.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.18.0/index.html">
-                
-                  v0.18.0
                 
               </a></dd>
             
@@ -890,8 +891,37 @@ Example: Running iterative algorithm (SSSP) in GraphScope<div class="summary-dow
 </details></div>
 <div class="section" id="graph-interactive-query-quick-start">
 <h2>Graph Interactive Query Quick Start<a class="headerlink" href="#graph-interactive-query-quick-start" title="Permalink to this heading">#</a></h2>
-<p>TODO(Robin):</p>
+<p>With the <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> package already installed, you can effortlessly engage with a graph on your local machine.
+You simply need to create the <code class="docutils literal notranslate"><span class="pre">gremlin</span></code> instance to serve as the conduit for submitting all Gremlin queries.</p>
+<details class="sphinx-bs dropdown card mb-3">
+<summary class="summary-title card-header">
+Example: Run Interactive Queries in GraphScope<div class="summary-down docutils">
+<svg version="1.1" width="24" height="24" class="octicon octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
+<div class="summary-up docutils">
+<svg version="1.1" width="24" height="24" class="octicon octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
+</summary><div class="summary-content card-body docutils">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+<span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
+<span class="kn">from</span> <span class="nn">graphscope.dataset.modern_graph</span> <span class="kn">import</span> <span class="n">load_modern_graph</span>
+
+<span class="n">gs</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># load the modern graph as example.</span>
+<span class="c1">#(modern graph is an example property graph for Gremlin queries given by Apache at https://tinkerpop.apache.org/docs/current/tutorials/getting-started/)</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">load_modern_graph</span><span class="p">()</span>
+
+<span class="c1"># Hereafter, you can use the `graph` object to create an `gremlin` query session</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+<span class="c1"># then `execute` any supported gremlin query.</span>
+<span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().count()&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">q1</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>   <span class="c1"># should print [6]</span>
+
+<span class="n">q2</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().hasLabel(</span><span class="se">\&#39;</span><span class="s1">person</span><span class="se">\&#39;</span><span class="s1">)&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">q2</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>  <span class="c1"># should print [[v[2], v[3], v[0], v[1]]]</span>
+</pre></div>
 </div>
+</div>
+</details></div>
 <div class="section" id="graph-learning-quick-start">
 <h2>Graph Learning Quick Start<a class="headerlink" href="#graph-learning-quick-start" title="Permalink to this heading">#</a></h2>
 <p>TODO(LiSu):</p>

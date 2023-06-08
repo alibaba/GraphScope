@@ -230,6 +230,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="../deployment/install_on_local.html">Install GraphScope on Local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy on K8s Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_with_existing_vineyard_cluster.html">Depoly with Existing Vineyard Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/persistent_storage_of_graphs_on_k8s.html">Persistent storage of graphs on the Kubernetes cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/install_in_offline_env.html">Install GraphScope in offline environment</a></li>
 </ul>
@@ -554,6 +555,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.22.0/index.html">
+                
+                  v0.22.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.21.0/index.html">
                 
                   v0.21.0
@@ -581,18 +594,6 @@ MathJax = {
               <dd><a href="../../v0.19.0/index.html">
                 
                   v0.19.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.18.0/index.html">
-                
-                  v0.18.0
                 
               </a></dd>
             
@@ -692,7 +693,11 @@ More options about <code class="docutils literal notranslate"><span class="pre">
 <div class="section" id="build-learning-engine">
 <h2>Build Learning Engine<a class="headerlink" href="#build-learning-engine" title="Permalink to this heading">#</a></h2>
 <p>You can build all targets for GraphScope Learning Engine with a single command.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>learning
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>learning
+</pre></div>
+</div>
+<p>You could install it to a location by:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>learning-install<span class="w"> </span>--install-prefix<span class="w"> </span>/opt/graphscope
 </pre></div>
 </div>
 </div>

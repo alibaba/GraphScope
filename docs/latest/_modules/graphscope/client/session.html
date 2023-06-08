@@ -219,6 +219,7 @@ MathJax = {
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment/install_on_local.html">Install GraphScope on Local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy on K8s Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment/deploy_with_existing_vineyard_cluster.html">Depoly with Existing Vineyard Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment/persistent_storage_of_graphs_on_k8s.html">Persistent storage of graphs on the Kubernetes cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment/install_in_offline_env.html">Install GraphScope in offline environment</a></li>
 </ul>
@@ -543,6 +544,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../../../v0.22.0/index.html">
+                
+                  v0.22.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../../../v0.21.0/index.html">
                 
                   v0.21.0
@@ -570,18 +583,6 @@ MathJax = {
               <dd><a href="../../../../v0.19.0/index.html">
                 
                   v0.19.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../../v0.18.0/index.html">
-                
-                  v0.18.0
                 
               </a></dd>
             
@@ -673,6 +674,7 @@ MathJax = {
 <span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">vineyard</span>
     <span class="kn">from</span> <span class="nn">kubernetes</span> <span class="kn">import</span> <span class="n">client</span> <span class="k">as</span> <span class="n">kube_client</span>
     <span class="kn">from</span> <span class="nn">kubernetes</span> <span class="kn">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">kube_config</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
@@ -700,6 +702,7 @@ MathJax = {
 <span class="kn">from</span> <span class="nn">graphscope.framework.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="kn">import</span> <span class="n">decode_dataframe</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="kn">import</span> <span class="n">decode_numpy</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="kn">import</span> <span class="n">random_string</span>
 <span class="kn">from</span> <span class="nn">graphscope.interactive.query</span> <span class="kn">import</span> <span class="n">InteractiveQuery</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">graph_def_pb2</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">message_pb2</span>
@@ -1224,6 +1227,10 @@ MathJax = {
             <span class="s2">&quot;show_log&quot;</span><span class="p">,</span>
             <span class="s2">&quot;log_level&quot;</span><span class="p">,</span>
         <span class="p">)</span>
+
+        <span class="c1"># the mapping table from old vineyard object id to new vineyard object id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_object_mapping_table</span> <span class="o">=</span> <span class="p">{}</span>
+
         <span class="n">saved_locals</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accessable_params</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">saved_locals</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
@@ -1663,15 +1670,7 @@ MathJax = {
             <span class="p">):</span>
                 <span class="n">api_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">api_client</span> <span class="o">=</span> <span class="n">resolve_api_client</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
-                    <span class="p">)</span>
-                <span class="k">except</span> <span class="n">kube_config</span><span class="o">.</span><span class="n">ConfigException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                        <span class="s2">&quot;Kubernetes environment not found, you may want to&quot;</span>
-                        <span class="s1">&#39; launch session locally with param cluster_type=&quot;hosts&quot;&#39;</span>
-                    <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+                <span class="n">api_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_api_client</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span> <span class="o">=</span> <span class="n">KubernetesClusterLauncher</span><span class="p">(</span>
                 <span class="n">api_client</span><span class="o">=</span><span class="n">api_client</span><span class="p">,</span>
                 <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">,</span>
@@ -1742,6 +1741,154 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get configuration of the session.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span></div>
 
+    <span class="k">def</span> <span class="nf">_get_api_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">api_client</span> <span class="o">=</span> <span class="n">resolve_api_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="n">kube_config</span><span class="o">.</span><span class="n">ConfigException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Kubernetes environment not found, you may want to&quot;</span>
+                <span class="s1">&#39; launch session locally with param cluster_type=&quot;hosts&quot;&#39;</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">return</span> <span class="n">api_client</span>
+
+    <span class="k">def</span> <span class="nf">_check_pvc_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pvc_name</span><span class="p">,</span> <span class="n">pvc_namespace</span><span class="p">):</span>
+        <span class="n">api_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_api_client</span><span class="p">()</span>
+        <span class="n">_core_api</span> <span class="o">=</span> <span class="n">kube_client</span><span class="o">.</span><span class="n">CoreV1Api</span><span class="p">(</span><span class="n">api_client</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_core_api</span><span class="o">.</span><span class="n">read_namespaced_persistent_volume_claim</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">pvc_name</span><span class="p">,</span>
+                <span class="n">namespace</span><span class="o">=</span><span class="n">pvc_namespace</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">kube_client</span><span class="o">.</span><span class="n">rest</span><span class="o">.</span><span class="n">ApiException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;PVC </span><span class="si">{</span><span class="n">pvc_name</span><span class="si">}</span><span class="s2"> not found in namespace </span><span class="si">{</span><span class="n">pvc_namespace</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="k">def</span> <span class="nf">_check_vineyard_deployment_exists</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">vineyard_deployment_name</span><span class="p">,</span> <span class="n">vineyard_deployment_namespace</span>
+    <span class="p">):</span>
+        <span class="n">api_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_api_client</span><span class="p">()</span>
+        <span class="n">_app_api</span> <span class="o">=</span> <span class="n">kube_client</span><span class="o">.</span><span class="n">AppsV1Api</span><span class="p">(</span><span class="n">api_client</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_app_api</span><span class="o">.</span><span class="n">read_namespaced_deployment</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">vineyard_deployment_name</span><span class="p">,</span>
+                <span class="n">namespace</span><span class="o">=</span><span class="n">vineyard_deployment_namespace</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">kube_client</span><span class="o">.</span><span class="n">rest</span><span class="o">.</span><span class="n">ApiException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">404</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Vineyard deployment </span><span class="si">{</span><span class="n">vineyard_deployment_name</span><span class="si">}</span><span class="s2"> not found in namespace </span><span class="si">{</span><span class="n">vineyard_deployment_namespace</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">e</span>
+
+<div class="viewcode-block" id="Session.store_to_pvc"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.store_to_pvc">[docs]</a>    <span class="k">def</span> <span class="nf">store_to_pvc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graphIDs</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pvc_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stores the given graph IDs to the given path with the given PVC.</span>
+<span class="sd">        Also, if you want to store graphs of different sessions to the same pv,</span>
+<span class="sd">        you&#39;d better to create different pvc for different sessions at first.</span>
+
+<span class="sd">        Notice, before calling this function, the KUBECONFIG environment variable</span>
+<span class="sd">        should be set to the path of your kubeconfig file. And you should make sure</span>
+<span class="sd">        that the pvc is bound to the pv and the pv&#39;s capacity is enough to store the</span>
+<span class="sd">        graphs.</span>
+
+<span class="sd">        The method uses the vineyardctl to create a kubernetes job to serialize</span>
+<span class="sd">        the selected graphs. For more information, see the vineyardctl documentation.</span>
+
+<span class="sd">        https://github.com/v6d-io/v6d/tree/main/k8s/cmd#vineyardctl-deploy-backup-job</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            graph_ids: The list of graph IDs to store.</span>
+<span class="sd">                       Supported types:</span>
+<span class="sd">                       - list: list of vineyard.ObjectID or graphscope.Graph</span>
+<span class="sd">            path: The path in the pv to which the pvc is bound.</span>
+<span class="sd">            pvc_name: The name of the PVC.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            RuntimeError: If the cluster type is not Kubernetes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">!=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Only support kubernetes cluster&quot;</span><span class="p">)</span>
+        <span class="n">object_ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="nb">object</span> <span class="ow">in</span> <span class="n">graphIDs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">object</span><span class="p">,</span> <span class="n">Graph</span><span class="p">):</span>
+                <span class="n">object_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">object</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">object_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">(</span><span class="nb">object</span><span class="p">))</span>
+        <span class="n">object_ids</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span> <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">object_ids</span><span class="p">)</span>
+        <span class="n">vineyard_deployment_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_deployment&quot;</span><span class="p">]</span>
+        <span class="n">namespace</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_vineyard_deployment_exists</span><span class="p">(</span><span class="n">vineyard_deployment_name</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_pvc_exists</span><span class="p">(</span><span class="n">pvc_name</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span>
+        <span class="c1"># The next function will create a kubernetes job for backuping</span>
+        <span class="c1"># the specific graphIDs to the specific path of the specific pvc</span>
+        <span class="n">vineyard</span><span class="o">.</span><span class="n">deploy</span><span class="o">.</span><span class="n">vineyardctl</span><span class="o">.</span><span class="n">deploy</span><span class="o">.</span><span class="n">backup_job</span><span class="p">(</span>
+            <span class="n">backup_name</span><span class="o">=</span><span class="s2">&quot;vineyard-backup-&quot;</span> <span class="o">+</span> <span class="n">random_string</span><span class="p">(</span><span class="mi">6</span><span class="p">),</span>
+            <span class="n">vineyard_deployment_name</span><span class="o">=</span><span class="n">vineyard_deployment_name</span><span class="p">,</span>
+            <span class="n">vineyard_deployment_namespace</span><span class="o">=</span><span class="n">namespace</span><span class="p">,</span>
+            <span class="n">namespace</span><span class="o">=</span><span class="n">namespace</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+            <span class="n">objectids</span><span class="o">=</span><span class="n">object_ids</span><span class="p">,</span>
+            <span class="n">pvc_name</span><span class="o">=</span><span class="n">pvc_name</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Session.restore_from_pvc"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.restore_from_pvc">[docs]</a>    <span class="k">def</span> <span class="nf">restore_from_pvc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pvc_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Restores the graphs from the given path in the given PVC.</span>
+<span class="sd">        Notice, before calling this function, the KUBECONFIG environment variable</span>
+<span class="sd">        should be set to the path of your kubeconfig file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path: The path in the pv to which the pvc is bound.</span>
+<span class="sd">            pvc_name: The name of the PVC.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            RuntimeError: If the cluster type is not Kubernetes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">!=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Only support kubernetes cluster&quot;</span><span class="p">)</span>
+        <span class="n">vineyard_deployment_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_deployment&quot;</span><span class="p">]</span>
+        <span class="n">namespace</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_vineyard_deployment_exists</span><span class="p">(</span><span class="n">vineyard_deployment_name</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_pvc_exists</span><span class="p">(</span><span class="n">pvc_name</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span>
+        <span class="n">random_suffix</span> <span class="o">=</span> <span class="n">random_string</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+        <span class="n">vineyard</span><span class="o">.</span><span class="n">deploy</span><span class="o">.</span><span class="n">vineyardctl</span><span class="o">.</span><span class="n">deploy</span><span class="o">.</span><span class="n">recover_job</span><span class="p">(</span>
+            <span class="n">recover_name</span><span class="o">=</span><span class="s2">&quot;vineyard-recover-&quot;</span> <span class="o">+</span> <span class="n">random_suffix</span><span class="p">,</span>
+            <span class="n">vineyard_deployment_name</span><span class="o">=</span><span class="n">vineyard_deployment_name</span><span class="p">,</span>
+            <span class="n">vineyard_deployment_namespace</span><span class="o">=</span><span class="n">namespace</span><span class="p">,</span>
+            <span class="n">namespace</span><span class="o">=</span><span class="n">namespace</span><span class="p">,</span>
+            <span class="n">recover_path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+            <span class="n">pvc_name</span><span class="o">=</span><span class="n">pvc_name</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">api_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_api_client</span><span class="p">()</span>
+        <span class="n">_core_api</span> <span class="o">=</span> <span class="n">kube_client</span><span class="o">.</span><span class="n">CoreV1Api</span><span class="p">(</span><span class="n">api_client</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">config_map</span> <span class="o">=</span> <span class="n">_core_api</span><span class="o">.</span><span class="n">read_namespaced_config_map</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;vineyard-recover-&quot;</span> <span class="o">+</span> <span class="n">random_suffix</span> <span class="o">+</span> <span class="s2">&quot;-mapping-table&quot;</span><span class="p">,</span>
+                <span class="n">namespace</span><span class="o">=</span><span class="n">namespace</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">kube_client</span><span class="o">.</span><span class="n">rest</span><span class="o">.</span><span class="n">ApiException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">404</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;ConfigMap vineyard-recover-</span><span class="si">{</span><span class="n">random_suffix</span><span class="si">}</span><span class="s2">-mapping-table not found in namespace </span><span class="si">{</span><span class="n">namespace</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">e</span>
+
+        <span class="c1"># parse configmap data to the self._vineyard_object_mapping_table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_object_mapping_table</span> <span class="o">=</span> <span class="n">config_map</span><span class="o">.</span><span class="n">data</span></div>
+
+<div class="viewcode-block" id="Session.get_vineyard_object_mapping_table"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.get_vineyard_object_mapping_table">[docs]</a>    <span class="k">def</span> <span class="nf">get_vineyard_object_mapping_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the vineyard object mapping table</span>
+<span class="sd">        from the old object id to new object id</span>
+<span class="sd">        during storing and restoring graph to pvc</span>
+<span class="sd">        on the kubernetes cluster.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_object_mapping_table</span></div>
+
     <span class="k">def</span> <span class="nf">g</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1752,6 +1899,16 @@ MathJax = {
         <span class="n">vertex_map</span><span class="o">=</span><span class="s2">&quot;global&quot;</span><span class="p">,</span>
         <span class="n">compact_edges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">,</span> <span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">repr</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">))</span>
+            <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_object_mapping_table</span>
+        <span class="p">):</span>
+            <span class="n">graph_vineyard_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_object_mapping_table</span><span class="p">[</span>
+                <span class="nb">repr</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">))</span>
+            <span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Restore graph from original graph: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">graph_vineyard_id</span><span class="p">)</span>
+            <span class="n">incoming_data</span> <span class="o">=</span> <span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">(</span><span class="n">graph_vineyard_id</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
             <span class="n">GraphDAGNode</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span>
