@@ -19,5 +19,5 @@ global_query = { path = "../../store/global_query" , features = ["with_v6d"] }
 pegasus = { path = "../../engine/pegasus/pegasus", package = "pegasus" }
 pegasus_network = { path = "../../engine/pegasus/network" }
 pegasus_server = { path = "../../engine/pegasus/server" }
-runtime = {path = "../../ir/runtime"}
+runtime = {path = "../../ir/runtime", features = ["with_v6d"]}
 graph_proxy = {path = "../../ir/graph_proxy", features = ["with_global_query", "with_v6d"]}

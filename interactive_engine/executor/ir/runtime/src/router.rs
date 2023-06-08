@@ -25,11 +25,11 @@ pub type WorkerId = u64;
 /// especially when the underlying data has been partitioned across the cluster.
 /// Given the partition information (by `PartitionInfo`) as well as how our cluster is managed (by `ClusterInfo`) and co-located with the graph data,
 /// we can implement the corresponding `route` function to guide the system to transfer the data to a proper destination worker.
-
 pub trait Router: Send + Sync + 'static {
     type P: PartitionInfo;
     type C: ClusterInfo;
-    /// a route function that given the data, return the worker id that is going to do the query.
+    /// A route function that given the data's partition key id, return the worker id that is going to do the query.
+    /// Here, partition key id is for locating the data's partition given in `PartitionInfo`
     fn route(&self, data: PartitionKeyId) -> GraphProxyResult<WorkerId>;
 }
 
