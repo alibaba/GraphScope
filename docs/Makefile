@@ -41,6 +41,9 @@ clean:
 	cd ${WORKING_DIR}/../analytical_engine/java && \
 	mvn -P javadoc javadoc:aggregate -Dmaven.antrun.skip=true -DskipTests -Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference -Djavadoc.output.destDir=gae_java --quiet \
 
+	@echo "Building Java doc to $(BUILDDIR)/${TAG}/$@/reference/flex"
+	@doxygen Doxyfile-flex
+
 doxygen:
 	@mkdir -p _build
 	@doxygen Doxyfile
