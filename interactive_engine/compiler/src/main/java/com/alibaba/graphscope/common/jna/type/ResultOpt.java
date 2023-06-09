@@ -20,7 +20,8 @@ import com.alibaba.graphscope.common.jna.IntEnum;
 
 public enum ResultOpt implements IntEnum<ResultOpt> {
     EndV,
-    AllV;
+    AllV,
+    AllVe;
 
     @Override
     public int getInt() {

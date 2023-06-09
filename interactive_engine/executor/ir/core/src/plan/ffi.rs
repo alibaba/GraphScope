@@ -2175,6 +2175,7 @@ mod graph {
     pub enum PathResultOpt {
         EndV = 0,
         AllV = 1,
+        AllVe = 2,
     }
 
     /// To initialize an path expand operator from an edge_expand base
