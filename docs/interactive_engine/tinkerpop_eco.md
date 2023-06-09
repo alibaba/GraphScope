@@ -33,6 +33,34 @@ A simpler option is to use the `gremlin` object for submitting Gremlin queries t
  Gremlin-Python and will automatically acquire the endpoint.
 ````
 
+In large-scale data processing scenarios, streaming the returned data is often necessary to avoid Out of Memory (OOM) issues caused by handling a large volume of data, which provides benefits such as memory efficiency, continuous processing, incremental analysis, reduced latency, scalability, and resource optimization. It enables you to handle and analyze vast amounts of data effectively while mitigating the risk of memory-related issues. Here is an example to guide you how to collect results in a streaming way by python sdk.
+   ```Python
+   from queue import Queue
+   from gremlin_python.driver.client import Client
+
+   graph_url = # the GIE Frontend service endpoint you've obtained
+   client = Client(graph_url, "g")
+
+   ret = []
+   q = client.submit('g.V()')
+   while True:
+   try:
+      ret.extend(q.next())
+   except StopIteration:
+      break
+
+   print(ret)
+   ```
+Furthermore, here are some parameters that can be used to configure the streaming size on the server-side.
+```
+# interactive_engine/compiler/src/main/resources/conf/gremlin-server.yaml
+...
+# total num of streaming batch size returned by compiler service
+resultIterationBatchSize: 64
+...
+
+```
+
 ## Connecting Gremlin within Java
 See [Gremlin-Java](https://tinkerpop.apache.org/docs/current/reference/#gremlin-java) for connecting Gremlin
 within the Java language.
