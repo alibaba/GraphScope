@@ -38,12 +38,6 @@ public class LiteralVisitor extends CypherGSBaseVisitor<Object> {
     public Object visitOC_IntegerLiteral(CypherGSParser.OC_IntegerLiteralContext ctx) {
         String integerLiteral = ctx.getText().toLowerCase();
         try {
-            if (integerLiteral.length() > 1) {
-                char lastChar = integerLiteral.charAt(integerLiteral.length() - 1);
-                if (lastChar == 'l' || lastChar == 'L') {
-                    return Long.decode(integerLiteral.substring(0, integerLiteral.length() - 1));
-                }
-            }
             // try to parse it as integer first
             return Integer.decode(integerLiteral);
         } catch (NumberFormatException ignoredExpection1) {

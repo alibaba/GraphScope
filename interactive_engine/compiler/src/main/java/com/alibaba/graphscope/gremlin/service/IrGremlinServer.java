@@ -73,11 +73,18 @@ public class IrGremlinServer implements AutoCloseable {
             IrMetaQueryCallback metaQueryCallback,
             GraphProperties testGraph) {
         AbstractOpProcessor standardProcessor =
-                new IrStandardOpProcessor(configs, graphPlanner, channelFetcher, metaQueryCallback, graph, g);
+                new IrStandardOpProcessor(
+                        configs, graphPlanner, channelFetcher, metaQueryCallback, graph, g);
         IrOpLoader.addProcessor(standardProcessor.getName(), standardProcessor);
         AbstractOpProcessor testProcessor =
                 new IrTestOpProcessor(
-                        configs, graphPlanner, channelFetcher, metaQueryCallback, graph, g, testGraph);
+                        configs,
+                        graphPlanner,
+                        channelFetcher,
+                        metaQueryCallback,
+                        graph,
+                        g,
+                        testGraph);
         IrOpLoader.addProcessor(testProcessor.getName(), testProcessor);
     }
 

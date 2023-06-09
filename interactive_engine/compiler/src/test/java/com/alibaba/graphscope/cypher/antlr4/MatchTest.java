@@ -16,11 +16,7 @@
 
 package com.alibaba.graphscope.cypher.antlr4;
 
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
-
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.sql.type.SqlTypeName;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -102,14 +98,5 @@ public class MatchTest {
                     + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 match.explain().trim());
-    }
-
-    @Test
-    public void match_5_test() {
-        RelNode project = Utils.eval("Match (a:person {id: 2l}) Return a").build();
-        GraphLogicalSource source = (GraphLogicalSource) project.getInput(0);
-        RexCall condition = (RexCall) source.getFilters().get(0);
-        Assert.assertEquals(
-                SqlTypeName.BIGINT, condition.getOperands().get(1).getType().getSqlTypeName());
     }
 }

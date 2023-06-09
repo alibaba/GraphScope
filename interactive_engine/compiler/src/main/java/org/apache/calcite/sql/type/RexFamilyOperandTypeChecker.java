@@ -25,7 +25,6 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.validate.implicit.TypeCoercion;
-import org.apache.calcite.util.Litmus;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -44,8 +43,9 @@ public class RexFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
     @Override
     public boolean checkOperandTypes(SqlCallBinding callBinding, boolean throwOnFailure) {
         if (families.size() != callBinding.getOperandCount()) {
-            Litmus.THROW.fail(
-                    "wrong operand count {} for {}", callBinding.getOperandCount(), families);
+            // assume this is an inapplicable sub-rule of a composite rule;
+            // don't throw
+            return false;
         }
         if (!(callBinding instanceof RexCallBinding)) {
             throw new IllegalArgumentException(

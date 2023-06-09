@@ -61,7 +61,6 @@ import org.apache.calcite.util.Litmus;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -485,8 +484,7 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.OR
                 || sqlKind == SqlKind.DESCENDING
                 || (sqlKind == SqlKind.OTHER_FUNCTION && operator.getName().equals("POWER"))
-                || (sqlKind == SqlKind.MINUS_PREFIX)
-                || (sqlKind == SqlKind.PROCEDURE_CALL);
+                || (sqlKind == SqlKind.MINUS_PREFIX);
     }
 
     @Override
@@ -888,33 +886,6 @@ public class GraphBuilder extends RelBuilder {
             project(originalExprs, originalAliases, false);
         }
         return this;
-    }
-
-    @Override
-    public RexLiteral literal(@Nullable Object value) {
-        final RexBuilder rexBuilder = cluster.getRexBuilder();
-        if (value == null) {
-            final RelDataType type = getTypeFactory().createSqlType(SqlTypeName.NULL);
-            return rexBuilder.makeNullLiteral(type);
-        } else if (value instanceof Boolean) {
-            return rexBuilder.makeLiteral((Boolean) value);
-        } else if (value instanceof BigDecimal) {
-            return rexBuilder.makeExactLiteral((BigDecimal) value);
-        } else if (value instanceof Float || value instanceof Double) {
-            return rexBuilder.makeApproxLiteral(BigDecimal.valueOf(((Number) value).doubleValue()));
-        } else if (value instanceof Integer) {
-            return rexBuilder.makeExactLiteral(BigDecimal.valueOf(((Number) value).longValue()));
-        } else if (value instanceof Long) { // convert long to BIGINT, i.e. 2l
-            return rexBuilder.makeBigintLiteral(BigDecimal.valueOf(((Number) value).longValue()));
-        } else if (value instanceof String) {
-            return rexBuilder.makeLiteral((String) value);
-        } else if (value instanceof Enum) {
-            return rexBuilder.makeLiteral(
-                    value, getTypeFactory().createSqlType(SqlTypeName.SYMBOL));
-        } else {
-            throw new IllegalArgumentException(
-                    "cannot convert " + value + " (" + value.getClass() + ") to a constant");
-        }
     }
 
     /**

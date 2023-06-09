@@ -18,14 +18,6 @@ package org.apache.calcite.sql.type;
 
 import com.google.common.collect.ImmutableList;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-
-import java.util.List;
-import java.util.function.Function;
-import java.util.function.IntFunction;
-import java.util.function.Predicate;
-
 /**
  * Similar to {@link OperandTypes}, but we rewrite some {@link SqlOperandTypeChecker}
  * to create validation functions based on {@link org.apache.calcite.rex.RexNode},
@@ -88,12 +80,4 @@ public abstract class RexOperandTypes {
 
     public static final SqlSingleOperandTypeChecker DIVISION_OPERATOR =
             OperandTypes.or(NUMERIC_NUMERIC, INTERVAL_NUMERIC);
-
-    public static SqlOperandMetadata operandMetadata(
-            List<SqlTypeFamily> families,
-            Function<RelDataTypeFactory, List<RelDataType>> typesFactory,
-            IntFunction<String> operandName,
-            Predicate<Integer> optional) {
-        return new RexOperandMetaDataImpl(families, typesFactory, operandName, optional);
-    }
 }

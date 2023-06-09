@@ -28,15 +28,6 @@ import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
-import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.config.PlannerConfig;
-import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
-import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
-import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
-import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
-import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
-import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
-import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -49,6 +40,7 @@ import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.File;
@@ -124,7 +116,7 @@ public class GraphPlanner {
             } else if (logicalPlan.getRegularQuery() != null) {
                 physicalBuilder = new FfiPhysicalBuilder(graphConfig, irMeta, logicalPlan);
             } else {
-                physicalBuilder = new ProcedurePhysicalBuilder(logicalPlan);
+                throw new NotImplementedException("procedure call is unimplemented yet");
             }
             return new Summary(this.id, this.name, logicalPlan, physicalBuilder);
         }
