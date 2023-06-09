@@ -25,7 +25,7 @@ data:
     ingestor.node.count={{ .Values.ingestor.replicaCount }}
     coordinator.node.count={{ .Values.coordinator.replicaCount }}
     ingestor.queue.count={{ .Values.ingestor.replicaCount }}
-    partition.count={{ .Values.store.replicaCount | mul 8 }}
+    partition.count={{ .Values.store.replicaCount | mul 128 }}
     engine.type={{ .Values.engineType }}
     discovery.mode={{ .Values.discoveryMode }}
 
