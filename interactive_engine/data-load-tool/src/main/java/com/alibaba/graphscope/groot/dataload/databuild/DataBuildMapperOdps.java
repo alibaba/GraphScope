@@ -81,7 +81,8 @@ public class DataBuildMapperOdps extends MapperBase {
         String[] items = new String[columnCount];
         for (int i = 0; i < columnCount; i++) {
             if (record.get(i) == null) {
-                items[i] = "";
+                //                items[i] = "";
+                items[i] = null;
             } else {
                 items[i] = record.get(i).toString();
             }
@@ -164,10 +165,12 @@ public class DataBuildMapperOdps extends MapperBase {
                                         + Arrays.toString(items)
                                         + "]");
                     }
-                    DataType dataType = propertyDef.getDataType();
-
                     String val = items[colIdx];
-                    PropertyValue propertyValue = new PropertyValue(dataType, val);
+                    PropertyValue propertyValue = null;
+                    if (val != null) {
+                        DataType dataType = propertyDef.getDataType();
+                        propertyValue = new PropertyValue(dataType, val);
+                    }
                     operationProperties.put(propertyId, propertyValue);
                 });
         return operationProperties;
