@@ -81,7 +81,7 @@ public class DataBuildMapperOdps extends MapperBase {
         String[] items = new String[columnCount];
         for (int i = 0; i < columnCount; i++) {
             if (record.get(i) == null) {
-//                items[i] = "";
+                //                items[i] = "";
                 items[i] = null;
             } else {
                 items[i] = record.get(i).toString();
