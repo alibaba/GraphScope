@@ -52,7 +52,7 @@ In large-scale data processing scenarios, streaming the returned data is often n
    print(ret)
    ```
 Furthermore, here are some parameters that can be used to configure the streaming size on the server-side.
-```
+```bash
 # interactive_engine/compiler/src/main/resources/conf/gremlin-server.yaml
 ...
 # total num of streaming batch size returned by compiler service
