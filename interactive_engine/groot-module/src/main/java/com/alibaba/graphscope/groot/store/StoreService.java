@@ -389,7 +389,7 @@ public class StoreService implements MetricsAgent {
         this.garbageCollectExecutor.execute(
                 () -> {
                     try {
-                        logger.info("Garbage collecting, snapshot [{}]", snapshotId);
+                        logger.debug("Garbage collecting, snapshot [{}]", snapshotId);
                         garbageCollectInternal(snapshotId);
                         callback.onCompleted(null);
                     } catch (Exception e) {

@@ -20,11 +20,5 @@ spec:
     - name: port
       port: {{ .Values.ingestor.service.port }}
       targetPort: port
-    - name: gaia-rpc
-      port: {{ .Values.ingestor.service.gaiaRpc }}
-      targetPort: gaia-rpc
-    - name: gaia-engine
-      port: {{ .Values.ingestor.service.gaiaEngine }}
-      targetPort: gaia-engine
   selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: ingestor
