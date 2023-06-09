@@ -142,7 +142,8 @@ template <typename fragment_t, typename fw_t, typename value_t, class F,
           class M, class C>
 VSet edgeMapDenseFunction(const fragment_t& graph,
                           const std::shared_ptr<fw_t> fw, VSet& U, int h,
-                          VSet& T, F& f, M& m, C& c, bool b = true) {
+                          VSet& T, bool is_join, F& f, M& m, C& c,
+                          bool b = true) {
   if ((&T) == (&All))
     return edgeMapDenseFunction(graph, fw, U, h, f, m, c, b);
   using vertex_t = typename fragment_t::vertex_t;
@@ -219,7 +220,8 @@ template <typename fragment_t, typename fw_t, typename value_t, class F,
           class M, class C, class H>
 VSet edgeMapDenseFunction(const fragment_t& graph,
                           const std::shared_ptr<fw_t> fw, VSet& U, H& h,
-                          VSet& T, F& f, M& m, C& c, bool b = true) {
+                          VSet& T, bool is_join, F& f, M& m, C& c,
+                          bool b = true) {
   using vid_t = typename fragment_t::vid_t;
   using edata_t = typename fragment_t::edata_t;
   bool flag = ((&U) == (&All));
@@ -381,8 +383,9 @@ template <typename fragment_t, typename fw_t, typename value_t, class F,
           class M, class C, class H>
 inline VSet edgeMapFunction(const fragment_t& graph,
                             const std::shared_ptr<fw_t> fw, VSet& U, H h,
-                            VSet& T, F& f, M& m, C& c, bool b = true) {
-  return edgeMapDenseFunction(graph, fw, U, h, T, f, m, c, b);
+                            VSet& T, bool is_join, F& f, M& m, C& c,
+                            bool b = true) {
+  return edgeMapDenseFunction(graph, fw, U, h, T, is_join, f, m, c, b);
 }
 
 template <typename fragment_t, typename fw_t>

@@ -14,24 +14,26 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.schema;
+package com.alibaba.graphscope.common.store;
 
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
+public class SnapshotId {
+    public static final SnapshotId createEmpty() {
+        return new SnapshotId(false, -1);
+    }
 
-import org.apache.calcite.schema.Statistic;
+    private final boolean acquired;
+    private final long id;
 
-import java.util.List;
+    public SnapshotId(boolean acquired, long id) {
+        this.acquired = acquired;
+        this.id = id;
+    }
 
-/**
- * Extends {@link GraphSchema} to add {@link Statistic}
- */
-public interface StatisticSchema extends GraphSchema {
-    // get meta for CBO
-    Statistic getStatistic(List<String> tableName);
+    public boolean isAcquired() {
+        return acquired;
+    }
 
-    // if the property name need to be converted to id
-    boolean isColumnId();
-
-    // schema json for ir core
-    String schemaJson();
+    public long getId() {
+        return id;
+    }
 }

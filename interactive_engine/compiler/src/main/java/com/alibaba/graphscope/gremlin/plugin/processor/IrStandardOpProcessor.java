@@ -29,20 +29,12 @@ import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
-import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
-import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
-import com.alibaba.graphscope.common.ir.rel.GraphRelShuttleWrapper;
-import com.alibaba.graphscope.common.ir.runtime.LogicalPlanConverter;
-import com.alibaba.graphscope.common.ir.runtime.ffi.FfiLogicalPlan;
-import com.alibaba.graphscope.common.ir.runtime.ffi.RelToFfiConverter;
-import com.alibaba.graphscope.common.ir.runtime.type.LogicalPlan;
-import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
-import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
-import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
-import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrCypherScriptEngineFactory;
@@ -57,17 +49,9 @@ import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.sun.jna.Pointer;
 
-import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
-import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.hep.HepPlanner;
-import org.apache.calcite.plan.hep.HepProgram;
-import org.apache.calcite.plan.hep.HepProgramBuilder;
-import org.apache.calcite.rel.RelNode;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.calcite.rel.hint.RelHint;
-import org.apache.calcite.rex.RexBuilder;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -90,12 +74,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.script.SimpleBindings;
@@ -108,20 +94,16 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected Graph graph;
     protected GraphTraversalSource g;
     protected Configs configs;
-    protected PlannerConfig plannerConfig;
     /**
      * todo: replace with {@link com.alibaba.graphscope.common.client.ExecutionClient} after unifying Gremlin into the Calcite stack
      */
     protected RpcClient rpcClient;
 
-    protected IrMetaFetcher irMetaFetcher;
     protected IrMetaQueryCallback metaQueryCallback;
-
-    protected final Function<StatisticSchema, GraphBuilder> graphBuilderGenerator;
+    protected final GraphPlanner graphPlanner;
 
     public IrStandardOpProcessor(
             Configs configs,
-            IrMetaFetcher irMetaFetcher,
             ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
             Graph graph,
@@ -129,21 +111,10 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.graph = graph;
         this.g = g;
         this.configs = configs;
-        this.plannerConfig = PlannerConfig.create(this.configs);
-        this.irMetaFetcher = irMetaFetcher;
         this.rpcClient =
                 new RpcClient(PegasusConfig.PEGASUS_GRPC_TIMEOUT.get(configs), fetcher.fetch());
         this.metaQueryCallback = metaQueryCallback;
-
-        RexBuilder rexBuilder = new RexBuilder(new JavaTypeFactoryImpl());
-        this.graphBuilderGenerator =
-                (StatisticSchema schema) -> {
-                    Objects.requireNonNull(schema);
-                    GraphOptCluster optCluster =
-                            GraphOptCluster.create(getRelOptPlanner(), rexBuilder);
-                    return GraphBuilder.create(
-                            null, optCluster, new GraphOptSchema(optCluster, schema));
-                };
+        this.graphPlanner = new GraphPlanner(configs);
     }
 
     @Override
@@ -334,15 +305,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                 b.putAll(bindingsSupplier.get());
                                 b.put("graph", graph);
                                 b.put("g", g);
-                                if (language.equals(
-                                        AntlrGremlinScriptEngineFactory.LANGUAGE_NAME)) {
-                                    // todo: prepare configs to parse gremlin
-                                } else if (language.equals(
-                                        AntlrCypherScriptEngineFactory.LANGUAGE_NAME)) {
-                                    b.put(
-                                            "graph.builder",
-                                            graphBuilderGenerator.apply(irMeta.getSchema()));
-                                }
                             } catch (OpProcessorException ope) {
                                 throw new RuntimeException(ope);
                             }
@@ -365,26 +327,18 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                             jobId,
                                             script,
                                             irMeta);
-                                } else if (o != null && o instanceof GraphBuilder) {
-                                    GraphBuilder builder = (GraphBuilder) o;
-                                    GraphOptCluster optCluster =
-                                            (GraphOptCluster) builder.getCluster();
-                                    RelNode topNode = builder.build();
-                                    // apply optimizations
-                                    if (this.plannerConfig.isOn()) {
-                                        RelOptPlanner planner = optCluster.getPlanner();
-                                        planner.setRoot(topNode);
-                                        topNode = planner.findBestExp();
-                                    }
+                                } else if (o != null && o instanceof ParseTree) {
+                                    GraphPlanner.PlannerInstance instance =
+                                            graphPlanner.instance((ParseTree) o, irMeta);
+                                    GraphPlanner.Summary summary = instance.plan();
                                     if (language.equals(
                                             AntlrGremlinScriptEngineFactory.LANGUAGE_NAME)) {
                                         // todo: handle gremlin results
                                     } else if (language.equals(
                                             AntlrCypherScriptEngineFactory.LANGUAGE_NAME)) {
                                         processRelNode(
-                                                topNode,
-                                                optCluster,
-                                                new CypherResultProcessor(ctx, topNode),
+                                                summary,
+                                                new CypherResultProcessor(ctx, summary),
                                                 jobId,
                                                 script,
                                                 irMeta,
@@ -440,39 +394,34 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     }
 
     protected void processRelNode(
-            RelNode topNode,
-            GraphOptCluster optCluster,
+            GraphPlanner.Summary summary,
             ResultProcessor resultProcessor,
             long jobId,
             String script,
             IrMeta irMeta,
             Context ctx)
             throws Exception {
-        try (LogicalPlan<Pointer, byte[]> logicalPlan =
-                new LogicalPlanConverter<>(
-                                new GraphRelShuttleWrapper(
-                                        new RelToFfiConverter(irMeta.getSchema().isColumnId())),
-                                new FfiLogicalPlan(optCluster, irMeta, getPlanHints(irMeta)))
-                        .go(topNode)) {
-            String jobName = "ir_plan_" + jobId;
-            if (logicalPlan.isReturnEmpty()) {
-                logger.info(
-                        "gremlin query \"{}\", job conf name \"{}\", relNode plan\n {}",
-                        script,
-                        jobName,
-                        topNode.explain());
-                // return empty results to the client
-                RequestMessage msg = ctx.getRequestMessage();
-                ctx.writeAndFlush(
-                        ResponseMessage.build(msg).code(ResponseStatusCode.NO_CONTENT).create());
-            } else {
-                byte[] physicalPlanBytes = logicalPlan.toPhysical();
+        String jobName = "ir_plan_" + jobId;
+        LogicalPlan logicalPlan = summary.getLogicalPlan();
+        if (logicalPlan.isReturnEmpty()) {
+            logger.info(
+                    "gremlin query \"{}\", job conf name \"{}\", logical plan\n {}",
+                    script,
+                    jobName,
+                    logicalPlan.explain());
+            // return empty results to the client
+            RequestMessage msg = ctx.getRequestMessage();
+            ctx.writeAndFlush(
+                    ResponseMessage.build(msg).code(ResponseStatusCode.NO_CONTENT).create());
+        } else {
+            try (PhysicalBuilder<byte[]> physicalBuilder = summary.getPhysicalBuilder()) {
+                byte[] physicalPlanBytes = physicalBuilder.build();
                 // print script and jobName with ir plan
                 logger.info(
-                        "gremlin query \"{}\", job conf name \"{}\", ir plan {}",
+                        "gremlin query \"{}\", job conf name \"{}\", ir core plan {}",
                         script,
                         jobName,
-                        logicalPlan.explain());
+                        physicalBuilder.explain());
                 PegasusClient.JobRequest request =
                         PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
                 PegasusClient.JobConfig jobConfig =
@@ -518,35 +467,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         strategies.add(InlineFilterStrategy.instance());
         strategies.add(ExpandFusionStepStrategy.instance());
         traversal.asAdmin().applyStrategies();
-    }
-
-    private RelOptPlanner getRelOptPlanner() {
-        if (this.plannerConfig.isOn()) {
-            PlannerConfig.Opt opt = this.plannerConfig.getOpt();
-            switch (opt) {
-                case RBO:
-                    HepProgramBuilder hepBuilder = HepProgram.builder();
-                    this.plannerConfig
-                            .getRules()
-                            .forEach(
-                                    k -> {
-                                        if (k.equals(FilterMatchRule.class.getSimpleName())) {
-                                            hepBuilder.addRuleInstance(
-                                                    FilterMatchRule.Config.DEFAULT.toRule());
-                                        } else {
-                                            // todo: add more rules
-                                        }
-                                    });
-                    return new HepPlanner(hepBuilder.build());
-                case CBO:
-                default:
-                    throw new UnsupportedOperationException(
-                            "planner type " + opt.name() + " is unsupported yet");
-            }
-        } else {
-            // return HepPlanner with empty rules if optimization is turned off
-            return new HepPlanner(HepProgram.builder().build());
-        }
     }
 
     @Override

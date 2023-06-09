@@ -18,7 +18,6 @@ import com.alibaba.graphscope.common.config.FileLoadType;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
-import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 
 public class GraphServiceMain {
@@ -27,25 +26,15 @@ public class GraphServiceMain {
 
     public static void main(String[] args) throws Exception {
         Configs configs = new Configs("conf/ir.compiler.properties", FileLoadType.RELATIVE_PATH);
-        IrMetaFetcher irMetaFetcher = new ExperimentalMetaFetcher(configs);
+        IrMetaQueryCallback metaQueryCallback =
+                new IrMetaQueryCallback(new ExperimentalMetaFetcher(configs));
         ChannelFetcher fetcher = new HostsRpcChannelFetcher(configs);
-
         IrGremlinServer server = new IrGremlinServer();
         String storeType = GraphConfig.GRAPH_STORE.get(configs);
         if (storeType.equals(EXPERIMENTAL)) {
-            server.start(
-                    configs,
-                    irMetaFetcher,
-                    fetcher,
-                    new IrMetaQueryCallback(irMetaFetcher),
-                    TestGraphFactory.EXPERIMENTAL);
+            server.start(configs, fetcher, metaQueryCallback, TestGraphFactory.EXPERIMENTAL);
         } else if (storeType.equals(CSR)) {
-            server.start(
-                    configs,
-                    irMetaFetcher,
-                    fetcher,
-                    new IrMetaQueryCallback(irMetaFetcher),
-                    TestGraphFactory.MCSR);
+            server.start(configs, fetcher, metaQueryCallback, TestGraphFactory.MCSR);
         } else {
             throw new UnsupportedOperationException(
                     "store type " + storeType + " is unsupported yet");
