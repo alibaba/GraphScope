@@ -14,12 +14,39 @@
 //! limitations under the License.
 
 pub use assembly::IRJobAssembly;
+use router::Router;
 
 pub mod assembly;
 pub mod error;
 pub mod process;
+pub mod router;
 
 #[macro_use]
 extern crate dyn_type;
 #[macro_use]
 extern crate log;
+
+use std::sync::Arc;
+
+use graph_proxy::apis::cluster_info::ClusterInfo;
+use graph_proxy::apis::partitioner::PartitionInfo;
+use graph_proxy::apis::{register_graph, ReadGraph};
+
+/// Initialize a job assembly with the given graph, partition info and cluster info.
+/// IRJobAssembly provides a `DefaultRouter`, which is a default implementation of `Router` that can be used in most distributed environment.
+pub fn initialize_job_assembly<G: ReadGraph + 'static, P: PartitionInfo, C: ClusterInfo>(
+    graph: Arc<G>, partition_info: Arc<P>, cluster_info: Arc<C>,
+) -> IRJobAssembly<P, C> {
+    register_graph(graph);
+    let job_assembly = IRJobAssembly::with(partition_info, cluster_info);
+    job_assembly
+}
+
+// /// Initialize a job assembly with the given graph and router.
+pub fn initialize_job_assembly_with_router<G: ReadGraph + 'static, P: PartitionInfo, C: ClusterInfo>(
+    graph: Arc<G>, router: Arc<dyn Router<P = P, C = C>>,
+) -> IRJobAssembly<P, C> {
+    register_graph(graph);
+    let job_assembly = IRJobAssembly::new(router);
+    job_assembly
+}

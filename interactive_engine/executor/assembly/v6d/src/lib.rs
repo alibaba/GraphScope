@@ -17,9 +17,6 @@
 #![allow(bare_trait_objects)]
 
 pub mod error;
-
-#[macro_use]
-extern crate log;
 extern crate dotproperties;
 extern crate global_query;
 extern crate log4rs;

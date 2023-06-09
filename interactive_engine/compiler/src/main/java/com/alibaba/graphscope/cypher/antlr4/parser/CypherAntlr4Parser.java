@@ -27,6 +27,9 @@ import org.antlr.v4.runtime.DefaultErrorStrategy;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+/**
+ * parse cypher DSL to antlr tree
+ */
 public class CypherAntlr4Parser implements Antlr4Parser {
     @Override
     public ParseTree parse(String statement) {

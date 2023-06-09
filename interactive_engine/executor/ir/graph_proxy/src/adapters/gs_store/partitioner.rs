@@ -19,7 +19,7 @@ use std::sync::Arc;
 use global_query::store_api::{PartitionId, VertexId};
 use global_query::GraphPartitionManager;
 
-use crate::apis::{Partitioner, ID};
+use crate::apis::partitioner::{PartitionInfo, PartitionedData, ServerId};
 use crate::{GraphProxyError, GraphProxyResult};
 
 /// A partition utility that one server contains multiple graph partitions for Groot Store
@@ -27,133 +27,59 @@ pub struct GrootMultiPartition {
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
 }
 
-#[allow(dead_code)]
 impl GrootMultiPartition {
     pub fn new(graph_partition_manager: Arc<dyn GraphPartitionManager>) -> Self {
         GrootMultiPartition { graph_partition_manager }
     }
 }
 
-impl Partitioner for GrootMultiPartition {
-    fn get_partition(&self, id: &ID, worker_num_per_server: usize) -> GraphProxyResult<u64> {
-        // The partitioning logics is as follows:
-        // 1. `partition_id = self.graph_partition_manager.get_partition_id(*id as VertexId)` routes a given id
-        // to the partition that holds its data.
-        // 2. `server_index = partition_id % self.num_servers as u64` routes the partition id to the
-        // server R that holds the partition
-        // 3. `worker_index = partition_id % worker_num_per_server` picks up one worker to do the computation.
-        // 4. `server_index * worker_num_per_server + worker_index` computes the worker index in server R
-        // to do the computation.
-        let vid = *id as VertexId;
-        let worker_num_per_server = worker_num_per_server as u64;
-        let partition_id = self
+impl PartitionInfo for GrootMultiPartition {
+    fn get_partition_id<D: PartitionedData>(&self, data: &D) -> GraphProxyResult<PartitionId> {
+        Ok(self
             .graph_partition_manager
-            .get_partition_id(vid) as u64;
-        let server_index = self
-            .graph_partition_manager
-            .get_server_id(partition_id as PartitionId)
-            .ok_or(GraphProxyError::query_store_error(&format!(
-                "get server id failed on Groot with vid of {:?}, partition_id of {:?}",
-                vid, partition_id
-            )))? as u64;
-        let worker_index = partition_id % worker_num_per_server;
-        Ok(server_index * worker_num_per_server + worker_index as u64)
+            .get_partition_id(data.get_partition_key_id() as VertexId) as PartitionId)
     }
-
-    fn get_worker_partitions(
-        &self, job_workers: usize, worker_id: u32,
-    ) -> GraphProxyResult<Option<Vec<u64>>> {
-        // Get worker partition list logic is as follows:
-        // 1. `process_partition_list = self.graph_partition_manager.get_process_partition_list()`
-        // get all partitions on current server
-        // 2. 'pid % job_workers' picks one worker to do the computation.
-        // and 'pid % job_workers == worker_id % job_workers' checks if current worker is the picked worker
-        let mut worker_partition_list = vec![];
-        let process_partition_list = self
-            .graph_partition_manager
-            .get_process_partition_list();
-        for pid in process_partition_list {
-            if pid % (job_workers as u32) == worker_id % (job_workers as u32) {
-                worker_partition_list.push(pid as u64)
-            }
-        }
-        info!(
-            "job_workers {:?}, worker id: {:?},  worker_partition_list {:?}",
-            job_workers, worker_id, worker_partition_list
-        );
-        Ok(Some(worker_partition_list))
+    fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId> {
+        self.graph_partition_manager
+            .get_server_id(partition_id)
+            .ok_or(GraphProxyError::query_store_error(&format!(
+                "get server id failed on Groot with partition_id of {:?}",
+                partition_id
+            )))
     }
 }
 
 /// A partition utility that one server contains multiple graph partitions for Vineyard
-/// Starting gaia with vineyard will pre-allocate partitions for each worker to process,
-/// thus we use graph_partitioner together with partition_worker_mapping for data routing.
+/// Starting GIE with vineyard will pre-allocate partitions for each server to process,
+/// thus we use graph_partitioner together with partition_server_index_mapping for data routing.
 pub struct VineyardMultiPartition {
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
     // mapping of partition id -> server_index
-    partition_server_index_mapping: HashMap<u32, u32>,
-    // computed partition ids after split fragments on same vineyard instance to multiple
-    // worker processes
-    computed_process_partition_list: Vec<u32>,
+    partition_server_index_mapping: HashMap<PartitionId, ServerId>,
 }
 
 impl VineyardMultiPartition {
     pub fn new(
         graph_partition_manager: Arc<dyn GraphPartitionManager>,
-        partition_server_index_mapping: HashMap<u32, u32>, computed_process_partition_list: Vec<u32>,
+        partition_server_index_mapping: HashMap<PartitionId, ServerId>,
     ) -> VineyardMultiPartition {
-        VineyardMultiPartition {
-            graph_partition_manager,
-            partition_server_index_mapping,
-            computed_process_partition_list,
-        }
+        VineyardMultiPartition { graph_partition_manager, partition_server_index_mapping }
     }
 }
 
-impl Partitioner for VineyardMultiPartition {
-    fn get_partition(&self, id: &ID, worker_num_per_server: usize) -> GraphProxyResult<u64> {
-        // The partitioning logics is as follows:
-        // 1. `partition_id = self.graph_partition_manager.get_partition_id(*id as VertexId)` routes a given id
-        // to the partition that holds its data.
-        // 2. `server_index = partition_id % self.num_servers as u64` routes the partition id to the
-        // server R that holds the partition
-        // 3. `worker_index = partition_id % worker_num_per_server` picks up one worker to do the computation.
-        // 4. `server_index * worker_num_per_server + worker_index` computes the worker index in server R
-        // to do the computation.
-        let vid = *id as VertexId;
-        let worker_num_per_server = worker_num_per_server as u64;
-        let partition_id = self
+impl PartitionInfo for VineyardMultiPartition {
+    fn get_partition_id<D: PartitionedData>(&self, data: &D) -> GraphProxyResult<PartitionId> {
+        Ok(self
             .graph_partition_manager
-            .get_partition_id(vid) as PartitionId;
-        let server_index = *self
-            .partition_server_index_mapping
-            .get(&partition_id)
-            .ok_or(GraphProxyError::query_store_error(&format!(
-                "get server id failed on Vineyard with vid of {:?}, partition_id of {:?}",
-                vid, partition_id
-            )))? as u64;
-        let worker_index = partition_id as u64 % worker_num_per_server;
-        Ok(server_index * worker_num_per_server + worker_index)
+            .get_partition_id(data.get_partition_key_id() as VertexId) as PartitionId)
     }
-
-    fn get_worker_partitions(
-        &self, job_workers: usize, worker_id: u32,
-    ) -> GraphProxyResult<Option<Vec<u64>>> {
-        // Get worker partition list logic is as follows:
-        // 1. `process_partition_list = self.graph_partition_manager.get_process_partition_list()`
-        // get all partitions on current server
-        // 2. 'pid % job_workers' picks one worker to do the computation.
-        // and 'pid % job_workers == worker_id % job_workers' checks if current worker is the picked worker
-        let mut worker_partition_list = vec![];
-        for pid in self.computed_process_partition_list.iter() {
-            if pid % (job_workers as u32) == worker_id % (job_workers as u32) {
-                worker_partition_list.push((*pid) as u64)
-            }
-        }
-        info!(
-            "job_workers {:?}, worker id: {:?},  worker_partition_list {:?}",
-            job_workers, worker_id, worker_partition_list
-        );
-        Ok(Some(worker_partition_list))
+    fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId> {
+        self.partition_server_index_mapping
+            .get(&partition_id)
+            .cloned()
+            .ok_or(GraphProxyError::query_store_error(&format!(
+                "get server id failed on Vineyard with partition_id of {:?}",
+                partition_id
+            )))
     }
 }

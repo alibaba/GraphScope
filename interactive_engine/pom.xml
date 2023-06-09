@@ -99,7 +99,7 @@
     <junit.jupiter.version>5.6.3</junit.jupiter.version>
     <testng.version>6.9.9</testng.version>
     <mockito.version>4.0.0</mockito.version>
-    <rocksdb.version>5.15.10</rocksdb.version>
+    <rocksdb.version>8.0.0</rocksdb.version>
     <metrics.core.version>4.2.18</metrics.core.version>
     <jgrapht.version>1.5.1</jgrapht.version>
     <skip.tests>true</skip.tests>

@@ -22,18 +22,18 @@ public class SnapshotId {
     }
 
     private final boolean acquired;
-    private final long snapshotId;
+    private final long id;
 
-    public SnapshotId(boolean acquired, long snapshotId) {
+    public SnapshotId(boolean acquired, long id) {
         this.acquired = acquired;
-        this.snapshotId = snapshotId;
+        this.id = id;
     }
 
     public boolean isAcquired() {
         return acquired;
     }
 
-    public long getSnapshotId() {
-        return snapshotId;
+    public long getId() {
+        return id;
     }
 }

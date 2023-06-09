@@ -20,6 +20,9 @@ target.revision:=0.0.1-SNAPSHOT
 
 QUIET_OPT := --quiet
 
+query:=
+physical:=
+
 build:
 	cd $(CUR_DIR)/.. && \
 		mvn clean install -DskipTests -Drevision=${target.revision} -Pexperimental ${QUIET_OPT} && \
@@ -56,6 +59,14 @@ run:
 	  -Dgraph.store=${graph.store} \
 	  -Dpegasus.hosts=${pegasus.hosts} \
 	  com.alibaba.graphscope.GraphServer
+
+# make physical_plan query='<query in string>' physical='<path to the physical output file>'
+physical_plan:
+	cd $(CUR_DIR) && $(java) \
+		-cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
+		-Djna.library.path=../executor/ir/target/release \
+		-Dgraph.schema=${graph.schema} \
+		com.alibaba.graphscope.common.ir.tools.GraphPlanner "$(query)" "$(physical)"
 
 # start rpc server
 # make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json 

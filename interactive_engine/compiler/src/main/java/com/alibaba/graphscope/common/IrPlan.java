@@ -613,7 +613,8 @@ public class IrPlan implements Closeable {
             }
             if (params != null && meta.getSnapshotId().isAcquired()) {
                 params.addExtraParams(
-                        QueryParams.SNAPSHOT_CONFIG_NAME, String.valueOf(meta.getSnapshotId()));
+                        QueryParams.SNAPSHOT_CONFIG_NAME,
+                        String.valueOf(meta.getSnapshotId().getId()));
             }
         }
         appendInterOpCollection(-1, opCollection);

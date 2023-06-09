@@ -19,6 +19,7 @@ package com.alibaba.graphscope.gremlin.service;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.auth.AuthManager;
@@ -54,27 +55,29 @@ public class IrGremlinServer implements AutoCloseable {
 
     public IrGremlinServer(
             Configs configs,
+            GraphPlanner graphPlanner,
             ChannelFetcher channelFetcher,
             IrMetaQueryCallback metaQueryCallback,
             GraphProperties testGraph) {
         this.configs = configs;
         this.graph = TinkerFactory.createModern();
         this.g = this.graph.traversal(IrCustomizedTraversalSource.class);
-        initProcessor(channelFetcher, metaQueryCallback, testGraph);
+        initProcessor(graphPlanner, channelFetcher, metaQueryCallback, testGraph);
         initAuthentication();
         initGremlinServer();
     }
 
     private void initProcessor(
+            GraphPlanner graphPlanner,
             ChannelFetcher channelFetcher,
             IrMetaQueryCallback metaQueryCallback,
             GraphProperties testGraph) {
         AbstractOpProcessor standardProcessor =
-                new IrStandardOpProcessor(configs, channelFetcher, metaQueryCallback, graph, g);
+                new IrStandardOpProcessor(configs, graphPlanner, channelFetcher, metaQueryCallback, graph, g);
         IrOpLoader.addProcessor(standardProcessor.getName(), standardProcessor);
         AbstractOpProcessor testProcessor =
                 new IrTestOpProcessor(
-                        configs, channelFetcher, metaQueryCallback, graph, g, testGraph);
+                        configs, graphPlanner, channelFetcher, metaQueryCallback, graph, g, testGraph);
         IrOpLoader.addProcessor(testProcessor.getName(), testProcessor);
     }
 

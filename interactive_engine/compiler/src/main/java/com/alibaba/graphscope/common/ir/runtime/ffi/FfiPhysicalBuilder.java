@@ -57,7 +57,7 @@ import org.apache.calcite.rex.RexVariable;
 import java.util.List;
 
 /**
- * build ffi logical plan in ir core by jna invocation
+ * build physical plan from logical plan of a regular query, the physical plan is actually denoted by ir core structure (FFI Pointer)
  */
 public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> {
     private static final IrCoreLibrary LIB = IrCoreLibrary.INSTANCE;

@@ -16,6 +16,18 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
+import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FileLoadType;
+import com.alibaba.graphscope.common.config.PlannerConfig;
+import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
+import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
+import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
+import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
+import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
+import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
+import com.alibaba.graphscope.common.store.IrMeta;
+import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
@@ -36,11 +48,16 @@ import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexBuilder;
+import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.io.File;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * A unified structure to build {@link PlannerInstance} which can further build logical and physical plan from an antlr tree
+ */
 public class GraphPlanner {
     private final Configs graphConfig;
     private final PlannerConfig plannerConfig;
@@ -170,6 +187,25 @@ public class GraphPlanner {
         } else {
             // return HepPlanner with empty rules if optimization is turned off
             return new HepPlanner(HepProgram.builder().build());
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        Configs configs = new Configs("conf/ir.compiler.properties", FileLoadType.RELATIVE_PATH);
+        ExperimentalMetaFetcher metaFetcher = new ExperimentalMetaFetcher(configs);
+        if (args.length < 2 || args[0].isEmpty() || args[1].isEmpty()) {
+            throw new IllegalArgumentException(
+                    "usage: make physical_plan query='<query in string>' physical='<path to the"
+                            + " physical output file>'");
+        }
+        String query = args[0];
+        GraphPlanner planner = new GraphPlanner(configs);
+        Antlr4Parser cypherParser = new CypherAntlr4Parser();
+        PlannerInstance instance =
+                planner.instance(cypherParser.parse(query), metaFetcher.fetch().get());
+        Summary summary = instance.plan();
+        try (PhysicalBuilder<byte[]> physicalBuilder = summary.getPhysicalBuilder()) {
+            FileUtils.writeByteArrayToFile(new File(args[1]), physicalBuilder.build());
         }
     }
 }

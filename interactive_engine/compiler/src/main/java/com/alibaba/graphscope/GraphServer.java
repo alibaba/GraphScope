@@ -49,7 +49,7 @@ public class GraphServer {
         ExecutionClient executionClient = ExecutionClient.Factory.create(configs, channelFetcher);
         GraphPlanner graphPlanner = new GraphPlanner(configs);
         this.gremlinServer =
-                new IrGremlinServer(configs, channelFetcher, metaQueryCallback, testGraph);
+                new IrGremlinServer(configs, graphPlanner, channelFetcher, metaQueryCallback, testGraph);
         this.cypherBootstrapper =
                 new CypherBootstrapper(configs, graphPlanner, metaQueryCallback, executionClient);
     }

@@ -18,13 +18,13 @@ package com.alibaba.graphscope.gremlin.integration.processor;
 
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.GremlinTestResultProcessor;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngine;
-
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
@@ -40,13 +40,12 @@ import org.apache.tinkerpop.gremlin.util.function.ThrowingConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.List;
-
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
+import java.util.Arrays;
+import java.util.List;
 
 public class IrTestOpProcessor extends IrStandardOpProcessor {
     private static final Logger logger = LoggerFactory.getLogger(TraversalOpProcessor.class);
@@ -56,12 +55,13 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
 
     public IrTestOpProcessor(
             Configs configs,
+            GraphPlanner graphPlanner,
             ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
             Graph graph,
             GraphTraversalSource g,
             GraphProperties testGraph) {
-        super(configs, fetcher, metaQueryCallback, graph, g);
+        super(configs, graphPlanner, fetcher, metaQueryCallback, graph, g);
         this.context = new SimpleScriptContext();
         Bindings globalBindings = new SimpleBindings();
         globalBindings.put("g", g);
