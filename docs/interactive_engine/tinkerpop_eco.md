@@ -1,57 +1,25 @@
 # Apache TinkerPop Ecosystem
-[Apache TinkerPop](http://tinkerpop.apache.org/) is an open framework for developing interactive graph applications using the Gremlin query language.
-GIE implements TinkerPop's [Gremlin Server](https://tinkerpop.apache.org/docs/current/reference/#gremlin-server) interface
-so that the system can seamlessly interact with the TinkerPop ecosystem, including development tools such as
-[Gremlin Console] (https://tinkerpop.apache.org/docs/current/reference/#gremlin-console) and language wrappers such as Java and Python.
+[Apache TinkerPop](http://tinkerpop.apache.org/) is an open framework for developing interactive
+graph applications using the Gremlin query language. GIE implements TinkerPop's [Gremlin Server](https://tinkerpop.apache.org/docs/current/reference/#gremlin-server) interface
+so that the system can seamlessly interact with the TinkerPop ecosystem, including client/development tools such as
+[Gremlin Console] (https://tinkerpop.apache.org/docs/current/reference/#gremlin-console) and
+language wrappers such as Java and Python. The following documentations will guide you through using GIE
+for your Tinkerpop applications.
 
-In this documentation, you will be guided through how to seamlessly empower you existing Tinkerpop code
-with the distributed capability of GIE in processing large-scale graph.
+GIE is a system that seamlessly integrates with the [Apache TinkerPop]((http://tinkerpop.apache.org/)) ecosystem,
+which is an open framework for developing interactive graph applications using the gremlin query language.
+By implementing TinkerPop's gremlin [Server]((https://tinkerpop.apache.org/docs/current/reference/#gremlin-server)) interface,
+GIE allows for easy interaction with client/development tools such as gremlin Console and language
+wrappers such as Java and Python. If you're interested in empowering your existing gremlin applications
+with the distributed capability of GIE, the following documentations will guide you through the process.
 
-
-````{panels}
-:header: text-center
-:column: col-lg-12 p-2
-
-```{link-button} tinkerpop_gremlin.html
-:text: Tutorial
-:classes: btn-block stretched-link
+```{toctree} arguments
+---
+caption: Design of Analytical Engine
+maxdepth: 1
+---
+tinkerpop_gremlin
+guide_and_examples
+supported_gremlin_steps
+faqs_for_gie_gremlin_usage
 ```
-^^^^^^^^^^^^^^
-Connect with Tinkerpop's SDK.
-````
-
-````{panels}
-:header: text-center
-:column: col-lg-12 p-2
-
-```{link-button} guide_and_examples.html
-:text: Tutorial
-:classes: btn-block stretched-link
-```
-^^^^^^^^^^^^^^
-Guide and examples of querying with Gremlin.
-````
-
-````{panels}
-:header: text-center
-:column: col-lg-12 p-2
-
-```{link-button} supported_gremlin_steps.html
-:text: Tutorial
-:classes: btn-block stretched-link
-```
-^^^^^^^^^^^^^^
-Guide and examples of querying with Gremlin.
-````
-
-````{panels}
-:header: text-center
-:column: col-lg-12 p-2
-
-```{link-button} faqs_for_gie_gremlin_usage.html
-:text: Tutorial
-:classes: btn-block stretched-link
-```
-^^^^^^^^^^^^^^
-FAQs for GIE Gremlin usage.
-````
