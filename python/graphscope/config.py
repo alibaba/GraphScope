@@ -16,119 +16,123 @@
 # limitations under the License.
 #
 
-""" GraphScope default configuration.
+""" GraphScope configuration manager
 """
 
-from graphscope.version import __is_prerelease__
-from graphscope.version import __version__
 
-registry = "registry.cn-hongkong.aliyuncs.com"
+
+import os
+import yaml
+import argparse
 
 
 class GSConfig(object):
-    # the coordinator endpoint of a pre-launched GraphScope instance.
-    addr = None
+    allowed_config_keys = [
+        'config_file'
+        'addr',
+        'mode',
+        'cluster_type',
+        'k8s_namespace',
+        'k8s_image_registry',
+        'k8s_image_repository',
+        'k8s_image_pull_policy',
+        'k8s_image_pull_secrets',
+        'k8s_coordinator_cpu',
+        'k8s_coordinator_mem',
+        'etcd_addrs',
+        'etcd_listening_client_port',
+        'etcd_listening_peer_port',
+        'k8s_vineyard_image',
+        'k8s_vineyard_deployment',
+        'k8s_vineyard_cpu',
+        'k8s_vineyard_mem',
+        'vineyard_shared_mem',
+        'k8s_engine_cpu',
+        'k8s_engine_mem',
+        'mars_worker_cpu',
+        'mars_worker_mem',
+        'mars_scheduler_cpu',
+        'mars_scheduler_mem',
+        'k8s_coordinator_pod_node_selector',
+        'k8s_engine_pod_node_selector',
+        'enabled_engines',
+        'with_mars',
+        'with_dataset',
+        'k8s_volumes',
+        'k8s_service_type',
+        'preemptive',
+        'k8s_deploy_mode',
+        'k8s_waiting_for_delete',
+        'num_workers',
+        'show_log',
+        'log_level',
+        'timeout_seconds',
+        'dangling_timeout_seconds',
+        'dataset_download_retries',
+    ]
+    def __init__(self, default_config_file = 'default.yml'):
+        self._conf = {}
+        self._parser = argparse.ArgumentParser()
+        for key in self.allowed_config_keys:
+            self._parser.add_argument(f'--{key}', dest=key.lower())
+        self._args, _ = self._parser.parse_known_args()
+        self._load_default_config(default_config_file)
+        self._override_with_env_vars()
+        self._override_with_cmd_args()
 
-    # "eager" or "lazy", defaults to "eager"
-    mode = "eager"
+    def _load_default_config(self, default_config_file='default.yml'):
+        override_config_file = os.environ.get('GS_CONFIG_FILE', None) or getattr(self._args, 'config_file', None)
+        default_config_file = override_config_file if type(override_config_file) is str else default_config_file
 
-    # "k8s" or "hosts"
-    cluster_type = "k8s"
+        try:
+            with open(default_config_file, 'r') as f:
+                default_config = yaml.safe_load(f)
+        except FileNotFoundError:
+            print(f"Error: {default_config_file} not found.")
+            return
+        except yaml.YAMLError as e:
+            print(f"Error: Failed to parse YAML file {default_config_file}. {e}")
+            return
 
-    k8s_namespace = None
+        for key in self.allowed_config_keys:
+            if key in default_config:
+                self[key] = str(default_config[key])
 
-    # k8s image information
-    # GraphScope's component has a fixed name, use registry, repository and tag to
-    # uniquely identify the image. For example, the coordinator image would be
-    # ${registry}/${repository}/coordinator:${tag}
-    # The image names of all major components are:
-    #   - coordinator: The coordinator of GraphScope instance.
-    #   - analytical: The analytical engine of GraphScope instance.
-    #   - interactive: The interactive engine of GraphScope instance.
-    #   - learning: The learning engine of GraphScope instance.
-    # These are utility components for ease of use.
-    #   - dataset: A dataset container with example datasets
-    #   - jupyter: A jupyter notebook container with GraphScope client installed.
-    k8s_image_registry = "registry.cn-hongkong.aliyuncs.com"
-    k8s_image_repository = "graphscope"
-    k8s_image_tag = __version__
+    def _override_with_env_vars(self):
+        for key in self.allowed_config_keys:
+            env_var = 'GS_' + key.upper()
+            if env_var in os.environ:
+                self[key] = os.environ[env_var]
 
-    # image pull configuration
-    k8s_image_pull_policy = "IfNotPresent"
-    k8s_image_pull_secrets = []
+    def _override_with_cmd_args(self):
+        for key in self.allowed_config_keys:
+            if getattr(self._args, key.lower()) is not None:
+                self[key] = str(getattr(self._args, key.lower()))
 
-    # coordinator resource configuration
-    k8s_coordinator_cpu = 0.5
-    k8s_coordinator_mem = "512Mi"
-
-    # etcd resource configuration
-    etcd_addrs = None
-    etcd_listening_client_port = 2379
-    etcd_listening_peer_port = 2380
-
-    # vineyard resource configuration
-    # image for vineyard container
-    k8s_vineyard_image = "vineyardcloudnative/vineyardd:latest"
-    k8s_vineyard_deployment = None
-    k8s_vineyard_cpu = 0.5
-    k8s_vineyard_mem = "512Mi"
-
-    # the limits for vineyard shared memory, defaults to 4Gi for kubernetes
-    # and half of the total memory for local sessions.
-    vineyard_shared_mem = "4Gi"
-
-    try:
-        import psutil
-
-        _local_vineyard_shared_mem = psutil.virtual_memory().total // 2
-    except:  # noqa: E722, pylint: disable=bare-except
-        _local_vineyard_shared_mem = vineyard_shared_mem
-
-    # engine resource configuration
-    k8s_engine_cpu = 0.2
-    k8s_engine_mem = "1Gi"
-
-    # mars resource configuration
-    mars_worker_cpu = 0.2
-    mars_worker_mem = "4Mi"
-    mars_scheduler_cpu = 0.2
-    mars_scheduler_mem = "2Mi"
-
-    # the node selector can be a dict, see also: https://tinyurl.com/3nx6k7ph
-    k8s_coordinator_pod_node_selector = None
-    k8s_engine_pod_node_selector = None
-
-    # Enabled engines, default to all 3 engines
-    # Available options: analytical, analytical-java, interactive, learning
-    enabled_engines = "analytical,interactive,learning"
-
-    # launch graphscope with mars
-    with_mars = False
-    # Demo dataset related
-    with_dataset = False
-
-    k8s_volumes = {}
-
-    k8s_service_type = "NodePort"
-
-    # support resource preemption or resource guarantee
-    preemptive = True
-
-    # the deploy mode of engines on the kubernetes cluster, default to eager
-    # eager: create all engine pods at once
-    # lazy: create engine pods when called
-    k8s_deploy_mode = "eager"
-
-    k8s_waiting_for_delete = False
-    num_workers = 2
-    show_log = False
-    log_level = "INFO"
-
-    timeout_seconds = 600
-
-    # kill GraphScope instance after seconds of client disconnect
-    # disable dangling check by setting -1.
-    dangling_timeout_seconds = 600
-
-    # download_retries
-    dataset_download_retries = 3
+    def dump_to_file(self, filename):
+        with open(filename, 'w') as f:
+            yaml.dump(self._conf, f)
+    
+    def __getitem__(self, key):
+        if key in self._conf:
+            return self._conf[key]
+        else:
+            return None
+        
+    def __getattr__(self, key):
+        if key in self._conf:
+            return self._conf[key]
+        else:
+            return None
+        
+    def __setitem__(self, key, value):
+        if key in self.allowed_config_keys:
+            self._conf[key] = value
+        else:
+            raise KeyError(f'Invalid config key {key}')
+    
+    def __iter__(self):
+        return iter(self._conf)
+    
+    def __contains__(self, key):
+        return key in self._conf
