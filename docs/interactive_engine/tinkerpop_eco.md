@@ -14,5 +14,5 @@ maxdepth: 2
 tinkerpop_gremlin
 guide_and_examples
 supported_gremlin_steps
-faqs_for_gie_gremlin_usage
+faq
 ```
