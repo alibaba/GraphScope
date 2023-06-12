@@ -253,7 +253,7 @@ impl FilterMapFuncGen for pb::GetV {
                     start_tag: self.tag,
                     opt,
                     alias: self.alias,
-                    labels: tables_condition,
+                    query_labels: tables_condition,
                 };
                 if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
                     debug!("Runtime GetVertexOperator: {:?}", get_vertex_operator);

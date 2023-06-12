@@ -67,9 +67,13 @@ impl VertexOrEdge {
 
 #[derive(Clone, Debug)]
 pub enum GraphPath {
+    /// Arbitrary path, which may contain both vertices and edges, or only vertices.
     AllPath(Vec<VertexOrEdge>),
+    /// Simple path, which may contains both vertices and edges, or only vertices.
     SimpleAllPath(Vec<VertexOrEdge>),
+    /// Arbitrary path with only end vertices preserved, which may contain both vertices and edges, or only vertices.
     EndV((VertexOrEdge, usize)),
+    /// Simple path with only end vertex preserved, which may contains both vertices and edges, or only vertices.
     SimpleEndV((VertexOrEdge, Vec<ID>)),
 }
 
