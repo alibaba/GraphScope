@@ -97,7 +97,7 @@ public class PathExpandStep extends ExpandFusionStep<Vertex> {
                                 + " insensitive)");
             }
         } else if (key.equals("ResultOpt")) {
-            if (value.equals("AllV") || value.equals("EndV") || value.equals("AllVe")) {
+            if (value.equals("AllV") || value.equals("EndV") || value.equals("AllVE")) {
                 this.resultOpt = ResultOpt.valueOf(value);
             } else {
                 throw new ExtendGremlinStepException(
