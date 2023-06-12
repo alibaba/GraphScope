@@ -355,7 +355,7 @@ fn build_and_try_fuse_get_v(builder: &mut JobBuilder, mut get_v: pb::GetV) -> Ir
             }
         } else if let physical_pb::physical_opr::operator::OpKind::Path(ref _path) = op_kind {
             // make opt of getV after path expand as End.
-            get_v.opt = physical_pb::get_v::VOpt::End as i32;
+            get_v.opt = unsafe { std::mem::transmute(physical_pb::get_v::VOpt::End) };
         }
     }
     builder.get_v(get_v);
