@@ -1,7 +1,7 @@
 #!/bin/bash
 base_dir=$(cd $(dirname $0); pwd)
 # clean service first
-ps -ef | grep "com.alibaba.graphscope.gremlin.service.GraphServiceMain" | awk '{print $2}' | xargs kill -9 || true
+ps -ef | grep "com.alibaba.graphscope.GraphServer" | awk '{print $2}' | xargs kill -9 || true
 ps -ef | grep "start_rpc_server" |  awk '{print $2}' | xargs kill -9
 sleep 3
 # start engine service and load ldbc graph
@@ -17,7 +17,7 @@ sleep 5
 cd ${base_dir} && make pattern_test
 exit_code=$?
 # clean service
-ps -ef | grep "com.alibaba.graphscope.gremlin.service.GraphServiceMain" | awk '{print $2}' | xargs kill -9 || true
+ps -ef | grep "com.alibaba.graphscope.GraphServer" | awk '{print $2}' | xargs kill -9 || true
 ps -ef | grep "start_rpc_server" | awk '{print $2}' | xargs kill -9
 # report test result
 if [ $exit_code -ne 0 ]; then
