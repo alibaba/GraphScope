@@ -633,26 +633,16 @@ mod test {
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<String>> = vec![];
         let mut expected_result_paths: Vec<Vec<String>> = vec![
-            // v1, e[1->2], v2
-            vec!["1", "1, 2", "2"],
-            // v1, e[1->4], v4
-            vec!["1", "1, 4", "4"],
-            // v2, e[1->2], v1
-            vec!["2", "1, 2", "1"],
-            // v4, e[1->4], v1
-            vec!["4", "1, 4", "1"],
-            // v1, e[1->2], v2, e[1->2], v1
-            vec!["1", "1, 2", "2", "1, 2", "1"],
-            // v1, e[1->4], v4, e[1->4], v1
-            vec!["1", "1, 4", "4", "1, 4", "1"],
-            // v2, e[1->2], v1, e[1->2], v2
-            vec!["2", "1, 2", "1", "1, 2", "2"],
-            // v2, e[1->2], v1, e[1->4], v4
-            vec!["2", "1, 2", "1", "1, 4", "4"],
-            // v4, e[1->4], v1, e[1->2], v2
-            vec!["4", "1, 4", "1", "1, 2", "2"],
-            // v4, e[1->4], v1, e[1->4], v4
-            vec!["4", "1, 4", "1", "1, 4", "4"],
+            vec!["v1", "e[1->2]", "v2"],
+            vec!["v1", "e[1->4]", "v4"],
+            vec!["v2", "e[1->2]", "v1"],
+            vec!["v4", "e[1->4]", "v1"],
+            vec!["v1", "e[1->2]", "v2", "e[1->2]", "v1"],
+            vec!["v1", "e[1->4]", "v4", "e[1->4]", "v1"],
+            vec!["v2", "e[1->2]", "v1", "e[1->2]", "v2"],
+            vec!["v2", "e[1->2]", "v1", "e[1->4]", "v4"],
+            vec!["v4", "e[1->4]", "v1", "e[1->2]", "v2"],
+            vec!["v4", "e[1->4]", "v1", "e[1->4]", "v4"],
         ]
         .into_iter()
         .map(|ids| {
@@ -670,9 +660,11 @@ mod test {
                         let mut path_ids = vec![];
                         for v_or_e in path_collect {
                             match v_or_e {
-                                graph_proxy::apis::VertexOrEdge::V(v) => path_ids.push(v.id().to_string()),
+                                graph_proxy::apis::VertexOrEdge::V(v) => {
+                                    path_ids.push(format!("v{}", v.id()))
+                                }
                                 graph_proxy::apis::VertexOrEdge::E(e) => {
-                                    path_ids.push(format!("{}, {}", e.src_id, e.dst_id));
+                                    path_ids.push(format!("e[{}->{}]", e.src_id, e.dst_id));
                                 }
                             }
                         }
@@ -706,34 +698,20 @@ mod test {
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<String>> = vec![];
         let mut expected_result_paths: Vec<Vec<String>> = vec![
-            // v1
-            vec!["1"],
-            // v2
-            vec!["2"],
-            // v4
-            vec!["4"],
-            // v6
-            vec!["6"],
-            // v1, e[1->2], v2
-            vec!["1", "1, 2", "2"],
-            // v1, e[1->4], v4
-            vec!["1", "1, 4", "4"],
-            // v2, e[1->2], v1
-            vec!["2", "1, 2", "1"],
-            // v4, e[1->4], v1
-            vec!["4", "1, 4", "1"],
-            // v1, e[1->2], v2, e[1->2], v1
-            vec!["1", "1, 2", "2", "1, 2", "1"],
-            // v1, e[1->4], v4, e[1->4], v1
-            vec!["1", "1, 4", "4", "1, 4", "1"],
-            // v2, e[1->2], v1, e[1->2], v2
-            vec!["2", "1, 2", "1", "1, 2", "2"],
-            // v2, e[1->2], v1, e[1->4], v4
-            vec!["2", "1, 2", "1", "1, 4", "4"],
-            // v4, e[1->4], v1, e[1->2], v2
-            vec!["4", "1, 4", "1", "1, 2", "2"],
-            // v4, e[1->4], v1, e[1->4], v4
-            vec!["4", "1, 4", "1", "1, 4", "4"],
+            vec!["v1"],
+            vec!["v2"],
+            vec!["v4"],
+            vec!["v6"],
+            vec!["v1", "e[1->2]", "v2"],
+            vec!["v1", "e[1->4]", "v4"],
+            vec!["v2", "e[1->2]", "v1"],
+            vec!["v4", "e[1->4]", "v1"],
+            vec!["v1", "e[1->2]", "v2", "e[1->2]", "v1"],
+            vec!["v1", "e[1->4]", "v4", "e[1->4]", "v1"],
+            vec!["v2", "e[1->2]", "v1", "e[1->2]", "v2"],
+            vec!["v2", "e[1->2]", "v1", "e[1->4]", "v4"],
+            vec!["v4", "e[1->4]", "v1", "e[1->2]", "v2"],
+            vec!["v4", "e[1->4]", "v1", "e[1->4]", "v4"],
         ]
         .into_iter()
         .map(|ids| {
@@ -751,9 +729,11 @@ mod test {
                         let mut path_ids = vec![];
                         for v_or_e in path_collect {
                             match v_or_e {
-                                graph_proxy::apis::VertexOrEdge::V(v) => path_ids.push(v.id().to_string()),
+                                graph_proxy::apis::VertexOrEdge::V(v) => {
+                                    path_ids.push(format!("v{}", v.id()));
+                                }
                                 graph_proxy::apis::VertexOrEdge::E(e) => {
-                                    path_ids.push(format!("{}, {}", e.src_id, e.dst_id));
+                                    path_ids.push(format!("e[{}->{}]", e.src_id, e.dst_id));
                                 }
                             }
                         }
@@ -787,18 +767,12 @@ mod test {
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<String>> = vec![];
         let mut expected_result_paths: Vec<Vec<String>> = vec![
-            // v1, e[1->2], v2, e[1->2], v1
-            vec!["1", "1, 2", "2", "1, 2", "1"],
-            // v1, e[1->4], v4, e[1->4], v1
-            vec!["1", "1, 4", "4", "1, 4", "1"],
-            // v2, e[1->2], v1, e[1->2], v2
-            vec!["2", "1, 2", "1", "1, 2", "2"],
-            // v2, e[1->2], v1, e[1->4], v4
-            vec!["2", "1, 2", "1", "1, 4", "4"],
-            // v4, e[1->4], v1, e[1->2], v2
-            vec!["4", "1, 4", "1", "1, 2", "2"],
-            // v4, e[1->4], v1, e[1->4], v4
-            vec!["4", "1, 4", "1", "1, 4", "4"],
+            vec!["v1", "e[1->2]", "v2", "e[1->2]", "v1"],
+            vec!["v1", "e[1->4]", "v4", "e[1->4]", "v1"],
+            vec!["v2", "e[1->2]", "v1", "e[1->2]", "v2"],
+            vec!["v2", "e[1->2]", "v1", "e[1->4]", "v4"],
+            vec!["v4", "e[1->4]", "v1", "e[1->2]", "v2"],
+            vec!["v4", "e[1->4]", "v1", "e[1->4]", "v4"],
         ]
         .into_iter()
         .map(|ids| {
@@ -816,9 +790,11 @@ mod test {
                         let mut path_ids = vec![];
                         for v_or_e in path_collect {
                             match v_or_e {
-                                graph_proxy::apis::VertexOrEdge::V(v) => path_ids.push(v.id().to_string()),
+                                graph_proxy::apis::VertexOrEdge::V(v) => {
+                                    path_ids.push(format!("v{}", v.id()));
+                                }
                                 graph_proxy::apis::VertexOrEdge::E(e) => {
-                                    path_ids.push(format!("{}, {}", e.src_id, e.dst_id));
+                                    path_ids.push(format!("e[{}->{}]", e.src_id, e.dst_id));
                                 }
                             }
                         }

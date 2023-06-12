@@ -33,17 +33,17 @@ struct GetVertexOperator {
     start_tag: Option<KeyId>,
     opt: VOpt,
     alias: Option<KeyId>,
-    labels: Vec<LabelId>,
+    query_labels: Vec<LabelId>,
 }
 
 impl GetVertexOperator {
     fn contains_label(&self, label: Option<&LabelId>) -> FnExecResult<bool> {
-        if self.labels.is_empty() {
+        if self.query_labels.is_empty() {
             // no label constraint
             Ok(true)
         } else {
             if let Some(label) = label {
-                Ok(self.labels.contains(label))
+                Ok(self.query_labels.contains(label))
             } else {
                 Err(FnExecError::UnExpectedData(format!(
                     "Label is None in GetVertexOperator, with Opr {:?}",
