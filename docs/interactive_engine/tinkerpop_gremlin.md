@@ -1,14 +1,12 @@
-This document will provide you with step-by-step guidance on how to connect your applications to the GIE's
+# GIE For Gremlin
+This document will provide you with step-by-step guidance on how to connect your gremlin applications to the GIE's
 FrontEnd service, which offers functionalities similar to the official Tinkerpop service.
 
-# Obtaining Endpoint
-
-All you need to connect with existing Tinkerpop's ecosystem is to obtain the GIE Frontend service endpoint.
-How to do that?
+Your first step is to obtain the endpoint of GIE Frontend service:
 - Follow the [instruction](./deployment.md#deploy-your-first-gie-service) while deploying GIE in a K8s cluster,
 - Follow the [instruction](./dev_and_test.md#manually-start-the-gie-services) while starting GIE on a local machine.
 
-# Connecting Gremlin within Python
+## Connecting Gremlin within Python
 
 GIE makes it easy to connect to a loaded graph with Tinkerpop's [Gremlin-Python](https://pypi.org/project/gremlinpython/).
 
@@ -63,7 +61,7 @@ resultIterationBatchSize: 64
 
 ```
 
-# Connecting Gremlin within Java
+## Connecting Gremlin within Java
 See [Gremlin-Java](https://tinkerpop.apache.org/docs/current/reference/#gremlin-java) for connecting Gremlin
 within the Java language.
 
@@ -83,7 +81,7 @@ client.close();
 cluster.close();
 ```
 
-# Gremlin Console
+## Gremlin Console
 1. Download Gremlin console and unpack to your local directory.
    ```bash
    # if the given version (3.6.4) is not found, try to access https://dlcdn.apache.org to
