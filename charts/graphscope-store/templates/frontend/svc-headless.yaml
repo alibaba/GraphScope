@@ -23,11 +23,5 @@ spec:
     - name: port
       port: {{ .Values.frontend.service.port }}
       targetPort: port
-    - name: gaia-rpc
-      port: {{ .Values.frontend.service.gaiaRpc }}
-      targetPort: gaia-rpc
-    - name: gaia-engine
-      port: {{ .Values.frontend.service.gaiaEngine }}
-      targetPort: gaia-engine
   selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: frontend

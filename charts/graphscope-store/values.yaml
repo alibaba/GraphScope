@@ -82,7 +82,7 @@ store:
     type: ClusterIP
     ## Service port
     ##
-    engine: 55556
+    port: 55555
     gaiaRpc: 60000
     gaiaEngine: 60001
 
@@ -138,10 +138,6 @@ frontend:
     ## Internal port for communication between components.
     ##
     port: 55555
-
-    gaiaRpc: 60000
-
-    gaiaEngine: 60001
 
     ## Specify the nodePort value for the LoadBalancer and NodePort service types.
     ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
@@ -213,8 +209,6 @@ ingestor:
   service:
     type: ClusterIP
     port: 55555
-    gaiaRpc: 60000
-    gaiaEngine: 60001
     annotations: {}
 
   ## @param hostAliases pods host aliases
@@ -277,8 +271,6 @@ coordinator:
   service:
     type: ClusterIP
     port: 55555
-    gaiaRpc: 60000
-    gaiaEngine: 60001
     annotations: {}
 
   ## @param hostAliases pods host aliases

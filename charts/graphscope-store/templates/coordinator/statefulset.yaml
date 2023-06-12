@@ -128,6 +128,9 @@ spec:
               value: {{ $kafkaFullname}}-headless.{{ $releaseNamespace }}
             - name: KAFKA_SERVERS
               value: {{ include "graphscope-store.kafka.brokerlist" . }}
+          ports:
+            - name: port
+              containerPort: 55555
           {{- if .Values.coordinator.resources }}
           resources: {{- toYaml .Values.coordinator.resources | nindent 12 }}
           {{- end }}
