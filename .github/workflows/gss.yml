@@ -84,6 +84,7 @@ jobs:
       run: |
         . ${HOME}/.graphscope_env
         cd interactive_engine/groot-server
+        sleep infinity
         mvn test -P gremlin-test
 
     - name: Build GraphScope Store
