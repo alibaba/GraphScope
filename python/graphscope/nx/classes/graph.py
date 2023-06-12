@@ -20,7 +20,6 @@
 #
 
 import copy
-import threading
 
 import orjson as json
 from networkx import freeze
@@ -369,6 +368,12 @@ class Graph(_GraphBase):
         self._saved_signature = self.signature
         self._is_client_view = False
 
+        # statically create the unload op
+        if self.op is None:
+            self._unload_op = None
+        else:
+            self._unload_op = dag_utils.unload_graph(self)
+
     def _is_gs_graph(self, incoming_graph_data):
         return (
             hasattr(incoming_graph_data, "graph_type")
@@ -376,22 +381,16 @@ class Graph(_GraphBase):
         )
 
     def __del__(self):
-        if self._session.info["status"] != "active" or self._key is None:
+        if self._key is None or self._session.disconnected:
             return
 
-        # use thread to avoid dead-lock
-        def _del(graph):
-            # cancel cache fetch future
-            if graph.cache.enable_iter_cache:
-                graph.cache.shutdown()
-            op = dag_utils.unload_graph(graph)
-            op.eval()
-            graph._key = None
+        if self.cache.enable_iter_cache:
+            self.cache.shutdown()
+        self.cache.shutdown_executor()
 
-        if not self._is_client_view:
-            t = threading.Thread(target=_del, args=(self,))
-            t.daemon = True
-            t.start()
+        if not self._is_client_view and self._unload_op is not None:
+            self._unload_op.eval()
+        self._key = None
 
     @property
     def op(self):

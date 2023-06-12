@@ -787,6 +787,10 @@ class Session(object):
     def closed(self):
         return self._closed
 
+    @property
+    def disconnected(self):
+        return self._grpc_client is None or self._disconnected
+
     def eager(self):
         return self._config_params["mode"] == "eager"
 

@@ -1,7 +1,0 @@
-<map id="engines/graph_db/database/transaction_utils.h" name="engines/graph_db/database/transaction_utils.h">
-<area shape="rect" id="node1" title=" " alt="" coords="391,5,592,47"/>
-<area shape="rect" id="node2" href="$insert__transaction_8cc.html" title=" " alt="" coords="5,95,207,136"/>
-<area shape="rect" id="node3" href="$single__edge__insert__transaction_8cc.html" title=" " alt="" coords="231,95,477,136"/>
-<area shape="rect" id="node4" href="$single__vertex__insert__transaction_8cc.html" title=" " alt="" coords="502,95,758,136"/>
-<area shape="rect" id="node5" href="$update__transaction_8cc.html" title=" " alt="" coords="783,95,984,136"/>
-</map>

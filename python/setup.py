@@ -193,6 +193,7 @@ def parsed_package_data():
     return {
         "graphscope": [
             "VERSION",
+            "proto/*.pyi",
         ],
     }
 
