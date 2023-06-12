@@ -128,6 +128,13 @@ spec:
               value: {{ $kafkaFullname}}-headless.{{ $releaseNamespace }}
             - name: KAFKA_SERVERS
               value: {{ include "graphscope-store.kafka.brokerlist" . }}
+          ports:
+            - name: port
+              containerPort: 55555
+            - name: gaia-rpc
+              containerPort: 60000
+            - name: gaia-engine
+              containerPort: 60001
           {{- if .Values.store.resources }}
           resources: {{- toYaml .Values.store.resources | nindent 12 }}
           {{- end }}

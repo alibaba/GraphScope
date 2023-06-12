@@ -292,6 +292,9 @@ class GraphDAGNode(DAGNode, GraphInterface):
         self._resolve_op(incoming_data)
         self._session.dag.add_op(self._op)
 
+        # statically create the unload op
+        self._unload_op = dag_utils.unload_graph(self)
+
     @property
     def v_labels(self):
         return self._v_labels
@@ -714,8 +717,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         Returns:
             :class:`graphscope.framework.graph.UnloadedGraph`: Evaluated in eager mode.
         """
-        op = dag_utils.unload_graph(self)
-        return UnloadedGraph(self._session, op)
+        return UnloadedGraph(self._session, self._unload_op)
 
     def project(
         self,
