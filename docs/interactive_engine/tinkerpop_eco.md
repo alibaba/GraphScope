@@ -15,8 +15,8 @@ with the distributed capability of GIE, the following documentations will guide 
 
 ```{toctree} arguments
 ---
-caption: Design of Analytical Engine
-maxdepth: 1
+caption: Apache Tinkerpop Ecosystem
+maxdepth: 2
 ---
 tinkerpop_gremlin
 guide_and_examples
