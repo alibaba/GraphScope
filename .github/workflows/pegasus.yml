@@ -1,6 +1,7 @@
 name: GraphScope Pegasus CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - gaia-x
