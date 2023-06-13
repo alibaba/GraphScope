@@ -134,7 +134,7 @@ public class PathExpandConfig {
                             (GraphOptCluster) innerBuilder.getCluster(),
                             innerBuilder.getRelOptSchema());
             this.pathOpt = GraphOpt.PathExpandPath.ARBITRARY;
-            this.resultOpt = GraphOpt.PathExpandResult.EndV;
+            this.resultOpt = GraphOpt.PathExpandResult.END_V;
         }
 
         public Builder expand(ExpandConfig config) {
