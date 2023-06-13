@@ -38,12 +38,15 @@ import org.neo4j.graphdb.factory.module.edition.AbstractEditionModule;
 import org.neo4j.graphdb.factory.module.edition.CommunityEditionModule;
 import org.neo4j.kernel.impl.factory.DbmsInfo;
 import org.neo4j.server.CommunityBootstrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
 public class CypherBootstrapper extends CommunityBootstrapper {
+    private static final Logger logger = LoggerFactory.getLogger(CypherBootstrapper.class);
     private final Dependencies externalDependencies;
     private final List<Class<?>> externalClassTypes;
     private final ExecutionClient client;
@@ -76,7 +79,7 @@ public class CypherBootstrapper extends CommunityBootstrapper {
                                     try {
                                         client.close();
                                     } catch (Exception e) {
-                                        e.printStackTrace();
+                                        logger.error("close client error", e);
                                     }
                                 }));
         dependencies.dependencies(externalDependencies);
