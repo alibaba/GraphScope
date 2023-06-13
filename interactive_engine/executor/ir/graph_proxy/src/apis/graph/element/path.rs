@@ -20,8 +20,7 @@ use std::hash::{Hash, Hasher};
 use ahash::HashMap;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::ParsePbError;
-use ir_common::generated::algebra::path_expand::PathOpt;
-use ir_common::generated::algebra::path_expand::ResultOpt;
+use ir_common::generated::algebra as pb;
 use ir_common::generated::results as result_pb;
 use ir_common::{LabelId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
@@ -78,19 +77,21 @@ pub enum GraphPath {
 }
 
 impl GraphPath {
-    pub fn new<E: Into<VertexOrEdge>>(entry: E, path_opt: PathOpt, result_opt: ResultOpt) -> Self {
+    pub fn new<E: Into<VertexOrEdge>>(
+        entry: E, path_opt: pb::path_expand::PathOpt, result_opt: pb::path_expand::ResultOpt,
+    ) -> Self {
         match result_opt {
-            ResultOpt::EndV => match path_opt {
-                PathOpt::Arbitrary => GraphPath::EndV((entry.into(), 1)),
-                PathOpt::Simple => {
+            pb::path_expand::ResultOpt::EndV => match path_opt {
+                pb::path_expand::PathOpt::Arbitrary => GraphPath::EndV((entry.into(), 1)),
+                pb::path_expand::PathOpt::Simple => {
                     let entry = entry.into();
                     let id = entry.id();
                     GraphPath::SimpleEndV((entry, vec![id]))
                 }
             },
-            ResultOpt::AllV | ResultOpt::AllVe => match path_opt {
-                PathOpt::Arbitrary => GraphPath::AllPath(vec![entry.into()]),
-                PathOpt::Simple => GraphPath::SimpleAllPath(vec![entry.into()]),
+            pb::path_expand::ResultOpt::AllV | pb::path_expand::ResultOpt::AllVE => match path_opt {
+                pb::path_expand::PathOpt::Arbitrary => GraphPath::AllPath(vec![entry.into()]),
+                pb::path_expand::PathOpt::Simple => GraphPath::SimpleAllPath(vec![entry.into()]),
             },
         }
     }

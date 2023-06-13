@@ -552,7 +552,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     let mut base_expand_plan = vec![];
                     // process edge_expand, with opt = ExpandV given by physical plan.
                     if let Some(edge_expand) = base.edge_expand.take() {
-                        if pb::path_expand::ResultOpt::AllVe
+                        if pb::path_expand::ResultOpt::AllVE
                             == unsafe { std::mem::transmute(path.result_opt) }
                         {
                             // the case when base expand needs to expand edges + vertices
