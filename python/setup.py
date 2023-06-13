@@ -326,6 +326,11 @@ setup(
         "Source": "https://github.com/alibaba/GraphScope",
         "Tracker": "https://github.com/alibaba/GraphScope/issues",
     },
+    entry_points={
+        "console_scripts": [
+            "gsctl = graphscope.gsctl.gsctl:cli",
+        ],
+    },
 )
 
 if os.name == "nt":
