@@ -31,14 +31,14 @@ def run_shell_cmd(cmd, workingdir):
         print(line.rstrip())
 
 
-class GSUtil(object):
+class GSCtl(object):
     """GraphScope command-line utility
 
     This is a context for the utility.
     """
 
-    def __init__(self, home=None, debug=False):
-        self.home = os.path.abspath(home or ".")
+    def __init__(self, repo_home=None, debug=False):
+        self.home = os.path.abspath("../")
         self.debug = debug
 
 
@@ -46,12 +46,12 @@ class GSUtil(object):
 @click.option(
     "--repo-home",
     envvar="REPO_HOME",
-    default=".",
+    type=click.Path(),
     help="GraphScope code repo location.",
 )
 @click.pass_context
 def cli(ctx, repo_home):
-    ctx.obj = GSUtil(repo_home)
+    ctx.obj = GSCtl(repo_home)
 
 
 @click.command()
@@ -202,11 +202,13 @@ def make_image():
 
 
 @click.command()
-def test():
+@click.pass_obj
+def test(repo):
     """Trigger tests on built artifacts.
 
     \f
     TODO: fulfill this."""
+    click.secho(f"repo.home = {repo.home}", fg="green")
     click.echo("test")
 
 

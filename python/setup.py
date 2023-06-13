@@ -23,9 +23,7 @@ import subprocess
 import sys
 from distutils.cmd import Command
 
-from setuptools import Extension
-from setuptools import find_packages
-from setuptools import setup
+from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
@@ -325,6 +323,11 @@ setup(
         "Documentation": "https://graphscope.io/docs",
         "Source": "https://github.com/alibaba/GraphScope",
         "Tracker": "https://github.com/alibaba/GraphScope/issues",
+    },
+    entry_points={
+        "console_scripts": [
+            "gsctl = graphscope.gsctl.gsctl:cli",
+        ],
     },
 )
 
