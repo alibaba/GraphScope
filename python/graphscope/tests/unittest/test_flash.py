@@ -49,6 +49,7 @@ def test_flash_triangle_counting_on_projected_graph(arrow_property_graph_directe
         )
         ctx = flash.triangle_counting(g)
 
+
 def test_flash_bfs_on_projected_graph(ldbc_graph):
     g = ldbc_graph.project(
         vertices={"person": []},
@@ -59,6 +60,7 @@ def test_flash_bfs_on_projected_graph(ldbc_graph):
         by=["id"]
     )
     print(df)
+
 
 def test_flash_cc_on_projected_graph(ldbc_graph):
     g = ldbc_graph.project(
