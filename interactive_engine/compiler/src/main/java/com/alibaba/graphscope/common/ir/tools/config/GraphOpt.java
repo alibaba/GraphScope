@@ -49,7 +49,8 @@ public abstract class GraphOpt {
     }
 
     public enum PathExpandResult {
-        EndV,
-        AllV
+        END_V,
+        ALL_V,
+        ALL_V_E
     }
 }
