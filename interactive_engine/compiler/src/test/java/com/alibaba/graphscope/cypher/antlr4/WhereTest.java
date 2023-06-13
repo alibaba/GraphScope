@@ -75,15 +75,21 @@ public class WhereTest {
     @Test
     public void where_4_test() {
         RelNode where =
-                Utils.eval("Match (n:person)-[]-(m:person) Where n.name = $name and m.name = $name Return n")
+                Utils.eval(
+                                "Match (n:person)-[]-(m:person) Where n.name = $name and m.name ="
+                                    + " $name Return n")
                         .build();
         Assert.assertEquals(
-                "GraphLogicalProject(n=[n], isAppend=[false])\n" +
-                        "  LogicalFilter(condition=[AND(=(n.name, ?0), =(m.name, ?0))])\n" +
-                        "    GraphLogicalSingleMatch(input=[null], sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[m], opt=[OTHER])\n" +
-                        "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}], alias=[DEFAULT], opt=[BOTH])\n" +
-                        "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[n], opt=[VERTEX])\n" +
-                        "], matchOpt=[INNER])",
+                "GraphLogicalProject(n=[n], isAppend=[false])\n"
+                    + "  LogicalFilter(condition=[AND(=(n.name, ?0), =(m.name, ?0))])\n"
+                    + "    GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[m], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[n], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
                 where.explain().trim());
     }
 }
