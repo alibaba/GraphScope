@@ -54,7 +54,7 @@ def test_flash_bfs_on_projected_graph(ldbc_graph):
         vertices={"person": []},
         edges={"knows": []},
     )
-    bfs_context = flash.bfs(g, source = 1)
+    bfs_context = flash.bfs(g, source=65)
     df = bfs_context.to_dataframe(selector={"id": "v.id", "dist": "r"}) \
         .sort_values(by=['id'])
     print(df)
@@ -65,6 +65,6 @@ def test_flash_cc_on_projected_graph(ldbc_graph):
         edges={"knows": []},
     )
     cc_context = flash.cc(g)
-    df = cc_context.to_dataframe(selector={"id": "v.id", "dist": "r"}) \
+    df = cc_context.to_dataframe(selector={"id": "v.id", "cc": "r"}) \
         .sort_values(by=['id'])
     print(df)
