@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">How to Deploy GraphScope by Helm on Kubernetes</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2023-06-11">11 Jun 2023</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2023-06-11">11 Jun 2023</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">How to Deploy GraphScope by Helm on Kubernetes</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2023-06-11-title-picture.jpg" alt="Deploy-GraphScope-by-helm" /></p>
+
+<p>This article describes how to deploy and use GraphScope clusters using the Helm tool.
+Helm  is a software package management tool in the K8s ecosystem, similar to Ubuntu’s apt or Python’s pip, designed for managing K8s application resources. Using Helm, you can easily package, distribute, install, upgrade, and rollback kubernetes applications. GraphScope also supports deployment by Helm.</p>
+
+<h2 id="prerequisites">Prerequisites</h2>
+<p>Before you start, make sure that the current environment has an K8s cluster. If not, you can refer to <a href="https://graphscope.io/blog/tech/2023/06/01/How-to-Run-GraphScope-on-Kubernetes-Cluster">previous articles</a> for installation. In addition, you also need to install the Python package <code class="language-plaintext highlighter-rouge">graphscope_client</code> to run the Python examples in this article,</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>pip3 <span class="nb">install </span>graphscope_client
+</code></pre></div></div>
+
+<h2 id="install-helm">Install Helm</h2>
+<p>According to the official Helm documentation, Helm can be installed using the following command.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+</code></pre></div></div>
+
+<p>If the server cannot connect to the network, you can pre-download Helm in an environment with a network connection, and then copy it to the server.</p>
+
+<p>Here is an example of installing Helm v3.8.1:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>wget https://get.helm.sh/helm-v3.8.1-linux-amd64.tar.gz
+<span class="nb">tar </span>zxvf helm-v3.8.1-linux-amd64.tar.gz
+</code></pre></div></div>
+
+<p>After decompression, you can copy the helm file to the server by yourself and put it under the <code class="language-plaintext highlighter-rouge">/usr/local/bin</code> directory. Then execute</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>helm version
+version.BuildInfo<span class="o">{</span>Version:<span class="s2">"v3.5.4"</span>, GitCommit:<span class="s2">"1b5edb69df3d3a08df77c9902dc17af864ff05d1"</span>, GitTreeState:<span class="s2">"clean"</span>, GoVersion:<span class="s2">"go1.15.11"</span><span class="o">}</span>
+</code></pre></div></div>
+
+<p>If commands succeed, it means that Helm is installed successfully.</p>
+
+<h2 id="configure-helm-repo">Configure Helm repo</h2>
+<p>GraphScope’s Helm Charts are hosted in the repository <code class="language-plaintext highlighter-rouge">https://graphscope.oss-cn-beijing.aliyuncs.com/</code>, so you can add this repository using the following command:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
+<span class="s2">"graphscope"</span> has been added to your repositories
+</code></pre></div></div>
+
+<p>After adding it, you can use helm search to search for Charts provided by GraphScope.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>helm search repo graphscope
+NAME                       	CHART VERSION	APP VERSION	DESCRIPTION
+graphscope/graphscope      	0.22.0       	0.22.0     	A One-Stop Large-Scale Graph Computing System f...
+graphscope/graphscope-store	0.22.0       	3.4.0      	GraphScope Store is a disk-based row-oriented m...
+graphscope/gie-standalone  	0.20.0       	3.4.0      	Chart to Deploy GIE on Vineyard Storage
+</code></pre></div></div>
+
+<h2 id="common-operations-of-helm">Common operations of Helm</h2>
+<p>The common operations of Helm include installing (<code class="language-plaintext highlighter-rouge">helm install</code>), upgrading (<code class="language-plaintext highlighter-rouge">helm upgrade</code>), uninstalling (<code class="language-plaintext highlighter-rouge">helm uninstall</code>), and listing (<code class="language-plaintext highlighter-rouge">helm ls</code>). Often, a Helm Chart has many parameters that need to be configured. Configuring them through command line is cumbersome, so it is recommended to use YAML files to configure these parameters. In this article, a file named <code class="language-plaintext highlighter-rouge">values.yaml</code> is used to configure charts, which is also a naming convention in the Helm community.</p>
+
+<h2 id="install-graphscope-chart">Install GraphScope Chart</h2>
+
+<p>To install charts, you must specify the name of the Chart (chart_name) and the name of the deployed instance (release_name). You can also specify one or more <code class="language-plaintext highlighter-rouge">values.yaml</code> files to configure Chart. If you have specific requirements for the version of Chart, you can specify the corresponding version (chart_version, default is the latest version) through the <code class="language-plaintext highlighter-rouge">--version</code> parameter. The basic command is as follows:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>helm <span class="nb">install </span>demo graphscope/graphscope <span class="o">[</span><span class="nt">--namespace</span><span class="o">=</span>default] <span class="o">[</span><span class="nt">--version</span><span class="o">=</span>0.22.0]
+</code></pre></div></div>
+
+<p>The above command will installed version 0.22.0 of GraphScope instance under <code class="language-plaintext highlighter-rouge">default</code> namespace, and the instance name is <code class="language-plaintext highlighter-rouge">demo</code>.</p>
+
+<h2 id="get-the-address-of-graphscope-service">Get the address of GraphScope service</h2>
+
+<p>Because images will be pulled during the first installation of Chart, you need to wait a few minutes. During this time, you can observe the status by executing helm test command multiple times:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>helm <span class="nb">test </span>demo
+NAME: demo
+LAST DEPLOYED: Sat Jun 10 17:08:49 2023
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE:     test-rpc-service-demo
+Last Started:   Sat Jun 10 17:14:21 2023
+Last Completed: Sat Jun 10 17:14:25 2023
+Phase:          Succeeded
+NOTES:
+The GraphScope has been deployed.
+</code></pre></div></div>
+
+<p>If the status output is as shown above, it means that the local GraphScope instance has been successfully installed. Next, take <code class="language-plaintext highlighter-rouge">default</code> namespace as an example. At this point, you can get the service address of the current instance:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">export </span><span class="nv">NODE_IP</span><span class="o">=</span><span class="si">$(</span>kubectl <span class="nt">--namespace</span> default  get pod <span class="nt">-l</span> graphscope.coordinator.name<span class="o">=</span>coordinator-demo <span class="nt">-ojsonpath</span><span class="o">=</span><span class="s2">"{.items[0].status.hostIP}"</span><span class="si">)</span>
+<span class="nv">$ </span><span class="nb">export </span><span class="nv">NODE_PORT</span><span class="o">=</span><span class="si">$(</span>kubectl <span class="nt">--namespace</span> default get services coordinator-service-demo  <span class="nt">-ojsonpath</span><span class="o">=</span><span class="s2">"{.spec.ports[0].nodePort}"</span><span class="si">)</span>
+<span class="nv">$ </span><span class="nb">echo</span> <span class="s2">"GraphScope service listen on </span><span class="k">${</span><span class="nv">NODE_IP</span><span class="k">}</span><span class="s2">:</span><span class="k">${</span><span class="nv">NODE_PORT</span><span class="k">}</span><span class="s2">"</span>
+
+GraphScope service listen on 192.168.0.65:30262
+</code></pre></div></div>
+
+<p>The above command is cumbersome, but don’t worry. After GraphScope Chart is successfully installed, these commands will be displayed on the console for copy and paste.
+You could also use <code class="language-plaintext highlighter-rouge">helm status</code> command at any time to get these output incase you lost it.</p>
+
+<h2 id="connect-to-service-using-client">Connect to service using client</h2>
+<p>After obtaining the service address (192.168.0.65:30262 in the above command), you can use GraphScope Python client to connect to this service:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> import graphscope
+<span class="o">&gt;&gt;&gt;</span> graphscope.set_option<span class="o">(</span><span class="nv">show_log</span><span class="o">=</span>True<span class="o">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="c"># sess = graphscope.session(addr='&lt;ip&gt;:&lt;port&gt;')</span>
+<span class="o">&gt;&gt;&gt;</span> sess <span class="o">=</span> graphscope.session<span class="o">(</span><span class="nv">addr</span><span class="o">=</span><span class="s1">'192.168.0.65:30262'</span><span class="o">)</span>
+Connecting graphscope session with address: 192.168.0.65:30262
+GraphScope coordinator service connected.
+</code></pre></div></div>
+
+<p>Unlike the way of deploying GraphScope through Python client, the lifecycle of GraphScope instances deployed using Helm tools are not bound to the client’s lifecycle. Therefore, you can connect to a GraphScope instance deployed using Helm multiple times through the client, but only one client can connect to the service at a time.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> import graphscope
+<span class="o">&gt;&gt;&gt;</span> sess1 <span class="o">=</span> graphscope.session<span class="o">(</span><span class="nv">addr</span><span class="o">=</span><span class="s1">'192.168.0.65:30262'</span><span class="o">)</span>
+<span class="o">&gt;&gt;&gt;</span> sess1.close<span class="o">()</span>  <span class="c"># The second session cannot connect to server until previous one was closed.</span>
+<span class="o">&gt;&gt;&gt;</span> sess2 <span class="o">=</span> graphscope.session<span class="o">(</span><span class="nv">addr</span><span class="o">=</span><span class="s1">'192.168.0.65:30262'</span><span class="o">)</span>
+</code></pre></div></div>
+
+<h2 id="uninstall-graphscope-instance">Uninstall GraphScope instance</h2>
+
+<p>Uninstall an instance only requires the corresponding instance name:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$helm</span> uninstall demo
+</code></pre></div></div>
+
+<h2 id="parameter-configuration">Parameter configuration</h2>
+
+<p>Deploying GraphScope through Helm can also configure parameters for customizing the GraphScope instance, such as CPU, memory, and volumes. The parameter configurations currently supported can be found in <a href="https://github.com/alibaba/GraphScope/blob/main/charts/graphscope/values.yaml">values.yaml</a> file. Here let’s take mounting datasets as an example to illustrate how to configure GraphScope Chart through values.yaml, which is one of the most common situations in use.
+First, create a <code class="language-plaintext highlighter-rouge">values.yaml</code> file with the following content:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">volumes</span><span class="pi">:</span>
+  <span class="na">enabled</span><span class="pi">:</span> <span class="kc">true</span>
+  <span class="na">items</span><span class="pi">:</span>
+    <span class="na">data</span><span class="pi">:</span>
+      <span class="na">type</span><span class="pi">:</span> <span class="s">hostPath</span>
+      <span class="na">field</span><span class="pi">:</span>
+        <span class="na">type</span><span class="pi">:</span> <span class="s">Directory</span>
+        <span class="na">path</span><span class="pi">:</span> <span class="s">/data</span>
+      <span class="na">mounts</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/tmp/data</span>
+</code></pre></div></div>
+
+<p>The above description volumes will use K8s <code class="language-plaintext highlighter-rouge">HostPath</code> type volume and mount the <code class="language-plaintext highlighter-rouge">/data</code> path of the corresponding node to the <code class="language-plaintext highlighter-rouge">/tmp/data</code> path of GraphScope instance. For more details about mounting volumes, please refer to <a href="https://kubernetes.io/zh/docs/concepts/storage/volumes/">K8s official documentation</a>.</p>
+
+<p>Next, we can specify the <code class="language-plaintext highlighter-rouge">values.yaml</code> as configuration file when installing GraphScope Chart:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>helm <span class="nb">install </span>demo graphscope/graphscope <span class="nt">-f</span> values.yaml
+</code></pre></div></div>
+
+<p>Other resource configurations, such as CPU and memory, can also be configured by referring to GraphScope configuration file.</p>
+
+<h2 id="offline-use-of-helm-charts">Offline use of Helm charts</h2>
+<p>If the server does not have external network access, it is impossible to install GraphScope by configuring Helm repo. In this case, you need to download chart files required for cluster installation on a machine with external network access and then copy them to the server. Taking version 0.22.0 as an example, you could download the chart as follows:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>wget https://graphscope.oss-cn-beijing.aliyuncs.com/charts/graphscope-0.22.0.tgz
+</code></pre></div></div>
+
+<p>After downloading is complete, you can copy it to the corresponding directory on the server and decompress it, then you can use these charts to install GraphScope instances through helm install command. The command is as follows.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">tar </span>zxvf graphscope-0.22.0.tgz
+<span class="nv">$ </span>helm <span class="nb">install </span>demo ./graphscope
+</code></pre></div></div>
+
+<p>Note that during installation of instances, images need to be pre-downloaded on servers. You could use <code class="language-plaintext highlighter-rouge">docker save</code> to save the contents of the image to a tarball, and copy that tarball to the servers then use <code class="language-plaintext highlighter-rouge">docker load</code> to extract the content as image.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>This article introduces how to connect GraphScope client to a GraphScope cluster deployed using Helm tools. In addition, GraphScope will also allow users to deploy, operate and use GraphScope on Kubernetes more easily through GraphScope Operator in the future. Stay tuned for more updates from GraphScope.</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=How to Deploy GraphScope by Helm on Kubernetes&amp;url=https://graphscope.io/tech/2023/06/11/How-to-Deploy-GraphScope-by-Helm-on-Kubernetes.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2023/06/11/How-to-Deploy-GraphScope-by-Helm-on-Kubernetes.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2023/06/11/How-to-Deploy-GraphScope-by-Helm-on-Kubernetes.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2023 &bull; All rights reserved.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+    
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+</body>
+</html>

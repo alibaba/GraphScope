@@ -5,9 +5,180 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Fri, 09 Jun 2023 06:07:25 +0000</pubDate>
-    <lastBuildDate>Fri, 09 Jun 2023 06:07:25 +0000</lastBuildDate>
+    <pubDate>Tue, 13 Jun 2023 03:28:54 +0000</pubDate>
+    <lastBuildDate>Tue, 13 Jun 2023 03:28:54 +0000</lastBuildDate>
     <generator>Jekyll v4.3.2</generator>
+    
+      <item>
+        <title>How to Deploy GraphScope by Helm on Kubernetes</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-06-11-title-picture.jpg&quot; alt=&quot;Deploy-GraphScope-by-helm&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;This article describes how to deploy and use GraphScope clusters using the Helm tool.
+Helm  is a software package management tool in the K8s ecosystem, similar to Ubuntu’s apt or Python’s pip, designed for managing K8s application resources. Using Helm, you can easily package, distribute, install, upgrade, and rollback kubernetes applications. GraphScope also supports deployment by Helm.&lt;/p&gt;
+
+&lt;h2 id=&quot;prerequisites&quot;&gt;Prerequisites&lt;/h2&gt;
+&lt;p&gt;Before you start, make sure that the current environment has an K8s cluster. If not, you can refer to &lt;a href=&quot;https://graphscope.io/blog/tech/2023/06/01/How-to-Run-GraphScope-on-Kubernetes-Cluster&quot;&gt;previous articles&lt;/a&gt; for installation. In addition, you also need to install the Python package &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;graphscope_client&lt;/code&gt; to run the Python examples in this article,&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;pip3 &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;graphscope_client
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;install-helm&quot;&gt;Install Helm&lt;/h2&gt;
+&lt;p&gt;According to the official Helm documentation, Helm can be installed using the following command.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If the server cannot connect to the network, you can pre-download Helm in an environment with a network connection, and then copy it to the server.&lt;/p&gt;
+
+&lt;p&gt;Here is an example of installing Helm v3.8.1:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;wget https://get.helm.sh/helm-v3.8.1-linux-amd64.tar.gz
+&lt;span class=&quot;nb&quot;&gt;tar &lt;/span&gt;zxvf helm-v3.8.1-linux-amd64.tar.gz
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;After decompression, you can copy the helm file to the server by yourself and put it under the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/usr/local/bin&lt;/code&gt; directory. Then execute&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;helm version
+version.BuildInfo&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;Version:&lt;span class=&quot;s2&quot;&gt;&quot;v3.5.4&quot;&lt;/span&gt;, GitCommit:&lt;span class=&quot;s2&quot;&gt;&quot;1b5edb69df3d3a08df77c9902dc17af864ff05d1&quot;&lt;/span&gt;, GitTreeState:&lt;span class=&quot;s2&quot;&gt;&quot;clean&quot;&lt;/span&gt;, GoVersion:&lt;span class=&quot;s2&quot;&gt;&quot;go1.15.11&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If commands succeed, it means that Helm is installed successfully.&lt;/p&gt;
+
+&lt;h2 id=&quot;configure-helm-repo&quot;&gt;Configure Helm repo&lt;/h2&gt;
+&lt;p&gt;GraphScope’s Helm Charts are hosted in the repository &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;https://graphscope.oss-cn-beijing.aliyuncs.com/&lt;/code&gt;, so you can add this repository using the following command:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
+&lt;span class=&quot;s2&quot;&gt;&quot;graphscope&quot;&lt;/span&gt; has been added to your repositories
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;After adding it, you can use helm search to search for Charts provided by GraphScope.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;helm search repo graphscope
+NAME                       	CHART VERSION	APP VERSION	DESCRIPTION
+graphscope/graphscope      	0.22.0       	0.22.0     	A One-Stop Large-Scale Graph Computing System f...
+graphscope/graphscope-store	0.22.0       	3.4.0      	GraphScope Store is a disk-based row-oriented m...
+graphscope/gie-standalone  	0.20.0       	3.4.0      	Chart to Deploy GIE on Vineyard Storage
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;common-operations-of-helm&quot;&gt;Common operations of Helm&lt;/h2&gt;
+&lt;p&gt;The common operations of Helm include installing (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;helm install&lt;/code&gt;), upgrading (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;helm upgrade&lt;/code&gt;), uninstalling (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;helm uninstall&lt;/code&gt;), and listing (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;helm ls&lt;/code&gt;). Often, a Helm Chart has many parameters that need to be configured. Configuring them through command line is cumbersome, so it is recommended to use YAML files to configure these parameters. In this article, a file named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;values.yaml&lt;/code&gt; is used to configure charts, which is also a naming convention in the Helm community.&lt;/p&gt;
+
+&lt;h2 id=&quot;install-graphscope-chart&quot;&gt;Install GraphScope Chart&lt;/h2&gt;
+
+&lt;p&gt;To install charts, you must specify the name of the Chart (chart_name) and the name of the deployed instance (release_name). You can also specify one or more &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;values.yaml&lt;/code&gt; files to configure Chart. If you have specific requirements for the version of Chart, you can specify the corresponding version (chart_version, default is the latest version) through the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--version&lt;/code&gt; parameter. The basic command is as follows:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;helm &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;demo graphscope/graphscope &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;--namespace&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;default] &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;--version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;0.22.0]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The above command will installed version 0.22.0 of GraphScope instance under &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default&lt;/code&gt; namespace, and the instance name is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;demo&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;get-the-address-of-graphscope-service&quot;&gt;Get the address of GraphScope service&lt;/h2&gt;
+
+&lt;p&gt;Because images will be pulled during the first installation of Chart, you need to wait a few minutes. During this time, you can observe the status by executing helm test command multiple times:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;helm &lt;span class=&quot;nb&quot;&gt;test &lt;/span&gt;demo
+NAME: demo
+LAST DEPLOYED: Sat Jun 10 17:08:49 2023
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE:     test-rpc-service-demo
+Last Started:   Sat Jun 10 17:14:21 2023
+Last Completed: Sat Jun 10 17:14:25 2023
+Phase:          Succeeded
+NOTES:
+The GraphScope has been deployed.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If the status output is as shown above, it means that the local GraphScope instance has been successfully installed. Next, take &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default&lt;/code&gt; namespace as an example. At this point, you can get the service address of the current instance:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;NODE_IP&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;kubectl &lt;span class=&quot;nt&quot;&gt;--namespace&lt;/span&gt; default  get pod &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; graphscope.coordinator.name&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;coordinator-demo &lt;span class=&quot;nt&quot;&gt;-ojsonpath&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;{.items[0].status.hostIP}&quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;NODE_PORT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;kubectl &lt;span class=&quot;nt&quot;&gt;--namespace&lt;/span&gt; default get services coordinator-service-demo  &lt;span class=&quot;nt&quot;&gt;-ojsonpath&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;{.spec.ports[0].nodePort}&quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;GraphScope service listen on &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;NODE_IP&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;NODE_PORT&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+
+GraphScope service listen on 192.168.0.65:30262
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The above command is cumbersome, but don’t worry. After GraphScope Chart is successfully installed, these commands will be displayed on the console for copy and paste.
+You could also use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;helm status&lt;/code&gt; command at any time to get these output incase you lost it.&lt;/p&gt;
+
+&lt;h2 id=&quot;connect-to-service-using-client&quot;&gt;Connect to service using client&lt;/h2&gt;
+&lt;p&gt;After obtaining the service address (192.168.0.65:30262 in the above command), you can use GraphScope Python client to connect to this service:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; import graphscope
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; graphscope.set_option&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;show_log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;True&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# sess = graphscope.session(addr=&apos;&amp;lt;ip&amp;gt;:&amp;lt;port&amp;gt;&apos;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; sess &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; graphscope.session&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;addr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;192.168.0.65:30262&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+Connecting graphscope session with address: 192.168.0.65:30262
+GraphScope coordinator service connected.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Unlike the way of deploying GraphScope through Python client, the lifecycle of GraphScope instances deployed using Helm tools are not bound to the client’s lifecycle. Therefore, you can connect to a GraphScope instance deployed using Helm multiple times through the client, but only one client can connect to the service at a time.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; import graphscope
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; sess1 &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; graphscope.session&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;addr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;192.168.0.65:30262&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; sess1.close&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;  &lt;span class=&quot;c&quot;&gt;# The second session cannot connect to server until previous one was closed.&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; sess2 &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; graphscope.session&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;addr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;192.168.0.65:30262&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;uninstall-graphscope-instance&quot;&gt;Uninstall GraphScope instance&lt;/h2&gt;
+
+&lt;p&gt;Uninstall an instance only requires the corresponding instance name:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$helm&lt;/span&gt; uninstall demo
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;parameter-configuration&quot;&gt;Parameter configuration&lt;/h2&gt;
+
+&lt;p&gt;Deploying GraphScope through Helm can also configure parameters for customizing the GraphScope instance, such as CPU, memory, and volumes. The parameter configurations currently supported can be found in &lt;a href=&quot;https://github.com/alibaba/GraphScope/blob/main/charts/graphscope/values.yaml&quot;&gt;values.yaml&lt;/a&gt; file. Here let’s take mounting datasets as an example to illustrate how to configure GraphScope Chart through values.yaml, which is one of the most common situations in use.
+First, create a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;values.yaml&lt;/code&gt; file with the following content:&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;enabled&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;items&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;hostPath&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;field&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Directory&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/data&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;mounts&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;mountPath&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/tmp/data&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The above description volumes will use K8s &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;HostPath&lt;/code&gt; type volume and mount the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/data&lt;/code&gt; path of the corresponding node to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/tmp/data&lt;/code&gt; path of GraphScope instance. For more details about mounting volumes, please refer to &lt;a href=&quot;https://kubernetes.io/zh/docs/concepts/storage/volumes/&quot;&gt;K8s official documentation&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Next, we can specify the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;values.yaml&lt;/code&gt; as configuration file when installing GraphScope Chart:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;helm &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;demo graphscope/graphscope &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; values.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Other resource configurations, such as CPU and memory, can also be configured by referring to GraphScope configuration file.&lt;/p&gt;
+
+&lt;h2 id=&quot;offline-use-of-helm-charts&quot;&gt;Offline use of Helm charts&lt;/h2&gt;
+&lt;p&gt;If the server does not have external network access, it is impossible to install GraphScope by configuring Helm repo. In this case, you need to download chart files required for cluster installation on a machine with external network access and then copy them to the server. Taking version 0.22.0 as an example, you could download the chart as follows:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;wget https://graphscope.oss-cn-beijing.aliyuncs.com/charts/graphscope-0.22.0.tgz
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;After downloading is complete, you can copy it to the corresponding directory on the server and decompress it, then you can use these charts to install GraphScope instances through helm install command. The command is as follows.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;tar &lt;/span&gt;zxvf graphscope-0.22.0.tgz
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;helm &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;demo ./graphscope
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Note that during installation of instances, images need to be pre-downloaded on servers. You could use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker save&lt;/code&gt; to save the contents of the image to a tarball, and copy that tarball to the servers then use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker load&lt;/code&gt; to extract the content as image.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;This article introduces how to connect GraphScope client to a GraphScope cluster deployed using Helm tools. In addition, GraphScope will also allow users to deploy, operate and use GraphScope on Kubernetes more easily through GraphScope Operator in the future. Stay tuned for more updates from GraphScope.&lt;/p&gt;
+</description>
+        <pubDate>Sun, 11 Jun 2023 11:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2023/06/11/How-to-Deploy-GraphScope-by-Helm-on-Kubernetes.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/06/11/How-to-Deploy-GraphScope-by-Helm-on-Kubernetes.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>How to Run GraphScope on Kubernetes Cluster</title>
@@ -23,7 +194,7 @@ This article will provide a detailed introduction on how to deploy GraphScope on
   &lt;li&gt;&lt;a href=&quot;https://www.docker.com/&quot;&gt;Docker&lt;/a&gt; Only if you choose to setup a local cluster&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;This article uses Kind1 as an example to introduce how to build a virtual Kubernetes cluster on a local machine and deploy GraphScope upon that. If you want to build a real multi-node cluster, you can refer to the &lt;a href=&quot;https://kubernetes.io/docs/setup/production-environment/tools/kubeadm&quot;&gt;kubeadm documentation&lt;/a&gt;; If you don’t want to manually manage a Kubernetes cluster, you can also choose a well-known cloud vendor product, such as &lt;a href=&quot;https://www.aliyun.com/product/kubernetes&quot;&gt;Aliyun ACK&lt;/a&gt;, &lt;a href=&quot;https://aws.amazon.com/eks/?nc1=h_ls&quot;&gt;AWS EKS&lt;/a&gt;, etc.&lt;/p&gt;
+&lt;p&gt;This article uses Kind as an example to introduce how to build a virtual Kubernetes cluster on a local machine and deploy GraphScope upon that. If you want to build a real multi-node cluster, you can refer to the &lt;a href=&quot;https://kubernetes.io/docs/setup/production-environment/tools/kubeadm&quot;&gt;kubeadm documentation&lt;/a&gt;; If you don’t want to manually manage a Kubernetes cluster, you can also choose a well-known cloud vendor product, such as &lt;a href=&quot;https://www.aliyun.com/product/kubernetes&quot;&gt;Aliyun ACK&lt;/a&gt;, &lt;a href=&quot;https://aws.amazon.com/eks/?nc1=h_ls&quot;&gt;AWS EKS&lt;/a&gt;, etc.&lt;/p&gt;
 
 &lt;p&gt;Assuming you have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kind&lt;/code&gt; installed in your machine, bootstrap a virtual cluster by the following command&lt;/p&gt;
 
@@ -320,7 +491,7 @@ git clone https://github.com/alibaba/GraphScope.git
     
       <item>
         <title>Categories, Languages, and Systems of Graph Computing</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-05-25-graph-computing.png&quot; alt=&quot;graph-computing&quot; /&gt;
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-05-25-graph-computing.jpg&quot; alt=&quot;graph-computing&quot; /&gt;
 In this post, we will introduce the categories, languages, and systems of graph computing.&lt;/p&gt;
 
 &lt;h3 id=&quot;what-is-graph-computing&quot;&gt;What is Graph Computing&lt;/h3&gt;
@@ -333,7 +504,7 @@ In this post, we will introduce the categories, languages, and systems of graph 
 
 &lt;p&gt;The graph data is typically vast, and graph interactive queries often focus on a relatively limited number of vertices and edges that satisfy specific criteria. These vertices and edges create specific paths or subgraph patterns, as illustrated in the image below. For example, finding the optimal route from one location to another or logistics path information are typical path query scenarios. Subgraph patterns are another form of graph query where a particular pattern is represented with a subgraph, and matching queries are performed on this subgraph within the entire graph.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-05-25-graph-interactive-queries.png&quot; alt=&quot;graph-interactive-queries&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-05-25-graph-interactive-queries.jpg&quot; alt=&quot;graph-interactive-queries&quot; /&gt;&lt;/p&gt;
 &lt;center&gt; Figure 1: Subgraph query (left) and path query (right) &lt;/center&gt;
 &lt;p&gt;&lt;br /&gt;&lt;/p&gt;
 
@@ -731,46 +902,6 @@ The GraphScope v0.12.0 release is a major update on many aspects of the project 
         <pubDate>Sat, 02 Apr 2022 03:33:20 +0000</pubDate>
         <link>https://graphscope.io/blog/releasenotes/2022/04/02/release-notes-0.12.0.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2022/04/02/release-notes-0.12.0.html</guid>
-        
-        
-        <category>ReleaseNotes</category>
-        
-      </item>
-    
-      <item>
-        <title>Release Notes: v0.11.0</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/release_note_t.png&quot; alt=&quot;release-note&quot; /&gt;
-We are glad to announce a number of new features and improvements to GraphScope, alongside the GraphScope v0.11.0 release. This major release introduces mutable graphs into GraphScope, and adds GPU supports for graph analytics engine (GAE). It also focuses on user-friendly improvements, code quality, and a series of bug fixes.&lt;/p&gt;
-
-&lt;p&gt;We highlight the following improvements included in this release:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;Supporting mutable graphs:
-    &lt;ul&gt;
-      &lt;li&gt;Providing a set of interfaces (e.g., &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;add_vertex&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;add_edge&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;update_vertex&lt;/code&gt;) to modify the topology of an existing graph;&lt;/li&gt;
-      &lt;li&gt;Adopting existing apps to mutable graphs.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Accelerating graph analytics apps with GPUs:
-    &lt;ul&gt;
-      &lt;li&gt;Adding new &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fragment&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;worker&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;message_manager&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;apps&lt;/code&gt; to utilize GPUs to process graph analytics tasks faster;&lt;/li&gt;
-      &lt;li&gt;On top of these new infrastructures, 6 example algorithms (BFS, WCC, SSSP, PageRank, CDLP and LCC) are implemented;&lt;/li&gt;
-      &lt;li&gt;Our GPU-based graph algorithms are about 2x faster compared with state-of-the-art  GPU-based graph processing systems. See detals in &lt;a href=&quot;https://github.com/alibaba/libgrape-lite/blob/master/Performance.md#performance-on-gpus&quot;&gt;performance report&lt;/a&gt;.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Optimizations and enhancements:
-    &lt;ul&gt;
-      &lt;li&gt;Stream grpc request (response) to support loading graph (fetching result) from (to) numpy/pandas more than 2GB;&lt;/li&gt;
-      &lt;li&gt;Accelerating manipulation of graph topology by replacing folly::dynamicwith &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rapidjson::value&lt;/code&gt;.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;For more detailed improvements that have been made in this release, please refer to the complete &lt;a href=&quot;https://github.com/alibaba/GraphScope/releases/tag/v0.11.0&quot;&gt;changelog&lt;/a&gt;.&lt;/p&gt;
-</description>
-        <pubDate>Sun, 06 Mar 2022 03:33:20 +0000</pubDate>
-        <link>https://graphscope.io/blog/releasenotes/2022/03/06/release-notes-0.11.0.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2022/03/06/release-notes-0.11.0.html</guid>
         
         
         <category>ReleaseNotes</category>
