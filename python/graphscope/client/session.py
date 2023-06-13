@@ -1304,7 +1304,7 @@ class Session(object):
         self._config_params["port"] = None
         self._config_params["vineyard_socket"] = ""
 
-    def gremlin(self, graph):
+    def gremlin(self, graph, params=None):
         """Get an interactive engine handler to execute gremlin queries.
 
         It will return an instance of :class:`graphscope.interactive.query.InteractiveQuery`,
@@ -1343,7 +1343,9 @@ class Session(object):
 
         object_id = graph.vineyard_id
         schema_path = graph.schema_path
-        endpoint = self._grpc_client.create_interactive_instance(object_id, schema_path)
+        endpoint = self._grpc_client.create_interactive_instance(
+            object_id, schema_path, params
+        )
         interactive_query = InteractiveQuery(graph, endpoint)
         self._interactive_instance_dict[object_id] = interactive_query
         graph._attach_interactive_instance(interactive_query)
@@ -1728,7 +1730,7 @@ def g(
     )
 
 
-def gremlin(graph):
+def gremlin(graph, params=None):
     """Create an interactive engine and get the handler to execute the gremlin queries.
 
     See params detail in :meth:`graphscope.Session.gremlin`
@@ -1749,7 +1751,7 @@ def gremlin(graph):
     assert (
         graph._session is not None
     ), "The graph object is invalid"  # pylint: disable=protected-access
-    return graph._session.gremlin(graph)  # pylint: disable=protected-access
+    return graph._session.gremlin(graph, params)  # pylint: disable=protected-access
 
 
 def graphlearn(graph, nodes=None, edges=None, gen_labels=None):
