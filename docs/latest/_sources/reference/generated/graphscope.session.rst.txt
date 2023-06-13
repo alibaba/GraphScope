@@ -43,6 +43,7 @@
    
       ~session.closed
       ~session.dag
+      ~session.disconnected
       ~session.engine_config
       ~session.info
       ~session.session_id

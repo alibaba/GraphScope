@@ -1,0 +1,11 @@
+digraph "/home/runner/work/GraphScope/GraphScope/flex/storages/rt_mutable_graph" {
+  compound=true
+  node [ fontsize="10", fontname="Helvetica"];
+  edge [ labelfontsize="10", labelfontname="Helvetica"];
+  subgraph clusterdir_0bdd5b7109e05b9939ed9c1c6f217959 {
+    graph [ bgcolor="#ddddee", pencolor="black", label="storages" fontname="Helvetica", fontsize="10", URL="dir_0bdd5b7109e05b9939ed9c1c6f217959.html"]
+  dir_6faf85451c2ea0ce304084ae4b878e7a [shape=box, label="rt_mutable_graph", style="filled", fillcolor="#eeeeff", pencolor="black", URL="dir_6faf85451c2ea0ce304084ae4b878e7a.html"];
+  }
+  dir_a95fcce11a0807c0de49b10c3984b702 [shape=box label="utils" fillcolor="white" style="filled" color="red" URL="dir_a95fcce11a0807c0de49b10c3984b702.html"];
+  dir_6faf85451c2ea0ce304084ae4b878e7a->dir_a95fcce11a0807c0de49b10c3984b702 [headlabel="7", labeldistance=1.5 headhref="dir_000006_000007.html"];
+}

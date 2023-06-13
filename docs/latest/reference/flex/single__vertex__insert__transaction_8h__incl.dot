@@ -1,0 +1,13 @@
+digraph "/home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database/single_vertex_insert_transaction.h"
+{
+ // LATEX_PDF_SIZE
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node1 [label="/home/runner/work/GraphScope\l/GraphScope/flex/engines\l/graph_db/database/single\l_vertex_insert_transaction.h",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black",tooltip=" "];
+  Node1 -> Node2 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node2 [label="flex/storages/rt_mutable\l_graph/types.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$storages_2rt__mutable__graph_2types_8h.html",tooltip=" "];
+  Node2 -> Node3 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node3 [label="stdint.h",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",tooltip=" "];
+  Node1 -> Node4 [color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node4 [label="grape/serialization\l/in_archive.h",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled",tooltip=" "];
+}

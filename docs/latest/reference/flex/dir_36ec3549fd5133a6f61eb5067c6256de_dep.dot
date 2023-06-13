@@ -1,0 +1,21 @@
+digraph "/home/runner/work/GraphScope/GraphScope/flex/engines/graph_db" {
+  compound=true
+  node [ fontsize="10", fontname="Helvetica"];
+  edge [ labelfontsize="10", labelfontname="Helvetica"];
+  subgraph clusterdir_74c203ea010b566e2aa7523d4d870365 {
+    graph [ bgcolor="#ddddee", pencolor="black", label="engines" fontname="Helvetica", fontsize="10", URL="dir_74c203ea010b566e2aa7523d4d870365.html"]
+  subgraph clusterdir_36ec3549fd5133a6f61eb5067c6256de {
+    graph [ bgcolor="#eeeeff", pencolor="black", label="" URL="dir_36ec3549fd5133a6f61eb5067c6256de.html"];
+    dir_36ec3549fd5133a6f61eb5067c6256de [shape=plaintext label="graph_db"];
+    dir_d6f73bcc22dbded39dcd0a634c0788cb [shape=box label="app" color="black" fillcolor="white" style="filled" URL="dir_d6f73bcc22dbded39dcd0a634c0788cb.html"];
+    dir_b22b7d531418ac8eb6812a94ced2c381 [shape=box label="database" color="black" fillcolor="white" style="filled" URL="dir_b22b7d531418ac8eb6812a94ced2c381.html"];
+  }
+  }
+  dir_a95fcce11a0807c0de49b10c3984b702 [shape=box label="utils" fillcolor="white" style="filled" color="red" URL="dir_a95fcce11a0807c0de49b10c3984b702.html"];
+  dir_0bdd5b7109e05b9939ed9c1c6f217959 [shape=box label="storages" fillcolor="white" style="filled" color="red" URL="dir_0bdd5b7109e05b9939ed9c1c6f217959.html"];
+  dir_b22b7d531418ac8eb6812a94ced2c381->dir_a95fcce11a0807c0de49b10c3984b702 [headlabel="9", labeldistance=1.5 headhref="dir_000004_000007.html"];
+  dir_b22b7d531418ac8eb6812a94ced2c381->dir_0bdd5b7109e05b9939ed9c1c6f217959 [headlabel="15", labeldistance=1.5 headhref="dir_000004_000005.html"];
+  dir_b22b7d531418ac8eb6812a94ced2c381->dir_d6f73bcc22dbded39dcd0a634c0788cb [headlabel="6", labeldistance=1.5 headhref="dir_000004_000003.html"];
+  dir_0bdd5b7109e05b9939ed9c1c6f217959->dir_a95fcce11a0807c0de49b10c3984b702 [headlabel="7", labeldistance=1.5 headhref="dir_000005_000007.html"];
+  dir_d6f73bcc22dbded39dcd0a634c0788cb->dir_b22b7d531418ac8eb6812a94ced2c381 [headlabel="2", labeldistance=1.5 headhref="dir_000003_000004.html"];
+}

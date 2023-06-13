@@ -1,0 +1,9 @@
+digraph "/home/runner/work/GraphScope/GraphScope/flex/utils/property" {
+  compound=true
+  node [ fontsize="10", fontname="Helvetica"];
+  edge [ labelfontsize="10", labelfontname="Helvetica"];
+  subgraph clusterdir_a95fcce11a0807c0de49b10c3984b702 {
+    graph [ bgcolor="#ddddee", pencolor="black", label="utils" fontname="Helvetica", fontsize="10", URL="dir_a95fcce11a0807c0de49b10c3984b702.html"]
+  dir_7a87ea2416c606f93255bcbc70249226 [shape=box, label="property", style="filled", fillcolor="#eeeeff", pencolor="black", URL="dir_7a87ea2416c606f93255bcbc70249226.html"];
+  }
+}
