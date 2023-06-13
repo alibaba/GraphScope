@@ -1,1 +1,0 @@
-g.V().has("TAG", "name", "$tag").in("HASTAG").as("msg").out("HASCREATOR").dedup().as("person").select("msg").in("LIKES").dedup().in("HASCREATOR").dedup().inE("LIKES").dedup().group().by(select("person").as("person")).by(dedup().count().as("score")).order().by(select("score"), desc).by(select("person").values("id"), asc).limit(100).select("score", "person").by().by("id")

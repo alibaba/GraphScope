@@ -1,0 +1,1 @@
+g.V().has("TAG", "name", "$tag").in("HASTAG").as("msg").out("HASCREATOR").as("person").select("msg").in("LIKES").in("HASCREATOR").inE("LIKES").group().by(select("person")).by(dedup().count()).order().by(select(values), desc).by(select(keys).values("id"), asc).limit(100)
