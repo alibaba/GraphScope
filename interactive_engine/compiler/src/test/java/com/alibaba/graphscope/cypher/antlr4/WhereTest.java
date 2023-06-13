@@ -77,7 +77,7 @@ public class WhereTest {
         RelNode where =
                 Utils.eval(
                                 "Match (n:person)-[]-(m:person) Where n.name = $name and m.name ="
-                                    + " $name Return n")
+                                        + " $name Return n")
                         .build();
         Assert.assertEquals(
                 "GraphLogicalProject(n=[n], isAppend=[false])\n"
