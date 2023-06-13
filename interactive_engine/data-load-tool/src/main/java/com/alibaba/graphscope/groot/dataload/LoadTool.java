@@ -12,14 +12,12 @@ import java.io.IOException;
 
 public class LoadTool {
 
-    public static void ingest(String configPath, boolean isFromOSS, String uniquePath)
-            throws IOException {
-        new IngestDataCommand(configPath, isFromOSS, uniquePath).run();
+    public static void ingest(String configPath) throws IOException {
+        new IngestDataCommand(configPath).run();
     }
 
-    public static void commit(String configPath, boolean isFromOSS, String uniquePath)
-            throws IOException {
-        new CommitDataCommand(configPath, isFromOSS, uniquePath).run();
+    public static void commit(String configPath) throws IOException {
+        new CommitDataCommand(configPath).run();
     }
 
     public static void main(String[] args) throws ParseException, IOException {
@@ -32,50 +30,27 @@ public class LoadTool {
                         .desc("supported COMMAND: ingest / commit")
                         .build());
         options.addOption(
-                Option.builder("d")
-                        .longOpt("dir")
+                Option.builder("f")
+                        .longOpt("config")
                         .hasArg()
-                        .argName("HDFS_PATH")
-                        .desc("data directory of HDFS. e.g., hdfs://1.2.3.4:9000/build_output")
-                        .build());
-        options.addOption(
-                Option.builder("oss")
-                        .longOpt("ossconfigfile")
-                        .hasArg()
-                        .argName("OSS_CONFIG_FILE")
-                        .desc("OSS Config File. e.g., config.init")
-                        .build());
-        options.addOption(
-                Option.builder("u")
-                        .longOpt("uniquepath")
-                        .hasArg()
-                        .argName("UNIQUE_PATH")
-                        .desc("unique path from uuid. e.g., unique_path")
+                        .argName("CONFIG")
+                        .desc("path to configuration file")
                         .build());
         options.addOption(Option.builder("h").longOpt("help").desc("print this message").build());
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = parser.parse(options, args);
         String command = commandLine.getOptionValue("command");
-        String configPath = null;
-        String uniquePath = null;
-        boolean isFromOSS = false;
-        if (commandLine.hasOption("oss")) {
-            isFromOSS = true;
-            configPath = commandLine.getOptionValue("oss");
-            uniquePath = commandLine.getOptionValue("u");
-        } else {
-            configPath = commandLine.getOptionValue("dir");
-        }
+        String configPath = commandLine.getOptionValue("config");
 
         if (commandLine.hasOption("help") || command == null) {
             printHelp(options);
         } else if (command.equalsIgnoreCase("ingest")) {
-            ingest(configPath, isFromOSS, uniquePath);
+            ingest(configPath);
         } else if (command.equalsIgnoreCase("commit")) {
-            commit(configPath, isFromOSS, uniquePath);
+            commit(configPath);
         } else if (command.equalsIgnoreCase("ingestAndCommit")) {
-            ingest(configPath, isFromOSS, uniquePath);
-            commit(configPath, isFromOSS, uniquePath);
+            ingest(configPath);
+            commit(configPath);
         } else {
             printHelp(options);
         }

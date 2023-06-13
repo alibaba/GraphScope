@@ -30,14 +30,8 @@ public class DataBuildPartitioner extends Partitioner<BytesWritable, BytesWritab
     public int getPartition(BytesWritable key, BytesWritable value, int numPartitions) {
         byte[] keyBytes = key.getBytes();
         ByteBuffer keyBuf = ByteBuffer.wrap(keyBytes);
-        long partitionKey;
-        if (key.getLength() > 24) {
-            // Edge
-            partitionKey = keyBuf.getLong(8);
-        } else {
-            // Vertex
-            partitionKey = keyBuf.getLong(8);
-        }
+        // for edge, its key.getLength() > 24
+        long partitionKey = keyBuf.getLong(8);
         return PartitionUtils.getPartitionIdFromKey(partitionKey, numPartitions);
     }
 }

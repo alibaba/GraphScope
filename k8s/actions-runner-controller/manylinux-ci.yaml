@@ -6,9 +6,9 @@ spec:
   template:
     spec:
       repository: alibaba/GraphScope
-      image: registry-vpc.cn-hongkong.aliyuncs.com/graphscope/runner:manylinux2014
+      image: registry-vpc.cn-hongkong.aliyuncs.com/graphscope/runner:manylinux2014-ci-test
       labels:
-        - manylinux2014
+        - manylinux2014-ci-test
       containers:
       - name: runner
         env: []

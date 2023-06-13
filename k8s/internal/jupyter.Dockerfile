@@ -33,7 +33,7 @@ COPY . /home/graphscope/gs
 
 # Install graphscope client
 RUN cd /home/graphscope/gs && \
-    if [ "${CI}" == "true" ]; then \
+    if [ "${CI}" = "true" ]; then \
         pushd artifacts/python/dist/wheelhouse; \
         for f in * ; do python3 -m pip install --no-cache-dir $f; done || true; \
         popd; \

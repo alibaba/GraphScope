@@ -27,7 +27,6 @@ We provided a docker image `graphscope-dev` with all tools and dependices includ
 ```bash
 # Use a mirror in HK aliyun to speed up the download if in need.
 # export REGISTRY=registry.cn-hongkong.aliyuncs.com/
-# TODO(yuansi): make it works
 
 docker run --rm -it --shm-size=4096m REGISTRY/graphscope/graphscope-dev:latest
 ```
@@ -41,7 +40,13 @@ More options about `docker` command can be found [here](https://docs.docker.com/
 You can build all targets for GraphScope Learning Engine with a single command.
 
 ```bash
-make learning
+./gs make learning
+```
+
+You could install it to a location by:
+
+```bash
+./gs make learning-install --install-prefix /opt/graphscope
 ```
 
 ## How to Test

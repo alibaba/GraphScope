@@ -26,6 +26,6 @@ public class KafkaConfig {
     public static final Config<String> KAFKA_PRODUCER_CUSTOM_CONFIGS =
             Config.stringConfig("kafka.producer.custom.configs", "");
 
-    public static final Config<Integer> KAFKA_MAX_MESSEAGE_MB =
+    public static final Config<Integer> KAFKA_MAX_MESSAGE_MB =
             Config.intConfig("kafka.max.message.mb", 20);
 }

@@ -28,7 +28,7 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
-import com.alibaba.graphscope.common.ir.runtime.type.LogicalNode;
+import com.alibaba.graphscope.common.ir.runtime.type.PhysicalNode;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
@@ -93,7 +93,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                                                 source.getRowType(), isColumnId)
                                         .get(0)
                                         .toByteArray())));
-        return new LogicalNode(source, ptrScan);
+        return new PhysicalNode(source, ptrScan);
     }
 
     @Override
@@ -112,7 +112,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                                                 expand.getRowType(), isColumnId)
                                         .get(0)
                                         .toByteArray())));
-        return new LogicalNode(expand, ptrExpand);
+        return new PhysicalNode(expand, ptrExpand);
     }
 
     @Override
@@ -130,13 +130,13 @@ public class RelToFfiConverter implements GraphRelShuttle {
                                                 getV.getRowType(), isColumnId)
                                         .get(0)
                                         .toByteArray())));
-        return new LogicalNode(getV, ptrGetV);
+        return new PhysicalNode(getV, ptrGetV);
     }
 
     @Override
     public RelNode visit(GraphLogicalPathExpand pxd) {
-        LogicalNode expand = (LogicalNode) visit((GraphLogicalExpand) pxd.getExpand());
-        LogicalNode getV = (LogicalNode) visit((GraphLogicalGetV) pxd.getGetV());
+        PhysicalNode expand = (PhysicalNode) visit((GraphLogicalExpand) pxd.getExpand());
+        PhysicalNode getV = (PhysicalNode) visit((GraphLogicalGetV) pxd.getGetV());
         Pointer ptrPxd =
                 LIB.initPathxpdOperatorWithExpandBase(
                         (Pointer) expand.getNode(),
@@ -148,7 +148,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
         if (pxd.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(LIB.setPathxpdAlias(ptrPxd, ArgUtils.asAlias(pxd.getAliasId())));
         }
-        return new LogicalNode(pxd, ptrPxd);
+        return new PhysicalNode(pxd, ptrPxd);
     }
 
     @Override
@@ -168,7 +168,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                                                     ptrPattern,
                                                     new FfiPbPointer.ByValue(k.toByteArray())));
                                 });
-                return new LogicalNode(match, ptrPattern);
+                return new PhysicalNode(match, ptrPattern);
             case OPTIONAL:
             case ANTI:
             default:
@@ -192,7 +192,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                                     LIB.addPatternMeta(
                                             ptrPattern, new FfiPbPointer.ByValue(k.toByteArray())));
                         });
-        return new LogicalNode(match, ptrPattern);
+        return new PhysicalNode(match, ptrPattern);
     }
 
     @Override
@@ -203,11 +203,11 @@ public class RelToFfiConverter implements GraphRelShuttle {
         checkFfiResult(
                 LIB.setSelectPredicatePb(
                         ptrFilter, new FfiPbPointer.ByValue(exprProto.toByteArray())));
-        return new LogicalNode(logicalFilter, ptrFilter);
+        return new PhysicalNode(logicalFilter, ptrFilter);
     }
 
     @Override
-    public LogicalNode visit(GraphLogicalProject project) {
+    public PhysicalNode visit(GraphLogicalProject project) {
         Pointer ptrProject = LIB.initProjectOperator(project.isAppend());
         List<RelDataTypeField> fields = project.getRowType().getFieldList();
         for (int i = 0; i < project.getProjects().size(); ++i) {
@@ -232,14 +232,14 @@ public class RelToFfiConverter implements GraphRelShuttle {
                                     LIB.addProjectMeta(
                                             ptrProject, new FfiPbPointer.ByValue(k.toByteArray())));
                         });
-        return new LogicalNode(project, ptrProject);
+        return new PhysicalNode(project, ptrProject);
     }
 
     @Override
-    public LogicalNode visit(GraphLogicalAggregate aggregate) {
+    public PhysicalNode visit(GraphLogicalAggregate aggregate) {
         List<GraphAggCall> groupCalls = aggregate.getAggCalls();
         if (groupCalls.isEmpty()) { // transform to project + dedup by keys
-            return new LogicalNode(aggregate, null);
+            return new PhysicalNode(aggregate, null);
         }
         Pointer ptrGroup = LIB.initGroupbyOperator();
         List<RelDataTypeField> fields = aggregate.getRowType().getFieldList();
@@ -306,11 +306,11 @@ public class RelToFfiConverter implements GraphRelShuttle {
                                     LIB.addGroupbyKeyValueMeta(
                                             ptrGroup, new FfiPbPointer.ByValue(k.toByteArray())));
                         });
-        return new LogicalNode(aggregate, ptrGroup);
+        return new PhysicalNode(aggregate, ptrGroup);
     }
 
     @Override
-    public LogicalNode visit(GraphLogicalSort sort) {
+    public PhysicalNode visit(GraphLogicalSort sort) {
         List<RelFieldCollation> collations = sort.getCollation().getFieldCollations();
         Pointer ptrNode = null;
         if (!collations.isEmpty()) {
@@ -337,7 +337,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                 checkFfiResult(LIB.setOrderbyLimit(ptrNode, limitRange.get(0), limitRange.get(1)));
             }
         }
-        return new LogicalNode(sort, ptrNode);
+        return new PhysicalNode(sort, ptrNode);
     }
 
     private Pointer ffiQueryParams(AbstractBindableTableScan tableScan) {
@@ -438,12 +438,12 @@ public class RelToFfiConverter implements GraphRelShuttle {
             addFfiBinder(ptrSentence, binder.getInput(0), false);
             if (binder instanceof AbstractBindableTableScan) {
                 if (binder instanceof GraphLogicalExpand) {
-                    LogicalNode node = (LogicalNode) visit((GraphLogicalExpand) binder);
+                    PhysicalNode node = (PhysicalNode) visit((GraphLogicalExpand) binder);
                     checkFfiResult(
                             LIB.addSentenceBinder(
                                     ptrSentence, (Pointer) node.getNode(), FfiBinderOpt.Edge));
                 } else { // getV
-                    LogicalNode node = (LogicalNode) visit((GraphLogicalGetV) binder);
+                    PhysicalNode node = (PhysicalNode) visit((GraphLogicalGetV) binder);
                     checkFfiResult(
                             LIB.addSentenceBinder(
                                     ptrSentence, (Pointer) node.getNode(), FfiBinderOpt.Vertex));
@@ -453,7 +453,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                     checkFfiResult(LIB.setSentenceEnd(ptrSentence, ArgUtils.asNameOrId(aliasId)));
                 }
             } else if (binder instanceof GraphLogicalPathExpand) { // path expand
-                LogicalNode node = (LogicalNode) visit((GraphLogicalPathExpand) binder);
+                PhysicalNode node = (PhysicalNode) visit((GraphLogicalPathExpand) binder);
                 checkFfiResult(
                         LIB.addSentenceBinder(
                                 ptrSentence, (Pointer) node.getNode(), FfiBinderOpt.Path));

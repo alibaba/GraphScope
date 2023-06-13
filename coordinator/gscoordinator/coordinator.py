@@ -174,18 +174,19 @@ class CoordinatorServiceServicer(
         self._dangling_timeout_seconds = dangling_timeout_seconds
         self._dangling_detecting_timer = None
         self._cleanup_instance = False
-        self._set_dangling_timer(cleanup_instance=True)
-
-        self._operation_executor: OperationExecutor = None
 
         self._session_id = self._generate_session_id()
         self._launcher.set_session_workspace(self._session_id)
-
-        self._operation_executor = OperationExecutor(
-            self._session_id, self._launcher, self._object_manager
-        )
         if not self._launcher.start():
             raise RuntimeError("Coordinator launching instance failed.")
+
+        self._operation_executor: OperationExecutor = OperationExecutor(
+            self._session_id, self._launcher, self._object_manager
+        )
+
+        # the dangling timer should be initialized after the launcher started,
+        # otherwise there would be a deadlock if `self._launcher.start()` failed.
+        self._set_dangling_timer(cleanup_instance=True)
 
         # a lock that protects the coordinator
         self._lock = threading.RLock()
@@ -242,6 +243,7 @@ class CoordinatorServiceServicer(
         # Session connected, fetch logs via gRPC.
         self._streaming_logs = True
         sys.stdout.drop(False)
+        sys.stderr.drop(False)
 
         return message_pb2.ConnectSessionResponse(
             session_id=self._session_id,
@@ -269,6 +271,7 @@ class CoordinatorServiceServicer(
 
         # Session closed, stop streaming logs
         sys.stdout.drop(True)
+        sys.stderr.drop(True)
         self._streaming_logs = False
         return message_pb2.CloseSessionResponse()
 
@@ -863,6 +866,12 @@ def parse_sys_args():
         help="Mount the aliyun dataset bucket as a volume by ossfs.",
     )
     parser.add_argument(
+        "--k8s_deploy_mode",
+        type=str,
+        default="eager",
+        help="The deploying mode of graphscope, eager or lazy.",
+    )
+    parser.add_argument(
         "--monitor",
         type=str2bool,
         nargs="?",
@@ -930,6 +939,7 @@ def get_launcher(args):
             with_mars=args.k8s_with_mars,
             enabled_engines=args.k8s_enabled_engines,
             dataset_proxy=args.dataset_proxy,
+            deploy_mode=args.k8s_deploy_mode,
         )
     elif args.cluster_type == "hosts":
         launcher = LocalLauncher(
@@ -982,9 +992,9 @@ def start_server(launcher, args):
             logger.info(
                 "Coordinator monitor server listen at 0.0.0.0:%d", args.monitor_port
             )
-        except Exception as e:
-            logger.error(
-                "Failed to start monitor server 0.0.0.0:%d : %s", args.monitor_port, e
+        except Exception:  # noqa: E722, pylint: disable=broad-except
+            logger.exception(
+                "Failed to start monitor server 0.0.0.0:%d", args.monitor_port
             )
 
     # handle SIGTERM signal

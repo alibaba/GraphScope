@@ -445,6 +445,21 @@ def test_app_on_local_vm_graph(
     assert r2 is not None
 
 
+def test_app_on_compact_graph(
+    p2p_property_graph_undirected_compact,
+    wcc_result,
+):
+    # on default int64 oid
+    ctx1 = graphscope.wcc_auto(p2p_property_graph_undirected_compact)
+    r1 = (
+        ctx1.to_dataframe({"node": "v.id", "r": "r"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=int)
+    )
+    # Test algorithm correctness
+    assert np.all(r1 == wcc_result)
+
+
 def test_wcc_on_flatten_graph(arrow_modern_graph_undirected):
     ctx = graphscope.wcc_auto(arrow_modern_graph_undirected)
     df = ctx.to_dataframe({"node": "v.id", "r": "r"})

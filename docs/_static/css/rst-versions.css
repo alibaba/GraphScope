@@ -15,7 +15,8 @@
 }
 
 .rst-versions-ver {
-    bottom: 128px !important;
+    /* bottom: 128px !important; */
+    bottom: 100px !important;
 }
 
 .rst-versions.rst-versions-ver .rst-current-version {
@@ -23,7 +24,8 @@
 }
 
 .rst-versions-lang {
-    height: 128px !important;
+    /* height: 128px !important; */
+	bottom: 1rem !important;;
 }
 
 .rst-versions {
@@ -133,7 +135,7 @@
 
 .rst-versions .rst-other-versions {
 	font-size: 90%;
-	padding: 12px;
+	padding: 0 12px 0  12px;
 	color: gray;
 	display: none;
 }
@@ -147,9 +149,13 @@
 	border-top: solid 1px #413d3d
 }
 
+.rst-versions .rst-other-versions dl {
+	margin: 0;
+}
+
 .rst-versions .rst-other-versions dd {
 	display: inline-block;
-	margin: 0
+	margin: 0;
 }
 
 .rst-versions .rst-other-versions dd a {

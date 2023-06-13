@@ -21,14 +21,15 @@ RUN cd /home/graphscope/GraphScope/ && \
     fi
 
 ############### RUNTIME: frontend #######################
-FROM centos:7.9.2009 AS frontend
+FROM ubuntu:22.04 AS frontend
 
 ENV GRAPHSCOPE_HOME=/opt/graphscope
 ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
 
-RUN yum install -y java-1.8.0-openjdk sudo \
-    && yum clean all \
-    && rm -rf /var/cache/yum
+RUN apt-get update -y && \
+    apt-get install -y sudo default-jdk && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /home/graphscope/install/bin/giectl /opt/graphscope/bin/giectl
 # vineyard.frontend.properties, log configuration files
@@ -49,22 +50,17 @@ USER graphscope
 WORKDIR /home/graphscope
 
 ############### RUNTIME: executor #######################
-FROM $REGISTRY/graphscope/manylinux2014:2022-12-12-ext AS ext
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:20230407-ext AS ext
 FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION AS executor
 
-ENV GRAPHSCOPE_HOME=/opt/graphscope
-ENV PATH=$PATH:/home/graphscope/.local/bin
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
 ENV RUST_BACKTRACE=1
 
-RUN sudo yum install -y centos-release-scl-rh java-1.8.0-openjdk  && \
-    INSTALL_PKGS="rh-python38-python-pip" && \
-    sudo yum install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
-    sudo rpm -V $INSTALL_PKGS && \
-    sudo yum -y clean all --enablerepo='*' && \
-    sudo rm -rf /var/cache/yum
+RUN sudo apt-get update -y && \
+    sudo apt-get install -y python3-pip default-jdk curl && \
+    sudo apt-get clean -y && \
+    sudo rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_HOME=/usr/lib/jvm/jre-openjdk HADOOP_HOME=/opt/hadoop-3.3.0
+ENV JAVA_HOME=/usr/lib/jvm/default-java HADOOP_HOME=/opt/hadoop-3.3.0
 ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
 ENV HADOOP_YARN_HOME=$HADOOP_HOME HADOOP_MAPRED_HOME=$HADOOP_HOME
 COPY --from=ext /opt/hadoop-3.3.0 /opt/hadoop-3.3.0
@@ -86,10 +82,9 @@ COPY ./k8s/utils/graphctl.py /usr/local/bin/graphctl.py
 RUN sudo chmod +x /opt/graphscope/bin/*
 RUN sudo chmod a+wrx /tmp /var/tmp
 
-SHELL ["/usr/bin/scl", "enable", "rh-python38" ]
 RUN python3 -m pip install --no-cache-dir vineyard vineyard-io --user
 
 USER graphscope
 WORKDIR /home/graphscope
 
-
+ENV PATH=${PATH}:/home/graphscope/.local/bin

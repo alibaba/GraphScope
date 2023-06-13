@@ -49,19 +49,12 @@ repo_root = os.path.dirname(os.path.abspath(__file__))
 version = get_version(os.path.join(repo_root, "..", "VERSION"))
 
 
-GRAPHSCOPE_REQUIRED_PACKAGES = [
-    f"gs-coordinator == {version}",
-    f"gs-engine == {version}",
-    f"gs-include == {version}",
-    f"gs-apps == {version}",
-]
-
 GRAPHSCOPE_HOME = os.environ.get("GRAPHSCOPE_HOME", "/usr/local")
 INSTALL_PREFIX = os.environ.get("INSTALL_PREFIX", "/opt/graphscope")
 
 
 # copy any files contains in ${INSTALL_PREFIX} into site-packages/graphscope.runtime
-def _get_extra_data():
+def _get_extra_data():  # noqa: C901
     # Copy
     #   1) ${INSTALL_PREFIX}
     #   2) headers of arrow/glog/gflags/google/openmpi/vineyard
@@ -76,34 +69,39 @@ def _get_extra_data():
     #   4) gs-engine: other runtime info such as 'conf', and *.jar
     #   5) gs-apps: precompiled builtin applications
 
+    def __unknown_platform(action, platform):
+        raise RuntimeError(f"Unknown platform '{platform}' to {action}")
+
+    def __get_homebrew_prefix(package=None):
+        cmd = [shutil.which("brew"), "--prefix"]
+        if package is not None:
+            cmd.append(package)
+        return subprocess.check_output(cmd).decode("utf-8", errors="ignore").strip("\n")
+
     def __get_openmpi_prefix():
-        openmpi_prefix = ""
         if platform.system() == "Linux":
             # install "/opt/openmpi" in gsruntime image
-            openmpi_prefix = "/opt/openmpi"
+            return "/opt/openmpi"
         elif platform.system() == "Darwin":
-            openmpi_prefix = (
-                subprocess.check_output([shutil.which("brew"), "--prefix", "openmpi"])
-                .decode("utf-8", errors="ignore")
-                .strip("\n")
-            )
+            return __get_homebrew_prefix("openmpi")
         else:
-            raise RuntimeError(
-                "Get openmpi prefix failed on {0}".format(platform.system())
-            )
-        return openmpi_prefix
+            __unknown_platform("find openmpi", platform.system())
+
+    def __get_vineyard_prefix():
+        if platform.system() == "Linux":
+            return GRAPHSCOPE_HOME
+        elif platform.system() == "Darwin":
+            return __get_homebrew_prefix("vineyard")
+        else:
+            __unknown_platform("find vineyard", platform.system())
 
     def __get_lib_suffix():
-        suffix = ""
         if platform.system() == "Linux":
-            suffix = "so"
+            return "so"
         elif platform.system() == "Darwin":
-            suffix = "dylib"
+            return "dylib"
         else:
-            raise RuntimeError(
-                "Get library suffix failed on {0}".format(platform.system())
-            )
-        return suffix
+            __unknown_platform("resolve lib suffix", platform.system())
 
     name = os.environ.get("package_name", "gs-coordinator")
     RUNTIME_ROOT = "graphscope.runtime"
@@ -119,7 +117,7 @@ def _get_extra_data():
             f"{INSTALL_PREFIX}/bin/": os.path.join(RUNTIME_ROOT, "bin"),
             f"{INSTALL_PREFIX}/lib/": os.path.join(RUNTIME_ROOT, "lib"),
             f"{INSTALL_PREFIX}/lib64/": os.path.join(RUNTIME_ROOT, "lib64"),
-            f"{GRAPHSCOPE_HOME}/lib/libvineyard_internal_registry.{__get_lib_suffix()}": os.path.join(
+            f"{__get_vineyard_prefix()}/lib/libvineyard_internal_registry.{__get_lib_suffix()}": os.path.join(
                 RUNTIME_ROOT, "lib"
             ),
         }
@@ -141,7 +139,7 @@ def _get_extra_data():
             f"{GRAPHSCOPE_HOME}/include/string_view": os.path.join(
                 RUNTIME_ROOT, "include"
             ),
-            f"{GRAPHSCOPE_HOME}/include/vineyard": os.path.join(
+            f"{__get_vineyard_prefix()}/include/vineyard": os.path.join(
                 RUNTIME_ROOT, "include"
             ),
             f"{GRAPHSCOPE_HOME}/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
@@ -155,9 +153,14 @@ def _get_extra_data():
             data["/usr/include/msgpack"] = os.path.join(RUNTIME_ROOT, "include")
             data["/usr/include/msgpack.hpp"] = os.path.join(RUNTIME_ROOT, "include")
         elif platform.system() == "Darwin":
-            data["/usr/local/include/rapidjson"] = os.path.join(RUNTIME_ROOT, "include")
-            data["/usr/local/include/msgpack"] = os.path.join(RUNTIME_ROOT, "include")
-            data["/usr/local/include/msgpack.hpp"] = os.path.join(
+            homebrew_prefix = __get_homebrew_prefix()
+            data[f"{homebrew_prefix}/include/rapidjson"] = os.path.join(
+                RUNTIME_ROOT, "include"
+            )
+            data[f"{homebrew_prefix}/include/msgpack"] = os.path.join(
+                RUNTIME_ROOT, "include"
+            )
+            data[f"{homebrew_prefix}/include/msgpack.hpp"] = os.path.join(
                 RUNTIME_ROOT, "include"
             )
     elif name == "gs-apps":
@@ -317,9 +320,16 @@ def parsed_reqs():
         with open(
             os.path.join(repo_root, "requirements.txt"), "r", encoding="utf-8"
         ) as fp:
-            return fp.read().splitlines()
+            pkgs = fp.read().splitlines()
+            pkgs.append(f"graphscope_client == {version}")
+            return pkgs
     elif name == "graphscope":
-        return GRAPHSCOPE_REQUIRED_PACKAGES
+        return [
+            f"gs-coordinator == {version}",
+            f"gs-engine == {version}",
+            f"gs-include == {version}",
+            f"gs-apps == {version}",
+        ]
     else:
         return []
 

@@ -16,8 +16,11 @@
 #include <memory>
 
 #include "vineyard/client/client.h"
+#include "vineyard/common/util/macros.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/loader/fragment_loader_utils.h"
+#include "vineyard/graph/loader/gar_fragment_loader.h"
+#include "vineyard/graph/writer/arrow_fragment_writer.h"
 
 #include "core/config.h"
 #include "core/error.h"
@@ -40,6 +43,7 @@
 using oid_t = typename _GRAPH_TYPE::oid_t;
 using vid_t = typename _GRAPH_TYPE::vid_t;
 using vertex_map_t = typename _GRAPH_TYPE::vertex_map_t;
+static constexpr bool compact_v = _GRAPH_TYPE::compact_v;
 
 namespace bl = boost::leaf;
 namespace detail {
@@ -80,6 +84,7 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
     gs::rpc::graph::GraphDefPb graph_def;
 
     graph_def.set_key(graph_name);
+    graph_def.set_compact_edges(frag->compact_edges());
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
       graph_def.extension().UnpackTo(&vy_info);
@@ -89,26 +94,52 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
     for (auto const& item : fg->Fragments()) {
       vy_info.add_fragments(item.second);
     }
+    graph_def.mutable_extension()->PackFrom(vy_info);
     gs::set_graph_def(frag, graph_def);
 
     auto wrapper = std::make_shared<gs::FragmentWrapper<_GRAPH_TYPE>>(
         graph_name, graph_def, frag);
     return std::dynamic_pointer_cast<gs::IFragmentWrapper>(wrapper);
   } else {
-    BOOST_LEAF_AUTO(graph_info, gs::ParseCreatePropertyGraph(params));
-    using loader_t = gs::arrow_fragment_loader_t<oid_t, vid_t, vertex_map_t>;
-    loader_t loader(client, comm_spec, graph_info);
+    vineyard::ObjectID frag_group_id = vineyard::InvalidObjectID();
+    bool generate_eid = false;
+    bool retain_oid = false;
+    bool from_gar = params.HasKey(gs::rpc::IS_FROM_GAR)
+                        ? params.Get<bool>(gs::rpc::IS_FROM_GAR).value()
+                        : false;
+    if (from_gar) {
+#ifdef ENABLE_GAR
+      BOOST_LEAF_AUTO(graph_info_path,
+                      params.Get<std::string>(gs::rpc::GRAPH_INFO_PATH));
+      BOOST_LEAF_ASSIGN(generate_eid, params.Get<bool>(gs::rpc::GENERATE_EID));
+      BOOST_LEAF_ASSIGN(retain_oid, params.Get<bool>(gs::rpc::RETAIN_OID));
+      using loader_t =
+          vineyard::gar_fragment_loader_t<oid_t, vid_t, vertex_map_t>;
+      loader_t loader(client, comm_spec, graph_info_path);
+      MPI_Barrier(comm_spec.comm());
+      BOOST_LEAF_ASSIGN(frag_group_id, loader.LoadFragmentAsFragmentGroup());
+#else
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                      "The vineyard is not compiled with GAR support");
+#endif
+    } else {
+      BOOST_LEAF_AUTO(graph_info, gs::ParseCreatePropertyGraph(params));
+      using loader_t = gs::arrow_fragment_loader_t<oid_t, vid_t, vertex_map_t>;
+      loader_t loader(client, comm_spec, graph_info);
 
-    MPI_Barrier(comm_spec.comm());
-    {
-      vineyard::json __dummy;
-      VINEYARD_DISCARD(
-          client.GetData(vineyard::InvalidObjectID(), __dummy, true, false));
+      MPI_Barrier(comm_spec.comm());
+      {
+        vineyard::json __dummy;
+        VINEYARD_DISCARD(
+            client.GetData(vineyard::InvalidObjectID(), __dummy, true, false));
+      }
+
+      BOOST_LEAF_ASSIGN(frag_group_id, loader.LoadFragmentAsFragmentGroup());
+      generate_eid = graph_info->generate_eid;
+      retain_oid = graph_info->retain_oid;
     }
 
-    BOOST_LEAF_AUTO(frag_group_id, loader.LoadFragmentAsFragmentGroup());
     MPI_Barrier(comm_spec.comm());
-
     LOG_IF(INFO, comm_spec.worker_id() == 0)
         << "PROGRESS--GRAPH-LOADING-SEAL-100";
 
@@ -128,6 +159,7 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
     gs::rpc::graph::GraphDefPb graph_def;
 
     graph_def.set_key(graph_name);
+    graph_def.set_compact_edges(frag->compact_edges());
 
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
@@ -138,8 +170,8 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
     for (auto const& item : fg->Fragments()) {
       vy_info.add_fragments(item.second);
     }
-    vy_info.set_generate_eid(graph_info->generate_eid);
-    vy_info.set_retain_oid(graph_info->retain_oid);
+    vy_info.set_generate_eid(generate_eid);
+    vy_info.set_retain_oid(retain_oid);
     graph_def.mutable_extension()->PackFrom(vy_info);
     gs::set_graph_def(frag, graph_def);
 
@@ -149,8 +181,32 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
   }
 }
 
-__attribute__((visibility(
-    "hidden"))) static bl::result<std::shared_ptr<gs::IFragmentWrapper>>
+__attribute__((visibility("hidden"))) static bl::result<void> ArchiveGraph(
+    vineyard::ObjectID frag_group_id, const grape::CommSpec& comm_spec,
+    vineyard::Client& client, const gs::rpc::GSParams& params) {
+#ifdef ENABLE_GAR
+  BOOST_LEAF_AUTO(graph_info_path,
+                  params.Get<std::string>(gs::rpc::GRAPH_INFO_PATH));
+
+  auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
+      client.GetObject(frag_group_id));
+  auto fid = comm_spec.WorkerToFrag(comm_spec.worker_id());
+  auto frag_id = fg->Fragments().at(fid);
+  auto frag = std::static_pointer_cast<_GRAPH_TYPE>(client.GetObject(frag_id));
+
+  using archive_t = vineyard::ArrowFragmentWriter<_GRAPH_TYPE>;
+  archive_t archive(frag, comm_spec, graph_info_path);
+  archive.WriteFragment();
+
+  return {};
+#else
+  RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                  "The vineyard is not compiled with GAR support");
+#endif
+}
+
+__attribute__((visibility("hidden")))
+bl::result<std::shared_ptr<gs::IFragmentWrapper>>
 ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
                 std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
                 const std::string& dst_graph_name) {
@@ -196,7 +252,8 @@ ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
                         std::string(vineyard::type_name<oid_t>()));
   }
 
-  gs::DynamicToArrowConverter<oid_t, vertex_map_t> converter(comm_spec, client);
+  gs::DynamicToArrowConverter<oid_t, vertex_map_t, compact_v> converter(
+      comm_spec, client);
   BOOST_LEAF_AUTO(arrow_frag, converter.Convert(dynamic_frag));
   VINEYARD_CHECK_OK(client.Persist(arrow_frag->id()));
   BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
@@ -206,6 +263,7 @@ ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
 
   gs::rpc::graph::GraphDefPb graph_def;
   graph_def.set_key(dst_graph_name);
+  graph_def.set_compact_edges(arrow_frag->compact_edges());
   gs::rpc::graph::VineyardInfoPb vy_info;
   if (graph_def.has_extension()) {
     graph_def.extension().UnpackTo(&vy_info);
@@ -251,6 +309,7 @@ ToDynamicFragment(const grape::CommSpec& comm_spec,
   graph_def.set_key(dst_graph_name);
   graph_def.set_directed(dynamic_frag->directed());
   graph_def.set_graph_type(gs::rpc::graph::DYNAMIC_PROPERTY);
+  graph_def.set_compact_edges(false);
   gs::rpc::graph::MutableGraphInfoPb graph_info;
   if (graph_def.has_extension()) {
     graph_def.extension().UnpackTo(&graph_info);
@@ -294,6 +353,7 @@ AddLabelsToGraph(vineyard::ObjectID origin_frag_id,
   gs::rpc::graph::GraphDefPb graph_def;
 
   graph_def.set_key(graph_name);
+  graph_def.set_compact_edges(frag->compact_edges());
 
   gs::rpc::graph::VineyardInfoPb vy_info;
   if (graph_def.has_extension()) {
@@ -317,10 +377,10 @@ AddLabelsToGraph(vineyard::ObjectID origin_frag_id,
 
 /**
  * property_graph_frame.cc serves as a frame to be compiled with ArrowFragment.
- * LoadGraph, ToArrowFragment, and ToDynamicFragment functions are provided to
- * proceed with corresponding operations. The frame only needs one macro
- * _GRAPH_TYPE to present which specialized ArrowFragment type will be injected
- * into the frame.
+ * LoadGraph, ArchiveGraph, ToArrowFragment, and ToDynamicFragment functions
+ * are provided to proceed with corresponding operations. The frame only needs
+ * one macro _GRAPH_TYPE to present which specialized ArrowFragment type will be
+ * injected into the frame.
  */
 extern "C" {
 
@@ -331,6 +391,12 @@ void LoadGraph(
   __FRAME_CATCH_AND_ASSIGN_GS_ERROR(
       fragment_wrapper,
       detail::LoadGraph(comm_spec, client, graph_name, params));
+}
+
+void ArchiveGraph(vineyard::ObjectID frag_id, const grape::CommSpec& comm_spec,
+                  vineyard::Client& client, const gs::rpc::GSParams& params,
+                  bl::result<void>& result_out) {
+  result_out = detail::ArchiveGraph(frag_id, comm_spec, client, params);
 }
 
 void ToArrowFragment(

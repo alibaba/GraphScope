@@ -19,28 +19,21 @@ package com.alibaba.graphscope.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.ProcessBuilder.Redirect;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class FileUtils {
     private static Logger logger = LoggerFactory.getLogger(FileUtils.class.getName());
 
     public static long getNumLinesOfFile(String path) {
-        ProcessBuilder builder = new ProcessBuilder("wc", "-l", path);
-        builder.inheritIO().redirectOutput(Redirect.PIPE);
-        Process process = null;
+        long count = 0;
         try {
-            process = builder.start();
-            try (BufferedReader reader =
-                    new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String res = reader.readLine().split("\\s+")[0];
-                return Long.parseLong(res);
-            }
-        } catch (IOException e) {
+            Path p = Paths.get(path);
+            count = Files.lines(p).count();
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return 0;
+        return count;
     }
 }

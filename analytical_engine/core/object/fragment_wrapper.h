@@ -201,6 +201,7 @@ inline void set_graph_def(
   graph_def.set_graph_type(rpc::graph::ARROW_PROPERTY);
   graph_def.set_directed(fragment->directed());
   graph_def.set_is_multigraph(fragment->is_multigraph());
+  graph_def.set_compact_edges(fragment->compact_edges());
 
   auto v_entries = schema.vertex_entries();
   auto e_entries = schema.edge_entries();
@@ -248,10 +249,12 @@ class FragmentWrapper {};
  * @tparam OID_T OID type
  * @tparam VID_T VID type
  */
-template <typename OID_T, typename VID_T, typename VERTEX_MAP_T>
-class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>>
+template <typename OID_T, typename VID_T, typename VERTEX_MAP_T, bool COMPACT>
+class FragmentWrapper<
+    vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T, COMPACT>>
     : public ILabeledFragmentWrapper {
-  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>;
+  using fragment_t =
+      vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T, COMPACT>;
   using label_id_t = typename fragment_t::label_id_t;
 
  public:
@@ -332,6 +335,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>>
     rpc::graph::GraphDefPb new_graph_def;
 
     new_graph_def.set_key(dst_graph_name);
+    new_graph_def.set_compact_edges(new_frag->compact_edges());
 
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def_.has_extension()) {
@@ -501,7 +505,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>>
       for (fid_t i = 0; i < cur_fnum; ++i) {
         auto name =
             "o2g_" + std::to_string(i) + "_" + std::to_string(pair.first);
-        if (ctx_meta.Haskey(name) && cur_meta.Haskey(name)) {
+        if (ctx_meta.HasKey(name) && cur_meta.HasKey(name)) {
           auto id_in_ctx = ctx_meta.GetMemberMeta(name).GetId();
           auto id_in_cur = cur_meta.GetMemberMeta(name).GetId();
           if (id_in_ctx != id_in_cur) {
@@ -536,6 +540,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>>
 
     rpc::graph::GraphDefPb new_graph_def;
     new_graph_def.set_key(dst_graph_name);
+    new_graph_def.set_compact_edges(new_frag->compact_edges());
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def_.has_extension()) {
       graph_def_.extension().UnpackTo(&vy_info);
@@ -700,6 +705,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>>
     rpc::graph::GraphDefPb new_graph_def;
 
     new_graph_def.set_key(dst_graph_name);
+    new_graph_def.set_compact_edges(new_frag->compact_edges());
 
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def_.has_extension()) {
@@ -743,12 +749,12 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>>
  * @tparam VID_T VID type
  */
 template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T,
-          typename VERTEX_MAP_T>
-class FragmentWrapper<
-    ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>>
+          typename VERTEX_MAP_T, bool COMPACT>
+class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T,
+                                             VERTEX_MAP_T, COMPACT>>
     : public IFragmentWrapper {
-  using fragment_t =
-      ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>;
+  using fragment_t = ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T,
+                                            VERTEX_MAP_T, COMPACT>;
 
  public:
   FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,

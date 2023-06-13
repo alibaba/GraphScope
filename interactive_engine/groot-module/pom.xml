@@ -107,6 +107,17 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>com.aliyun.odps</groupId>
+      <artifactId>odps-sdk-commons</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.aliyun.odps</groupId>
+      <artifactId>odps-sdk-core</artifactId>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 
 </project>

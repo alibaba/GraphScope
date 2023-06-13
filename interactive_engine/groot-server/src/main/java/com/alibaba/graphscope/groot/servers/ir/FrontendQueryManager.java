@@ -82,7 +82,7 @@ public class FrontendQueryManager extends IrMetaQueryCallback {
     public synchronized IrMeta beforeExec() {
         try {
             IrMeta irMeta = super.beforeExec();
-            QueryStatus status = new QueryStatus(irMeta.getSnapshotId());
+            QueryStatus status = new QueryStatus(irMeta.getSnapshotId().getId());
             queryQueue.put(status);
             return irMeta;
         } catch (InterruptedException e) {
@@ -93,7 +93,7 @@ public class FrontendQueryManager extends IrMetaQueryCallback {
     // set the QueryStatus as done after the execution of the query
     @Override
     public synchronized void afterExec(IrMeta irMeta) {
-        long snapshotId = irMeta.getSnapshotId();
+        long snapshotId = irMeta.getSnapshotId().getId();
         queryQueue.forEach(
                 k -> {
                     if (k.snapshotId == snapshotId) {
@@ -111,7 +111,7 @@ public class FrontendQueryManager extends IrMetaQueryCallback {
                     queryQueue.remove();
                 }
                 if (queryQueue.isEmpty()) {
-                    minSnapshotId = fetcher.fetch().get().getSnapshotId();
+                    minSnapshotId = fetcher.fetch().get().getSnapshotId().getId();
                 } else {
                     minSnapshotId = queryQueue.peek().snapshotId;
                 }

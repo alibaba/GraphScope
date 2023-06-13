@@ -35,21 +35,21 @@ class TestHararyGraph:
     def test_hkn_harary_graph(self):
         # When k == 1, the hkn_harary_graph(k,n) is
         # the path_graph(n)
-        for (k, n) in [(1, 6), (1, 7)]:
+        for k, n in [(1, 6), (1, 7)]:
             G1 = hkn_harary_graph(k, n)
             G2 = nx.path_graph(n)
             assert is_isomorphic(G1, G2)
 
         # When k is even, the hkn_harary_graph(k,n) is
         # the circulant_graph(n, list(range(1,k/2+1)))
-        for (k, n) in [(2, 6), (2, 7), (4, 6), (4, 7)]:
+        for k, n in [(2, 6), (2, 7), (4, 6), (4, 7)]:
             G1 = hkn_harary_graph(k, n)
             G2 = nx.circulant_graph(n, list(range(1, k // 2 + 1)))
             assert is_isomorphic(G1, G2)
 
         # When k is odd and n is even, the hkn_harary_graph(k,n) is
         # the circulant_graph(n, list(range(1,(k+1)/2)) plus [n/2])
-        for (k, n) in [(3, 6), (5, 8), (7, 10)]:
+        for k, n in [(3, 6), (5, 8), (7, 10)]:
             G1 = hkn_harary_graph(k, n)
             L = list(range(1, (k + 1) // 2))
             L.append(n // 2)
@@ -59,7 +59,7 @@ class TestHararyGraph:
         # When k is odd and n is odd, the hkn_harary_graph(k,n) is
         # the circulant_graph(n, list(range(1,(k+1)/2))) with
         # n//2+1 edges added between node i and node i+n//2+1
-        for (k, n) in [(3, 5), (5, 9), (7, 11)]:
+        for k, n in [(3, 5), (5, 9), (7, 11)]:
             G1 = hkn_harary_graph(k, n)
             G2 = nx.circulant_graph(n, list(range(1, (k + 1) // 2)))
             eSet1 = set(G1.edges)

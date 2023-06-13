@@ -492,7 +492,7 @@ std::string generate_jvm_opts() {
     return "";
   }
   std::string cmd =
-      std::string("source ") + std::string(gs_home) + "/conf/grape_jvm_opts";
+      std::string(". ") + std::string(gs_home) + "/conf/grape_jvm_opts";
   std::string res = exec(cmd.c_str());
   VLOG(10) << "jvm opts res: " << res;
   return res;

@@ -2,7 +2,8 @@
 
 
 
-Real-life graph computation applications are often more complex than the workloads we've seen so far, which highlights the need for a flexible and intelligent design for the graph processing system. In this section, we will introduce the modular design of GraphScope and how it addresses the diverse needs of graph computation workloads.
+Real-life graph computation applications are often more complex than the workloads we've seen so far, which highlights the need for a flexible and intelligent design for the graph processing system. 
+In this section, we will introduce the modular design of GraphScope and how it addresses the diverse needs of graph computation workloads.
 
 
 ## Motivation
@@ -175,7 +176,7 @@ GraphScope is both performant and easy-to-use for graph analytical jobs.
 In this scenario, applications are provided as iterative algorithms in the built-in library or customized by the users. 
 The algorithms can be implemented using FLASH-style API, Pregel API, or GRAPE native API. 
 All these types of algorithms are compiled in the engine layer and run on GRAPE, 
-a processing system proposed in [this paper](https://dl.acm.org/doi/10.1145/3282488) published in SIGMOD2017. 
+a processing system proposed in [this paper](https://dl.acm.org/doi/10.1145/3282488) published in SIGMOD 2017. 
 GRAPE distinguishes itself from prior systems by its ability to parallelize sequential graph algorithms as a whole. 
 In GRAPE, sequential algorithms can be easily "plugged into" with only minor changes, allowing them to efficiently handle large graphs. 
 To achieve high performance, deployments for this scenario typically choose an in-memory graph store for the storage layer. 

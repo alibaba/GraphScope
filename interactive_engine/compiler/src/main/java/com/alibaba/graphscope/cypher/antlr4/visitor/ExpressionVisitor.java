@@ -20,7 +20,7 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariable;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
-import com.alibaba.graphscope.cypher.antlr4.type.ExprVisitorResult;
+import com.alibaba.graphscope.cypher.antlr4.visitor.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 import com.google.common.collect.ImmutableList;

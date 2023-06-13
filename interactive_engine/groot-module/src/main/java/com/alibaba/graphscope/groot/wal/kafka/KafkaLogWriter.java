@@ -57,7 +57,7 @@ public class KafkaLogWriter implements LogWriter {
     }
 
     @Override
-    public long append(LogEntry logEntry) throws IOException {
+    public long append(LogEntry logEntry) {
         Future<RecordMetadata> future =
                 producer.send(
                         new ProducerRecord<>(this.topicName, this.partitionId, null, logEntry));

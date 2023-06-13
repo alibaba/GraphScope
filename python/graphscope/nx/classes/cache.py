@@ -21,7 +21,14 @@ import io
 from functools import lru_cache
 
 import msgpack
-import simdjson
+
+try:
+    import simdjson as json
+except ImportError:
+    try:
+        import ujson as json
+    except ImportError:
+        import json
 
 from graphscope.framework import dag_utils
 from graphscope.nx.utils.misc import clear_mutation_cache
@@ -106,9 +113,8 @@ class Cache:
     def align_node_attr_cache(self):
         """Check and align the node attr cache with node id cache"""
         if self.enable_iter_cache and self.node_attr_align is False:
-            f = self.futures["node_attr"]
-            if f is not None:
-                start_gid, self.node_attr_cache = f.result()
+            if self.futures["node_attr"] is not None:
+                start_gid, self.node_attr_cache = self.futures["node_attr"].result()
                 if start_gid == self.iter_pre_gid:
                     # align to current node_id_cache
                     if self.iter_gid != self.iter_pre_gid:
@@ -122,8 +128,7 @@ class Cache:
     def align_succ_cache(self):
         """Check and align the succ neighbor cache with node id cache"""
         if self.enable_iter_cache and self.succ_align is False:
-            f = self.futures["succ"]
-            start_gid, self.succ_cache = f.result()
+            start_gid, self.succ_cache = self.futures["succ"].result()
             if start_gid == self.iter_pre_gid:
                 if self.iter_gid != self.iter_pre_gid:
                     self._async_fetch_succ_cache(self.iter_gid)
@@ -136,9 +141,8 @@ class Cache:
     def align_succ_attr_cache(self):
         """Check and align the succ neighbor attr cache with node id cache"""
         if self.enable_iter_cache and self.succ_attr_align is False:
-            f = self.futures["succ_attr"]
-            if f is not None:
-                start_gid, self.succ_attr_cache = f.result()
+            if self.futures["succ_attr"] is not None:
+                start_gid, self.succ_attr_cache = self.futures["succ_attr"].result()
                 if start_gid == self.iter_pre_gid:
                     if self.iter_gid != self.iter_pre_gid:
                         self._async_fetch_succ_attr_cache(self.iter_gid)
@@ -153,8 +157,7 @@ class Cache:
         if self.enable_iter_cache and self.pred_align is False:
             if self.futures["pred"] is None:
                 self._async_fetch_pred_cache(self.iter_pre_gid)
-            f = self.futures["pred"]
-            start_gid, self.pred_cache = f.result()
+            start_gid, self.pred_cache = self.futures["pred"].result()
             if start_gid == self.iter_pre_gid:
                 if self.iter_gid != self.iter_pre_gid:
                     self._async_fetch_pred_cache(self.iter_gid)
@@ -170,8 +173,7 @@ class Cache:
         if self.enable_iter_cache and self.pred_attr_align is False:
             if self.futures["pred_attr"] is None:
                 self._async_fetch_pred_attr_cache(self.iter_pre_gid)
-            f = self.futures["pred_attr"]
-            start_gid, self.pred_attr_cache = f.result()
+            start_gid, self.pred_attr_cache = self.futures["pred_attr"].result()
             if start_gid == self.iter_pre_gid:
                 if self.iter_gid != self.iter_pre_gid:
                     self._async_fetch_pred_attr_cache(self.iter_gid)
@@ -251,6 +253,9 @@ class Cache:
                 except concurrent.futures.CancelledError:
                     pass
                 future = None
+
+    def shutdown_executor(self):
+        self.executor.shutdown(wait=True)
 
     def clear(self):
         """Clear batch cache and lru cache, reset the status and warmup again"""
@@ -405,7 +410,7 @@ def get_neighbors(graph, n, pred=False):
         n = graph._convert_to_label_id_tuple(n)
     report_t = types_pb2.PREDS_BY_NODE if pred else types_pb2.SUCCS_BY_NODE
     op = dag_utils.report_graph(
-        graph, report_t, node=simdjson.dumps(n).encode("utf-8", errors="ignore")
+        graph, report_t, node=json.dumps(n).encode("utf-8", errors="ignore")
     )
     archive = op.eval()
     return msgpack.unpackb(archive.get_bytes(), use_list=False)
@@ -433,10 +438,10 @@ def get_neighbors_attr(graph, n, pred=False):
         n = graph._convert_to_label_id_tuple(n)
     report_t = types_pb2.PRED_ATTR_BY_NODE if pred else types_pb2.SUCC_ATTR_BY_NODE
     op = dag_utils.report_graph(
-        graph, report_t, node=simdjson.dumps(n).encode("utf-8", errors="ignore")
+        graph, report_t, node=json.dumps(n).encode("utf-8", errors="ignore")
     )
     archive = op.eval()
-    return simdjson.loads(archive.get_bytes())
+    return json.loads(archive.get_bytes())
 
 
 def get_node_data(graph, n):
@@ -476,7 +481,7 @@ def get_node_data(graph, n):
     op = dag_utils.report_graph(
         graph,
         types_pb2.NODE_DATA,
-        node=simdjson.dumps(n).encode("utf-8", errors="ignore"),
+        node=json.dumps(n).encode("utf-8", errors="ignore"),
     )
     archive = op.eval()
     return msgpack.loads(archive.get_bytes(), use_list=False)

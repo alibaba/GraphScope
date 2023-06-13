@@ -18,11 +18,12 @@
 
 from typing import Mapping
 from typing import Sequence
+from typing import Type
 from typing import Union
 
 try:
     import vineyard
-except ImportError:
+except (ImportError, TypeError):
     vineyard = None
 
 from graphscope.client.session import get_default_session
@@ -56,6 +57,7 @@ def load_from(
     vformat=None,
     eformat=None,
     vertex_map="global",
+    compact_edges=False,
 ) -> Graph:
     """Load a Arrow property graph using a list of vertex/edge specifications.
 
@@ -157,6 +159,9 @@ def load_from(
             This feature is for cooperating with interactive engine.
             If you only need to work with analytical engine, set it to False. Defaults to True.
         vertex_map (str, optional): Indicate use global vertex map or local vertex map. Can be "global" or "local".
+        compact_edges (bool, optional): Compact edges (CSR) using varint and delta encoding. Defaults to False.
+            Note that compact edges helps to half the memory usage of edges in graph data structure, but may cause
+            at most 10%~20% performance degeneration in some algorithms.
     """
 
     # Don't import the :code:`nx` in top-level statments to improve the
@@ -183,10 +188,63 @@ def load_from(
         types_pb2.RETAIN_OID: utils.b_to_attr(retain_oid),
         types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
         types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
+        types_pb2.IS_FROM_GAR: utils.b_to_attr(False),
         types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(vertex_map),
+        types_pb2.COMPACT_EDGES: utils.b_to_attr(compact_edges),
     }
     op = dag_utils.create_graph(
         sess.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=[loader_op], attrs=config
     )
-    graph = sess.g(op, vertex_map=vertex_map)
+    graph = sess.g(
+        op,
+        oid_type=oid_type,
+        directed=directed,
+        generate_eid=generate_eid,
+        retain_oid=retain_oid,
+        vertex_map=vertex_map,
+        compact_edges=compact_edges,
+    )
+    return graph
+
+
+def load_from_gar(
+    graph_info_path: str,
+    directed=True,
+    oid_type="int64_t",
+    vertex_map="global",
+    compact_edges=False,
+) -> Graph:
+    sess = get_default_session()
+    oid_type = utils.normalize_data_type_str(oid_type)
+    if oid_type not in ("int32_t", "int64_t", "std::string"):
+        raise ValueError("The 'oid_type' can only be int32_t, int64_t or string.")
+    if compact_edges:
+        raise ValueError(
+            "Loading from gar with 'compact_edges' hasn't been supported yet."
+        )
+    # generate and add a loader op to dag
+    vertex_map = utils.vertex_map_type_to_enum(vertex_map)
+    # construct create graph op
+    config = {
+        types_pb2.DIRECTED: utils.b_to_attr(directed),
+        types_pb2.OID_TYPE: utils.s_to_attr(oid_type),
+        types_pb2.GENERATE_EID: utils.b_to_attr(False),
+        types_pb2.RETAIN_OID: utils.b_to_attr(False),
+        types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
+        types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
+        types_pb2.IS_FROM_GAR: utils.b_to_attr(True),
+        types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(vertex_map),
+        types_pb2.COMPACT_EDGES: utils.b_to_attr(compact_edges),
+        types_pb2.GRAPH_INFO_PATH: utils.s_to_attr(graph_info_path),
+    }
+    op = dag_utils.create_graph(
+        sess.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=[], attrs=config
+    )
+    graph = sess.g(
+        op,
+        oid_type=oid_type,
+        directed=directed,
+        vertex_map=vertex_map,
+        compact_edges=compact_edges,
+    )
     return graph

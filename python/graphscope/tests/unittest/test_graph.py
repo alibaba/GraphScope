@@ -21,7 +21,6 @@ import os
 
 import numpy as np
 import pytest
-import vineyard
 
 import graphscope
 from graphscope import Graph
@@ -56,8 +55,15 @@ def test_graph_schema_todict(p2p_property_graph):
                         "id": 0,
                         "type": "LONG",
                         "is_primary_key": False,
+                        "comment": "",
                     },
-                    {"name": "id", "id": 1, "type": "LONG", "is_primary_key": False},
+                    {
+                        "name": "id",
+                        "id": 1,
+                        "type": "LONG",
+                        "is_primary_key": False,
+                        "comment": "",
+                    },
                 ],
             }
         ],
@@ -70,14 +76,22 @@ def test_graph_schema_todict(p2p_property_graph):
                         "id": 0,
                         "type": "LONG",
                         "is_primary_key": False,
+                        "comment": "",
                     },
                     {
                         "name": "dst_label_id",
                         "id": 1,
                         "type": "LONG",
                         "is_primary_key": False,
+                        "comment": "",
                     },
-                    {"name": "dist", "id": 2, "type": "LONG", "is_primary_key": False},
+                    {
+                        "name": "dist",
+                        "id": 2,
+                        "type": "LONG",
+                        "is_primary_key": False,
+                        "comment": "",
+                    },
                 ],
                 "relations": [{"src_label": "person", "dst_label": "person"}],
             }
@@ -87,6 +101,8 @@ def test_graph_schema_todict(p2p_property_graph):
 
 
 def test_load_graph_copy(graphscope_session, arrow_property_graph):
+    import vineyard
+
     g = arrow_property_graph
     g2 = graphscope_session.g(g)
     assert g.key != g2.key

@@ -62,6 +62,7 @@ RUN export ARCH=$(echo ${TARGETPLATFORM} | cut -d / -f2) \
     && sudo curl -f -L -o runner.tar.gz https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-${ARCH}-${RUNNER_VERSION}.tar.gz \
     && sudo tar xzf ./runner.tar.gz \
     && sudo rm runner.tar.gz \
+    && sudo sed -i 's/liblttng-ust0/liblttng-ust1/g' ./bin/installdependencies.sh \
     && sudo ./bin/installdependencies.sh \
     && sudo mv ./externals ./externalstmp
 

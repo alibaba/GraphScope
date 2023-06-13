@@ -16,6 +16,23 @@
 # limitations under the License.
 #
 
+import os
+import platform
+import sys
+
+# Tensorflow with Python 3.7 and ARM platform requires lower version of protobuf
+if (sys.version_info.major == 3 and sys.version_info.minor == 7) or (
+    platform.system() == "Linux" and platform.processor() == "aarch64"
+):
+    os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+
+# The gremlinpython has a async event loop, which may conflicts with
+# jupyter notebook's event loop. The nest_asyncio must be applied
+# before other imports, see also #2663.
+import nest_asyncio
+
+nest_asyncio.apply()
+
 from graphscope.analytical.app import *
 from graphscope.analytical.udf import declare
 from graphscope.analytical.udf.types import Vertex
@@ -32,6 +49,7 @@ from graphscope.client.session import set_option
 from graphscope.framework.errors import *
 from graphscope.framework.graph import Graph
 from graphscope.framework.graph_builder import load_from
+from graphscope.framework.graph_builder import load_from_gar
 from graphscope.version import __version__
 
 __doc__ = """
@@ -67,7 +85,6 @@ def __inject_graphscope_extensions():
 
     It may inject classes, functions, methods and attributes to the graphscope module.
     """
-    import sys
 
     if "__graphscope_extensions__" in globals():
         for ext in globals()["__graphscope_extensions__"]:

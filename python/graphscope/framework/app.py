@@ -352,6 +352,10 @@ class AppDAGNode(DAGNode):
         # add op to dag
         self._session.dag.add_op(self._op)
 
+        # statically create the unload op to prevent a possible segmentation fault
+        # inside the protobuf library.
+        self._unload_op = unload_app(self)
+
     def __repr__(self):
         s = f"graphscope.App <type: {self._app_assets.type}, algorithm: {self._app_assets.algo} "
         s += f"bounded_graph: {str(self._graph)}>"
@@ -420,8 +424,7 @@ class AppDAGNode(DAGNode):
         Returns:
             :class:`graphscope.framework.app.UnloadedApp`: Evaluated in eager mode.
         """
-        op = unload_app(self)
-        return UnloadedApp(self._session, op)
+        return UnloadedApp(self._session, self._unload_op)
 
 
 class App(object):

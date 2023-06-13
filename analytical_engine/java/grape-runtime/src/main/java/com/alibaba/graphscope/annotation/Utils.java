@@ -222,7 +222,7 @@ public class Utils {
         } else if (cppType.equals("std::string")) {
             return StringView.class.getName();
         }
-        throw new IllegalStateException("Not recognized cpp " + cppType);
+        throw new IllegalStateException("Not recognized cpp type: " + cppType);
     }
 
     public static String java2Cpp(String javaType, boolean signed) {

@@ -66,7 +66,6 @@ impl ExactExtendEdge {
         &self, mut path_opr: pb::PathExpand,
     ) -> IrPatternResult<pb::logical_plan::Operator> {
         path_opr.start_tag = Some((self.src_vertex_id as KeyId).into());
-        path_opr.alias = None;
         path_opr
             .base
             .as_mut()

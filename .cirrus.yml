@@ -1,0 +1,142 @@
+# only run for releases
+# only_if: $CIRRUS_TAG != ''
+
+env:
+  MACOSX_DEPLOYMENT_TARGET: "11"
+
+macosx_arm64_wheel_task:
+  macos_instance:
+    image: ghcr.io/cirruslabs/macos-monterey-base:latest
+
+  timeout_in: 120m
+
+  # can be manually triggered when needed (nightly or release)
+  trigger_type: manual
+
+  checkout_script:
+    - git submodule init
+    - git submodule update
+    - |
+      pushd ./learning_engine/graph-learn
+      git submodule update --init third_party/pybind11
+      popd
+
+      # suppress the warning of `git submodule xxx` with `sudo`.
+      git config --global --add safe.directory `pwd`
+      git config --global --add safe.directory `pwd`/learning_engine/graph-learn
+      git config --global --add safe.directory `pwd`/learning_engine/graph-learn/third_party/pybind11/pybind11
+    - |
+      # change the version for nightly release
+      # e.g. 0.15.0 -> 0.15.0a20220808
+      time=$(date "+%Y%m%d")
+      version=$(cat ./VERSION)
+      if [[ "$CIRRUS_TAG" == "" ]];
+      then
+        echo "${version}a${time}" > ./VERSION;
+      fi
+
+  install_deps_script:
+    - brew update
+    - brew install coreutils pyenv python
+
+  install_graphscope_deps_script: |
+    brew update || true
+    brew install bash coreutils
+    alias bash=$(brew --prefix)/bin/bash
+    sudo mkdir /opt/graphscope
+    sudo chown -R $(id -u):$(id -g) /opt/graphscope
+
+    # Not sure when the first installation would fail, saying that the lock of python3.10 is taken
+    # However the second trial would success.
+    ./gs install-deps dev || true
+    ./gs install-deps dev
+
+    brew install openjdk@11
+    sudo ln -sfn /opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-11.jdk
+
+    python3 -m pip install -r ./python/requirements.txt
+    python3 -m pip install -r ./python/requirements-dev.txt
+
+    echo "export PATH=/opt/homebrew/opt/coreutils/libexec/gnubin:\$PATH" >> ~/.graphscope_env
+
+    # for debugging with "Rerun with Terminal Access" on cirrus CI
+    bash ./debugging.sh || true
+
+  build_graphscope_wheels_script: |
+    # source environment variable
+    . ~/.graphscope_env
+    python3 -m pip install libclang
+    echo ${CC}
+
+    # for grpc-java
+    /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+
+    # for building GLE
+    git config --global --add safe.directory .
+
+    # prepare
+    pushd ./python
+    python3 setup.py build_proto
+    popd
+    pushd ./coordinator
+    python3 setup.py build_builtin
+    popd
+
+    # build graphscope server wheel
+    pushd ./k8s/internal
+    sudo -E env PATH=$PATH make graphscope-py3-package GRAPHSCOPE_HOME=/usr/local
+    popd
+
+  graphscope_artifacts:
+    path: coordinator/dist/wheelhouse/*.whl
+
+  install_various_python_script:
+    - pyenv install 3.8.16
+    - pyenv install 3.9.16
+    - pyenv install 3.10.10
+    - pyenv install 3.11.2
+
+  build_graphscope_client_script: |
+    . ~/.graphscope_env
+
+    for py in 3.8.16 3.9.16 3.10.10 3.11.2; do
+      current_python=$(pyenv root)/versions/$py/bin/python
+      echo "Python is: $current_python, $($current_python --version)"
+      $current_python -m pip install delocate numpy wheel
+
+      export PATH=$(dirname $current_python):$PATH
+      python3 -c "import sys; print(sys.version)"
+
+      # build graphscope client wheel
+      pushd ./k8s/internal
+      sudo -E env PATH=$PATH make graphscope-client-py3-package GRAPHSCOPE_HOME=/usr/local
+      popd
+    done
+
+  graphscope_client_artifacts:
+    path: python/dist/wheelhouse/*.whl
+
+  run_tests_script: |
+    pushd python/dist/wheelhouse
+    for f in * ; do
+      python3 -m pip install $f --user || true;
+    done
+    popd
+
+    sudo python3 -m pip install coordinator/dist/wheelhouse/*.whl
+
+    # run tests
+    export GS_TEST_DIR="$(pwd)/gstest"
+    git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+
+    export JAVA_HOME=$(/usr/libexec/java_home -v11)
+    export PATH=$JAVA_HOME/bin:$HOME/.local/bin:$PATH
+
+    sudo mkdir -p /tmp || true
+    sudo chmod -R a+wrx /tmp || true
+
+    # for debugging with "Rerun with Terminal Access" on cirrus CI
+    bash ./debugging.sh || true
+
+    python3 -c "import sys; print(sys.version)"
+    python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest

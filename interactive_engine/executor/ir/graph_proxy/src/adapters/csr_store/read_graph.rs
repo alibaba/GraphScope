@@ -15,7 +15,6 @@
 
 use std::convert::TryFrom;
 use std::fmt;
-use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
 use ahash::HashMap;
@@ -34,7 +33,7 @@ use pegasus_common::impl_as_any;
 
 use crate::apis::graph::PKV;
 use crate::apis::{
-    from_fn, register_graph, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
+    from_fn, ClusterInfo, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
     Statement, Vertex, ID,
 };
 use crate::errors::{GraphProxyError, GraphProxyResult};
@@ -44,20 +43,20 @@ lazy_static! {
     pub static ref CSR_PATH: String = configure_with_default!(String, "CSR_PATH", "".to_string());
     pub static ref PARTITION_ID: usize = configure_with_default!(usize, "PARTITION_ID", 0);
     pub static ref CSR: CsrDB<usize, usize> = _init_csr();
-    static ref GRAPH_PROXY: Arc<CSRStore> = initialize();
 }
 
 const CSR_STORE_PK: KeyId = 0;
 pub const LABEL_SHIFT_BITS: usize =
     8 * (std::mem::size_of::<DefaultId>() - std::mem::size_of::<StoreLabelId>());
 
-pub struct CSRStore {
-    store: &'static CsrDB<usize, usize>,
+pub fn create_csr_store(cluster_info: Arc<dyn ClusterInfo>) -> Arc<CSRStore> {
+    lazy_static::initialize(&CSR);
+    Arc::new(CSRStore { store: &CSR, cluster_info })
 }
 
-fn initialize() -> Arc<CSRStore> {
-    lazy_static::initialize(&CSR);
-    Arc::new(CSRStore { store: &CSR })
+pub struct CSRStore {
+    store: &'static CsrDB<usize, usize>,
+    cluster_info: Arc<dyn ClusterInfo>,
 }
 
 fn _init_csr() -> CsrDB<usize, usize> {
@@ -71,16 +70,12 @@ impl ReadGraph for CSRStore {
         let label_ids = encode_storage_label(&params.labels);
         let props = params.columns.clone();
 
-        let worker_id = pegasus::get_current_worker_checked()
-            .map(|worker| worker.index)
-            .unwrap_or(0);
-        let workers_num = pegasus::get_current_worker_checked()
-            .map(|worker| worker.local_peers)
-            .unwrap_or(1);
+        let worker_index = self.cluster_info.get_worker_index()?;
+        let workers_num = self.cluster_info.get_local_worker_num()?;
 
         let result = self
             .store
-            .get_partitioned_vertices(label_ids.as_ref(), worker_id, workers_num)
+            .get_partitioned_vertices(label_ids.as_ref(), worker_index, workers_num)
             .map(move |v| to_runtime_vertex(v, props.clone()));
         Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
     }
@@ -97,17 +92,13 @@ impl ReadGraph for CSRStore {
         let label_ids = encode_storage_label(&params.labels);
         let props = params.columns.clone();
 
-        let worker_id = pegasus::get_current_worker_checked()
-            .map(|worker| worker.index)
-            .unwrap_or(0);
-        let workers_num = pegasus::get_current_worker_checked()
-            .map(|worker| worker.local_peers)
-            .unwrap_or(1);
+        let worker_index = self.cluster_info.get_worker_index()?;
+        let workers_num = self.cluster_info.get_local_worker_num()?;
         let partition_id = self.store.partition as u8;
 
         let result = self
             .store
-            .get_partitioned_edges(label_ids.as_ref(), worker_id, workers_num)
+            .get_partitioned_edges(label_ids.as_ref(), worker_index, workers_num)
             .map(move |e| to_runtime_edge(e, None, props.clone(), partition_id));
         Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
     }
@@ -183,12 +174,6 @@ impl ReadGraph for CSRStore {
     }
 }
 
-#[allow(dead_code)]
-pub fn create_csr_store() {
-    lazy_static::initialize(&GRAPH_PROXY);
-    register_graph(GRAPH_PROXY.clone());
-}
-
 #[inline]
 fn to_runtime_vertex(
     v: LocalVertex<'static, DefaultId, DefaultId>, prop_keys: Option<Vec<NameOrId>>,
@@ -255,24 +240,14 @@ struct LazyVertexDetails {
     // Specifically, Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property
     prop_keys: Option<Vec<NameOrId>>,
-    inner: AtomicPtr<LocalVertex<'static, DefaultId, DefaultId>>,
+    inner: LocalVertex<'static, DefaultId, DefaultId>,
 }
 
 impl_as_any!(LazyVertexDetails);
 
 impl LazyVertexDetails {
     pub fn new(v: LocalVertex<'static, DefaultId, DefaultId>, prop_keys: Option<Vec<NameOrId>>) -> Self {
-        let ptr = Box::into_raw(Box::new(v));
-        LazyVertexDetails { prop_keys, inner: AtomicPtr::new(ptr) }
-    }
-
-    fn get_vertex_ptr(&self) -> Option<*mut LocalVertex<'static, DefaultId, DefaultId>> {
-        let ptr = self.inner.load(Ordering::SeqCst);
-        if ptr.is_null() {
-            None
-        } else {
-            Some(ptr)
-        }
+        LazyVertexDetails { prop_keys, inner: v }
     }
 }
 
@@ -288,20 +263,14 @@ impl fmt::Debug for LazyVertexDetails {
 impl Details for LazyVertexDetails {
     fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
         if let NameOrId::Str(key) = key {
-            if let Some(ptr) = self.get_vertex_ptr() {
-                unsafe {
-                    if key == "id" {
-                        let mask = (1_usize << LABEL_SHIFT_BITS) - 1;
-                        let original_id = ((*ptr).get_id() & mask) as i64;
-                        Some(PropertyValue::Owned(Object::Primitive(Primitives::Long(original_id))))
-                    } else {
-                        (*ptr)
-                            .get_property(key)
-                            .map(|prop| PropertyValue::Borrowed(to_borrow_object(prop)))
-                    }
-                }
+            if key == "id" {
+                let mask = (1_usize << LABEL_SHIFT_BITS) - 1;
+                let original_id = (self.inner.get_id() & mask) as i64;
+                Some(PropertyValue::Owned(Object::Primitive(Primitives::Long(original_id))))
             } else {
-                None
+                self.inner
+                    .get_property(key)
+                    .map(|prop| PropertyValue::Borrowed(to_borrow_object(prop)))
             }
         } else {
             info!("Have not support getting property by prop_id in exp_store yet");
@@ -311,43 +280,23 @@ impl Details for LazyVertexDetails {
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         // the case of get_all_properties from vertex;
-        let props = if let Some(ptr) = self.get_vertex_ptr() {
-            unsafe {
-                if let Some(prop_key_vals) = (*ptr).get_all_properties() {
-                    let mut all_props: HashMap<NameOrId, Object> = prop_key_vals
-                        .into_iter()
-                        .map(|(prop_key, prop_val)| (prop_key.into(), to_object(prop_val)))
-                        .collect();
-                    let mask = (1_usize << LABEL_SHIFT_BITS) - 1;
-                    let original_id = ((*ptr).get_id() & mask) as i64;
-                    all_props.insert(
-                        NameOrId::Str("id".to_string()),
-                        Object::Primitive(Primitives::Long(original_id)),
-                    );
-                    Some(all_props)
-                } else {
-                    None
-                }
-            }
+        if let Some(prop_key_vals) = self.inner.get_all_properties() {
+            let mut all_props: HashMap<NameOrId, Object> = prop_key_vals
+                .into_iter()
+                .map(|(prop_key, prop_val)| (prop_key.into(), to_object(prop_val)))
+                .collect();
+            let mask = (1_usize << LABEL_SHIFT_BITS) - 1;
+            let original_id = (self.inner.get_id() & mask) as i64;
+            all_props
+                .insert(NameOrId::Str("id".to_string()), Object::Primitive(Primitives::Long(original_id)));
+            Some(all_props)
         } else {
             None
-        };
-        props
+        }
     }
 
     fn get_property_keys(&self) -> Option<Vec<NameOrId>> {
         self.prop_keys.clone()
-    }
-}
-
-impl Drop for LazyVertexDetails {
-    fn drop(&mut self) {
-        let ptr = self.inner.load(Ordering::SeqCst);
-        if !ptr.is_null() {
-            unsafe {
-                std::ptr::drop_in_place(ptr);
-            }
-        }
     }
 }
 
@@ -360,24 +309,14 @@ struct LazyEdgeDetails {
     // Specifically, Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property,
     prop_keys: Option<Vec<NameOrId>>,
-    inner: AtomicPtr<LocalEdge<'static, DefaultId, DefaultId>>,
+    inner: LocalEdge<'static, DefaultId, DefaultId>,
 }
 
 impl_as_any!(LazyEdgeDetails);
 
 impl LazyEdgeDetails {
     pub fn new(e: LocalEdge<'static, DefaultId, DefaultId>, prop_keys: Option<Vec<NameOrId>>) -> Self {
-        let ptr = Box::into_raw(Box::new(e));
-        LazyEdgeDetails { prop_keys, inner: AtomicPtr::new(ptr) }
-    }
-
-    fn get_edge_ptr(&self) -> Option<*mut LocalEdge<'static, DefaultId, DefaultId>> {
-        let ptr = self.inner.load(Ordering::SeqCst);
-        if ptr.is_null() {
-            None
-        } else {
-            Some(ptr)
-        }
+        LazyEdgeDetails { prop_keys, inner: e }
     }
 }
 
@@ -385,7 +324,7 @@ impl fmt::Debug for LazyEdgeDetails {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("LazyEdgeDetails")
             .field("prop_keys", &self.prop_keys)
-            .field("inner", &self.inner)
+            // .field("inner", &self.inner)
             .finish()
     }
 }
@@ -393,16 +332,9 @@ impl fmt::Debug for LazyEdgeDetails {
 impl Details for LazyEdgeDetails {
     fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
         if let NameOrId::Str(key) = key {
-            let ptr = self.get_edge_ptr();
-            if let Some(ptr) = ptr {
-                unsafe {
-                    (*ptr)
-                        .get_property(key)
-                        .map(|prop| PropertyValue::Borrowed(to_borrow_object(prop)))
-                }
-            } else {
-                None
-            }
+            self.inner
+                .get_property(key)
+                .map(|prop| PropertyValue::Borrowed(to_borrow_object(prop)))
         } else {
             info!("Have not support getting property by prop_id in experiments store yet");
             None
@@ -410,38 +342,19 @@ impl Details for LazyEdgeDetails {
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        // the case of get_all_properties from vertex;
-        let props = if let Some(ptr) = self.get_edge_ptr() {
-            unsafe {
-                if let Some(prop_key_vals) = (*ptr).get_all_properties() {
-                    let all_props: HashMap<NameOrId, Object> = prop_key_vals
-                        .into_iter()
-                        .map(|(prop_key, prop_val)| (prop_key.into(), to_object(prop_val)))
-                        .collect();
-                    Some(all_props)
-                } else {
-                    None
-                }
-            }
+        if let Some(prop_key_vals) = self.inner.get_all_properties() {
+            let all_props: HashMap<NameOrId, Object> = prop_key_vals
+                .into_iter()
+                .map(|(prop_key, prop_val)| (prop_key.into(), to_object(prop_val)))
+                .collect();
+            Some(all_props)
         } else {
             None
-        };
-        props
+        }
     }
 
     fn get_property_keys(&self) -> Option<Vec<NameOrId>> {
         self.prop_keys.clone()
-    }
-}
-
-impl Drop for LazyEdgeDetails {
-    fn drop(&mut self) {
-        let ptr = self.inner.load(Ordering::SeqCst);
-        if !ptr.is_null() {
-            unsafe {
-                std::ptr::drop_in_place(ptr);
-            }
-        }
     }
 }
 

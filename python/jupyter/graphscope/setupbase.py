@@ -181,7 +181,7 @@ def command_for_func(func):
 
 def run(cmd, **kwargs):
     """Echo a command before running it.  Defaults to repo as cwd"""
-    log.info("> " + list2cmdline(cmd))
+    log.info("> %s", list2cmdline(cmd))
     kwargs.setdefault("cwd", HERE)
     kwargs.setdefault("shell", os.name == "nt")
     if not isinstance(cmd, (list, tuple)) and os.name != "nt":
@@ -344,10 +344,10 @@ def install_npm(
 
             if not which(npm_cmd[0]):
                 log.error(
-                    "`{0}` unavailable.  If you're running this command "
-                    "using sudo, make sure `{0}` is available to sudo".format(
-                        npm_cmd[0]
-                    )
+                    "`%s` unavailable.  If you're running this command "
+                    "using sudo, make sure `%s` is available to sudo",
+                    npm_cmd[0],
+                    npm_cmd[0],
                 )
                 return
 
@@ -483,7 +483,7 @@ def _get_file_handler(package_data_spec, data_files_spec):
             package_data = self.distribution.package_data
             package_spec = package_data_spec or dict()
 
-            for (key, patterns) in package_spec.items():
+            for key, patterns in package_spec.items():
                 package_data[key] = _get_package_data(key, patterns)
 
             self.distribution.data_files = _get_data_files(
@@ -516,12 +516,12 @@ def _get_data_files(data_specs, existing, top=HERE):
     """
     # Extract the existing data files into a staging object.
     file_data = defaultdict(list)
-    for (path, files) in existing or []:
+    for path, files in existing or []:
         file_data[path] = files
 
     # Extract the files and assign them to the proper data
     # files path.
-    for (path, dname, pattern) in data_specs or []:
+    for path, dname, pattern in data_specs or []:
         if os.path.isabs(dname):
             dname = os.path.relpath(dname, top)
         dname = dname.replace(os.sep, "/")
@@ -538,7 +538,7 @@ def _get_data_files(data_specs, existing, top=HERE):
 
     # Construct the data files spec.
     data_files = []
-    for (path, files) in file_data.items():
+    for path, files in file_data.items():
         data_files.append((path, files))
     return data_files
 

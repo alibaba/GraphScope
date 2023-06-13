@@ -31,21 +31,14 @@ public class DataBuildPartitionerOdps extends Partitioner {
 
     @Override
     public int getPartition(Record key, Record value, int numPartitions) {
-        byte[] keyBytes = null;
+        byte[] keyBytes;
         try {
             keyBytes = ((String) key.get(0)).getBytes(DataBuildMapperOdps.charSet);
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Should not have happened " + e.toString());
+            throw new RuntimeException("PartitionerOdps: Should not have happened " + e);
         }
         ByteBuffer keyBuf = ByteBuffer.wrap(keyBytes);
-        long partitionKey;
-        if (keyBytes.length > 24) {
-            // Edge
-            partitionKey = keyBuf.getLong(8);
-        } else {
-            // Vertex
-            partitionKey = keyBuf.getLong(8);
-        }
+        long partitionKey = keyBuf.getLong(8);
         return PartitionUtils.getPartitionIdFromKey(partitionKey, numPartitions);
     }
 }

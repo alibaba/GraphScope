@@ -3,7 +3,7 @@
         {
             "data_path": "$STORE_DATA_PATH/modern_graph/person.csv",
             "label": "person",
-            "options": "header_row=true&delimiter=|"
+            "options": "header_row=true&delimiter=|&schema=0,1,2&column_types=,,int"
         },
         {
             "data_path": "$STORE_DATA_PATH/modern_graph/software.csv",

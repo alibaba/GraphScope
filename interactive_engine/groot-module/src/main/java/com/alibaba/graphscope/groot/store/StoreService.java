@@ -60,17 +60,16 @@ public class StoreService implements MetricsAgent {
 
     private static final String PARTITION_WRITE_PER_SECOND_MS = "partition.write.per.second.ms";
 
-    private Configs storeConfigs;
-    private int storeId;
-    private int writeThreadCount;
-    private int downloadThreadCount;
-    private MetaService metaService;
+    private final Configs storeConfigs;
+    private final int storeId;
+    private final int writeThreadCount;
+    private final MetaService metaService;
     private Map<Integer, GraphPartition> idToPartition;
     private ExecutorService writeExecutor;
     private ExecutorService ingestExecutor;
     private ExecutorService garbageCollectExecutor;
-    private ExecutorService downloadExecutor;
-    private boolean enableGc;
+    private ThreadPoolExecutor downloadExecutor;
+    private final boolean enableGc;
     private volatile boolean shouldStop = true;
 
     private volatile long lastUpdateTime;
@@ -128,16 +127,16 @@ public class StoreService implements MetricsAgent {
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-garbage-collect", logger));
         logger.info("StoreService started. storeId [" + this.storeId + "]");
-        this.downloadThreadCount = 8;
         this.downloadExecutor =
                 new ThreadPoolExecutor(
-                        0,
-                        downloadThreadCount,
-                        0L,
+                        16,
+                        16,
+                        1000L,
                         TimeUnit.MILLISECONDS,
                         new LinkedBlockingQueue<>(),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-download", logger));
+        this.downloadExecutor.allowCoreThreadTimeOut(true);
         logger.info("StoreService started. storeId [" + this.storeId + "]");
     }
 
@@ -304,7 +303,7 @@ public class StoreService implements MetricsAgent {
             String path, Map<String, String> config, CompletionCallback<Void> callback) {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
         String downloadPath = Paths.get(dataRoot, "download").toString();
-        String[] items = path.split("\\/");
+        String[] items = path.split("/");
         // Get the  unique path  (uuid)
         String unique_path = items[items.length - 1];
         Path uniquePath = Paths.get(downloadPath, unique_path);
@@ -319,8 +318,8 @@ public class StoreService implements MetricsAgent {
         }
         this.ingestExecutor.execute(
                 () -> {
+                    logger.info("ingesting data [{}]", path);
                     try {
-                        logger.info("ingesting data [{}]", path);
                         ingestDataInternal(path, config, callback);
                     } catch (Exception e) {
                         logger.error("ingest data failed. path [" + path + "]", e);
@@ -348,29 +347,38 @@ public class StoreService implements MetricsAgent {
                         try {
                             partition.ingestExternalFile(externalStorage, fullPath);
                         } catch (Exception e) {
+                            logger.error("ingest external file failed.", e);
                             if (!finished.getAndSet(true)) {
                                 callback.onError(e);
                             }
                         }
                         if (counter.decrementAndGet() == 0) {
+                            logger.info("All download tasks finished.");
                             finished.set(true);
                             callback.onCompleted(null);
+                        } else {
+                            logger.info(counter.get() + " download tasks remaining");
                         }
                     });
         }
     }
 
-    public void clearIngest() throws IOException {
+    public void clearIngest(String dataPath) throws IOException {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
-        Path downloadPath = Paths.get(dataRoot, "download");
+        if (dataPath == null || dataPath.isEmpty()) {
+            logger.warn("Must set a sub-path for clearing.");
+            return;
+        }
+
+        Path downloadPath = Paths.get(dataRoot, "download", dataPath);
         try {
             logger.info("Clearing directory {}", downloadPath);
             FileUtils.forceDelete(downloadPath.toFile());
-        } catch (FileNotFoundException fnfe) {
+        } catch (FileNotFoundException e) {
             // Ignore
         }
         logger.info("cleared directory {}", downloadPath);
-        Files.createDirectories(downloadPath);
+        // Files.createDirectories(downloadPath);
     }
 
     public void garbageCollect(long snapshotId, CompletionCallback<Void> callback) {
@@ -381,7 +389,7 @@ public class StoreService implements MetricsAgent {
         this.garbageCollectExecutor.execute(
                 () -> {
                     try {
-                        logger.info("Garbage collecting, snapshot [{}]", snapshotId);
+                        logger.debug("Garbage collecting, snapshot [{}]", snapshotId);
                         garbageCollectInternal(snapshotId);
                         callback.onCompleted(null);
                     } catch (Exception e) {

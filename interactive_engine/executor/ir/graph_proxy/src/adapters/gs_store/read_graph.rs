@@ -29,11 +29,10 @@ use global_query::{
 use graph_store::utils::IterList;
 use ir_common::{KeyId, LabelId, NameOrId, OneOrMany};
 
-use super::details::{LazyEdgeDetails, LazyVertexDetails};
+use crate::adapters::gs_store::details::{LazyEdgeDetails, LazyVertexDetails};
 use crate::apis::graph::PKV;
-use crate::apis::{
-    from_fn, register_graph, Direction, DynDetails, Edge, QueryParams, ReadGraph, Statement, Vertex, ID,
-};
+use crate::apis::ClusterInfo;
+use crate::apis::{from_fn, Direction, DynDetails, Edge, QueryParams, ReadGraph, Statement, Vertex, ID};
 use crate::utils::expr::eval_pred::PEvaluator;
 use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit};
 use crate::{GraphProxyError, GraphProxyResult};
@@ -54,6 +53,8 @@ where
 {
     store: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
     partition_manager: Arc<dyn GraphPartitionManager>,
+    server_partitions: Vec<PartitionId>,
+    cluster_info: Arc<dyn ClusterInfo>,
     row_filter_pushdown: bool,
     column_filter_pushdown: bool,
 }
@@ -61,9 +62,10 @@ where
 #[allow(dead_code)]
 pub fn create_gs_store<V, VI, E, EI>(
     store: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
-    partition_manager: Arc<dyn GraphPartitionManager>, row_filter_push_down: bool,
-    column_filter_push_down: bool,
-) where
+    partition_manager: Arc<dyn GraphPartitionManager>, server_partitions: Vec<PartitionId>,
+    cluster_info: Arc<dyn ClusterInfo>, row_filter_push_down: bool, column_filter_push_down: bool,
+) -> Arc<GraphScopeStore<V, VI, E, EI>>
+where
     V: StoreVertex + 'static,
     VI: Iterator<Item = V> + Send + 'static,
     E: StoreEdge + 'static,
@@ -72,10 +74,12 @@ pub fn create_gs_store<V, VI, E, EI>(
     let graph = GraphScopeStore {
         store,
         partition_manager,
+        server_partitions,
+        cluster_info,
         row_filter_pushdown: row_filter_push_down,
         column_filter_pushdown: column_filter_push_down,
     };
-    register_graph(Arc::new(graph));
+    Arc::new(graph)
 }
 
 impl<V, VI, E, EI> ReadGraph for GraphScopeStore<V, VI, E, EI>
@@ -88,7 +92,8 @@ where
     fn scan_vertex(
         &self, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
-        if let Some(partitions) = params.partitions.as_ref() {
+        let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
+        if !worker_partitions.is_empty() {
             let store = self.store.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
@@ -121,11 +126,6 @@ where
                 get_all_storage_props()
             };
 
-            let partitions: Vec<PartitionId> = partitions
-                .iter()
-                .map(|pid| *pid as PartitionId)
-                .collect();
-
             let columns = params.columns.clone();
             let result = store
                 .get_all_vertices(
@@ -138,8 +138,8 @@ where
                     prop_ids.as_ref(),
                     // Zero limit means no limit. Same as follows.
                     0,
-                    // Each worker will scan the partitions pre-allocated in source operator. Same as follows.
-                    partitions.as_ref(),
+                    // Each worker will scan the partitions returned by assign_worker_partitions(). Same as follows.
+                    worker_partitions.as_ref(),
                 )
                 .map(move |v| to_runtime_vertex(v, columns.clone()));
 
@@ -155,37 +155,30 @@ where
     }
 
     fn index_scan_vertex(
-        &self, label_id: LabelId, primary_key: &PKV, params: &QueryParams,
+        &self, label_id: LabelId, primary_key: &PKV, _params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>> {
         // get_vertex_id_by_primary_keys() is a global query function, that is,
         // you can query vertices (with only vertex id) by pks on any graph partitions (not matter locally or remotely).
-        // To guarantee the correctness (i.e., avoid duplication results), we pre-assign partitions for workers,
-        // and only the worker responsible for this vertex (i.e., contains the vertex in its partitions) is going to search for it.
-
-        let store_label_id = encode_storage_label(label_id)?;
-        let store_indexed_values = match primary_key {
-            OneOrMany::One(pkv) => {
-                vec![encode_store_prop_val(pkv[0].1.clone())]
-            }
-            OneOrMany::Many(pkvs) => pkvs
-                .iter()
-                .map(|(_pk, value)| encode_store_prop_val(value.clone()))
-                .collect(),
-        };
-
-        if let Some(vid) = self
-            .partition_manager
-            .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
-        {
-            if let Some(worker_partitions) = params.partitions.as_ref() {
-                // only the one responsible for vid is going to search for the vertex
-                let vertex_partition = self.partition_manager.get_partition_id(vid) as u64;
-                if worker_partitions.contains(&vertex_partition) {
-                    self.get_vertex(&[vid as ID], params)
-                        .map(|mut v_iter| v_iter.next())
-                } else {
-                    Ok(None)
+        // To guarantee the correctness (i.e., avoid duplication results), only one worker (for now, it is worker 0) is going to search for it.
+        let worker_id = pegasus::get_current_worker_checked()
+            .map(|worker| worker.index)
+            .unwrap_or(0);
+        if worker_id == 0 {
+            let store_label_id = encode_storage_label(label_id)?;
+            let store_indexed_values = match primary_key {
+                OneOrMany::One(pkv) => {
+                    vec![encode_store_prop_val(pkv[0].1.clone())]
                 }
+                OneOrMany::Many(pkvs) => pkvs
+                    .iter()
+                    .map(|(_pk, value)| encode_store_prop_val(value.clone()))
+                    .collect(),
+            };
+            if let Some(vid) = self
+                .partition_manager
+                .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
+            {
+                Ok(Some(Vertex::new(vid as ID, Some(label_id.clone()), DynDetails::default())))
             } else {
                 Ok(None)
             }
@@ -195,7 +188,8 @@ where
     }
 
     fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
-        if let Some(partitions) = params.partitions.as_ref() {
+        let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
+        if !worker_partitions.is_empty() {
             let store = self.store.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
@@ -223,10 +217,6 @@ where
                 get_all_storage_props()
             };
 
-            let partitions: Vec<PartitionId> = partitions
-                .iter()
-                .map(|pid| *pid as PartitionId)
-                .collect();
             let result = store.get_all_edges(
                 si,
                 label_ids.as_ref(),
@@ -234,7 +224,7 @@ where
                 None,
                 prop_ids.as_ref(),
                 0,
-                partitions.as_ref(),
+                worker_partitions.as_ref(),
             );
             let iter = RuntimeEdgeIter::new(result, true, params.columns.clone());
 
@@ -609,7 +599,7 @@ fn extract_needed_columns(
 ) -> GraphProxyResult<Option<Vec<PropId>>> {
     use ahash::HashSet;
 
-    use super::translation::zip_option_vecs;
+    use crate::adapters::gs_store::translation::zip_option_vecs;
 
     // Some(vec[]) means need all props, so can't merge it with props needed in filter
     if let Some(out_columns) = out_columns {
@@ -715,6 +705,27 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
         Object::None => Property::Null,
         _ => Property::Unknown,
     }
+}
+
+/// Given all the partitions,
+/// return the partition_list that current worker is going to scan.
+#[inline]
+fn assign_worker_partitions(
+    query_partitions: &Vec<u32>, cluster_info: &Arc<dyn ClusterInfo>,
+) -> GraphProxyResult<Vec<PartitionId>> {
+    let workers_num = cluster_info.get_local_worker_num()?;
+    let worker_idx = cluster_info.get_worker_index()?;
+    let mut worker_partition_list = vec![];
+    for pid in query_partitions {
+        if *pid % workers_num == worker_idx % workers_num {
+            worker_partition_list.push(*pid as PartitionId)
+        }
+    }
+    debug!(
+        "workers_num {:?}, worker_idx: {:?},  worker_partition_list {:?}",
+        workers_num, worker_idx, worker_partition_list
+    );
+    Ok(worker_partition_list)
 }
 
 /// Transform type of ids to PartitionLabeledVertexIds as required by graphscope store,

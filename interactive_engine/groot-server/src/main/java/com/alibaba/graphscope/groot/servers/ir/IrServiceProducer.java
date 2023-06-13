@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.groot.servers.ir;
 
-import com.alibaba.graphscope.common.client.RpcChannelFetcher;
+import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.compiler.api.schema.SchemaFetcher;
@@ -35,10 +35,15 @@ import com.alibaba.graphscope.groot.servers.AbstractService;
 import com.alibaba.graphscope.groot.servers.ComputeServiceProducer;
 import com.alibaba.graphscope.groot.store.StoreService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class IrServiceProducer implements ComputeServiceProducer {
+    private static final Logger logger = LoggerFactory.getLogger(IrServiceProducer.class);
+
     private Configs configs;
 
     public IrServiceProducer(Configs configs) {
@@ -49,7 +54,8 @@ public class IrServiceProducer implements ComputeServiceProducer {
     public AbstractService makeGraphService(
             SchemaFetcher schemaFetcher, ChannelManager channelManager) {
         int executorCount = CommonConfig.STORE_NODE_COUNT.get(configs);
-        RpcChannelFetcher channelFetcher =
+        int port = GremlinConfig.GREMLIN_PORT.get(configs);
+        ChannelFetcher channelFetcher =
                 new RpcChannelManagerFetcher(channelManager, executorCount, RoleType.GAIA_RPC);
         com.alibaba.graphscope.common.config.Configs irConfigs = getConfigs();
         IrMetaFetcher irMetaFetcher = new GrootMetaFetcher(schemaFetcher);
@@ -61,18 +67,14 @@ public class IrServiceProducer implements ComputeServiceProducer {
                 new FrontendQueryManager(irMetaFetcher, frontendId, updateCommitter);
 
         return new AbstractService() {
-            private IrGremlinServer irGremlinServer =
-                    new IrGremlinServer(GremlinConfig.GREMLIN_PORT.get(configs));
+            private IrGremlinServer irGremlinServer = new IrGremlinServer(port);
 
             @Override
             public void start() {
                 try {
+                    logger.info("Starting Gremlin service at port {}", port);
                     irGremlinServer.start(
-                            irConfigs,
-                            irMetaFetcher,
-                            channelFetcher,
-                            queryManager,
-                            TestGraphFactory.GROOT);
+                            irConfigs, channelFetcher, queryManager, TestGraphFactory.GROOT);
 
                     queryManager.start();
                 } catch (Exception e) {

@@ -13,10 +13,15 @@ groot-store = { path = "../../store/groot" }
 gaia_pegasus = { path = "../../engine/pegasus/pegasus", package = "pegasus" }
 pegasus_network = { path = "../../engine/pegasus/network" }
 pegasus_server = { path = "../../engine/pegasus/server" }
-runtime_integration =  { path = "../../ir/integrated" }
 log = "0.4"
+runtime = {path = "../../ir/runtime"}
+graph_proxy = {path = "../../ir/graph_proxy", features = ["with_global_query"]}
 log4rs = "1.2"
 tokio = { version = "1.24", features = ["macros", "sync"] }
 
 [features]
-column_filter_push_down = ["runtime_integration/column_filter_push_down"]
+column_filter_push_down = []
+
+[profile.dev]
+# TODO(siyuan): re-enable debug assertions by addressing the reports for misaligned pointer dereferences https://github.com/rust-lang/rust/pull/98112/
+debug-assertions = false

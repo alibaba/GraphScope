@@ -58,6 +58,8 @@ def bind_app(graph, app_assets):
     config[types_pb2.APP_ALGO] = utils.s_to_attr(app_assets.algo)
     if hasattr(graph, "_vertex_map"):
         config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(graph._vertex_map)
+    if hasattr(graph, "_compact_edges"):
+        config[types_pb2.COMPACT_EDGES] = utils.b_to_attr(graph._compact_edges)
     if app_assets.cmake_extra_options is not None:
         config[types_pb2.CMAKE_EXTRA_OPTIONS] = utils.s_to_attr(
             app_assets.cmake_extra_options
@@ -198,8 +200,10 @@ def add_labels_to_graph(graph, loader_op):
         types_pb2.GENERATE_EID: utils.b_to_attr(graph._generate_eid),
         types_pb2.RETAIN_OID: utils.b_to_attr(graph._retain_oid),
         types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(graph._vertex_map),
+        types_pb2.COMPACT_EDGES: utils.b_to_attr(graph._compact_edges),
         types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
         types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
+        types_pb2.IS_FROM_GAR: utils.b_to_attr(False),
     }
     # inferred from the context of the dag.
     config.update({types_pb2.GRAPH_NAME: utils.s_to_attr("")})
@@ -431,6 +435,7 @@ def project_arrow_property_graph(graph, vertex_collections, edge_collections):
     config = {
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
         types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(graph._vertex_map),
+        types_pb2.COMPACT_EDGES: utils.b_to_attr(graph._compact_edges),
     }
     config.update(
         {
@@ -473,6 +478,8 @@ def project_to_simple(
     }
     if hasattr(graph, "_vertex_map"):
         config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(graph._vertex_map)
+    if hasattr(graph, "_compact_edges"):
+        config[types_pb2.COMPACT_EDGES] = utils.b_to_attr(graph._compact_edges)
     op = Operation(
         graph.session_id,
         types_pb2.PROJECT_TO_SIMPLE,
@@ -1066,5 +1073,33 @@ def fetch_gremlin_result(result_set, fetch_type="one"):
         config=config,
         inputs=[result_set.op],
         output_types=types_pb2.RESULTS,
+    )
+    return op
+
+
+def archive_graph(graph, path):
+    """Archive a graph to gar format with a path.
+
+    Args:
+        graph (:class:`graphscope.framework.graph.GraphDAGNode`): Source graph.
+        path (str): The path to archive the graph.
+
+    Returns:
+        An op to archive the graph to a path.
+    """
+    config = {
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph._graph_type),
+        types_pb2.OID_TYPE: utils.s_to_attr(graph._oid_type),
+        types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
+        types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(graph._vertex_map),
+        types_pb2.COMPACT_EDGES: utils.b_to_attr(graph._compact_edges),
+    }
+    config[types_pb2.GRAPH_INFO_PATH] = utils.s_to_attr(path)
+    op = Operation(
+        graph.session_id,
+        types_pb2.ARCHIVE_GRAPH,
+        config=config,
+        inputs=[graph.op],
+        output_types=types_pb2.NULL_OUTPUT,
     )
     return op

@@ -20,6 +20,7 @@
 import logging
 import os
 import re
+import sys
 import threading
 import time
 from queue import Queue
@@ -99,12 +100,22 @@ def try_to_read_namespace_from_context():
     return None
 
 
-def wait_for_deployment_complete(api_client, namespace, name, timeout_seconds=60):
+def wait_for_deployment_complete(
+    api_client, namespace, name, pods_watcher=None, timeout_seconds=60
+):
     core_api = kube_client.CoreV1Api(api_client)
     app_api = kube_client.AppsV1Api(api_client)
     start_time = time.time()
     while time.time() - start_time < timeout_seconds:
         time.sleep(1)
+        if pods_watcher is not None:
+            if pods_watcher.exception is not None:
+                tp, value, tb = pods_watcher.exception
+                if value is None:
+                    value = tp()
+                if value.__traceback__ is not tb:
+                    raise value.with_traceback(tb)
+                raise value
         response = app_api.read_namespaced_deployment_status(
             namespace=namespace, name=name
         )
@@ -154,6 +165,11 @@ class KubernetesPodWatcher(object):
         self._stream_event_thread = None
         self._stream_log_thread = None
         self._stopped = True
+        self._exc_info = None
+
+    @property
+    def exception(self):
+        return self._exc_info
 
     def _stream_event_impl(self, simple=False):
         field_selector = "involvedObject.name=" + self._pod_name
@@ -170,6 +186,7 @@ class KubernetesPodWatcher(object):
             except K8SApiException:
                 pass
             else:
+                error_message = []
                 for event in events.items:
                     msg = f"{self._pod_name}: {event.message}"
                     if msg and msg not in event_messages:
@@ -177,7 +194,16 @@ class KubernetesPodWatcher(object):
                         self._lines.put(msg)
                         logger.info(msg, extra={"simple": simple})
                         if event.reason == "Failed":
-                            raise K8sError(f"Kubernetes event error: {msg}")
+                            error_message.append(f"Kubernetes event error: {msg}")
+                if error_message:
+                    try:
+                        raise K8sError(
+                            "Error when launching Coordinator on kubernetes cluster: \n"
+                            + "\n".join(error_message)
+                        )
+                    except:  # noqa: E722,B110, pylint: disable=bare-except
+                        self._exc_info = sys.exc_info()
+                        return
 
     def _stream_log_impl(self, simple=False):
         log_messages = []
@@ -391,19 +417,19 @@ def delete_kubernetes_object(
                         getattr(k8s_api, "read_namespaced_{0}".format(kind))(**kwargs)
                     except K8SApiException as ex:
                         if ex.status != 404:
-                            logger.error(
-                                "Deleting {0} {1} failed: {2}".format(
-                                    kind, target.metadata.name, str(ex)
-                                )
+                            logger.exception(
+                                "Deleting %s, %s, failed",
+                                kind,
+                                target.metadata.name,
                             )
                         break
                     else:
                         time.sleep(1)
                         if time.time() - start_time > timeout_seconds:
                             logger.info(
-                                "Deleting {0} {1} timeout".format(
-                                    kind, target.metadata.name
-                                )
+                                "Deleting %s, %s, timeout",
+                                kind,
+                                target.metadata.name,
                             )
         if verbose:
             msg = "{0}/{1} deleted.".format(kind, target.metadata.name)

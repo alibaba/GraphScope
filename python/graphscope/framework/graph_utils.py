@@ -27,7 +27,7 @@ import pandas as pd
 
 try:
     import vineyard
-except ImportError:
+except (ImportError, TypeError):
     vineyard = None
 
 from graphscope.framework import utils
@@ -64,7 +64,7 @@ class VertexLabel(object):
         self,
         label: str,
         loader: Any,
-        properties: Sequence = None,
+        properties: Union[Sequence, None] = None,
         vid_field: Union[str, int] = 0,
         session_id=None,
         id_type: str = "int64_t",

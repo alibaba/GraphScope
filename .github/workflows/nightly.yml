@@ -43,15 +43,17 @@ jobs:
         fi
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
-        ./gs install-deps dev --v6d-version v0.13.4
+        ./gs install-deps dev --v6d-version v0.15.0
 
     - name: Setup tmate session
-      if: false 
+      if: false
       uses: mxschmitt/action-tmate@v2
 
     - name: Build GraphScope
       run: |
-        source ${HOME}/.graphscope_env
+        . ${HOME}/.graphscope_env
+        # fixes nightly CI
+        export PATH=/Users/runner/Library/Python/3.11/bin:$PATH
         make install INSTALL_PREFIX=/opt/graphscope
 
     - name: Run Python Test
@@ -63,7 +65,7 @@ jobs:
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         # run test
-        source ${HOME}/.graphscope_env
+        . ${HOME}/.graphscope_env
         make unittest
 
     - name: Upload Coverage

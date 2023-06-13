@@ -11,10 +11,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CommitDataCommand extends DataCommand {
-
-    public CommitDataCommand(String dataPath, boolean isFromOSS, String uniquePath)
-            throws IOException {
-        super(dataPath, isFromOSS, uniquePath);
+    public CommitDataCommand(String dataPath) throws IOException {
+        super(dataPath);
     }
 
     public void run() {
@@ -40,6 +38,9 @@ public class CommitDataCommand extends DataCommand {
             }
             tableToTarget.put(tableId, builder.build());
         }
-        client.commitDataLoad(tableToTarget, this.uniquePath);
+        System.out.println("Commit data. unique path: " + uniquePath);
+        client.commitDataLoad(tableToTarget, uniquePath);
+        System.out.println("Commit complete.");
+        client.close();
     }
 }

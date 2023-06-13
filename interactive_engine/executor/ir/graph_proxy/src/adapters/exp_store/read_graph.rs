@@ -15,7 +15,6 @@
 
 use std::fmt;
 use std::path::Path;
-use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
 use ahash::HashMap;
@@ -34,11 +33,11 @@ use pegasus_common::impl_as_any;
 
 use crate::apis::graph::PKV;
 use crate::apis::{
-    from_fn, register_graph, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
+    from_fn, ClusterInfo, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
     Statement, Vertex, ID,
 };
-use crate::errors::{GraphProxyError, GraphProxyResult};
-use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit};
+use crate::errors::GraphProxyResult;
+use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit, GraphProxyError};
 
 const EXP_STORE_PK: KeyId = 0;
 
@@ -46,16 +45,17 @@ lazy_static! {
     pub static ref DATA_PATH: String = configure_with_default!(String, "DATA_PATH", "".to_string());
     pub static ref PARTITION_ID: usize = configure_with_default!(usize, "PARTITION_ID", 0);
     pub static ref GRAPH: LargeGraphDB<DefaultId, InternalId> = _init_graph();
-    static ref GRAPH_PROXY: Arc<ExpStore> = initialize();
+}
+
+#[allow(dead_code)]
+pub fn create_exp_store(cluster_info: Arc<dyn ClusterInfo>) -> Arc<ExpStore> {
+    lazy_static::initialize(&GRAPH);
+    Arc::new(ExpStore { store: &GRAPH, cluster_info })
 }
 
 pub struct ExpStore {
     store: &'static LargeGraphDB<DefaultId, InternalId>,
-}
-
-fn initialize() -> Arc<ExpStore> {
-    lazy_static::initialize(&GRAPH);
-    Arc::new(ExpStore { store: &GRAPH })
+    cluster_info: Arc<dyn ClusterInfo>,
 }
 
 fn _init_graph() -> LargeGraphDB<DefaultId, InternalId> {
@@ -233,18 +233,14 @@ impl ReadGraph for ExpStore {
         let label_ids = encode_storage_label(&params.labels);
         let props = params.columns.clone();
 
-        // get_current_worker_checked() in case pegasus not started, i.e., for ci tests.
-        let worker_id = pegasus::get_current_worker_checked()
-            .map(|worker| worker.index)
-            .unwrap_or(0);
-        let workers_num = pegasus::get_current_worker_checked()
-            .map(|worker| worker.local_peers)
-            .unwrap_or(1);
+        let worker_idx = self.cluster_info.get_worker_index()?;
+        let workers_num = self.cluster_info.get_local_worker_num()?;
         let count = self
             .store
             .count_all_vertices(label_ids.as_ref());
         let partial_count = count / workers_num as usize;
-        let take_count = if (worker_id + 1) % workers_num == 0 {
+        let take_count = if (worker_idx + 1) % workers_num == 0 {
+            // the last part
             count - partial_count * (workers_num as usize - 1)
         } else {
             partial_count
@@ -253,7 +249,7 @@ impl ReadGraph for ExpStore {
         let result = self
             .store
             .get_all_vertices(label_ids.as_ref())
-            .skip((worker_id % workers_num) as usize * partial_count)
+            .skip((worker_idx % workers_num) as usize * partial_count)
             .take(take_count)
             .map(move |v| to_runtime_vertex(v, props.clone()));
 
@@ -275,16 +271,11 @@ impl ReadGraph for ExpStore {
         let label_ids = encode_storage_label(&params.labels);
         let props = params.columns.clone();
 
-        // get_current_worker_checked() in case pegasus not started, i.e., for ci tests.
-        let worker_id = pegasus::get_current_worker_checked()
-            .map(|worker| worker.index)
-            .unwrap_or(0);
-        let workers_num = pegasus::get_current_worker_checked()
-            .map(|worker| worker.local_peers)
-            .unwrap_or(1);
+        let worker_idx = self.cluster_info.get_worker_index()?;
+        let workers_num = self.cluster_info.get_local_worker_num()?;
         let count = self.store.count_all_edges(label_ids.as_ref());
         let partial_count = count / workers_num as usize;
-        let take_count = if (worker_id + 1) % workers_num == 0 {
+        let take_count = if (worker_idx + 1) % workers_num == 0 {
             count - partial_count * (workers_num as usize - 1)
         } else {
             partial_count
@@ -293,7 +284,7 @@ impl ReadGraph for ExpStore {
         let result = self
             .store
             .get_all_edges(label_ids.as_ref())
-            .skip((worker_id % workers_num) as usize * partial_count)
+            .skip((worker_idx % workers_num) as usize * partial_count)
             .take(take_count)
             .map(move |v| to_runtime_edge(v, props.clone()));
 
@@ -376,12 +367,6 @@ impl ReadGraph for ExpStore {
     }
 }
 
-#[allow(dead_code)]
-pub fn create_exp_store() {
-    lazy_static::initialize(&GRAPH_PROXY);
-    register_graph(GRAPH_PROXY.clone());
-}
-
 #[inline]
 fn to_runtime_vertex(v: LocalVertex<'static, DefaultId>, prop_keys: Option<Vec<NameOrId>>) -> Vertex {
     // For vertices, we query properties via vid
@@ -434,24 +419,14 @@ struct LazyVertexDetails {
     // Specifically, Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property
     prop_keys: Option<Vec<NameOrId>>,
-    inner: AtomicPtr<LocalVertex<'static, DefaultId>>,
+    inner: LocalVertex<'static, DefaultId>,
 }
 
 impl_as_any!(LazyVertexDetails);
 
 impl LazyVertexDetails {
     pub fn new(v: LocalVertex<'static, DefaultId>, prop_keys: Option<Vec<NameOrId>>) -> Self {
-        let ptr = Box::into_raw(Box::new(v));
-        LazyVertexDetails { prop_keys, inner: AtomicPtr::new(ptr) }
-    }
-
-    fn get_vertex_ptr(&self) -> Option<*mut LocalVertex<'static, DefaultId>> {
-        let ptr = self.inner.load(Ordering::SeqCst);
-        if ptr.is_null() {
-            None
-        } else {
-            Some(ptr)
-        }
+        LazyVertexDetails { prop_keys, inner: v }
     }
 }
 
@@ -467,15 +442,9 @@ impl fmt::Debug for LazyVertexDetails {
 impl Details for LazyVertexDetails {
     fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
         if let NameOrId::Str(key) = key {
-            if let Some(ptr) = self.get_vertex_ptr() {
-                unsafe {
-                    (*ptr)
-                        .get_property(key)
-                        .map(|prop| PropertyValue::Borrowed(prop))
-                }
-            } else {
-                None
-            }
+            self.inner
+                .get_property(key)
+                .map(|prop| PropertyValue::Borrowed(prop))
         } else {
             info!("Have not support getting property by prop_id in exp_store yet");
             None
@@ -483,35 +452,18 @@ impl Details for LazyVertexDetails {
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        if let Some(ptr) = self.get_vertex_ptr() {
-            unsafe {
-                (*ptr)
-                    .clone_all_properties()
-                    .map(|prop_key_vals| {
-                        prop_key_vals
-                            .into_iter()
-                            .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
-                            .collect()
-                    })
-            }
-        } else {
-            None
-        }
+        self.inner
+            .clone_all_properties()
+            .map(|prop_key_vals| {
+                prop_key_vals
+                    .into_iter()
+                    .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
+                    .collect()
+            })
     }
 
     fn get_property_keys(&self) -> Option<Vec<NameOrId>> {
         self.prop_keys.clone()
-    }
-}
-
-impl Drop for LazyVertexDetails {
-    fn drop(&mut self) {
-        let ptr = self.inner.load(Ordering::SeqCst);
-        if !ptr.is_null() {
-            unsafe {
-                std::ptr::drop_in_place(ptr);
-            }
-        }
     }
 }
 
@@ -524,24 +476,14 @@ struct LazyEdgeDetails {
     // Specifically, Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property,
     prop_keys: Option<Vec<NameOrId>>,
-    inner: AtomicPtr<LocalEdge<'static, DefaultId, InternalId>>,
+    inner: LocalEdge<'static, DefaultId, InternalId>,
 }
 
 impl_as_any!(LazyEdgeDetails);
 
 impl LazyEdgeDetails {
     pub fn new(e: LocalEdge<'static, DefaultId, InternalId>, prop_keys: Option<Vec<NameOrId>>) -> Self {
-        let ptr = Box::into_raw(Box::new(e));
-        LazyEdgeDetails { prop_keys, inner: AtomicPtr::new(ptr) }
-    }
-
-    fn get_edge_ptr(&self) -> Option<*mut LocalEdge<'static, DefaultId, InternalId>> {
-        let ptr = self.inner.load(Ordering::SeqCst);
-        if ptr.is_null() {
-            None
-        } else {
-            Some(ptr)
-        }
+        LazyEdgeDetails { prop_keys, inner: e }
     }
 }
 
@@ -557,16 +499,9 @@ impl fmt::Debug for LazyEdgeDetails {
 impl Details for LazyEdgeDetails {
     fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
         if let NameOrId::Str(key) = key {
-            let ptr = self.get_edge_ptr();
-            if let Some(ptr) = ptr {
-                unsafe {
-                    (*ptr)
-                        .get_property(key)
-                        .map(|prop| PropertyValue::Borrowed(prop))
-                }
-            } else {
-                None
-            }
+            self.inner
+                .get_property(key)
+                .map(|prop| PropertyValue::Borrowed(prop))
         } else {
             info!("Have not support getting property by prop_id in experiments store yet");
             None
@@ -574,35 +509,18 @@ impl Details for LazyEdgeDetails {
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        if let Some(ptr) = self.get_edge_ptr() {
-            unsafe {
-                (*ptr)
-                    .clone_all_properties()
-                    .map(|prop_key_vals| {
-                        prop_key_vals
-                            .into_iter()
-                            .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
-                            .collect()
-                    })
-            }
-        } else {
-            None
-        }
+        self.inner
+            .clone_all_properties()
+            .map(|prop_key_vals| {
+                prop_key_vals
+                    .into_iter()
+                    .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
+                    .collect()
+            })
     }
 
     fn get_property_keys(&self) -> Option<Vec<NameOrId>> {
         self.prop_keys.clone()
-    }
-}
-
-impl Drop for LazyEdgeDetails {
-    fn drop(&mut self) {
-        let ptr = self.inner.load(Ordering::SeqCst);
-        if !ptr.is_null() {
-            unsafe {
-                std::ptr::drop_in_place(ptr);
-            }
-        }
     }
 }
 

@@ -103,6 +103,7 @@ enum OperationType {
   VIEW_GRAPH = 21;  // create graph view
   INDUCE_SUBGRAPH = 22;  // induce subgraph
   UNLOAD_CONTEXT = 23;  // unload context
+  ARCHIVE_GRAPH = 24;  // archive graph
 
   SUBGRAPH = 32;  // subgraph in interactive query
   GREMLIN_QUERY = 33;  // queries on gremlin engine
@@ -182,7 +183,7 @@ enum ParamKey {
   VINEYARD_ID = 43;
   VINEYARD_NAME = 44;
   VERTEX_MAP_TYPE = 45;
-
+  COMPACT_EDGES = 46;
 
   // project
   VERTEX_COLLECTIONS = 51;
@@ -192,6 +193,10 @@ enum ParamKey {
   GLE_HANDLE = 60;
   GLE_CONFIG = 61;
   GLE_GEN_LABELS = 62;
+
+  // GraphAr
+  IS_FROM_GAR = 70;
+  GRAPH_INFO_PATH = 71;
 
   APP_NAME = 100;
   APP_ALGO = 101;
@@ -285,7 +290,7 @@ enum ReportType {
   PRED_ATTR_BY_NODE = 16;
 }
 
-// 
+//
 message QueryArgs {
   // pack messages from data_types.proto
   repeated google.protobuf.Any args = 1;

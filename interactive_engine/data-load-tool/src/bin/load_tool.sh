@@ -2,8 +2,7 @@
 #
 # load_data tools
 
-set -e
-set -o pipefail
+set -eo pipefail
 
 SCRIPT="$0"
 while [ -h "$SCRIPT" ] ; do
@@ -20,22 +19,45 @@ done
 LOAD_TOOL_HOME=$(dirname "$SCRIPT")
 LOAD_TOOL_HOME=$(cd "$LOAD_TOOL_HOME"; pwd)
 LOAD_TOOL_HOME=$(dirname "$LOAD_TOOL_HOME")
-JAR_FILE="$(echo "$LOAD_TOOL_HOME"/lib/*.jar | tr ' ' ':')"
 
-if [ "$1" = "hadoop-build" ]; then
-  hadoop_build_config=$2
-  if [ -z "$hadoop_build_config" ]; then
-    echo "no valid hadoop build config file"
+
+usage() {
+cat <<EOF
+  A script to launch data loading.
+
+  Usage: load_tool.sh build/ingest/commit <config-file>
+EOF
+}
+
+COMMAND=$1
+CONFIG=$2
+
+if [ "$COMMAND" = "-h" ] || [ "$COMMAND" = "--help" ]; then
+  usage
+  exit 0
+fi
+
+check_arguments() {
+  if [ -z "$CONFIG" ]; then
+    echo "No valid config file"
+    usage
     exit 1
   fi
-  exec hadoop jar $JAR_FILE com.alibaba.graphscope.groot.dataload.databuild.OfflineBuild $hadoop_build_config
+
+  JAR_FILE=$(find "$LOAD_TOOL_HOME"/.. -maxdepth 2 -type f -iname "data-load-tool-*.jar" | head -1)
+
+  if [[ -z "${JAR_FILE}" ]]; then
+      echo "Error: Could not find data-load-tool-*.jar within the $LOAD_TOOL_HOME"
+      exit 1
+  fi
+}
+
+if [ "$COMMAND" = "build" ]; then
+  check_arguments
+  exec hadoop jar "$JAR_FILE" com.alibaba.graphscope.groot.dataload.databuild.OfflineBuild "$CONFIG"
+elif [ "$COMMAND" = "ingest" ] || [ "$COMMAND" = "commit" ]; then
+  check_arguments
+  exec java -cp "$JAR_FILE" com.alibaba.graphscope.groot.dataload.LoadTool -c "$COMMAND" -f "$CONFIG"
 else
-  if [ ! -z "$JAVA_HOME" ]; then
-    JAVA="$JAVA_HOME/bin/java"
-  fi
-  if [ ! -x "$JAVA" ]; then
-    echo "no valid JAVA_HOME" >&2
-    exit 1
-  fi
-  exec "$JAVA" -cp $JAR_FILE com.alibaba.graphscope.groot.dataload.LoadTool "$@"
+  usage
 fi

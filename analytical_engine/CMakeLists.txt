@@ -119,7 +119,7 @@ include(GNUInstallDirs)
 # reference: https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#always-full-rpath
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 if(APPLE)
-    # the LC_RPATH on Mac seems doesn't support multiple path (seperated with ':seperated with `:`)
+    # the LC_RPATH on Mac seems doesn't support multiple path (separated with ':separated with `:`)
     # fortunately, we just need to take care `lib` on Mac.
     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 else()
@@ -153,8 +153,29 @@ if (APPLE)
     else()
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/local/lib")
     endif()
-endif ()
+endif()
 find_package(OpenMP REQUIRED)
+
+if (APPLE)
+    # If we're on OS X check for Homebrew's copy of OpenSSL instead of Apple's
+    if (NOT OpenSSL_DIR)
+        find_program(HOMEBREW brew)
+        if (HOMEBREW STREQUAL "HOMEBREW-NOTFOUND")
+            message(WARNING "Homebrew not found: not using Homebrew's OpenSSL")
+            if (NOT OPENSSL_ROOT_DIR)
+                message(WARNING "Use -DOPENSSL_ROOT_DIR for non-Apple OpenSSL")
+            endif()
+        else()
+            execute_process(COMMAND brew --prefix openssl
+                OUTPUT_VARIABLE OPENSSL_ROOT_DIR
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+        endif()
+    endif()
+endif()
+find_package(OpenSSL ${ARGN})
+if (OPENSSL_FOUND)
+    include_directories(SYSTEM ${OPENSSL_INCLUDE_DIR})
+endif()
 
 find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly
@@ -240,7 +261,7 @@ else()
 endif()
 
 # find vineyard after arrow to avoid duplicate target names
-find_package(vineyard 0.13.0 REQUIRED)
+find_package(vineyard 0.14.8 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -300,6 +321,10 @@ target_link_libraries(grape_engine PRIVATE
 
 if (ENABLE_JAVA_SDK)
     target_compile_definitions(grape_engine PUBLIC ENABLE_JAVA_SDK)
+endif()
+
+if (BUILD_VINEYARD_GRAPH_WITH_GAR)
+    target_compile_definitions(grape_engine PRIVATE -DENABLE_GAR)
 endif()
 
 if (LET_IT_CRASH_ON_EXCEPTION)
@@ -388,6 +413,7 @@ if (BUILD_TESTS)
     endmacro()
 
     add_vineyard_app(run_vy_app SRCS test/run_vy_app.cc)
+    add_vineyard_app(run_vy_app_compact SRCS test/run_vy_app_compact.cc)
     add_vineyard_app(run_vy_app_local_vm SRCS test/run_vy_app_local_vm.cc)
 
     add_vineyard_app(run_load_from_stream SRCS test/run_load_from_stream.cc)
@@ -426,7 +452,7 @@ if (BUILD_TESTS)
     endif ()
 endif ()
 
-# Cpplint
+# cpplint
 file(GLOB_RECURSE FILES_NEED_LINT
         "apps/*.cc"
         "apps/*.h"

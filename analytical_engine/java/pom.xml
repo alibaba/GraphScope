@@ -64,7 +64,7 @@
   </modules>
 
   <properties>
-    <revision>0.21.0</revision>
+    <revision>0.23.0</revision>
     <fastffi.version>0.1.2</fastffi.version>
     <compile-testing.version>0.19</compile-testing.version>
     <cupid.sdk.version>3.3.11</cupid.sdk.version>
@@ -378,6 +378,36 @@
         </plugin>
       </plugins>
     </pluginManagement>
+
+    <!-- use flatten plugin to replace revision property value in mvn install,otherwise the version
+    of grape-jdk can not be resolved -->
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>flatten-maven-plugin</artifactId>
+        <version>1.1.0</version>
+        <configuration>
+          <updatePomFile>true</updatePomFile>
+          <flattenMode>resolveCiFriendliesOnly</flattenMode>
+        </configuration>
+        <executions>
+          <execution>
+            <id>flatten</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>flatten</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>flatten.clean</id>
+            <phase>clean</phase>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 
   <profiles>

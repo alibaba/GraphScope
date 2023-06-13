@@ -4,7 +4,7 @@ In this tutorial, you will first try to explore GraphScope JavaSDK with some exa
 
 ## Run example algorithms with example jar
 
-An example jar which constains implementation of several graph algorithms(i.e. PageRank, SSSP, BFS) is provided in 
+An example jar which contains implementation of several graph algorithms(i.e. PageRank, SSSP, BFS) is provided in 
 [grape-demo.jar](https://graphscope.oss-cn-beijing.aliyuncs.com/jar/grape-demo-0.19.0-shaded.jar). You can run the graph algorithms provided in this jar by submitting the downloaded jar to GraphScope.
 
 Here we provide an example to run `SSSP` on p2p dataset.
@@ -69,7 +69,7 @@ Different from the *pregel* interface provided by **Apache Giraph** and **Spark 
 models graph computing in a ``subgraph-centric`` manner. 
 In `PIE` model, the program requires less supersteps and the size of generated message has been drastically reduced, which lead to great performance improvement.
 
-To implement a `PIE` algorithm, you need to provide two separate functions, `PEval` and `IncEval`. `PEval` function will be execute only once at the first round of computation, and `IncEval` will be called for multiple times untile covergence. You are also supposed to provide a class called `Context`. You can put intermediate
+To implement a `PIE` algorithm, you need to provide two separate functions, `PEval` and `IncEval`. `PEval` function will be execute only once at the first round of computation, and `IncEval` will be called for multiple times until convergence. You are also supposed to provide a class called `Context`. You can put intermediate
 results, init configuration in this class. The `init` method will be called before
 `PEval`.
 
@@ -163,7 +163,7 @@ import graphscope
 from graphscope import JavaApp
 from graphscope.dataset import load_p2p_network
 
-"""Or lauch session in k8s cluster"""
+"""Or launch session in k8s cluster"""
 sess = graphscope.session(cluster_type='hosts')
 
 

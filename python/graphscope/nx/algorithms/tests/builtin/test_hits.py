@@ -28,7 +28,6 @@ from graphscope.nx.tests.utils import almost_equal
 @pytest.mark.usefixtures("graphscope_session")
 class TestHITS:
     def setup_class(cls):
-
         G = nx.DiGraph()
 
         edges = [(1, 3), (1, 5), (2, 1), (3, 5), (5, 4), (5, 3), (6, 5)]

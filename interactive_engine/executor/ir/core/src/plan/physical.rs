@@ -19,9 +19,9 @@
 //! protobuf structure.
 //!
 
-use ir_common::error::ParsePbError;
 use std::convert::TryInto;
 
+use ir_common::error::ParsePbError;
 use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
@@ -247,6 +247,10 @@ impl AsPhysical for pb::PathExpand {
         if let Some(expand_base) = path_expand.base.as_mut() {
             let edge_expand = expand_base.edge_expand.as_mut();
             let getv = expand_base.get_v.as_mut();
+            let edge_expand_meta = edge_expand
+                .as_ref()
+                .map(|opr| opr.meta_data.clone())
+                .unwrap_or(None);
             if edge_expand.is_some() && getv.is_none() {
                 // Must be the case of EdgeExpand with Opt=Vertex
                 if edge_expand.unwrap().expand_opt != pb::edge_expand::ExpandOpt::Vertex as i32 {
@@ -286,10 +290,17 @@ impl AsPhysical for pb::PathExpand {
                     edge_expand, getv
                 )));
             }
+
+            path_expand.post_process(builder, plan_meta)?;
+            // Set the Metadata of PathExpand to the Metadata of EdgeExpand
+            builder
+                .path_expand(path_expand)
+                .with_meta_data(edge_expand_meta);
+
+            Ok(())
+        } else {
+            Err(IrError::MissingData("PathExpand::base".to_string()))
         }
-        path_expand.post_process(builder, plan_meta)?;
-        builder.path_expand(path_expand);
-        Ok(())
     }
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
@@ -761,15 +772,14 @@ impl AsPhysical for LogicalPlan {
 // 3. To intersect a->c, b->c with key=c, with filters
 // we support expanding vertices with filters on edges (i.e., filters on a->c, b->c), e.g., Intersect{{a-filter->c, b-filter->c}, key=c};
 // if expanding vertices with filters on vertices (i.e., filters on c), translate into Intersect{{a->c, b->c}, key=c} + Select {filter on c}
-// For now, this logic is in the translation rule in Pattern in logical plan
-// TODO: move this logic into physical layer, as we may able to directly filter vertices during intersection if we have the global view of storage.
+// 4. To intersect a->...->d->c and b->c with key=c, where a->..->d->c is a path from a to c,
+// if so, translate into PathExpand{a->d} + Intersect{d->c, b->c, key=c}.
 
 // Thus, after build intersect, the physical plan looks like:
 // 1. the last ops in intersect's sub_plans are the ones to intersect;
-// 2. the intersect op can be:
-//     1) EdgeExpand with Opt = ExpandE followed by GetV with Opt = End, which is to expand and intersect on id-only vertices; (supported currently)
+// 2. the intersect op includes:
+//     1) EdgeExpand with Opt = ExpandV, which is to expand and intersect on id-only vertices; (supported currently)
 //     2) EdgeExpand with Opt = ExpandE, which is to expand and intersect on edges (although, not considered in Pattern yet);
-// and 3) GetV with Opt = Self, which is to expand and intersect on vertices, while there may be some filters on the intersected vertices. (TODO e2e)
 
 fn add_intersect_job_builder(
     builder: &mut JobBuilder, plan_meta: &mut PlanMeta, intersect_opr: &pb::Intersect,
@@ -816,6 +826,8 @@ fn add_intersect_job_builder(
                 //    and the last edge_expand is the one to intersect.
                 //    Notice that if we have predicates for vertices in path_expand, or for the last vertex of path_expand,
                 //    do the filtering after intersection.
+                // TODO: there might be a bug here:
+                // if path_expand has an alias which indicates that the path would be referred later, it may not as expected.
                 let mut path_expand = path_expand.clone();
                 let path_expand_base = path_expand
                     .base

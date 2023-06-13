@@ -43,7 +43,7 @@ from graphscope.framework import utils
 from graphscope.framework.errors import CompilationError
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.framework.utils import PipeWatcher
-from graphscope.framework.utils import find_java
+from graphscope.framework.utils import find_java_exe
 from graphscope.framework.utils import get_platform_info
 from graphscope.framework.utils import get_tempdir
 from graphscope.proto import attr_value_pb2
@@ -63,6 +63,12 @@ try:
     WORKSPACE = os.environ["GRAPHSCOPE_RUNTIME"]
 except KeyError:
     WORKSPACE = os.path.join(get_tempdir(), "gs")
+
+# make sure we have permission to create instance workspace
+try:
+    os.makedirs(os.path.join(WORKSPACE, ".ignore"), exist_ok=True)
+except:  # noqa: E722, pylint: disable=bare-except
+    WORKSPACE = os.path.expanduser("~/.graphscope/gs")
 
 # COORDINATOR_HOME
 #   1) get from gscoordinator python module, if failed,
@@ -217,9 +223,11 @@ def get_app_sha256(attr, java_class_path: str):
         s.update(f"{graph_type}.{vd_type}".encode("utf-8", errors="ignore"))
         app_sha256 = s.hexdigest()
         logger.info(
-            "app sha256 for app {} with graph {}:{}, is {}".format(
-                java_app_class, app_type, java_app_class, app_sha256
-            )
+            "app sha256 for app %s with graph %s:%s, is %s",
+            java_app_class,
+            app_type,
+            java_app_class,
+            app_sha256,
         )
     else:
         s = hashlib.sha256()
@@ -293,16 +301,27 @@ def delegate_command_to_pod(args: str, pod: str, container: str):
     """Delegate a command to a pod.
 
     Args:
-        command (str): Command to be delegated.
-        pod_name (str): Pod name.
-        namespace (str): Namespace of the pod.
+         command (str): Command to be delegated.
+         pod_name (str): Pod name.
+         namespace (str): Namespace of the pod.
 
-    Returns:
-        str: Output of the command.
+     Returns:
+         str: Output of the command.
     """
     # logger.info("Delegate command to pod: %s, %s, %s", args, pod, container)
     args = f'kubectl exec -c {container} {pod} -- bash -c "{args}"'
     return run_command(args)
+
+
+def run_kube_cp_command(src, dst, pod, container=None, host_to_pod=True):
+    if host_to_pod:
+        cmd = f"kubectl cp {src} {pod}:{dst}"
+    else:
+        cmd = f"kubectl cp {pod}:{src} {dst}"
+    if container is not None:
+        cmd = f"{cmd} -c {container}"
+    cmd = f"{cmd} --retries=5"
+    return run_command(cmd)
 
 
 def compile_library(commands, workdir, output_name, launcher):
@@ -330,35 +349,31 @@ def _compile_on_kubernetes(commands, workdir, output_name, pod, container):
         container,
     )
     try:
-        full_path = get_lib_path(workdir, output_name)
+        lib_path = get_lib_path(workdir, output_name)
         try:
             # The library may exists in the analytical pod.
-            test_cmd = f"test -f {full_path}"
+            test_cmd = f"test -f {lib_path}"
             logger.debug(delegate_command_to_pod(test_cmd, pod, container))
             logger.info("Library exists, skip compilation")
-            cp = f"kubectl cp {pod}:{full_path} {full_path} -c {container}"
-            logger.debug(run_command(cp))
-            return full_path
+            logger.debug(run_kube_cp_command(lib_path, lib_path, pod, container, False))
+            return lib_path
         except RuntimeError:
             pass
         parent_dir = os.path.dirname(workdir)
         mkdir = f"mkdir -p {parent_dir}"
         logger.debug(delegate_command_to_pod(mkdir, pod, container))
-        cp = f"kubectl cp {workdir} {pod}:{workdir} -c {container}"
-        logger.debug(run_command(cp))
-        prepend = "source scl_source enable devtoolset-8 rh-python38 &&"
+        logger.debug(run_kube_cp_command(workdir, workdir, pod, container, True))
         for command in commands:
-            command = f"{prepend} cd {workdir} && {command}"
+            command = f"cd {workdir} && {command}"
             logger.debug(delegate_command_to_pod(command, pod, container))
-        cp = f"kubectl cp {pod}:{full_path} {full_path} -c {container}"
-        logger.debug(run_command(cp))
-        if not os.path.isfile(full_path):
+        logger.debug(run_kube_cp_command(lib_path, lib_path, pod, container, False))
+        if not os.path.isfile(lib_path):
             logger.error("Could not find desired library, found files are:")
             logger.error(os.listdir(workdir))
-            raise FileNotFoundError(full_path)
+            raise FileNotFoundError(lib_path)
     except Exception as e:
         raise CompilationError(f"Failed to compile {output_name} on kubernetes") from e
-    return full_path
+    return lib_path
 
 
 def _compile_on_local(commands, workdir, output_name):
@@ -366,16 +381,16 @@ def _compile_on_local(commands, workdir, output_name):
     try:
         for command in commands:
             logger.debug(run_command(command, cwd=workdir))
-        full_path = get_lib_path(workdir, output_name)
-        if not os.path.isfile(full_path):
+        lib_path = get_lib_path(workdir, output_name)
+        if not os.path.isfile(lib_path):
             logger.error("Could not find desired library")
             logger.info(os.listdir(workdir))
-            raise FileNotFoundError(full_path)
+            raise FileNotFoundError(lib_path)
     except Exception as e:
         raise CompilationError(
             f"Failed to compile {output_name} on platform {get_platform_info()}"
         ) from e
-    return full_path
+    return lib_path
 
 
 def compile_app(
@@ -452,6 +467,7 @@ def compile_app(
         f"-DNETWORKX={engine_config['networkx']}",
         f"-DCMAKE_PREFIX_PATH='{GRAPHSCOPE_HOME};{OPAL_PREFIX}'",
     ]
+
     if types_pb2.CMAKE_EXTRA_OPTIONS in attr:
         extra_options = (
             attr[types_pb2.CMAKE_EXTRA_OPTIONS]
@@ -502,7 +518,7 @@ def compile_app(
             )
     elif app_type == "cpp_flash":
         cmake_commands += ["-DFLASH_APP=ON"]
-    elif app_type not in ("cpp_pie", "cpp_pregel"):
+    elif app_type not in ("cpp_pie", "cpp_pregel"):  # Cython
         if app_type == "cython_pregel":
             pxd_name = "pregel"
             cmake_commands += ["-DCYTHON_PREGEL_APP=ON"]
@@ -511,6 +527,13 @@ def compile_app(
         else:
             pxd_name = "pie"
             cmake_commands += ["-DCYTHON_PIE_APP=ON"]
+        if "Python_ROOT_DIR" in os.environ:
+            python3_path = os.path.join(os.environ["Python_ROOT_DIR"], "bin", "python3")
+        elif "CONDA_PREFIX" in os.environ:
+            python3_path = os.path.join(os.environ["CONDA_PREFIX"], "bin", "python3")
+        else:
+            python3_path = shutil.which("python3")
+        cmake_commands.append(f"-DPython3_EXECUTABLE={python3_path}")
 
         # Copy pxd file and generate cc file from pyx
         shutil.copyfile(
@@ -657,6 +680,8 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
         _pre_process_for_add_column_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.UNLOAD_GRAPH:
         _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.ARCHIVE_GRAPH:
+        _pre_process_for_archive_graph_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op in (
         types_pb2.CONTEXT_TO_NUMPY,
         types_pb2.CONTEXT_TO_DATAFRAME,
@@ -808,18 +833,18 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
     app_type = parent_op.attr[types_pb2.APP_ALGO].s.decode("utf-8", errors="ignore")
 
     if app_type.startswith("java_pie:") or app_type.startswith("giraph:"):
-        logger.debug("args len: {}".format(len(op.query_args.args)))
+        logger.debug("args length: %s", len(op.query_args.args))
         if len(op.query_args.args) == 1:
             original_json_param = data_types_pb2.StringValue()
             op.query_args.args[0].Unpack(original_json_param)
-            logger.debug("original user param {}".format(original_json_param))
+            logger.debug("original user params: %s", original_json_param)
             user_params = json.loads(original_json_param.value)
             del op.query_args.args[0]
         elif len(op.query_args.args) == 0:
             user_params = {}
         else:
             raise RuntimeError(
-                "Unexpected num of params{}".format(len(op.query_args.args))
+                "Unexpected num of params: {}".format(len(op.query_args.args))
             )
         # we need extra param in first arg.
         user_params["jar_name"] = engine_java_class_path
@@ -837,7 +862,7 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
             user_params["user_app_class"] = app_type[7:]
         else:
             user_params["app_class"] = app_type.split(":")[-1]
-        logger.debug("user params {}".format(json.dumps(user_params)))
+        logger.debug("user params: %s", json.dumps(user_params))
         new_user_param = Any()
         new_user_param.Pack(data_types_pb2.StringValue(value=json.dumps(user_params)))
         op.query_args.args.extend([new_user_param])
@@ -847,7 +872,7 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
         lib_path = parent_op.attr[types_pb2.APP_LIBRARY_PATH].s.decode(
             "utf-8", errors="ignore"
         )
-        logger.info("Java app: Lib path {}".format(lib_path))
+        logger.info("Java app: Lib path: %s", lib_path)
         lib_param.Pack(data_types_pb2.StringValue(value=lib_path))
         op.query_args.args.extend([lib_param])
 
@@ -1236,6 +1261,17 @@ def _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs):
     del op.attr[types_pb2.EDGE_COLLECTIONS]
 
 
+def _pre_process_for_archive_graph_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    result = op_result_pool[key_of_parent_op]
+    op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
+    if result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR):
+        vy_info = graph_def_pb2.VineyardInfoPb()
+        result.graph_def.extension.Unpack(vy_info)
+        op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vy_info.vineyard_id))
+
+
 # Below are selector transformation part, which will transform label / property
 # names to corresponding id.
 
@@ -1417,7 +1453,8 @@ def _parse_java_app_type(java_class_path, real_algo):
     _java_app_type = ""
     _frag_param_str = ""
     _java_inner_context_type = ""
-    _java_executable = find_java()
+    _vd_type = ""
+    _java_executable = find_java_exe()
     parse_user_app_cmd = [
         _java_executable,
         "-cp",
@@ -1462,9 +1499,11 @@ def _parse_java_app_type(java_class_path, real_algo):
             _vd_type = line.split(":")[-1].strip()
     # for giraph app, we manually set java inner ctx type
     logger.info(
-        "Java app type: {}, frag type str: {}, ctx type: {}, vd type {}".format(
-            _java_app_type, _frag_param_str, _java_inner_context_type, _vd_type
-        )
+        "Java app type: %s, frag type str: %s, ctx type: %s, vd type %s",
+        _java_app_type,
+        _frag_param_str,
+        _java_inner_context_type,
+        _vd_type,
     )
     if (
         not _java_app_type
@@ -1532,7 +1571,7 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
     # for algo start with giraph:, we don't find info in meta
     if algo.startswith("giraph:") or algo.startswith("java_pie:"):
         real_algo = algo.split(":")[1]
-        logger.info("codegen app info for java app : {}".format(real_algo))
+        logger.info("codegen app info for java app: %s", real_algo)
         src_header, app_class, vd_type, java_app_template_str = _probe_for_java_app(
             attr, java_class_path, real_algo
         )
@@ -1649,17 +1688,23 @@ def _codegen_graph_info(attr):
             internal_type(oid_type()), vid_type()
         )
 
+    def compact_edges():
+        compact_edges = False
+        if types_pb2.COMPACT_EDGES in attr:
+            compact_edges = attr[types_pb2.COMPACT_EDGES].b
+        return "true" if compact_edges else "false"
+
     graph_type = attr[types_pb2.GRAPH_TYPE].i
     graph_class, graph_header = GRAPH_HEADER_MAP[graph_type]
 
     # graph_type is a literal of graph template in c++ side
     if graph_type == graph_def_pb2.ARROW_PROPERTY:
         # in a format of full qualified name, e.g.
-        # vineyard::ArrowFragment<int64_t, uin64_t, vineyard::ArrowLocalVertexMap<int64_t, uint64_t>>
-        graph_fqn = f"{graph_class}<{oid_type()},{vid_type()},{vertex_map_type()}>"
+        # vineyard::ArrowFragment<int64_t, uin64_t, vineyard::ArrowLocalVertexMap<int64_t, uint64_t>, false>
+        graph_fqn = f"{graph_class}<{oid_type()},{vid_type()},{vertex_map_type()},{compact_edges()}>"
     elif graph_type == graph_def_pb2.ARROW_PROJECTED:
-        # gs::ArrowProjectedFragment<int64_t, uint64_t, double, double,vineyard::ArrowLocalVertexMap<int64_t, uint64_t>>
-        graph_fqn = f"{graph_class}<{oid_type()},{vid_type()},{vdata_type()},{edata_type()},{vertex_map_type()}>"
+        # gs::ArrowProjectedFragment<int64_t, uint64_t, double, double,vineyard::ArrowLocalVertexMap<int64_t, uint64_t>, false>
+        graph_fqn = f"{graph_class}<{oid_type()},{vid_type()},{vdata_type()},{edata_type()},{vertex_map_type()},{compact_edges()}>"  # noqa: E501
     elif graph_type == graph_def_pb2.IMMUTABLE_EDGECUT:
         # grape::ImmutableEdgecutFragment<int64_t, uint32_t, double, double>
         graph_fqn = (

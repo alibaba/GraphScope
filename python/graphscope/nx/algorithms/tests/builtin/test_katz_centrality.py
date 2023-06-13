@@ -325,14 +325,14 @@ class TestKatzCentralityDirected(object):
         G = self.G
         alpha = self.G.alpha
         p = nx.builtin.katz_centrality(G, alpha, weight="weight")
-        for (a, b) in zip(list(dict(sorted(p.items())).values()), self.G.evc):
+        for a, b in zip(list(dict(sorted(p.items())).values()), self.G.evc):
             assert almost_equal(a, b)
 
     def test_katz_centrality_unweighted(self):
         H = self.H
         alpha = self.H.alpha
         p = nx.builtin.katz_centrality(H, alpha, weight="weight")
-        for (a, b) in zip(list(dict(sorted(p.items())).values()), self.H.evc):
+        for a, b in zip(list(dict(sorted(p.items())).values()), self.H.evc):
             assert almost_equal(a, b)
 
 
@@ -349,14 +349,14 @@ class TestKatzCentralityDirectedNumpy(TestKatzCentralityDirected):
         G = self.G
         alpha = self.G.alpha
         p = nx.katz_centrality_numpy(G, alpha, weight="weight")
-        for (a, b) in zip(list(p.values()), self.G.evc):
+        for a, b in zip(list(p.values()), self.G.evc):
             assert almost_equal(a, b)
 
     def test_katz_centrality_unweighted(self):
         H = self.H
         alpha = self.H.alpha
         p = nx.katz_centrality_numpy(H, alpha, weight="weight")
-        for (a, b) in zip(list(p.values()), self.H.evc):
+        for a, b in zip(list(p.values()), self.H.evc):
             assert almost_equal(a, b)
 
 

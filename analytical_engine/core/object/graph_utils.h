@@ -47,6 +47,12 @@ typedef void LoadGraphT(
     const std::string& graph_name, const rpc::GSParams& params,
     bl::result<std::shared_ptr<IFragmentWrapper>>& fragment_wrapper);
 
+typedef void ArchiveGraphT(vineyard::ObjectID frag_id,
+                           const grape::CommSpec& comm_spec,
+                           vineyard::Client& client,
+                           const gs::rpc::GSParams& params,
+                           bl::result<void>& result_out);
+
 typedef void AddLabelsToGraphT(
     vineyard::ObjectID frag_id, const grape::CommSpec& comm_spec,
     vineyard::Client& client, const std::string& graph_name,
@@ -68,7 +74,7 @@ typedef void ToDynamicFragmentT(
 /**
  * @brief PropertyGraphUtils is a invoker of property_graph_frame library. This
  * utility provides these methods to manipulate ArrowFragment: LoadGraph,
- * ToArrowFragment and ToDynamicFragment.
+ * ArchiveGraph, ToArrowFragment and ToDynamicFragment.
  */
 class PropertyGraphUtils : public GSObject {
  public:
@@ -77,6 +83,7 @@ class PropertyGraphUtils : public GSObject {
         lib_path_(std::move(lib_path)),
         dl_handle_(nullptr),
         load_graph_(nullptr),
+        archive_graph_(nullptr),
         add_labels_to_graph_(nullptr),
         to_arrow_fragment_(nullptr),
         to_dynamic_fragment_(nullptr) {}
@@ -86,6 +93,11 @@ class PropertyGraphUtils : public GSObject {
     {
       BOOST_LEAF_AUTO(p_fun, get_func_ptr(lib_path_, dl_handle_, "LoadGraph"));
       load_graph_ = reinterpret_cast<LoadGraphT*>(p_fun);
+    }
+    {
+      BOOST_LEAF_AUTO(p_fun,
+                      get_func_ptr(lib_path_, dl_handle_, "ArchiveGraph"));
+      archive_graph_ = reinterpret_cast<ArchiveGraphT*>(p_fun);
     }
     {
       BOOST_LEAF_AUTO(p_fun,
@@ -112,6 +124,16 @@ class PropertyGraphUtils : public GSObject {
 
     load_graph_(comm_spec, client, graph_name, params, wrapper);
     return wrapper;
+  }
+
+  bl::result<void> ArchiveGraph(vineyard::ObjectID frag_id,
+                                const grape::CommSpec& comm_spec,
+                                vineyard::Client& client,
+                                const rpc::GSParams& params) {
+    bl::result<void> out;
+
+    archive_graph_(frag_id, comm_spec, client, params, out);
+    return out;
   }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> AddLabelsToGraph(
@@ -162,6 +184,7 @@ class PropertyGraphUtils : public GSObject {
   std::string lib_path_;
   void* dl_handle_;
   LoadGraphT* load_graph_;
+  ArchiveGraphT* archive_graph_;
   AddLabelsToGraphT* add_labels_to_graph_;
   ToArrowFragmentT* to_arrow_fragment_;
   ToDynamicFragmentT* to_dynamic_fragment_;

@@ -606,13 +606,14 @@ class VertexMapConverter<vineyard::ArrowVertexMap<
  *
  * @tparam OID_T OID type
  */
-template <typename OID_T, typename VERTEX_MAP_T>
+template <typename OID_T, typename VERTEX_MAP_T, bool COMPACT = false>
 class DynamicToArrowConverter {
   using src_fragment_t = DynamicFragment;
   using oid_t = OID_T;
   using vid_t = typename src_fragment_t::vid_t;
   using vertex_map_t = VERTEX_MAP_T;
-  using dst_fragment_t = vineyard::ArrowFragment<oid_t, vid_t, vertex_map_t>;
+  using dst_fragment_t =
+      vineyard::ArrowFragment<oid_t, vid_t, vertex_map_t, COMPACT>;
   using oid_array_t = typename vineyard::ConvertToArrowType<oid_t>::ArrayType;
 
  public:
@@ -698,7 +699,7 @@ class DynamicToArrowConverter {
 
     auto frag_builder = std::make_shared<vineyard::BasicArrowFragmentBuilder<
         typename dst_fragment_t::oid_t, typename dst_fragment_t::vid_t,
-        vertex_map_t>>(client_, dst_vm);
+        vertex_map_t, dst_fragment_t::compact_v>>(client_, dst_vm);
     BOOST_LEAF_CHECK(frag_builder->Init(fid, fnum, {v_table}, {e_table},
                                         src_frag->directed()));
     frag_builder->SetPropertyGraphSchema(std::move(schema));
