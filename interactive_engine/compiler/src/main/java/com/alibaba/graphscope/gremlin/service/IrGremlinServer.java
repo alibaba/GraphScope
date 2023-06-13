@@ -68,7 +68,7 @@ public class IrGremlinServer implements AutoCloseable {
                 getClass().getClassLoader().getResourceAsStream("conf/gremlin-server.yaml");
         this.settings = Settings.read(input);
         this.settings.host = "0.0.0.0";
-        int port = FrontendConfig.FRONTEND_SERVICE_PORT.get(configs);
+        int port = FrontendConfig.GREMLIN_SERVER_PORT.get(configs);
         if (port >= 0) {
             this.settings.port = port;
         }

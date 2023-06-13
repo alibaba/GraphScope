@@ -36,14 +36,19 @@ import com.google.common.io.Resources;
 
 import org.apache.commons.io.FileUtils;
 import org.neo4j.server.CommunityBootstrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class GraphServer {
+    private static final Logger logger = LoggerFactory.getLogger(GraphServer.class);
     private final IrGremlinServer gremlinServer;
     private final CommunityBootstrapper cypherBootstrapper;
     private final Configs configs;
@@ -65,31 +70,45 @@ public class GraphServer {
 
     public void start() throws Exception {
         this.gremlinServer.start();
-        File neo4jHomeDir = makeNeo4jHomeDir();
+        Path neo4jHomePath = getNeo4jHomePath();
         this.cypherBootstrapper.start(
-                Path.of(neo4jHomeDir.getPath()),
-                getNeo4jConfPath(neo4jHomeDir),
+                neo4jHomePath,
+                getNeo4jConfPath(neo4jHomePath),
                 ImmutableMap.of(
                         "dbms.connector.bolt.listen_address",
-                                ":" + FrontendConfig.NEO4J_BOLT_SERVICE_PORT.get(this.configs),
+                                ":" + FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(this.configs),
                         "dbms.connector.bolt.advertised_address",
-                                ":" + FrontendConfig.NEO4J_BOLT_SERVICE_PORT.get(this.configs)),
+                                ":" + FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(this.configs)),
                 false);
     }
 
-    private File makeNeo4jHomeDir() {
-        File neo4jHomeDir = new File(FrontendConfig.NEO4J_HOME_DIR.get(configs));
-        if (!neo4jHomeDir.exists()) {
-            neo4jHomeDir.mkdirs();
-        }
-        return neo4jHomeDir;
+    private Path getNeo4jHomePath() throws IOException {
+        Path neo4jHomePath = Files.createTempDirectory("neo4j-");
+        deleteOnExit(neo4jHomePath);
+        return neo4jHomePath;
     }
 
-    private Path getNeo4jConfPath(File neo4jHomeDir) throws IOException {
+    private void deleteOnExit(Path tmpPath) {
+        // Register a shutdown hook to delete the temporary directory on exit
+        Runtime.getRuntime()
+                .addShutdownHook(
+                        new Thread(
+                                () -> {
+                                    try {
+                                        FileUtils.deleteDirectory(tmpPath.toFile());
+                                    } catch (IOException e) {
+                                        logger.error(
+                                                "Failed to delete temporary directory {}",
+                                                tmpPath,
+                                                e);
+                                    }
+                                }));
+    }
+
+    private Path getNeo4jConfPath(Path neo4jHomePath) throws IOException {
         URL resourceUrl = getClass().getClassLoader().getResource("conf/neo4j.conf");
         String neo4jConf = Resources.toString(resourceUrl, StandardCharsets.UTF_8).trim();
-        File tmpFile = File.createTempFile("neo4j-", ".conf", neo4jHomeDir);
-        tmpFile.deleteOnExit();
+        File tmpFile = new File(Paths.get(neo4jHomePath.toString(), "neo4j.conf").toString());
         FileUtils.writeStringToFile(tmpFile, neo4jConf, StandardCharsets.UTF_8);
         return tmpFile.toPath();
     }
