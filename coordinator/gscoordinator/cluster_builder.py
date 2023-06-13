@@ -163,8 +163,8 @@ class EngineCluster:
 
         self._vineyard_requests = {"cpu": vineyard_cpu, "memory": vineyard_mem}
         self._analytical_requests = {"cpu": engine_cpu, "memory": engine_mem}
-        # Give executor a smaller value, since it doesn't need to load the graph
-        self._executor_requests = {"cpu": "2000m", "memory": engine_mem // 4}
+        # Should give executor a smaller value, since it doesn't need to load the graph
+        self._executor_requests = {"cpu": "2000m", "memory": engine_mem}
         self._learning_requests = {"cpu": "1000m", "memory": "256Mi"}
         self._frontend_requests = {"cpu": "200m", "memory": "512Mi"}
         self._dataset_requests = {"cpu": "200m", "memory": "64Mi"}
@@ -266,19 +266,15 @@ class EngineCluster:
         )
         return container
 
-    def _get_tail_if_exists_cmd(fname: str):
-        return f"""while true; do if [ -e {fname} ];
-                   then tail -f {fname}; fi;
-                   sleep 1; done"""
+    def _get_tail_if_exists_cmd(self, fname: str):
+        return (
+            f"while true; do if [ -e {fname} ]; then tail -f {fname}; fi; sleep 1; done"
+        )
 
     def get_analytical_container(self, volume_mounts, with_java=False):
         name = self.analytical_container_name
         image = self._analytical_image if not with_java else self._analytical_java_image
-        args = [
-            "bash",
-            "-c",
-            self._get_tail_if_exists_cmd("/tmp/grape_engine.INFO")
-        ]
+        args = ["bash", "-c", self._get_tail_if_exists_cmd("/tmp/grape_engine.INFO")]
         container = self.get_engine_container_helper(
             name,
             image,
@@ -305,7 +301,7 @@ class EngineCluster:
         args = [
             "bash",
             "-c",
-            self._get_tail_if_exists_cmd("/var/log/graphscope/current/executor.log")
+            self._get_tail_if_exists_cmd("/var/log/graphscope/current/executor.log"),
         ]
         container = self.get_engine_container_helper(
             name,
@@ -551,7 +547,7 @@ class EngineCluster:
         args = [
             "bash",
             "-c",
-            self._get_tail_if_exists_cmd("/var/log/graphscope/current/frontend.log")
+            self._get_tail_if_exists_cmd("/var/log/graphscope/current/frontend.log"),
         ]
         container = kube_client.V1Container(name=name, image=image, args=args)
         container.image_pull_policy = self._image_pull_policy
