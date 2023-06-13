@@ -16,10 +16,11 @@
 # limitations under the License.
 #
 
-import os
-import click
-import subprocess
 import io
+import os
+import subprocess
+
+import click
 
 
 def run_shell_cmd(cmd, workingdir):
