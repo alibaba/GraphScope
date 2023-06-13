@@ -113,7 +113,7 @@ def make(repo, component, clean, install, install_prefix, storage_type, with_jav
         run_shell_cmd(cmd, repo.home)
         return
     click.secho(
-        f"Before making artifacts, please manually source ENVs from ~/.graphscope_env.",
+        "Before making artifacts, please manually source ENVs from ~/.graphscope_env.",
         fg="yellow",
     )
     click.secho(
@@ -144,8 +144,8 @@ def make(repo, component, clean, install, install_prefix, storage_type, with_jav
             )
             click.secho(f"Begin to extract, from {workingdir}.", fg="green")
             run_shell_cmd(cmd, workingdir)
-            click.secho(f"GraphScope interactive engine has been built.", fg="green")
-        if install == True:
+            click.secho("GraphScope interactive engine has been built.", fg="green")
+        if install is True:
             cmd = [
                 "make",
                 "interactive-install",
@@ -162,8 +162,8 @@ def make(repo, component, clean, install, install_prefix, storage_type, with_jav
         if with_java:
             cmd = ["make", "analytical-java"]
         run_shell_cmd(cmd, repo.home)
-        click.secho(f"GraphScope analytical engine has been built.", fg="green")
-        if install == True:
+        click.secho("GraphScope analytical engine has been built.", fg="green")
+        if install is True:
             cmd = [
                 "make",
                 "analytical-install",
@@ -183,10 +183,10 @@ def make(repo, component, clean, install, install_prefix, storage_type, with_jav
         cmd = ["make", "coordinator"]
         run_shell_cmd(cmd, repo.home)
 
-    if component == None:
+    if component is None:
         click.secho("Building all components.", fg="green")
         cmd = ["make", "all"]
-        if install == True:
+        if install is True:
             cmd = ["make", "install", "INSTALL_PREFIX={}".format(install_prefix)]
         run_shell_cmd(cmd, repo.home)
 
