@@ -44,8 +44,7 @@ import java.util.Map;
 
 public class IrServiceProducer implements ComputeServiceProducer {
     private static final Logger logger = LoggerFactory.getLogger(IrServiceProducer.class);
-
-    private Configs configs;
+    private final Configs configs;
 
     public IrServiceProducer(Configs configs) {
         this.configs = configs;

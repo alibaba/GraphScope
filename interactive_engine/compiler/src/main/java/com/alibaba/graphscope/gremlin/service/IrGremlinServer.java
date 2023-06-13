@@ -31,9 +31,6 @@ import com.alibaba.graphscope.gremlin.plugin.processor.IrOpLoader;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 
-import io.netty.channel.Channel;
-
-import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.Settings;
@@ -43,15 +40,18 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 
 public class IrGremlinServer implements AutoCloseable {
+    private final Configs configs;
+    private final GraphPlanner graphPlanner;
+    private final ChannelFetcher channelFetcher;
+    private final IrMetaQueryCallback metaQueryCallback;
+    private final GraphProperties testGraph;
+
     private GremlinServer gremlinServer;
+    private final Settings settings;
     private final Graph graph;
     private final GraphTraversalSource g;
-    private final Configs configs;
 
     public IrGremlinServer(
             Configs configs,
@@ -60,18 +60,23 @@ public class IrGremlinServer implements AutoCloseable {
             IrMetaQueryCallback metaQueryCallback,
             GraphProperties testGraph) {
         this.configs = configs;
+        this.graphPlanner = graphPlanner;
+        this.channelFetcher = channelFetcher;
+        this.metaQueryCallback = metaQueryCallback;
+        this.testGraph = testGraph;
+        InputStream input =
+                getClass().getClassLoader().getResourceAsStream("conf/gremlin-server.yaml");
+        this.settings = Settings.read(input);
+        this.settings.host = "0.0.0.0";
+        int port = FrontendConfig.FRONTEND_SERVICE_PORT.get(configs);
+        if (port >= 0) {
+            this.settings.port = port;
+        }
         this.graph = TinkerFactory.createModern();
         this.g = this.graph.traversal(IrCustomizedTraversalSource.class);
-        initProcessor(graphPlanner, channelFetcher, metaQueryCallback, testGraph);
-        initAuthentication();
-        initGremlinServer();
     }
 
-    private void initProcessor(
-            GraphPlanner graphPlanner,
-            ChannelFetcher channelFetcher,
-            IrMetaQueryCallback metaQueryCallback,
-            GraphProperties testGraph) {
+    public void start() throws Exception {
         AbstractOpProcessor standardProcessor =
                 new IrStandardOpProcessor(
                         configs, graphPlanner, channelFetcher, metaQueryCallback, graph, g);
@@ -86,31 +91,17 @@ public class IrGremlinServer implements AutoCloseable {
                         g,
                         testGraph);
         IrOpLoader.addProcessor(testProcessor.getName(), testProcessor);
-    }
 
-    private void initAuthentication() {
         AuthManager authManager = new DefaultAuthManager(configs);
         AuthManagerReference.setAuthManager(authManager);
-    }
 
-    private void initGremlinServer() {
-        InputStream input =
-                getClass().getClassLoader().getResourceAsStream("conf/gremlin-server.yaml");
-        Settings settings = Settings.read(input);
-        settings.host = "0.0.0.0";
-        int port = FrontendConfig.FRONTEND_SERVICE_PORT.get(configs);
-        if (port >= 0) {
-            settings.port = port;
-        }
         this.gremlinServer = new GremlinServer(settings);
         ServerGremlinExecutor serverGremlinExecutor =
                 Utils.getFieldValue(
                         GremlinServer.class, this.gremlinServer, "serverGremlinExecutor");
         serverGremlinExecutor.getGraphManager().putGraph("graph", graph);
         serverGremlinExecutor.getGraphManager().putTraversalSource("g", graph.traversal());
-    }
 
-    public void start() throws Exception {
         this.gremlinServer.start().join();
     }
 
@@ -119,17 +110,5 @@ public class IrGremlinServer implements AutoCloseable {
         if (this.gremlinServer != null) {
             this.gremlinServer.stop();
         }
-    }
-
-    public int getGremlinServerPort() throws Exception {
-        Field ch = this.gremlinServer.getClass().getDeclaredField("ch");
-        ch.setAccessible(true);
-        Channel o = (Channel) ch.get(this.gremlinServer);
-        SocketAddress localAddr = o.localAddress();
-        return ((InetSocketAddress) localAddr).getPort();
-    }
-
-    public GremlinExecutor getGremlinExecutor() {
-        return gremlinServer.getServerGremlinExecutor().getGremlinExecutor();
     }
 }
