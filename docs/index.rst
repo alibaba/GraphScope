@@ -64,11 +64,11 @@ and the vineyard store that offers efficient in-memory data transfers.
    interactive_engine/getting_started
    interactive_engine/deployment
    interactive_engine/tinkerpop_eco
-   interactive_engine/guide_and_examples
+   .. interactive_engine/guide_and_examples
    interactive_engine/design_of_gie
-   interactive_engine/supported_gremlin_steps
+   .. interactive_engine/supported_gremlin_steps
    interactive_engine/dev_and_test.md
-   interactive_engine/faq.md
+   .. interactive_engine/faq.md
 
 .. toctree::
    :maxdepth: 1
