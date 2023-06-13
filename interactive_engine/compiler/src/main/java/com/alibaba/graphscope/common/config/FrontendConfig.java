@@ -20,5 +20,11 @@ public class FrontendConfig {
     public static final Config<Integer> FRONTEND_SERVICE_PORT =
             Config.intConfig("frontend.service.port", 8182);
 
+    public static final Config<String> NEO4J_HOME_DIR =
+            Config.stringConfig("neo4j.home.dir", "/tmp/neo4j");
+
+    public static final Config<Integer> NEO4J_BOLT_SERVICE_PORT =
+            Config.intConfig("neo4j.bolt.service.port", 7687);
+
     public static final Config<String> ENGINE_TYPE = Config.stringConfig("engine.type", "pegasus");
 }

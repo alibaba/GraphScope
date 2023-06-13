@@ -32,14 +32,21 @@ import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.gremlin.service.IrGremlinServer;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Resources;
 
+import org.apache.commons.io.FileUtils;
 import org.neo4j.server.CommunityBootstrapper;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 public class GraphServer {
     private final IrGremlinServer gremlinServer;
     private final CommunityBootstrapper cypherBootstrapper;
+    private final Configs configs;
 
     public GraphServer(
             Configs configs,
@@ -49,15 +56,42 @@ public class GraphServer {
         ExecutionClient executionClient = ExecutionClient.Factory.create(configs, channelFetcher);
         GraphPlanner graphPlanner = new GraphPlanner(configs);
         this.gremlinServer =
-                new IrGremlinServer(configs, null, channelFetcher, metaQueryCallback, testGraph);
+                new IrGremlinServer(
+                        configs, graphPlanner, channelFetcher, metaQueryCallback, testGraph);
         this.cypherBootstrapper =
                 new CypherBootstrapper(configs, graphPlanner, metaQueryCallback, executionClient);
+        this.configs = configs;
     }
 
     public void start() throws Exception {
         this.gremlinServer.start();
+        File neo4jHomeDir = makeNeo4jHomeDir();
         this.cypherBootstrapper.start(
-                Path.of("/tmp/neo4j"), Path.of("conf/neo4j.conf"), ImmutableMap.of(), false);
+                Path.of(neo4jHomeDir.getPath()),
+                getNeo4jConfPath(neo4jHomeDir),
+                ImmutableMap.of(
+                        "dbms.connector.bolt.listen_address",
+                                ":" + FrontendConfig.NEO4J_BOLT_SERVICE_PORT.get(this.configs),
+                        "dbms.connector.bolt.advertised_address",
+                                ":" + FrontendConfig.NEO4J_BOLT_SERVICE_PORT.get(this.configs)),
+                false);
+    }
+
+    private File makeNeo4jHomeDir() {
+        File neo4jHomeDir = new File(FrontendConfig.NEO4J_HOME_DIR.get(configs));
+        if (!neo4jHomeDir.exists()) {
+            neo4jHomeDir.mkdirs();
+        }
+        return neo4jHomeDir;
+    }
+
+    private Path getNeo4jConfPath(File neo4jHomeDir) throws IOException {
+        URL resourceUrl = getClass().getClassLoader().getResource("conf/neo4j.conf");
+        String neo4jConf = Resources.toString(resourceUrl, StandardCharsets.UTF_8).trim();
+        File tmpFile = File.createTempFile("neo4j-", ".conf", neo4jHomeDir);
+        tmpFile.deleteOnExit();
+        FileUtils.writeStringToFile(tmpFile, neo4jConf, StandardCharsets.UTF_8);
+        return tmpFile.toPath();
     }
 
     public void close() throws Exception {
