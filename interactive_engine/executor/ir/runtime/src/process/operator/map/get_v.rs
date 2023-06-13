@@ -71,18 +71,23 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                 } else {
                     Ok(None)
                 }
-            } else if let Some(_) = entry.as_graph_path() {
-                let graph_path = input
-                    .get_mut(self.start_tag)
-                    .unwrap()
-                    .as_any_mut()
-                    .downcast_mut::<GraphPath>()
-                    .ok_or(FnExecError::unexpected_data_error(&format!("entry is not a path in GetV")))?;
+            } else if let Some(graph_path) = entry.as_graph_path() {
                 // we check VOpt here:
                 // for `Other`, we treat it as to get_other_id() in the Edge within the Path (in which case is expanding the path with a adj vertex)
                 // for `End`, we treat it as to get EndV() in the Path (in which case is getting the end vertex from the path)
                 match self.opt {
                     VOpt::Other => {
+                        let graph_path = input
+                            .get_mut(self.start_tag)
+                            .ok_or(FnExecError::unexpected_data_error(&format!(
+                                "get_mut of GraphPath failed in {:?}",
+                                self
+                            )))?
+                            .as_any_mut()
+                            .downcast_mut::<GraphPath>()
+                            .ok_or(FnExecError::unexpected_data_error(&format!(
+                                "entry is not a path in GetV"
+                            )))?;
                         let path_end_edge = graph_path.get_path_end().as_edge().ok_or(
                             FnExecError::unexpected_data_error(&format!(
                                 "GetOtherVertex on a path entry with input: {:?}",
