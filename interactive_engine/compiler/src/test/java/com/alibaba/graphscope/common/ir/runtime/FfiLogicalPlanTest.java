@@ -48,7 +48,7 @@ public class FfiLogicalPlanTest {
                         .getV(getVConfig)
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
-                        .resultOpt(GraphOpt.PathExpandResult.AllV)
+                        .resultOpt(GraphOpt.PathExpandResult.ALL_V)
                         .build();
         RelNode aggregate =
                 builder.source(
@@ -74,7 +74,7 @@ public class FfiLogicalPlanTest {
                     + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
                     + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[DEFAULT], opt=[END])\n"
-                    + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[AllV],"
+                    + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
                     + " alias=[DEFAULT])\n"
                     + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[x], opt=[VERTEX])",

@@ -2,8 +2,36 @@ This document shows how to debugging GraphScope under various conditions.
 
 ### Debugging on local deployment
 
+## Find the logs
+
+Most of the logs will be streamed through the stdout of client, you could control the log level by 
+
+```python
+import graphscope
+graphscope.set_option(show_log=True)
+graphscope.set_option(log_level='DEBUG')  # could also be INFO, ERROR
+```
+
+As you may know, GraphScope is composed of three engines, where the detailed log location of each engine is
+
+- Analytical Engine: `/tmp/grape_engine.INFO`
+- Interactive Engine: Inside `/var/log/graphscope/` or `$HOME/log/graphscope` if GraphScope doesn't have permission of `/var/log`. You may find several folders named with a long number, which is the object id of the graph. There is also a `current` folder links to the log folder of latest created interactive instance.
+- Learning Engine: `graphlearn.INFO` in the current directory.
+
+
 
 ### Debugging on Kubernetes deployment
+
+## Find the logs
+
+In kubernetes environment, besides most of the logs still output to console, you could find detailed logs in each pod's stdout, or files inside each pods.
+
+Note: You could use `kubectl logs <pod>` to inspect the stdout of the pod. Use `kubectl logs <pod> -c <container>` to inspect a specific container inside the pod.
+
+- Coordinator: The stdout of coordinator pod.
+- Analytical Engine: The stdout engine container in the engine pod.
+- Interactive Engine: The stdout of executor container in the engine pod for the executor log. And the stdout of interactive-frontend pod for the frontend. The log files resides in the `/var/log/graphscope` of each container, respectively.
+
 
 ## Commands for Debugging
 

@@ -184,8 +184,7 @@ jobs:
 
         minikube image load ${{ env.GSS_IMAGE }}:${SHORT_SHA}
 
-    - name: Start to export kubernetes logs
-      uses: dashanji/kubernetes-log-export-action@v4
+    - uses: dashanji/kubernetes-log-export-action@v4
       env:
         SHOW_TIMESTAMPS: 'true'
         OUTPUT_DIR: ${{ github.workspace }}/helm-installation-logs
@@ -202,19 +201,6 @@ jobs:
         cd ${GITHUB_WORKSPACE}/charts
         helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
         helm test ci --timeout 5m0s
-
-    - name: Stop to export kubernetes logs
-      uses: dashanji/kubernetes-log-export-action@v4
-      env:
-        MODE: stop
-
-    - name: Start to export kubernetes logs
-      uses: dashanji/kubernetes-log-export-action@v4
-      env:
-        SHOW_TIMESTAMPS: 'true'
-        OUTPUT_DIR: ${{ github.workspace }}/demo-fresh-of-helm-installation-logs
-        NAMESPACES: "gs*,default"
-        MODE: start
 
     - name: Test the helm deployment
       run: |
@@ -248,19 +234,6 @@ jobs:
         python3 setup.py build_proto
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_fresh
 
-    - name: Stop to export kubernetes logs
-      uses: dashanji/kubernetes-log-export-action@v4
-      env:
-        MODE: stop
-
-    - name: Start to export kubernetes logs
-      uses: dashanji/kubernetes-log-export-action@v4
-      env:
-        SHOW_TIMESTAMPS: 'true'
-        OUTPUT_DIR: ${{ github.workspace }}/demo-script-of-helm-installation-with-pv-logs
-        NAMESPACES: "gs*,default"
-        MODE: start
-
     - name: restart helm and run demo with the PersistentVolume
       run: |
         # restart helm and run demo with the PersistentVolume
@@ -268,19 +241,6 @@ jobs:
         sleep 30
         cd ${GITHUB_WORKSPACE}/charts
         helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
-
-    - name: Stop to export kubernetes logs
-      uses: dashanji/kubernetes-log-export-action@v4
-      env:
-        MODE: stop
-
-    - name: Start to export kubernetes logs
-      uses: dashanji/kubernetes-log-export-action@v4
-      env:
-        SHOW_TIMESTAMPS: 'true'
-        OUTPUT_DIR: ${{ github.workspace }}/helm-test-of-helm-installation-with-pv-logs
-        NAMESPACES: "gs*,default"
-        MODE: start
 
     - name: Helm Test with Helm Deployment and PersistentVolume
       run: |
@@ -290,19 +250,6 @@ jobs:
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
         helm test ci --timeout 10m0s
 
-    - name: Stop to export kubernetes logs
-      uses: dashanji/kubernetes-log-export-action@v4
-      env:
-        MODE: stop
-
-    - name: Start to export kubernetes logs
-      uses: dashanji/kubernetes-log-export-action@v4
-      env:
-        SHOW_TIMESTAMPS: 'true'
-        OUTPUT_DIR: ${{ github.workspace }}/demo-after-restart-of-helm-installation-with-pv-logs
-        NAMESPACES: "gs*,default"
-        MODE: start
-
     - name: Python Test with Helm Deployment and PersistentVolume
       run: |
         export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
@@ -311,14 +258,15 @@ jobs:
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_after_restart
 
+    - uses: dashanji/kubernetes-log-export-action@v4
+      env:
+        MODE: stop
+
     - name: upload the k8s logs to artifact
       if: ${{ always() }}
       uses: actions/upload-artifact@v3
+      continue-on-error: true
       with:
         name: k8s-test-logs
         path: ${{ github.workspace }}/k8s-ci-*-logs
 
-    - name: Stop to export kubernetes logs
-      uses: dashanji/kubernetes-log-export-action@v4
-      env:
-        MODE: stop

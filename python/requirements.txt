@@ -20,6 +20,7 @@ ujson;python_version>="3.11"
 PyYAML
 rich
 tqdm
+click
 vineyard>=0.15.0;sys_platform!="win32"
 vineyard-io>=0.15.0;sys_platform!="win32"
 
