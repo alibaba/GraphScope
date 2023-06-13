@@ -16,7 +16,8 @@
 
 .rst-versions-ver {
     /* bottom: 128px !important; */
-    bottom: 100px !important;
+    height: 6rem !important;
+    bottom: 6rem !important;
 }
 
 .rst-versions.rst-versions-ver .rst-current-version {
@@ -24,8 +25,9 @@
 }
 
 .rst-versions-lang {
-    /* height: 128px !important; */
-	bottom: 1rem !important;;
+    height: 5rem !important;
+	bottom: 0 !important;;
+	padding-bottom: 1rem !important;
 }
 
 .rst-versions {

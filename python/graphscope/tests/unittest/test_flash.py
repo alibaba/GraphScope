@@ -48,3 +48,27 @@ def test_flash_triangle_counting_on_projected_graph(arrow_property_graph_directe
             vertices={v: []}, edges={e: ["weight"]}
         )
         ctx = flash.triangle_counting(g)
+
+
+def test_flash_bfs_on_projected_graph(ldbc_graph):
+    g = ldbc_graph.project(
+        vertices={"person": []},
+        edges={"knows": []},
+    )
+    bfs_context = flash.bfs(g, source=65)
+    df = bfs_context.to_dataframe(selector={"id": "v.id", "dist": "r"}).sort_values(
+        by=["id"]
+    )
+    print(df)
+
+
+def test_flash_cc_on_projected_graph(ldbc_graph):
+    g = ldbc_graph.project(
+        vertices={"person": []},
+        edges={"knows": []},
+    )
+    cc_context = flash.cc(g)
+    df = cc_context.to_dataframe(selector={"id": "v.id", "cc": "r"}).sort_values(
+        by=["id"]
+    )
+    print(df)

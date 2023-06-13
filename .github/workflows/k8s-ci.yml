@@ -377,23 +377,6 @@ jobs:
           # Use a dummy builder image (tag=ci, which is actually a busybox) to reduce time and space to pull the builder
           make graphscope CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
 
-      - name: Prepare the log directory
-        run: |
-          # create the helm installation log directory
-          mkdir -p ${{ github.workspace }}/helm-installation-logs
-
-          # create the store service of helm installation log directory
-          mkdir -p ${{ github.workspace }}/store-service-of-helm-installation-logs
-
-          # create the demo script of helm installation log directory
-          mkdir -p ${{ github.workspace }}/demo-script-of-helm-installation-logs
-
-          # create the store service of kubernetes test log directory
-          mkdir -p ${{ github.workspace }}/store-service-of-kubernetes-test-logs
-
-          # create the demo script of hdfs test log directory
-          mkdir -p ${{ github.workspace }}/demo-script-of-hdfs-test-logs
-
       - name: Install Python dependencies
         run: |
           cd ${GITHUB_WORKSPACE}/python
@@ -448,8 +431,7 @@ jobs:
           minikube image load graphscope/learning:${SHORT_SHA}
           echo "loaded learning"
 
-      - name: Start to export kubernetes logs
-        uses: dashanji/kubernetes-log-export-action@v4
+      - uses: dashanji/kubernetes-log-export-action@v4
         env:
           SHOW_TIMESTAMPS: 'true'
           OUTPUT_DIR: ${{ github.workspace }}/k8s-ci-helm-installation-logs
@@ -467,19 +449,6 @@ jobs:
                                   ./graphscope
           helm test graphscope --timeout 5m0s
 
-      - name: Stop to export kubernetes logs
-        uses: dashanji/kubernetes-log-export-action@v4
-        env:
-          MODE: stop
-
-      - name: Start to export kubernetes logs
-        uses: dashanji/kubernetes-log-export-action@v4
-        env:
-          SHOW_TIMESTAMPS: 'true'
-          OUTPUT_DIR: ${{ github.workspace }}/k8s-ci-demo-script-of-helm-installation-logs
-          NAMESPACES: "gs*,default"
-          MODE: start
-
       - name: Test demo script of helm installation
         run: |
           export NODE_IP=$(kubectl get pod -lgraphscope.coordinator.name=coordinator-graphscope -ojsonpath="{.items[0].status.hostIP}")
@@ -490,20 +459,17 @@ jobs:
 
           python3 -m pytest -s -vvv ./graphscope/tests/kubernetes/test_demo_script.py -k test_helm_installation
 
-      - name: Stop to export kubernetes logs
-        uses: dashanji/kubernetes-log-export-action@v4
+      - uses: dashanji/kubernetes-log-export-action@v4
         env:
           MODE: stop
 
       - name: Delete Helm Cluster
-        run: |
-          helm delete graphscope
+        run: helm delete graphscope
 
-      - name: Start to export kubernetes logs
-        uses: dashanji/kubernetes-log-export-action@v4
+      - uses: dashanji/kubernetes-log-export-action@v4
         env:
           SHOW_TIMESTAMPS: 'true'
-          OUTPUT_DIR: ${{ github.workspace }}/k8s-ci-store-service-of-kubernetes-test-logs
+          OUTPUT_DIR: ${{ github.workspace }}/k8s-ci-demo-script-test-logs
           NAMESPACES: "gs*,default"
           MODE: start
 
@@ -522,24 +488,11 @@ jobs:
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
                           ./graphscope/tests/kubernetes
 
-      - name: Stop to export kubernetes logs
-        uses: dashanji/kubernetes-log-export-action@v4
-        env:
-          MODE: stop
-
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
         with:
           file: ./python/coverage.xml
           fail_ci_if_error: false
-
-      - name: Start to export kubernetes logs
-        uses: dashanji/kubernetes-log-export-action@v4
-        env:
-          SHOW_TIMESTAMPS: 'true'
-          OUTPUT_DIR: ${{ github.workspace }}/k8s-ci-demo-script-of-hdfs-test-logs
-          NAMESPACES: "gs*,default"
-          MODE: start
 
       - name: HDFS test
         env:
@@ -561,28 +514,24 @@ jobs:
           hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_0_0.csv /ldbc_sample/person_0_0.csv
           hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
 
-          # validate hadoop
-          hadoop fs -ls /ldbc_sample
-
           # prepare CI environments
           export HDFS_TEST_DIR=hdfs:///ldbc_sample
           export HDFS_HOST=$(hostname -I | awk '{print $1}')
 
           # run test
           cd ${GITHUB_WORKSPACE}/python
-
           python3 -m pytest -s -vvv ./graphscope/tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
           # Check the result file have successfully written to the given location
           # hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
 
-      - name: Stop to export kubernetes logs
-        uses: dashanji/kubernetes-log-export-action@v4
+      - uses: dashanji/kubernetes-log-export-action@v4
         env:
           MODE: stop
 
       - name: Upload the k8s logs to artifact
         uses: actions/upload-artifact@v3
         if: ${{ always() }}
+        continue-on-error: true
         with:
           name: k8s-test-logs
           path: ${{ github.workspace }}/k8s-ci-*-logs
@@ -718,11 +667,6 @@ jobs:
               -t registry.cn-hongkong.aliyuncs.com/graphscope/interactive-experimental:${SHORT_SHA} \
               -f .github/workflows/docker/interactive-experimental-local-artifacts.Dockerfile .
 
-      - name: Prepare the log directory
-        run: |
-          # create the k8s failover test log directory
-          mkdir -p ${{ github.workspace }}/k8s-failover-test-logs
-
       - name: Prepare Cluster and Data
         env:
           GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -743,8 +687,7 @@ jobs:
           # install python gremlin client
           pip install gremlinpython
 
-      - name: Start to export kubernetes logs
-        uses: dashanji/kubernetes-log-export-action@v4
+      - uses: dashanji/kubernetes-log-export-action@v4
         env:
           SHOW_TIMESTAMPS: 'true'
           OUTPUT_DIR: ${{ github.workspace }}/k8s-failover-logs
@@ -769,14 +712,14 @@ jobs:
           # run failover test
           cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_k8s_failover_ci.sh default test-gie-standalone 2 1
 
+      - uses: dashanji/kubernetes-log-export-action@v4
+        env:
+          MODE: stop
+
       - name: upload the k8s logs to artifact
         uses: actions/upload-artifact@v3
+        continue-on-error: true
         if: ${{ always() }}
         with:
           name: k8s-failover-logs
           path: ${{ github.workspace }}/k8s-failover-logs
-
-      - name: Stop to export kubernetes logs
-        uses: dashanji/kubernetes-log-export-action@v4
-        env:
-          MODE: stop

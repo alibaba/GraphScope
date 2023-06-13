@@ -17,7 +17,7 @@ use ahash::HashMap;
 use dyn_type::{BorrowObject, Object};
 pub use edge::Edge;
 use ir_common::{LabelId, NameOrId};
-pub use path::GraphPath;
+pub use path::{GraphPath, VertexOrEdge};
 pub use property::{Details, DynDetails, PropKey, PropertyValue};
 pub use vertex::Vertex;
 

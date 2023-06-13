@@ -131,7 +131,7 @@ java -cp ".:$GIE_TEST_HOME/lib/*" -Djna.library.path=$GIE_TEST_HOME/lib com.alib
 ```
 
 With the frontend service, you can open the gremlin console and set the endpoint to
-`localhost:8182`, as given [here](./deployment.md#deploy-your-first-gie-service).
+`localhost:8182`, as given [here](./tinkerpop_gremlin.md#gremlin-console).
 
 7. Kill the services of `vineyardd`, `gaia_executor` and `frontend`:
 ```
