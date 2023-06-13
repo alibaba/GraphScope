@@ -313,6 +313,7 @@ jobs:
       - name: Upload GIE log
         if: failure()
         uses: actions/upload-artifact@v3
+        continue-on-error: true
         with:
           name: gie-log
           path: ~/.local/log/graphscope

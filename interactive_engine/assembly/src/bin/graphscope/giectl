@@ -80,6 +80,10 @@ start_frontend() {
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
 
+  # make a "current" link
+  unlink ${GS_LOG}/current || true
+  ln -s ${log_dir} ${GS_LOG}/current
+
   declare java_opt="-server
             -verbose:gc
             -Xloggc:${log_dir}/frontend.gc.log
@@ -149,6 +153,10 @@ start_executor() {
   export LD_LIBRARY_PATH=${GRAPHSCOPE_HOME}/lib:${LD_LIBRARY_PATH}
   export DYLD_LIBRARY_PATH=${GRAPHSCOPE_HOME}/lib:${DYLD_LIBRARY_PATH}
 
+  # make a "current" link
+  unlink ${GS_LOG}/current || true
+  ln -s ${log_dir} ${GS_LOG}/current
+
   # set executor config file
   sed -e "s@GRAPH_NAME@${object_id}@g" \
       -e "s@VINEYARD_OBJECT_ID@${object_id}@g" \
@@ -206,9 +214,6 @@ create_gremlin_instance_on_local() {
   mkdir -p ${GS_LOG}
 
   declare -r log_dir=${GS_LOG}/${object_id}
-  # make a "current" link
-  unlink ${GS_LOG}/current || true
-  ln -s ${log_dir} ${GS_LOG}/current
 
   # Frontend use executor rpc port
   network_servers=""
