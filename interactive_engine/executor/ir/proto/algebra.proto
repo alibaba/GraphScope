@@ -249,13 +249,13 @@ message Scan {
 message GetV {
   enum VOpt {
     // Getting the start vertex of the edge/path
-    Start = 0;
+    START = 0;
     // Getting the end vertex of the edge/path
-    End = 1;
+    END = 1;
     // Getting the other vertex of the edge/path. We are calibrating to Gremlin's bothE.otherV semantics
-    Other = 2;
+    OTHER = 2;
     // Getting both vertices of the edge/path
-    Both = 3;
+    BOTH = 3;
   }
   // The tag that refers to the edge/path where the end vertex will be retrieved
   common.NameOrId tag = 1;
@@ -281,9 +281,9 @@ message EdgeExpand {
     BOTH = 2;
   }
   enum ExpandOpt {
-    Vertex = 0;
-    Edge = 1;
-    Degree = 2;
+    VERTEX = 0;
+    EDGE = 1;
+    DEGREE = 2;
   }
   // The tag that refers to the starting vertex
   common.NameOrId v_tag = 1;
@@ -310,17 +310,19 @@ message PathExpand {
   }
   enum PathOpt {
     // an arbitrary path, in which both vertex/edge may duplicate
-    Arbitrary = 0;
+    ARBITRARY = 0;
     // a path without vertex duplications
-    Simple = 1;
+    SIMPLE = 1;
   }
    // Define what result is required for this path. We currently support `EndV` and `AllV`, while an option to
    // include all edges and vertices may be needed in the future.
    enum ResultOpt {
      // only end vertex is required for this expansion
-     EndV = 0;
+     END_V = 0;
      // all vertices of this path are required for this expansion.
-     AllV = 1;
+     ALL_V = 1;
+     // all vertices and edges of this path are required for this expansion.
+     ALL_V_E = 2;
   }
   // A path expansion has a base expansion
   ExpandBase base = 1;
