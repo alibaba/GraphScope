@@ -96,7 +96,7 @@ spec:
               cd /opt/graphscope/interactive_engine/compiler && ./set_properties.sh
               java -cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
                 -Djna.library.path=../executor/ir/target/release \
-                -Dgraph.schema=/etc/groot/config/$GRAPH_SCHEMA com.alibaba.graphscope.gremlin.service.GraphServiceMain
+                -Dgraph.schema=/etc/groot/config/$GRAPH_SCHEMA com.alibaba.graphscope.GraphServer
           {{- end }}
           env:
             - name: GAIA_RPC_PORT
