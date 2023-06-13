@@ -27,7 +27,6 @@ import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.GremlinConfig;
 import com.alibaba.graphscope.groot.discovery.DiscoveryFactory;
 import com.alibaba.graphscope.groot.frontend.SnapshotUpdateCommitter;
 import com.alibaba.graphscope.groot.meta.MetaService;
@@ -102,48 +101,25 @@ public class IrServiceProducer implements ComputeServiceProducer {
     private com.alibaba.graphscope.common.config.Configs getConfigs() {
         Map<String, String> configMap = new HashMap<>();
         // add pegasus config
-        addToConfigMapIfExist(
-                PegasusConfig.PEGASUS_HOSTS.getKey(),
-                PegasusConfig.PEGASUS_HOSTS.getKey(),
-                configMap);
-        addToConfigMapIfExist(
-                PegasusConfig.PEGASUS_WORKER_NUM.getKey(),
-                PegasusConfig.PEGASUS_WORKER_NUM.getKey(),
-                configMap);
-        addToConfigMapIfExist(
-                PegasusConfig.PEGASUS_TIMEOUT.getKey(),
-                PegasusConfig.PEGASUS_TIMEOUT.getKey(),
-                configMap);
-        addToConfigMapIfExist(
-                PegasusConfig.PEGASUS_BATCH_SIZE.getKey(),
-                PegasusConfig.PEGASUS_BATCH_SIZE.getKey(),
-                configMap);
-        addToConfigMapIfExist(
-                PegasusConfig.PEGASUS_OUTPUT_CAPACITY.getKey(),
-                PegasusConfig.PEGASUS_OUTPUT_CAPACITY.getKey(),
-                configMap);
-        addToConfigMapIfExist(
-                PegasusConfig.PEGASUS_MEMORY_LIMIT.getKey(),
-                PegasusConfig.PEGASUS_MEMORY_LIMIT.getKey(),
-                configMap);
+        addToConfigMapIfExist(PegasusConfig.PEGASUS_HOSTS.getKey(), configMap);
+        addToConfigMapIfExist(PegasusConfig.PEGASUS_WORKER_NUM.getKey(), configMap);
+        addToConfigMapIfExist(PegasusConfig.PEGASUS_TIMEOUT.getKey(), configMap);
+        addToConfigMapIfExist(PegasusConfig.PEGASUS_BATCH_SIZE.getKey(), configMap);
+        addToConfigMapIfExist(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.getKey(), configMap);
+        addToConfigMapIfExist(PegasusConfig.PEGASUS_MEMORY_LIMIT.getKey(), configMap);
         // add authentication
-        addToConfigMapIfExist(
-                AuthConfig.AUTH_USERNAME.getKey(), AuthConfig.AUTH_USERNAME.getKey(), configMap);
-        addToConfigMapIfExist(
-                AuthConfig.AUTH_PASSWORD.getKey(), AuthConfig.AUTH_PASSWORD.getKey(), configMap);
-        // add gremlin port
-        addToConfigMapIfExist(
-                GremlinConfig.GREMLIN_PORT.getKey(),
-                FrontendConfig.FRONTEND_SERVICE_PORT.getKey(),
-                configMap);
+        addToConfigMapIfExist(AuthConfig.AUTH_USERNAME.getKey(), configMap);
+        addToConfigMapIfExist(AuthConfig.AUTH_PASSWORD.getKey(), configMap);
+        // add gremlin config
+        addToConfigMapIfExist(FrontendConfig.GREMLIN_SERVER_PORT.getKey(), configMap);
+        // todo: add neo4j config
         return new com.alibaba.graphscope.common.config.Configs(configMap);
     }
 
-    private void addToConfigMapIfExist(
-            String originalKey, String targetKey, Map<String, String> configMap) {
-        String value = configs.get(originalKey);
+    private void addToConfigMapIfExist(String key, Map<String, String> configMap) {
+        String value = configs.get(key);
         if (value != null) {
-            configMap.put(targetKey, value);
+            configMap.put(key, value);
         }
     }
 }
