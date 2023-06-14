@@ -388,7 +388,10 @@ class Graph(_GraphBase):
             return
 
         if self.cache.enable_iter_cache:
-            self.cache.shutdown()
+            try:
+                self.cache.shutdown()
+            except:  # noqa: E722, pylint: disable=bare-except
+                pass
         self.cache.shutdown_executor()
 
         if not self._is_client_view and self._unload_op is not None:
