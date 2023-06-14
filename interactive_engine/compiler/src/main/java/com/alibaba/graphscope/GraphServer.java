@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 
 import org.apache.commons.io.FileUtils;
-import org.neo4j.server.CommunityBootstrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,30 +48,38 @@ import java.nio.file.Paths;
 
 public class GraphServer {
     private static final Logger logger = LoggerFactory.getLogger(GraphServer.class);
-    private final IrGremlinServer gremlinServer;
-    private final CommunityBootstrapper cypherBootstrapper;
     private final Configs configs;
+    private final ChannelFetcher channelFetcher;
+    private final IrMetaQueryCallback metaQueryCallback;
+    private final GraphProperties testGraph;
+
+    private IrGremlinServer gremlinServer;
+    private CypherBootstrapper cypherBootstrapper;
 
     public GraphServer(
             Configs configs,
             ChannelFetcher channelFetcher,
             IrMetaQueryCallback metaQueryCallback,
             GraphProperties testGraph) {
-        ExecutionClient executionClient = ExecutionClient.Factory.create(configs, channelFetcher);
-        GraphPlanner graphPlanner = new GraphPlanner(configs);
-        this.gremlinServer =
-                new IrGremlinServer(
-                        configs, graphPlanner, channelFetcher, metaQueryCallback, testGraph);
-        this.cypherBootstrapper =
-                new CypherBootstrapper(configs, graphPlanner, metaQueryCallback, executionClient);
         this.configs = configs;
+        this.channelFetcher = channelFetcher;
+        this.metaQueryCallback = metaQueryCallback;
+        this.testGraph = testGraph;
     }
 
     public void start() throws Exception {
+        ExecutionClient executionClient = ExecutionClient.Factory.create(configs, channelFetcher);
+        GraphPlanner graphPlanner = new GraphPlanner(configs);
         if (!FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs)) {
+            this.gremlinServer =
+                    new IrGremlinServer(
+                            configs, graphPlanner, channelFetcher, metaQueryCallback, testGraph);
             this.gremlinServer.start();
         }
         if (!FrontendConfig.NEO4J_BOLT_SERVER_DISABLED.get(configs)) {
+            this.cypherBootstrapper =
+                    new CypherBootstrapper(
+                            configs, graphPlanner, metaQueryCallback, executionClient);
             Path neo4jHomePath = getNeo4jHomePath();
             this.cypherBootstrapper.start(
                     neo4jHomePath,
@@ -118,7 +125,7 @@ public class GraphServer {
     }
 
     public void close() throws Exception {
-        if (this.gremlinServer != null && !FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs)) {
+        if (!FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs) && this.gremlinServer != null) {
             this.gremlinServer.close();
         }
     }
