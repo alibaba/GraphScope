@@ -17,8 +17,14 @@
 package com.alibaba.graphscope.common.config;
 
 public class FrontendConfig {
+    public static final Config<Boolean> GREMLIN_SERVER_DISABLED =
+            Config.boolConfig("gremlin.server.disabled", false);
+
     public static final Config<Integer> GREMLIN_SERVER_PORT =
             Config.intConfig("gremlin.server.port", 8182);
+
+    public static final Config<Boolean> NEO4J_BOLT_SERVER_DISABLED =
+            Config.boolConfig("neo4j.bolt.server.disabled", false);
 
     public static final Config<Integer> NEO4J_BOLT_SERVER_PORT =
             Config.intConfig("neo4j.bolt.server.port", 7687);
