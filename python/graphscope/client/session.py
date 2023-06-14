@@ -1319,6 +1319,7 @@ class Session(object):
         Args:
             graph (:class:`graphscope.framework.graph.GraphDAGNode`):
                 The graph to create interactive instance.
+            params: A dict consists of configurations of GIE instance.
 
         Raises:
             InvalidArgumentError:
