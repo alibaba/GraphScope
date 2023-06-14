@@ -369,6 +369,9 @@ class Graph(_GraphBase):
         self._is_client_view = False
 
         # statically create the unload op
+        #
+        # networkx operations update the op, but keep the key as same, thus
+        # the unload op don't need to be refreshed.
         if self.op is None:
             self._unload_op = None
         else:

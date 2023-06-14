@@ -136,3 +136,8 @@ pr_delta set to 0.85, running for 50 rounds.
 | C++ time             	| 24.15 	| 12.46 	| 6.59  	| 3.59  	| 2.11 	| 1.56 	| 1.53 	|
 | Java time            	| 80.77 	| 40.94 	| 20.87 	| 14.55 	| 8.14 	| 5.13 	| 5.15 	|
 | Java(+LLVM4JNI) time 	| 49.80 	| 24.15 	| 10.54 	| 6.63  	| 3.83 	| 2.95 	| 3.42 	|
+
+
+## Graphscope-GraphX Integration
+
+We also evaluate the performance of `grape-graphx`, the integration of GraphScope on Spark GraphX. See [grape-graphX performace](grape-graphx/performance.md).
