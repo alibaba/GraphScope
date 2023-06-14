@@ -672,7 +672,7 @@ class Session(object):
         #       "vineyard_socket": "...",
         #       "vineyard_rpc_endpoint": "..."
         #   }
-        self._engine_config: {} = None
+        self._engine_config: dict = None
 
         # interactive instance related graph map
         self._interactive_instance_dict = {}
@@ -713,7 +713,7 @@ class Session(object):
         return self._session_id
 
     @property
-    def dag(self):
+    def dag(self) -> Dag:
         return self._dag
 
     def _log_session_info(self):
