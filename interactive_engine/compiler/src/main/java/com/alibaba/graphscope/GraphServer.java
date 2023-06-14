@@ -72,7 +72,7 @@ public class GraphServer {
         if (!FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs)) {
             this.gremlinServer.start();
         }
-        if (!FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs)) {
+        if (!FrontendConfig.NEO4J_BOLT_SERVER_DISABLED.get(configs)) {
             Path neo4jHomePath = getNeo4jHomePath();
             this.cypherBootstrapper.start(
                     neo4jHomePath,
