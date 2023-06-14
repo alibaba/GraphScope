@@ -17,75 +17,75 @@ RETURN a, b;
 
 | Category  |  Type  | Supported  |  Todo  |
 |:---|:---|:---:|:---|
-| Bool  | bool  |  :heavy_check_mark: |   |
-| Integer  |  int32/uint32/int64/uint64 | :heavy_check_mark: |   |
-| Float  | float/double  | :heavy_check_mark:  |   |
-| Numeric  | numeric(prec, scale)   |  :x:  |  Planned   |
-| String | String  | :heavy_check_mark:  |    |
-| String | Char(n) | :x:   | Planned  |
-| String | VarChar(n) | :x:   | Planned |
-| Temporal | Date | :x:   |  Planned  |
-| Temporal | DateTime (Zone) | :x:   | Planned    |
-| Temporal | Time (Zone) | :x:   | Planned  |
+| Bool  | bool  |  &#9745 |   |
+| Integer  |  int32/uint32/int64/uint64 | &#9745 |   |
+| Float  | float/double  | &#9745  |   |
+| Numeric  | numeric(prec, scale)   |  &#9744  |  Planned   |
+| String | String  | &#9745  |    |
+| String | Char(n) | &#9744   | Planned  |
+| String | VarChar(n) | &#9744   | Planned |
+| Temporal | Date | &#9744   |  Planned  |
+| Temporal | DateTime (Zone) | &#9744   | Planned    |
+| Temporal | Time (Zone) | &#9744   | Planned  |
 
 ### Graph Elements
 
 | Category  |  Type  | Supported  |  Todo  |
 |:---|:---|:---:|:---|
-| Graph  | Vertex  |  :heavy_check_mark: |   |
-| Graph  | Edge  |  :heavy_check_mark: |   |
-| Graph  | Path  |  :heavy_check_mark: |   |
+| Graph  | Vertex  |  &#9745 |   |
+| Graph  | Edge  |  &#9745 |   |
+| Graph  | Path  |  &#9745 |   |
 
 ### Composite Types
 | Category  |  Type  | Supported  |  Todo  |
 |:---|:---|:---:|:---|
-| Pair  | Pair  |  :heavy_check_mark: |   |
-| Array  | int32 Array  |  :heavy_check_mark: |   |
-| Array  | int64 Array  |  :heavy_check_mark: |   |
-| Array  | double Array  |  :heavy_check_mark: |   |
-| Array  | string Array  |  :heavy_check_mark: |   |
-| Array  | pair Array  |  :heavy_check_mark: |   |
-| Map  | Map  |  :x: | not planned  |
+| Pair  | Pair  |  &#9745 |   |
+| Array  | int32 Array  |  &#9745 |   |
+| Array  | int64 Array  |  &#9745 |   |
+| Array  | double Array  |  &#9745 |   |
+| Array  | string Array  |  &#9745 |   |
+| Array  | pair Array  |  &#9745 |   |
+| Map  | Map  |  &#9744 | not planned  |
 
 ## Operators
 
 ### Clause
-| Keyword |  Supported  | Desc.  |  Todo  |
-|:---|:---|:---:|:---|
-| MATCH | :heavy_check_mark:  |  only one Match clause is allowed |   |
-| OPTIONAL MATCH | :x:  | implements as left outer join  |  planned |
-| RETURN | :heavy_check_mark:  |   |   |
-| WITH | :heavy_check_mark:  |  project, aggregate, distinct |   |
-| WHERE | :heavy_check_mark:  |    |   |
-| NOT EXIST (an edge/path) | :x: | implements as anti join | planned
-| ORDER BY | :heavy_check_mark:  |    |   |
-| LIMIT | :heavy_check_mark:  |    |   |
+| Keyword |  Supported  |  Todo  | Desc.|
+|:---|:---:|:---|:---|
+| MATCH | &#9745  | |  only one Match clause is allowed |
+| OPTIONAL MATCH | &#9744  |  planned | implements as left outer join  |
+| RETURN | &#9745  |   |   |
+| WITH | &#9745  |   | project, aggregate, distinct |
+| WHERE | &#9745  |    |   |
+| NOT EXIST (an edge/path) | &#9744 | implements as anti join | planned
+| ORDER BY | &#9745  |  |   |
+| LIMIT | &#9745  |    |   |
 
 ### Builtin Functions, Expression and Logical Operations
 | Category  |  Operation | Supported  |  Todo  |
 |:---|:---|:---:|:---|
-| Aggregate | avg()  |  :heavy_check_mark: |   |
-| Aggregate | min()  |  :heavy_check_mark: |   |
-| Aggregate | max()  |  :heavy_check_mark: |   |
-| Aggregate | count()  |  :heavy_check_mark: |   |
-| Aggregate | count(distinct)  |  :heavy_check_mark: |   |
-| Aggregate | sum()  |  :heavy_check_mark: |   |
-| Aggregate | collect()  |  :heavy_check_mark: |   |
-| Aggregate | collect(distinct)  |  :heavy_check_mark: |   |
-| Logical | =, <>, >, <, >=, <= |  :heavy_check_mark: |   |
-| Logical | AND, OR |  :heavy_check_mark: |   |
-| Logical | NOT, IN |  :x: |  planned |
-| String Match | START WITH |  :x: |  planned |
-| String Match | END WITH |  :x: |  planned |
-| String Match | CONTAINS |  :x: |  planned |
+| Aggregate | avg()  |  &#9745 |   |
+| Aggregate | min()  |  &#9745 |   |
+| Aggregate | max()  |  &#9745 |   |
+| Aggregate | count()  |  &#9745 |   |
+| Aggregate | count(distinct)  |  &#9745 |   |
+| Aggregate | sum()  |  &#9745 |   |
+| Aggregate | collect()  |  &#9745 |   |
+| Aggregate | collect(distinct)  |  &#9745 |   |
+| Logical | =, <>, >, <, >=, <= |  &#9745 |   |
+| Logical | AND, OR |  &#9745 |   |
+| Logical | NOT, IN |  &#9744 |  planned |
+| String Match | START WITH |  &#9744 |  planned |
+| String Match | END WITH |  &#9744 |  planned |
+| String Match | CONTAINS |  &#9744 |  planned |
 | String Match (Reg) | =~ |  not planned |
-| Arithmetic  | Add (+) |  :heavy_check_mark: |  |
-| Arithmetic  | Subtract (-) |  :heavy_check_mark: |  |
-| Arithmetic  | Multiply (*) |  :heavy_check_mark: |  |
-| Arithmetic  | Divide (/) |  :heavy_check_mark: |  |
-| Arithmetic  | Mod (%) |  :heavy_check_mark: |  |
-| Arithmetic  | Exponential (^) |  :heavy_check_mark: |  |
-| BitOpr  | AND (&), OR (\|), NOT(~) |  :heavy_check_mark: |  |
-| BitOpr  | LEFT SHIFT (<<) |  :x: | planned |
-| BitOpr  | RIGHT SHIFT (>>) | :x: | planned |
-| Branch | CASE WHEN  |  :x: | planned |
+| Arithmetic  | Add (+) |  &#9745 |  |
+| Arithmetic  | Subtract (-) |  &#9745 |  |
+| Arithmetic  | Multiply (*) |  &#9745 |  |
+| Arithmetic  | Divide (/) |  &#9745 |  |
+| Arithmetic  | Mod (%) |  &#9745 |  |
+| Arithmetic  | Exponential (^) |  &#9745 |  |
+| BitOpr  | AND (&), OR (\|), NOT(~) |  &#9745 |  |
+| BitOpr  | LEFT SHIFT (<<) |  &#9744 | planned |
+| BitOpr  | RIGHT SHIFT (>>) | &#9744 | planned |
+| Branch | CASE WHEN  |  &#9744 | planned |
