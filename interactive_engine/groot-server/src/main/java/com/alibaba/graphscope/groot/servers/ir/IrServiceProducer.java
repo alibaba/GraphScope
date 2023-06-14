@@ -113,7 +113,7 @@ public class IrServiceProducer implements ComputeServiceProducer {
         // add gremlin config
         addToConfigMapIfExist(FrontendConfig.GREMLIN_SERVER_PORT.getKey(), configMap);
         // todo: enable neo4j service
-        configMap.put(FrontendConfig.GREMLIN_SERVER_DISABLED.getKey(), "true");
+        configMap.put(FrontendConfig.NEO4J_BOLT_SERVER_DISABLED.getKey(), "true");
         return new com.alibaba.graphscope.common.config.Configs(configMap);
     }
 
