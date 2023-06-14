@@ -83,7 +83,51 @@
               "extra": {}
             },
             "idx_predicate": null,
-            "meta_data": null
+            "meta_data": {
+              "type": {
+                "type": {
+                  "GraphType": {
+                    "element_opt": 0,
+                    "graph_data_type": [
+                      {
+                        "label": {
+                          "label": 0,
+                          "src_label": null,
+                          "dst_label": null
+                        },
+                        "props": [
+                          {
+                            "prop_id": {
+                              "item": {
+                                "Name": "id"
+                              }
+                            },
+                            "type": 2
+                          },
+                          {
+                            "prop_id": {
+                              "item": {
+                                "Name": "name"
+                              }
+                            },
+                            "type": 4
+                          },
+                          {
+                            "prop_id": {
+                              "item": {
+                                "Name": "age"
+                              }
+                            },
+                            "type": 1
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              "alias": 0
+            }
           }
         }
       },
