@@ -610,6 +610,7 @@ class Context(object):
         # copy and set op evaluated
         self._context_node.op = deepcopy(self._context_node.op)
         self._context_node.evaluated = True
+        self._context_node._unload_op = dag_utils.unload_context(self._context_node)
         self._saved_signature = self.signature
 
     @property

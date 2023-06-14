@@ -442,6 +442,7 @@ class App(object):
         # copy and set op evaluated
         self._app_node.op = deepcopy(self._app_node.op)
         self._app_node.evaluated = True
+        self._app_node._unload_op = unload_app(self._app_node)
         self._session.dag.add_op(self._app_node.op)
         self._saved_signature = self.signature
 
