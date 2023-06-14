@@ -5,7 +5,7 @@ allow specifying multiple `MATCH` clauses in **one** query. For example,
 the following code will not compile:
 ```cypher
 MATCH (a) -[]-> (b)
-with a, b
+WITH a, b
 MATCH (a) -[]-> () -[]-> (b)  # second MATCH clause
 RETURN a, b;
 ```
@@ -79,6 +79,13 @@ RETURN a, b;
 | String Match | END WITH |  :x: |  planned |
 | String Match | CONTAINS |  :x: |  planned |
 | String Match (Reg) | =~ |  not planned |
-| Arithmetic  | +, -, *, /, % |  :heavy_check_mark: |  |
-| BitOpr  | &, |, ^, ~, >>, <<, >>> |  :x: | planned |
+| Arithmetic  | Add (+) |  :heavy_check_mark: |  |
+| Arithmetic  | Subtract (-) |  :heavy_check_mark: |  |
+| Arithmetic  | Multiply (*) |  :heavy_check_mark: |  |
+| Arithmetic  | Divide (/) |  :heavy_check_mark: |  |
+| Arithmetic  | Mod (%) |  :heavy_check_mark: |  |
+| Arithmetic  | Exponential (^) |  :heavy_check_mark: |  |
+| BitOpr  | AND (&), OR (\|), NOT(~) |  :heavy_check_mark: |  |
+| BitOpr  | LEFT SHIFT (<<) |  :x: | planned |
+| BitOpr  | RIGHT SHIFT (>>) | :x: | planned |
 | Branch | CASE WHEN  |  :x: | planned |
