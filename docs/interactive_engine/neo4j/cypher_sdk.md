@@ -20,14 +20,13 @@ Then connect to the service and run queries:
     from neo4j import GraphDatabase, RoutingControl
 
     URI = "neo4j://localhost:7687"  # the bolt connector you've obtained
-    AUTH = ("neo4j", "password")
+    AUTH = ("", "")  # We have not implemented authentication yet
 
     def print_top_10(driver):
         records, _, _ = driver.execute_query(
             "MATCH (n) RETURN n Limit 10",
-            # for now, GIE only supports one graph, which is named as "neo4j".
-            # Do not change the name.
-            database_="neo4j", routing_=RoutingControl.READ,
+            # For now, GIE only supports one graph, and its name is not important.
+            database_="", routing_=RoutingControl.READ,
         )
         for record in records:
             print(record["n"])
