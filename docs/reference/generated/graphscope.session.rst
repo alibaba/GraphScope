@@ -21,13 +21,17 @@
       ~session.eager
       ~session.g
       ~session.get_config
+      ~session.get_vineyard_object_mapping_table
       ~session.graphlearn
       ~session.gremlin
       ~session.learning
       ~session.load_from
+      ~session.load_from_gar
       ~session.nx
+      ~session.restore_from_pvc
       ~session.run
       ~session.run_fetches
+      ~session.store_to_pvc
    
    
 
@@ -39,6 +43,7 @@
    
       ~session.closed
       ~session.dag
+      ~session.disconnected
       ~session.engine_config
       ~session.info
       ~session.session_id

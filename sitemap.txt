@@ -12,8 +12,10 @@ https://graphscope.io/docs/latest/zh/
 https://slack.graphscope.io
 
 https://graphscope.io/blog/
+https://graphscope.io/blog/tech/2023/06/11/How-to-Deploy-GraphScope-by-Helm-on-Kubernetes
 https://graphscope.io/blog/tech/2023/06/01/How-to-Run-GraphScope-on-Kubernetes-Cluster
 https://graphscope.io/blog/tech/2023/05/31/How-to-Play-GraphScope-Locally
+https://graphscope.io/blog/tech/2023/05/25/Categories-Languages-and-Systems-of-Graph-Computing
 https://graphscope.io/blog/tech/2023/05/22/Graphs-and-Graph-Applications
 https://graphscope.io/blog/releasenotes/2022/09/26/release-notes-0.17.0
 https://graphscope.io/blog/releasenotes/2022/08/09/release-notes-0.16.0

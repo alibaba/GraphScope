@@ -6,12 +6,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="development/how_to_debug.html" />
 <meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="This document shows how to debugging GraphScope under various conditions. Debugging on Kubernetes deployment: Commands for Debugging: Here is list with commands usually used for checking the status..." />
+<meta property="og:description" content="This document shows how to debugging GraphScope under various conditions. Find the logs: Most of the logs will be streamed through the stdout of client, you could control the log level by As you ma..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="/_images/social_previews/summary_development_how_to_debug_0e147f98.png" />
-<meta property="og:image:alt" content="This document shows how to debugging GraphScope under various conditions. Debugging on Kubernetes deployment: Commands for Debugging: Here is list with comma..." />
-<meta name="description" content="This document shows how to debugging GraphScope under various conditions. Debugging on Kubernetes deployment: Commands for Debugging: Here is list with commands usually used for checking the status..." />
+<meta property="og:image" content="/_images/social_previews/summary_development_how_to_debug_1b89cec8.png" />
+<meta property="og:image:alt" content="This document shows how to debugging GraphScope under various conditions. Find the logs: Most of the logs will be streamed through the stdout of client, you..." />
+<meta name="description" content="This document shows how to debugging GraphScope under various conditions. Find the logs: Most of the logs will be streamed through the stdout of client, you could control the log level by As you ma..." />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" />
 
@@ -287,7 +287,7 @@ MathJax = {
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Utilities</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find logs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gsctl</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/error_codes.html">Error Codes</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development</span></p>
@@ -665,8 +665,33 @@ MathJax = {
 <div class="section" id="debugging-on-local-deployment">
 <h1>Debugging on local deployment<a class="headerlink" href="#debugging-on-local-deployment" title="Permalink to this heading">#</a></h1>
 </div>
+<div class="section" id="find-the-logs">
+<h1>Find the logs<a class="headerlink" href="#find-the-logs" title="Permalink to this heading">#</a></h1>
+<p>Most of the logs will be streamed through the stdout of client, you could control the log level by</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="n">graphscope</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">graphscope</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">)</span>  <span class="c1"># could also be INFO, ERROR</span>
+</pre></div>
+</div>
+<p>As you may know, GraphScope is composed of three engines, where the detailed log location of each engine is</p>
+<ul class="simple">
+<li><p>Analytical Engine: <code class="docutils literal notranslate"><span class="pre">/tmp/grape_engine.INFO</span></code></p></li>
+<li><p>Interactive Engine: Inside <code class="docutils literal notranslate"><span class="pre">/var/log/graphscope/</span></code> or <code class="docutils literal notranslate"><span class="pre">$HOME/log/graphscope</span></code> if GraphScope doesn’t have permission of <code class="docutils literal notranslate"><span class="pre">/var/log</span></code>. You may find several folders named with a long number, which is the object id of the graph. There is also a <code class="docutils literal notranslate"><span class="pre">current</span></code> folder links to the log folder of latest created interactive instance.</p></li>
+<li><p>Learning Engine: <code class="docutils literal notranslate"><span class="pre">graphlearn.INFO</span></code> in the current directory.</p></li>
+</ul>
 <div class="section" id="debugging-on-kubernetes-deployment">
-<h1>Debugging on Kubernetes deployment<a class="headerlink" href="#debugging-on-kubernetes-deployment" title="Permalink to this heading">#</a></h1>
+<h2>Debugging on Kubernetes deployment<a class="headerlink" href="#debugging-on-kubernetes-deployment" title="Permalink to this heading">#</a></h2>
+</div>
+</div>
+<div class="section" id="id1">
+<h1>Find the logs<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h1>
+<p>In kubernetes environment, besides most of the logs still output to console, you could find detailed logs in each pod’s stdout, or files inside each pods.</p>
+<p>Note: You could use <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">&lt;pod&gt;</span></code> to inspect the stdout of the pod. Use <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">&lt;pod&gt;</span> <span class="pre">-c</span> <span class="pre">&lt;container&gt;</span></code> to inspect a specific container inside the pod.</p>
+<ul class="simple">
+<li><p>Coordinator: The stdout of coordinator pod.</p></li>
+<li><p>Analytical Engine: The stdout engine container in the engine pod.</p></li>
+<li><p>Interactive Engine: The stdout of executor container in the engine pod for the executor log. And the stdout of interactive-frontend pod for the frontend. The log files resides in the <code class="docutils literal notranslate"><span class="pre">/var/log/graphscope</span></code> of each container, respectively.</p></li>
+</ul>
 </div>
 <div class="section" id="commands-for-debugging">
 <h1>Commands for Debugging<a class="headerlink" href="#commands-for-debugging" title="Permalink to this heading">#</a></h1>

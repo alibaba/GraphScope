@@ -2,19 +2,21 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Command-line Utility gs" />
+    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Command-line Utility gsctl" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="utilities/gs.html" />
 <meta property="og:site_name" content="GraphScope" />
+<meta property="og:description" content="gsctl is a command-line utility for GraphScope. It is shipped with graphscope-client and provides a set of functionalities to make it easy to use GraphScope. These functionalities include building ..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="/_images/social_previews/summary_utilities_gs_05852a2d.png" />
-<meta property="og:image:alt" content="" />
+<meta property="og:image" content="/_images/social_previews/summary_utilities_gs_74844503.png" />
+<meta property="og:image:alt" content="gsctl is a command-line utility for GraphScope. It is shipped with graphscope-client and provides a set of functionalities to make it easy to use GraphScope...." />
+<meta name="description" content="gsctl is a command-line utility for GraphScope. It is shipped with graphscope-client and provides a set of functionalities to make it easy to use GraphScope. These functionalities include building ..." />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Error Codes" href="error_codes.html" /><link rel="prev" title="How to Find logs" href="how_to_find_logs.html" />
 
     <!-- Generated with Sphinx 5.3.0 and Furo 2023.05.20 -->
-        <title>Command-line Utility gs - GraphScope documentation</title>
+        <title>Command-line Utility gsctl - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -189,7 +191,7 @@ MathJax = {
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -285,7 +287,7 @@ MathJax = {
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Utilities</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="how_to_find_logs.html">How to Find logs</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gsctl</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="error_codes.html">Error Codes</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development</span></p>
@@ -653,14 +655,43 @@ MathJax = {
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="command-line-utility-gs">
-<h1>Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code><a class="headerlink" href="#command-line-utility-gs" title="Permalink to this heading">#</a></h1>
+          <div class="tex2jax_ignore mathjax_ignore section" id="command-line-utility-gsctl">
+<h1>Command-line Utility <code class="docutils literal notranslate"><span class="pre">gsctl</span></code><a class="headerlink" href="#command-line-utility-gsctl" title="Permalink to this heading">#</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">gsctl</span></code> is a command-line utility for GraphScope. It is shipped with <code class="docutils literal notranslate"><span class="pre">graphscope-client</span></code> and provides a set of functionalities to make it easy to use GraphScope. These functionalities include building and testing binaries, managing sessions and resources, and more.</p>
+<div class="section" id="install-update-gsctl">
+<h2>Install/Update <code class="docutils literal notranslate"><span class="pre">gsctl</span></code><a class="headerlink" href="#install-update-gsctl" title="Permalink to this heading">#</a></h2>
+<p>Since it is shipped with python package <code class="docutils literal notranslate"><span class="pre">graphscope-client</span></code>, the <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> command will be available in your terminal after installing GraphScope:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>graphscope-client
+</pre></div>
+</div>
+<p>In some cases, such as development on <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>, you may want to build it from source.
+To do this, navigate to the directory where the source code is located and run the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>REPO_HOME/python
+<span class="c1"># If you want to develop gsctl, </span>
+<span class="c1"># please note the entry point is located on: </span>
+<span class="c1"># /python/graphscope/gsctl/gsctl.py</span>
+pip<span class="w"> </span>install<span class="w"> </span>--editable<span class="w"> </span>.
+</pre></div>
+</div>
+<p>This will install <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> in an editable mode, which means that any changes you make to the source code will be reflected in the installed version of <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>.</p>
+</div>
+<div class="section" id="commands">
+<h2>Commands<a class="headerlink" href="#commands" title="Permalink to this heading">#</a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>, you can do the following things. Always remember to
+use <code class="docutils literal notranslate"><span class="pre">--help</span></code> on a command to get more information.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">install-deps</span></code>, install dependencies for building GraphScope.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">make</span></code>, build GraphScope executable binaries and artifacts.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">make-image</span></code>, build GraphScope docker images.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">test</span></code>, trigger test suites.</p></li>
+</ul>
+</div>
 </div>
 
         </article>
@@ -709,8 +740,28 @@ MathJax = {
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gsctl</span></code></a><ul>
+<li><a class="reference internal" href="#install-update-gsctl">Install/Update <code class="docutils literal notranslate"><span class="pre">gsctl</span></code></a></li>
+<li><a class="reference internal" href="#commands">Commands</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

@@ -5,15 +5,14 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 13 Jun 2023 03:28:54 +0000</pubDate>
-    <lastBuildDate>Tue, 13 Jun 2023 03:28:54 +0000</lastBuildDate>
+    <pubDate>Tue, 13 Jun 2023 06:03:03 +0000</pubDate>
+    <lastBuildDate>Tue, 13 Jun 2023 06:03:03 +0000</lastBuildDate>
     <generator>Jekyll v4.3.2</generator>
     
       <item>
         <title>How to Deploy GraphScope by Helm on Kubernetes</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-06-11-title-picture.jpg&quot; alt=&quot;Deploy-GraphScope-by-helm&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;This article describes how to deploy and use GraphScope clusters using the Helm tool.
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-06-11-title-picture.jpg&quot; alt=&quot;Deploy-GraphScope-by-helm&quot; /&gt;
+This article describes how to deploy and use GraphScope clusters using the Helm tool.
 Helm  is a software package management tool in the K8s ecosystem, similar to Ubuntu’s apt or Python’s pip, designed for managing K8s application resources. Using Helm, you can easily package, distribute, install, upgrade, and rollback kubernetes applications. GraphScope also supports deployment by Helm.&lt;/p&gt;
 
 &lt;h2 id=&quot;prerequisites&quot;&gt;Prerequisites&lt;/h2&gt;

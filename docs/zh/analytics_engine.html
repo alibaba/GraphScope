@@ -1,48 +1,55 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta property="og:title" content="图分析引擎" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="zh/analytics_engine.html" />
+<meta property="og:site_name" content="GraphScope" />
+<meta property="og:description" content="GraphScope 的图分析引擎继承了 GRAPE ， 该系统于 SIGMOD2017 上首次提出并获得最佳论文奖。 与以往的系统的不同，GRAPE 支持将串行图算法自动并行化。在 GRAPE 中， 只需进行很小的更改即可轻松地将串行算法即插即用，使其并行化的运行在分布式环境，并高效地处理大规模图数据。 除了易于编程外，GRAPE 还被设计为高效且可拓展的系统，可灵活应对现实中图应用多变的..." />
+<meta property="og:image" content="/_images/social_previews/summary_zh_analytics_engine_f7f06df3.png" />
+<meta property="og:image:alt" content="GraphScope 的图分析引擎继承了 GRAPE ， 该系统于 SIGMOD2017 上首次提出并获得最佳论文奖。 与以往的系统的不同，GRAPE 支持将串行图算法自动并行化。在 GRAPE 中， 只需进行很小的更改即可轻松地将串行算法即插即用，使其并行化的运行在分布式环境，并高效地处理大规模图数据。 除了易..." />
+<meta name="description" content="GraphScope 的图分析引擎继承了 GRAPE ， 该系统于 SIGMOD2017 上首次提出并获得最佳论文奖。 与以往的系统的不同，GRAPE 支持将串行图算法自动并行化。在 GRAPE 中， 只需进行很小的更改即可轻松地将串行算法即插即用，使其并行化的运行在分布式环境，并高效地处理大规模图数据。 除了易于编程外，GRAPE 还被设计为高效且可拓展的系统，可灵活应对现实中图应用多变的..." />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="图交互式分析引擎" href="interactive_engine.html" /><link rel="prev" title="图的变换操作" href="graph_transformation.html" />
 
-
-<!DOCTYPE html>
-<html class="writer-html5" lang="en" >
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>图分析引擎 &mdash; GraphScope  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
-
-  
-  
-  
-  
-
-  
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
+    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
+        <title>图分析引擎 - GraphScope documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
     
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-    
-    <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="图交互式分析引擎" href="interactive_engine.html" />
-    <link rel="prev" title="图的变换操作" href="graph_transformation.html" />
 
- 
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+
+
 
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
@@ -54,6 +61,7 @@
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<!-- Baidu analytics -->
 <script>
   var _hmt = _hmt || [];
   (function() {
@@ -64,166 +72,322 @@
   })();
 </script>
 
-
+<!-- MathJax rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script
+  type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
 </head>
-
-<body class="wy-body-for-nav">
-
-   
-  <div class="wy-grid-for-nav">
+  <body>
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
+<script>
+  document.body.dataset.theme = "light";
+</script>
 
-          
-            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> GraphScope
-          
 
-          
-          </a>
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
 
-          
-            
-            
-              <div class="version">
-                stable
-              </div>
-            
-          
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
 
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
 
-          
-        </div>
 
-        
-  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-    
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">GraphScope  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
       
-      
-        
-          
-        
-      
-      
-        <p class="caption"><span class="caption-text">目录</span></p>
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">目录</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">安装</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">快速上手</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">部署</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials.html">入门教程</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/04_loading_graphs.ipynb">载入图数据</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/05_builtin_analytical_algorithms.ipynb">内置的图分析算法</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/06_writing_your_own_algorithms.ipynb">编写自定义图分析算法</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/07_interactive_query_with_gremlin.ipynb">使用查询语言 Gremlin 进行交互式查询</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/08_unsupervised_learning_with_graphsage.ipynb">使用 GraphSage 进行无监督图学习</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/09_unsupervised_learning_with_bipartite_graphsage.ipynb">基于 BipartiteGraphSage 的二部图无监督学习</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/10_supervised_learning_with_gcn.ipynb">使用 GCN 进行有监督图学习</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/11_revisit_classification_on_citation_network_on_k8s.ipynb">基于 Kubernetes 环境再探论文引用网络中的节点分类任务</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="loading_graph.html">载图</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">图的变换操作</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">图分析引擎</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id2">内置算法</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id3">对计算结果的处理</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pie">使用 PIE 编程模型自定义算法</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pregel">使用 Pregel 编程模型自定义算法</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#math-h">自定义算法中使用 <code class="docutils literal notranslate"><span class="pre">math.h</span></code> 中的函数</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id5">运行自定义算法</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#java">运行Java编写的算法</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id6">运行示例的Java算法</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id7">使用Java编写用户自定义的图算法</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">图分析引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">图交互式分析引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">图学习引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">常见问题</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API 参考</span></p>
+<p class="caption" role="heading"><span class="caption-text">API 参考</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
 </ul>
 
-      
-    
-  </div>
-
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">GraphScope</a>
-        
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
-          <li><a href="index.html">GraphScope: 一站式图计算系统</a> &raquo;</li>
-        
-      <li>图分析引擎</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            
-              <a href="https://github.com/alibaba/graphscope/edit/main/docs/zh/analytics_engine.rst" class="fa fa-github"> Edit on GitHub</a>
-            
-          
-        
-      </li>
-    
-  </ul>
-
-  
-  <hr/>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
+
+<div class="rst-versions rst-versions-ver shift-up" role="note" aria-label="versions">
+  <div class="rst-other-versions">
+    <hr />
+    <dl>
+      <dt><span class="fa fa-book">Versions</span></dt>
+      
+        
+          
             
-  <div class="section" id="id1">
-<h1>图分析引擎<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+              <dd><a href="../latest/zh/index.html">
+                
+                  latest
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
+              <dd><a href="index.html">
+                
+                  <strong><em>stable</em></strong>
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
+              <dd><a href="../v0.22.0/zh/index.html">
+                
+                  v0.22.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
+              <dd><a href="../v0.21.0/zh/index.html">
+                
+                  v0.21.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
+              <dd><a href="../v0.20.0/zh/index.html">
+                
+                  v0.20.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
+              <dd><a href="../v0.19.0/zh/index.html">
+                
+                  v0.19.0
+                
+              </a></dd>
+            
+          
+        
+      
+      
+    </dl>
+  </div>
+</div>
+
+<div class="rst-versions rst-versions-lang shift-up" role="note" aria-label="versions">
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Languages</dt>
+      <dd><a href="../index.html">en</a></dd>
+      <dd><a href="index.html">zh_CN</a></dd>
+    </dl>
+
+    <hr />
+    <small>
+      <span>Hosted on <a href="https://pages.cloudflare.com/">Cloudflare Pages</a>.</span>
+    </small>
+  </div>
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/zh/analytics_engine.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <div class="section" id="id1">
+<h1>图分析引擎<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h1>
 <p>GraphScope 的图分析引擎继承了 <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">GRAPE</a> ，
 该系统于 SIGMOD2017 上首次提出并获得最佳论文奖。</p>
 <p>与以往的系统的不同，GRAPE 支持将串行图算法自动并行化。在 GRAPE 中，
 只需进行很小的更改即可轻松地将串行算法即插即用，使其并行化的运行在分布式环境，并高效地处理大规模图数据。
 除了易于编程外，GRAPE 还被设计为高效且可拓展的系统，可灵活应对现实中图应用多变的规模、多样性和复杂性。</p>
 <div class="section" id="id2">
-<h2>内置算法<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<h2>内置算法<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h2>
 <p>GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通性分析算法、路径分析算法、社区检测和中心度计算等类型。</p>
 <p>内置算法可以在图上轻松调用。例如，</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
@@ -240,7 +404,8 @@
 </pre></div>
 </div>
 <p>内置算法的完整列表如下所示。具体某个算法是否支持属性图也在其文档进行了描述。</p>
-<table class="longtable docutils align-default">
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
@@ -248,37 +413,38 @@
 <tbody>
 </tbody>
 </table>
+</div>
 <ul class="simple">
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.attribute_assortativity_coefficient" title="graphscope.attribute_assortativity_coefficient"><code class="xref py py-func docutils literal notranslate"><span class="pre">attribute_assortativity_coefficient()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.numeric_assortativity_coefficient" title="graphscope.numeric_assortativity_coefficient"><code class="xref py py-func docutils literal notranslate"><span class="pre">numeric_assortativity_coefficient()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../reference/app.html#graphscope.average_degree_connectivity" title="graphscope.average_degree_connectivity"><code class="xref py py-func docutils literal notranslate"><span class="pre">average_degree_connectivity()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../analytical_engine/builtin_algorithms.html#average_degree_connectivity" title="average_degree_connectivity"><code class="xref py py-func docutils literal notranslate"><span class="pre">average_degree_connectivity()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.average_shortest_path_length" title="graphscope.average_shortest_path_length"><code class="xref py py-func docutils literal notranslate"><span class="pre">average_shortest_path_length()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../reference/app.html#graphscope.bfs" title="graphscope.bfs"><code class="xref py py-func docutils literal notranslate"><span class="pre">bfs()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../analytical_engine/builtin_algorithms.html#bfs" title="bfs"><code class="xref py py-func docutils literal notranslate"><span class="pre">bfs()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.avg_clustering" title="graphscope.avg_clustering"><code class="xref py py-func docutils literal notranslate"><span class="pre">avg_clustering()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../reference/app.html#graphscope.clustering" title="graphscope.clustering"><code class="xref py py-func docutils literal notranslate"><span class="pre">clustering()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../reference/app.html#graphscope.degree_assortativity_coefficient" title="graphscope.degree_assortativity_coefficient"><code class="xref py py-func docutils literal notranslate"><span class="pre">degree_assortativity_coefficient()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../reference/app.html#graphscope.degree_centrality" title="graphscope.degree_centrality"><code class="xref py py-func docutils literal notranslate"><span class="pre">degree_centrality()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../reference/app.html#graphscope.eigenvector_centrality" title="graphscope.eigenvector_centrality"><code class="xref py py-func docutils literal notranslate"><span class="pre">eigenvector_centrality()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../reference/app.html#graphscope.hits" title="graphscope.hits"><code class="xref py py-func docutils literal notranslate"><span class="pre">hits()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../analytical_engine/builtin_algorithms.html#id0" title="clustering"><code class="xref py py-func docutils literal notranslate"><span class="pre">clustering()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../analytical_engine/builtin_algorithms.html#degree_assortativity_coefficient" title="degree_assortativity_coefficient"><code class="xref py py-func docutils literal notranslate"><span class="pre">degree_assortativity_coefficient()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../analytical_engine/builtin_algorithms.html#degree_centrality" title="degree_centrality"><code class="xref py py-func docutils literal notranslate"><span class="pre">degree_centrality()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../analytical_engine/builtin_algorithms.html#eigenvector_centrality" title="eigenvector_centrality"><code class="xref py py-func docutils literal notranslate"><span class="pre">eigenvector_centrality()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../analytical_engine/builtin_algorithms.html#hits" title="hits"><code class="xref py py-func docutils literal notranslate"><span class="pre">hits()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.is_simple_path" title="graphscope.is_simple_path"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_simple_path()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.k_core" title="graphscope.k_core"><code class="xref py py-func docutils literal notranslate"><span class="pre">k_core()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.k_shell" title="graphscope.k_shell"><code class="xref py py-func docutils literal notranslate"><span class="pre">k_shell()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../reference/app.html#graphscope.katz_centrality" title="graphscope.katz_centrality"><code class="xref py py-func docutils literal notranslate"><span class="pre">katz_centrality()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../analytical_engine/builtin_algorithms.html#katz_centrality" title="katz_centrality"><code class="xref py py-func docutils literal notranslate"><span class="pre">katz_centrality()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.louvain" title="graphscope.louvain"><code class="xref py py-func docutils literal notranslate"><span class="pre">louvain()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.cdlp" title="graphscope.cdlp"><code class="xref py py-func docutils literal notranslate"><span class="pre">cdlp()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../reference/app.html#graphscope.lpa" title="graphscope.lpa"><code class="xref py py-func docutils literal notranslate"><span class="pre">lpa()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../analytical_engine/builtin_algorithms.html#lpa" title="lpa"><code class="xref py py-func docutils literal notranslate"><span class="pre">lpa()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.lpa_u2i" title="graphscope.lpa_u2i"><code class="xref py py-func docutils literal notranslate"><span class="pre">lpa_u2i()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../reference/app.html#graphscope.pagerank" title="graphscope.pagerank"><code class="xref py py-func docutils literal notranslate"><span class="pre">pagerank()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../analytical_engine/builtin_algorithms.html#id1" title="pagerank"><code class="xref py py-func docutils literal notranslate"><span class="pre">pagerank()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.pagerank_nx" title="graphscope.pagerank_nx"><code class="xref py py-func docutils literal notranslate"><span class="pre">pagerank_nx()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../reference/app.html#graphscope.sssp" title="graphscope.sssp"><code class="xref py py-func docutils literal notranslate"><span class="pre">sssp()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../analytical_engine/builtin_algorithms.html#sssp" title="sssp"><code class="xref py py-func docutils literal notranslate"><span class="pre">sssp()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.triangles" title="graphscope.triangles"><code class="xref py py-func docutils literal notranslate"><span class="pre">triangles()</span></code></a></p></li>
-<li><p><a class="reference internal" href="../reference/app.html#graphscope.voterank" title="graphscope.voterank"><code class="xref py py-func docutils literal notranslate"><span class="pre">voterank()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../analytical_engine/builtin_algorithms.html#id2" title="voterank"><code class="xref py py-func docutils literal notranslate"><span class="pre">voterank()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.wcc" title="graphscope.wcc"><code class="xref py py-func docutils literal notranslate"><span class="pre">wcc()</span></code></a></p></li>
 </ul>
 <p>算法的支持列表会随着不断增加持续更新中。</p>
 </div>
 <div class="section" id="id3">
-<h2>对计算结果的处理<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<h2>对计算结果的处理<a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h2>
 <p>当完成一次图计算，计算结果会被包装成 <a class="reference internal" href="../reference/context.html#context"><span class="std std-ref">Context</span></a> 类，保存在分布式集群的内存中。</p>
 <p>用户可能希望将结果传到客户端进行处理，或是写入云中某位置或分布式文件系统。GraphScope 支持用户通过以下方法来获取结果数据。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 转化为相应数据类型</span>
@@ -328,7 +494,7 @@
 <p>可以查看 <a class="reference internal" href="../reference/context.html#context"><span class="std std-ref">Context</span></a> 和 <a class="reference internal" href="../reference/selector.html#selector"><span class="std std-ref">Selector</span></a> 获取更多细节。</p>
 </div>
 <div class="section" id="pie">
-<h2>使用 PIE 编程模型自定义算法<a class="headerlink" href="#pie" title="Permalink to this headline">¶</a></h2>
+<h2>使用 PIE 编程模型自定义算法<a class="headerlink" href="#pie" title="Permalink to this heading">#</a></h2>
 <p>如果内置算法无法满足需求，用户可以编写自己的算法。用户可以通过 <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> 在纯 Python 模式
 下使用 <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">PIE</a> 编程模型编写算法。</p>
 <a class="reference internal image-reference" href="../_images/pie.png"><img alt="Workflow of PIE" class="align-center" src="../_images/pie.png" style="width: 600px;" /></a>
@@ -419,7 +585,7 @@
 在这种情况下，经典的 Dijkstra 算法及其增量版本就可以用于在集群上的大规模图数据计算。</p>
 </div>
 <div class="section" id="pregel">
-<h2>使用 Pregel 编程模型自定义算法<a class="headerlink" href="#pregel" title="Permalink to this headline">¶</a></h2>
+<h2>使用 Pregel 编程模型自定义算法<a class="headerlink" href="#pregel" title="Permalink to this heading">#</a></h2>
 <p>除了基于子图的 PIE 模型之外，<code class="docutils literal notranslate"><span class="pre">graphscope</span></code> 也支持以顶点为中心的 <code class="docutils literal notranslate"><span class="pre">Pregel</span></code> 编程模型。
 您可以通过实现以下算法类来在 <code class="docutils literal notranslate"><span class="pre">Pregel</span></code> 模型中开发算法。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf.decorators</span> <span class="kn">import</span> <span class="n">pregel</span>
@@ -478,7 +644,7 @@
 </div>
 </div>
 <div class="section" id="math-h">
-<h2>自定义算法中使用 <code class="docutils literal notranslate"><span class="pre">math.h</span></code> 中的函数<a class="headerlink" href="#math-h" title="Permalink to this headline">¶</a></h2>
+<h2>自定义算法中使用 <code class="docutils literal notranslate"><span class="pre">math.h</span></code> 中的函数<a class="headerlink" href="#math-h" title="Permalink to this heading">#</a></h2>
 <p>GraphScope 支持用户在自定义算法中通过 <code class="code docutils literal notranslate"><span class="pre">context.math</span></code> 上的接口来使用定义在 <code class="code docutils literal notranslate"><span class="pre">math.h</span></code> 中的 C 函数,
 例如，下列代码，</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@staticmethod</span>
@@ -494,12 +660,12 @@
 </div>
 </div>
 <div class="section" id="id5">
-<h2>运行自定义算法<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<h2>运行自定义算法<a class="headerlink" href="#id5" title="Permalink to this heading">#</a></h2>
 <p>运行自定义算法，用户需要在定义算法后调用算法。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
 <span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
 
-<span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">generate_eid</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <span class="c1"># 加载自己的算法</span>
 <span class="n">my_app</span> <span class="o">=</span> <span class="n">SSSP_Pregel</span><span class="p">()</span>
@@ -525,11 +691,11 @@
 </div>
 </div>
 <div class="section" id="java">
-<h2>运行Java编写的算法<a class="headerlink" href="#java" title="Permalink to this headline">¶</a></h2>
+<h2>运行Java编写的算法<a class="headerlink" href="#java" title="Permalink to this heading">#</a></h2>
 <p>GraphScope 支持用户编写Java的PIE app，并且运行在图分析引擎上。我们首先通过一个简单的例子来演示如果在GraphScope
 图分析引擎上运行一个Java的图算法(bfs)，然后我们将展示如果实现并运行自定义的Java图算法。</p>
 <div class="section" id="id6">
-<h3>运行示例的Java算法<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<h3>运行示例的Java算法<a class="headerlink" href="#id6" title="Permalink to this heading">#</a></h3>
 <p>我们提供了一些经典图分析算法的示例实现，通过下面展示的例子，你可以尝试在GraphScope的图分析引擎上试着运行他们。首先你需要从下载我们提供的示例app的合集
 <cite>grape-demo.jar &lt;https://github.com/GraphScope/gstest/blob/master/jars/grape-demo-0.17.0-shaded.jar&gt;_</cite>，无需任何更改你就可以在
 GraphScope图分析引擎上运行这些示例算法。</p>
@@ -558,7 +724,7 @@ GraphScope图分析引擎上运行这些示例算法。</p>
 </div>
 </div>
 <div class="section" id="id7">
-<h3>使用Java编写用户自定义的图算法<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<h3>使用Java编写用户自定义的图算法<a class="headerlink" href="#id7" title="Permalink to this heading">#</a></h3>
 <p>为了编写Java实现的图算法，用户需要借助于 <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code>。请参考 <a class="reference internal" href="../reference/gae_java/about.html#gae-java-sdk-about"><span class="std std-ref">About Grape JDK</span></a> 来将 <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code> 安装到你的本地环境上。</p>
 <p>安装完成后，你需要将 <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code> 的依赖添加到你的maven项目依赖中。用户应当注意在 <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code> 的依赖配置上应当添加 classifier <em>shaded</em> ，来确保
 所有必要的依赖都被包括到。</p>
@@ -696,391 +862,95 @@ python3<span class="w"> </span>java-app-runner.py<span class="w"> </span>--app<s
 </div>
 </div>
 
-
-           </div>
-           
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="interactive_engine.html" class="btn btn-neutral float-right" title="图交互式分析引擎" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="graph_transformation.html" class="btn btn-neutral float-left" title="图的变换操作" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
-  
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p>
+        </article>
+      </div>
+      <footer>
         
-        &copy; Copyright 2020-2023, DAMO Academy, Alibaba Inc.
+        <div class="related-pages">
+          <a class="next-page" href="interactive_engine.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">图交互式分析引擎</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="graph_transformation.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">图的变换操作</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2020-2023, DAMO Academy, Alibaba Inc.
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link muted-link" href="https://github.com/alibaba/GraphScope" aria-label="GitHub"><svg stroke='currentColor' fill='currentColor' stroke-width='0' viewBox='0 0 16 16'><path fill-rule='evenodd' d='M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z'></path></svg></a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">图分析引擎</a><ul>
+<li><a class="reference internal" href="#id2">内置算法</a></li>
+<li><a class="reference internal" href="#id3">对计算结果的处理</a></li>
+<li><a class="reference internal" href="#pie">使用 PIE 编程模型自定义算法</a></li>
+<li><a class="reference internal" href="#pregel">使用 Pregel 编程模型自定义算法</a></li>
+<li><a class="reference internal" href="#math-h">自定义算法中使用 <code class="docutils literal notranslate"><span class="pre">math.h</span></code> 中的函数</a></li>
+<li><a class="reference internal" href="#id5">运行自定义算法</a></li>
+<li><a class="reference internal" href="#java">运行Java编写的算法</a><ul>
+<li><a class="reference internal" href="#id6">运行示例的Java算法</a></li>
+<li><a class="reference internal" href="#id7">使用Java编写用户自定义的图算法</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 
-    </p>
-  </div>
-    
-    
-    
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
-
-</footer>
-
+          </div>
         </div>
       </div>
-
-    </section>
-
+      
+      
+    </aside>
   </div>
-  
-
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
-
-  
-  
-    
-  
-  
-
-  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
-    <span class="rst-current-version" data-toggle="rst-current-version">
-      <span class="fa fa-book"> Read the Docs</span>
-      v: stable
-      <span class="fa fa-caret-down"></span>
-    </span>
-    <div class="rst-other-versions">
-      <dl>
-        <dt>Versions</dt>
-        
-          
-
-            
-              
-                <dd><a href="../latest/zh/index.html">latest</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="index.html">stable</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.20.0/zh/index.html">v0.20.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.19.0/zh/index.html">v0.19.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.18.0/zh/index.html">v0.18.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.17.0/zh/index.html">v0.17.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.16.0/zh/index.html">v0.16.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.15.0/zh/index.html">v0.15.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.14.0/zh/index.html">v0.14.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.13.0/zh/index.html">v0.13.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.12.0/zh/index.html">v0.12.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.11.0/zh/index.html">v0.11.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.10.1/zh/index.html">v0.10.1</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.10.0/zh/index.html">v0.10.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.9.1/zh/index.html">v0.9.1</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.9.0/zh/index.html">v0.9.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.8.0/zh/index.html">v0.8.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.7.0/zh/index.html">v0.7.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.6.1/zh/index.html">v0.6.1</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.6.0/zh/index.html">v0.6.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.5.0/zh/index.html">v0.5.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.4.1/zh/index.html">v0.4.1</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.4.0/zh/index.html">v0.4.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.3.0/zh/index.html">v0.3.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.2.1/zh/index.html">v0.2.1</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.2.0/zh/index.html">v0.2.0</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.1.3/zh/index.html">v0.1.3</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.1.2/zh/index.html">v0.1.2</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.1.1/zh/index.html">v0.1.1</a></dd>
-              
-            
-
-          
-        
-          
-
-            
-              
-                <dd><a href="../v0.1.0/zh/index.html">v0.1.0</a></dd>
-              
-            
-
-          
-        
-      </dl>
-    </div>
-  </div>
-
-  <div class="rst-languages shift-up" role="note" aria-label="languages">
-    <div class="rst-other-languages">
-      <dl>
-        <dt>Languages</dt>
-        <dd><a href="../index.html">en</a></dd>
-        <dd><a href="index.html">zh_CN</a></dd>
-      </dl>
-
-      <hr />
-      <small>
-        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
-      </small>
-    </div>
-  </div>
-
-
-</body>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/scripts/furo.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    </body>
 </html>
