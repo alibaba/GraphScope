@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.collect.ImmutableMap;
@@ -38,7 +39,7 @@ import java.net.URL;
 
 public class Utils {
     public static final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
-    public static final RexBuilder rexBuilder = new RexBuilder(typeFactory);
+    public static final RexBuilder rexBuilder = new GraphRexBuilder(typeFactory);
     public static final IrMeta schemaMeta = mockSchemaMeta();
 
     public static final GraphBuilder mockGraphBuilder() {

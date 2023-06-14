@@ -61,7 +61,7 @@ public class GraphPlanner {
         this.graphConfig = graphConfig;
         this.plannerConfig = PlannerConfig.create(this.graphConfig);
         this.optPlanner = createRelOptPlanner(this.plannerConfig);
-        this.rexBuilder = new RexBuilder(new JavaTypeFactoryImpl());
+        this.rexBuilder = new GraphRexBuilder(new JavaTypeFactoryImpl());
         this.idGenerator = new AtomicLong(0l);
     }
 
