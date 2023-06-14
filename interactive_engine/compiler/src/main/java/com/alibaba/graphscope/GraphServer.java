@@ -69,17 +69,21 @@ public class GraphServer {
     }
 
     public void start() throws Exception {
-        this.gremlinServer.start();
-        Path neo4jHomePath = getNeo4jHomePath();
-        this.cypherBootstrapper.start(
-                neo4jHomePath,
-                getNeo4jConfPath(neo4jHomePath),
-                ImmutableMap.of(
-                        "dbms.connector.bolt.listen_address",
-                                ":" + FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(this.configs),
-                        "dbms.connector.bolt.advertised_address",
-                                ":" + FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(this.configs)),
-                false);
+        if (!FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs)) {
+            this.gremlinServer.start();
+        }
+        if (!FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs)) {
+            Path neo4jHomePath = getNeo4jHomePath();
+            this.cypherBootstrapper.start(
+                    neo4jHomePath,
+                    getNeo4jConfPath(neo4jHomePath),
+                    ImmutableMap.of(
+                            "dbms.connector.bolt.listen_address",
+                            ":" + FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(this.configs),
+                            "dbms.connector.bolt.advertised_address",
+                            ":" + FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(this.configs)),
+                    false);
+        }
     }
 
     private Path getNeo4jHomePath() throws IOException {
@@ -114,7 +118,7 @@ public class GraphServer {
     }
 
     public void close() throws Exception {
-        if (this.gremlinServer != null) {
+        if (this.gremlinServer != null && !FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs)) {
             this.gremlinServer.close();
         }
     }

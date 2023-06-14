@@ -18,7 +18,7 @@ package com.alibaba.graphscope.common.config;
 
 public class HiactorConfig {
     public static final Config<String> HIACTOR_HOSTS =
-            Config.stringConfig("hiactor.hosts", "localhost:8080");
+            Config.stringConfig("hiactor.hosts", "localhost:1000");
 
     public static final Config<Long> HIACTOR_TIMEOUT =
             Config.longConfig("hiactor.timeout", 6000000L);
