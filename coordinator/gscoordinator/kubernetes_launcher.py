@@ -605,7 +605,12 @@ class KubernetesClusterLauncher(AbstractLauncher):
         return self.deploy_interactive_engine(object_id)
 
     def _distribute_interactive_process(
-        self, hosts, object_id: int, schema_path: str, engine_selector: str
+        self,
+        hosts,
+        object_id: int,
+        schema_path: str,
+        params: dict,
+        engine_selector: str,
     ):
         """
         Args:
@@ -617,6 +622,10 @@ class KubernetesClusterLauncher(AbstractLauncher):
         env = os.environ.copy()
         env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
         container = self._engine_cluster.interactive_executor_container_name
+
+        params = "\n".join([f"{k}={v}" for k, v in params.items()])
+        params = base64.b64encode(params.encode("utf-8")).decode("utf-8")
+
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "create_gremlin_instance_on_k8s",
@@ -630,6 +639,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             str(self._interactive_port + 2),  # frontend port
             self._coordinator_name,
             engine_selector,
+            params,
         ]
         self._interactive_port += 3
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
@@ -648,7 +658,9 @@ class KubernetesClusterLauncher(AbstractLauncher):
         )
         return process
 
-    def create_interactive_instance(self, object_id: int, schema_path: str):
+    def create_interactive_instance(
+        self, object_id: int, schema_path: str, params: dict
+    ):
         pod_name_list, _, _ = self._allocate_interactive_engine(object_id)
         if not pod_name_list:
             raise RuntimeError("Failed to allocate interactive engine")
@@ -661,7 +673,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             )
 
         return self._distribute_interactive_process(
-            hosts, object_id, schema_path, engine_selector
+            hosts, object_id, schema_path, params, engine_selector
         )
 
     def close_interactive_instance(self, object_id):

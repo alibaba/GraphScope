@@ -449,8 +449,11 @@ class CoordinatorServiceServicer(
         # create instance
         object_id = request.object_id
         schema_path = request.schema_path
+        params = request.params
         try:
-            proc = self._launcher.create_interactive_instance(object_id, schema_path)
+            proc = self._launcher.create_interactive_instance(
+                object_id, schema_path, params
+            )
             gie_manager = InteractiveQueryManager(object_id)
             # Put it to object_manager to ensure it could be killed during coordinator cleanup
             # If coordinator is shutdown by force when creating interactive instance

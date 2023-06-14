@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.ir.tools.config.*;
@@ -33,7 +34,7 @@ import org.junit.Test;
 public class FfiLogicalPlanTest {
     // Match (x:person)-[:knows*1..3]->(:person {age: 10})
     @Test
-    public void logical_plan_test() throws Exception {
+    public void logical_plan_1_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         GetVConfig getVConfig =
@@ -47,7 +48,7 @@ public class FfiLogicalPlanTest {
                         .getV(getVConfig)
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
-                        .resultOpt(GraphOpt.PathExpandResult.AllV)
+                        .resultOpt(GraphOpt.PathExpandResult.ALL_V)
                         .build();
         RelNode node =
                 builder.source(
@@ -77,7 +78,7 @@ public class FfiLogicalPlanTest {
                     + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
                     + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[DEFAULT], opt=[END])\n"
-                    + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[AllV],"
+                    + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
                     + " alias=[DEFAULT])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[x], opt=[VERTEX])\n"
@@ -89,7 +90,38 @@ public class FfiLogicalPlanTest {
                         Utils.schemaMeta,
                         new LogicalPlan(aggregate, false))) {
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("ffi_logical_plan.json"), ffiBuilder.explain());
+                    FileUtils.readJsonFromResource("ffi_logical_plan_1.json"),
+                    ffiBuilder.explain());
+        }
+    }
+
+    // Match (x:person) where x.age = $age
+    @Test
+    public void logical_plan_2_test() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode filter =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "x"))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.variable("x", "age"),
+                                        ((GraphRexBuilder) builder.getRexBuilder())
+                                                .makeGraphDynamicParam("age", 0)))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[x],"
+                        + " fusedFilter=[[=(DEFAULT.age, ?0)]], opt=[VERTEX])",
+                filter.explain().trim());
+        try (PhysicalBuilder<byte[]> ffiBuilder =
+                new FfiPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(filter, false))) {
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("ffi_logical_plan_2.json"),
+                    ffiBuilder.explain());
         }
     }
 

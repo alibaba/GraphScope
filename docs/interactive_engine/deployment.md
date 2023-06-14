@@ -77,7 +77,7 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
    You should see the GIE Frontend service endpoint as `<ip>:<gremlinPort>`.
 
 - Connect to the GIE frontend service using the Tinkerpop's official SDKs or Gremlin console, which
-can be found [here](./tinkerpop_eco.md).
+can be found [here](./tinkerpop_gremlin.md).
 
 ## Remove the GIE Service
 ```bash

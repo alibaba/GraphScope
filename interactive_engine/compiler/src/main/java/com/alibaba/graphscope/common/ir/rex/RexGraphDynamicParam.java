@@ -14,26 +14,21 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.jna.type;
+package com.alibaba.graphscope.common.ir.rex;
 
-import com.alibaba.graphscope.common.jna.IntEnum;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexDynamicParam;
 
-public enum ResultOpt implements IntEnum<ResultOpt> {
-    EndV,
-    AllV,
-    AllVE;
+public class RexGraphDynamicParam extends RexDynamicParam {
+    private final String paramName;
 
-    @Override
-    public int getInt() {
-        return this.ordinal();
+    public RexGraphDynamicParam(RelDataType type, String paramName, int index) {
+        super(type, index);
+        this.paramName = paramName;
     }
 
     @Override
-    public ResultOpt getEnum(int i) {
-        ResultOpt opts[] = values();
-        if (i < opts.length && i >= 0) {
-            return opts[i];
-        }
-        return null;
+    public String getName() {
+        return paramName;
     }
 }

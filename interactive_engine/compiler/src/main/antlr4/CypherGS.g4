@@ -249,7 +249,11 @@ oC_Atom
         | oC_Variable
         | oC_FunctionInvocation
         | oC_CountAny
+        | oC_Parameter
         ;
+
+oC_Parameter
+    : '$' ( oC_SymbolicName ) ;
 
 oC_CountAny
     : ( COUNT SP? '(' SP? '*' SP? ')' )
@@ -367,7 +371,7 @@ oC_ListLiteral
            :  '[' SP? ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? ']' ;
 
 oC_MapLiteral
-          :  '{' SP? ( oC_PropertyKeyName SP? ':' SP? oC_StringListNullPredicateExpression SP? ( ',' SP? oC_PropertyKeyName SP? ':' SP? oC_StringListNullPredicateExpression SP? )* )? '}' ;
+          :  '{' SP? ( oC_PropertyKeyName SP? ':' SP? oC_Expression SP? ( ',' SP? oC_PropertyKeyName SP? ':' SP? oC_Expression SP? )* )? '}' ;
 
 oC_PropertyKeyName
                :  oC_SchemaName ;

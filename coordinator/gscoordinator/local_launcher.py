@@ -192,7 +192,9 @@ class LocalLauncher(AbstractLauncher):
             "Analytical engine is listening on %s", self._analytical_engine_endpoint
         )
 
-    def create_interactive_instance(self, object_id: int, schema_path: str):
+    def create_interactive_instance(
+        self, object_id: int, schema_path: str, params: dict
+    ):
         try:
             logger.info("Java version: %s", get_java_version())
         except:  # noqa: E722
@@ -218,6 +220,9 @@ class LocalLauncher(AbstractLauncher):
         else:
             num_workers = self._num_workers
 
+        params = "\n".join([f"{k}={v}" for k, v in params.items()])
+        params = base64.b64encode(params.encode("utf-8")).decode("utf-8")
+
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "create_gremlin_instance_on_local",
@@ -229,6 +234,7 @@ class LocalLauncher(AbstractLauncher):
             str(self._interactive_port + 1),  # executor rpc port
             str(self._interactive_port + 2 * num_workers),  # frontend port
             self.vineyard_socket,
+            params,
         ]
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
         self._interactive_port += 3

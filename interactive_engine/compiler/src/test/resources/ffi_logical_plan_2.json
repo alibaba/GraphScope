@@ -1,0 +1,96 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "Scan": {
+            "scan_opt": 0,
+            "alias": {
+              "item": {
+                "Id": 0
+              }
+            },
+            "params": {
+              "tables": [
+                {
+                  "item": {
+                    "Id": 0
+                  }
+                }
+              ],
+              "columns": [],
+              "is_all_columns": false,
+              "limit": null,
+              "predicate": {
+                "operators": [
+                  {
+                    "node_type": {
+                      "type": {
+                        "DataType": 1
+                      }
+                    },
+                    "item": {
+                      "Var": {
+                        "tag": null,
+                        "property": {
+                          "item": {
+                            "Key": {
+                              "item": {
+                                "Name": "age"
+                              }
+                            }
+                          }
+                        },
+                        "node_type": {
+                          "type": {
+                            "DataType": 1
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "node_type": {
+                      "type": {
+                        "DataType": 0
+                      }
+                    },
+                    "item": {
+                      "Logical": 0
+                    }
+                  },
+                  {
+                    "node_type": {
+                      "type": {
+                        "DataType": 1
+                      }
+                    },
+                    "item": {
+                      "Param": {
+                        "name": "age",
+                        "index": 0,
+                        "data_type": {
+                          "type": {
+                            "DataType": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "sample_ratio": 1.0,
+              "extra": {}
+            },
+            "idx_predicate": null,
+            "meta_data": null
+          }
+        }
+      },
+      "children": []
+    }
+  ],
+  "roots": [
+    0
+  ]
+}

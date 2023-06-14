@@ -111,7 +111,7 @@ class OperationExecutor:
                 # TODO: make the stacktrace separated from normal error messages
                 # Too verbose.
                 if len(e.details()) > 3072:  # 3k bytes
-                    msg = f"{e.details()[:30]} ... [truncated]"
+                    msg = f"{e.details()[:256]} ... [truncated]"
                 else:
                     msg = e.details()
                 raise AnalyticalEngineInternalError(msg)

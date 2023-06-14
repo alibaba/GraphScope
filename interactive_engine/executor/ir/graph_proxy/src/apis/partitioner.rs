@@ -50,7 +50,10 @@ impl PartitionedData for Edge {
 
 impl PartitionedData for GraphPath {
     fn get_partition_key_id(&self) -> PartitionKeyId {
-        self.get_path_end().id() as PartitionKeyId
+        match self.get_path_end() {
+            super::VertexOrEdge::V(v) => v.get_partition_key_id(),
+            super::VertexOrEdge::E(e) => e.get_partition_key_id(),
+        }
     }
 }
 
