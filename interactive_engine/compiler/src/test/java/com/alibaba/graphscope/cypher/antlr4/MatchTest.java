@@ -92,11 +92,21 @@ public class MatchTest {
                     + " 1.0E0)]], opt=[OUT])\n"
                     + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[DEFAULT], opt=[END])\n"
-                    + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[EndV],"
+                    + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[END_V],"
                     + " alias=[b])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
+                match.explain().trim());
+    }
+
+    @Test
+    public void match_5_test() {
+        RelNode match = Utils.eval("Match (n:person {age: $age}) Return n").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(n=[n], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[n], fusedFilter=[[=(DEFAULT.age, ?0)]], opt=[VERTEX])",
                 match.explain().trim());
     }
 }

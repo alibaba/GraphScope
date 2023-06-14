@@ -22,6 +22,7 @@ pub mod write_graph;
 pub use cluster_info::*;
 pub use graph::element::{
     Details, DynDetails, Edge, Element, GraphElement, GraphPath, PropKey, PropertyValue, Vertex,
+    VertexOrEdge,
 };
 pub use graph::{read_id, write_id, Direction, QueryParams, ID};
 pub use read_graph::{from_fn, get_graph, register_graph, ReadGraph, Statement};

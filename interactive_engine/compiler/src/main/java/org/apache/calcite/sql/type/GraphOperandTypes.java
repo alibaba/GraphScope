@@ -18,12 +18,20 @@ package org.apache.calcite.sql.type;
 
 import com.google.common.collect.ImmutableList;
 
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.IntFunction;
+import java.util.function.Predicate;
+
 /**
  * Similar to {@link OperandTypes}, but we rewrite some {@link SqlOperandTypeChecker}
  * to create validation functions based on {@link org.apache.calcite.rex.RexNode},
  * Meanwhile, we re-use functions from {@link OperandTypes} as much as possible
  */
-public abstract class RexOperandTypes {
+public abstract class GraphOperandTypes {
     public static final SqlSingleOperandTypeChecker NUMERIC_NUMERIC =
             family(SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC);
 
@@ -65,7 +73,7 @@ public abstract class RexOperandTypes {
      * @return
      */
     public static FamilyOperandTypeChecker family(SqlTypeFamily... families) {
-        return new RexFamilyOperandTypeChecker(ImmutableList.copyOf(families), i -> false);
+        return new GraphFamilyOperandTypeChecker(ImmutableList.copyOf(families), i -> false);
     }
 
     public static final SqlSingleOperandTypeChecker PLUS_OPERATOR =
@@ -80,4 +88,12 @@ public abstract class RexOperandTypes {
 
     public static final SqlSingleOperandTypeChecker DIVISION_OPERATOR =
             OperandTypes.or(NUMERIC_NUMERIC, INTERVAL_NUMERIC);
+
+    public static SqlOperandMetadata operandMetadata(
+            List<SqlTypeFamily> families,
+            Function<RelDataTypeFactory, List<RelDataType>> typesFactory,
+            IntFunction<String> operandName,
+            Predicate<Integer> optional) {
+        return new GraphOperandMetaDataImpl(families, typesFactory, operandName, optional);
+    }
 }

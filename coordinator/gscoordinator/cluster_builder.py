@@ -163,6 +163,7 @@ class EngineCluster:
 
         self._vineyard_requests = {"cpu": vineyard_cpu, "memory": vineyard_mem}
         self._analytical_requests = {"cpu": engine_cpu, "memory": engine_mem}
+        # Should give executor a smaller value, since it doesn't need to load the graph
         self._executor_requests = {"cpu": "2000m", "memory": engine_mem}
         self._learning_requests = {"cpu": "1000m", "memory": "256Mi"}
         self._frontend_requests = {"cpu": "200m", "memory": "512Mi"}
@@ -265,10 +266,15 @@ class EngineCluster:
         )
         return container
 
+    def _get_tail_if_exists_cmd(self, fname: str):
+        return (
+            f"while true; do if [ -e {fname} ]; then tail -f {fname}; fi; sleep 1; done"
+        )
+
     def get_analytical_container(self, volume_mounts, with_java=False):
         name = self.analytical_container_name
         image = self._analytical_image if not with_java else self._analytical_java_image
-        args = ["tail", "-f", "/dev/null"]
+        args = ["bash", "-c", self._get_tail_if_exists_cmd("/tmp/grape_engine.INFO")]
         container = self.get_engine_container_helper(
             name,
             image,
@@ -292,7 +298,11 @@ class EngineCluster:
     def get_interactive_executor_container(self, volume_mounts):
         name = self.interactive_executor_container_name
         image = self._interactive_executor_image
-        args = ["tail", "-f", "/dev/null"]
+        args = [
+            "bash",
+            "-c",
+            self._get_tail_if_exists_cmd("/var/log/graphscope/current/executor.log"),
+        ]
         container = self.get_engine_container_helper(
             name,
             image,
@@ -445,7 +455,7 @@ class EngineCluster:
             "ClusterIP", ports, self._engine_labels, None
         )
 
-        # Necessary, create a headless service for statefulset
+        # Necessary, create a headless service for statefulsets
         service_spec.cluster_ip = "None"
         service = ResourceBuilder.get_service(
             self._namespace, name, service_spec, self._engine_labels
@@ -534,7 +544,11 @@ class EngineCluster:
     def get_interactive_frontend_container(self):
         name = self.interactive_frontend_container_name
         image = self._interactive_frontend_image
-        args = ["tail", "-f", "/dev/null"]
+        args = [
+            "bash",
+            "-c",
+            self._get_tail_if_exists_cmd("/var/log/graphscope/current/frontend.log"),
+        ]
         container = kube_client.V1Container(name=name, image=image, args=args)
         container.image_pull_policy = self._image_pull_policy
         container.resources = ResourceBuilder.get_resources(

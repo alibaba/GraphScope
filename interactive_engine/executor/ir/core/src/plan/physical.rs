@@ -316,6 +316,7 @@ impl AsPhysical for pb::PathExpand {
 // 1. the previous op is ExpandE, and with no alias (which means that the edges won't be accessed later).
 // 2. `GetV` is GetV(Adj) (i.e., opt=Start/End/Other) without any filters or further query semantics.
 // 3. the direction should be: outE + inV = out; inE + outV = in; and bothE + otherV = both
+// In addition, if PathExpand + GetV, make opt of GetV to be `End`.
 fn build_and_try_fuse_get_v(builder: &mut JobBuilder, mut get_v: pb::GetV) -> IrResult<()> {
     if get_v.opt == 4 {
         return Err(IrError::Unsupported("Try to fuse GetV with Opt=Self into ExpandE".to_string()));
@@ -352,6 +353,9 @@ fn build_and_try_fuse_get_v(builder: &mut JobBuilder, mut get_v: pb::GetV) -> Ir
                     return Ok(());
                 }
             }
+        } else if let physical_pb::physical_opr::operator::OpKind::Path(ref _path) = op_kind {
+            // make opt of getV after path expand as End.
+            get_v.opt = unsafe { std::mem::transmute(physical_pb::get_v::VOpt::End) };
         }
     }
     builder.get_v(get_v);

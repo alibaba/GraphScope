@@ -16,14 +16,14 @@
 use std::convert::TryInto;
 
 use graph_proxy::apis::GraphElement;
-use graph_proxy::apis::{get_graph, DynDetails, QueryParams, Vertex};
+use graph_proxy::apis::{get_graph, DynDetails, GraphPath, QueryParams, Vertex};
 use ir_common::error::ParsePbError;
 use ir_common::generated::physical as pb;
 use ir_common::generated::physical::get_v::VOpt;
 use ir_common::{KeyId, LabelId};
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
-use crate::error::{FnExecError, FnGenError, FnGenResult};
+use crate::error::{FnExecError, FnExecResult, FnGenError, FnGenResult};
 use crate::process::entry::{DynEntry, Entry, EntryType};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::Record;
@@ -33,6 +33,25 @@ struct GetVertexOperator {
     start_tag: Option<KeyId>,
     opt: VOpt,
     alias: Option<KeyId>,
+    query_labels: Vec<LabelId>,
+}
+
+impl GetVertexOperator {
+    fn contains_label(&self, label: Option<&LabelId>) -> FnExecResult<bool> {
+        if self.query_labels.is_empty() {
+            // no label constraint
+            Ok(true)
+        } else {
+            if let Some(label) = label {
+                Ok(self.query_labels.contains(label))
+            } else {
+                Err(FnExecError::UnExpectedData(format!(
+                    "Label is None in GetVertexOperator, with Opr {:?}",
+                    self,
+                )))?
+            }
+        }
+    }
 }
 
 impl FilterMapFunction<Record, Record> for GetVertexOperator {
@@ -45,73 +64,67 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                     VOpt::Other => (e.get_other_id(), e.get_other_label()),
                     _ => unreachable!(),
                 };
-                let vertex = Vertex::new(id, label.map(|l| l.clone()), DynDetails::default());
-                input.append(vertex, self.alias.clone());
-                Ok(Some(input))
-            } else if let Some(graph_path) = entry.as_graph_path() {
-                // TODO: we do not check VOpt here, and we treat all cases as to get the end vertex of the path.
-                let path_end = graph_path.get_path_end().clone();
-                input.append(path_end, self.alias.clone());
-                Ok(Some(input))
-            } else {
-                Err(FnExecError::unexpected_data_error(
-                    "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry",
-                ))?
-            }
-        } else {
-            Ok(None)
-        }
-    }
-}
-
-#[derive(Debug)]
-struct GetVertexWithLabelOperator {
-    start_tag: Option<KeyId>,
-    opt: VOpt,
-    alias: Option<KeyId>,
-    labels: Vec<LabelId>,
-}
-
-impl FilterMapFunction<Record, Record> for GetVertexWithLabelOperator {
-    fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
-        if let Some(entry) = input.get(self.start_tag) {
-            if let Some(e) = entry.as_edge() {
-                let (id, label) = match self.opt {
-                    VOpt::Start => (e.src_id, e.get_src_label()),
-                    VOpt::End => (e.dst_id, e.get_dst_label()),
-                    VOpt::Other => (e.get_other_id(), e.get_other_label()),
-                    _ => unreachable!(),
-                };
-                let label = label.ok_or(FnExecError::UnExpectedData(format!(
-                    "Label is None in GetVertexWithLabelOperator, Record {:?} with Opr {:?}",
-                    input, self,
-                )))?;
-                if self.labels.contains(label) {
-                    let vertex = Vertex::new(id, Some(*label), DynDetails::default());
+                if self.contains_label(label)? {
+                    let vertex = Vertex::new(id, label.cloned(), DynDetails::default());
                     input.append(vertex, self.alias.clone());
                     Ok(Some(input))
                 } else {
                     Ok(None)
                 }
             } else if let Some(graph_path) = entry.as_graph_path() {
-                if let VOpt::End = self.opt {
-                    let path_end = graph_path.get_path_end();
-                    let label = path_end
-                        .label()
-                        .ok_or(FnExecError::UnExpectedData(format!(
-                            "Label is None in GetVertexWithLabelOperator, Record {:?} with Opr {:?}",
-                            input, self,
-                        )))?;
-                    if self.labels.contains(&label) {
-                        input.append(path_end.clone(), self.alias.clone());
-                        Ok(Some(input))
-                    } else {
-                        Ok(None)
+                // we check VOpt here:
+                // for `Other`, we treat it as to get_other_id() in the Edge within the Path (in which case is expanding the path with a adj vertex)
+                // for `End`, we treat it as to get EndV() in the Path (in which case is getting the end vertex from the path)
+                match self.opt {
+                    VOpt::Other => {
+                        let graph_path = input
+                            .get_mut(self.start_tag)
+                            .ok_or(FnExecError::unexpected_data_error(&format!(
+                                "get_mut of GraphPath failed in {:?}",
+                                self
+                            )))?
+                            .as_any_mut()
+                            .downcast_mut::<GraphPath>()
+                            .ok_or(FnExecError::unexpected_data_error(&format!(
+                                "entry is not a path in GetV"
+                            )))?;
+                        let path_end_edge = graph_path.get_path_end().as_edge().ok_or(
+                            FnExecError::unexpected_data_error(&format!(
+                                "GetOtherVertex on a path entry with input: {:?}",
+                                graph_path.get_path_end()
+                            )),
+                        )?;
+                        let label = path_end_edge.get_other_label();
+                        if self.contains_label(label)? {
+                            let vertex = Vertex::new(
+                                path_end_edge.get_other_id(),
+                                label.cloned(),
+                                DynDetails::default(),
+                            );
+                            graph_path.append(vertex);
+                            Ok(Some(input))
+                        } else {
+                            Ok(None)
+                        }
                     }
-                } else {
-                    Err(FnExecError::unsupported_error(
-                        "Only support `GetV` with VOpt::End on a path entry",
-                    ))?
+                    VOpt::End => {
+                        let path_end_vertex = graph_path
+                            .get_path_end()
+                            .as_vertex()
+                            .ok_or(FnExecError::unsupported_error("Get end edge on a path entry"))?
+                            .clone();
+                        let label = path_end_vertex.label();
+                        if self.contains_label(label.as_ref())? {
+                            input.append(path_end_vertex, self.alias.clone());
+                            Ok(Some(input))
+                        } else {
+                            Ok(None)
+                        }
+                    }
+                    _ => Err(FnExecError::unsupported_error(&format!(
+                        "Wired opt in GetVertexOperator for GraphPath: {:?}",
+                        self.opt
+                    )))?,
                 }
             } else {
                 Err(FnExecError::unexpected_data_error(
@@ -241,25 +254,16 @@ impl FilterMapFuncGen for pb::GetV {
                     }
                 }
 
-                if !tables_condition.is_empty() {
-                    let get_vertex_with_label_operator = GetVertexWithLabelOperator {
-                        start_tag: self.tag,
-                        opt,
-                        alias: self.alias,
-                        labels: tables_condition,
-                    };
-                    if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
-                        debug!("Runtime GetVertexWithLabelOperator: {:?}", get_vertex_with_label_operator);
-                    }
-                    Ok(Box::new(get_vertex_with_label_operator))
-                } else {
-                    let get_vertex_operator =
-                        GetVertexOperator { start_tag: self.tag, opt, alias: self.alias };
-                    if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
-                        debug!("Runtime GetVertexOperator: {:?}", get_vertex_operator);
-                    }
-                    Ok(Box::new(get_vertex_operator))
+                let get_vertex_operator = GetVertexOperator {
+                    start_tag: self.tag,
+                    opt,
+                    alias: self.alias,
+                    query_labels: tables_condition,
+                };
+                if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
+                    debug!("Runtime GetVertexOperator: {:?}", get_vertex_operator);
                 }
+                Ok(Box::new(get_vertex_operator))
             }
             VOpt::Itself => {
                 let query_params: QueryParams = self.params.try_into()?;

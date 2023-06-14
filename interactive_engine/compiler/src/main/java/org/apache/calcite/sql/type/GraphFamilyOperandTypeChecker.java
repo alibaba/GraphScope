@@ -34,8 +34,8 @@ import java.util.function.Predicate;
  * The constructor of {@code FamilyOperandTypeChecker} is protected, To inherit from it,
  * we have to make the subclass under the same package {@code org.apache.calcite.sql.type}
  */
-public class RexFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
-    protected RexFamilyOperandTypeChecker(
+public class GraphFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
+    protected GraphFamilyOperandTypeChecker(
             List<SqlTypeFamily> families, Predicate<Integer> optional) {
         super(families, optional);
     }
