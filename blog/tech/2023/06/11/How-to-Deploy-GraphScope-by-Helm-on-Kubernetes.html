@@ -150,20 +150,20 @@ You could also use <code class="language-plaintext highlighter-rouge">helm statu
 <h2 id="connect-to-service-using-client">Connect to service using client</h2>
 <p>After obtaining the service address (192.168.0.65:30262 in the above command), you can use GraphScope Python client to connect to this service:</p>
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> import graphscope
-<span class="o">&gt;&gt;&gt;</span> graphscope.set_option<span class="o">(</span><span class="nv">show_log</span><span class="o">=</span>True<span class="o">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="c"># sess = graphscope.session(addr='&lt;ip&gt;:&lt;port&gt;')</span>
-<span class="o">&gt;&gt;&gt;</span> sess <span class="o">=</span> graphscope.session<span class="o">(</span><span class="nv">addr</span><span class="o">=</span><span class="s1">'192.168.0.65:30262'</span><span class="o">)</span>
-Connecting graphscope session with address: 192.168.0.65:30262
-GraphScope coordinator service connected.
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="n">graphscope</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># sess = graphscope.session(addr='&lt;ip&gt;:&lt;port&gt;')
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">session</span><span class="p">(</span><span class="n">addr</span><span class="o">=</span><span class="sh">'</span><span class="s">192.168.0.65:30262</span><span class="sh">'</span><span class="p">)</span>
+<span class="n">Connecting</span> <span class="n">graphscope</span> <span class="n">session</span> <span class="k">with</span> <span class="n">address</span><span class="p">:</span> <span class="mf">192.168</span><span class="p">.</span><span class="mf">0.65</span><span class="p">:</span><span class="mi">30262</span>
+<span class="n">GraphScope</span> <span class="n">coordinator</span> <span class="n">service</span> <span class="n">connected</span><span class="p">.</span>
 </code></pre></div></div>
 
 <p>Unlike the way of deploying GraphScope through Python client, the lifecycle of GraphScope instances deployed using Helm tools are not bound to the client’s lifecycle. Therefore, you can connect to a GraphScope instance deployed using Helm multiple times through the client, but only one client can connect to the service at a time.</p>
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> import graphscope
-<span class="o">&gt;&gt;&gt;</span> sess1 <span class="o">=</span> graphscope.session<span class="o">(</span><span class="nv">addr</span><span class="o">=</span><span class="s1">'192.168.0.65:30262'</span><span class="o">)</span>
-<span class="o">&gt;&gt;&gt;</span> sess1.close<span class="o">()</span>  <span class="c"># The second session cannot connect to server until previous one was closed.</span>
-<span class="o">&gt;&gt;&gt;</span> sess2 <span class="o">=</span> graphscope.session<span class="o">(</span><span class="nv">addr</span><span class="o">=</span><span class="s1">'192.168.0.65:30262'</span><span class="o">)</span>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="n">graphscope</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sess1</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">session</span><span class="p">(</span><span class="n">addr</span><span class="o">=</span><span class="sh">'</span><span class="s">192.168.0.65:30262</span><span class="sh">'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sess1</span><span class="p">.</span><span class="nf">close</span><span class="p">()</span>  <span class="c1"># The second session cannot connect to server until previous one was closed.
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">sess2</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">session</span><span class="p">(</span><span class="n">addr</span><span class="o">=</span><span class="sh">'</span><span class="s">192.168.0.65:30262</span><span class="sh">'</span><span class="p">)</span>
 </code></pre></div></div>
 
 <h2 id="uninstall-graphscope-instance">Uninstall GraphScope instance</h2>
