@@ -52,6 +52,7 @@ data:
 
     ## Frontend Config
     gremlin.server.port=12312
+    neo4j.bolt.server.disabled=true
 
     executor.worker.per.process={{ .Values.executorWorkerPerProcess }}
     executor.query.thread.count={{ .Values.executorQueryThreadCount }}
