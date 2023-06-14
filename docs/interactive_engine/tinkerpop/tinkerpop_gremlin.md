@@ -1,4 +1,4 @@
-# GIE For Gremlin
+# GIE for Gremlin
 This document will provide you with step-by-step guidance on how to connect your gremlin applications to the GIE's
 FrontEnd service, which offers functionalities similar to the official Tinkerpop service.
 

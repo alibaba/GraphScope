@@ -287,7 +287,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::projectToSimple(
     return graph_def;
   }
   VY_OK_OR_RAISE(client_->Persist(vy_info.vineyard_id()));
-  // contruct fragment group
+  // construct fragment group
   BOOST_LEAF_AUTO(frag_group_id,
                   vineyard::ConstructFragmentGroup(
                       *client_, vy_info.vineyard_id(), comm_spec_));
