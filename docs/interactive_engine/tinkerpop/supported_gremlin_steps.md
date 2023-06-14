@@ -17,9 +17,9 @@
    3. [Aggregate(Group)](#aggregate-group)
 4. [Limitations](#limitations)
 ## Introduction
-This documentation guides you how to work with the [gremlin](https://tinkerpop.apache.org/docs/current/reference) graph traversal language in GraphScope. On the one hand we retain the original syntax of most steps from the standard gremlin, on the other hand the usages of some steps are further extended to denote more complex situations in real-world scenarios.
+This documentation guides you how to work with the [Gremlin](https://tinkerpop.apache.org/docs/current/reference) graph traversal language in GraphScope. On the one hand we retain the original syntax of most steps from the standard Gremlin, on the other hand the usages of some steps are further extended to denote more complex situations in real-world scenarios.
 ## Standard Steps
-We retain the original syntax of the following steps from the standard gremlin.
+We retain the original syntax of the following steps from the standard Gremlin.
 ### Source
 #### [V()](https://tinkerpop.apache.org/docs/current/reference/#v-step)
 The V()-step is meant to iterate over all vertices from the graph. Moreover, `vertexIds` can be injected into the traversal to select a subset of vertices.
@@ -308,7 +308,7 @@ g.V().valueMap("name")
 g.V().valueMap("name", "age")
 ```
 #### [values()](https://tinkerpop.apache.org/docs/current/reference/#values-step)
-The values()-step is meant to map the graph element to the values of the associated properties given the provide property keys. Here we just allow only one property key as the argument to the `values()` to implement the step as a map instead of a flat-map, which may be a little different from the standard gremlin.
+The values()-step is meant to map the graph element to the values of the associated properties given the provide property keys. Here we just allow only one property key as the argument to the `values()` to implement the step as a map instead of a flat-map, which may be a little different from the standard Gremlin.
 
 Parameters: </br>
 propertyKey - the property to retrieve its value from.
@@ -504,7 +504,7 @@ g.V().union(out(), out().out())
 The match()-step provides a declarative form of graph patterns to match with. With match(), the user provides a collection of "sentences," called patterns, that have variables defined that must hold true throughout the duration of the match(). For most of the complex graph patterns, it is usually much easier to express via match() than with single-path traversals.
 
 Parameters: </br>
-matchSentences - define a collection of patterns. Each pattern consists of a start tag, a serials of gremlin steps (binders) and an end tag.
+matchSentences - define a collection of patterns. Each pattern consists of a start tag, a serials of Gremlin steps (binders) and an end tag.
 
 Supported binders within a pattern: </br>
 * Expand: in()/out()/both(), inE()/outE()/bothE(), inV()/outV()/otherV/bothV
@@ -709,7 +709,7 @@ gremlin> g.V().select(expr("@.name"))
 ==>peter
 ```
 ### Aggregate (Group)
-The group()-step in standard gremlin has limited capabilities (i.e. grouping can only be performed based on a single key, and only one aggregate calculation can be applied in each group), which cannot be applied to the requirements of performing group calculations on multiple keys or values; Therefore, we further extend the capabilities of the group()-step, allowing multiple variables to be set and different aliases to be configured in key by()-step and value by()-step respectively.
+The group()-step in standard Gremlin has limited capabilities (i.e. grouping can only be performed based on a single key, and only one aggregate calculation can be applied in each group), which cannot be applied to the requirements of performing group calculations on multiple keys or values; Therefore, we further extend the capabilities of the group()-step, allowing multiple variables to be set and different aliases to be configured in key by()-step and value by()-step respectively.
 
 Usages of the key by()-step:
 ```bash

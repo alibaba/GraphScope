@@ -6,9 +6,16 @@ Your first step is to obtain the endpoint of GIE Frontend service:
 - Follow the [instruction](./deployment.md#deploy-your-first-gie-service) while deploying GIE in a K8s cluster,
 - Follow the [instruction](./dev_and_test.md#manually-start-the-gie-services) while starting GIE on a local machine.
 
-## Connecting Gremlin within Python
+## Connecting via Python SDK
 
 GIE makes it easy to connect to a loaded graph with Tinkerpop's [Gremlin-Python](https://pypi.org/project/gremlinpython/).
+
+You first install the dependency:
+```bash
+pip3 install gremlinpython
+```
+
+Then connect to the service and run queries:
 
    ```Python
    import sys
@@ -61,7 +68,7 @@ resultIterationBatchSize: 64
 
 ```
 
-## Connecting Gremlin within Java
+## Connecting via Java SDK
 See [Gremlin-Java](https://tinkerpop.apache.org/docs/current/reference/#gremlin-java) for connecting Gremlin
 within the Java language.
 
@@ -81,7 +88,7 @@ client.close();
 cluster.close();
 ```
 
-## Gremlin Console
+## Connecting via Gremlin-Console
 1. Download Gremlin console and unpack to your local directory.
    ```bash
    # if the given version (3.6.4) is not found, try to access https://dlcdn.apache.org to
@@ -91,7 +98,7 @@ cluster.close();
    cd apache-tinkerpop-gremlin-console-3.6.4
    ```
 
-2. In the directory of gremlin console, modify the `hosts` and `port` in `conf/remote.yaml` to the GIE Frontend Service endpoint, as
+2. In the directory of Gremlin console, modify the `hosts` and `port` in `conf/remote.yaml` to the GIE Frontend Service endpoint, as
   ```bash
   hosts: [your_endpoint_address]
   port: [your_endpoint_port]
