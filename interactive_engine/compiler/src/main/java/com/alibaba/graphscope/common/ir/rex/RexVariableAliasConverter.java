@@ -59,4 +59,9 @@ public class RexVariableAliasConverter extends RexVisitorImpl<RexNode> {
         return RexGraphVariable.of(
                 targetAliasId, variable.getProperty(), targetVarName, variable.getType());
     }
+
+    @Override
+    public RexNode visitDynamicParam(RexDynamicParam dynamicParam) {
+        return dynamicParam;
+    }
 }
