@@ -362,8 +362,12 @@ class LocalLauncher(AbstractLauncher):
         else:
             self._etcd_peer_port = get_free_port()
 
+        if isinstance(self._hosts, (list, tuple)):
+            hosts = self._hosts
+        else:
+            hosts = self._hosts.split(",")
         local_hostname = "127.0.0.1"
-        if len(self._hosts) > 1:
+        if len(hosts) > 1:
             try:
                 local_hostname = socket.gethostname()
                 socket.gethostbyname(
@@ -452,8 +456,11 @@ class LocalLauncher(AbstractLauncher):
         cmd.extend(["--socket", self.vineyard_socket])
         cmd.extend(["--rpc_socket_port", str(self._vineyard_rpc_port)])
         cmd.extend(["--size", self._shared_mem])
-        cmd.extend(["-etcd_endpoint", self._etcd_endpoint])
-        cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
+        if len(hosts) == 1:
+            cmd.extend(["--meta", "local"])
+        else:
+            cmd.extend(["-etcd_endpoint", self._etcd_endpoint])
+            cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
         env = os.environ.copy()
         env["GLOG_v"] = str(self._glog_level)
         env.update(mpi_env)
@@ -550,7 +557,12 @@ class LocalLauncher(AbstractLauncher):
     def start(self):
         try:
             # create etcd
-            self.configure_etcd_endpoint()
+            if isinstance(self._hosts, (list, tuple)):
+                hosts = self._hosts
+            else:
+                hosts = self._hosts.split(",")
+            if len(hosts) > 1:
+                self.configure_etcd_endpoint()
             # create vineyard
             self.launch_vineyard()
         except Exception:  # pylint: disable=broad-except

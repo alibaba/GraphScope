@@ -119,7 +119,7 @@ start_frontend() {
       -e "s@THREADS_PER_WORKER@${threads_per_worker}@g" \
       ${GRAPHSCOPE_HOME}/conf/frontend.vineyard.properties > ${config_dir}/frontend.vineyard.properties
   echo -e "\n" >> ${config_dir}/frontend.vineyard.properties
-  echo $decoded_params >> ${config_dir}/frontend.vineyard.properties
+  echo -e "$decoded_params" >> ${config_dir}/frontend.vineyard.properties
 
   # frontend service hold a handle client of coordinator
   java ${java_opt} \
@@ -178,7 +178,7 @@ start_executor() {
       -e "s@THREADS_PER_WORKER@${threads_per_worker}@g" \
       ${GRAPHSCOPE_HOME}/conf/executor.vineyard.properties > ${config_dir}/executor.$server_id.vineyard.properties
   echo -e "\n" >> ${config_dir}/executor.$server_id.vineyard.properties
-  echo $decoded_params >> ${config_dir}/executor.$server_id.vineyard.properties
+  echo "$decoded_params" >> ${config_dir}/executor.$server_id.vineyard.properties
 
   cp ${GRAPHSCOPE_HOME}/conf/log4rs.yml  ${config_dir}/log4rs.yml
 

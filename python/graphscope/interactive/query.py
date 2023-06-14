@@ -135,7 +135,7 @@ class InteractiveQuery(object):
         """Execute gremlin querying scripts.
 
         Args:
-            query (str): Scripts that written in gremlin quering language.
+            query (str): Scripts that written in gremlin query language.
             request_options (dict, optional): Gremlin request options. format:
             {
                 "engine": "gae"
@@ -154,7 +154,7 @@ class InteractiveQuery(object):
     def subgraph(self, gremlin_script, request_options=None):
         """Create a subgraph, which input is the result of the execution of `gremlin_script`.
 
-        Any gremlin script that output a set of edges can be used to contruct a subgraph.
+        Any gremlin script that output a set of edges can be used to construct a subgraph.
 
         Args:
             gremlin_script (str): Gremlin script to be executed.
