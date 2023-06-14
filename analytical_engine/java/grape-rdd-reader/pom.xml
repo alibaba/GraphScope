@@ -83,7 +83,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>31.0.1-android</version>
+            <version>32.0.0-jre</version>
         </dependency>
         <dependency>
 <!--            include this package to resolve error javax.annotation.generated not found java 11-->
