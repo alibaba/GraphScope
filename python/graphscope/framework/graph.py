@@ -292,8 +292,12 @@ class GraphDAGNode(DAGNode, GraphInterface):
         self._resolve_op(incoming_data)
         self._session.dag.add_op(self._op)
 
-        # statically create the unload op
-        self._unload_op = dag_utils.unload_graph(self)
+        # statically create the unload op, as the op may change, the
+        # unload op should be refreshed as well.
+        if self._op is None:
+            self._unload_op = None
+        else:
+            self._unload_op = dag_utils.unload_graph(self)
 
     @property
     def v_labels(self):
@@ -377,6 +381,8 @@ class GraphDAGNode(DAGNode, GraphInterface):
                 self._op = self._from_nx_graph(incoming_data)
             else:
                 raise RuntimeError("Not supported incoming data.")
+        # update the unload op
+        self._unload_op = dag_utils.unload_graph(self)
 
     def to_numpy(self, selector, vertex_range=None):
         """Select some elements of the graph and output to numpy.
@@ -806,6 +812,7 @@ class Graph(GraphInterface):
         # copy and set op evaluated
         self._graph_node.op = deepcopy(self._graph_node.op)
         self._graph_node.evaluated = True
+        self._graph_node._unload_op = dag_utils.unload_graph(self._graph_node)
         self._session.dag.add_op(self._graph_node.op)
 
         self._key = None

@@ -72,17 +72,22 @@ start_frontend() {
   declare -r schema_path=$3
   declare -r pegasus_hosts=$4
   declare -r frontend_port=$5
+  declare -r params=$6
+
   declare -r threads_per_worker=${THREADS_PER_WORKER:-2}
 
   # create related directories
   declare -r log_dir=${GS_LOG}/${object_id}
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
+
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
 
   # make a "current" link
   unlink ${GS_LOG}/current || true
   ln -s ${log_dir} ${GS_LOG}/current
+
+  decoded_params=`echo -n $params | base64 -d`
 
   declare java_opt="-server
             -verbose:gc
@@ -113,6 +118,8 @@ start_frontend() {
       -e "s@FRONTEND_SERVICE_PORT@${frontend_port}@g" \
       -e "s@THREADS_PER_WORKER@${threads_per_worker}@g" \
       ${GRAPHSCOPE_HOME}/conf/frontend.vineyard.properties > ${config_dir}/frontend.vineyard.properties
+  echo -e "\n" >> ${config_dir}/frontend.vineyard.properties
+  echo -e "$decoded_params" >> ${config_dir}/frontend.vineyard.properties
 
   # frontend service hold a handle client of coordinator
   java ${java_opt} \
@@ -142,6 +149,8 @@ start_executor() {
   declare -r server_size=$4
   declare -r rpc_port=$5
   declare -r network_servers=$6
+  declare -r params=$7
+
   declare -r threads_per_worker=${THREADS_PER_WORKER:-2}
 
   declare -r log_dir=${GS_LOG}/${object_id}
@@ -157,6 +166,8 @@ start_executor() {
   unlink ${GS_LOG}/current || true
   ln -s ${log_dir} ${GS_LOG}/current
 
+  decoded_params=`echo -n $params | base64 -d`
+
   # set executor config file
   sed -e "s@GRAPH_NAME@${object_id}@g" \
       -e "s@VINEYARD_OBJECT_ID@${object_id}@g" \
@@ -166,6 +177,8 @@ start_executor() {
       -e "s@NETWORK_SERVERS@${network_servers}@g" \
       -e "s@THREADS_PER_WORKER@${threads_per_worker}@g" \
       ${GRAPHSCOPE_HOME}/conf/executor.vineyard.properties > ${config_dir}/executor.$server_id.vineyard.properties
+  echo -e "\n" >> ${config_dir}/executor.$server_id.vineyard.properties
+  echo "$decoded_params" >> ${config_dir}/executor.$server_id.vineyard.properties
 
   cp ${GRAPHSCOPE_HOME}/conf/log4rs.yml  ${config_dir}/log4rs.yml
 
@@ -201,6 +214,7 @@ create_gremlin_instance_on_local() {
   declare -r executor_rpc_port=$6
   declare -r frontend_port=$7
   export VINEYARD_IPC_SOCKET=$8
+  declare -r params=$9
 
   declare -r cluster_type="local"
   declare -r executor_count="1"  # local mode only start one executor
@@ -228,7 +242,7 @@ create_gremlin_instance_on_local() {
   pegasus_hosts=${pegasus_hosts:1}
 
   start_frontend ${GRAPHSCOPE_RUNTIME} ${object_id} ${schema_path} ${pegasus_hosts} \
-                 ${frontend_port}
+                 ${frontend_port} ${params}
 
   log "FRONTEND_ENDPOINT:127.0.0.1:${frontend_port}"
 
@@ -237,7 +251,7 @@ create_gremlin_instance_on_local() {
     current_executor_port=$(($executor_port + 2 * $server_id))
     current_executor_rpc_port=$(($executor_rpc_port + 2 * $server_id))
     start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${server_id} ${server_size} ${current_executor_rpc_port} \
-                   ${network_servers}
+                   ${network_servers} ${params}
   done
 }
 
@@ -271,6 +285,7 @@ create_gremlin_instance_on_k8s() {
   declare -r frontend_port=$8
   declare -r coordinator_name=$9 # deployment name of coordinator
   declare -r engine_selector=${10}
+  declare -r params=${11}
 
   instance_id=${coordinator_name#*-}
 
@@ -289,7 +304,7 @@ create_gremlin_instance_on_k8s() {
 
   launch_frontend_cmd="GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} \
       ${GRAPHSCOPE_HOME}/bin/giectl start_frontend \
-      ${GRAPHSCOPE_RUNTIME} ${object_id} ${schema_path} ${pegasus_hosts} ${frontend_port}"
+      ${GRAPHSCOPE_RUNTIME} ${object_id} ${schema_path} ${pegasus_hosts} ${frontend_port} '${params}'"
   kubectl cp ${schema_path} ${frontend_name}:${schema_path}
 
   kubectl exec ${frontend_name} -- /bin/bash -c "${launch_frontend_cmd}"
@@ -303,7 +318,9 @@ create_gremlin_instance_on_k8s() {
   _server_id=0
   for pod in $(echo ${pod_hosts})
   do
-    launch_executor_cmd="GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} ${GRAPHSCOPE_HOME}/bin/giectl start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${_server_id} ${server_size} ${executor_rpc_port} ${network_servers}"
+    launch_executor_cmd="GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} ${GRAPHSCOPE_HOME}/bin/giectl \
+        start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${_server_id} ${server_size} \
+        ${executor_rpc_port} ${network_servers} '${params}'"
     # kubectl exec ${pod} -c ${engine_container} -- sudo mkdir -p /var/log/graphscope
     # kubectl exec ${pod} -c ${engine_container} -- sudo chown -R graphscope:graphscope /var/log/graphscope
     kubectl exec ${pod} -c ${engine_container} -- /bin/bash -c "${launch_executor_cmd}"

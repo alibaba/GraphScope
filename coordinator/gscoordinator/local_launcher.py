@@ -192,7 +192,9 @@ class LocalLauncher(AbstractLauncher):
             "Analytical engine is listening on %s", self._analytical_engine_endpoint
         )
 
-    def create_interactive_instance(self, object_id: int, schema_path: str):
+    def create_interactive_instance(
+        self, object_id: int, schema_path: str, params: dict
+    ):
         try:
             logger.info("Java version: %s", get_java_version())
         except:  # noqa: E722
@@ -218,6 +220,9 @@ class LocalLauncher(AbstractLauncher):
         else:
             num_workers = self._num_workers
 
+        params = "\n".join([f"{k}={v}" for k, v in params.items()])
+        params = base64.b64encode(params.encode("utf-8")).decode("utf-8")
+
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "create_gremlin_instance_on_local",
@@ -229,6 +234,7 @@ class LocalLauncher(AbstractLauncher):
             str(self._interactive_port + 1),  # executor rpc port
             str(self._interactive_port + 2 * num_workers),  # frontend port
             self.vineyard_socket,
+            params,
         ]
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
         self._interactive_port += 3
@@ -356,8 +362,12 @@ class LocalLauncher(AbstractLauncher):
         else:
             self._etcd_peer_port = get_free_port()
 
+        if isinstance(self._hosts, (list, tuple)):
+            hosts = self._hosts
+        else:
+            hosts = self._hosts.split(",")
         local_hostname = "127.0.0.1"
-        if len(self._hosts) > 1:
+        if len(hosts) > 1:
             try:
                 local_hostname = socket.gethostname()
                 socket.gethostbyname(
@@ -446,8 +456,11 @@ class LocalLauncher(AbstractLauncher):
         cmd.extend(["--socket", self.vineyard_socket])
         cmd.extend(["--rpc_socket_port", str(self._vineyard_rpc_port)])
         cmd.extend(["--size", self._shared_mem])
-        cmd.extend(["-etcd_endpoint", self._etcd_endpoint])
-        cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
+        if len(hosts) == 1:
+            cmd.extend(["--meta", "local"])
+        else:
+            cmd.extend(["-etcd_endpoint", self._etcd_endpoint])
+            cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
         env = os.environ.copy()
         env["GLOG_v"] = str(self._glog_level)
         env.update(mpi_env)
@@ -544,7 +557,12 @@ class LocalLauncher(AbstractLauncher):
     def start(self):
         try:
             # create etcd
-            self.configure_etcd_endpoint()
+            if isinstance(self._hosts, (list, tuple)):
+                hosts = self._hosts
+            else:
+                hosts = self._hosts.split(",")
+            if len(hosts) > 1:
+                self.configure_etcd_endpoint()
             # create vineyard
             self.launch_vineyard()
         except Exception:  # pylint: disable=broad-except
