@@ -613,9 +613,11 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                             })?;
                         }
                     }
-                    // path end
-                    let path_end_func = self.udf_gen.gen_path_end(path)?;
-                    stream = stream.map_with_name("PathEnd", move |input| path_end_func.exec(input))?;
+                    // path end to add path_alias if exists
+                    if path.alias.is_some() {
+                        let path_end_func = self.udf_gen.gen_path_end(path)?;
+                        stream = stream.map_with_name("PathEnd", move |input| path_end_func.exec(input))?;
+                    }
                 }
                 OpKind::Scan(scan) => {
                     let udf_gen = self.udf_gen.clone();
