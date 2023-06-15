@@ -18,16 +18,23 @@ package com.alibaba.graphscope.common.store;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.GraphConfig;
+import com.alibaba.graphscope.common.ir.procedure.GraphStoredProcedures;
+import com.alibaba.graphscope.common.ir.procedure.StoredProcedures;
 import com.alibaba.graphscope.common.ir.schema.GraphSchemaWrapper;
 import com.alibaba.graphscope.gremlin.Utils;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Optional;
 
 public class ExperimentalMetaFetcher implements IrMetaFetcher {
     private final IrMeta meta;
 
     public ExperimentalMetaFetcher(Configs configs) throws IOException {
+        String procedureDir = GraphConfig.GRAPH_STORED_PROCEDURES.get(configs);
+        StoredProcedures storedProcedures =
+                (procedureDir != null && !procedureDir.isEmpty())
+                        ? new GraphStoredProcedures(procedureDir)
+                        : StoredProcedures.createEmpty();
         String schemaFilePath = GraphConfig.GRAPH_SCHEMA.get(configs);
         String schemaJson = Utils.readStringFromFile(schemaFilePath);
         this.meta =
@@ -36,7 +43,8 @@ public class ExperimentalMetaFetcher implements IrMetaFetcher {
                                 com.alibaba.graphscope.common.ir.schema.Utils.buildSchemaFromJson(
                                         schemaJson),
                                 schemaJson,
-                                false));
+                                false),
+                        storedProcedures);
     }
 
     @Override

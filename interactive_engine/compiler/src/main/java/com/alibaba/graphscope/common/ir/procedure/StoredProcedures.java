@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.config;
+package com.alibaba.graphscope.common.ir.procedure;
 
-public class GraphConfig {
-    public static final Config<String> GRAPH_SCHEMA = Config.stringConfig("graph.schema", ".");
-    public static final Config<String> GRAPH_STORE = Config.stringConfig("graph.store", "exp");
-    public static final Config<String> GRAPH_STORED_PROCEDURES =
-            Config.stringConfig("graph.stored.procedures", "");
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+public interface StoredProcedures {
+    @Nullable StoredProcedureMeta getStoredProcedure(String procedureName);
+
+    static StoredProcedures createEmpty() {
+        return (String producerName) -> null;
+    }
 }

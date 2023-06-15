@@ -16,21 +16,33 @@
 
 package com.alibaba.graphscope.common.store;
 
+import com.alibaba.graphscope.common.ir.procedure.StoredProcedures;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 
 import java.util.Objects;
 
 public class IrMeta {
     private final SnapshotId snapshotId;
-    private StatisticSchema schema;
+    private final StatisticSchema schema;
+    private final StoredProcedures storedProcedures;
 
     public IrMeta(StatisticSchema schema) {
         this(SnapshotId.createEmpty(), schema);
     }
 
+    public IrMeta(StatisticSchema schema, StoredProcedures storedProcedures) {
+        this(SnapshotId.createEmpty(), schema, storedProcedures);
+    }
+
     public IrMeta(SnapshotId snapshotId, StatisticSchema schema) {
+        this(snapshotId, schema, StoredProcedures.createEmpty());
+    }
+
+    public IrMeta(
+            SnapshotId snapshotId, StatisticSchema schema, StoredProcedures storedProcedures) {
         this.snapshotId = Objects.requireNonNull(snapshotId);
         this.schema = Objects.requireNonNull(schema);
+        this.storedProcedures = Objects.requireNonNull(storedProcedures);
     }
 
     public StatisticSchema getSchema() {
@@ -39,5 +51,9 @@ public class IrMeta {
 
     public SnapshotId getSnapshotId() {
         return snapshotId;
+    }
+
+    public StoredProcedures getStoredProcedures() {
+        return storedProcedures;
     }
 }
