@@ -492,7 +492,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           file: ./python/coverage.xml
-          fail_ci_if_error: false
+          continue-on-error: true
 
       - name: HDFS test
         env:
