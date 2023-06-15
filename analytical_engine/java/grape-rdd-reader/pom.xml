@@ -83,7 +83,6 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>31.0.1-android</version>
         </dependency>
         <dependency>
 <!--            include this package to resolve error javax.annotation.generated not found java 11-->
@@ -168,7 +167,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>1.4.1</version>
+                <version>3.3.0</version>
                 <executions>
                     <execution>
                         <id>enforce</id>
@@ -177,7 +176,12 @@
                         </goals>
                         <configuration>
                             <rules>
-                                <requireUpperBoundDeps/>
+                                <requireUpperBoundDeps>
+                                    <excludes>
+                                        <exclude>com.google.j2objc:j2objc-annotations</exclude>
+                                        <exclude>com.google.errorprone:error_prone_annotations</exclude>
+                                    </excludes>
+                                </requireUpperBoundDeps>
                             </rules>
                         </configuration>
                     </execution>
