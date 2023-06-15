@@ -49,4 +49,4 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         file: ./python/coverage.xml
-        fail_ci_if_error: true
+        continue-on-error: true
