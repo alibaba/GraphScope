@@ -20,7 +20,6 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
@@ -32,11 +31,10 @@ public class PhysicalNode<T> extends AbstractRelNode {
     private final RelNode original;
     private final T node;
 
-    protected PhysicalNode(
-            RelOptCluster cluster, RelTraitSet traitSet, RelNode original, @Nullable T node) {
+    protected PhysicalNode(RelOptCluster cluster, RelTraitSet traitSet, RelNode original, T node) {
         super(cluster, traitSet);
         this.original = Objects.requireNonNull(original);
-        this.node = node;
+        this.node = Objects.requireNonNull(node);
     }
 
     public PhysicalNode(RelNode original, T node) {
