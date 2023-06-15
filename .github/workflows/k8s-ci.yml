@@ -490,9 +490,10 @@ jobs:
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
+        continue-on-error: true
         with:
           file: ./python/coverage.xml
-          continue-on-error: true
+          fail_ci_if_error: false
 
       - name: HDFS test
         env:
