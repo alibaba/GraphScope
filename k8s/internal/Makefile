@@ -65,6 +65,7 @@ graphscope-py3-package: $(TARGET_SERVER_PACKAGE)
 graphscope-client-py3-package: $(TARGET_CLIENT_PACKAGE)
 
 
+MAKE_COMMAND=make INSTALL_PREFIX=${INSTALL_PREFIX}
 MAKE_INSTALL_COMMAND=make install INSTALL_PREFIX=${INSTALL_PREFIX}
 
 graphscope-darwin-py3:
@@ -72,8 +73,10 @@ graphscope-darwin-py3:
 	cd $(WORKING_DIR)/../.. && \
 		python3 -m pip install --upgrade setuptools && \
 		export INSTALL_PREFIX=/opt/graphscope && \
-		for _ in {1..5}; do if make INSTALL_PREFIX=${INSTALL_PREFIX}; then break; fi; done && \
-		for _ in {1..5}; do if $(MAKE_INSTALL_COMMAND); then break; fi; done && \
+		for _ in {1..5}; do if $(MAKE_COMMAND); then succeed=1; break; else succeed=0; fi; done && \
+		if [[ $$succeed == 1 ]]; then echo "Build succeed"; else echo "Build failed"; exit 1; fi && \
+		for _ in {1..5}; do if $(MAKE_INSTALL_COMMAND); then succeed=1; break; else succeed=0; fi; done && \
+		if [[ $$succeed == 1 ]]; then echo "Install succeed"; else echo "Install failed"; exit 1; fi && \
 		(sudo cp -rs ${INSTALL_PREFIX}/* /usr/local/ || true) && \
 		python3 $(WORKING_DIR)/../utils/precompile.py --graph --app
 	# build and delocate wheel
@@ -105,35 +108,40 @@ graphscope-manylinux2014-py3-nodocker:
 	sudo yum install java-11-openjdk-devel -y && \
 	sudo yum remove java-1.8.0-openjdk-devel java-1.8.0-openjdk java-1.8.0-openjdk-headless -y && \
 	cd $(WORKING_DIR)/../.. && \
-	if [[ "${ARCH}" == "aarch64" ]]; then python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
-		export AUDITWHEEL_PLAT=manylinux2014_${ARCH}; \
-		python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; fi && \
-	for _ in {1..5}; do if make INSTALL_PREFIX=${INSTALL_PREFIX}; then break; fi; done && \
-	for _ in {1..5}; do if $(MAKE_INSTALL_COMMAND); then break; fi; done && \
-	if [ ${INSTALL_PREFIX} != ${GRAPHSCOPE_HOME} ]; then sudo cp -rsn ${INSTALL_PREFIX}/* ${GRAPHSCOPE_HOME}/; fi && \
-	python3 $(WORKING_DIR)/../utils/precompile.py --graph --app && \
-	export WITH_EXTRA_DATA=ON && \
-	export GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} && \
-	export INSTALL_PREFIX=${INSTALL_PREFIX} && \
+		if [[ "${ARCH}" == "aarch64" ]]; then python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
+			export AUDITWHEEL_PLAT=manylinux2014_${ARCH}; \
+			python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
+		fi && \
+		for _ in {1..5}; do if $(MAKE_COMMAND); then succeed=1; break; else succeed=0; fi; done && \
+		if [[ $$succeed == 1 ]]; then echo "Build succeed"; else echo "Build failed"; exit 1; fi && \
+		for _ in {1..5}; do if $(MAKE_INSTALL_COMMAND); then succeed=1; break; else succeed=0; fi; done && \
+		if [[ $$succeed == 1 ]]; then echo "Install succeed"; else echo "Install failed"; exit 1; fi && \
+		if [ ${INSTALL_PREFIX} != ${GRAPHSCOPE_HOME} ]; then \
+			sudo cp -rsn ${INSTALL_PREFIX}/* ${GRAPHSCOPE_HOME}/; \
+		fi && \
+		python3 $(WORKING_DIR)/../utils/precompile.py --graph --app && \
 	cd $(WORKING_DIR)/../../coordinator && \
-	rm -rf build dist/*.whl && \
-	sudo strip ${INSTALL_PREFIX}/bin/grape_engine && \
-	sudo strip ${INSTALL_PREFIX}/bin/gaia_executor && \
-	sudo strip ${INSTALL_PREFIX}/lib/*.so && \
-	(strip /tmp/gs/builtin/*/*.so || true) && \
-	package_name=gs-include python3 setup.py bdist_wheel && \
-	rm -rf build && \
-	package_name=gs-apps python3 setup.py bdist_wheel && \
-	rm -rf build && \
-	package_name=gs-engine python3 setup.py bdist_wheel && \
-	rm -rf build && \
-	package_name=gs-coordinator python3 setup.py bdist_wheel && \
-	rm -rf build && \
-	package_name=graphscope python3 setup.py bdist_wheel && \
-	cd dist && \
-	for wheel in `ls ./*.whl`; do \
-		(auditwheel repair $$wheel --plat=manylinux2014_${ARCH} && rm $$wheel) || true; \
-	done
+		export WITH_EXTRA_DATA=ON && \
+		export GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} && \
+		export INSTALL_PREFIX=${INSTALL_PREFIX} && \
+		rm -rf build dist/*.whl && \
+		sudo strip ${INSTALL_PREFIX}/bin/grape_engine && \
+		sudo strip ${INSTALL_PREFIX}/bin/gaia_executor && \
+		sudo strip ${INSTALL_PREFIX}/lib/*.so && \
+		(strip /tmp/gs/builtin/*/*.so || true) && \
+		package_name=gs-include python3 setup.py bdist_wheel && \
+		rm -rf build && \
+		package_name=gs-apps python3 setup.py bdist_wheel && \
+		rm -rf build && \
+		package_name=gs-engine python3 setup.py bdist_wheel && \
+		rm -rf build && \
+		package_name=gs-coordinator python3 setup.py bdist_wheel && \
+		rm -rf build && \
+		package_name=graphscope python3 setup.py bdist_wheel && \
+		cd dist && \
+		for wheel in `ls ./*.whl`; do \
+			(auditwheel repair $$wheel --plat=manylinux2014_${ARCH} && rm $$wheel) || true; \
+		done
 
 graphscope-manylinux2014-py3:
 	docker pull ${REGISTRY}/graphscope/graphscope-dev:wheel
