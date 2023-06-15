@@ -653,14 +653,14 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="graph-interactive-workloads">
+          <div class="tex2jax_ignore mathjax_ignore section" id="graph-interactive-workloads">
 <h1>Graph Interactive Workloads<a class="headerlink" href="#graph-interactive-workloads" title="Permalink to this heading">#</a></h1>
 <p>Graph interactive workloads primarily focus on exploring complex graph structures in an
 <strong>interactive</strong> manner. There’re two common interactive workloads, namely</p>
 <ul class="simple">
 <li><p>Graph traversal: This type of workload involves traversing the graph from a set of source vertices
 while satisfying the constraints on the vertices and edges that the traversal passes. Graph
-traversal differs from the <a class="reference internal" href="graph_analytics_workloads.html"><span class="doc std std-doc">analytics</span></a> workload as it typically accesses a small
+traversal differs from the <a class="reference internal" href="graph_analytics_workloads.html"><span class="std std-doc">analytics</span></a> workload as it typically accesses a small
 portion of the graph rather than the whole graph.</p></li>
 <li><p>Pattern Matching: Given a pattern that is a small graph, graph pattern matching aims to compute
 all occurrences (or instances) of the pattern in the graph. Pattern matching often involves relational operations to project, order and group the matched instances.</p></li>
@@ -673,7 +673,7 @@ workloads.</p>
 <div class="section" id="tinkerpop-and-gremlin">
 <h2>Tinkerpop and Gremlin<a class="headerlink" href="#tinkerpop-and-gremlin" title="Permalink to this heading">#</a></h2>
 <p>Apache <a class="reference external" href="https://tinkerpop.apache.org">TinkerPop</a> is an open framework for developing interactive
-graph applications using the <a class="reference external" href="https://tinkerpop.apache.org/gremlin.html">Gremlin</a> query language. We have implemented TinkerPop’s Gremlin Server interface and attempted to support the official traversal steps of Gremlin in GIE. As a result, Gremlin users can easily get started with GIE through the existing <a class="reference internal" href="../interactive_engine/tinkerpop_eco.html"><span class="doc std std-doc">TinkerPop ecosystem</span></a>, including the language wrappers of Python and Gremlin’s console.
+graph applications using the <a class="reference external" href="https://tinkerpop.apache.org/gremlin.html">Gremlin</a> query language. We have implemented TinkerPop’s Gremlin Server interface and attempted to support the official traversal steps of Gremlin in GIE. As a result, Gremlin users can easily get started with GIE through the existing <a class="reference internal" href="../interactive_engine/tinkerpop_eco.html"><span class="std std-doc">TinkerPop ecosystem</span></a>, including the language wrappers of Python and Gremlin’s console.
 For language features, we support both the imperative graph traversal and declarative pattern matching in Gremlin for handling the graph traversal and pattern matching workloads in the interactive context, respectively.</p>
 <div class="section" id="graph-traversal">
 <h3>Graph Traversal<a class="headerlink" href="#graph-traversal" title="Permalink to this heading">#</a></h3>
@@ -682,12 +682,10 @@ where a set of traversers walk a graph step by step according to the correspondi
 and the result of the traversal is the collection of all halted traversers. A traverser is the basic
 unit of data processed by a Gremlin engine. Each traverser maintains a location that is a reference
 to the current vertex, edge or property being visited, and (optionally) the path history with application states.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/cycle_detection.png"
-     alt="Pattern matching example"
-     width="60%"></p>
-<p>A traversal query for cycle detection.
-:::</p>
+<div class="figure align-default" id="id1">
+<a class="reference internal image-reference" href="../_images/cycle_detection.png"><img alt="Pattern matching example" src="../_images/cycle_detection.png" style="width: 60%;" /></a>
+<p class="caption"><span class="caption-text">A traversal query for cycle detection.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</div>
 <p>The above figure shows a simplified anti-money-laundering scenario via cycle detection.
 Below is the corresponding traversal query, which tries to find cyclic paths of length
 <code class="docutils literal notranslate"><span class="pre">k</span></code> starting from a given account.</p>
@@ -704,7 +702,7 @@ Below is the corresponding traversal query, which tries to find cyclic paths of 
 traversers but introduces a name (<code class="docutils literal notranslate"><span class="pre">s</span></code> in this case) for later references. Second, it traverses
 the outgoing <code class="docutils literal notranslate"><span class="pre">transfer</span></code> edges for exact <code class="docutils literal notranslate"><span class="pre">k-1</span></code> times using an <code class="docutils literal notranslate"><span class="pre">out()</span></code> step with a range of lower bound <code class="docutils literal notranslate"><span class="pre">k-1</span></code> (included)
 and upper bound <code class="docutils literal notranslate"><span class="pre">k</span></code> (excluded), while skipping any repeated vertices <code class="docutils literal notranslate"><span class="pre">with()</span></code> the <code class="docutils literal notranslate"><span class="pre">SIMPLE</span></code> path option.
-Such a multi-hop <a class="reference internal" href="../interactive_engine/supported_gremlin_steps.html"><span class="doc std std-doc">path expansion</span></a> is a syntactic sugar we
+Such a multi-hop <a class="reference internal" href="../interactive_engine/supported_gremlin_steps.html"><span class="std std-doc">path expansion</span></a> is a syntactic sugar we
 introduce for easily handling the path-related applications.
 Third, the <code class="docutils literal notranslate"><span class="pre">where</span></code> operator checks if the starting vertex s can be reached by one more step, that is,
 whether a cycle of length <code class="docutils literal notranslate"><span class="pre">k</span></code> is formed. Finally, the <code class="docutils literal notranslate"><span class="pre">limit()</span></code> operator at the end indicates that
@@ -715,12 +713,10 @@ only one such result is needed.</p>
 <p>Different from the imperative traversal query, the <code class="docutils literal notranslate"><span class="pre">match()</span></code> step provides a
 declarative way of expressing the pattern matching queries. In other words, users only need to describe what the pattern is using using <code class="docutils literal notranslate"><span class="pre">match()</span></code>, and the engine will automatically derive the best-possible execution
 plans based on both algorithmic heuristics and cost estimation.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/pattern-matching-example.png"
-     alt="Pattern matching example"
-     width="95%"></p>
-<p>An example of pattern matching.
-:::</p>
+<div class="figure align-default" id="id2">
+<a class="reference internal image-reference" href="../_images/pattern-matching-example.png"><img alt="Pattern matching example" src="../_images/pattern-matching-example.png" style="width: 95%;" /></a>
+<p class="caption"><span class="caption-text">An example of pattern matching.</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</div>
 <p>The above figure shows an example of pattern matching query, where the pattern is a triangle that describes two buyers who knows each other purchase the same product. In the graph, there is a matched instance highlighted in bolder borders, in which pattern vertices <code class="docutils literal notranslate"><span class="pre">v1</span></code>, <code class="docutils literal notranslate"><span class="pre">v2</span></code> and <code class="docutils literal notranslate"><span class="pre">v3</span></code> are matched by vertices <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">5</span></code>, respectively.</p>
 <div class="highlight-groovy notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">match</span><span class="o">(</span>
 <span class="w">  </span><span class="k">as</span><span class="o">(</span><span class="s1">&#39;v1&#39;</span><span class="o">).</span><span class="na">both</span><span class="o">(</span><span class="s1">&#39;Knows&#39;</span><span class="o">).</span><span class="na">as</span><span class="o">(</span><span class="s1">&#39;v2&#39;</span><span class="o">),</span>

@@ -653,10 +653,10 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="faqs-for-gie-gremlin-usage">
+          <div class="tex2jax_ignore mathjax_ignore section" id="faqs-for-gie-gremlin-usage">
 <h1>FAQs for GIE Gremlin Usage<a class="headerlink" href="#faqs-for-gie-gremlin-usage" title="Permalink to this heading">#</a></h1>
-<div class="section" id="what-s-the-difference-between-inner-id-and-property-id">
-<h2>What’s the difference between Inner ID and Property ID ?<a class="headerlink" href="#what-s-the-difference-between-inner-id-and-property-id" title="Permalink to this heading">#</a></h2>
+<div class="section" id="whats-the-difference-between-inner-id-and-property-id">
+<h2>What’s the difference between Inner ID and Property ID ?<a class="headerlink" href="#whats-the-difference-between-inner-id-and-property-id" title="Permalink to this heading">#</a></h2>
 <p>The main difference between Inner ID and Property ID is that Inner ID is a system-assigned identifier used internally by the graph engine for efficient data storage and retrieval, while Property ID is a user-defined property within a specific entity type.</p>
 <p>For example, in the LDBC (Linked Data Benchmark Council) schema, we have an entity type called ‘PERSON’, which has its own list of properties, consisting of ‘id’, ‘name’ and ‘birthday’. In the actual storage, we maintain key-value pairs for each instance of entity type ‘PERSON’, and internally maintain a unique ID to differentiate each such instance. The unique ID in this context is referred to as the Inner ID, and the ‘id’ in the attribute list is the Property ID.</p>
 <p>GIE Gremlin provides different approaches to query a vertex instance by its Inner ID or Property ID, similar to:</p>
@@ -834,7 +834,7 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">FAQs for GIE Gremlin Usage</a><ul>
-<li><a class="reference internal" href="#what-s-the-difference-between-inner-id-and-property-id">What’s the difference between Inner ID and Property ID ?</a></li>
+<li><a class="reference internal" href="#whats-the-difference-between-inner-id-and-property-id">What’s the difference between Inner ID and Property ID ?</a></li>
 <li><a class="reference internal" href="#how-to-use-path-expand-in-gie-gremlin">How to use path expand in GIE Gremlin ?</a></li>
 <li><a class="reference internal" href="#how-to-filter-data-in-gie-gremlin-like-sql">How to filter data in GIE Gremlin like SQL ?</a></li>
 <li><a class="reference internal" href="#how-to-aggregate-data-in-gie-gremlin-like-sql">How to aggregate data in GIE Gremlin like SQL?</a><ul>

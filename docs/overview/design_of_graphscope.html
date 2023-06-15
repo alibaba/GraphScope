@@ -653,7 +653,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="design-of-graphscope">
+          <div class="tex2jax_ignore mathjax_ignore section" id="design-of-graphscope">
 <h1>Design of GraphScope<a class="headerlink" href="#design-of-graphscope" title="Permalink to this heading">#</a></h1>
 <p>Real-life graph computation applications are often more complex than the workloads we’ve seen so far, which highlights the need for a flexible and intelligent design for the graph processing system.
 In this section, we will introduce the modular design of GraphScope and how it addresses the diverse needs of graph computation workloads.</p>
@@ -668,12 +668,10 @@ transactions and reviews collaboratively to boost their ratings and rankings.
 In practice, all users and transactions can be represented as a large-scale graph
 containing vertices such as buyers, sellers, and items, and edges representing
 buying, selling, or reviewing relationships.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/gs-example.png"
-     alt="An example in e-commerce."
-     width="80%"></p>
-<p>An example in e-commerce
-:::</p>
+<div class="figure align-default" id="id1">
+<a class="reference internal image-reference" href="../_images/gs-example.png"><img alt="An example in e-commerce." src="../_images/gs-example.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">An example in e-commerce</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</div>
 <p>To identify suspicious users and transactions in the transaction graph, an anti-fraud workflow may include the following steps:</p>
 <ol class="arabic simple">
 <li><p>Construct the graph using a data-parallel system from external storage.</p></li>
@@ -706,12 +704,10 @@ offering a comprehensive and efficient platform for large-scale graph computatio
 To achieve this, various components must interact seamlessly,
 including cluster management (deployment) software, graph storage (for input, output, and intermediate results),
 distributed execution engines, language constructs, and development tools.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/gs-workflow.png"
-     alt="GraphScope workflow."
-     width="80%"></p>
-<p>GraphScope workflow
-:::</p>
+<div class="figure align-default" id="id2">
+<a class="reference internal image-reference" href="../_images/gs-workflow.png"><img alt="GraphScope workflow." src="../_images/gs-workflow.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">GraphScope workflow</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</div>
 <div class="section" id="application-layer">
 <h3>Application layer<a class="headerlink" href="#application-layer" title="Permalink to this heading">#</a></h3>
 <p>Graph processing often requires customized applications for each specific task.
@@ -787,7 +783,7 @@ Next, a code-gen module generates the physical plan and applies it to Pegasus,
 a distributed data-parallel compute engine based on the cyclic dataflow computation model at the core of GIE.
 In the storage layer, a dynamic graph store is deployed and responsible for storing the graph data.
 With this combination, GraphScope provides a high-performance and interactive query answering service for BI analysis.</p>
-<p><a class="reference internal" href="../interactive_engine/tutorial_ldbc_gremlin.html"><span class="doc std std-doc">Read more about GraphScope for traversal queries</span></a></p>
+<p><a class="reference internal" href="../interactive_engine/tutorial_ldbc_gremlin.html"><span class="std std-doc">Read more about GraphScope for traversal queries</span></a></p>
 </div>
 <div class="section" id="graphscope-for-high-qps-queries">
 <h3>GraphScope for high QPS queries<a class="headerlink" href="#graphscope-for-high-qps-queries" title="Permalink to this heading">#</a></h3>
@@ -812,7 +808,7 @@ a processing system proposed in <a class="reference external" href="https://dl.a
 GRAPE distinguishes itself from prior systems by its ability to parallelize sequential graph algorithms as a whole.
 In GRAPE, sequential algorithms can be easily “plugged into” with only minor changes, allowing them to efficiently handle large graphs.
 To achieve high performance, deployments for this scenario typically choose an in-memory graph store for the storage layer.</p>
-<p><span class="xref myst">Read more about GraphScope for analytics</span></p>
+<p><a class="reference internal" href="#graphscope_for_graph_analytics.md"><span class="xref myst">Read more about GraphScope for analytics</span></a></p>
 </div>
 <div class="section" id="graphscope-for-learning">
 <h3>GraphScope for learning<a class="headerlink" href="#graphscope-for-learning" title="Permalink to this heading">#</a></h3>
@@ -826,7 +822,7 @@ and also includes a rich set of example models. Users can flexibly choose Tensor
 To enable a flexible and cost-effective resource configuration,
 the processes of sampling and training in GLE are decoupled,
 allowing each to be independently scaled to achieve the best end-to-end throughput.</p>
-<p><span class="xref myst">Read more about GraphScope for learning</span></p>
+<p><a class="reference internal" href="#graphscope_for_learning.md"><span class="xref myst">Read more about GraphScope for learning</span></a></p>
 </div>
 </div>
 </div>

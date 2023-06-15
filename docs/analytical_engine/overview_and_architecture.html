@@ -653,18 +653,16 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="overview-and-architecture">
+          <div class="tex2jax_ignore mathjax_ignore section" id="overview-and-architecture">
 <h1>Overview and Architecture<a class="headerlink" href="#overview-and-architecture" title="Permalink to this heading">#</a></h1>
 <p>In GraphScope, Graph Analytical Engine (GAE) is responsible for handling various graph analytics algorithms. GAE derives from <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">GRAPE</a>, a graph processing system proposed on SIGMOD 2017. GRAPE differs from prior systems in its ability to parallelize sequential graph algorithms as a whole. Different from other parallel graph processing systems which need to recast the existing sequential algorithm into <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html">a new model</a> (e.g., Pregel and GAS), in GRAPE, sequential algorithms can be easily “plugged into” with only minor changes and get parallelized to handle large graphs efficiently. In addition to the ease of programming, GRAPE is designed to be highly efficient and flexible, to cope the scale, variety and complexity from real-life graph applications.</p>
 <div class="section" id="architecture">
 <h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this heading">#</a></h2>
 <p>GAE is a full-fledged, in-production system for graph analytics algorithms over large scale graph data. As shown in the following figure, there exist three major layers in GAE, namely storage layer, engine layer and application layer. Next, we give an overview to each of them below.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/gae_arch.png"
-     alt="Architecture of GAE."
-     width="70%"></p>
-<p>Architecture of GAE.
-:::</p>
+<div class="figure align-default" id="id1">
+<a class="reference internal image-reference" href="../_images/gae_arch.png"><img alt="Architecture of GAE." src="../_images/gae_arch.png" style="width: 70%;" /></a>
+<p class="caption"><span class="caption-text">Architecture of GAE.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</div>
 <ul class="simple">
 <li><p>Storage layer: Graph data in real-life is extremely large scale, and thus graph storage stores graph data in a distributed fashion. The graph storage consists of different graph formats with different features. Although there exist diverse types of graph storages, unified interfaces for graph storage are provided for GAE as well as other computation engines of GraphScope, and thus GAE does not care about how each type of graph storage is implemented.</p></li>
 <li><p>Engine layer: At the core of GAE is its engine layer. It is built on top of GRAPE, which provides many efficient graph-specific optimizations. Based on GRAPE, GAE offers three programming models for users (i.e., Pregel, PIE, and FLASH), and users can develop their own graph applications through user-friendly interfaces. The execution engine of GAE is written in C++ and supports other programming languages (i.e., Java and Python) through FFIs (Foreign Function Interfaces), allowing for better integration with other big data ecosystems. Additionally, GAE supports both batch and incremental computation patterns, giving users the freedom to choose the property computation pattern according to their demands.</p></li>
@@ -697,7 +695,7 @@ MathJax = {
 </div>
 <div class="section" id="incremental-computation-engine">
 <h3>Incremental Computation Engine<a class="headerlink" href="#incremental-computation-engine" title="Permalink to this heading">#</a></h3>
-<p>GAE also supports incremental computation over graph data via the <a class="reference external" href="http://vldb.org/pvldb/vol14/p1613-gong.pdf">Ingress</a> engine, where we apply a batch algorithm to compute the result over the original graph <em>G</em> once, followed by employing an incremental algorithm to adjust the old result in response to the input changes $\Delta$<em>G</em> to <em>G</em>. To achieve this , based on the dynamic graph storage, we have implemented an <em>Ingress fragment</em> which can capture the changes between original and new graphs. Please check out <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/ingress.html">our detailed introduction to the Ingress engine</a> for more details.</p>
+<p>GAE also supports incremental computation over graph data via the <a class="reference external" href="http://vldb.org/pvldb/vol14/p1613-gong.pdf">Ingress</a> engine, where we apply a batch algorithm to compute the result over the original graph <em>G</em> once, followed by employing an incremental algorithm to adjust the old result in response to the input changes <span class="math notranslate nohighlight">\(\Delta\)</span><em>G</em> to <em>G</em>. To achieve this , based on the dynamic graph storage, we have implemented an <em>Ingress fragment</em> which can capture the changes between original and new graphs. Please check out <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/ingress.html">our detailed introduction to the Ingress engine</a> for more details.</p>
 </div>
 </div>
 <div class="section" id="application-layer">
@@ -801,5 +799,7 @@ MathJax = {
     <script src="../_static/scripts/furo.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>
 </html>

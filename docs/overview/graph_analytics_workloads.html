@@ -653,47 +653,37 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="graph-analytics-workloads">
+          <div class="tex2jax_ignore mathjax_ignore section" id="graph-analytics-workloads">
 <h1>Graph Analytics Workloads<a class="headerlink" href="#graph-analytics-workloads" title="Permalink to this heading">#</a></h1>
 <div class="section" id="what-is-graph-analytics">
 <h2>What is Graph Analytics<a class="headerlink" href="#what-is-graph-analytics" title="Permalink to this heading">#</a></h2>
 <p>A graph is a data structure composed of vertices (or nodes) connected by edges. Graphs can represent many real-world data, such as social networks, transportation networks, and protein interaction networks, as shown in the following figure.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/graph_examples.png"
-     alt="Examples of graphs"
-     width="80%"></p>
-<p>Examples of graphs.
-:::</p>
+<div class="figure align-default" id="id1">
+<a class="reference internal image-reference" href="../_images/graph_examples.png"><img alt="Examples of graphs" src="../_images/graph_examples.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">Examples of graphs.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</div>
 <p>In general, any computation on graph data can be considered graph analytics. The objective of graph analytics is to uncover and utilize the structure of graphs, providing insights into the relationships and connections between different elements in graphs. Computation patterns in graph analytics can vary significantly: some involve only a small number of vertices/edges, while others access a large portion or even all vertices/edges of a graph. In GraphScope, we refer to the former as <em>graph traversal</em> and the latter as <em>graph analytics</em>, unless specified otherwise.</p>
 <p>There are various types of graph analytics algorithms, which typically iterate over a large portion or all vertices/edges of a graph to discover hidden insights within the graph data. Common graph analytics algorithms include general analytics algorithms (e.g., PageRank, shortest path, and maximum flow), community detection algorithms (e.g., maximum clique/bi-clique, connected components, Louvain, and label propagation), and graph mining algorithms (e.g., frequent structure mining and graph pattern discovery). Below, we provide several examples to illustrate how graph analytics algorithms operate.</p>
 <p>The <a class="reference external" href="https://en.wikipedia.org/wiki/PageRank">PageRank</a> algorithm measures the importance of each vertex in a graph by iteratively counting the number and importance of its neighbors. This helps determine a rough estimate of a vertex’s importance. Specifically, the PageRank computation consists of multiple iterations, with each vertex initially assigned a value indicating its importance. During each iteration, vertices sum the values of their neighbors pointing to them and update their own values accordingly.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/pagerank.png"
-     alt="PageRank algorithm"
-     width="40%"></p>
-<p>PageRank algorithm (https://snap-stanford.github.io/cs224w-notes/network-methods/pagerank).
-:::</p>
+<div class="figure align-default" id="id2">
+<a class="reference internal image-reference" href="../_images/pagerank.png"><img alt="PageRank algorithm" src="../_images/pagerank.png" style="width: 40%;" /></a>
+<p class="caption"><span class="caption-text">PageRank algorithm (<a class="reference external" href="https://snap-stanford.github.io/cs224w-notes/network-methods/pagerank">https://snap-stanford.github.io/cs224w-notes/network-methods/pagerank</a>).</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</div>
 <p><a class="reference external" href="https://en.wikipedia.org/wiki/Shortest_path_problem">The shortest path problem</a> aims to find the most efficient path between two vertices by minimizing the sum of the weights of its constituent edges. Several well-known algorithms, such as Dijkstra’s algorithm and Bellman–Ford algorithm, have been proposed to solve this problem. For instance, Dijkstra’s algorithm selects a single vertex as the “source” vertex and attempts to find the shortest paths from the source to all other vertices in the graph. The computation of Dijkstra’s algorithm involves multiple iterations. In each iteration, a vertex with a known shortest path to the source is selected, and the shortest path values of its neighbors are updated, as demonstrated in the following <a class="reference external" href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">figure</a>.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/sssp.gif"
-     alt="Dijkstra's algorithm"
-     width="40%"></p>
-<p>Dijkstra’s algorithm (https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm).
-:::</p>
+<div class="figure align-default" id="id3">
+<a class="reference internal image-reference" href="../_images/sssp.gif"><img alt="Dijkstra's algorithm" src="../_images/sssp.gif" style="width: 40%;" /></a>
+<p class="caption"><span class="caption-text">Dijkstra’s algorithm (<a class="reference external" href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">https://en.wikipedia.org/wiki/Dijkstra’s_algorithm</a>).</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
+</div>
 <p><a class="reference external" href="https://en.wikipedia.org/wiki/Community_structure">Community detection algorithms</a> (e.g., Louvain) aim to identify groups of vertices that are more densely connected internally than with other vertices in the graph. These algorithms work by having each vertex repeatedly send its label to its neighbors and update its own label based on specific rules after receiving labels from its neighbors. After multiple iterations, vertices that are densely connected internally will have the same or similar labels.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/comm_detection.png"
-     alt="Community detection algorithm"
-     width="40%"></p>
-<p>Community detection algorithm (https://towardsdatascience.com/community-detection-algorithms-9bd8951e7dae).
-:::</p>
+<div class="figure align-default" id="id4">
+<a class="reference internal image-reference" href="../_images/comm_detection.png"><img alt="Community detection algorithm" src="../_images/comm_detection.png" style="width: 40%;" /></a>
+<p class="caption"><span class="caption-text">Community detection algorithm (<a class="reference external" href="https://towardsdatascience.com/community-detection-algorithms-9bd8951e7dae">https://towardsdatascience.com/community-detection-algorithms-9bd8951e7dae</a>).</span><a class="headerlink" href="#id4" title="Permalink to this image">#</a></p>
+</div>
 <p>The examples above demonstrate how graph analytics algorithms analyze properties of vertices and edges within a graph. In real-world applications, many problems can be modeled as graph analytics problems. For instance, Google Search represents websites and their interconnections as a graph, applying the PageRank algorithm to identify the most important websites on the Internet. Similarly, a city’s road map can be modeled as a graph, with the shortest path algorithm assisting in path planning for logistics and delivery services. By considering social media users as a graph, community detection techniques (e.g., Louvain) can help discover users with shared interests and maintain strong connections between them.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/analytics_examples.png"
-     alt="Applications of graph analytics"
-     width="80%"></p>
-<p>Applications of graph analytics.
-:::</p>
+<div class="figure align-default" id="id5">
+<a class="reference internal image-reference" href="../_images/analytics_examples.png"><img alt="Applications of graph analytics" src="../_images/analytics_examples.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">Applications of graph analytics.</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
+</div>
 </div>
 <div class="section" id="challenges-of-graph-analytics-on-large-graphs">
 <h2>Challenges of Graph Analytics on Large Graphs<a class="headerlink" href="#challenges-of-graph-analytics-on-large-graphs" title="Permalink to this heading">#</a></h2>

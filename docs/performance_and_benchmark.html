@@ -653,7 +653,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="performance-and-benchmark">
+          <div class="tex2jax_ignore mathjax_ignore section" id="performance-and-benchmark">
 <h1>Performance and Benchmark<a class="headerlink" href="#performance-and-benchmark" title="Permalink to this heading">#</a></h1>
 <p>We evaluated performance of GraphScope with the benchmarks provided by <a class="reference external" href="https://ldbcouncil.org/">Linked Data Benchmark Council (LDBC)</a>. Specifically, we evaluated <strong>Graph Analytical Engine (GAE)</strong> with <a class="reference external" href="http://graphalytics.org/">LDBC Graph Analytics Benchmark</a>, which is an industrial-grade benchmark that enables the objective comparison of graph analysis platforms. We also evaluated <strong>Graph Interactive Engine (GIE)</strong> with LDBC Social Network Benchmark, which focuses on graph database management systems and includes two workloads for interactive transactional queries and analytical queries. We compared GraphScope’s performance to the state-of-the-art systems including PowerGraph, GeminiGraph, Plato, Neo4j, etc. and found GraphScope achieves high performance in most cases.</p>
 <div class="section" id="graph-analytical-engine">
@@ -892,7 +892,7 @@ The best results are marked in <strong>bold</strong>.</p>
 <li><p><strong>X</strong>  indicates the results produced are not consistent with the verified results provided by LDBC.</p></li>
 </ul>
 <p>The inconsistences of PageRank come from different settings on convergence conditions.
-To give a comprehensive comparison, we made our best efforts to revise our application(<span class="xref myst">pagerank_local.h</span>), making them output the same results as competitor systems.
+To give a comprehensive comparison, we made our best efforts to revise our application(<a class="reference internal" href="#examples/analytical_apps/pagerank/pagerank_local.h"><span class="xref myst">pagerank_local.h</span></a>), making them output the same results as competitor systems.
 The performance results are shown as below.</p>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="colwidths-auto docutils align-default">

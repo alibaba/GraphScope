@@ -653,9 +653,9 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="standalone-deployment-for-gie">
+          <div class="tex2jax_ignore mathjax_ignore section" id="standalone-deployment-for-gie">
 <h1>Standalone Deployment for GIE<a class="headerlink" href="#standalone-deployment-for-gie" title="Permalink to this heading">#</a></h1>
-<p>We have demonstrated <a class="reference internal" href="getting_started.html"><span class="doc std std-doc">how to execute interactive queries</span></a> easily by installing Graphscope via <code class="docutils literal notranslate"><span class="pre">pip</span></code> on a local machine. However, in real-life applications, graphs are often too large to fit on a single machine. In such cases, Graphscope can be deployed on a cluster, such as a <span class="xref myst">self-managed k8s cluster</span>, for processing large-scale graphs. But you may wonder, “what if I only need the GIE engine and not the whole package of GraphScope?” This tutorial will walk you through the process of standalone deployment of GIE on a self-managed k8s cluster.</p>
+<p>We have demonstrated <a class="reference internal" href="getting_started.html"><span class="std std-doc">how to execute interactive queries</span></a> easily by installing Graphscope via <code class="docutils literal notranslate"><span class="pre">pip</span></code> on a local machine. However, in real-life applications, graphs are often too large to fit on a single machine. In such cases, Graphscope can be deployed on a cluster, such as a <a class="reference internal" href="#../deploy_graphscope_on_self_managed_k8s.md"><span class="xref myst">self-managed k8s cluster</span></a>, for processing large-scale graphs. But you may wonder, “what if I only need the GIE engine and not the whole package of GraphScope?” This tutorial will walk you through the process of standalone deployment of GIE on a self-managed k8s cluster.</p>
 <p>Throughout the tutorial, we assume all machines are running Linux system.
 We do not guarantee that it works as smoothly as Linux on the other platform.
 For your reference, we’ve tested the tutorial on Ubuntu 20.04.</p>
@@ -666,7 +666,7 @@ For your reference, we’ve tested the tutorial on Ubuntu 20.04.</p>
 <li><p>Python &gt;= 3.9</p></li>
 </ul>
 <p>To get started, you need to prepare a Kubernetes Cluster to continue.</p>
-<p>Incase you doesn’t have one, you could refer to the instruction of <span class="xref myst">create kubernetes cluster</span>.</p>
+<p>Incase you doesn’t have one, you could refer to the instruction of <a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html#prepare-a-kubernetes-cluster"><span class="std std-ref">create kubernetes cluster</span></a>.</p>
 </div>
 <div class="section" id="deploy-your-first-gie-service">
 <h2>Deploy Your First GIE Service<a class="headerlink" href="#deploy-your-first-gie-service" title="Permalink to this heading">#</a></h2>
@@ -732,7 +732,7 @@ and modify the <code class="docutils literal notranslate"><span class="pre">host
 <p>You should see the GIE Frontend service endpoint as <code class="docutils literal notranslate"><span class="pre">&lt;ip&gt;:&lt;gremlinPort&gt;</span></code>.</p>
 </li>
 <li><p>Connect to the GIE frontend service using the Tinkerpop’s official SDKs or Gremlin console, which
-can be found <a class="reference internal" href="tinkerpop_eco.html"><span class="doc std std-doc">here</span></a>.</p></li>
+can be found <a class="reference internal" href="tinkerpop_eco.html"><span class="std std-doc">here</span></a>.</p></li>
 </ul>
 </div>
 <div class="section" id="remove-the-gie-service">

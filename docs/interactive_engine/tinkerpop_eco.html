@@ -653,14 +653,14 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="apache-tinkerpop-ecosystem">
+          <div class="tex2jax_ignore mathjax_ignore section" id="apache-tinkerpop-ecosystem">
 <h1>Apache TinkerPop Ecosystem<a class="headerlink" href="#apache-tinkerpop-ecosystem" title="Permalink to this heading">#</a></h1>
-<p><a class="reference external" href="http://tinkerpop.apache.org/">Apache TinkerPop</a> is an open framework for developing interactive graph applications using the Gremlin query language.  GIE implements TinkerPop’s <a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/#gremlin-server">Gremlin Server</a> interface so that the system can seamlessly interact with the TinkerPop ecosystem, including development tools such as [Gremlin Console] (https://tinkerpop.apache.org/docs/current/reference/#gremlin-console) and language wrappers such as Java and Python.</p>
+<p><a class="reference external" href="http://tinkerpop.apache.org/">Apache TinkerPop</a> is an open framework for developing interactive graph applications using the Gremlin query language.  GIE implements TinkerPop’s <a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/#gremlin-server">Gremlin Server</a> interface so that the system can seamlessly interact with the TinkerPop ecosystem, including development tools such as [Gremlin Console] (<a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/#gremlin-console">https://tinkerpop.apache.org/docs/current/reference/#gremlin-console</a>) and language wrappers such as Java and Python.</p>
 <p>All you need to connect with existing Tinkerpop ecosystem is to obtain the GIE Frontend service endpoint.
 How to do that?</p>
 <ul class="simple">
-<li><p>Follow the <span class="xref myst">instruction</span> while deploying GIE in a K8s cluster,</p></li>
-<li><p>Follow the <span class="xref myst">instruction</span> while starting GIE on a local machine.</p></li>
+<li><p>Follow the <a class="reference internal" href="deployment.html#deploy-your-first-gie-service"><span class="std std-ref">instruction</span></a> while deploying GIE in a K8s cluster,</p></li>
+<li><p>Follow the <a class="reference internal" href="dev_and_test.html#manually-start-the-gie-services"><span class="std std-ref">instruction</span></a> while starting GIE on a local machine.</p></li>
 </ul>
 <div class="section" id="connecting-gremlin-within-python">
 <h2>Connecting Gremlin within Python<a class="headerlink" href="#connecting-gremlin-within-python" title="Permalink to this heading">#</a></h2>
@@ -684,7 +684,7 @@ How to do that?</p>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
 <p>A simpler option is to use the <code class="docutils literal notranslate"><span class="pre">gremlin</span></code> object for submitting Gremlin queries through
-<a class="reference internal" href="getting_started.html"><span class="doc std std-doc">GraphScope’s python SDK</span></a>, which is a wrapper that encompasses Tinkerpop’s
+<a class="reference internal" href="getting_started.html"><span class="std std-doc">GraphScope’s python SDK</span></a>, which is a wrapper that encompasses Tinkerpop’s
 Gremlin-Python and will automatically acquire the endpoint.</p>
 </div>
 </div>
@@ -746,19 +746,19 @@ more succinct expression. However, because of the distributed nature and practic
 <li><p>Functionalities</p>
 <ul>
 <li><p>Graph mutations.</p></li>
-<li><p>Lambda and Groovy expressions and functions, such as the <code class="docutils literal notranslate"><span class="pre">.map{&lt;expression&gt;}</span></code>, the <code class="docutils literal notranslate"><span class="pre">.by{&lt;expression&gt;}</span></code>, and the <code class="docutils literal notranslate"><span class="pre">.filter{&lt;expression&gt;}</span></code> functions, and <code class="docutils literal notranslate"><span class="pre">System.currentTimeMillis()</span></code>, etc. By the way, we have provided the <code class="docutils literal notranslate"><span class="pre">expr()</span></code> <a class="reference internal" href="supported_gremlin_steps.html"><span class="doc std std-doc">syntactic sugar</span></a> to handle complex expressions.</p></li>
+<li><p>Lambda and Groovy expressions and functions, such as the <code class="docutils literal notranslate"><span class="pre">.map{&lt;expression&gt;}</span></code>, the <code class="docutils literal notranslate"><span class="pre">.by{&lt;expression&gt;}</span></code>, and the <code class="docutils literal notranslate"><span class="pre">.filter{&lt;expression&gt;}</span></code> functions, and <code class="docutils literal notranslate"><span class="pre">System.currentTimeMillis()</span></code>, etc. By the way, we have provided the <code class="docutils literal notranslate"><span class="pre">expr()</span></code> <a class="reference internal" href="supported_gremlin_steps.html"><span class="std std-doc">syntactic sugar</span></a> to handle complex expressions.</p></li>
 <li><p>Gremlin traversal strategies.</p></li>
 <li><p>Transactions.</p></li>
 <li><p>Secondary index isn’t currently available. Primary keys will be automatically indexed.</p></li>
 </ul>
 </li>
-<li><p>Gremlin Steps: See <a class="reference internal" href="supported_gremlin_steps.html"><span class="doc std std-doc">here</span></a> for a complete supported/unsupported list of Gremlin.</p></li>
+<li><p>Gremlin Steps: See <a class="reference internal" href="supported_gremlin_steps.html"><span class="std std-doc">here</span></a> for a complete supported/unsupported list of Gremlin.</p></li>
 </ul>
 </div>
 <div class="section" id="property-graph-constraints">
 <h2>Property Graph Constraints<a class="headerlink" href="#property-graph-constraints" title="Permalink to this heading">#</a></h2>
 <p>The current release of GIE supports two graph stores: one leverages <a class="reference external" href="https://v6d.io/">Vineyard</a> to supply an in-memory store for immutable
-graph data, and the other, called <a class="reference internal" href="../storage_engine/groot.html"><span class="doc std std-doc">groot</span></a>, is developed on top of <a class="reference external" href="https://rocksdb.org/">RocksDB</a> that also provides real-time write and data consistency via <a class="reference external" href="https://en.wikipedia.org/wiki/Snapshot_isolation">snapshot isolation</a>. Both stores support graph data being partitioned across multiple servers. By design, the following constraints are introduced (on both stores):</p>
+graph data, and the other, called <a class="reference internal" href="../storage_engine/groot.html"><span class="std std-doc">groot</span></a>, is developed on top of <a class="reference external" href="https://rocksdb.org/">RocksDB</a> that also provides real-time write and data consistency via <a class="reference external" href="https://en.wikipedia.org/wiki/Snapshot_isolation">snapshot isolation</a>. Both stores support graph data being partitioned across multiple servers. By design, the following constraints are introduced (on both stores):</p>
 <ul class="simple">
 <li><p>Each graph has a schema comprised of the edge labels, property keys, and vertex labels used therein.</p></li>
 <li><p>Each vertex type or label has a primary key (property) defined by user. The system will automatically

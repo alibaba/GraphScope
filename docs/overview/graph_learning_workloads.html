@@ -653,7 +653,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="graph-learning-workloads">
+          <div class="tex2jax_ignore mathjax_ignore section" id="graph-learning-workloads">
 <h1>Graph Learning Workloads<a class="headerlink" href="#graph-learning-workloads" title="Permalink to this heading">#</a></h1>
 <div class="section" id="what-is-graph-neural-network">
 <h2>What is Graph Neural Network<a class="headerlink" href="#what-is-graph-neural-network" title="Permalink to this heading">#</a></h2>
@@ -708,11 +708,11 @@ a user-defined GNN model using **GLE**. -->
 <div class="section" id="typical-gnn-models">
 <h2>Typical GNN Models<a class="headerlink" href="#typical-gnn-models" title="Permalink to this heading">#</a></h2>
 <p>First, let’s briefly rewind the concept of GNN.
-Given a graph $G = (V,E)$, where each vertex is associated with a vector
+Given a graph <span class="math notranslate nohighlight">\(G = (V,E)\)</span>, where each vertex is associated with a vector
 of data as its feature. Graph Neural Networks(GNNs) learn a low-dimensional
-embedding for each target vertex by stacking multiple GNNs layers $L$.
+embedding for each target vertex by stacking multiple GNNs layers <span class="math notranslate nohighlight">\(L\)</span>.
 For each layer, every vertex updates its activation by aggregating features
-or hidden activations of its neighbors $N(v),v \in V$.</p>
+or hidden activations of its neighbors <span class="math notranslate nohighlight">\(N(v),v \in V\)</span>.</p>
 <p>There are several types of GNN models used for various tasks, such as
 node classification, link prediction, and graph classification. Here are some
 of the most common types of GNN models:</p>
@@ -948,5 +948,7 @@ demonstrating the use of GLE for offline training and online inference.</p>
     <script src="../_static/scripts/furo.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>
 </html>

@@ -740,6 +740,14 @@ the modern graph, which has been widely used in <a class="reference external" hr
 </pre></div>
 </div>
 <p>The number 6 is printed, which is the number of vertices in modern graph.</p>
+<div class="section" id="customize-configurations-for-gie-instance">
+<h3>Customize Configurations for GIE instance<a class="headerlink" href="#customize-configurations-for-gie-instance" title="Permalink to this heading">#</a></h3>
+<p>You could pass additional key-value pairs to customize the startup configuration of GIE, for example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the timeout value to 10 min</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;pegasus.timeout&#39;</span><span class="p">:</span> <span class="mi">600000</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="whats-the-next">
 <h2>What’s the Next<a class="headerlink" href="#whats-the-next" title="Permalink to this heading">#</a></h2>
@@ -815,7 +823,10 @@ business intelligence workloads. <a class="reference internal" href="guide_and_e
             <ul>
 <li><a class="reference internal" href="#">Getting Started</a><ul>
 <li><a class="reference internal" href="#installation">Installation</a></li>
-<li><a class="reference internal" href="#running-graphscope-interactive-engine-on-local">Running GraphScope Interactive Engine on Local</a></li>
+<li><a class="reference internal" href="#running-graphscope-interactive-engine-on-local">Running GraphScope Interactive Engine on Local</a><ul>
+<li><a class="reference internal" href="#customize-configurations-for-gie-instance">Customize Configurations for GIE instance</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#whats-the-next">What’s the Next</a></li>
 </ul>
 </li>

@@ -653,17 +653,15 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="deploy-on-k8s-cluster">
+          <div class="tex2jax_ignore mathjax_ignore section" id="deploy-on-k8s-cluster">
 <h1>Deploy on K8s Cluster<a class="headerlink" href="#deploy-on-k8s-cluster" title="Permalink to this heading">#</a></h1>
 <p>To processing large-scale graph in a distributed environment, GraphScope is designed to be deployed on a Kubernetes(K8s) cluster.</p>
 <p>As shown in the figure, you could deploy and manage the workloads of GraphScope through a python client, which communicates with the
 GraphScope engines on the K8s cluster through a gRPC service.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/k8s.png"
-     alt="GraphScope on K8s"
-     width="80%"></p>
-<p>GraphScope on K8s.
-:::</p>
+<div class="figure align-default" id="id1">
+<a class="reference internal image-reference" href="../_images/k8s.png"><img alt="GraphScope on K8s" src="../_images/k8s.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">GraphScope on K8s.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</div>
 <p>A cluster on k8s contains a pod running the coordinator, and a <code class="docutils literal notranslate"><span class="pre">deployment</span></code> of GraphScope engines.</p>
 <p>The coordinator in GraphScope is the endpoint of the backend. It manages the connections from python client via grpc, and takes responsibility for applying or releasing the pods for interactive, analytical and learning engines.</p>
 <p>This document describes how to deploy GraphScope on a K8s cluster.</p>
@@ -709,12 +707,10 @@ standalone Kubernetes server and client.</p>
 </pre></div>
 </div>
 <p>A normal status should look like this</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/minikube_status.png"
-     alt="Minikube Status"
-     width="60%"></p>
-<p>minikube status
-:::</p>
+<div class="figure align-default" id="id2">
+<a class="reference internal image-reference" href="../_images/minikube_status.png"><img alt="Minikube Status" src="../_images/minikube_status.png" style="width: 60%;" /></a>
+<p class="caption"><span class="caption-text">minikube status</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</div>
 <p>The output should show that the cluster is running, and the kubectl context is set to the minikube context.
 Once started, minikube generates a <a class="reference external" href="https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/">kubeconfig</a> file for you to communicate and interact with the cluster.</p>
 <p>The default location of this file is <code class="docutils literal notranslate"><span class="pre">~/.kube/config</span></code>, which should look like this:</p>
@@ -847,17 +843,15 @@ Once the images are pulled, you can expect GraphScope to be up and running in le
 </pre></div>
 </div>
 <p>The output should show the status of the GraphScope pods.  Here’s an example</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/kubectl_get_po_gs.png"
-     alt="Pods of GraphScope"
-     width="60%"></p>
-<p>Pods of GraphScope
-:::</p>
+<div class="figure align-default" id="id3">
+<a class="reference internal image-reference" href="../_images/kubectl_get_po_gs.png"><img alt="Pods of GraphScope" src="../_images/kubectl_get_po_gs.png" style="width: 60%;" /></a>
+<p class="caption"><span class="caption-text">Pods of GraphScope</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
+</div>
 <p>Wait until all pods are running before proceeding.</p>
 <p>You can further inspect the status of pods using <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">describe</span> <span class="pre">pod</span> <span class="pre">&lt;pod-name&gt;</span></code>.</p>
 <p>That’s it! You now have a running instance of GraphScope in a Kubernetes cluster.</p>
 <p>You can use GraphScope to analyze graphs as usual.
-Check out the <a class="reference internal" href="../overview/getting_started.html"><span class="doc std std-doc">Getting Started</span></a> guide for more information.</p>
+Check out the <a class="reference internal" href="../overview/getting_started.html"><span class="std std-doc">Getting Started</span></a> guide for more information.</p>
 </div>
 </div>
 <div class="section" id="cleaning-up">

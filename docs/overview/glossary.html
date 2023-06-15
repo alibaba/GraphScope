@@ -653,19 +653,19 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="glossary">
+          <div class="tex2jax_ignore mathjax_ignore section" id="glossary">
 <h1>Glossary<a class="headerlink" href="#glossary" title="Permalink to this heading">#</a></h1>
 <p>This page lists all the glossary used in the GraphScope project.</p>
 <div class="section" id="flash">
 <h2>FLASH<a class="headerlink" href="#flash" title="Permalink to this heading">#</a></h2>
 <p>FLASH is a distributed programming model for programming a broad spectrum of graph algorithms, including clustering, centrality, traversal, matching, mining, etc. FLASH follows the vertex-centric philosophy, but it moves a step further for stronger expressiveness by providing flexible control flow, the operations on arbitrary vertex sets and beyond-neighborhood communication. FLASH makes diverse complex graph algorithms easy to write at the distributed runtime. The algorithms expressed in FLASH take only a few lines of code, and provide a satisfactory performance.</p>
 <p>FLASH is planned to be integrated to GraphScope, as a module in the analytical engine(GAE).</p>
-<p>Learn more: <span class="xref myst">Paper on ICDE2023</span>, <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/flash.html">Doc</a></p>
+<p>Learn more: <a class="reference internal" href="#"><span class="xref myst">Paper on ICDE2023</span></a>, <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/flash.html">Doc</a></p>
 </div>
 <div class="section" id="grape">
 <h2>GRAPE<a class="headerlink" href="#grape" title="Permalink to this heading">#</a></h2>
 <p>the code name of analytical engine in GraphScope. It was first indroduced in the SIGMOD2017 paper, represents <u>GRA</u>ph <u>P</u>arallel processing <u>E</u>ngine. The analytical engine inherits the design proposed in this paper.</p>
-<p>The core part of GRAPE is opensourced at https://github.com/alibaba/libgrape-lite, which is a dependency and serves as the analytical engine in GraphScope.</p>
+<p>The core part of GRAPE is opensourced at <a class="reference external" href="https://github.com/alibaba/libgrape-lite">https://github.com/alibaba/libgrape-lite</a>, which is a dependency and serves as the analytical engine in GraphScope.</p>
 <p>Read more: <a class="reference external" href="https://homepages.inf.ed.ac.uk/wenfei/papers/sigmod17-GRAPE.pdf">Best Paper on SIGMOD2017</a>, <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/design_of_gae.html">Design of GAE</a></p>
 </div>
 <div class="section" id="gae">
@@ -681,12 +681,12 @@ MathJax = {
 <h2>GRIN<a class="headerlink" href="#grin" title="Permalink to this heading">#</a></h2>
 <p>GRIN is a proposed standard <u>G</u>raph <u>R</u>etrieval <u>IN</u>terface in GraphScope. The goal of GRIN is to provide a common way for the graph computing engines to retrieve graph data stored in different storage engines in GraphScope, and to simplify the integration of these engines with each other.</p>
 <p>GRIN is defined in C, which makes it portable to systems written in different programming languages, such as C++, Rust and Java. It provides a set of common operations and data structure handlers that can be used to access graph data, regardless of the underlying storage engine.</p>
-<p>Repo: https://github.com/graphscope/grin</p>
+<p>Repo: <a class="reference external" href="https://github.com/graphscope/grin">https://github.com/graphscope/grin</a></p>
 </div>
 <div class="section" id="graphar">
 <h2>GraphAr<a class="headerlink" href="#graphar" title="Permalink to this heading">#</a></h2>
 <p>GraphAr (short for <u>Graph</u> <u>Ar</u>chive) is a project that aims to make it easier for diverse applications and systems (in-memory and out-of-core storages, databases, graph computing systems, and interactive graph query frameworks) to build and access graph data conveniently and efficiently.</p>
-<p>Repo: https://github.com/alibaba/GraphAr</p>
+<p>Repo: <a class="reference external" href="https://github.com/alibaba/GraphAr">https://github.com/alibaba/GraphAr</a></p>
 </div>
 <div class="section" id="groot">
 <h2>Groot<a class="headerlink" href="#groot" title="Permalink to this heading">#</a></h2>
@@ -697,7 +697,7 @@ MathJax = {
 <h2>GUM<a class="headerlink" href="#gum" title="Permalink to this heading">#</a></h2>
 <p>GUM is a highly efficient multi-GPU graph analytics engine that employs a work-stealing mechanism to tackle both dynamic load imbalances and long-tail issues. It does so by utilizing the high-speed NVLinks found in modern multi-GPU servers. Additionally, GUM is acutely aware of the asymmetric topology of GPU connections and generates an optimal task-stealing plan from a holistic perspective during each iteration. With this innovative approach, GUM can offer a significant order-of-magnitude improvement in performance.</p>
 <p>GUM serves as an GPU-speedup module for GRAPE when applicable.</p>
-<p>Read more: <span class="xref myst">Paper on ICDE2023</span>, <a class="reference external" href="https://github.com/alibaba/libgrape-lite/tree/gum">Code</a></p>
+<p>Read more: <a class="reference internal" href="#"><span class="xref myst">Paper on ICDE2023</span></a>, <a class="reference external" href="https://github.com/alibaba/libgrape-lite/tree/gum">Code</a></p>
 </div>
 <div class="section" id="maxgraph-deprecated">
 <h2>MaxGraph (deprecated)<a class="headerlink" href="#maxgraph-deprecated" title="Permalink to this heading">#</a></h2>
@@ -707,7 +707,7 @@ MathJax = {
 <h2>Vineyard, or v6d<a class="headerlink" href="#vineyard-or-v6d" title="Permalink to this heading">#</a></h2>
 <p>Vineyard is the code name of the immutable memory mangement. Its name suggests it was a underlying component of GRAPE.</p>
 <p>Vineyard (v6d) is an innovative in-memory immutable data manager that offers out-of-the-box high-level abstractions and zero-copy in-memory sharing for distributed data in various big data tasks, such as graph analytics (e.g., GraphScope), numerical computing (e.g., Mars), and machine learning. It is a CNCF sandbox project.</p>
-<p>Repo: https://github.com/v6d-io/v6d</p>
+<p>Repo: <a class="reference external" href="https://github.com/v6d-io/v6d">https://github.com/v6d-io/v6d</a></p>
 </div>
 <div class="section" id="gaia">
 <h2>GAIA<a class="headerlink" href="#gaia" title="Permalink to this heading">#</a></h2>

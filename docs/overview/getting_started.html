@@ -653,7 +653,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="getting-started">
+          <div class="tex2jax_ignore mathjax_ignore section" id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">#</a></h1>
 <p>This tutorial provides a quick overview of GraphScope’s features.
 To begin, we will install GraphScope on your local machine using Python.
@@ -691,12 +691,10 @@ process various graph computation tasks in a one-stop manner.</p>
 <p>ogbn-mag is a heterogeneous network composed of a subset of the Microsoft Academic Graph. It contains 4 types of entities (i.e., papers, authors, institutions, and fields of study), as well as four types of directed relations connecting two entities.</p>
 <p>Given the heterogeneous ogbn-mag data, the task is to predict the class of each paper. Node classification can identify papers in multiple venues, which represent different groups of scientific work on different topics. We apply both the attribute and structural information to classify papers. In the graph, each paper node contains a 128-dimensional word2vec vector representing its content, which is obtained by averaging the embeddings of words in its title and abstract. The embeddings of individual words are pre-trained. The structural information is computed on-the-fly.</p>
 <p>GraphScope models graph data as property graph, in which the edges/vertices are labeled and have many properties. Taking ogbn-mag as an example, the figure below shows the model of the property graph.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/sample_pg.png"
-     alt="Sample of property graph."
-     width="80%"></p>
-<p>Sample of property graph
-:::</p>
+<div class="figure align-default" id="id1">
+<a class="reference internal image-reference" href="../_images/sample_pg.png"><img alt="Sample of property graph." src="../_images/sample_pg.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">Sample of property graph</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</div>
 <p>This graph has four kinds of vertices, labeled as paper, author, institution, and field_of_study. There are four kinds of edges connecting them, each kind of edge has a label and specifies the vertex labels for its two ends. For example, cites edges connect two vertices labeled paper. Another example is writes, it requires the source vertex is labeled author and the destination is a paper vertex. All the vertices and edges may have properties. e.g., paper vertices have properties like features, publish year, subject label, etc.</p>
 <details class="sphinx-bs dropdown card mb-3">
 <summary class="summary-title card-header">

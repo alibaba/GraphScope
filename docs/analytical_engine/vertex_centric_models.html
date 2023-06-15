@@ -653,7 +653,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="vertex-centric-model">
+          <div class="tex2jax_ignore mathjax_ignore section" id="vertex-centric-model">
 <h1>Vertex-Centric Model<a class="headerlink" href="#vertex-centric-model" title="Permalink to this heading">#</a></h1>
 <p>In a single machine environment, developers can easily implement graph analytics algorithms as they have a global view of the graph and can freely iterate through all vertices and edges. When the size of graph data grows beyond the memory capacity of a single machine, graph data must be partitioned to distributed memory, leading to the indivisibility of the whole graph structure.</p>
 <p>To allow developers to succinctly express graph analytics algorithms under such environment, the <em>vertex-centric programming model</em> have been developed, with the philosophy of “think like a vertex”. Specifically, a graph analytics algorithm iteratively executes a user-defined program over vertices of a graph. The user-defined vertex program
@@ -670,12 +670,10 @@ have widely applied in various graph processing systems, such as Giraph, GraphX 
 <blockquote>
 <div><p>“During a superstep the framework invokes a user-defined function for each vertex, conceptually in parallel. The function specifies behavior at a single vertex <em>V</em> and a single superstep <em>S</em>. It can read messages sent to <em>V</em> in superstep <em>S − 1</em>, send messages to other vertices that will be received at superstep <em>S + 1</em>, and modify the state of <em>V</em> and its outgoing edges. Messages are typically sent along outgoing edges, but a message may be sent to any vertex whose identifier is known.”</p>
 </div></blockquote>
-<p>:::{figure-md}</p>
-<p><img src="../images/pregel.png"
-     alt="The Pregel model"
-     width="80%"></p>
-<p>The Pregel model.
-:::</p>
+<div class="figure align-default" id="id1">
+<a class="reference internal image-reference" href="../_images/pregel.png"><img alt="The Pregel model" src="../_images/pregel.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">The Pregel model.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</div>
 <p>As shown in the following figure, in each iteration, the state of a vertex becomes <em>inactive</em> if there are no messages sent to it. Once it receives messages, its state will become <em>active</em> again.<br />
 The iterations terminate until no messages are sent from any vertex, indicating a <em>halt</em>.</p>
 <p>The vertex function can be invoked at each vertex in parallel, since individual vertices communicate via message-passing.</p>
@@ -698,12 +696,10 @@ The iterations terminate until no messages are sent from any vertex, indicating 
 <div class="section" id="gas-model">
 <h2>GAS Model<a class="headerlink" href="#gas-model" title="Permalink to this heading">#</a></h2>
 <p>However, the performance of Pregel drops dramatically when facing natural graphs which follow a power-law distribution. To solve this problem, <a class="reference external" href="https://www.usenix.org/conference/osdi12/technical-sessions/presentation/gonzalez">PowerGraph</a> proposed the GAS (Gather-Apply-Scatter) programming model for the vertex-cut graph partitioning strategy. The <em>Gather</em> function runs locally on each partition and then one accumulator is sent from each mirror to the master. The master runs the <em>Apply</em> function and then sends the updated vertex data to all mirrors. Finally, the <em>Scatter</em> phase is run in parallel on mirrors to update the data on adjacent edges.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/gas.png"
-     alt="The GAS model"
-     width="50%"></p>
-<p>The GAS model.
-:::</p>
+<div class="figure align-default" id="id2">
+<a class="reference internal image-reference" href="../_images/gas.png"><img alt="The GAS model" src="../_images/gas.png" style="width: 50%;" /></a>
+<p class="caption"><span class="caption-text">The GAS model.</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</div>
 </div>
 <div class="section" id="simulation-of-pregel-model-in-analytical-engine">
 <h2>Simulation of Pregel Model in Analytical Engine<a class="headerlink" href="#simulation-of-pregel-model-in-analytical-engine" title="Permalink to this heading">#</a></h2>

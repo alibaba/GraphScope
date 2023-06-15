@@ -1316,7 +1316,7 @@ MathJax = {
         <span class="c1">#       &quot;vineyard_socket&quot;: &quot;...&quot;,</span>
         <span class="c1">#       &quot;vineyard_rpc_endpoint&quot;: &quot;...&quot;</span>
         <span class="c1">#   }</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span><span class="p">:</span> <span class="p">{}</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1"># interactive instance related graph map</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1357,7 +1357,7 @@ MathJax = {
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">dag</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dag</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dag</span>
 
     <span class="k">def</span> <span class="nf">_log_session_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1948,7 +1948,7 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;port&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
-<div class="viewcode-block" id="Session.gremlin"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.gremlin">[docs]</a>    <span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.gremlin"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.gremlin">[docs]</a>    <span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get an interactive engine handler to execute gremlin queries.</span>
 
 <span class="sd">        It will return an instance of :class:`graphscope.interactive.query.InteractiveQuery`,</span>
@@ -1963,6 +1963,7 @@ MathJax = {
 <span class="sd">        Args:</span>
 <span class="sd">            graph (:class:`graphscope.framework.graph.GraphDAGNode`):</span>
 <span class="sd">                The graph to create interactive instance.</span>
+<span class="sd">            params: A dict consists of configurations of GIE instance.</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            InvalidArgumentError:</span>
@@ -1987,7 +1988,9 @@ MathJax = {
 
         <span class="n">object_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span>
         <span class="n">schema_path</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema_path</span>
-        <span class="n">endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">create_interactive_instance</span><span class="p">(</span><span class="n">object_id</span><span class="p">,</span> <span class="n">schema_path</span><span class="p">)</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">create_interactive_instance</span><span class="p">(</span>
+            <span class="n">object_id</span><span class="p">,</span> <span class="n">schema_path</span><span class="p">,</span> <span class="n">params</span>
+        <span class="p">)</span>
         <span class="n">interactive_query</span> <span class="o">=</span> <span class="n">InteractiveQuery</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">object_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">interactive_query</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_attach_interactive_instance</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">)</span>
@@ -2372,7 +2375,7 @@ MathJax = {
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="gremlin"><a class="viewcode-back" href="../../../reference/generated/graphscope.gremlin.html#graphscope.gremlin">[docs]</a><span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="gremlin"><a class="viewcode-back" href="../../../reference/generated/graphscope.gremlin.html#graphscope.gremlin">[docs]</a><span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an interactive engine and get the handler to execute the gremlin queries.</span>
 
 <span class="sd">    See params detail in :meth:`graphscope.Session.gremlin`</span>
@@ -2393,7 +2396,7 @@ MathJax = {
     <span class="k">assert</span> <span class="p">(</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
     <span class="p">),</span> <span class="s2">&quot;The graph object is invalid&quot;</span>  <span class="c1"># pylint: disable=protected-access</span>
-    <span class="k">return</span> <span class="n">graph</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span></div>
+    <span class="k">return</span> <span class="n">graph</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span></div>
 
 
 <div class="viewcode-block" id="graphlearn"><a class="viewcode-back" href="../../../reference/generated/graphscope.graphlearn.html#graphscope.graphlearn">[docs]</a><span class="k">def</span> <span class="nf">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>

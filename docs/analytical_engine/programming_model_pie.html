@@ -653,7 +653,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="programming-model-pie">
+          <div class="tex2jax_ignore mathjax_ignore section" id="programming-model-pie">
 <h1>Programming Model: PIE<a class="headerlink" href="#programming-model-pie" title="Permalink to this heading">#</a></h1>
 <p>Although the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html">vertex-centric programming model</a> can express various graph analytics algorithms, existing sequential (single-machine) graph algorithms need to be modified to adhere to the “think like a vertex” principle. This makes parallel graph computation a privilege for experienced users only. Additionally, the performance of graph algorithms using the vertex-centric model is sub-optimal in many cases. Each vertex has information about only its 1-hop neighbors, causing information propagation through the graph to be slow and occur one hop at a time. Consequently, it may take multiple computation iterations to propagate a piece of information from a source to a destination.</p>
 <div class="section" id="what-is-the-pie-model">
@@ -665,12 +665,10 @@ MathJax = {
 <li><p>(2) <em>IncEval</em>, a sequential incremental function, computes changes to the old output by treating incoming messages as updates; and</p></li>
 <li><p>(3) <em>Assemble</em>, which collects partial answers, and combines them into a complete answer.</p></li>
 </ul>
-<p>:::{figure-md}</p>
-<p><img src="../images/pie.png"
-     alt="The PIE model"
-     width="80%"></p>
-<p>The PIE model.
-:::</p>
+<div class="figure align-default" id="id1">
+<a class="reference internal image-reference" href="../_images/pie.png"><img alt="The PIE model" src="../_images/pie.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">The PIE model.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</div>
 </div>
 <div class="section" id="workflow-of-pie">
 <h2>Workflow of PIE<a class="headerlink" href="#workflow-of-pie" title="Permalink to this heading">#</a></h2>

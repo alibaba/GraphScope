@@ -89,6 +89,15 @@ You may see something like:
 
 The number 6 is printed, which is the number of vertices in modern graph.
 
+### Customize Configurations for GIE instance
+
+You could pass additional key-value pairs to customize the startup configuration of GIE, for example:
+
+```python
+# Set the timeout value to 10 min
+g = gs.gremlin(graph, params={'pegasus.timeout': 600000})
+```
+
 ## What's the Next
 As shown in the above example, it is very easy to use GraphScope to interactively query a graph using the gremlin query language on your local machine. You may find more tutorials [here](https://tinkerpop.apache.org/docs/current/tutorials/getting-started/) for the basic Gremlin usage, in which most read-only queries can be seamlessly executed with the above `g.execute()` function.
 

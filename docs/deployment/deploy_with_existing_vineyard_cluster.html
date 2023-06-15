@@ -653,7 +653,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="depoly-with-existing-vineyard-cluster">
+          <div class="tex2jax_ignore mathjax_ignore section" id="depoly-with-existing-vineyard-cluster">
 <h1>Depoly with Existing Vineyard Cluster<a class="headerlink" href="#depoly-with-existing-vineyard-cluster" title="Permalink to this heading">#</a></h1>
 <p>If you have already deployed a vineyard cluster, you can easily deploy GraphScope on the existing cluster and reuse the vineyard data such as graph with several GraphScope sessions. This will allow you to load a graph to the existing vineyard cluster and then reuse it with multiple GraphScope sessions, without needing to deploy a separate vineyard cluster for each session.</p>
 <p>This doc provides step-by-step instructions on how to do this.</p>
@@ -671,12 +671,12 @@ MathJax = {
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>graphscope-client
 </pre></div>
 </div>
-<p>Refer to <span class="xref myst">Install GraphScope Client</span> for details.</p>
+<p>Refer to <a class="reference internal" href="deploy_graphscope_on_self_managed_k8s.html#install-graphscope-client"><span class="std std-ref">Install GraphScope Client</span></a> for details.</p>
 </div>
 <div class="section" id="prepare-a-kubernetes-cluster">
 <h2>Prepare a Kubernetes cluster<a class="headerlink" href="#prepare-a-kubernetes-cluster" title="Permalink to this heading">#</a></h2>
 <p>If you don’t have a Kubernetes cluster by hand, we recommend using <a class="reference external" href="https://minikube.sigs.k8s.io/docs/start/">minikube</a>.</p>
-<p>Please refer to <span class="xref myst">Prepare a Kubernetes cluster</span> for details.</p>
+<p>Please refer to <a class="reference internal" href="deploy_graphscope_on_self_managed_k8s.html#prepare-a-kubernetes-cluster"><span class="std std-ref">Prepare a Kubernetes cluster</span></a> for details.</p>
 </div>
 <div class="section" id="deploy-a-vineyard-cluster">
 <h2>Deploy a Vineyard Cluster<a class="headerlink" href="#deploy-a-vineyard-cluster" title="Permalink to this heading">#</a></h2>

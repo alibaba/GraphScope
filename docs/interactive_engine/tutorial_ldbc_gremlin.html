@@ -653,7 +653,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="tutorial-ldbc-gremlin">
+          <div class="tex2jax_ignore mathjax_ignore section" id="tutorial-ldbc-gremlin">
 <h1>Tutorial: LDBC Gremlin<a class="headerlink" href="#tutorial-ldbc-gremlin" title="Permalink to this heading">#</a></h1>
 <p>Prior to beginning, it is important to note that <a class="reference external" href="https://ldbcouncil.org/">LDBC</a> is a highly
 regarded organization in the realm of graph databases/systems benchmark standards and audit testing.
@@ -673,12 +673,10 @@ business intelligence workloads found in SNB.</p>
 <li><p>connections and relationships among labels</p></li>
 <li><p>properties related all kinds of labels</p></li>
 </ul>
-<p>:::{figure-md}</p>
-<p><img src="../images/LDBC_Schema.png"
-     alt="The schema of the LDBC graph"
-     width="65%"></p>
-<p>Figure 1. The schema of the LDBC graph (referred to LDBC <a class="reference external" href="https://ldbcouncil.org/benchmarks/snb/">SNB</a>).
-:::</p>
+<div class="figure align-default" id="id2">
+<a class="reference internal image-reference" href="../_images/LDBC_Schema.png"><img alt="The schema of the LDBC graph" src="../_images/LDBC_Schema.png" style="width: 65%;" /></a>
+<p class="caption"><span class="caption-text">Figure 1. The schema of the LDBC graph (referred to LDBC <a class="reference external" href="https://ldbcouncil.org/benchmarks/snb/">SNB</a>).</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</div>
 <p>LDBC graph is one of the built-in dataset of GraphScope, so it can be easily loaded through:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.dataset.ldbc</span> <span class="kn">import</span> <span class="n">load_ldbc</span>
 
@@ -689,7 +687,7 @@ business intelligence workloads found in SNB.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>We do permit loading much larger LDBC graphs, such as sf 3k.
-To handle such large graphs, you’re recommended using the <a class="reference internal" href="deployment.html"><span class="doc std std-doc">standalone deployment of GIE</span></a>
+To handle such large graphs, you’re recommended using the <a class="reference internal" href="deployment.html"><span class="std std-doc">standalone deployment of GIE</span></a>
 in a large cluster.</p>
 </div>
 <p>Currently, GIE supports Gremlin as its query language.
@@ -863,12 +861,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>:::{figure-md}</p>
-<p><img src="../images/comments_length_histogram.png"
-     alt="The_histogram"
-     width="65%"></p>
-<p>Figure 2. The histogram of the comments’ length in the ldbc social network.
-:::</p>
+<div class="figure align-default" id="id3">
+<a class="reference internal image-reference" href="../_images/comments_length_histogram.png"><img alt="The_histogram" src="../_images/comments_length_histogram.png" style="width: 65%;" /></a>
+<p class="caption"><span class="caption-text">Figure 2. The histogram of the comments’ length in the ldbc social network.</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
+</div>
 <p>We can also draw a pie chart about the gender ratio in the social network.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
@@ -898,12 +894,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>:::{figure-md}</p>
-<p><img src="../images/gender_ratio.png"
-     alt="The_pie_chart"
-     width="60%"></p>
-<p>Figure 3. The pie chart of person’s gender in the ldbc social network.
-:::</p>
+<div class="figure align-default" id="id4">
+<a class="reference internal image-reference" href="../_images/gender_ratio.png"><img alt="The_pie_chart" src="../_images/gender_ratio.png" style="width: 60%;" /></a>
+<p class="caption"><span class="caption-text">Figure 3. The pie chart of person’s gender in the ldbc social network.</span><a class="headerlink" href="#id4" title="Permalink to this image">#</a></p>
+</div>
 </div>
 </div>
 <div class="section" id="basic-traversal-query">
@@ -927,12 +921,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <li><p><code class="docutils literal notranslate"><span class="pre">bothV():</span></code>Map the edge to its incident vertices.</p></li>
 </ul>
 <p>Here is a local subgraph extracted from the LDBC Graph, which is formed by a center person vertex (id=216172782113784483) and all of its adjacent edges and vertices. Then we will use this subgraph to explain all of the expansion steps.</p>
-<p>:::{figure-md}
-<img src="../images/loacal_graph_example.png"
-     alt="loacal_graph_example"
-     width="33%"></p>
-<p>Figure 5. A local graph around a given person vertex.
-:::</p>
+<div class="figure align-default" id="id5">
+<a class="reference internal image-reference" href="../_images/loacal_graph_example.png"><img alt="loacal_graph_example" src="../_images/loacal_graph_example.png" style="width: 33%;" /></a>
+<p class="caption"><span class="caption-text">Figure 5. A local graph around a given person vertex.</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
+</div>
 <div class="section" id="out-in-and-both">
 <h4>out(), in() and both()<a class="headerlink" href="#out-in-and-both" title="Permalink to this heading">#</a></h4>
 <p>All of these three steps start traverse from source vertices to their adjacent vertices. The differences between them are:</p>
@@ -954,12 +946,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>This figure illustrates the execution process of <code class="docutils literal notranslate"><span class="pre">q1</span></code>, <code class="docutils literal notranslate"><span class="pre">q2</span></code> and <code class="docutils literal notranslate"><span class="pre">q3</span></code>:</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/out_in_both.png"
-     alt="out_in_both"
-     width="95%"></p>
-<p>Figure 6. The examples of <code class="docutils literal notranslate"><span class="pre">out</span></code>/<code class="docutils literal notranslate"><span class="pre">in</span></code>/<code class="docutils literal notranslate"><span class="pre">both</span></code> steps.
-:::</p>
+<div class="figure align-default" id="id6">
+<a class="reference internal image-reference" href="../_images/out_in_both.png"><img alt="out_in_both" src="../_images/out_in_both.png" style="width: 95%;" /></a>
+<p class="caption"><span class="caption-text">Figure 6. The examples of <code class="docutils literal notranslate"><span class="pre">out</span></code>/<code class="docutils literal notranslate"><span class="pre">in</span></code>/<code class="docutils literal notranslate"><span class="pre">both</span></code> steps.</span><a class="headerlink" href="#id6" title="Permalink to this image">#</a></p>
+</div>
 <p>Therefore, the output of the above codes should be like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># q1: vertex&#39;s adjacent vertices through outgoing edges</span>
 <span class="o">[</span>v<span class="o">[</span><span class="m">432345564227569033</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">288230376151712472</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">144115188075856168</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">144115188075860911</span><span class="o">]]</span>
@@ -982,12 +972,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>This figure illustrates the execution process of <code class="docutils literal notranslate"><span class="pre">q1</span></code>, <code class="docutils literal notranslate"><span class="pre">q2</span></code> and <code class="docutils literal notranslate"><span class="pre">q3</span></code>:</p>
-<p>:::{figure-md}
-<img src="../images/out_in_both_labels.png"
-     alt="out_in_both_labels"
-     width="95%"></p>
-<p>Figure 7. The examples of <code class="docutils literal notranslate"><span class="pre">out</span></code>/<code class="docutils literal notranslate"><span class="pre">in</span></code>/<code class="docutils literal notranslate"><span class="pre">both</span></code> steps from given labels.
-:::</p>
+<div class="figure align-default" id="id7">
+<a class="reference internal image-reference" href="../_images/out_in_both_labels.png"><img alt="out_in_both_labels" src="../_images/out_in_both_labels.png" style="width: 95%;" /></a>
+<p class="caption"><span class="caption-text">Figure 7. The examples of <code class="docutils literal notranslate"><span class="pre">out</span></code>/<code class="docutils literal notranslate"><span class="pre">in</span></code>/<code class="docutils literal notranslate"><span class="pre">both</span></code> steps from given labels.</span><a class="headerlink" href="#id7" title="Permalink to this image">#</a></p>
+</div>
 <p>Therefore, the output of the above codes should be like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># q1: vertex&#39;s adjacent vertices through incoming &#39;hasModerator&#39; edges</span>
 <span class="o">[</span>v<span class="o">[</span><span class="m">72057594037934114</span><span class="o">]]</span>
@@ -1019,12 +1007,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>This figure illustrates the execution process of <code class="docutils literal notranslate"><span class="pre">q1</span></code>, <code class="docutils literal notranslate"><span class="pre">q2</span></code> and <code class="docutils literal notranslate"><span class="pre">q3</span></code>:</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/outE_inE_bothE.png"
-     alt="The current states of graph queries"
-     width="95%"></p>
-<p>Figure 8. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code>/<code class="docutils literal notranslate"><span class="pre">inE</span></code>/<code class="docutils literal notranslate"><span class="pre">bothE</span></code> steps.
-:::</p>
+<div class="figure align-default" id="id8">
+<a class="reference internal image-reference" href="../_images/outE_inE_bothE.png"><img alt="The current states of graph queries" src="../_images/outE_inE_bothE.png" style="width: 95%;" /></a>
+<p class="caption"><span class="caption-text">Figure 8. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code>/<code class="docutils literal notranslate"><span class="pre">inE</span></code>/<code class="docutils literal notranslate"><span class="pre">bothE</span></code> steps.</span><a class="headerlink" href="#id8" title="Permalink to this image">#</a></p>
+</div>
 <p>Therefore, the output of the above codes should be like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># q1: vertex&#39;s incident outgoing edges</span>
 <span class="o">[</span>e<span class="o">[</span><span class="m">432345564227582847</span><span class="o">][</span><span class="m">216172782113784483</span>-hasInterest-&gt;432345564227569033<span class="o">]</span>,<span class="w"> </span>e<span class="o">[</span><span class="m">504403158265496227</span><span class="o">][</span><span class="m">216172782113784483</span>-isLocatedIn-&gt;288230376151712472<span class="o">]</span>,<span class="w"> </span>e<span class="o">[</span><span class="m">864691128455136658</span><span class="o">][</span><span class="m">216172782113784483</span>-workAt-&gt;144115188075856168<span class="o">]</span>,<span class="w"> </span>e<span class="o">[</span><span class="m">1008806316530991636</span><span class="o">][</span><span class="m">216172782113784483</span>-studyAt-&gt;144115188075860911<span class="o">]]</span>
@@ -1047,12 +1033,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>This figure illustrates the execution process of <code class="docutils literal notranslate"><span class="pre">q1</span></code>, <code class="docutils literal notranslate"><span class="pre">q2</span></code> and <code class="docutils literal notranslate"><span class="pre">q3</span></code>:</p>
-<p>:::{figure-md}
-<img src="../images/outE_inE_bothE_labels.png"
-     alt="outE_inE_bothE_labels"
-     width="95%"></p>
-<p>Figure 9. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code>/<code class="docutils literal notranslate"><span class="pre">inE</span></code>/<code class="docutils literal notranslate"><span class="pre">bothE</span></code> steps from given labels.
-:::</p>
+<div class="figure align-default" id="id9">
+<a class="reference internal image-reference" href="../_images/outE_inE_bothE_labels.png"><img alt="outE_inE_bothE_labels" src="../_images/outE_inE_bothE_labels.png" style="width: 95%;" /></a>
+<p class="caption"><span class="caption-text">Figure 9. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code>/<code class="docutils literal notranslate"><span class="pre">inE</span></code>/<code class="docutils literal notranslate"><span class="pre">bothE</span></code> steps from given labels.</span><a class="headerlink" href="#id9" title="Permalink to this image">#</a></p>
+</div>
 <p>Therefore, the output of the above codes should like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># q1: vertex&#39;s incident incoming &#39;hasModerator&#39; edges</span>
 <span class="o">[</span>e<span class="o">[</span><span class="m">360287970189645858</span><span class="o">][</span><span class="m">72057594037934114</span>-hasModerator-&gt;216172782113784483<span class="o">]]</span>
@@ -1066,12 +1050,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <div class="section" id="outv-inv-bothv-and-otherv">
 <h4>outV(), inV(), bothV() and otherV()<a class="headerlink" href="#outv-inv-bothv-and-otherv" title="Permalink to this heading">#</a></h4>
 <p>When reaching an edge during the traversal, you may be interested in its incident vertices. Therefore, GIE supports gremlin steps that traverse from source edges to their incident vertices.</p>
-<p>:::{figure-md}
-<img src="../images/out_in_vertices.png"
-     alt="out_in_vertices"
-     width="50%"></p>
-<p>Figure 10. The examples of outgoing/incoming vertex of an edge.
-:::</p>
+<div class="figure align-default" id="id10">
+<a class="reference internal image-reference" href="../_images/out_in_vertices.png"><img alt="out_in_vertices" src="../_images/out_in_vertices.png" style="width: 50%;" /></a>
+<p class="caption"><span class="caption-text">Figure 10. The examples of outgoing/incoming vertex of an edge.</span><a class="headerlink" href="#id10" title="Permalink to this image">#</a></p>
+</div>
 <p>For en edge <code class="docutils literal notranslate"><span class="pre">e1</span></code> whose direction is from <code class="docutils literal notranslate"><span class="pre">v1</span></code> to <code class="docutils literal notranslate"><span class="pre">v2</span></code>, we call <code class="docutils literal notranslate"><span class="pre">v1</span></code> as ‘outgoing vertex’ and <code class="docutils literal notranslate"><span class="pre">v2</span></code> as ‘incoming’ vertices.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">outV()</span></code>: traverse from source edges to the outgoing vertices</p></li>
@@ -1092,12 +1074,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>This figure illustrates the execution process of <code class="docutils literal notranslate"><span class="pre">q1</span></code>, <code class="docutils literal notranslate"><span class="pre">q2</span></code> and <code class="docutils literal notranslate"><span class="pre">q3</span></code>:</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/outV_inV_bothV.png"
-     alt="outV_inV_bothV"
-     width="95%"></p>
-<p>Figure 11. The examples of outV/inV/bothV steps.
-:::</p>
+<div class="figure align-default" id="id11">
+<a class="reference internal image-reference" href="../_images/outV_inV_bothV.png"><img alt="outV_inV_bothV" src="../_images/outV_inV_bothV.png" style="width: 95%;" /></a>
+<p class="caption"><span class="caption-text">Figure 11. The examples of outV/inV/bothV steps.</span><a class="headerlink" href="#id11" title="Permalink to this image">#</a></p>
+</div>
 <p>Therefore, the output of the above codes should like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># q1: the edge&#39;s outgoing vertex</span>
 <span class="o">[</span>v<span class="o">[</span><span class="m">216172782113784483</span><span class="o">]]</span>
@@ -1123,12 +1103,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <h4>Multiple Expansion Steps<a class="headerlink" href="#multiple-expansion-steps" title="Permalink to this heading">#</a></h4>
 <p>You may have already noticed that graph traversal supports multiple expansion steps. For example, in gremlin sentence<code class="docutils literal notranslate"><span class="pre">g.V(216172782113784483).outE('isLocatedIn').inV()</span></code>, <code class="docutils literal notranslate"><span class="pre">outE('isLocatedIn')</span></code> is first expansion and <code class="docutils literal notranslate"><span class="pre">inV()</span></code> is the second expansion.</p>
 <p>The figure illustrates the execution process of this gremlin sentence:</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/outE_then_inV.png"
-     alt="outE_then_inV"
-     width="70%"></p>
-<p>Figure 12. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code> followed by <code class="docutils literal notranslate"><span class="pre">inV</span></code>.
-:::</p>
+<div class="figure align-default" id="id12">
+<a class="reference internal image-reference" href="../_images/outE_then_inV.png"><img alt="outE_then_inV" src="../_images/outE_then_inV.png" style="width: 70%;" /></a>
+<p class="caption"><span class="caption-text">Figure 12. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code> followed by <code class="docutils literal notranslate"><span class="pre">inV</span></code>.</span><a class="headerlink" href="#id12" title="Permalink to this image">#</a></p>
+</div>
 <p>During the traversal, it firstly start from the source vertex ‘person’, and get to the ‘isLocatedIn’ edge. Then it starts from the ‘isLocatedIn’ edge, and get to the ‘place’ vertex. Thus the traversal ends, the ‘place’ vertex is the end of this traversal, and the ‘isLocatedIn’ edge can be regarded as the intermediate process of the traversal.</p>
 <p>When GIE handle continuous multiple expansion steps during the traversal, the next expansion step will use the its previous expansion step’s output as its starting points. According to this property, we can summarize the following equivalent rules:</p>
 <ul class="simple">
@@ -1143,12 +1121,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>This figure illustrates the execution process:</p>
-<p>:::{figure-md}
-<img src="../images/out_out_predicate.png"
-     alt="out_out_predicate"
-     width="40%"></p>
-<p>Figure 13. The examples of two-hop outgoing vertices.
-:::</p>
+<div class="figure align-default" id="id13">
+<a class="reference internal image-reference" href="../_images/out_out_predicate.png"><img alt="out_out_predicate" src="../_images/out_out_predicate.png" style="width: 40%;" /></a>
+<p class="caption"><span class="caption-text">Figure 13. The examples of two-hop outgoing vertices.</span><a class="headerlink" href="#id13" title="Permalink to this image">#</a></p>
+</div>
 <p>Therefore, the output of the gremlin sentence should be like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># The larger place(country) that the person is located in</span>
 <span class="o">[</span>v<span class="o">[</span><span class="m">288230376151711797</span><span class="o">]]</span>
@@ -1177,12 +1153,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <h4>Expansion from many starting points<a class="headerlink" href="#expansion-from-many-starting-points" title="Permalink to this heading">#</a></h4>
 <p>Currently, we only discuss the expansion from only one vertex/edges. However, it is very common to write gremlin sentence like <code class="docutils literal notranslate"><span class="pre">g.V().out()</span></code> in GIE. In previous tutorials we have known that <code class="docutils literal notranslate"><span class="pre">g.V()</span></code> will get all the vertices in the graph. Then how to understand the meaning of <code class="docutils literal notranslate"><span class="pre">g.V().out()</span></code>?</p>
 <p>The explain it more clear, let’s firstly look at a much simpler situation: starting from only two vertices. This is a subgraph of LDBC Graph formed by two person vertices’ local graphs, where the two person vertices’ ids are 216172782113784483 and 216172782113784555.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/two_local_graphs.png"
-     alt="two_local_graphs"
-     width="80%"></p>
-<p>Figure 14. The examples of two local graphs.
-:::</p>
+<div class="figure align-default" id="id14">
+<a class="reference internal image-reference" href="../_images/two_local_graphs.png"><img alt="two_local_graphs" src="../_images/two_local_graphs.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">Figure 14. The examples of two local graphs.</span><a class="headerlink" href="#id14" title="Permalink to this image">#</a></p>
+</div>
 <p>In addition, we further limit the starting points of the traversal to be exactly the two person vertices. Therefore, we can write the following gremlin sentence in GIE:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Traverse from the two source vertices to their adjacent vertices through their incident outgoing edges</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V(216172782113784483, 216172782113784555).out()&#39;</span><span class="p">)</span>
@@ -1190,12 +1164,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>The figure illustrates the execution process of <code class="docutils literal notranslate"><span class="pre">q1</span></code>:</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/out_two_starting_points.png"
-     alt="two_local_graphs"
-     width="80%"></p>
-<p>Figure 15. The results of outgoing neighbors from two given vertices.
-:::</p>
+<div class="figure align-default" id="id15">
+<a class="reference internal image-reference" href="../_images/out_two_starting_points.png"><img alt="two_local_graphs" src="../_images/out_two_starting_points.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">Figure 15. The results of outgoing neighbors from two given vertices.</span><a class="headerlink" href="#id15" title="Permalink to this image">#</a></p>
+</div>
 <p>The traversal starts from the two person vertices, and then the <code class="docutils literal notranslate"><span class="pre">out()</span></code> step map the two source vertices both to their outgoing adjacent vertices. Therefore, the output should be like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span>v<span class="o">[</span><span class="m">432345564227569033</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">288230376151712472</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">144115188075856168</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">144115188075860911</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">432345564227569357</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">432345564227570524</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">288230376151712984</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">144115188075861043</span><span class="o">]]</span>
 </pre></div>
@@ -1227,19 +1199,15 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <li><p>Finally, <code class="docutils literal notranslate"><span class="pre">in()</span></code> maps every traverser (vertex) to its incoming adjacent vertices, and these incoming adjacent vertices form the next series of traversers, and it is the final output of the gremlin sentence.</p></li>
 </ul>
 <p>This figure illustrates the overview of the traverser transformation during the traversal of <code class="docutils literal notranslate"><span class="pre">g.V().out().in()</span></code>.</p>
-<p>:::{figure-md}
-<img src="../images/traversers_transformation_overview.png"
-     alt="traversers_transformation_overview"
-     width="50%"></p>
-<p>Figure 16. The overview of traversers’ transformation.
-:::</p>
+<div class="figure align-default" id="id16">
+<a class="reference internal image-reference" href="../_images/traversers_transformation_overview.png"><img alt="traversers_transformation_overview" src="../_images/traversers_transformation_overview.png" style="width: 50%;" /></a>
+<p class="caption"><span class="caption-text">Figure 16. The overview of traversers’ transformation.</span><a class="headerlink" href="#id16" title="Permalink to this image">#</a></p>
+</div>
 <p>In addition, this figure shows the details of the traverser’s change after every expansion step and <code class="docutils literal notranslate"><span class="pre">as(TAG)</span></code> step during the execution of gremlin sentence <code class="docutils literal notranslate"><span class="pre">g.V().as('a').out().as('b').in().as('c')</span></code>.</p>
-<p>:::{figure-md}
-<img src="../images/traversers_transformation_details.png"
-     alt="traversers_transformation_details"
-     width="70%"></p>
-<p>Figure 17. The mapping details of the above traversers’ transformation.
-:::</p>
+<div class="figure align-default" id="id17">
+<a class="reference internal image-reference" href="../_images/traversers_transformation_details.png"><img alt="traversers_transformation_details" src="../_images/traversers_transformation_details.png" style="width: 70%;" /></a>
+<p class="caption"><span class="caption-text">Figure 17. The mapping details of the above traversers’ transformation.</span><a class="headerlink" href="#id17" title="Permalink to this image">#</a></p>
+</div>
 </div>
 </div>
 <div class="section" id="filter-expansion">
@@ -1309,7 +1277,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <li><p>If we want to find a vertex which is 10-hop(edges) away from the current vertex, we need to write expansion step 10 times, which is very cost-ineffective.</p></li>
 <li><p>The number of hops from the source to the destination is arbitrary. For example, if we want to find all vertices which can be reached from a source vertex within 3-hops, it can not be solved by already introduced steps.</p></li>
 </ul>
-<p>Therefore, we would like to introduce path expansion to solve the two problems, which extends the expansion steps <code class="docutils literal notranslate"><span class="pre">out()</span></code>, <code class="docutils literal notranslate"><span class="pre">in()</span></code> and <code class="docutils literal notranslate"><span class="pre">both()</span></code> as the <a class="reference internal" href="supported_gremlin_steps.html"><span class="doc std std-doc">syntactic sugar</span></a>.</p>
+<p>Therefore, we would like to introduce path expansion to solve the two problems, which extends the expansion steps <code class="docutils literal notranslate"><span class="pre">out()</span></code>, <code class="docutils literal notranslate"><span class="pre">in()</span></code> and <code class="docutils literal notranslate"><span class="pre">both()</span></code> as the <a class="reference internal" href="supported_gremlin_steps.html"><span class="std std-doc">syntactic sugar</span></a>.</p>
 <p>In the three expansion steps, you can now write as <code class="docutils literal notranslate"><span class="pre">out/in/both(lower..upper,</span> <span class="pre">label1,</span> <span class="pre">label2...)</span></code>, where <code class="docutils literal notranslate"><span class="pre">lower</span></code> is the minimum number of hops in the path, and <code class="docutils literal notranslate"><span class="pre">upper-1</span></code> is the maximum number of hops in the path. For example, <code class="docutils literal notranslate"><span class="pre">out(3..5)</span></code> means expansion through the outgoing edges 3 or 4 times. Therefore,  <code class="docutils literal notranslate"><span class="pre">lower</span> <span class="pre">&lt;=</span> <span class="pre">upper</span> <span class="pre">-</span> <span class="pre">1</span></code>, otherwise the sentence is illegal.</p>
 <p>Path expansion is very flexible. Therefore, we design the <code class="docutils literal notranslate"><span class="pre">with()</span></code> step followed by path expansion step to provide two options for user to configure the corresponding behaviors of the path expansion step:</p>
 <ul class="simple">
@@ -1317,12 +1285,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <li><p><code class="docutils literal notranslate"><span class="pre">RESULT_OPT</span></code>: Sometimes, you may be interested in all the vertices in the path, but sometimes you may be only interested in the last vertex of the path. Therefore, when the <code class="docutils literal notranslate"><span class="pre">RESULT_OPT</span></code> is set to <code class="docutils literal notranslate"><span class="pre">ALL_V</span></code>, all the vertices in the path will be kept to the output. Instead, when the <code class="docutils literal notranslate"><span class="pre">RESULT_OPT</span></code> is set to <code class="docutils literal notranslate"><span class="pre">END_V</span></code>, only the last vertex of the path will be kept.</p></li>
 </ul>
 <p>At last, we would like to introduce <code class="docutils literal notranslate"><span class="pre">endV()</span></code> step in path expansion. Since a path may contain many vertices, all kept vertices are stored in a path collection by default. Therefore, <code class="docutils literal notranslate"><span class="pre">endV()</span></code> is used to unfold the path collection. For example, if the traversers after path expansion is <code class="docutils literal notranslate"><span class="pre">[[v[1],</span> <span class="pre">v[2],</span> <span class="pre">v[3]]</span></code>, where the inner <code class="docutils literal notranslate"><span class="pre">[v[1],</span> <span class="pre">v[2],</span> <span class="pre">v[3]]</span></code> is the path collection.   With the <code class="docutils literal notranslate"><span class="pre">endV()</span></code>, <code class="docutils literal notranslate"><span class="pre">v[1]</span></code>, <code class="docutils literal notranslate"><span class="pre">v[2]</span></code> and <code class="docutils literal notranslate"><span class="pre">v[3]</span></code> are picked out from the path collection, and the traversers becomes <code class="docutils literal notranslate"><span class="pre">[v[1],</span> <span class="pre">v[2],</span> <span class="pre">v[3]]</span></code></p>
-<p>:::{figure-md}
-<img src="../images/path_expansion_explanation.png"
-     alt="path_expansion_explanation"
-     width="70%"></p>
-<p>Figure 18. The examples of path expansion.
-:::</p>
+<div class="figure align-default" id="id18">
+<a class="reference internal image-reference" href="../_images/path_expansion_explanation.png"><img alt="path_expansion_explanation" src="../_images/path_expansion_explanation.png" style="width: 70%;" /></a>
+<p class="caption"><span class="caption-text">Figure 18. The examples of path expansion.</span><a class="headerlink" href="#id18" title="Permalink to this image">#</a></p>
+</div>
 </div>
 <div class="section" id="id1">
 <h3>Real Applications<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
@@ -1351,12 +1317,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>:::{figure-md}
-<img src="../images/comments_length_histogram_china.png"
-     alt="comments_length_histogram_china"
-     width="50%"></p>
-<p>Figure 19. Comments length histogram in China.
-:::</p>
+<div class="figure align-default" id="id19">
+<a class="reference internal image-reference" href="../_images/comments_length_histogram_china.png"><img alt="comments_length_histogram_china" src="../_images/comments_length_histogram_china.png" style="width: 50%;" /></a>
+<p class="caption"><span class="caption-text">Figure 19. Comments length histogram in China.</span><a class="headerlink" href="#id19" title="Permalink to this image">#</a></p>
+</div>
 <p>Or we can estimate the browser market share in Japan:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
@@ -1382,12 +1346,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>:::{figure-md}
-<img src="../images/estimated_japan_brower_market_share.png"
-     alt="estimated_japan_brower_market_share"
-     width="50%"></p>
-<p>Figure 20. Estimated Japan Browser Market Share
-:::</p>
+<div class="figure align-default" id="id20">
+<a class="reference internal image-reference" href="../_images/estimated_japan_brower_market_share.png"><img alt="estimated_japan_brower_market_share" src="../_images/estimated_japan_brower_market_share.png" style="width: 50%;" /></a>
+<p class="caption"><span class="caption-text">Figure 20. Estimated Japan Browser Market Share</span><a class="headerlink" href="#id20" title="Permalink to this image">#</a></p>
+</div>
 </div>
 </div>
 <div class="section" id="pattern-match">
@@ -1452,27 +1414,21 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <li><p>“Find two <code class="docutils literal notranslate"><span class="pre">persons</span></code> and the <code class="docutils literal notranslate"><span class="pre">universities</span></code> they <code class="docutils literal notranslate"><span class="pre">studyAt</span></code> in the graph that the two <code class="docutils literal notranslate"><span class="pre">person</span></code> <code class="docutils literal notranslate"><span class="pre">know</span></code> each other and the two <code class="docutils literal notranslate"><span class="pre">person</span></code> <code class="docutils literal notranslate"><span class="pre">studyAt</span></code> the same <code class="docutils literal notranslate"><span class="pre">university</span></code>”</p></li>
 </ul>
 <p>or can be illustrated as a graph pattern as shown in the following.</p>
-<p>:::{figure-md}
-<img src="../images/pattern_person_person_university.png"
-     alt="pattern_person_person_university"
-     width="35%"></p>
-<p>Figure 21. Pattern: two person know each other and study at the same university.
-:::</p>
+<div class="figure align-default" id="id21">
+<a class="reference internal image-reference" href="../_images/pattern_person_person_university.png"><img alt="pattern_person_person_university" src="../_images/pattern_person_person_university.png" style="width: 35%;" /></a>
+<p class="caption"><span class="caption-text">Figure 21. Pattern: two person know each other and study at the same university.</span><a class="headerlink" href="#id21" title="Permalink to this image">#</a></p>
+</div>
 <p>Then you aim to find all the matched subgraphs that are <a class="reference external" href="https://en.wikipedia.org/wiki/Graph_isomorphism">isomorphic</a> to the pattern. Under graph isomorphism, a subgraph and the pattern are matched if, when there is an edge between vertices in the pattern, there is an equivalent edge between two matched vertices in the subgraph. In addition, a vertex in the subgraph cannot match multiple pattern vertices.</p>
 <p>For example, this is a local graph of university vertex(id = 144115188075858884) in the LDBC Graph:</p>
-<p>:::{figure-md}
-<img src="../images/local_person_person_university.png"
-     alt="local_person_person_university"
-     width="50%"></p>
-<p>Figure 22. Local graph of a university vertex.
-:::</p>
+<div class="figure align-default" id="id22">
+<a class="reference internal image-reference" href="../_images/local_person_person_university.png"><img alt="local_person_person_university" src="../_images/local_person_person_university.png" style="width: 50%;" /></a>
+<p class="caption"><span class="caption-text">Figure 22. Local graph of a university vertex.</span><a class="headerlink" href="#id22" title="Permalink to this image">#</a></p>
+</div>
 <p>and here are the matched subgraphs in this local graph:</p>
-<p>:::{figure-md}
-<img src="../images/matched_person_person_university.png"
-     alt="matched_person_person_university"
-     width="50%"></p>
-<p>Figure 23. Three matched subgraphs in the local graph.
-:::</p>
+<div class="figure align-default" id="id23">
+<a class="reference internal image-reference" href="../_images/matched_person_person_university.png"><img alt="matched_person_person_university" src="../_images/matched_person_person_university.png" style="width: 50%;" /></a>
+<p class="caption"><span class="caption-text">Figure 23. Three matched subgraphs in the local graph.</span><a class="headerlink" href="#id23" title="Permalink to this image">#</a></p>
+</div>
 <p>The matched instances in the local graph are:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">{person1:</span> <span class="pre">v[216172782113784192],</span> <span class="pre">person2:</span> <span class="pre">v[216172782113784107],</span> <span class="pre">university:</span> <span class="pre">v[144115188075858884]}</span></code></p></li>
@@ -1544,12 +1500,10 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <li><p><code class="docutils literal notranslate"><span class="pre">person</span></code> A creates a <code class="docutils literal notranslate"><span class="pre">message</span></code>, which is replied to by a <code class="docutils literal notranslate"><span class="pre">comment</span></code> created by <code class="docutils literal notranslate"><span class="pre">person</span></code> B</p></li>
 </ul>
 <p>This figure illustrates the pattern:</p>
-<p>:::{figure-md}
-<img src="../images/bi19_right_lower_corner.png"
-     alt="bi19_right_lower_corner"
-     width="50%"></p>
-<p>Figure 24. Pattern: two person know each other, and one person creates a comment replying a message created by the other.
-:::</p>
+<div class="figure align-default" id="id24">
+<a class="reference internal image-reference" href="../_images/bi19_right_lower_corner.png"><img alt="bi19_right_lower_corner" src="../_images/bi19_right_lower_corner.png" style="width: 50%;" /></a>
+<p class="caption"><span class="caption-text">Figure 24. Pattern: two person know each other, and one person creates a comment replying a message created by the other.</span><a class="headerlink" href="#id24" title="Permalink to this image">#</a></p>
+</div>
 <p>We can easily match this pattern with gremlin <code class="docutils literal notranslate"><span class="pre">match(...)</span></code> step:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># pA and pB know each other</span>
 <span class="c1"># pB create a comment that reply a message created by pA</span>
@@ -1803,7 +1757,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[{</span><span class="s1">&#39;lastName&#39;</span>:<span class="w"> </span><span class="o">[</span><span class="s1">&#39;Donati&#39;</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;firstName&#39;</span>:<span class="w"> </span><span class="o">[</span><span class="s1">&#39;Luigi&#39;</span><span class="o">]}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;lastName&#39;</span>:<span class="w"> </span><span class="o">[</span><span class="s1">&#39;Hall&#39;</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;firstName&#39;</span>:<span class="w"> </span><span class="o">[</span><span class="s1">&#39;S. N.&#39;</span><span class="o">]}</span>,<span class="w"> </span>...,<span class="w"> </span><span class="o">]</span>
 </pre></div>
 </div>
-<p>Furthermore, if you want to add <code class="docutils literal notranslate"><span class="pre">by()</span></code> step after <code class="docutils literal notranslate"><span class="pre">select(TAG1,</span> <span class="pre">TAG2,</span> <span class="pre">...)</span></code> which contains multiple tags, assume the tags number is $n$, you should add $n$ <code class="docutils literal notranslate"><span class="pre">by()</span></code> steps after the <code class="docutils literal notranslate"><span class="pre">select(...)</span></code> step, and the $i^{th}$ <code class="docutils literal notranslate"><span class="pre">by()</span></code> step corresponds to the $i^{th}$ tag. For example,  if you want to extract vertex ‘a’s <code class="docutils literal notranslate"><span class="pre">firstName</span></code> and vertex ‘b’s <code class="docutils literal notranslate"><span class="pre">lastName</span></code>, you can write:</p>
+<p>Furthermore, if you want to add <code class="docutils literal notranslate"><span class="pre">by()</span></code> step after <code class="docutils literal notranslate"><span class="pre">select(TAG1,</span> <span class="pre">TAG2,</span> <span class="pre">...)</span></code> which contains multiple tags, assume the tags number is <span class="math notranslate nohighlight">\(n\)</span>, you should add <span class="math notranslate nohighlight">\(n\)</span> <code class="docutils literal notranslate"><span class="pre">by()</span></code> steps after the <code class="docutils literal notranslate"><span class="pre">select(...)</span></code> step, and the <span class="math notranslate nohighlight">\(i^{th}\)</span> <code class="docutils literal notranslate"><span class="pre">by()</span></code> step corresponds to the <span class="math notranslate nohighlight">\(i^{th}\)</span> tag. For example,  if you want to extract vertex ‘a’s <code class="docutils literal notranslate"><span class="pre">firstName</span></code> and vertex ‘b’s <code class="docutils literal notranslate"><span class="pre">lastName</span></code>, you can write:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># extract vertex &#39;a&#39;s firstName and vertex &#39;b&#39;s lastName</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().hasLabel(</span><span class="se">\&#39;</span><span class="s1">person</span><span class="se">\&#39;</span><span class="s1">).as(</span><span class="se">\&#39;</span><span class="s1">a</span><span class="se">\&#39;</span><span class="s1">).out(</span><span class="se">\&#39;</span><span class="s1">knows</span><span class="se">\&#39;</span><span class="s1">).as(</span><span class="se">\&#39;</span><span class="s1">b</span><span class="se">\&#39;</span><span class="s1">)</span><span class="se">\</span>
 <span class="s1">                 .select(</span><span class="se">\&#39;</span><span class="s1">a</span><span class="se">\&#39;</span><span class="s1">, </span><span class="se">\&#39;</span><span class="s1">b</span><span class="se">\&#39;</span><span class="s1">).by(</span><span class="se">\&#39;</span><span class="s1">firstName</span><span class="se">\&#39;</span><span class="s1">).by(</span><span class="se">\&#39;</span><span class="s1">lastName</span><span class="se">\&#39;</span><span class="s1">)&#39;</span><span class="p">)</span>
@@ -1814,7 +1768,7 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[{</span><span class="s1">&#39;a&#39;</span>:<span class="w"> </span><span class="s1">&#39;Luigi&#39;</span>,<span class="w"> </span><span class="s1">&#39;b&#39;</span>:<span class="w"> </span><span class="s1">&#39;Dom Pedro II&#39;</span><span class="o">}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;a&#39;</span>:<span class="w"> </span><span class="s1">&#39;Luigi&#39;</span>,<span class="w"> </span><span class="s1">&#39;b&#39;</span>:<span class="w"> </span><span class="s1">&#39;Condariuc&#39;</span><span class="o">}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;a&#39;</span>:<span class="w"> </span><span class="s1">&#39;Luigi&#39;</span>,<span class="w"> </span><span class="s1">&#39;b&#39;</span>:<span class="w"> </span><span class="s1">&#39;Bonomi&#39;</span><span class="o">}</span>,<span class="w"> </span>...,<span class="w"> </span><span class="o">]</span>
 </pre></div>
 </div>
-<p>Note that, if <code class="docutils literal notranslate"><span class="pre">select(TAG1,</span> <span class="pre">TAG2...)</span></code> step containing $n$ tags has <code class="docutils literal notranslate"><span class="pre">by()</span></code> step followed, then it must be $n$ <code class="docutils literal notranslate"><span class="pre">by()</span></code> steps. For some tagged entities, even if we don’t want to project them to anything, we have to give them a corresponding empty <code class="docutils literal notranslate"><span class="pre">by()</span></code> step. For example, the following code only project vertex ‘b’ to its <code class="docutils literal notranslate"><span class="pre">lastName</span></code> but leave vertex ‘a’ as it is.</p>
+<p>Note that, if <code class="docutils literal notranslate"><span class="pre">select(TAG1,</span> <span class="pre">TAG2...)</span></code> step containing <span class="math notranslate nohighlight">\(n\)</span> tags has <code class="docutils literal notranslate"><span class="pre">by()</span></code> step followed, then it must be <span class="math notranslate nohighlight">\(n\)</span> <code class="docutils literal notranslate"><span class="pre">by()</span></code> steps. For some tagged entities, even if we don’t want to project them to anything, we have to give them a corresponding empty <code class="docutils literal notranslate"><span class="pre">by()</span></code> step. For example, the following code only project vertex ‘b’ to its <code class="docutils literal notranslate"><span class="pre">lastName</span></code> but leave vertex ‘a’ as it is.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># extract vertex &#39;a&#39; and vertex &#39;b&#39;s lastName</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().hasLabel(</span><span class="se">\&#39;</span><span class="s1">person</span><span class="se">\&#39;</span><span class="s1">).as(</span><span class="se">\&#39;</span><span class="s1">a</span><span class="se">\&#39;</span><span class="s1">).out(</span><span class="se">\&#39;</span><span class="s1">knows</span><span class="se">\&#39;</span><span class="s1">).as(</span><span class="se">\&#39;</span><span class="s1">b</span><span class="se">\&#39;</span><span class="s1">)</span><span class="se">\</span>
 <span class="s1">                 .select(</span><span class="se">\&#39;</span><span class="s1">a</span><span class="se">\&#39;</span><span class="s1">, </span><span class="se">\&#39;</span><span class="s1">b</span><span class="se">\&#39;</span><span class="s1">).by().by(</span><span class="se">\&#39;</span><span class="s1">lastName</span><span class="se">\&#39;</span><span class="s1">)&#39;</span><span class="p">)</span>
@@ -2087,12 +2041,10 @@ print<span class="o">(</span>q1.all<span class="o">())</span>
 <p>In this tutorial, we will mainly discuss how to use GIE with gremlin sentences to make some complex queries. The queries we choose are mainly from LDBC BI Workload.</p>
 <div class="section" id="ldbc-bi2">
 <h3>LDBC BI2<a class="headerlink" href="#ldbc-bi2" title="Permalink to this heading">#</a></h3>
-<p>:::{figure-md}
-<img src="../images/bi2.png"
-     alt="bi2"
-     width="80%"></p>
-<p>Figure 25. LDBC BI Query2.
-:::</p>
+<div class="figure align-default" id="id25">
+<a class="reference internal image-reference" href="../_images/bi2.png"><img alt="bi2" src="../_images/bi2.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">Figure 25. LDBC BI Query2.</span><a class="headerlink" href="#id25" title="Permalink to this image">#</a></p>
+</div>
 <p>This figure illustrates LDBC BI2 query. This query aims to find the <code class="docutils literal notranslate"><span class="pre">Tags</span></code> under a given <code class="docutils literal notranslate"><span class="pre">TagClass</span></code> that were used in <code class="docutils literal notranslate"><span class="pre">Messages</span></code> during in the 100-day time window starting at date and compare it with the 100-day time window that follows. For the <code class="docutils literal notranslate"><span class="pre">Tags</span></code> and for both time windows, compute the count of <code class="docutils literal notranslate"><span class="pre">Messages</span></code>.</p>
 <p>The key to this query is creating two sub execution branches to count the two windows separately. We can use gremlin’s <code class="docutils literal notranslate"><span class="pre">by()</span></code> step to achieve the purpose. Assume the <code class="docutils literal notranslate"><span class="pre">TagClass's</span> <span class="pre">name='Actor'</span></code> <code class="docutils literal notranslate"><span class="pre">$date='2012-01-01'</span></code>, <code class="docutils literal notranslate"><span class="pre">$date+100='2012-04-09'$</span></code> and <code class="docutils literal notranslate"><span class="pre">$date+200='2012-07-18'</span></code>:</p>
 <ol class="arabic">
@@ -2137,12 +2089,10 @@ print<span class="o">(</span>q1.all<span class="o">())</span>
 </div>
 <div class="section" id="ldbc-bi3">
 <h3>LDBC BI3<a class="headerlink" href="#ldbc-bi3" title="Permalink to this heading">#</a></h3>
-<p>:::{figure-md}
-<img src="../images/bi3.png"
-     alt="bi3"
-     width="65%"></p>
-<p>Figure 26. LDBC BI Query3.
-:::</p>
+<div class="figure align-default" id="id26">
+<a class="reference internal image-reference" href="../_images/bi3.png"><img alt="bi3" src="../_images/bi3.png" style="width: 65%;" /></a>
+<p class="caption"><span class="caption-text">Figure 26. LDBC BI Query3.</span><a class="headerlink" href="#id26" title="Permalink to this image">#</a></p>
+</div>
 <p>This figure illustrates LDBC BI3 query. Given a <code class="docutils literal notranslate"><span class="pre">TagClass</span></code> and <code class="docutils literal notranslate"><span class="pre">Country</span></code>, this query aims to find all the <code class="docutils literal notranslate"><span class="pre">Forums</span></code> created in the given <code class="docutils literal notranslate"><span class="pre">Country</span></code>, containing at least one <code class="docutils literal notranslate"><span class="pre">Message</span></code> with <code class="docutils literal notranslate"><span class="pre">Tags</span></code> belonging directly to the given <code class="docutils literal notranslate"><span class="pre">TagClass</span></code>, and count the <code class="docutils literal notranslate"><span class="pre">Messages</span></code> by the <code class="docutils literal notranslate"><span class="pre">Forum</span></code> which contains them.</p>
 <p>The location of a <code class="docutils literal notranslate"><span class="pre">Forum</span></code> is identified by the location of the Forum’s moderator. Here comes another question, how to determine whether the forum contains a message directly related to the given <code class="docutils literal notranslate"><span class="pre">TagClass</span></code> or not? We assume that a message is contained by a forum if:</p>
 <ul class="simple">
@@ -2199,12 +2149,10 @@ print<span class="o">(</span>q1.all<span class="o">())</span>
 </div>
 <div class="section" id="ldbc-bi4-left-part">
 <h3>LDBC BI4(Left Part)<a class="headerlink" href="#ldbc-bi4-left-part" title="Permalink to this heading">#</a></h3>
-<p>:::{figure-md}
-<img src="../images/bi4(left_part).png"
-     alt="bi4(left_part)"
-     width="30%"></p>
-<p>Figure 27. LDBC BI Query4(Left Part).
-:::</p>
+<div class="figure align-default" id="id27">
+<a class="reference internal image-reference" href="../_images/bi4(left_part).png"><img alt="bi4(left_part)" src="../_images/bi4%28left_part%29.png" style="width: 30%;" /></a>
+<p class="caption"><span class="caption-text">Figure 27. LDBC BI Query4(Left Part).</span><a class="headerlink" href="#id27" title="Permalink to this image">#</a></p>
+</div>
 <p>This figure illustrates the left part of the LDBC BI4 query. The query aims to find the top 100 forum of every country based on the memberCount, and the forum should be created after the given date.</p>
 <p>Since GIE doesn’t provide global storage currently, we cannot pick out the top 100 forums of every country using gremlin sentence directly. We can retrieve a tuple of <code class="docutils literal notranslate"><span class="pre">(country,</span> <span class="pre">forum,</span> <span class="pre">country_count)</span></code> at first.</p>
 <p>Assume <code class="docutils literal notranslate"><span class="pre">Forum's</span> <span class="pre">creationDate</span> <span class="pre">&gt;</span> <span class="pre">'2012-01-01'</span></code>, we can write in GIE as</p>
@@ -2274,12 +2222,10 @@ print<span class="o">(</span>q1.all<span class="o">())</span>
 </div>
 <div class="section" id="ldbc-bi11">
 <h3>LDBC BI11<a class="headerlink" href="#ldbc-bi11" title="Permalink to this heading">#</a></h3>
-<p>:::{figure-md}
-<img src="../images/bi11.png"
-     alt="bi11"
-     width="80%"></p>
-<p>Figure 28. LDBC BI Query11.
-:::</p>
+<div class="figure align-default" id="id28">
+<a class="reference internal image-reference" href="../_images/bi11.png"><img alt="bi11" src="../_images/bi11.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">Figure 28. LDBC BI Query11.</span><a class="headerlink" href="#id28" title="Permalink to this image">#</a></p>
+</div>
 <p>This figure illustrates LDBC BI11 query. This query aims to find three persons tagged as a, b, c, where:</p>
 <ul class="simple">
 <li><p>a, b, c know each other</p></li>
@@ -2313,12 +2259,10 @@ print<span class="o">(</span>q1.all<span class="o">())</span>
 </div>
 <div class="section" id="ldbc-bi14">
 <h3>LDBC BI14<a class="headerlink" href="#ldbc-bi14" title="Permalink to this heading">#</a></h3>
-<p>:::{figure-md}
-<img src="../images/bi14.png"
-     alt="bi14"
-     width="80%"></p>
-<p>Figure 29. LDBC BI Query14.
-:::</p>
+<div class="figure align-default" id="id29">
+<a class="reference internal image-reference" href="../_images/bi14.png"><img alt="bi14" src="../_images/bi14.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">Figure 29. LDBC BI Query14.</span><a class="headerlink" href="#id29" title="Permalink to this image">#</a></p>
+</div>
 <p>This figure illustrates LDBC BI14 query. Here is its purpose:</p>
 <p>Consider all pairs of people (<code class="docutils literal notranslate"><span class="pre">person1</span></code>, <code class="docutils literal notranslate"><span class="pre">person2</span></code>) such that</p>
 <ol class="arabic simple">
@@ -2511,5 +2455,7 @@ print<span class="o">(</span>q1.all<span class="o">())</span>
     <script src="../_static/scripts/furo.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>
 </html>

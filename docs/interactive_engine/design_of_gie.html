@@ -653,7 +653,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="design-of-gie">
+          <div class="tex2jax_ignore mathjax_ignore section" id="design-of-gie">
 <h1>Design of GIE<a class="headerlink" href="#design-of-gie" title="Permalink to this heading">#</a></h1>
 <p>GIE (Graph Interactive Engine) is a system for interactive workloads on graphs, such as graph
 traversal and pattern matching. It provides a declarative query language for users to interact
@@ -689,12 +689,10 @@ and high throughput. The requirements for queries raised by different scenarios 
 the requirements for the underlying computing engines. To meet these requirements, it is inevitable
 to introduce multiple computing engines</p></li>
 </ul>
-<p>:::{figure-md}</p>
-<p><img src="../images/states_of_gie.png"
-     alt="The current states of graph queries"
-     width="65%"></p>
-<p>Figure 1. The current states of graph queries.
-:::</p>
+<div class="figure align-default" id="id1">
+<a class="reference internal image-reference" href="../_images/states_of_gie.png"><img alt="The current states of graph queries" src="../_images/states_of_gie.png" style="width: 65%;" /></a>
+<p class="caption"><span class="caption-text">Figure 1. The current states of graph queries.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</div>
 <p>As shown in Figure 1, in order to support as many query languages as possible and adapt to various
 application scenarios, a realistic graph query system inevitably has to face an engineering
 implementation problem with a total of “M×N”, that is, for each of the “M” query languages to
@@ -712,12 +710,10 @@ core tasks in the graph query process, query verification and query optimization
 language is completed in the corresponding client, and code generation for each execution engine is
 handled at the corresponding runtime. In this way, we only need to implement M parsers for M
 languages and N sets of code generation for N engines.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/design_of_gie.png"
-     alt="The architecture of GIE"
-     width="85%"></p>
-<p>Figure 2. The architecture of GIE.
-:::</p>
+<div class="figure align-default" id="id2">
+<a class="reference internal image-reference" href="../_images/design_of_gie.png"><img alt="The architecture of GIE" src="../_images/design_of_gie.png" style="width: 85%;" /></a>
+<p class="caption"><span class="caption-text">Figure 2. The architecture of GIE.</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</div>
 <p>The original “M × N” engineering implementation can be replaced by this new “M+N” pattern.
 Even if M and N are not very large, such as in the case of “M = 2” and “N = 2”, the workload
 may not appear to be reduced, but it should be noted that:</p>

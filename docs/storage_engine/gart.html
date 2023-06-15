@@ -653,7 +653,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="gart-bridging-the-gap-between-relational-oltp-and-graph-workloads">
+          <div class="tex2jax_ignore mathjax_ignore section" id="gart-bridging-the-gap-between-relational-oltp-and-graph-workloads">
 <h1>GART: Bridging the Gap between Relational OLTP and Graph Workloads<a class="headerlink" href="#gart-bridging-the-gap-between-relational-oltp-and-graph-workloads" title="Permalink to this heading">#</a></h1>
 <p>GART is a loosely-coupled framework that can be deployed to bridge an existing relational OLTP system (e.g., MySQL) with the graph-specific system GraphScope.
 In a nutshell, GART exploits the high availability mechanism of modern OLTP systems, and leverages write-ahead logs (WALs) of OLTP systems to extract graphs on which to perform graph-related workloads over execution engines of GraphScope.
@@ -664,12 +664,10 @@ Instead of offline data migration, GART reuses WALs to replay graph data online 
 Transactions are submitted and processed in the OLTP engine and update the data in relational storage.
 During transaction committing, it also generates logs to record updates for high availability.
 GART leverages the logs to convert relational data into graph data and stores the updates in dynamic graph storage. After that, GraphScope can process graph workloads over the dynamic graph storage.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/gart_arch.png"
-     alt="Architecture of GART."
-     width="70%"></p>
-<p>Architecture of GART.
-:::</p>
+<div class="figure align-default" id="id1">
+<a class="reference internal image-reference" href="../_images/gart_arch.png"><img alt="Architecture of GART." src="../_images/gart_arch.png" style="width: 70%;" /></a>
+<p class="caption"><span class="caption-text">Architecture of GART.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</div>
 </div>
 <div class="section" id="defining-graph-mapping-in-gart">
 <h2>Defining Graph Mapping in GART<a class="headerlink" href="#defining-graph-mapping-in-gart" title="Permalink to this heading">#</a></h2>

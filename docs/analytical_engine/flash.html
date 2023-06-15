@@ -653,7 +653,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="programming-model-flash">
+          <div class="tex2jax_ignore mathjax_ignore section" id="programming-model-flash">
 <h1>Programming Model: FLASH<a class="headerlink" href="#programming-model-flash" title="Permalink to this heading">#</a></h1>
 <p>FLASH is a distributed programming model for programming a broad spectrum of graph algorithms, including clustering, centrality, traversal, matching, mining, etc. FLASH follows the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html">vertex-centric</a> philosophy, but it moves a step further for stronger expressiveness by providing flexible control flow, the operations on arbitrary vertex sets and beyond-neighborhood communication. FLASH makes diverse complex graph algorithms easy to write at the distributed runtime. The algorithms expressed in FLASH take only a few lines of code, and provide a satisfactory performance.</p>
 <div class="section" id="motivation">
@@ -714,12 +714,10 @@ If a chosen edge passes the condition checking <em>F</em>, the map function <em>
 <div class="section" id="architecture">
 <h3>Architecture<a class="headerlink" href="#architecture" title="Permalink to this heading">#</a></h3>
 <p>The architecture of FLASH contains several main components, as shown in the following figure. The first is a code generator which takes the high-level FLASH APIs as input, and generates execution code to be run on the second component named FlashWare, which is a middleware designed and optimized for the FLASH model and is implemented based on the fundamental modules of GraphScope. The FlashWare executes the code produced by the code generator on the distributed runtime, utilizing the ability of parallel computing and communication ability of GraphScope.</p>
-<p>:::{figure-md}</p>
-<p><img src="../images/flash.png"
-     alt="The FLASH architecture"
-     width="80%"></p>
-<p>The FLASH architecture.
-:::</p>
+<div class="figure align-default" id="id1">
+<a class="reference internal image-reference" href="../_images/flash.png"><img alt="The FLASH architecture" src="../_images/flash.png" style="width: 80%;" /></a>
+<p class="caption"><span class="caption-text">The FLASH architecture.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</div>
 </div>
 <div class="section" id="optimizations">
 <h3>Optimizations<a class="headerlink" href="#optimizations" title="Permalink to this heading">#</a></h3>

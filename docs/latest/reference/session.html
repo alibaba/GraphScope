@@ -1052,7 +1052,7 @@ GNN training. The detail is explained in the examples below.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.gremlin">
-<span class="sig-name descname"><span class="pre">gremlin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.gremlin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.gremlin" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gremlin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.gremlin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.gremlin" title="Permalink to this definition">#</a></dt>
 <dd><p>Get an interactive engine handler to execute gremlin queries.</p>
 <p>It will return an instance of <a class="reference internal" href="interactive.html#graphscope.interactive.query.InteractiveQuery" title="graphscope.interactive.query.InteractiveQuery"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.interactive.query.InteractiveQuery</span></code></a>,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># close and recreate InteractiveQuery.</span>
@@ -1063,7 +1063,10 @@ GNN training. The detail is explained in the examples below.</p></li>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>graph</strong> (<a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a>) – The graph to create interactive instance.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a>) – The graph to create interactive instance.</p></li>
+<li><p><strong>params</strong> – A dict consists of configurations of GIE instance.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>InvalidArgumentError</strong> – <ul class="simple">
@@ -1191,7 +1194,7 @@ Supported types:
 <tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.g.html#graphscope.g" title="graphscope.g"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.g</span></code></a>([incoming_data, oid_type, ...])</p></td>
 <td><p>Construct a GraphScope graph object on the default session.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.gremlin.html#graphscope.gremlin" title="graphscope.gremlin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.gremlin</span></code></a>(graph)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.gremlin.html#graphscope.gremlin" title="graphscope.gremlin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.gremlin</span></code></a>(graph[, params])</p></td>
 <td><p>Create an interactive engine and get the handler to execute the gremlin queries.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.graphlearn.html#graphscope.graphlearn" title="graphscope.graphlearn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.graphlearn</span></code></a>(graph[, nodes, edges, ...])</p></td>

@@ -653,7 +653,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="dev-and-test">
+          <div class="tex2jax_ignore mathjax_ignore section" id="dev-and-test">
 <h1>Dev and Test<a class="headerlink" href="#dev-and-test" title="Permalink to this heading">#</a></h1>
 <p>This document describes how to build and test GraphScope Interactive Engine from source code.</p>
 <div class="section" id="dev-environment">
@@ -662,11 +662,11 @@ MathJax = {
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--name<span class="w"> </span>dev<span class="w"> </span>-it<span class="w"> </span>--shm-size<span class="o">=</span>4096m<span class="w"> </span>registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest
 </pre></div>
 </div>
-<p>Please refer to <span class="xref myst">Dev Environment</span> to find more options to get a dev environment.</p>
+<p>Please refer to <a class="reference internal" href="../development/dev_guide.html#dev-environment"><span class="std std-ref">Dev Environment</span></a> to find more options to get a dev environment.</p>
 </div>
 <div class="section" id="build-gie-with-vineyard-store-on-local">
 <h2>Build GIE with Vineyard Store on Local<a class="headerlink" href="#build-gie-with-vineyard-store-on-local" title="Permalink to this heading">#</a></h2>
-<p>In <a class="reference internal" href="deployment.html"><span class="doc std std-doc">GIE standalone deployment</span></a>, we have instructed on how to deploy GIE in a Kubenetes cluster with Vineyard store. Here, we show how to develop and test GIE with vineyard store on a local machine.</p>
+<p>In <a class="reference internal" href="deployment.html"><span class="std std-doc">GIE standalone deployment</span></a>, we have instructed on how to deploy GIE in a Kubenetes cluster with Vineyard store. Here, we show how to develop and test GIE with vineyard store on a local machine.</p>
 <p>Clone the ``graphscope’’ repo if you do not have it.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/alibaba/graphscope
 <span class="nb">cd</span><span class="w"> </span>graphscope
@@ -694,7 +694,7 @@ MathJax = {
 graph.</p></li>
 <li><p><a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/gremlin/integration/suite/pattern">IR pattern test</a>: In addition to Tinkerpop’s official test of <code class="docutils literal notranslate"><span class="pre">match</span></code> steps, we offer extra pattern queries on modern graph.</p></li>
 <li><p><a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/gremlin/integration/suite/ldbc">LDBC test</a>: We further test GIE against the LDBC complex workloads on the LDBC social network with the scale factor (sf) 1.
-Please refer to the <a class="reference internal" href="tutorial_ldbc_gremlin.html"><span class="doc std std-doc">tutorial</span></a> for more information.</p></li>
+Please refer to the <a class="reference internal" href="tutorial_ldbc_gremlin.html"><span class="std std-doc">tutorial</span></a> for more information.</p></li>
 </ul>
 </div>
 <div class="section" id="manually-start-the-gie-services">
@@ -787,7 +787,7 @@ frontend.service.port<span class="w"> </span><span class="o">=</span><span class
 </pre></div>
 </div>
 <p>With the frontend service, you can open the gremlin console and set the endpoint to
-<code class="docutils literal notranslate"><span class="pre">localhost:8182</span></code>, as given <span class="xref myst">here</span>.</p>
+<code class="docutils literal notranslate"><span class="pre">localhost:8182</span></code>, as given <a class="reference internal" href="deployment.html#deploy-your-first-gie-service"><span class="std std-ref">here</span></a>.</p>
 <ol class="arabic simple" start="7">
 <li><p>Kill the services of <code class="docutils literal notranslate"><span class="pre">vineyardd</span></code>, <code class="docutils literal notranslate"><span class="pre">gaia_executor</span></code> and <code class="docutils literal notranslate"><span class="pre">frontend</span></code>:</p></li>
 </ol>
