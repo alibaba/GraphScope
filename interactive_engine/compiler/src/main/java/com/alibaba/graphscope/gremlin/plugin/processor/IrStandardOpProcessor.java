@@ -44,6 +44,7 @@ import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.result.processor.CypherResultProcessor;
 import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
+import com.alibaba.graphscope.gremlin.service.MetricsPrinter;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
@@ -122,41 +123,32 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             final Context ctx,
             final Supplier<GremlinExecutor> gremlinExecutorSupplier,
             final AbstractEvalOpProcessor.BindingSupplier bindingsSupplier) {
-        long startTime = System.currentTimeMillis();
-        com.codahale.metrics.Timer.Context timerContext = evalOpTimer.time();
         RequestMessage msg = ctx.getRequestMessage();
         GremlinExecutor gremlinExecutor = gremlinExecutorSupplier.get();
         Map<String, Object> args = msg.getArgs();
         String script = (String) args.get("gremlin");
-
         // replace with antlr parser
         String language = getLanguageFromRequest(msg);
-
         long jobId = JOB_ID_COUNTER.incrementAndGet();
         IrMeta irMeta = metaQueryCallback.beforeExec();
+        MetricsPrinter metricsPrinter = createMetricsPrinter(jobId, script);
         GremlinExecutor.LifeCycle lifeCycle =
                 createLifeCycle(
-                        ctx, gremlinExecutorSupplier, bindingsSupplier, jobId, script, irMeta);
+                        ctx,
+                        gremlinExecutorSupplier,
+                        bindingsSupplier,
+                        jobId,
+                        script,
+                        irMeta,
+                        metricsPrinter);
         try {
             CompletableFuture<Object> evalFuture =
                     gremlinExecutor.eval(script, language, new SimpleBindings(), lifeCycle);
             evalFuture.handle(
                     (v, t) -> {
                         metaQueryCallback.afterExec(irMeta);
-                        long elapsed = timerContext.stop();
-                        logger.info(
-                                "query \"{}\" total execution time is {} ms",
-                                script,
-                                elapsed / 1000000.0f);
-                        boolean isSuccess = (t == null);
-                        metricLogger.info(
-                                "{} | {} | {} | {} | {}",
-                                jobId,
-                                script,
-                                isSuccess,
-                                elapsed / 1000000.0f,
-                                startTime);
                         if (t != null) {
+                            metricsPrinter.stop(false);
                             Optional<Throwable> possibleTemporaryException =
                                     determineIfTemporaryException(t);
                             if (possibleTemporaryException.isPresent()) {
@@ -260,6 +252,10 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         }
     }
 
+    protected MetricsPrinter createMetricsPrinter(long queryId, String script) {
+        return new MetricsPrinter(queryId, script, evalOpTimer, metricLogger);
+    }
+
     protected String getLanguageFromRequest(RequestMessage msg) {
         Map<String, Object> args = msg.getArgs();
         if (args.containsKey("bindings")) {
@@ -287,7 +283,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             BindingSupplier bindingsSupplier,
             long jobId,
             String script,
-            IrMeta irMeta) {
+            IrMeta irMeta,
+            MetricsPrinter metricsPrinter) {
         final RequestMessage msg = ctx.getRequestMessage();
         final Settings settings = ctx.getSettings();
         final Map<String, Object> args = msg.getArgs();
@@ -323,7 +320,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                     Traversal traversal = (Traversal) o;
                                     processTraversal(
                                             traversal,
-                                            new GremlinResultProcessor(ctx, traversal),
+                                            new GremlinResultProcessor(
+                                                    ctx, traversal, metricsPrinter),
                                             jobId,
                                             script,
                                             irMeta);
@@ -338,7 +336,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                             AntlrCypherScriptEngineFactory.LANGUAGE_NAME)) {
                                         processRelNode(
                                                 summary,
-                                                new CypherResultProcessor(ctx, summary),
+                                                new CypherResultProcessor(
+                                                        ctx, summary, metricsPrinter),
                                                 jobId,
                                                 script,
                                                 irMeta,

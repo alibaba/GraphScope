@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.integration.result;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
+import com.alibaba.graphscope.gremlin.service.MetricsPrinter;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.tinkerpop.gremlin.process.remote.traversal.DefaultRemoteTraverser;
@@ -43,8 +44,12 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
     private static String EDGE_PROPERTIES = "edge_properties";
 
     public GremlinTestResultProcessor(
-            Context writeResult, Traversal traversal, GraphProperties testGraph, Configs configs) {
-        super(writeResult, traversal);
+            Context writeResult,
+            Traversal traversal,
+            MetricsPrinter metricsPrinter,
+            GraphProperties testGraph,
+            Configs configs) {
+        super(writeResult, traversal, metricsPrinter);
         this.cachedProperties = testGraph.getProperties(configs);
     }
 

@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.gremlin.result.parser.CypherResultParser;
+import com.alibaba.graphscope.gremlin.service.MetricsPrinter;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.rel.RelNode;
@@ -35,8 +36,12 @@ import java.util.stream.Collectors;
 
 public class CypherResultProcessor extends AbstractResultProcessor {
 
-    public CypherResultProcessor(Context context, GraphPlanner.Summary summary) {
-        super(context, new CypherResultParser(getOutputType(summary.getLogicalPlan())));
+    public CypherResultProcessor(
+            Context context, GraphPlanner.Summary summary, MetricsPrinter metricsPrinter) {
+        super(
+                context,
+                new CypherResultParser(getOutputType(summary.getLogicalPlan())),
+                metricsPrinter);
     }
 
     @Override

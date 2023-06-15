@@ -96,7 +96,11 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                             processTraversal(
                                     traversal,
                                     new GremlinTestResultProcessor(
-                                            ctx, traversal, testGraph, this.configs),
+                                            ctx,
+                                            traversal,
+                                            createMetricsPrinter(jobId, script),
+                                            testGraph,
+                                            this.configs),
                                     jobId,
                                     script,
                                     irMeta);

@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.result.processor;
 
 import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
 import com.alibaba.graphscope.gremlin.result.GroupResultParser;
+import com.alibaba.graphscope.gremlin.service.MetricsPrinter;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.server.Context;
@@ -29,8 +30,9 @@ import java.util.*;
 public class GremlinResultProcessor extends AbstractResultProcessor {
     private static Logger logger = LoggerFactory.getLogger(GremlinResultProcessor.class);
 
-    public GremlinResultProcessor(Context writeResult, Traversal traversal) {
-        super(writeResult, GremlinResultAnalyzer.analyze(traversal));
+    public GremlinResultProcessor(
+            Context writeResult, Traversal traversal, MetricsPrinter metricsPrinter) {
+        super(writeResult, GremlinResultAnalyzer.analyze(traversal), metricsPrinter);
     }
 
     // format group result as a single map

@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.result.processor;
 
 import com.alibaba.graphscope.common.result.ResultParser;
+import com.alibaba.graphscope.gremlin.service.MetricsPrinter;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 
@@ -47,15 +48,19 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
 
     protected final Context writeResult;
     protected final ResultParser resultParser;
+    protected final MetricsPrinter metricsPrinter;
 
     protected final List<Object> resultCollectors;
     protected final int resultCollectorsBatchSize;
 
     protected boolean locked;
 
-    protected AbstractResultProcessor(Context writeResult, ResultParser resultParser) {
+    protected AbstractResultProcessor(
+            Context writeResult, ResultParser resultParser, MetricsPrinter metricsPrinter) {
         this.writeResult = writeResult;
         this.resultParser = resultParser;
+        this.metricsPrinter = metricsPrinter;
+
         RequestMessage msg = writeResult.getRequestMessage();
         Settings settings = writeResult.getSettings();
         // init batch size from resultIterationBatchSize in conf/gremlin-server.yaml,
@@ -68,53 +73,51 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
     }
 
     @Override
-    public void process(PegasusClient.JobResponse response) {
-        synchronized (this) {
-            try {
-                if (!locked) {
-                    // send back a page of results if batch size is met and then reset the
-                    // resultCollectors
-                    if (this.resultCollectors.size() >= this.resultCollectorsBatchSize) {
-                        aggregateResults();
-                        writeResultList(
-                                writeResult, resultCollectors, ResponseStatusCode.PARTIAL_CONTENT);
-                        this.resultCollectors.clear();
-                    }
-                    resultCollectors.addAll(resultParser.parseFrom(response));
+    public synchronized void process(PegasusClient.JobResponse response) {
+        try {
+            if (!locked) {
+                // send back a page of results if batch size is met and then reset the
+                // resultCollectors
+                if (this.resultCollectors.size() >= this.resultCollectorsBatchSize) {
+                    aggregateResults();
+                    writeResultList(
+                            writeResult, resultCollectors, ResponseStatusCode.PARTIAL_CONTENT);
+                    this.resultCollectors.clear();
                 }
-            } catch (Exception e) {
-                writeResultList(
-                        writeResult,
-                        Collections.singletonList(e.getMessage()),
-                        ResponseStatusCode.SERVER_ERROR);
-                // cannot write to this context any more
-                locked = true;
-                throw new RuntimeException(e);
+                resultCollectors.addAll(resultParser.parseFrom(response));
             }
+        } catch (Exception e) {
+            logger.error("process response from grpc fail", e);
+            // cannot write to this context any more
+            locked = true;
+            metricsPrinter.stop(false);
+            writeResultList(
+                    writeResult,
+                    Collections.singletonList(e.getMessage()),
+                    ResponseStatusCode.SERVER_ERROR);
         }
     }
 
     @Override
-    public void finish() {
-        synchronized (this) {
-            if (!locked) {
-                aggregateResults();
-                writeResultList(writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
-                locked = true;
-            }
+    public synchronized void finish() {
+        if (!locked) {
+            locked = true;
+            metricsPrinter.stop(true);
+            aggregateResults();
+            writeResultList(writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
         }
     }
 
     @Override
-    public void error(Status status) {
-        synchronized (this) {
-            if (!locked) {
-                writeResultList(
-                        writeResult,
-                        Collections.singletonList(status.toString()),
-                        ResponseStatusCode.SERVER_ERROR);
-                locked = true;
-            }
+    public synchronized void error(Status status) {
+        logger.error("error return from grpc, status {}", status);
+        if (!locked) {
+            locked = true;
+            metricsPrinter.stop(false);
+            writeResultList(
+                    writeResult,
+                    Collections.singletonList(status.toString()),
+                    ResponseStatusCode.SERVER_ERROR);
         }
     }
 
