@@ -228,7 +228,7 @@ def build_learning_engine():
     library_dirs.append(ROOT_PATH + "/graphlearn/built/lib")
 
     extra_compile_args.append("-D__USE_XOPEN2K8")
-    extra_compile_args.append("-std=c++11")
+    extra_compile_args.append("-std=c++17")
     extra_compile_args.append("-fvisibility=hidden")
 
     libraries.append("graphlearn_shared")
