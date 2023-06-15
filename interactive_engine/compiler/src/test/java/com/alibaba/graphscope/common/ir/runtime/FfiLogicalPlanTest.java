@@ -121,6 +121,17 @@ public class FfiLogicalPlanTest {
         }
     }
 
+    @Test
+    public void logical_plan_3_test() throws Exception {
+        LogicalPlan logicalPlan =
+                com.alibaba.graphscope.cypher.antlr4.Utils.evalLogicalPlan(
+                        "Call query_ic2(10l, 20120112l)");
+        try (PhysicalBuilder<byte[]> ffiBuilder = new ProcedurePhysicalBuilder(logicalPlan)) {
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("call_procedure.json"), ffiBuilder.explain());
+        }
+    }
+
     private Configs getMockGraphConfig() {
         return new Configs(ImmutableMap.of("servers", "1", "workers", "1"));
     }

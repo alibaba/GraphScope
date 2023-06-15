@@ -16,10 +16,15 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
+import com.alibaba.graphscope.common.ir.procedure.StoredProcedureMeta;
+
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.SqlMonotonicBinaryOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Extends {@link org.apache.calcite.sql.fun.SqlStdOperatorTable} to re-implement type checker/inference in some operators
@@ -175,4 +180,27 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     ReturnTypes.BOOLEAN_NULLABLE,
                     GraphInferTypes.FIRST_KNOWN,
                     OperandTypes.COMPARABLE_ORDERED_COMPARABLE_ORDERED);
+
+    public static final SqlFunction USER_DEFINED_PROCEDURE(StoredProcedureMeta meta) {
+        SqlReturnTypeInference returnTypeInference = ReturnTypes.explicit(meta.getReturnType());
+        List<StoredProcedureMeta.Parameter> parameters = meta.getParameters();
+        SqlOperandTypeChecker operandTypeChecker =
+                GraphOperandTypes.operandMetadata(
+                        parameters.stream()
+                                .map(p -> p.getDataType().getSqlTypeName().getFamily())
+                                .collect(Collectors.toList()),
+                        typeFactory ->
+                                parameters.stream()
+                                        .map(p -> p.getDataType())
+                                        .collect(Collectors.toList()),
+                        i -> parameters.get(i).getName(),
+                        i -> false);
+        return new SqlFunction(
+                meta.getName(),
+                SqlKind.PROCEDURE_CALL,
+                returnTypeInference,
+                null,
+                operandTypeChecker,
+                SqlFunctionCategory.USER_DEFINED_PROCEDURE);
+    }
 }

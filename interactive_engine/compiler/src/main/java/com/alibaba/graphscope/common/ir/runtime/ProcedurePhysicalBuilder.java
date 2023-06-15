@@ -19,8 +19,10 @@ package com.alibaba.graphscope.common.ir.runtime;
 import com.alibaba.graphscope.common.ir.runtime.proto.Utils;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.gaia.proto.Common;
-
 import com.alibaba.graphscope.gaia.proto.StoredProcedure;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
+
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlOperator;
 
@@ -49,6 +51,7 @@ public class ProcedurePhysicalBuilder extends PhysicalBuilder<byte[]> {
         for (int i = 0; i < operands.size(); ++i) {
             builder.addArguments(
                     StoredProcedure.Argument.newBuilder()
+                            // param name is omitted
                             .setParamInd(i)
                             .setValue(Utils.protoValue((RexLiteral) operands.get(i)))
                             .build());
@@ -57,7 +60,11 @@ public class ProcedurePhysicalBuilder extends PhysicalBuilder<byte[]> {
 
     @Override
     public String explain() {
-        return this.builder.toString();
+        try {
+            return JsonFormat.printer().print(this.builder);
+        } catch (InvalidProtocolBufferException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
