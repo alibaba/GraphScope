@@ -229,4 +229,18 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue addParamsExtra(Pointer params, String key, String value);
 
     Pointer initSinkGraphOperator(String graphName);
+
+    FfiResult.ByValue setScanMeta(Pointer scan, FfiPbPointer.ByValue meta);
+
+    FfiResult.ByValue setEdgexpdMeta(Pointer edgexpd, FfiPbPointer.ByValue meta);
+
+    FfiResult.ByValue setGetvMeta(Pointer getV, FfiPbPointer.ByValue meta);
+
+    FfiResult.ByValue addProjectMeta(Pointer project, FfiPbPointer.ByValue meta);
+
+    FfiResult.ByValue addGroupbyKeyValueMeta(Pointer groupBy, FfiPbPointer.ByValue meta);
+
+    FfiResult.ByValue addPatternMeta(Pointer pattern, FfiPbPointer.ByValue meta);
+
+    FfiResult.ByValue setUnfoldMeta(Pointer unfold, FfiPbPointer.ByValue meta);
 }
