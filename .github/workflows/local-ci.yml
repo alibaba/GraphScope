@@ -380,9 +380,10 @@ jobs:
     - name: Upload Coverage
       if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
       uses: codecov/codecov-action@v3
+      continue-on-error: true
       with:
         file: ./coverage.xml
-        continue-on-error: true
+        fail_ci_if_error: false
 
   networkx-basic-test:
     runs-on: ubuntu-20.04
