@@ -347,6 +347,7 @@ pre {
     overflow: auto;
     background: #F7FAFB;
     border-radius: 3px;
+    line-height: 140%;
 }
 
 pre code, tt {
