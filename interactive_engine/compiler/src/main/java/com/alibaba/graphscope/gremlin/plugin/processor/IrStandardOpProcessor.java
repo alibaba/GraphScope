@@ -48,6 +48,7 @@ import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -377,7 +378,10 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes(configs);
         irPlan.close();
 
-        PegasusClient.JobRequest request = PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
+        PegasusClient.JobRequest request =
+                PegasusClient.JobRequest.newBuilder()
+                        .setPlan(ByteString.copyFrom(physicalPlanBytes))
+                        .build();
         PegasusClient.JobConfig jobConfig =
                 PegasusClient.JobConfig.newBuilder()
                         .setJobId(jobId)
@@ -423,7 +427,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         jobName,
                         physicalBuilder.explain());
                 PegasusClient.JobRequest request =
-                        PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
+                        PegasusClient.JobRequest.newBuilder()
+                                .setPlan(ByteString.copyFrom(physicalPlanBytes))
+                                .build();
                 PegasusClient.JobConfig jobConfig =
                         PegasusClient.JobConfig.newBuilder()
                                 .setJobId(jobId)
