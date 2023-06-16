@@ -9,13 +9,17 @@ project (
   VERSION ${FLEX_VERSION}
   LANGUAGES CXX)
 
+
+option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
+option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 
 set(DEFAULT_BUILD_TYPE "Release")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -mno-avx512f")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -mno-avx512f -fPIC")
+
 
 add_compile_definitions(FLEX_VERSION="${FLEX_VERSION}")
 
@@ -52,6 +56,11 @@ else ()
     include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})
 endif ()
 
+#find boost----------------------------------------------------------------------
+find_package(Boost REQUIRED COMPONENTS system filesystem
+             # required by folly
+             context program_options regex thread)
+
 # Find Doxygen
 if (BUILD_DOC)
     find_package(Doxygen)
@@ -69,10 +78,31 @@ if (BUILD_DOC)
 endif()
 
 add_subdirectory(utils)
+add_subdirectory(codegen)
 add_subdirectory(storages)
 add_subdirectory(engines)
 add_subdirectory(bin)
+if (BUILD_TEST)
+   add_subdirectory(tests)
+endif()
 
+
+file(GLOB_RECURSE FILES_NEED_LINT
+        "engines/*.cc"
+        "engines/*.h"
+        "bin/*.cc"
+        "storages/*.h"
+        "storages/*.cc"
+        "test/*.h"
+        "test/*.cc"
+        "third_pary/*.h"
+        "third_pary/*.cc" EXCEPT "*.act.h" "*.actg.h" "*.autogen.h" "*.autogen.cc")
+list(FILTER FILES_NEED_LINT EXCLUDE REGEX ".*\.act.h$|.*\.actg.h$|.*\.autogen.h$|.*\.autogen.cc$")
+# gsa_clformat
+add_custom_target(flex_clformat
+    COMMAND clang-format --style=file -i ${FILES_NEED_LINT}
+    COMMENT "Running clang-format, using clang-format-8 from https://github.com/muttleyxd/clang-tools-static-binaries/releases"
+    VERBATIM)
 
 if (NOT DEFINED CPACK_PACKAGE_NAME)
   set(CPACK_PACKAGE_NAME "graphscope_flex")
@@ -87,5 +117,9 @@ set(CPACK_DEBIAN_PACKAGE_MAINTAINER "graphscope")
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
 set(CPACK_DEB_COMPONENT_INSTALL YES)
+
+
+#install CMakeLists.txt.template to resources/
+install(FILES resources/hqps/CMakeLists.txt.template DESTINATION lib/flex/)
 
 include(CPack)
