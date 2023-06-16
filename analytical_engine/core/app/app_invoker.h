@@ -187,13 +187,13 @@ class AppInvoker {
   static void query_impl(std::shared_ptr<worker_t> worker,
                          const rpc::QueryArgs& query_args,
                          std::index_sequence<I...>) {
-    double t0 = grape::GetCurrentTime();
+    double start_time = grape::GetCurrentTime();
     worker->Query(
         ArgsUnpacker<typename std::remove_const<typename std::remove_reference<
             typename ArgTypeAt<I + 1, context_init_func_t>::type>::type>::
                          type>::unpack(query_args.args(I))...);
-    double t1 = grape::GetCurrentTime();
-    LOG(INFO) << "Query time: " << t1 - t0;
+    double end_time = grape::GetCurrentTime();
+    LOG(INFO) << "Query time: " << end_time - start_time << " seconds";
   }
 
  public:
@@ -216,13 +216,13 @@ class FlashAppInvoker {
   static void query_impl(std::shared_ptr<worker_t> worker,
                          const rpc::QueryArgs& query_args,
                          std::index_sequence<I...>) {
-    double t0 = grape::GetCurrentTime();
+    double start_time = grape::GetCurrentTime();
     worker->Query(
         ArgsUnpacker<typename std::remove_const<typename std::remove_reference<
             typename ArgTypeAt<I + 2, app_run_func_t>::type>::type>::type>::
             unpack(query_args.args(I))...);
-    double t1 = grape::GetCurrentTime();
-    LOG(INFO) << "Query time: " << t1 - t0;
+    double end_time = grape::GetCurrentTime();
+    LOG(INFO) << "Query time: " << end_time - start_time << " seconds";
   }
 
  public:
