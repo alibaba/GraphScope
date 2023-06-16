@@ -301,7 +301,7 @@ class EngineCluster:
         args = [
             "bash",
             "-c",
-            self._get_tail_if_exists_cmd("/var/log/graphscope/current/executor.log"),
+            self._get_tail_if_exists_cmd("/var/log/graphscope/current/executor.*.log"),
         ]
         container = self.get_engine_container_helper(
             name,

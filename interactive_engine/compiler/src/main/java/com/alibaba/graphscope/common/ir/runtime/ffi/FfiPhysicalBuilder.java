@@ -17,8 +17,8 @@
 package com.alibaba.graphscope.common.ir.runtime.ffi;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PegasusConfig;
-import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
@@ -29,30 +29,20 @@ import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
-import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
-import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.runtime.RegularPhysicalBuilder;
-import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
 import com.alibaba.graphscope.common.ir.runtime.type.PhysicalNode;
-import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
-import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiData;
-import com.alibaba.graphscope.common.jna.type.FfiPbPointer;
 import com.alibaba.graphscope.common.jna.type.FfiResult;
 import com.alibaba.graphscope.common.jna.type.ResultCode;
 import com.alibaba.graphscope.common.store.IrMeta;
-import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexVariable;
 
 import java.util.List;
 
@@ -106,7 +96,7 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
         } else if (original instanceof GraphLogicalAggregate) {
             // transform aggregate to project + dedup by key
             if (((GraphLogicalAggregate) original).getAggCalls().isEmpty()) {
-                appendProjectDedup((GraphLogicalAggregate) original, oprIdx);
+                appendProjectDedup(node, oprIdx);
             } else {
                 checkFfiResult(
                         LIB.appendGroupbyOperator(
@@ -141,9 +131,8 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
     @Override
     public byte[] build() {
         appendSink(new IntByReference(this.lastIdx));
-        int servers = PegasusConfig.PEGASUS_HOSTS.get(graphConfig).split(",").length;
-        int workers = PegasusConfig.PEGASUS_WORKER_NUM.get(graphConfig);
-        FfiData.ByValue ffiData = LIB.buildPhysicalPlan(ptrPlan, workers, servers);
+        FfiData.ByValue ffiData =
+                LIB.buildPhysicalPlan(ptrPlan, getEngineWorkerNum(), getEngineServerNum());
         checkFfiResult(ffiData.error);
         byte[] bytes = ffiData.getBytes();
         ffiData.close();
@@ -164,64 +153,49 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
         }
     }
 
-    private boolean isColumnId() {
-        return this.irMeta.getSchema().isColumnId();
-    }
-
     private void appendMatch(PhysicalNode<Pointer> node, IntByReference oprIdx) {
-        // append dummy source
-        Pointer ptrScan = LIB.initScanOperator(Utils.ffiScanOpt(GraphOpt.Source.VERTEX));
-        checkFfiResult(LIB.appendScanOperator(ptrPlan, ptrScan, oprIdx.getValue(), oprIdx));
+        List<Pointer> ffiNodes = node.getNodes();
+        Preconditions.checkArgument(
+                ffiNodes.size() == 2,
+                "should have 2 ffi nodes, one is `scan` and the other is `match`");
+        checkFfiResult(LIB.appendScanOperator(ptrPlan, ffiNodes.get(0), oprIdx.getValue(), oprIdx));
         checkFfiResult(
-                LIB.appendPatternOperator(ptrPlan, node.getNode(), oprIdx.getValue(), oprIdx));
+                LIB.appendPatternOperator(ptrPlan, ffiNodes.get(1), oprIdx.getValue(), oprIdx));
     }
 
-    private void appendProjectDedup(GraphLogicalAggregate aggregate, IntByReference oprIdx) {
-        GraphGroupKeys keys = aggregate.getGroupKey();
+    private void appendProjectDedup(PhysicalNode<Pointer> node, IntByReference oprIdx) {
+        List<Pointer> ffiNodes = node.getNodes();
         Preconditions.checkArgument(
-                keys.groupKeyCount() > 0 && aggregate.getAggCalls().isEmpty(),
-                "group keys should not be empty while group calls should be empty if need dedup");
-        List<RelDataTypeField> fields = aggregate.getRowType().getFieldList();
-        Pointer ptrProject = LIB.initProjectOperator(false);
-        for (int i = 0; i < keys.groupKeyCount(); ++i) {
-            RexNode var = keys.getVariables().get(i);
-            Preconditions.checkArgument(
-                    var instanceof RexGraphVariable,
-                    "each group key should be type %s, but is %s",
-                    RexGraphVariable.class,
-                    var.getClass());
-            OuterExpression.Expression expr =
-                    var.accept(new RexToProtoConverter(true, isColumnId()));
-            int aliasId;
-            if (i >= fields.size()
-                    || (aliasId = fields.get(i).getIndex()) == AliasInference.DEFAULT_ID) {
-                throw new IllegalArgumentException(
-                        "each group key should have an alias if need dedup");
-            }
-            checkFfiResult(
-                    LIB.addProjectExprPbAlias(
-                            ptrProject,
-                            new FfiPbPointer.ByValue(expr.toByteArray()),
-                            ArgUtils.asAlias(aliasId)));
-        }
-        Pointer ptrDedup = LIB.initDedupOperator();
-        for (int i = 0; i < keys.groupKeyCount(); ++i) {
-            RelDataTypeField field = fields.get(i);
-            RexVariable rexVar =
-                    RexGraphVariable.of(field.getIndex(), field.getName(), field.getType());
-            OuterExpression.Variable exprVar =
-                    rexVar.accept(new RexToProtoConverter(true, isColumnId()))
-                            .getOperators(0)
-                            .getVar();
-            checkFfiResult(
-                    LIB.addDedupKeyPb(ptrDedup, new FfiPbPointer.ByValue(exprVar.toByteArray())));
-        }
-        checkFfiResult(LIB.appendProjectOperator(ptrPlan, ptrProject, oprIdx.getValue(), oprIdx));
-        checkFfiResult(LIB.appendDedupOperator(ptrPlan, ptrDedup, oprIdx.getValue(), oprIdx));
+                ffiNodes.size() == 2,
+                "should have 2 ffi nodes, one is `project` and the other is `dedup`");
+        checkFfiResult(
+                LIB.appendProjectOperator(ptrPlan, ffiNodes.get(0), oprIdx.getValue(), oprIdx));
+        checkFfiResult(
+                LIB.appendDedupOperator(ptrPlan, ffiNodes.get(1), oprIdx.getValue(), oprIdx));
     }
 
     private void appendSink(IntByReference oprIdx) {
         Pointer ptrSink = LIB.initSinkOperator();
         checkFfiResult(LIB.appendSinkOperator(ptrPlan, ptrSink, oprIdx.getValue(), oprIdx));
+    }
+
+    private int getEngineWorkerNum() {
+        switch (FrontendConfig.ENGINE_TYPE.get(this.graphConfig)) {
+            case "pegasus":
+                return PegasusConfig.PEGASUS_WORKER_NUM.get(graphConfig);
+            case "hiactor":
+            default:
+                return 1;
+        }
+    }
+
+    private int getEngineServerNum() {
+        switch (FrontendConfig.ENGINE_TYPE.get(this.graphConfig)) {
+            case "pegasus":
+                return PegasusConfig.PEGASUS_HOSTS.get(graphConfig).split(",").length;
+            case "hiactor":
+            default:
+                return 1;
+        }
     }
 }
