@@ -1,16 +1,8 @@
 # Cypher Support
-We report the current states of GIE supporting the Cypher queries, regarding
-data types and operators. A notable limitation for now is that we do not
-allow specifying multiple `MATCH` clauses in **one** query. For example,
-the following code will not compile:
-```cypher
-MATCH (a) -[]-> (b)
-WITH a, b
-MATCH (a) -[]-> () -[]-> (b)  # second MATCH clause
-RETURN a, b;
-```
+We report the current states of GIE supporting the Cypher queries, mainly in terms of
+data types and operators.
 ## Data Types
-As [Cypher](https://neo4j.com/docs/cypher-manual/current/values-and-types), we have provided support for
+As [Neo4j](https://neo4j.com/docs/cypher-manual/current/values-and-types), we have provided support for
 data value of types in the categories of **property**, **structural** and **constructed**.
 However, the specific data types that we support are slightly modified from those in Cypher to ensure compatibility with our storage system. Further details will be elaborated upon.
 
@@ -18,35 +10,48 @@ However, the specific data types that we support are slightly modified from thos
 The available data types stored in the vertices (equivalent of nodes in Cypher) and edges (equivalent of relationships in Cypher), known as property types, are divided into several categories including Boolean, Integer, Float, Numeric, String, and Temporal. These property types are extensively utilized and can be commonly utilized in queries and as parameters -- making them the most commonly used data types.
 
 | Category  | Cypher Type | GIE Type  | Supported  |  Todo  |
-|:---|:---|:---|:---|:---|
-| Boolean  | BOOL  | bool |  <input type="checkbox" disabled checked /> |   |
+|:---|:---|:---|:---:|:---|
+| Boolean  | BOOLEAN  | bool |  <input type="checkbox" disabled checked /> |   |
 | Integer  | INTEGER | int32/uint32/int64/uint64 | <input type="checkbox" disabled checked /> |   |
-| Float  | FLOAT | float/double |  | <input type="checkbox" disabled checked />  |   |
-| String | String | String | <input type="checkbox" disabled checked />  |    |
-| Temporal | Date | Date | <input type="checkbox" disabled  />  |  Planned  |
-| Temporal | DateTime (Zoned) | DateTime (Zoned) | <input type="checkbox" disabled  />  | Planned    |
-| Temporal | Time (Zoned) | DateTime (Zoned) | <input type="checkbox" disabled  />  | Planned  |
+| Float  | FLOAT | float/double |  <input type="checkbox" disabled checked />  |   |
+| String | STRING | String | <input type="checkbox" disabled checked />  |    |
+| Bytes| BYTES | Bytes | <input type="checkbox" disabled checked />  |   |
+| Placeholder | NULL | None |  <input type="checkbox" disabled  />  |   Planned  |
+| Temporal | DATE | Date | <input type="checkbox" disabled  />  |  Planned  |
+| Temporal | DATETIME (ZONED) | DateTime (Zoned) | <input type="checkbox" disabled  />  | Planned    |
+| Temporal | TIME (ZONED) | DateTime (Zoned) | <input type="checkbox" disabled  />  | Planned  |
 
 ### Structural types
+In a graph, Structural Types are the first-class citizens and are comprised of the following:
+- Vertex: It encodes the information of a particular vertex in the graph. The information includes the id, label, and a map of properties. However, it is essential to note that multiple labels in a vertex are currently unsupported in GIE.
+- Edge: It encodes the information of a particular edge in the graph. The information comprises the id, edge label, a map of properties, and a pair of vertex ids that refer to source/destination vertices.
+- Path: It encodes the alternating sequence of vertices and conceivably edges while traversing the graph.
 
-| Category  |  Type  | Supported  |  Todo  |
+| Cypher Type | GIE Type | Supported  |  Todo  |
 |:---|:---|:---:|:---|
-| Graph  | Vertex  |  <input type="checkbox" disabled checked /> |   |
-| Graph  | Edge  |  <input type="checkbox" disabled checked /> |   |
-| Graph  | Path  |  <input type="checkbox" disabled checked /> |   |
+| NODE   | Vertex  |  <input type="checkbox" disabled checked /> |   |
+| RELATIONSHIP  | Edge  |  <input type="checkbox" disabled checked /> |   |
+| PATH  | Path  |  <input type="checkbox" disabled checked /> |   |
 
 ### Constructed Types
-| Category  |  Type  | Supported  |  Todo  |
-|:---|:---|:---:|:---|
-| Pair  | Pair  |  <input type="checkbox" disabled checked /> |   |
-| Array  | int32 Array  |  <input type="checkbox" disabled checked /> |   |
-| Array  | int64 Array  |  <input type="checkbox" disabled checked /> |   |
-| Array  | double Array  |  <input type="checkbox" disabled checked /> |   |
-| Array  | string Array  |  <input type="checkbox" disabled checked /> |   |
-| Array  | pair Array  |  <input type="checkbox" disabled checked /> |   |
-| Map  | Map  |  <input type="checkbox" disabled  />| not planned  |
+Constructed types mainly include PAIR, LIST and MAP.
+
+| Category  | Cypher Type | GIE Type  | Supported  |  Todo  |
+|:---|:---|:---|:---:|:---|
+| PAIR  | POINT | Pair |  <input type="checkbox" disabled checked /> |   |
+| LIST | LIST<INNER_TYPE> | int32/int64/double/string/pair Array |  <input type="checkbox" disabled checked /> |   |
+| Map  | MAP  | N/A |  <input type="checkbox" disabled  />| only used in Vertex/Edge  |
 
 ## Operators
+A notable limitation for now is that we do not
+allow specifying multiple `MATCH` clauses in **one** query. For example,
+the following code will not compile:
+```Cypher
+MATCH (a) -[]-> (b)
+WITH a, b
+MATCH (a) -[]-> () -[]-> (b)  # second MATCH clause
+RETURN a, b;
+```
 
 ### Clause
 | Keyword |  Supported  |  Todo  | Desc.|
