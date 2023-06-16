@@ -18,6 +18,8 @@
 
 #include <hiactor/core/actor-template.hh>
 
+#include "flex/engines/graph_db/server/types.h"
+
 namespace server {
 
 class ANNOTATION(actor:group) executor_group : public hiactor::schedulable_actor_group {

@@ -15,7 +15,7 @@
 
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/graph_db/app/app_base.h"
-#include "flex/engines/graph_db/app/app_utils.h"
+#include "flex/utils/app_utils.h"
 #include "flex/engines/graph_db/database/graph_db.h"
 
 namespace gs {

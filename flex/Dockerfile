@@ -18,7 +18,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt install -y \
       ninja-build ragel libhwloc-dev libnuma-dev libpciaccess-dev vim wget \
       git g++ libgoogle-glog-dev cmake libopenmpi-dev default-jdk libcrypto++-dev \
-      libboost-all-dev libxml2-dev
+      libboost-all-dev libxml2-dev curl
 RUN apt install -y xfslibs-dev libgnutls28-dev liblz4-dev maven openssl pkg-config \
       libsctp-dev gcc make python3 systemtap-sdt-dev libtool libyaml-cpp-dev \
       libc-ares-dev stow libfmt-dev diffutils valgrind doxygen python3-pip net-tools
@@ -35,3 +35,15 @@ RUN git clone https://github.com/alibaba/hiactor.git && cd hiactor && git checko
     git submodule update --init --recursive && ./seastar/seastar/install-dependencies.sh && mkdir build && cd build && \
     cmake -DHiactor_DEMOS=OFF -DHiactor_TESTING=OFF -DHiactor_DPDK=OFF -DHiactor_CXX_DIALECT=gnu++17 -DSeastar_CXX_FLAGS="-DSEASTAR_DEFAULT_ALLOCATOR -mno-avx512" .. && \
     make -j && make install
+
+#install protobuf
+RUN apt-get install -y protobuf-compiler libprotobuf-dev
+
+# install java and maven
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install default-jdk -y && \
+    apt-get install maven -y
+
+# install rust
+RUN curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal && \
+    source "$HOME/.cargo/env"

@@ -52,17 +52,17 @@ message Property {
 
 enum Logical {
   // A binary equality operator
-  EQ  = 0;
+  EQ = 0;
   // A binary inequality operator
-  NE  = 1;
+  NE = 1;
   // A binary less-than operator
-  LT  = 2;
+  LT = 2;
   // A binary less-than-equal operator
-  LE  = 3;
+  LE = 3;
   // A binary greater-than operator
-  GT  = 4;
+  GT = 4;
   // A binary greater-than-equal operator
-  GE  = 5;
+  GE = 5;
   // A binary containment check operator, e.g 1 WITHIN [1, 2, 3, 4]
   WITHIN = 6;
   // A binary not-containment check operator, e.g 5 WITHOUT [1, 2, 3, 4]
@@ -107,7 +107,8 @@ enum Arithmetic {
 message Variable {
   // The alias of a graph relation, which is required for a variable
   common.NameOrId tag = 1;
-  // The property of a nested attribute (vertex/edge) of a graph relation, r.a.key, optional
+  // The property of a nested attribute (vertex/edge) of a graph relation,
+  // r.a.key, optional
   Property property = 2;
   // The data of type of Property
   common.IrDataType node_type = 3;
@@ -115,6 +116,18 @@ message Variable {
 
 message VariableKeys {
   repeated Variable keys = 1;
+}
+
+message Case {
+  message WhenThen {
+    Expression when_expression = 1;
+    Expression then_result_expression = 2;
+  }
+  // optional, if not set, it is a simple case expression, else it is a searched
+  // case expression
+  Expression input_expression = 1;
+  repeated WhenThen when_then_expressions = 2;
+  Expression else_result_expression = 3;
 }
 
 // dynamic param
@@ -127,7 +140,7 @@ message DynamicParam {
 // An operator of expression is one of Logical, Arithmetic, Const and Variable.
 message ExprOpr {
   enum Brace {
-    LEFT_BRACE = 0;  // (
+    LEFT_BRACE = 0;   // (
     RIGHT_BRACE = 1;  // )
   }
   oneof item {
@@ -140,13 +153,13 @@ message ExprOpr {
     VariableKeys var_map = 8;
     // dynamic param in expression
     DynamicParam param = 9;
+    Case case = 10;
   }
   // The data of type of ExprOpr
-  common.IrDataType node_type = 10;
+  common.IrDataType node_type = 11;
 }
 
 // An inner representation of an expression
 message Expression {
   repeated ExprOpr operators = 1;
 }
-

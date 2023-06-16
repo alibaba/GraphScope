@@ -24,3 +24,19 @@ install(TARGETS flex_analytical_engine
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib)
+
+if (BUILD_HQPS)
+    if (Hiactor_FOUND)
+        add_executable(sync_server sync_server.cc)
+        target_link_libraries(sync_server flex_mutable_csr_graph hqps_server hqps_plan_proto ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
+        
+        install(TARGETS sync_server
+                RUNTIME DESTINATION bin
+                ARCHIVE DESTINATION lib
+                LIBRARY DESTINATION lib)
+        #install db_admin.sh
+        install(PROGRAMS db_admin.sh DESTINATION bin)
+        # install load_plan_and_run.sh
+        install(PROGRAMS load_plan_and_run.sh DESTINATION bin)
+    endif ()
+endif()

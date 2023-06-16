@@ -1,0 +1,1 @@
+:submit MATCH (p :person {id: $personId })-[:knows]-(friend:person)<-[:hasCreator]-(message : post | comment) WITH p,friend, collect(message) as messages return p,friend,messages

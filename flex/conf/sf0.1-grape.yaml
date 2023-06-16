@@ -1,0 +1,371 @@
+graph_dir: /workspaces/gstest/flex/ldbc-sf01-long-date/
+
+graph:
+  file_format: ldbc_snb
+  graph_store: mutable_csr
+  vertex:
+    - label_name: place
+      properties:
+        - name: _ID
+          type: int64
+        - name: name
+          type: String
+        - name: url
+          type: String
+        - name: type
+          type: String
+      max_vertex_num: 1460
+      files:
+        - place_0_0.csv
+    - label_name: person
+      properties:
+        - name: _ID
+          type: int64
+        - name: firstName
+          type: String
+        - name: lastName
+          type: String
+        - name: gender
+          type: String
+        - name: birthday
+          type: int64
+        - name: creationDate
+          type: int64
+        - name: locationIP
+          type: String
+        - name: browserUsed
+          type: String
+        - name: language
+          type: String
+        - name: email
+          type: String
+      max_vertex_num: 1254000
+      files:
+        - person_0_0.csv
+    - label_name: comment
+      properties:
+        - name: _ID
+          type: int64
+        - name: creationDate
+          type: int64
+        - name: locationIP
+          type: String
+        - name: browserUsed
+          type: String
+        - name: content
+          type: String
+        - name: length
+          type: int32
+      max_vertex_num: 762949871
+      files:
+        - comment_0_0.csv
+    - label_name: post
+      properties:
+        - name: _ID
+          type: int64
+        - name: imageFile
+          type: String
+        - name: creationDate
+          type: int64
+        - name: locationIP
+          type: String
+        - name: browserUsed
+          type: String
+        - name: language
+          type: String
+        - name: content
+          type: String
+        - name: length
+          type: int32
+      max_vertex_num: 187893047
+      files:
+        - post_0_0.csv
+    - label_name: forum
+      properties:
+        - name: _ID
+          type: int64
+        - name: title
+          type: String
+        - name: creationDate
+          type: int64
+      max_vertex_num: 12549398
+      files:
+        - forum_0_0.csv
+    - label_name: organisation
+      properties:
+        - name: _ID
+          type: int64
+        - name: type
+          type: String
+        - name: name
+          type: String
+        - name: url
+          type: String
+      max_vertex_num: 7955
+      files:
+        - organisation_0_0.csv
+    - label_name: tagClass
+      properties:
+        - name: _ID
+          type: int64
+        - name: name
+          type: String
+        - name: url
+          type: String
+      max_vertex_num: 71
+      files:
+        - tagclass_0_0.csv
+    - label_name: tag
+      properties:
+        - name: _ID
+          type: int64
+        - name: name
+          type: String
+        - name: url
+          type: String
+      max_vertex_num: 16080
+      files:
+        - tag_0_0.csv
+  edge:
+    - src_label_name: comment
+      dst_label_name: person
+      edge_label_name: hasCreator
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+      files:
+        - comment_hasCreator_person_0_0.csv
+    - src_label_name: post
+      dst_label_name: person
+      edge_label_name: hasCreator
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+      files:
+        - post_hasCreator_person_0_0.csv
+    - src_label_name: post
+      dst_label_name: tag
+      edge_label_name: hasTag
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      files:
+        - post_hasTag_tag_0_0.csv
+    - src_label_name: comment
+      dst_label_name: comment
+      edge_label_name: replyOf
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+      files:
+        - comment_replyOf_comment_0_0.csv
+    - src_label_name: comment
+      dst_label_name: post
+      edge_label_name: replyOf
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+      files:
+        - comment_replyOf_post_0_0.csv
+    - src_label_name: forum
+      dst_label_name: post
+      edge_label_name: containerOf
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Multiple
+      incoming_edge_strategy: Single
+      files:
+        - forum_containerOf_post_0_0.csv
+    - src_label_name: forum
+      dst_label_name: person
+      edge_label_name: hasMember
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+        - name: joinDate
+          type: int64
+      outgoing_edge_strategy: None
+      files:
+        - forum_hasMember_person_0_0.csv
+    - src_label_name: forum
+      dst_label_name: person
+      edge_label_name: hasModerator
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+      incoming_edge_strategy: None
+      files:
+        - forum_hasModerator_person_0_0.csv
+    - src_label_name: person
+      dst_label_name: tag
+      edge_label_name: hasInterest
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      incoming_edge_strategy: Multiple
+      files:
+        - person_hasInterest_tag_0_0.csv
+    - src_label_name: comment
+      dst_label_name: place
+      edge_label_name: isLocatedIn
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: None
+      files:
+        - comment_isLocatedIn_place_0_0.csv
+    - src_label_name: person
+      dst_label_name: place
+      edge_label_name: isLocatedIn
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+      files:
+        - person_isLocatedIn_place_0_0.csv
+    - src_label_name: post
+      dst_label_name: place
+      edge_label_name: isLocatedIn
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: None
+      files:
+        - post_isLocatedIn_place_0_0.csv
+    - src_label_name: organisation
+      dst_label_name: place
+      edge_label_name: isLocatedIn
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+      files:
+        - organisation_isLocatedIn_place_0_0.csv
+    - src_label_name: person
+      dst_label_name: person
+      edge_label_name: knows
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+        - name: creationDate
+          type: int64
+      files:
+        - person_knows_person_0_0.csv
+    - src_label_name: person
+      dst_label_name: comment
+      edge_label_name: likes
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+        - name: creationDate
+          type: int64
+      outgoing_edge_strategy: None
+      files:
+        - person_likes_comment_0_0.csv
+    - src_label_name: person
+      dst_label_name: post
+      edge_label_name: likes
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+        - name: creationDate
+          type: int64
+      outgoing_edge_strategy: None
+      files:
+        - person_likes_post_0_0.csv
+    - src_label_name: person
+      dst_label_name: organisation
+      edge_label_name: workAt
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+        - name: workFrom
+          type: int32
+      files:
+        - person_workAt_organisation_0_0.csv
+    - src_label_name: place
+      dst_label_name: place
+      edge_label_name: isPartOf
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+      files:
+        - place_isPartOf_place_0_0.csv
+    - src_label_name: tag
+      dst_label_name: tagClass
+      edge_label_name: hasType
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+      files:
+        - tag_hasType_tagclass_0_0.csv
+    - src_label_name: tagClass
+      dst_label_name: tagClass
+      edge_label_name: isSubclassOf
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+      files:
+        - tagclass_isSubclassOf_tagclass_0_0.csv
+    - src_label_name: person
+      dst_label_name: organisation
+      edge_label_name: studyAt
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+        - name: studyFrom
+          type: int32
+      incoming_edge_strategy: None
+      files:
+        - person_studyAt_organisation_0_0.csv
