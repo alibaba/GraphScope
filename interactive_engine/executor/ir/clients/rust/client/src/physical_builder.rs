@@ -20,23 +20,23 @@ use std::ops::{Deref, DerefMut};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::physical as pb;
-use ir_common::KeyId;
 use pegasus::{BuildJobError, JobConf, ServerConf};
 use pegasus_server::pb as pegasus_pb;
 use prost::Message;
 
+/// A plan builder used to build a GIE physical JobRequest.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Plan {
+pub struct PlanBuilder {
     plan: Vec<pb::PhysicalOpr>,
 }
 
-impl Default for Plan {
+impl Default for PlanBuilder {
     fn default() -> Self {
-        Plan { plan: vec![] }
+        PlanBuilder { plan: vec![] }
     }
 }
 
-impl Deref for Plan {
+impl Deref for PlanBuilder {
     type Target = Vec<pb::PhysicalOpr>;
 
     fn deref(&self) -> &Self::Target {
@@ -44,22 +44,30 @@ impl Deref for Plan {
     }
 }
 
-impl DerefMut for Plan {
+impl DerefMut for PlanBuilder {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.plan
     }
 }
 
-impl Plan {
+impl PlanBuilder {
     pub fn add_dummy_source(&mut self) -> &mut Self {
         let op = pb::physical_opr::operator::OpKind::Root(pb::RootScan {});
         self.plan.push(op.into());
         self
     }
 
-    pub fn add_scan_source(&mut self, scan: pb::Scan) -> &mut Self {
-        let op = pb::physical_opr::operator::OpKind::Scan(scan);
-        self.plan.push(op.into());
+    /// Scan as the source, when the data come from the scan operator.
+    /// If the plan is single source, scan would be the root op;
+    /// Otherwise, the root is the dummy node, while the real sources are multiple scans.
+    pub fn add_scan_source(&mut self, mut scan: algebra_pb::Scan) -> &mut Self {
+        let meta_data = scan
+            .meta_data
+            .take()
+            .map(|meta| vec![meta.into()])
+            .unwrap_or_default();
+        let op = pb::physical_opr::operator::OpKind::Scan(scan.into());
+        self.plan.push((op, meta_data).into());
         self
     }
 
@@ -69,7 +77,8 @@ impl Plan {
         self
     }
 
-    pub fn shuffle(&mut self, shuffle_key: Option<KeyId>) -> &mut Self {
+    pub fn shuffle(&mut self, shuffle_key: Option<common_pb::NameOrId>) -> &mut Self {
+        let shuffle_key = shuffle_key.map(|tag| tag.try_into().unwrap());
         let shuffle = pb::repartition::Shuffle { shuffle_key };
         let repartition = pb::Repartition { strategy: Some(pb::repartition::Strategy::ToAnother(shuffle)) };
         self.repartition(repartition)
@@ -82,9 +91,15 @@ impl Plan {
         self.repartition(repartition)
     }
 
-    pub fn project(&mut self, project: pb::Project) -> &mut Self {
-        let op = pb::physical_opr::operator::OpKind::Project(project);
-        self.plan.push(op.into());
+    pub fn project(&mut self, project: algebra_pb::Project) -> &mut Self {
+        let meta_data = project
+            .meta_data
+            .clone()
+            .into_iter()
+            .map(|meta| meta.into())
+            .collect();
+        let op = pb::physical_opr::operator::OpKind::Project(project.into());
+        self.plan.push((op, meta_data).into());
         self
     }
 
@@ -94,9 +109,15 @@ impl Plan {
         self
     }
 
-    pub fn group(&mut self, group: pb::GroupBy) -> &mut Self {
-        let op = pb::physical_opr::operator::OpKind::GroupBy(group);
-        self.plan.push(op.into());
+    pub fn group(&mut self, group: algebra_pb::GroupBy) -> &mut Self {
+        let meta_data = group
+            .meta_data
+            .clone()
+            .into_iter()
+            .map(|meta| meta.into())
+            .collect();
+        let op = pb::physical_opr::operator::OpKind::GroupBy(group.into());
+        self.plan.push((op, meta_data).into());
         self
     }
 
@@ -112,9 +133,14 @@ impl Plan {
         self
     }
 
-    pub fn unfold(&mut self, unfold: pb::Unfold) -> &mut Self {
-        let op = pb::physical_opr::operator::OpKind::Unfold(unfold);
-        self.plan.push(op.into());
+    pub fn unfold(&mut self, mut unfold: algebra_pb::Unfold) -> &mut Self {
+        let meta_data = unfold
+            .meta_data
+            .take()
+            .map(|meta| vec![meta.into()])
+            .unwrap_or_default();
+        let op = pb::physical_opr::operator::OpKind::Unfold(unfold.into());
+        self.plan.push((op, meta_data).into());
         self
     }
 
@@ -125,8 +151,10 @@ impl Plan {
     }
 
     pub fn apply(
-        &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: Plan, alias: Option<i32>,
+        &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: PlanBuilder,
+        alias: Option<common_pb::NameOrId>,
     ) -> &mut Self {
+        let alias = alias.map(|tag| tag.try_into().unwrap());
         let apply = pb::Apply {
             join_kind: unsafe { ::std::mem::transmute(join_kind) },
             keys: vec![],
@@ -138,10 +166,23 @@ impl Plan {
         self
     }
 
+    pub fn apply_func<F>(
+        &mut self, join_kind: algebra_pb::join::JoinKind, mut subtask: F,
+        alias: Option<common_pb::NameOrId>,
+    ) -> &mut Self
+    where
+        F: FnMut(&mut PlanBuilder),
+    {
+        let mut sub_plan = PlanBuilder::default();
+        subtask(&mut sub_plan);
+        self.apply(join_kind, sub_plan, alias)
+    }
+
     pub fn seg_apply(
-        &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: Plan, keys: Vec<common_pb::Variable>,
-        alias: Option<i32>,
+        &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: PlanBuilder,
+        keys: Vec<common_pb::Variable>, alias: Option<common_pb::NameOrId>,
     ) -> &mut Self {
+        let alias = alias.map(|tag| tag.try_into().unwrap());
         let apply = pb::Apply {
             join_kind: unsafe { ::std::mem::transmute(join_kind) },
             keys,
@@ -153,8 +194,20 @@ impl Plan {
         self
     }
 
+    pub fn seg_apply_func<F>(
+        &mut self, join_kind: algebra_pb::join::JoinKind, mut subtask: F, keys: Vec<common_pb::Variable>,
+        alias: Option<common_pb::NameOrId>,
+    ) -> &mut Self
+    where
+        F: FnMut(&mut PlanBuilder),
+    {
+        let mut sub_plan = PlanBuilder::default();
+        subtask(&mut sub_plan);
+        self.seg_apply(join_kind, sub_plan, keys, alias)
+    }
+
     pub fn join(
-        &mut self, join_kind: algebra_pb::join::JoinKind, left_plan: Plan, right_plan: Plan,
+        &mut self, join_kind: algebra_pb::join::JoinKind, left_plan: PlanBuilder, right_plan: PlanBuilder,
         left_keys: Vec<common_pb::Variable>, right_keys: Vec<common_pb::Variable>,
     ) -> &mut Self {
         let join = pb::Join {
@@ -169,7 +222,22 @@ impl Plan {
         self
     }
 
-    pub fn union(&mut self, mut plans: Vec<Plan>) -> &mut Self {
+    pub fn join_func<FL, FR>(
+        &mut self, join_kind: algebra_pb::join::JoinKind, mut left_task: FL, mut right_task: FR,
+        left_keys: Vec<common_pb::Variable>, right_keys: Vec<common_pb::Variable>,
+    ) -> &mut Self
+    where
+        FL: FnMut(&mut PlanBuilder),
+        FR: FnMut(&mut PlanBuilder),
+    {
+        let mut left_plan = PlanBuilder::default();
+        left_task(&mut left_plan);
+        let mut right_plan = PlanBuilder::default();
+        right_task(&mut right_plan);
+        self.join(join_kind, left_plan, right_plan, left_keys, right_keys)
+    }
+
+    pub fn union(&mut self, mut plans: Vec<PlanBuilder>) -> &mut Self {
         let mut sub_plans = vec![];
         for plan in plans.drain(..) {
             sub_plans.push(pb::PhysicalPlan { plan: plan.take() });
@@ -180,7 +248,8 @@ impl Plan {
         self
     }
 
-    pub fn intersect(&mut self, mut plans: Vec<Plan>, key: i32) -> &mut Self {
+    pub fn intersect(&mut self, mut plans: Vec<PlanBuilder>, key: common_pb::NameOrId) -> &mut Self {
+        let key = key.try_into().unwrap();
         let mut sub_plans = vec![];
         for plan in plans.drain(..) {
             sub_plans.push(pb::PhysicalPlan { plan: plan.take() });
@@ -191,45 +260,74 @@ impl Plan {
         self
     }
 
-    pub fn get_v(&mut self, get_v: pb::GetV) -> &mut Self {
-        let op = pb::physical_opr::operator::OpKind::Vertex(get_v);
-        self.plan.push(op.into());
+    pub fn get_v(&mut self, mut get_v: algebra_pb::GetV) -> &mut Self {
+        let meta_data = get_v
+            .meta_data
+            .take()
+            .map(|meta| vec![meta.into()])
+            .unwrap_or_default();
+        let op = pb::physical_opr::operator::OpKind::Vertex(get_v.into());
+        self.plan.push((op, meta_data).into());
         self
     }
 
-    pub fn edge_expand(&mut self, edge: pb::EdgeExpand) -> &mut Self {
-        let op = pb::physical_opr::operator::OpKind::Edge(edge);
-        self.plan.push(op.into());
+    pub fn edge_expand(&mut self, mut edge: algebra_pb::EdgeExpand) -> &mut Self {
+        let meta_data = edge
+            .meta_data
+            .take()
+            .map(|meta| vec![meta.into()])
+            .unwrap_or_default();
+        let op = pb::physical_opr::operator::OpKind::Edge(edge.into());
+        self.plan.push((op, meta_data).into());
         self
     }
 
-    pub fn path_expand(&mut self, path: pb::PathExpand) -> &mut Self {
-        let op = pb::physical_opr::operator::OpKind::Path(path);
-        self.plan.push(op.into());
-        self
-    }
-
-    // Notice that this is used to set the meta_data of the **Last Appended OP**
-    pub fn with_meta_data(&mut self, meta_data: Vec<pb::physical_opr::MetaData>) {
-        if let Some(op) = self.plan.last_mut() {
-            op.meta_data = meta_data;
+    pub fn path_expand(&mut self, path: algebra_pb::PathExpand) -> &mut Self {
+        let mut edge_expand = None;
+        if let Some(base) = &path.base {
+            if let Some(expd) = &base.edge_expand {
+                edge_expand = Some(expd);
+            }
         }
+        // Set the Metadata of PathExpand to the Metadata of EdgeExpand
+        let meta_data = if let Some(edge_expand) = edge_expand {
+            edge_expand
+                .meta_data
+                .clone()
+                .map(|meta| vec![meta.into()])
+                .unwrap_or_default()
+        } else {
+            vec![]
+        };
+
+        let op = pb::physical_opr::operator::OpKind::Path(path.into());
+        self.plan.push((op, meta_data).into());
+        self
     }
 
-    pub fn sink(&mut self, sink: pb::Sink) {
-        let op = pb::physical_opr::operator::OpKind::Sink(sink);
+    pub fn sink(&mut self, sink: algebra_pb::Sink) {
+        let op = pb::physical_opr::operator::OpKind::Sink(sink.into());
         self.plan.push(op.into());
     }
 
     pub fn take(self) -> Vec<pb::PhysicalOpr> {
         self.plan
     }
+
+    pub fn get_last_op_mut(&mut self) -> Option<&mut pb::PhysicalOpr> {
+        self.plan.last_mut()
+    }
+
+    pub fn build(self) -> pb::PhysicalPlan {
+        pb::PhysicalPlan { plan: self.plan }
+    }
 }
 
+/// A job builder used to build a Pegasus JobRequest.
 #[derive(Default)]
 pub struct JobBuilder {
     pub conf: JobConf,
-    plan: Plan,
+    plan: PlanBuilder,
 }
 
 impl fmt::Debug for JobBuilder {
@@ -251,6 +349,10 @@ impl JobBuilder {
         JobBuilder { conf, plan: Default::default() }
     }
 
+    pub fn with_plan(plan: PlanBuilder) -> Self {
+        JobBuilder { conf: JobConf::default(), plan }
+    }
+
     /// Dummy node as the root, when the data come from multiple sources actually.
     pub fn add_dummy_source(&mut self) -> &mut Self {
         self.plan.add_dummy_source();
@@ -260,15 +362,8 @@ impl JobBuilder {
     /// Scan as the source, when the data come from the scan operator.
     /// If the plan is single source, scan would be the root op;
     /// Otherwise, the root is the dummy node, while the real sources are multiple scans.
-    pub fn add_scan_source(&mut self, mut scan: algebra_pb::Scan) -> &mut Self {
-        let meta_data = scan.meta_data.take();
-        self.plan
-            .add_scan_source(scan.into())
-            .with_meta_data(
-                meta_data
-                    .map(|meta| vec![meta.into()])
-                    .unwrap_or_default(),
-            );
+    pub fn add_scan_source(&mut self, scan: algebra_pb::Scan) -> &mut Self {
+        self.plan.add_scan_source(scan);
         self
     }
 
@@ -278,7 +373,6 @@ impl JobBuilder {
     }
 
     pub fn shuffle(&mut self, shuffle_key: Option<common_pb::NameOrId>) -> &mut Self {
-        let shuffle_key = shuffle_key.map(|tag| tag.try_into().unwrap());
         self.plan.shuffle(shuffle_key);
         self
     }
@@ -289,15 +383,7 @@ impl JobBuilder {
     }
 
     pub fn project(&mut self, project: algebra_pb::Project) -> &mut Self {
-        let meta_data = project.meta_data.clone();
-        self.plan
-            .project(project.into())
-            .with_meta_data(
-                meta_data
-                    .into_iter()
-                    .map(|meta| meta.into())
-                    .collect(),
-            );
+        self.plan.project(project);
         self
     }
 
@@ -307,13 +393,7 @@ impl JobBuilder {
     }
 
     pub fn group(&mut self, group: algebra_pb::GroupBy) -> &mut Self {
-        let meta_data = group.meta_data.clone();
-        self.plan.group(group.into()).with_meta_data(
-            meta_data
-                .into_iter()
-                .map(|meta| meta.into())
-                .collect(),
-        );
+        self.plan.group(group);
         self
     }
 
@@ -327,13 +407,8 @@ impl JobBuilder {
         self
     }
 
-    pub fn unfold(&mut self, mut unfold: algebra_pb::Unfold) -> &mut Self {
-        let meta_data = unfold.meta_data.take();
-        self.plan.unfold(unfold.into()).with_meta_data(
-            meta_data
-                .map(|meta| vec![meta.into()])
-                .unwrap_or_default(),
-        );
+    pub fn unfold(&mut self, unfold: algebra_pb::Unfold) -> &mut Self {
+        self.plan.unfold(unfold);
         self
     }
 
@@ -343,54 +418,46 @@ impl JobBuilder {
     }
 
     pub fn apply(
-        &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: Plan,
+        &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: PlanBuilder,
         alias: Option<common_pb::NameOrId>,
     ) -> &mut Self {
-        let alias = alias.map(|tag| tag.try_into().unwrap());
         self.plan.apply(join_kind, sub_plan, alias);
         self
     }
 
     pub fn apply_func<F>(
-        &mut self, join_kind: algebra_pb::join::JoinKind, mut subtask: F,
-        alias: Option<common_pb::NameOrId>,
+        &mut self, join_kind: algebra_pb::join::JoinKind, subtask: F, alias: Option<common_pb::NameOrId>,
     ) -> &mut Self
     where
-        F: FnMut(&mut Plan),
+        F: FnMut(&mut PlanBuilder),
     {
-        let mut sub_plan = Plan::default();
-        subtask(&mut sub_plan);
-        let alias = alias.map(|tag| tag.try_into().unwrap());
-        self.apply(join_kind, sub_plan, alias)
+        self.plan.apply_func(join_kind, subtask, alias);
+        self
     }
 
     pub fn seg_apply(
-        &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: Plan, keys: Vec<common_pb::Variable>,
-        alias: Option<common_pb::NameOrId>,
+        &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: PlanBuilder,
+        keys: Vec<common_pb::Variable>, alias: Option<common_pb::NameOrId>,
     ) -> &mut Self {
-        let alias = alias.map(|tag| tag.try_into().unwrap());
         self.plan
             .seg_apply(join_kind, sub_plan, keys, alias);
         self
     }
 
     pub fn seg_apply_func<F>(
-        &mut self, join_kind: algebra_pb::join::JoinKind, mut subtask: F, keys: Vec<common_pb::Variable>,
+        &mut self, join_kind: algebra_pb::join::JoinKind, subtask: F, keys: Vec<common_pb::Variable>,
         alias: Option<common_pb::NameOrId>,
     ) -> &mut Self
     where
-        F: FnMut(&mut Plan),
+        F: FnMut(&mut PlanBuilder),
     {
-        let mut sub_plan = Plan::default();
-        subtask(&mut sub_plan);
-        let alias = alias.map(|tag| tag.try_into().unwrap());
         self.plan
-            .seg_apply(join_kind, sub_plan, keys, alias);
+            .seg_apply_func(join_kind, subtask, keys, alias);
         self
     }
 
     pub fn join(
-        &mut self, join_kind: algebra_pb::join::JoinKind, left_plan: Plan, right_plan: Plan,
+        &mut self, join_kind: algebra_pb::join::JoinKind, left_plan: PlanBuilder, right_plan: PlanBuilder,
         left_keys: Vec<common_pb::Variable>, right_keys: Vec<common_pb::Variable>,
     ) -> &mut Self {
         self.plan
@@ -399,78 +466,49 @@ impl JobBuilder {
     }
 
     pub fn join_func<FL, FR>(
-        &mut self, join_kind: algebra_pb::join::JoinKind, mut left_task: FL, mut right_task: FR,
+        &mut self, join_kind: algebra_pb::join::JoinKind, left_task: FL, right_task: FR,
         left_keys: Vec<common_pb::Variable>, right_keys: Vec<common_pb::Variable>,
     ) -> &mut Self
     where
-        FL: FnMut(&mut Plan),
-        FR: FnMut(&mut Plan),
+        FL: FnMut(&mut PlanBuilder),
+        FR: FnMut(&mut PlanBuilder),
     {
-        let mut left_plan = Plan::default();
-        left_task(&mut left_plan);
-        let mut right_plan = Plan::default();
-        right_task(&mut right_plan);
-        self.join(join_kind, left_plan, right_plan, left_keys, right_keys)
+        self.plan
+            .join_func(join_kind, left_task, right_task, left_keys, right_keys);
+        self
     }
 
-    pub fn union(&mut self, plans: Vec<Plan>) -> &mut Self {
+    pub fn union(&mut self, plans: Vec<PlanBuilder>) -> &mut Self {
         self.plan.union(plans);
         self
     }
 
-    pub fn intersect(&mut self, plans: Vec<Plan>, key: common_pb::NameOrId) -> &mut Self {
-        let key = key.try_into().unwrap();
+    pub fn intersect(&mut self, plans: Vec<PlanBuilder>, key: common_pb::NameOrId) -> &mut Self {
         self.plan.intersect(plans, key);
         self
     }
 
-    pub fn get_v(&mut self, mut get_v: algebra_pb::GetV) -> &mut Self {
-        let meta_data = get_v.meta_data.take();
-        self.plan.get_v(get_v.into()).with_meta_data(
-            meta_data
-                .map(|meta| vec![meta.into()])
-                .unwrap_or_default(),
-        );
+    pub fn get_v(&mut self, get_v: algebra_pb::GetV) -> &mut Self {
+        self.plan.get_v(get_v);
         self
     }
 
-    pub fn edge_expand(&mut self, mut edge: algebra_pb::EdgeExpand) -> &mut Self {
-        let meta_data = edge.meta_data.take();
-        self.plan
-            .edge_expand(edge.into())
-            .with_meta_data(
-                meta_data
-                    .map(|meta| vec![meta.into()])
-                    .unwrap_or_default(),
-            );
+    pub fn edge_expand(&mut self, edge: algebra_pb::EdgeExpand) -> &mut Self {
+        self.plan.edge_expand(edge);
         self
     }
 
     pub fn path_expand(&mut self, path: algebra_pb::PathExpand) -> &mut Self {
-        self.plan.path_expand(path.into());
+        self.plan.path_expand(path);
         self
     }
 
-    // Notice that this is used to set the meta_data of the **Last Appended OP**
-    pub fn with_meta_data(&mut self, meta_data: Option<algebra_pb::MetaData>) {
-        self.plan.with_meta_data(
-            meta_data
-                .map(|meta| vec![meta.into()])
-                .unwrap_or_default(),
-        );
-    }
-
     pub fn sink(&mut self, sink: algebra_pb::Sink) {
-        self.plan.sink(sink.into());
+        self.plan.sink(sink);
     }
 
-    pub fn take_plan(self) -> Plan {
+    pub fn take_plan(self) -> PlanBuilder {
         self.plan
-    }
-
-    /// get the last appended op
-    pub fn get_last_op_mut(&mut self) -> Option<&mut pb::PhysicalOpr> {
-        self.plan.plan.last_mut()
     }
 
     pub fn build(self) -> Result<pegasus_pb::JobRequest, BuildJobError> {
@@ -494,7 +532,7 @@ impl JobBuilder {
             },
         };
 
-        let plan = pb::PhysicalPlan { plan: self.plan.take() };
+        let plan = self.plan.build();
 
         Ok(pegasus_pb::JobRequest {
             conf: Some(conf),
@@ -511,7 +549,7 @@ mod test {
 
     #[test]
     fn test_job_build_00() {
-        let mut builder = JobBuilder::new(JobConf::new("test_build_00"));
+        let mut builder = PlanBuilder::default();
         let source_pb = algebra_pb::Scan {
             scan_opt: 0,
             alias: None,
@@ -534,7 +572,7 @@ mod test {
 
     #[test]
     fn test_job_build_01() {
-        let mut builder = JobBuilder::new(JobConf::new("test_build_01"));
+        let mut builder = PlanBuilder::default();
         let scan1_pb = algebra_pb::Scan {
             scan_opt: 0,
             alias: None,
@@ -566,7 +604,7 @@ mod test {
         // dummy_source, join, sink
         assert_eq!(&plan_len, &3);
 
-        let join_op = plan.plan[1].clone();
+        let join_op = plan[1].clone();
         if let Some(pb::physical_opr::operator::OpKind::Join(join)) = join_op.opr.unwrap().op_kind {
             // scan
             assert_eq!(join.left_plan.unwrap().plan.len(), 1);
@@ -577,24 +615,18 @@ mod test {
         }
 
         // another way to build `Join`
-        let mut left_builder = JobBuilder::default();
-        let mut right_builder = JobBuilder::default();
+        let mut left_builder = PlanBuilder::default();
+        let mut right_builder = PlanBuilder::default();
         left_builder.add_scan_source(scan1_pb);
         right_builder
             .add_scan_source(scan2_pb)
             .project(project_pb);
-        let mut builder2 = JobBuilder::default();
+        let mut builder2 = PlanBuilder::default();
         builder2
             .add_dummy_source()
-            .join(
-                algebra_pb::join::JoinKind::Inner,
-                left_builder.take_plan(),
-                right_builder.take_plan(),
-                vec![],
-                vec![],
-            )
+            .join(algebra_pb::join::JoinKind::Inner, left_builder, right_builder, vec![], vec![])
             .sink(sink_pb);
 
-        assert_eq!(plan, builder2.take_plan())
+        assert_eq!(plan, builder2.take())
     }
 }
