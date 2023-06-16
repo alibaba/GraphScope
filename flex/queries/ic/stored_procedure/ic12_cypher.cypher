@@ -1,0 +1,3 @@
+MATCH (unused:PERSON {id: $personId})-[:KNOWS]-(friend:PERSON)<-[:HASCREATOR]-(comments:COMMENT)-[:REPLYOF]->(:POST)-[:HASTAG]->(tags:TAG)-[:hasType]->(:TAGClass)-[:isSubclassOf*0..10]->(:TAGClass {name: $tagClassName})
+ with friend AS friend, collect(DISTINCT tags.name) AS tagNames, count(DISTINCT comments) AS replyCount 
+ ORDER BY replyCount DESC, friend.id ASC LIMIT 20 return friend.id AS personId, friend.firstName AS personFirstName, friend.lastName AS personLastName, tagNames, replyCount
