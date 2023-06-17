@@ -1,6 +1,13 @@
 # Cypher Support
-We report the current capabilities of GIE, concerning its support for Neo4j's Cypher queries. This includes the data types, operators and clauses that it supports. Note that we have also included the functionalities that we plan to support in the near future as "Planned" features.
-In this document, all terminologies including data types, operators, and keywords in clauses are case-insensitive. However, for clarity, we have chosen to use capital and lowercase letters for the terminologies of Neo4j and GIE, respectively.
+This document outlines the current capabilities of GIE in supporting Neo4j's Cypher queries and
+compares them to the [syntax](https://neo4j.com/docs/cypher-manual/current/syntax/) specified in Neo4j.
+While our goal is to comply with Neo4j's syntax, GIE currently has some limitations.
+One major constraint is that we solely support the **read** path in Cypher.
+Therefore, functionalities associated with writing, such as adding vertices/edges or modifying their properties, remain **unaddressed**.
+
+We provide in-depth details regarding Cypher's support in GIE, mainly including data types, operators and clauses.
+We further highlight planned features that we intend to offer in the near future.
+While all terminologies, including data types, operators, and keywords in clauses, are case-insensitive in this document, we use capital and lowercase letters for the terminologies of Neo4j and GIE, respectively, to ensure clarity.
 
 ## Data Types
 As [Neo4j](https://neo4j.com/docs/cypher-manual/current/values-and-types), we have provided support for
@@ -50,33 +57,44 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 [functions](https://neo4j.com/docs/cypher-manual/current/functions/). We have not introduced functions at this moment.
 
 
-| Category  |  Cypher Operation | GIE Operation | Supported  |  Todo  |
-|:---|:---|:----|:---:|:---|
-| Aggregate | AVG() | avg()  |  <input type="checkbox" disabled checked /> |   |
-| Aggregate | MIN() | min()  |  <input type="checkbox" disabled checked /> |   |
-| Aggregate | MAX() | max()  |  <input type="checkbox" disabled checked /> |   |
-| Aggregate | COUNT() | count()  |  <input type="checkbox" disabled checked /> |   |
-| Aggregate | COUNT(DISTINCT) | count(distinct)  |  <input type="checkbox" disabled checked /> |   |
-| Aggregate | sum()  |  <input type="checkbox" disabled checked /> |   |
-| Aggregate | collect()  |  <input type="checkbox" disabled checked /> |   |
-| Aggregate | collect(distinct)  |  <input type="checkbox" disabled checked /> |   |
-| Logical | =, <>, >, <, >=, <= |  <input type="checkbox" disabled checked /> |   |
-| Logical | AND, OR |  <input type="checkbox" disabled checked /> |   |
-| Logical | NOT, IN |  <input type="checkbox" disabled  />|  planned |
-| String Match | START WITH |  <input type="checkbox" disabled  />|  planned |
-| String Match | END WITH |  <input type="checkbox" disabled  />|  planned |
-| String Match | CONTAINS |  <input type="checkbox" disabled  />|  planned |
-| String Match (Reg) | =~ |  not planned |
-| Arithmetic  | Add (+) |  <input type="checkbox" disabled checked /> |  |
-| Arithmetic  | Subtract (-) |  <input type="checkbox" disabled checked /> |  |
-| Arithmetic  | Multiply (*) |  <input type="checkbox" disabled checked /> |  |
-| Arithmetic  | Divide (/) |  <input type="checkbox" disabled checked /> |  |
-| Arithmetic  | Mod (%) |  <input type="checkbox" disabled checked /> |  |
-| Arithmetic  | Exponential (^) |  <input type="checkbox" disabled checked /> |  |
-| BitOpr  | AND (&), OR (\|), NOT(~) |  <input type="checkbox" disabled checked /> |  |
-| BitOpr  | LEFT SHIFT (<<) |  <input type="checkbox" disabled  />| planned |
-| BitOpr  | RIGHT SHIFT (>>) | <input type="checkbox" disabled  />| planned |
-| Branch | CASE WHEN  |  <input type="checkbox" disabled  />| planned |
+| Category  | Description | Cypher Operation | GIE Operation | Supported  |  Todo  |
+|:---|:----|:---|:----|:---:|:---|
+| Aggregate | Average value |  AVG() | avg()  |  <input type="checkbox" disabled checked /> |   |
+| Aggregate | Minimum value | MIN() | min()  |  <input type="checkbox" disabled checked /> |   |
+| Aggregate | Maximum value |MAX() | max()  |  <input type="checkbox" disabled checked /> |   |
+| Aggregate | Count the elements |COUNT() | count()  |  <input type="checkbox" disabled checked /> |   |
+| Aggregate | Count the distinct elements | COUNT(DISTINCT) | count(distinct)  |  <input type="checkbox" disabled checked /> |   |
+| Aggregate | Summarize the value | SUM()  | sum() |  <input type="checkbox" disabled checked /> |   |
+| Aggregate | Collect into a list | COLLECT()  | collect() |  <input type="checkbox" disabled checked /> |   |
+| Aggregate | Collect into a set | COLLECT(DISTINCT)  | collect(distinct) | <input type="checkbox" disabled checked /> |   |
+| Property | Get property of a vertex/edge | [N\|R]."KEY"  | [v\|e]."key" | <input type="checkbox" disabled checked /> |   |
+| Mathematical | Addition |  + |  + | <input type="checkbox" disabled checked /> |  |
+| Mathematical | Subtraction |  - |  - | <input type="checkbox" disabled checked /> |  |
+| Mathematical  | Multiplication | * | * | <input type="checkbox" disabled checked /> |  |
+| Mathematical  | Division  | /  | / | <input type="checkbox" disabled checked /> |  |
+| Mathematical  | Modulo division | %  | % |  <input type="checkbox" disabled checked /> |  |
+| Mathematical  | Exponentiation | ^ | ^^ |  <input type="checkbox" disabled checked /> |  |
+| Comparison | Equality | = | = |  <input type="checkbox" disabled checked /> |  |
+| Comparison | Inequality| <> | <> |  <input type="checkbox" disabled checked /> |  |
+| Comparison | Less than | < | < |  <input type="checkbox" disabled checked /> |  |
+| Comparison | Less than or equal | <= | <= |  <input type="checkbox" disabled checked /> |  |
+| Comparison | Greater than | > | > |  <input type="checkbox" disabled checked /> |  |
+| Comparison | Greater than or equal | >= | >= |  <input type="checkbox" disabled checked /> |  |
+| Comparison | Verify as `NULL`| IS NULL | is null |  <input type="checkbox" disabled /> | planned |
+| Comparison | Verify as `NOT NULL`| IS NOT NULL | is not null |  <input type="checkbox" disabled /> | planned |
+| Comparison | String starts with | STARTS WITH | starts with  | <input type="checkbox" disabled  />|  planned |
+| Comparison | String ends with | ENDS WITH | ends with | <input type="checkbox" disabled  />|  planned |
+| Comparison | String contains | CONTAINS | contains | <input type="checkbox" disabled  />|  planned |
+| Boolean | Conjunction | AND | && |  <input type="checkbox" disabled checked /> |   |
+| Boolean | Disjunction | OR | \|\| |  <input type="checkbox" disabled checked /> |   |
+| Boolean | Negation | NOT | ! |  <input type="checkbox" disabled checked /> |   |
+| BitOpr  | Bit and | via function | & |  <input type="checkbox" disabled checked /> |  |
+| BitOpr  | Bit or | via function | \| |  <input type="checkbox" disabled checked /> |  |
+| Boolean | Bit xor | via function | ^ |  <input type="checkbox" disabled checked /> |   |
+| BitOpr  | Bit reverse | via function | ~ |  <input type="checkbox" disabled checked /> |  |
+| BitOpr  | Bit left shift | via function | << |  <input type="checkbox" disabled  />| planned |
+| BitOpr  | Bit right shift | via function | >> |  <input type="checkbox" disabled  />| planned |
+| Branch | Use with `Project` and `Return` | CASE WHEN  | CASE WHEN |  <input type="checkbox" disabled  />| planned |
 
 
 
@@ -91,14 +109,14 @@ MATCH (a) -[]-> () -[]-> (b)  # second MATCH clause
 RETURN a, b;
 ```
 
-| Keyword |  Supported  |  Todo  | Desc.|
-|:---|:---:|:---|:---|
-| MATCH | <input type="checkbox" disabled checked />  | |  only one Match clause is allowed |
-| OPTIONAL MATCH | <input type="checkbox" disabled  /> |  planned | implements as left outer join  |
-| RETURN | <input type="checkbox" disabled checked />  |   |   |
-| WITH | <input type="checkbox" disabled checked />  |   | project, aggregate, distinct |
-| WHERE | <input type="checkbox" disabled checked />  |    |   |
-| NOT EXIST (an edge/path) | <input type="checkbox" disabled  />| implements as anti join | planned
-| ORDER BY | <input type="checkbox" disabled checked />  |  |   |
-| LIMIT | <input type="checkbox" disabled checked />  |    |   |
+| Keyword | Comments |  Supported  |  Todo
+|:---|---|:---:|:---|
+| MATCH | only one Match clause is allowed  | <input type="checkbox" disabled checked />  |
+| OPTIONAL MATCH | implements as left outer join | <input type="checkbox" disabled  /> |  planned |
+| RETURN .. [AS] |  | <input type="checkbox" disabled checked />  |   |
+| WITH .. [AS] | project, aggregate, distinct | <input type="checkbox" disabled checked />  | |
+| WHERE |  | <input type="checkbox" disabled checked />  |    |
+| NOT EXIST (an edge/path) | implements as anti join  |  <input type="checkbox" disabled  />|  |
+| ORDER BY |  | <input type="checkbox" disabled checked />  |  |
+| LIMIT |  | <input type="checkbox" disabled checked />  |    |
 
