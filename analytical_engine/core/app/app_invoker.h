@@ -16,12 +16,13 @@
 #ifndef ANALYTICAL_ENGINE_CORE_APP_APP_INVOKER_H_
 #define ANALYTICAL_ENGINE_CORE_APP_APP_INVOKER_H_
 
-#include <glog/logging.h>
-
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <type_traits>
+
+#include "glog/logging.h"
+#include "grape/util.h"
 
 #ifdef NETWORKX
 #include "core/object/dynamic.h"
@@ -186,15 +187,18 @@ class AppInvoker {
   static void query_impl(std::shared_ptr<worker_t> worker,
                          const rpc::QueryArgs& query_args,
                          std::index_sequence<I...>) {
+    double start_time = grape::GetCurrentTime();
     worker->Query(
         ArgsUnpacker<typename std::remove_const<typename std::remove_reference<
             typename ArgTypeAt<I + 1, context_init_func_t>::type>::type>::
                          type>::unpack(query_args.args(I))...);
+    double end_time = grape::GetCurrentTime();
+    LOG(INFO) << "Query time: " << end_time - start_time << " seconds";
   }
 
  public:
-  static bl::result<nullptr_t> Query(std::shared_ptr<worker_t> worker,
-                                     const rpc::QueryArgs& query_args) {
+  static bl::result<std::nullptr_t> Query(std::shared_ptr<worker_t> worker,
+                                          const rpc::QueryArgs& query_args) {
     constexpr std::size_t args_num = ArgsNum<context_init_func_t>::value - 1;
     // There maybe default argument
     CHECK_OR_RAISE(args_num >= query_args.args_size());
@@ -212,15 +216,18 @@ class FlashAppInvoker {
   static void query_impl(std::shared_ptr<worker_t> worker,
                          const rpc::QueryArgs& query_args,
                          std::index_sequence<I...>) {
+    double start_time = grape::GetCurrentTime();
     worker->Query(
         ArgsUnpacker<typename std::remove_const<typename std::remove_reference<
             typename ArgTypeAt<I + 2, app_run_func_t>::type>::type>::type>::
             unpack(query_args.args(I))...);
+    double end_time = grape::GetCurrentTime();
+    LOG(INFO) << "Query time: " << end_time - start_time << " seconds";
   }
 
  public:
-  static bl::result<nullptr_t> Query(std::shared_ptr<worker_t> worker,
-                                     const rpc::QueryArgs& query_args) {
+  static bl::result<std::nullptr_t> Query(std::shared_ptr<worker_t> worker,
+                                          const rpc::QueryArgs& query_args) {
     constexpr std::size_t args_num = ArgsNum<app_run_func_t>::value - 2;
     // There maybe default argument
     CHECK_OR_RAISE(args_num >= query_args.args_size());

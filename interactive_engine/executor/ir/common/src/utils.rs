@@ -650,6 +650,21 @@ impl From<physical_pb::physical_opr::operator::OpKind> for physical_pb::Physical
     }
 }
 
+impl From<(physical_pb::physical_opr::operator::OpKind, Vec<physical_pb::physical_opr::MetaData>)>
+    for physical_pb::PhysicalOpr
+{
+    fn from(
+        op_kind_with_meta: (
+            physical_pb::physical_opr::operator::OpKind,
+            Vec<physical_pb::physical_opr::MetaData>,
+        ),
+    ) -> Self {
+        let (op_kind, meta_data) = op_kind_with_meta;
+        let opr = physical_pb::physical_opr::Operator { op_kind: Some(op_kind) };
+        physical_pb::PhysicalOpr { opr: Some(opr), meta_data }
+    }
+}
+
 impl From<pb::MetaData> for physical_pb::physical_opr::MetaData {
     fn from(meta_data: pb::MetaData) -> Self {
         physical_pb::physical_opr::MetaData { r#type: meta_data.r#type, alias: meta_data.alias }

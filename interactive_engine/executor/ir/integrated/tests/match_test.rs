@@ -28,7 +28,7 @@ mod test {
     use ir_core::plan::logical::LogicalPlan;
     use ir_core::plan::meta::set_schema_from_json;
     use ir_core::plan::physical::AsPhysical;
-    use ir_physical_client::physical_builder::JobBuilder;
+    use ir_physical_client::physical_builder::{JobBuilder, PlanBuilder};
     use pegasus_server::JobRequest;
     use runtime::process::entry::Entry;
 
@@ -128,11 +128,11 @@ mod test {
         plan.append_operator_as_node(sink.into(), vec![id])
             .unwrap();
 
-        let mut job_builder = JobBuilder::default();
+        let mut plan_builder = PlanBuilder::default();
         let mut plan_meta = plan.get_meta().clone();
-        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+        plan.add_job_builder(&mut plan_builder, &mut plan_meta)
             .unwrap();
-
+        let job_builder = JobBuilder::with_plan(plan_builder);
         job_builder.build().unwrap()
     }
 
@@ -220,11 +220,11 @@ mod test {
         plan.append_operator_as_node(sink.into(), vec![id])
             .unwrap();
 
-        let mut job_builder = JobBuilder::default();
+        let mut plan_builder = PlanBuilder::default();
         let mut plan_meta = plan.get_meta().clone();
-        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+        plan.add_job_builder(&mut plan_builder, &mut plan_meta)
             .unwrap();
-
+        let job_builder = JobBuilder::with_plan(plan_builder);
         job_builder.build().unwrap()
     }
 
