@@ -1162,12 +1162,6 @@ class Session(object):
         with default_session(self):
             return graphscope.load_from(*args, **kwargs)
 
-    def load_from_gar(self, *args, **kwargs):
-        """Load a graph from gar format files within the session.
-        See more information in :meth:`graphscope.load_from_gar`.
-        """
-        with default_session(self):
-            return graphscope.load_from_gar(*args, **kwargs)
 
     @deprecated("Please use `sess.interactive` instead.")
     def gremlin(self, graph, params=None):

@@ -112,8 +112,6 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
 #ifdef ENABLE_GAR
       BOOST_LEAF_AUTO(graph_info_path,
                       params.Get<std::string>(gs::rpc::GRAPH_INFO_PATH));
-      BOOST_LEAF_ASSIGN(generate_eid, params.Get<bool>(gs::rpc::GENERATE_EID));
-      BOOST_LEAF_ASSIGN(retain_oid, params.Get<bool>(gs::rpc::RETAIN_OID));
       using loader_t =
           vineyard::gar_fragment_loader_t<oid_t, vid_t, vertex_map_t>;
       loader_t loader(client, comm_spec, graph_info_path);

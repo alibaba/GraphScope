@@ -18,23 +18,29 @@
 
 import os
 
-import pytest
+from graphscope.framework.graph import Graph
 
-gar_test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
+graphar_test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
 
 
 @pytest.mark.skip(reason="Issue 3162")
-def test_load_from_gar(graphscope_session):
+def test_load_from_graphar(graphscope_session):
     graph_yaml = os.path.join(
-        gar_test_repo_dir, "graphar/ldbc_sample/parquet/ldbc_sample.graph.yml"
+        graphar_test_repo_dir, "graphar/ldbc_sample/parquet/ldbc_sample.graph.yml"
     )
-    print(graph_yaml)
-    graph = graphscope_session.load_from_gar(graph_yaml)
-    assert graph.schema is not None
-    del graph
+    graph_yaml_path = "graphar+file://" + graph_yaml
+    print(graph_yaml_path)
+    g = Graph.load_from(graph_yaml_path, graphscope_session)
+    assert g.schema is not None
+    del g
 
 
 @pytest.mark.skip(reason="Issue 3162")
-def test_archive_to_gar(ldbc_graph):
-    graph_yaml = os.path.join(gar_test_repo_dir, "graphar/ldbc/ldbc.graph.yml")
-    ldbc_graph.archive(graph_yaml)
+def test_save_to_graphar(ldbc_graph):
+    graphar_options = {
+        "graph_name": "ldbc_sample",
+        "file_type": "orc",
+        "vertex_block_size": 256,
+        "edge_block_size": 1024,
+    }
+    ldbc_graph.save_to("/tmp/", format="graphar", graphar_options=graphar_options)

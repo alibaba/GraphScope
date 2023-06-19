@@ -31,10 +31,12 @@ import time
 import warnings
 from queue import Empty
 from queue import Queue
+from urllib.parse import urlparse
 
 import numpy as np
 import pandas as pd
 import psutil
+import yaml
 from google.protobuf.any_pb2 import Any
 
 from graphscope.client.archive import OutArchive
@@ -694,11 +696,110 @@ def deprecated(msg):
     return decorator
 
 
-def apply_docstring(fn):
-    """Apply the docstring of `fn` to annotated function."""
+def generate_graphar_info_from_schema(path, schema, graphar_options):
+    import copy
 
-    def decorator(func):
-        func.__doc__ = fn.__doc__
-        return func
+    class Dumper(yaml.Dumper):
+        def increase_indent(self, flow=False, indentless=False):
+            return super(Dumper, self).increase_indent(flow, False)
 
-    return decorator
+    def PbDataType2InfoType(str):
+        if str == "INT":
+            return "int32"
+        elif str == "LONG":
+            return "int64"
+        elif str == "STRING":
+            return "string"
+        elif str == "BOOL":
+            return "bool"
+        else:
+            raise ValueError("Invlid type name {}".format(str))
+
+    # if not urlparse(path).scheme:
+    #    path = "file://" + path
+    graph_name = graphar_options.get("graph_name", "graph")
+    vertex_block_size = graphar_options.get("vertex_block_size", 262144)  # 2^18
+    edge_block_size = graphar_options.get("edge_block_size", 4194304)  # 2^22
+    file_type = graphar_options.get("file_type", "parquet")
+    version = graphar_options.get("version", "v1")
+    graph_info = dict()
+    graph_info["name"] = graph_name
+    graph_info["version"] = "gar/{}".format(version)
+    # process vertex info
+    graph_info["vertices"] = []
+    graph_info["edges"] = []
+    for vertex_label in schema.vertex_labels:
+        info = dict()
+        info["label"] = vertex_label
+        info["chunk_size"] = vertex_block_size
+        info["prefix"] = "vertex/" + vertex_label + "/"
+        info["version"] = "gar/{}".format(version)
+        info["property_groups"] = [{"properties": [], "file_type": file_type}]
+        for property in schema.get_vertex_properties(vertex_label):
+            info["property_groups"][0]["properties"].append(
+                {
+                    "name": property.name,
+                    "data_type": PbDataType2InfoType(
+                        graph_def_pb2.DataTypePb.Name(property.data_type)
+                    ),
+                    "is_primary": True if property.name == "id" else False,
+                }
+            )
+        output_path = os.path.join(path, vertex_label + ".vertex.yml")
+        with open(output_path, "w") as f:
+            yaml.dump(info, f, Dumper=Dumper, default_flow_style=False)
+        graph_info["vertices"].append(vertex_label + ".vertex.yml")
+    # process edge info
+    for edge_label in schema.edge_labels:
+        properties = []
+        for property in schema.get_edge_properties(edge_label):
+            properties.append(
+                {
+                    "name": property.name,
+                    "data_type": PbDataType2InfoType(
+                        graph_def_pb2.DataTypePb.Name(property.data_type)
+                    ),
+                    "is_primary": False,
+                }
+            )
+        csr_adj_list = {
+            "file_type": file_type,
+            "property_groups": [
+                {"properties": copy.deepcopy(properties), "file_type": file_type}
+            ],
+            "ordered": True,
+            "aligned_by": "src",
+        }
+        csc_adj_list = {
+            "file_type": file_type,
+            "property_groups": [
+                {"properties": copy.deepcopy(properties), "file_type": file_type}
+            ],
+            "ordered": True,
+            "aligned_by": "dst",
+        }
+        for r in schema.get_relationships(edge_label):
+            info = dict()
+            info["prefix"] = (
+                "edge/" + r.source + "_" + edge_label + "_" + r.destination + "/"
+            )
+            info["edge_label"] = edge_label
+            info["src_label"] = r.source
+            info["dst_label"] = r.destination
+            info["chunk_size"] = edge_block_size
+            info["src_chunk_size"] = vertex_block_size
+            info["dst_chunk_size"] = vertex_block_size
+            info["version"] = "gar/{}".format(version)
+            info["adj_lists"] = [csr_adj_list, csc_adj_list]
+            output_path = os.path.join(
+                path, r.source + "_" + edge_label + "_" + r.destination + ".edge.yml"
+            )
+            with open(output_path, "w") as f:
+                yaml.dump(info, f, Dumper=Dumper, default_flow_style=False)
+        graph_info["edges"].append(
+            r.source + "_" + edge_label + "_" + r.destination + ".edge.yml"
+        )
+    graph_info_path = os.path.join(path, graph_name + ".graph.yml")
+    with open(graph_info_path, "w") as f:
+        yaml.dump(graph_info, f, Dumper=Dumper, default_flow_style=False)
+    return graph_info_path

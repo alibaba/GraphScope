@@ -28,6 +28,7 @@ from typing import List
 from typing import Mapping
 from typing import Tuple
 from typing import Union
+from urllib.parse import urlparse
 
 try:
     import vineyard
@@ -114,9 +115,6 @@ class GraphInterface(metaclass=ABCMeta):
 
     @classmethod
     def load_from(cls, path, sess, **kwargs):
-        raise NotImplementedError
-
-    def archive(self, path, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
@@ -456,16 +454,6 @@ class GraphDAGNode(DAGNode, GraphInterface):
         vertex_range = utils.transform_vertex_range(vertex_range)
         op = dag_utils.graph_to_dataframe(self, selector, vertex_range)
         return ResultDAGNode(self, op)
-
-    def archive(self, path):
-        """Archive the graph to gar format with graph yaml file path.
-
-        Args:
-            path (str): The graph yaml file path describe how to archive the graph.
-        """
-        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
-        op = dag_utils.archive_graph(self, path)
-        return ArchivedGraph(self._session, op)
 
     def to_directed(self):
         op = dag_utils.to_directed(self)
@@ -1164,49 +1152,101 @@ class Graph(GraphInterface):
             self.signature == self._saved_signature, "Graph has been modified!"
         )
 
-    def save_to(self, path, **kwargs):
-        """Serialize graph to a location.
-        The meta and data of graph is dumped to specified location,
-        and can be restored by `Graph.load_from` in other sessions.
-
-        Each worker will write a `path_{worker_id}.meta` file and
-        a `path_{worker_id}` file to storage.
-        Args:
-            path (str): supported storages are local, hdfs, oss, s3
-        """
-
-        op = dag_utils.save_graph_to(self, path, self._vineyard_id, **kwargs)
-        self._session.dag.add_op(op)
-        return self._session._wrapper(op)
-
-    @classmethod
-    def load_from(cls, path, sess, **kwargs):
-        """Construct a `Graph` by deserialize from `path`.
-        It will read all serialization files, which is dumped by
-        `Graph.serialize`.
-        If any serialize file doesn't exists or broken, will error out.
-
-        Args:
-            path (str): Path contains the serialization files.
-            sess (`graphscope.Session`): The target session
-                that the graph will be construct in
-
-        Returns:
-            `Graph`: A new graph object. Schema and data is supposed to be
-                identical with the one that called serialized method.
-        """
-        op = dag_utils.load_graph_from(path, sess, **kwargs)
+    @staticmethod
+    def _load_from_graphar(path, sess, **kwargs):
+        # graphar now only support global vertex map.
+        vertex_map = utils.vertex_map_type_to_enum("global")
+        config = {
+            types_pb2.OID_TYPE: utils.s_to_attr(
+                "int64_t"
+            ),  # grahar use vertex index as oid, so it always be int64_t
+            types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
+            types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
+            types_pb2.IS_FROM_GAR: utils.b_to_attr(True),
+            types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(vertex_map),
+            types_pb2.COMPACT_EDGES: utils.b_to_attr(False),
+            types_pb2.GRAPH_INFO_PATH: utils.s_to_attr(path),
+        }
+        op = dag_utils.create_graph(
+            sess.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=[], attrs=config
+        )
         return sess._wrapper(GraphDAGNode(sess, op))
 
-    def archive(self, path):
-        """Archive graph gar format files base on the graph info.
-        The meta and data of graph is dumped to specified location,
-        and can be restored by `Graph.deserialize` in other sessions.
+    @classmethod
+    def load_from(cls, uristring, sess=None, **kwargs):
+        """Load a ArrowProperty graph from with a certain data source. The data source
+        can be vineyard serialized files or graphar files.
 
         Args:
-            path (str): the graph info file path.
+            uristring (str): URI contains the description of the data source or
+                path contains the serialization files,
+                example: "graphar+file:///tmp/graphar/xxx"
+            sess (`graphscope.Session`): The target session that the graph
+                will be construct, if None, use the default session.
+            kwargs: Other arguments that will be passed to the data source loader.
+        Returns:
+            `Graph`: A new graph object.
         """
-        return self._session._wrapper(self._graph_node.archive(path))
+        from graphscope.client.session import get_default_session
+
+        if sess is None:
+            sess = get_default_session()
+        uri = urlparse(uristring)
+        if uri.scheme and "+" in uri.scheme:
+            source = uri.scheme.split("+")[0]
+            path = uri.scheme.split("+")[-1] + "://" + uri.netloc + uri.path
+            if source == "graphar":
+                return cls._load_from_graphar(path, sess)
+            else:
+                raise ValueError("Unknown source: %s" % source)
+        else:
+            # not a uri string, assume it is a path for deserialization
+            storage_options = kwargs.pop("storage_options", {})
+            deserialization_options = kwargs.pop("deserialization_options", {})
+            op = dag_utils.deserialize_graph(
+                uristring, sess, storage_options, deserialization_options
+            )
+            return sess._wrapper(GraphDAGNode(sess, op))
+
+    def save_to(
+        self,
+        path,
+        format="serialization",
+        **kwargs,
+    ):
+        """Save graph to specified location with specified format.
+
+        Args:
+            path (str): the directory path to write graph.
+            format (str): the format to write graph, default is "serialization".
+            kwargs: Other arguments that will be passed to the data source
+                    saver.
+
+        Return (dict): A dict contains the type and uri string of output data.
+        """
+        if format == "graphar":
+            graphar_options = kwargs.pop("graphar_options", {})
+            graph_info_path = utils.generate_graphar_info_from_schema(
+                path,
+                self._schema,
+                graphar_options,
+            )
+            op = dag_utils.save_to_graphar(self, graph_info_path)
+            self._session.dag.add_op(op)
+            self._session._wrapper(op)
+            return {"type": format, "uri": "graphar+" + graph_info_path}
+        elif format == "serialization":
+            # serialize graph
+            storage_options = kwargs.pop("storage_options", {})
+            serialization_options = kwargs.pop("serialization_options", {})
+            op = dag_utils.serialize_graph(
+                self, path, storage_options, serialization_options
+            )
+            self._session.dag.add_op(op)
+            self._session._wrapper(op)
+            return {"type": format, "uri": path}
+        else:
+            raise ValueError("Unknown format: %s" % format)
 
     @apply_docstring(GraphDAGNode.add_vertices)
     def add_vertices(
@@ -1295,17 +1335,6 @@ class UnloadedGraph(DAGNode):
     """Unloaded graph node in a DAG."""
 
     def __init__(self, session, op):
-        self._session = session
-        self._op = op
-        # add op to dag
-        self._session.dag.add_op(self._op)
-
-
-class ArchivedGraph(DAGNode):
-    """Archived graph node in a DAG"""
-
-    def __init__(self, session, op):
-        super().__init__()
         self._session = session
         self._op = op
         # add op to dag
