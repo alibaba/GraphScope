@@ -130,14 +130,4 @@ public class ProjectTest {
         // only contain the new appended columns in project data type
         Assert.assertEquals("RecordType(INTEGER b)", builder.build().getRowType().toString());
     }
-
-    @Test
-    public void project_6_test() {
-
-        //        // true
-        //        Assert.assertEquals("a.name", variable.toString());
-        //        // only contain the new appended columns in project data type
-        //        Assert.assertEquals("RecordType(INTEGER b)",
-        // builder.build().getRowType().toString());
-    }
 }
