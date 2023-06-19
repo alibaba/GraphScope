@@ -15,6 +15,10 @@
 
 #include <memory>
 
+#include "boost/property_tree/exceptions.hpp"
+#include "boost/property_tree/json_parser.hpp"
+#include "boost/property_tree/ptree.hpp"
+
 #include "vineyard/client/client.h"
 #include "vineyard/common/util/macros.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
@@ -112,11 +116,38 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
 #ifdef ENABLE_GAR
       BOOST_LEAF_AUTO(graph_info_path,
                       params.Get<std::string>(gs::rpc::GRAPH_INFO_PATH));
-      BOOST_LEAF_ASSIGN(generate_eid, params.Get<bool>(gs::rpc::GENERATE_EID));
-      BOOST_LEAF_ASSIGN(retain_oid, params.Get<bool>(gs::rpc::RETAIN_OID));
+      BOOST_LEAF_AUTO(storage_option,
+                      params.Get<std::string>(gs::rpc::STORAGE_OPTIONS));
+      boost::property_tree::ptree pt;
+      bool store_in_local;
+      std::stringstream ss(storage_option);
+      std::vector<std::string> vertex_labels;
+      std::vector<std::vector<std::string>> edge_labels;
+      try {
+        boost::property_tree::read_json(ss, pt);
+        store_in_local = pt.get<bool>("store_in_local", false);
+        if (pt.count("vertex_label") != 0) {
+          for (auto& item : pt.get_child("vertex_label")) {
+            vertex_labels.push_back(item.second.get_value<std::string>());
+          }
+        }
+        if (pt.count("edge_label") != 0) {
+          for (auto& triple : pt.get_child("edge_label")) {
+            std::vector<std::string> edge_triple;
+            for (auto& item : triple.second) {
+              edge_triple.push_back(item.second.get_value<std::string>());
+            }
+            assert(edge_triple.size() == 3);
+            edge_labels.push_back(std::move(edge_triple));
+          }
+        }
+      } catch (boost::property_tree::ptree_error const& e) {
+        RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                        "Invalid write_option: " + std::string(e.what()));
+      }
       using loader_t =
           vineyard::gar_fragment_loader_t<oid_t, vid_t, vertex_map_t>;
-      loader_t loader(client, comm_spec, graph_info_path);
+      loader_t loader(client, comm_spec, graph_info_path, vertex_labels, edge_labels, true, false, store_in_local);
       MPI_Barrier(comm_spec.comm());
       BOOST_LEAF_ASSIGN(frag_group_id, loader.LoadFragmentAsFragmentGroup());
 #else
@@ -187,9 +218,26 @@ __attribute__((visibility("hidden"))) static bl::result<void> ArchiveGraph(
     vineyard::ObjectID frag_group_id, const grape::CommSpec& comm_spec,
     vineyard::Client& client, const gs::rpc::GSParams& params) {
 #ifdef ENABLE_GAR
-  BOOST_LEAF_AUTO(graph_info_path,
+  BOOST_LEAF_AUTO(output_path,
                   params.Get<std::string>(gs::rpc::GRAPH_INFO_PATH));
-
+  BOOST_LEAF_AUTO(write_option,
+                  params.Get<std::string>(gs::rpc::WRITE_OPTIONS));
+  boost::property_tree::ptree pt;
+  std::string graph_name, file_type;
+  int64_t vertex_block_size, edge_block_size;
+  bool store_in_local;
+  std::stringstream ss(write_option);
+  try {
+    boost::property_tree::read_json(ss, pt);
+    graph_name = pt.get<std::string>("graph_name", "graph");
+    file_type = pt.get<std::string>("file_type", "parquet");
+    vertex_block_size = pt.get<int64_t>("vertex_block_size", 262144);  // default 2^18
+    edge_block_size = pt.get<int64_t>("edge_block_size", 4194304);  // default 2^22
+    store_in_local = pt.get<bool>("store_in_local", false);
+  } catch (boost::property_tree::ptree_error const& e) {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                    "Invalid write_option: " + std::string(e.what()));
+  }
   auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
       client.GetObject(frag_group_id));
   auto fid = comm_spec.WorkerToFrag(comm_spec.worker_id());
@@ -197,8 +245,8 @@ __attribute__((visibility("hidden"))) static bl::result<void> ArchiveGraph(
   auto frag = std::static_pointer_cast<_GRAPH_TYPE>(client.GetObject(frag_id));
 
   using archive_t = vineyard::ArrowFragmentWriter<_GRAPH_TYPE>;
-  archive_t archive(frag, comm_spec, graph_info_path);
-  archive.WriteFragment();
+  archive_t archive(frag, comm_spec, graph_name, output_path, vertex_block_size, edge_block_size, file_type, store_in_local);
+  BOOST_LEAF_CHECK(archive.WriteFragment());
 
   return {};
 #else
