@@ -1103,3 +1103,47 @@ def archive_graph(graph, path):
         output_types=types_pb2.NULL_OUTPUT,
     )
     return op
+
+
+def save_graph_to(
+    graph,
+    path: str,
+    vineyard_id,
+    **kwargs,
+):
+    """Serialize graph to the specified location
+
+    Args:
+        graph (:class:`graphscope.framework.graph.GraphDAGNode`): Source graph.
+        path (str): The path to serialize the graph, on each worker.
+
+    Returns:
+        An op to serialize the graph to a path.
+    """
+    config = {
+        types_pb2.GRAPH_SERIALIZATION_PATH: utils.s_to_attr(path),
+        types_pb2.VINEYARD_ID: utils.i_to_attr(vineyard_id),
+        types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(kwargs)),
+    }
+    op = Operation(
+        graph.session_id,
+        types_pb2.SERIALIZE_GRAPH,
+        config=config,
+        inputs=[graph.op],
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
+def load_graph_from(path: str, sess, **kwargs):
+    config = {
+        types_pb2.GRAPH_SERIALIZATION_PATH: utils.s_to_attr(path),
+        types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(kwargs)),
+    }
+    op = Operation(
+        sess.session_id,
+        types_pb2.DESERIALIZE_GRAPH,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op

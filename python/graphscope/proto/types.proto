@@ -104,6 +104,8 @@ enum OperationType {
   INDUCE_SUBGRAPH = 22;  // induce subgraph
   UNLOAD_CONTEXT = 23;  // unload context
   ARCHIVE_GRAPH = 24;  // archive graph
+  SERIALIZE_GRAPH = 25; // serialize graph
+  DESERIALIZE_GRAPH = 26; // desrialize graph
 
   SUBGRAPH = 32;  // subgraph in interactive query
   GREMLIN_QUERY = 33;  // queries on gremlin engine
@@ -252,6 +254,9 @@ enum ParamKey {
   CHUNK_TYPE = 342;
 
   GRAPH_LIBRARY_PATH = 400;
+    //serialization path
+  GRAPH_SERIALIZATION_PATH = 401;
+
 
   VFORMAT = 500; // vertex input format
   EFORMAT = 501; // edge input format
