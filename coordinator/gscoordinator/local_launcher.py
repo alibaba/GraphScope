@@ -61,7 +61,7 @@ class LocalLauncher(AbstractLauncher):
         log_level: str,
         instance_id: str,
         timeout_seconds: int,
-        close_timeout_seconds:int = 60,
+        close_timeout_seconds: int = 60,
         retry_time_seconds: int = 1,
     ):
         super().__init__()
