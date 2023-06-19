@@ -172,6 +172,8 @@ class CoordinatorServiceServicer(
 
         # dangling check
         self._dangling_timeout_seconds = dangling_timeout_seconds
+        self._comm_timeout_seconds = 120
+        self._poll_timeout_seconds = 2
         self._dangling_detecting_timer = None
         self._cleanup_instance = False
 
@@ -237,6 +239,9 @@ class CoordinatorServiceServicer(
         self._connected = True
         # Cleanup after timeout seconds
         self._dangling_timeout_seconds = request.dangling_timeout_seconds
+        # other timeout seconds
+        self._comm_timeout_seconds = getattr(request, 'comm_timeout_seconds', 120)
+        self._poll_timeout_seconds = getattr(request, 'poll_timeout_seconds', 2)
         # If true, also delete graphscope instance (such as pods) in closing process
         self._cleanup_instance = request.cleanup_instance
 
@@ -382,7 +387,7 @@ class CoordinatorServiceServicer(
     def FetchLogs(self, request, context):
         while self._streaming_logs:
             try:
-                info_message, error_message = self._pipe_merged.poll(timeout=2)
+                info_message, error_message = self._pipe_merged.poll(timeout=self._poll_timeout_seconds)
             except queue.Empty:
                 info_message, error_message = "", ""
             except Exception as e:
@@ -460,7 +465,7 @@ class CoordinatorServiceServicer(
             self._object_manager.put(object_id, gie_manager)
             # 60 seconds is enough, see also GH#1024; try 120
             # already add errs to outs
-            outs, _ = proc.communicate(timeout=120)  # throws TimeoutError
+            outs, _ = proc.communicate(timeout=self._comm_timeout_seconds)  # throws TimeoutError
             return_code = proc.poll()
             if return_code != 0:
                 raise RuntimeError(f"Error code: {return_code}, message {outs}")
@@ -852,6 +857,20 @@ def parse_sys_args():
         default=600,
         help="The length of time to wait starting from client disconnected before killing the graphscope instance",
     )
+    parser.add_argument(
+        "--comm_timeout_seconds",
+        type=int,
+        default=600,
+        help="The length of timeout to test communication when creating instance"
+    )
+
+    parser.add_argument(
+        "--poll_timeout_seconds",
+        type=int,
+        default=2,
+        help="The length of timeout to wait for pipe polling"
+    )
+
     parser.add_argument(
         "--waiting_for_delete",
         type=str2bool,
