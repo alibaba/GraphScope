@@ -240,8 +240,8 @@ class CoordinatorServiceServicer(
         # Cleanup after timeout seconds
         self._dangling_timeout_seconds = request.dangling_timeout_seconds
         # other timeout seconds
-        self._comm_timeout_seconds = getattr(request, 'comm_timeout_seconds', 120)
-        self._poll_timeout_seconds = getattr(request, 'poll_timeout_seconds', 2)
+        self._comm_timeout_seconds = getattr(request, "comm_timeout_seconds", 120)
+        self._poll_timeout_seconds = getattr(request, "poll_timeout_seconds", 2)
         # If true, also delete graphscope instance (such as pods) in closing process
         self._cleanup_instance = request.cleanup_instance
 
@@ -857,20 +857,6 @@ def parse_sys_args():
         default=600,
         help="The length of time to wait starting from client disconnected before killing the graphscope instance",
     )
-    parser.add_argument(
-        "--comm_timeout_seconds",
-        type=int,
-        default=600,
-        help="The length of timeout to test communication when creating instance"
-    )
-
-    parser.add_argument(
-        "--poll_timeout_seconds",
-        type=int,
-        default=2,
-        help="The length of timeout to wait for pipe polling"
-    )
-
     parser.add_argument(
         "--waiting_for_delete",
         type=str2bool,
