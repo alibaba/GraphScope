@@ -43,6 +43,7 @@ import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
@@ -329,7 +330,10 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes(configs);
         irPlan.close();
 
-        PegasusClient.JobRequest request = PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
+        PegasusClient.JobRequest request =
+                PegasusClient.JobRequest.newBuilder()
+                        .setPlan(ByteString.copyFrom(physicalPlanBytes))
+                        .build();
         PegasusClient.JobConfig jobConfig =
                 PegasusClient.JobConfig.newBuilder()
                         .setJobId(jobId)
