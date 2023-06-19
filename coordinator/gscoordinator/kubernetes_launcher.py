@@ -1259,7 +1259,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
                         )
                     time.sleep(self._del_retry_time_seconds)
 
-
     def _get_owner_reference_as_json(self):
         owner_reference = [
             {

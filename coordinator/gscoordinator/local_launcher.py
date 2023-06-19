@@ -61,8 +61,8 @@ class LocalLauncher(AbstractLauncher):
         log_level: str,
         instance_id: str,
         timeout_seconds: int,
-        close_timeout_seconds:int=60,
-        retry_time_seconds: int=1,
+        close_timeout_seconds:int = 60,
+        retry_time_seconds: int = 1,
     ):
         super().__init__()
         self._num_workers = num_workers
@@ -498,7 +498,7 @@ class LocalLauncher(AbstractLauncher):
 
         start_time = time.time()
         if len(hosts) > 1:
-            time.sleep(5*self._retry_time_seconds)  # should be OK
+            time.sleep(5 * self._retry_time_seconds)  # should be OK
         else:
             while not os.path.exists(self._vineyard_socket):
                 if self._vineyardd_process.poll() is not None:

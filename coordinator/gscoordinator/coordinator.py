@@ -387,7 +387,9 @@ class CoordinatorServiceServicer(
     def FetchLogs(self, request, context):
         while self._streaming_logs:
             try:
-                info_message, error_message = self._pipe_merged.poll(timeout=self._poll_timeout_seconds)
+                info_message, error_message = self._pipe_merged.poll(
+                    timeout=self._poll_timeout_seconds
+                )
             except queue.Empty:
                 info_message, error_message = "", ""
             except Exception as e:
@@ -465,7 +467,9 @@ class CoordinatorServiceServicer(
             self._object_manager.put(object_id, gie_manager)
             # 60 seconds is enough, see also GH#1024; try 120
             # already add errs to outs
-            outs, _ = proc.communicate(timeout=self._comm_timeout_seconds)  # throws TimeoutError
+            outs, _ = proc.communicate(
+                timeout=self._comm_timeout_seconds
+            )  # throws TimeoutError
             return_code = proc.poll()
             if return_code != 0:
                 raise RuntimeError(f"Error code: {return_code}, message {outs}")
