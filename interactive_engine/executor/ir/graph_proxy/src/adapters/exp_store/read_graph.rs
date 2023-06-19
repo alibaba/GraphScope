@@ -33,11 +33,11 @@ use pegasus_common::impl_as_any;
 
 use crate::apis::graph::PKV;
 use crate::apis::{
-    from_fn, register_graph, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
+    from_fn, ClusterInfo, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
     Statement, Vertex, ID,
 };
-use crate::errors::{GraphProxyError, GraphProxyResult};
-use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit};
+use crate::errors::GraphProxyResult;
+use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit, GraphProxyError};
 
 const EXP_STORE_PK: KeyId = 0;
 
@@ -45,16 +45,17 @@ lazy_static! {
     pub static ref DATA_PATH: String = configure_with_default!(String, "DATA_PATH", "".to_string());
     pub static ref PARTITION_ID: usize = configure_with_default!(usize, "PARTITION_ID", 0);
     pub static ref GRAPH: LargeGraphDB<DefaultId, InternalId> = _init_graph();
-    static ref GRAPH_PROXY: Arc<ExpStore> = initialize();
+}
+
+#[allow(dead_code)]
+pub fn create_exp_store(cluster_info: Arc<dyn ClusterInfo>) -> Arc<ExpStore> {
+    lazy_static::initialize(&GRAPH);
+    Arc::new(ExpStore { store: &GRAPH, cluster_info })
 }
 
 pub struct ExpStore {
     store: &'static LargeGraphDB<DefaultId, InternalId>,
-}
-
-fn initialize() -> Arc<ExpStore> {
-    lazy_static::initialize(&GRAPH);
-    Arc::new(ExpStore { store: &GRAPH })
+    cluster_info: Arc<dyn ClusterInfo>,
 }
 
 fn _init_graph() -> LargeGraphDB<DefaultId, InternalId> {
@@ -232,18 +233,14 @@ impl ReadGraph for ExpStore {
         let label_ids = encode_storage_label(&params.labels);
         let props = params.columns.clone();
 
-        // get_current_worker_checked() in case pegasus not started, i.e., for ci tests.
-        let worker_id = pegasus::get_current_worker_checked()
-            .map(|worker| worker.index)
-            .unwrap_or(0);
-        let workers_num = pegasus::get_current_worker_checked()
-            .map(|worker| worker.local_peers)
-            .unwrap_or(1);
+        let worker_idx = self.cluster_info.get_worker_index()?;
+        let workers_num = self.cluster_info.get_local_worker_num()?;
         let count = self
             .store
             .count_all_vertices(label_ids.as_ref());
         let partial_count = count / workers_num as usize;
-        let take_count = if (worker_id + 1) % workers_num == 0 {
+        let take_count = if (worker_idx + 1) % workers_num == 0 {
+            // the last part
             count - partial_count * (workers_num as usize - 1)
         } else {
             partial_count
@@ -252,7 +249,7 @@ impl ReadGraph for ExpStore {
         let result = self
             .store
             .get_all_vertices(label_ids.as_ref())
-            .skip((worker_id % workers_num) as usize * partial_count)
+            .skip((worker_idx % workers_num) as usize * partial_count)
             .take(take_count)
             .map(move |v| to_runtime_vertex(v, props.clone()));
 
@@ -274,16 +271,11 @@ impl ReadGraph for ExpStore {
         let label_ids = encode_storage_label(&params.labels);
         let props = params.columns.clone();
 
-        // get_current_worker_checked() in case pegasus not started, i.e., for ci tests.
-        let worker_id = pegasus::get_current_worker_checked()
-            .map(|worker| worker.index)
-            .unwrap_or(0);
-        let workers_num = pegasus::get_current_worker_checked()
-            .map(|worker| worker.local_peers)
-            .unwrap_or(1);
+        let worker_idx = self.cluster_info.get_worker_index()?;
+        let workers_num = self.cluster_info.get_local_worker_num()?;
         let count = self.store.count_all_edges(label_ids.as_ref());
         let partial_count = count / workers_num as usize;
-        let take_count = if (worker_id + 1) % workers_num == 0 {
+        let take_count = if (worker_idx + 1) % workers_num == 0 {
             count - partial_count * (workers_num as usize - 1)
         } else {
             partial_count
@@ -292,7 +284,7 @@ impl ReadGraph for ExpStore {
         let result = self
             .store
             .get_all_edges(label_ids.as_ref())
-            .skip((worker_id % workers_num) as usize * partial_count)
+            .skip((worker_idx % workers_num) as usize * partial_count)
             .take(take_count)
             .map(move |v| to_runtime_edge(v, props.clone()));
 
@@ -373,12 +365,6 @@ impl ReadGraph for ExpStore {
         let pk_val = Object::from(outer_id);
         Ok(Some((EXP_STORE_PK.into(), pk_val).into()))
     }
-}
-
-#[allow(dead_code)]
-pub fn create_exp_store() {
-    lazy_static::initialize(&GRAPH_PROXY);
-    register_graph(GRAPH_PROXY.clone());
 }
 
 #[inline]

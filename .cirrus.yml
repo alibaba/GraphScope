@@ -20,6 +20,11 @@ macosx_arm64_wheel_task:
       pushd ./learning_engine/graph-learn
       git submodule update --init third_party/pybind11
       popd
+
+      # suppress the warning of `git submodule xxx` with `sudo`.
+      git config --global --add safe.directory `pwd`
+      git config --global --add safe.directory `pwd`/learning_engine/graph-learn
+      git config --global --add safe.directory `pwd`/learning_engine/graph-learn/third_party/pybind11/pybind11
     - |
       # change the version for nightly release
       # e.g. 0.15.0 -> 0.15.0a20220808
@@ -104,7 +109,7 @@ macosx_arm64_wheel_task:
 
       # build graphscope client wheel
       pushd ./k8s/internal
-      make graphscope-client-py3-package GRAPHSCOPE_HOME=/usr/local
+      sudo -E env PATH=$PATH make graphscope-client-py3-package GRAPHSCOPE_HOME=/usr/local
       popd
     done
 

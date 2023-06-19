@@ -1,0 +1,21 @@
+PROJECT_NAME = "Flex"
+PROJECT_NUMBER = "0.17.9"
+OUTPUT_DIRECTORY = "_build/latest/html/reference/"
+HTML_OUTPUT = "flex"
+
+INPUT = ../flex/storages/rt_mutable_graph \
+        ../flex/engines/graph_db/app \
+        ../flex/engines/graph_db/database \
+        ../flex/utils \
+
+FILE_PATTERNS = *.h *.cc
+RECURSIVE = YES
+OPTIMIZE_OUTPUT_FOR_C = NO
+
+EXTRACT_ALL = YES
+EXTRACT_PRIVATE = YES
+EXTRACT_STATIC = YES
+
+TYPED_HIDES_STRUCT = YES
+GENERATE_LATEX = NO
+GENERATE_HTML = YES

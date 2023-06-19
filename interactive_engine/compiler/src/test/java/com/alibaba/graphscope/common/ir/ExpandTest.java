@@ -94,7 +94,7 @@ public class ExpandTest {
                                         pxdBuilder.literal(10)))
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
-                        .resultOpt(GraphOpt.PathExpandResult.AllV)
+                        .resultOpt(GraphOpt.PathExpandResult.ALL_V)
                         .build();
         RelNode pathExpand =
                 builder.source(
@@ -108,7 +108,7 @@ public class ExpandTest {
                         + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
                         + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
-                        + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[AllV],"
+                        + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
                         + " alias=[DEFAULT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], opt=[VERTEX])",

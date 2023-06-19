@@ -33,7 +33,7 @@ use pegasus_common::impl_as_any;
 
 use crate::apis::graph::PKV;
 use crate::apis::{
-    from_fn, register_graph, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
+    from_fn, ClusterInfo, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
     Statement, Vertex, ID,
 };
 use crate::errors::{GraphProxyError, GraphProxyResult};
@@ -43,20 +43,20 @@ lazy_static! {
     pub static ref CSR_PATH: String = configure_with_default!(String, "CSR_PATH", "".to_string());
     pub static ref PARTITION_ID: usize = configure_with_default!(usize, "PARTITION_ID", 0);
     pub static ref CSR: CsrDB<usize, usize> = _init_csr();
-    static ref GRAPH_PROXY: Arc<CSRStore> = initialize();
 }
 
 const CSR_STORE_PK: KeyId = 0;
 pub const LABEL_SHIFT_BITS: usize =
     8 * (std::mem::size_of::<DefaultId>() - std::mem::size_of::<StoreLabelId>());
 
-pub struct CSRStore {
-    store: &'static CsrDB<usize, usize>,
+pub fn create_csr_store(cluster_info: Arc<dyn ClusterInfo>) -> Arc<CSRStore> {
+    lazy_static::initialize(&CSR);
+    Arc::new(CSRStore { store: &CSR, cluster_info })
 }
 
-fn initialize() -> Arc<CSRStore> {
-    lazy_static::initialize(&CSR);
-    Arc::new(CSRStore { store: &CSR })
+pub struct CSRStore {
+    store: &'static CsrDB<usize, usize>,
+    cluster_info: Arc<dyn ClusterInfo>,
 }
 
 fn _init_csr() -> CsrDB<usize, usize> {
@@ -70,16 +70,12 @@ impl ReadGraph for CSRStore {
         let label_ids = encode_storage_label(&params.labels);
         let props = params.columns.clone();
 
-        let worker_id = pegasus::get_current_worker_checked()
-            .map(|worker| worker.index)
-            .unwrap_or(0);
-        let workers_num = pegasus::get_current_worker_checked()
-            .map(|worker| worker.local_peers)
-            .unwrap_or(1);
+        let worker_index = self.cluster_info.get_worker_index()?;
+        let workers_num = self.cluster_info.get_local_worker_num()?;
 
         let result = self
             .store
-            .get_partitioned_vertices(label_ids.as_ref(), worker_id, workers_num)
+            .get_partitioned_vertices(label_ids.as_ref(), worker_index, workers_num)
             .map(move |v| to_runtime_vertex(v, props.clone()));
         Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
     }
@@ -96,17 +92,13 @@ impl ReadGraph for CSRStore {
         let label_ids = encode_storage_label(&params.labels);
         let props = params.columns.clone();
 
-        let worker_id = pegasus::get_current_worker_checked()
-            .map(|worker| worker.index)
-            .unwrap_or(0);
-        let workers_num = pegasus::get_current_worker_checked()
-            .map(|worker| worker.local_peers)
-            .unwrap_or(1);
+        let worker_index = self.cluster_info.get_worker_index()?;
+        let workers_num = self.cluster_info.get_local_worker_num()?;
         let partition_id = self.store.partition as u8;
 
         let result = self
             .store
-            .get_partitioned_edges(label_ids.as_ref(), worker_id, workers_num)
+            .get_partitioned_edges(label_ids.as_ref(), worker_index, workers_num)
             .map(move |e| to_runtime_edge(e, None, props.clone(), partition_id));
         Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
     }
@@ -180,12 +172,6 @@ impl ReadGraph for CSRStore {
         let pk_val = Object::from(outer_id);
         Ok(Some((CSR_STORE_PK.into(), pk_val).into()))
     }
-}
-
-#[allow(dead_code)]
-pub fn create_csr_store() {
-    lazy_static::initialize(&GRAPH_PROXY);
-    register_graph(GRAPH_PROXY.clone());
 }
 
 #[inline]

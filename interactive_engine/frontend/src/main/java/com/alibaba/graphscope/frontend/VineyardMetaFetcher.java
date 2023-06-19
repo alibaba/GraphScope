@@ -33,7 +33,7 @@ public class VineyardMetaFetcher implements IrMetaFetcher {
         JsonFileSchemaFetcher fetcher = new JsonFileSchemaFetcher(schemaPath);
         GraphSchema graphSchema = fetcher.getSchemaSnapshotPair().getLeft();
         this.irMeta =
-                new IrMeta(new GraphSchemaWrapper(graphSchema, true), parser.parse(graphSchema));
+                new IrMeta(new GraphSchemaWrapper(graphSchema, parser.parse(graphSchema), true));
     }
 
     @Override

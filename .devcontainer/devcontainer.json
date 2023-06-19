@@ -32,6 +32,9 @@
 	// Set `remoteUser` to `root` to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 	"remoteUser": "graphscope",
 
+	// Use 'postCreateCommand' to run commands before the container is created.
+	"initializeCommand": "sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest",
+
 	// Uncomment this to enable C++ and Rust debugging in containers
 	// "capAdd": ["SYS_PTRACE"],
 	// "securityOpt": ["seccomp=unconfined"],
@@ -39,7 +42,7 @@
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [3000],
 
-	// Use 'portsAttributes' to set default properties for specific forwarded ports. 
+	// Use 'portsAttributes' to set default properties for specific forwarded ports.
 	// More info: https://containers.dev/implementors/json_reference/#port-attributes
 	// "portsAttributes": {
 	// 	"9000": {
@@ -52,7 +55,7 @@
 	// "postCreateCommand": "yarn install"
 
 	// Improve performance
-	
+
 	// Uncomment these to mount a folder to a volume
 	// https://code.visualstudio.com/remote/advancedcontainers/improve-performance#_use-a-targeted-named-volume
 	// "mounts": [

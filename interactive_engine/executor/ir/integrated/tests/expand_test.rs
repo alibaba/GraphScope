@@ -22,8 +22,8 @@ mod test {
     use std::sync::Arc;
 
     use dyn_type::object;
-    use graph_proxy::apis::GraphElement;
-    use graph_proxy::{create_exp_store, SimplePartition};
+    use graph_proxy::apis::{register_graph, GraphElement};
+    use graph_proxy::create_exp_store;
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::DefaultId;
     use ir_common::expr_parse::str_to_expr_pb;
@@ -43,19 +43,13 @@ mod test {
 
     // g.V()
     fn source_gen(alias: Option<KeyId>) -> Box<dyn Iterator<Item = Record> + Send> {
-        create_exp_store();
-        let source_opr_pb = pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None };
-        let source =
-            SourceOperator::new(source_opr_pb.into(), 1, 1, Arc::new(SimplePartition { num_servers: 1 }))
-                .unwrap();
-        source.gen_source(0).unwrap()
+        source_gen_with_scan_opr(pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None })
     }
 
     fn source_gen_with_scan_opr(scan_opr_pb: pb::Scan) -> Box<dyn Iterator<Item = Record> + Send> {
-        create_exp_store();
-        let source =
-            SourceOperator::new(scan_opr_pb.into(), 1, 1, Arc::new(SimplePartition { num_servers: 1 }))
-                .unwrap();
+        let graph = create_exp_store(Arc::new(TestCluster {}));
+        register_graph(graph);
+        let source = SourceOperator::new(scan_opr_pb.into(), Arc::new(TestRouter::default())).unwrap();
         source.gen_source(0).unwrap()
     }
 

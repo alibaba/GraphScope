@@ -544,6 +544,9 @@ keyValuePair - the options to configure the corresponding behaviors of the `Path
 # vertices can be duplicated and only the end vertex should be kept
 g.V().out("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'END_V')
 # expand hops within the range of [1, 10) along the outgoing edges,
+# vertices and edges can be duplicated, and all vertices and edges along the path should be kept
+g.V().out("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'ALL_V_E')
+# expand hops within the range of [1, 10) along the outgoing edges,
 # vertices can not be duplicated and all vertices should be kept
 g.V().out("1..10").with('PATH_OPT', 'SIMPLE').with('RESULT_OPT', 'ALL_V')
 # = g.V().out("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'END_V')
@@ -560,6 +563,9 @@ Running Example:
 gremlin> g.V().out("1..3", "knows").with('RESULT_OPT', 'ALL_V')
 ==>[v[1], v[2]]
 ==>[v[1], v[4]]
+gremlin> g.V().out("1..3", "knows").with('RESULT_OPT', 'ALL_V_E')
+==>[v[1], e[0][1-knows->2], v[2]]
+==>[v[1], e[2][1-knows->4], v[4]]
 gremlin> g.V().out("1..3", "knows").with('RESULT_OPT', 'END_V').endV()
 ==>v[2]
 ==>v[4]
@@ -574,6 +580,9 @@ Running Example:
 gremlin> g.V().in("1..3", "knows").with('RESULT_OPT', 'ALL_V')
 ==>[v[2], v[1]]
 ==>[v[4], v[1]]
+gremlin> g.V().in("1..3", "knows").with('RESULT_OPT', 'ALL_V_E')
+==>[v[2], e[0][1-knows->2], v[1]]
+==>[v[4], e[2][1-knows->4], v[1]]
 gremlin> g.V().in("1..3", "knows").with('RESULT_OPT', 'END_V').endV()
 ==>v[1]
 ==>v[1]
@@ -596,6 +605,17 @@ gremlin> g.V().both("1..3", "knows").with('RESULT_OPT', 'ALL_V')
 ==>[v[1], v[4], v[1]]
 ==>[v[4], v[1], v[2]]
 ==>[v[4], v[1], v[4]]
+gremlin> g.V().both("1..3", "knows").with('RESULT_OPT', 'ALL_V_E')
+==>[v[2], e[0][1-knows->2], v[1]]
+==>[v[4], e[2][1-knows->4], v[1]]
+==>[v[1], e[0][1-knows->2], v[2]]
+==>[v[1], e[2][1-knows->4], v[4]]
+==>[v[2], e[0][1-knows->2], v[1], e[0][1-knows->2], v[2]]
+==>[v[2], e[0][1-knows->2], v[1], e[2][1-knows->4], v[4]]
+==>[v[4], e[2][1-knows->4], v[1], e[0][1-knows->2], v[2]]
+==>[v[4], e[2][1-knows->4], v[1], e[2][1-knows->4], v[4]]
+==>[v[1], e[0][1-knows->2], v[2], e[0][1-knows->2], v[1]]
+==>[v[1], e[2][1-knows->4], v[4], e[2][1-knows->4], v[1]]
 gremlin> g.V().both("1..3", "knows").with('RESULT_OPT', 'END_V').endV()
 ==>v[1]
 ==>v[1]

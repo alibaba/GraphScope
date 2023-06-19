@@ -105,7 +105,6 @@ class DynamicFragmentReporter : public grape::Communicator {
       }
       break;
     }
-
     case rpc::HAS_EDGE: {
       BOOST_LEAF_AUTO(edge_in_json, params.Get<std::string>(rpc::EDGE));
       dynamic::Value edge;
@@ -761,7 +760,9 @@ class ArrowFragmentReporter<
         }
       }
       // archive the start gid and nodes attribute array.
-      arc << gid << nodes_attr;
+      msgpack::sbuffer sbuf;
+      msgpack::pack(&sbuf, nodes_attr);
+      arc << gid << sbuf;
     }
   }
 
@@ -859,7 +860,9 @@ class ArrowFragmentReporter<
         }
       }
       // archive the start gid and edges attributes array.
-      arc << gid << adj_list;
+      msgpack::sbuffer sbuf;
+      msgpack::pack(&sbuf, adj_list);
+      arc << gid << sbuf;
     }
   }
 

@@ -31,4 +31,7 @@ public interface StatisticSchema extends GraphSchema {
 
     // if the property name need to be converted to id
     boolean isColumnId();
+
+    // schema json for ir core
+    String schemaJson();
 }

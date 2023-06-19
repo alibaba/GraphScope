@@ -58,7 +58,7 @@ use std::os::raw::c_char;
 use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
-use ir_physical_client::physical_builder::JobBuilder;
+use ir_physical_client::physical_builder::PlanBuilder;
 use pegasus::BuildJobError;
 use prost::Message;
 
@@ -623,25 +623,20 @@ pub extern "C" fn build_physical_plan(
         plan.meta = plan.meta.with_partition();
     }
     let mut plan_meta = plan.meta.clone();
-    let mut builder = JobBuilder::default();
+    let mut builder = PlanBuilder::default();
     let build_result = plan.add_job_builder(&mut builder, &mut plan_meta);
     let result = match build_result {
         Ok(_) => {
-            let req_result = builder.build();
-            match req_result {
-                Ok(req) => {
-                    let mut req_bytes = req.encode_to_vec().into_boxed_slice();
-                    let data = FfiData {
-                        ptr: req_bytes.as_mut_ptr() as *mut c_void,
-                        len: req_bytes.len(),
-                        error: FfiResult::success(),
-                    };
-                    std::mem::forget(req_bytes);
+            let physical_plan = builder.build();
+            let mut plan_bytes = physical_plan.encode_to_vec().into_boxed_slice();
+            let data = FfiData {
+                ptr: plan_bytes.as_mut_ptr() as *mut c_void,
+                len: plan_bytes.len(),
+                error: FfiResult::success(),
+            };
+            std::mem::forget(plan_bytes);
 
-                    data
-                }
-                Err(e) => e.into(),
-            }
+            data
         }
         Err(e) => e.into(),
     };
@@ -2175,6 +2170,7 @@ mod graph {
     pub enum PathResultOpt {
         EndV = 0,
         AllV = 1,
+        AllVE = 2,
     }
 
     /// To initialize an path expand operator from an edge_expand base

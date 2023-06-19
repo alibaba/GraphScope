@@ -112,11 +112,13 @@ public abstract class Utils {
 
     public static final ResultOpt ffiResultOpt(GraphOpt.PathExpandResult opt) {
         switch (opt) {
-            case EndV:
+            case END_V:
                 return ResultOpt.EndV;
-            case AllV:
-            default:
+            case ALL_V:
                 return ResultOpt.AllV;
+            case ALL_V_E:
+            default:
+                return ResultOpt.AllVE;
         }
     }
 

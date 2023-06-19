@@ -16,14 +16,8 @@
 
 package com.alibaba.graphscope.gremlin.plugin.script;
 
-import com.alibaba.graphscope.common.antlr4.SyntaxErrorListener;
-import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.cypher.antlr4.visitor.GraphBuilderVisitor;
-import com.alibaba.graphscope.grammar.CypherGSLexer;
-import com.alibaba.graphscope.grammar.CypherGSParser;
+import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.atn.PredictionMode;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngineFactory;
@@ -33,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Reader;
-import java.util.Objects;
 
 import javax.script.AbstractScriptEngine;
 import javax.script.Bindings;
@@ -43,27 +36,16 @@ import javax.script.SimpleBindings;
 public class AntlrCypherScriptEngine extends AbstractScriptEngine implements GremlinScriptEngine {
     private static final Logger logger = LoggerFactory.getLogger(AntlrCypherScriptEngine.class);
     private volatile AntlrCypherScriptEngineFactory factory;
+    private final CypherAntlr4Parser cypherParser;
+
+    public AntlrCypherScriptEngine() {
+        this.cypherParser = new CypherAntlr4Parser();
+    }
 
     @Override
     public Object eval(String script, ScriptContext ctx) {
         logger.debug("antlr-cypher start to eval \"{}\"", script);
-        Bindings globalBindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
-        GraphBuilder graphBuilder =
-                Objects.requireNonNull((GraphBuilder) globalBindings.get("graph.builder"));
-        GraphBuilderVisitor visitor = new GraphBuilderVisitor(graphBuilder);
-
-        CypherGSLexer lexer = new CypherGSLexer(CharStreams.fromString(script));
-        // reset error listeners on lexer
-        lexer.removeErrorListeners();
-        lexer.addErrorListener(new SyntaxErrorListener());
-        final CypherGSParser parser = new CypherGSParser(new CommonTokenStream(lexer));
-        // setup error handler on parser
-        parser.setErrorHandler(new DefaultErrorStrategy());
-        // reset error listeners on parser
-        parser.removeErrorListeners();
-        parser.addErrorListener(new SyntaxErrorListener());
-        parser.getInterpreter().setPredictionMode(PredictionMode.LL);
-        return visitor.visit(parser.oC_Cypher());
+        return this.cypherParser.parse(script);
     }
 
     @Override

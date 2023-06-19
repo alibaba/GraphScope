@@ -466,6 +466,9 @@ fn process_predicates(
                     }
                 }
                 Item::Arith(_) => return Ok(None),
+                Item::Param(param) => {
+                    return Err(ExprError::Unsupported(format!("Dynamic Param {:?}", param)))
+                }
             }
         }
     }

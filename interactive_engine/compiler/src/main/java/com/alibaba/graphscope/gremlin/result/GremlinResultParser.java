@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.result;
 
-import com.alibaba.graphscope.common.client.ResultParser;
+import com.alibaba.graphscope.common.result.ResultParser;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 import com.alibaba.pegasus.service.protocol.PegasusClient;

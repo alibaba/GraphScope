@@ -16,9 +16,9 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import static java.util.Objects.requireNonNull;
-
-import com.alibaba.graphscope.common.ir.rel.*;
+import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
+import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
+import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
@@ -27,8 +27,8 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphRelCollations;
-import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
+import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
@@ -39,9 +39,9 @@ import com.alibaba.graphscope.gremlin.Utils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-
 import org.apache.calcite.plan.*;
-import org.apache.calcite.rel.*;
+import org.apache.calcite.rel.RelFieldCollation;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.Sort;
@@ -60,6 +60,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Integrate interfaces to build algebra structures,
@@ -461,6 +463,7 @@ public class GraphBuilder extends RelBuilder {
             throw new UnsupportedOperationException(
                     "operator " + operator.getKind().name() + " not supported");
         }
+        operandList = inferOperandTypes(operator, operandList);
         RexCallBinding callBinding =
                 new RexCallBinding(getTypeFactory(), operator, operandList, ImmutableList.of());
         // check count of operands, if fail throw exceptions
@@ -471,6 +474,28 @@ public class GraphBuilder extends RelBuilder {
         RelDataType type = operator.inferReturnType(callBinding);
         final RexBuilder builder = cluster.getRexBuilder();
         return builder.makeCall(type, operator, operandList);
+    }
+
+    private List<RexNode> inferOperandTypes(SqlOperator operator, List<RexNode> operandList) {
+        if (operator.getOperandTypeInference() != null
+                && operandList.stream()
+                        .anyMatch((t) -> t.getType().getSqlTypeName() == SqlTypeName.UNKNOWN)) {
+            RexCallBinding callBinding =
+                    new RexCallBinding(getTypeFactory(), operator, operandList, ImmutableList.of());
+            RelDataType[] newTypes = callBinding.collectOperandTypes().toArray(new RelDataType[0]);
+            operator.getOperandTypeInference().inferOperandTypes(callBinding, null, newTypes);
+            List<RexNode> typeInferredOperands = new ArrayList<>(operandList.size());
+            GraphRexBuilder rexBuilder = (GraphRexBuilder) this.getRexBuilder();
+            for (int i = 0; i < operandList.size(); ++i) {
+                typeInferredOperands.add(
+                        operandList
+                                .get(i)
+                                .accept(new RexNodeTypeRefresher(newTypes[i], rexBuilder)));
+            }
+            return typeInferredOperands;
+        } else {
+            return operandList;
+        }
     }
 
     private boolean isCurrentSupported(SqlOperator operator) {

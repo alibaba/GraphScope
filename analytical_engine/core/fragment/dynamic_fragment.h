@@ -1529,7 +1529,7 @@ class DynamicFragmentMutator {
       v_fid = partitioner.GetPartitionId(oid);
       if (modify_type == rpc::NX_ADD_NODES) {
         vm_ptr_->AddVertex(std::move(oid), gid);
-        if (!v_data.Empty()) {
+        if (v_data.IsObject() && !v_data.GetObject().ObjectEmpty()) {
           for (const auto& prop : v_data.GetObject()) {
             if (!fragment_->schema_["vertex"].HasMember(prop.name)) {
               dynamic::Value key(prop.name);
@@ -1606,7 +1606,7 @@ class DynamicFragmentMutator {
                                                   std::move(empty_data));
           }
         }
-        if (!e_data.Empty()) {
+        if (e_data.IsObject() && !e_data.GetObject().ObjectEmpty()) {
           for (const auto& prop : e_data.GetObject()) {
             if (!fragment_->schema_["edge"].HasMember(prop.name)) {
               dynamic::Value key(prop.name);

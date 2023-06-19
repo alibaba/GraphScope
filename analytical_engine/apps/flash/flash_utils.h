@@ -110,7 +110,7 @@ namespace gs {
 #define CTrueV cTrueV<vid_t, value_t>
 #define CTrueE cTrueE<vid_t, value_t, edata_t>
 
-#define EjoinV(E, V) E, V
+#define EjoinV(E, V) E, V, true
 #define VjoinP(property)     \
   std::vector<vid_t> res;    \
   res.clear();               \

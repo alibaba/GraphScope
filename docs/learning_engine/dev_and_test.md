@@ -40,7 +40,13 @@ More options about `docker` command can be found [here](https://docs.docker.com/
 You can build all targets for GraphScope Learning Engine with a single command.
 
 ```bash
-make learning
+./gs make learning
+```
+
+You could install it to a location by:
+
+```bash
+./gs make learning-install --install-prefix /opt/graphscope
 ```
 
 ## How to Test

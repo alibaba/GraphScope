@@ -121,6 +121,9 @@ class BaseContextDAGNode(DAGNode):
         self._op = run_app(self._bound_app, *args, **kwargs)
         self._session.dag.add_op(self._op)
 
+        # statically create the unload op
+        self._unload_op = dag_utils.unload_context(self)
+
     def _check_selector(self, selector):
         raise NotImplementedError()
 
@@ -279,8 +282,7 @@ class BaseContextDAGNode(DAGNode):
             pass
 
     def _unload(self):
-        op = dag_utils.unload_context(self)
-        return UnloadedContext(self._session, op)
+        return UnloadedContext(self._session, self._unload_op)
 
 
 class TensorContextDAGNode(BaseContextDAGNode):
@@ -608,6 +610,7 @@ class Context(object):
         # copy and set op evaluated
         self._context_node.op = deepcopy(self._context_node.op)
         self._context_node.evaluated = True
+        self._context_node._unload_op = dag_utils.unload_context(self._context_node)
         self._saved_signature = self.signature
 
     @property

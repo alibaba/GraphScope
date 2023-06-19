@@ -19,13 +19,14 @@ use std::sync::Arc;
 
 use gaia_runtime::error::{StartServerError, StartServerResult};
 use global_query::{FFIGraphStore, GraphPartitionManager};
+use graph_proxy::{apis::PegasusClusterInfo, create_gs_store, VineyardMultiPartition};
 use log::info;
-use pegasus::api::{Fold, Sink};
+use pegasus::api::Sink;
 use pegasus::{wait_servers_ready, Configuration, JobConf, ServerConf};
 use pegasus_network::config::NetworkConfig;
 use pegasus_network::config::ServerAddr;
 use pegasus_server::rpc::{start_rpc_server, RPCServerConfig, ServiceStartListener};
-use runtime_integration::{InitializeJobAssembly, QueryVineyard};
+use runtime::initialize_job_assembly;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -87,7 +88,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ffi_store = FFIGraphStore::new(vineyard_graph_id, worker_thread_num);
 
     // Init partitions information
-    let partition_manager = ffi_store.get_partition_manager();
+    let partition_manager = Arc::new(ffi_store.get_partition_manager());
     let process_partition_list = partition_manager.get_process_partition_list();
     info!("process_partition_list: {:?}", process_partition_list);
 
@@ -103,13 +104,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let partition_server_index_map = compute_partition_server_mapping(process_partition_lists)?;
     info!("server_index: {:?}, partition_server_index_map: {:?}", server_index, partition_server_index_map);
 
-    let query_vineyard = QueryVineyard::new(
-        Arc::new(ffi_store).clone(),
-        Arc::new(partition_manager),
-        partition_server_index_map,
+    let cluster_info = Arc::new(PegasusClusterInfo::default());
+    let gs_store = create_gs_store(
+        Arc::new(ffi_store),
+        partition_manager.clone(),
         computed_process_partition_list,
+        cluster_info.clone(),
+        false,
+        false,
     );
-    let job_assembly = query_vineyard.initialize_job_assembly();
+    let partition_info = VineyardMultiPartition::new(partition_manager, partition_server_index_map.clone());
+    let job_assembly = initialize_job_assembly(gs_store, Arc::new(partition_info), cluster_info);
     start_rpc_server(server_id, rpc_config, job_assembly, GaiaServiceListener).await?;
     Ok(())
 }

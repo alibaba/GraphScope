@@ -25,7 +25,7 @@ import java.util.List;
 
 // build from RexTmpVariable to RexGraphVariable
 public class RexTmpVariableConverter extends RexVisitorImpl<RexNode> {
-    private GraphBuilder builder;
+    private final GraphBuilder builder;
 
     public RexTmpVariableConverter(boolean deep, GraphBuilder builder) {
         super(deep);
@@ -61,5 +61,10 @@ public class RexTmpVariableConverter extends RexVisitorImpl<RexNode> {
         return (tmpVar.getProperty() == null)
                 ? builder.variable(tmpVar.getAlias())
                 : builder.variable(tmpVar.getAlias(), tmpVar.getProperty());
+    }
+
+    @Override
+    public RexNode visitDynamicParam(RexDynamicParam dynamicParam) {
+        return dynamicParam;
     }
 }

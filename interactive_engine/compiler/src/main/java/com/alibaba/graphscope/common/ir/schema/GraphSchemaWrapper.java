@@ -37,10 +37,12 @@ import java.util.stream.Collectors;
  */
 public class GraphSchemaWrapper implements StatisticSchema {
     private final GraphSchema graphSchema;
+    private final String schemeJson;
     private final boolean isColumnId;
 
-    public GraphSchemaWrapper(GraphSchema graphSchema, boolean isColumnId) {
+    public GraphSchemaWrapper(GraphSchema graphSchema, String schemaJson, boolean isColumnId) {
         this.graphSchema = graphSchema;
+        this.schemeJson = schemaJson;
         this.isColumnId = isColumnId;
     }
 
@@ -58,6 +60,11 @@ public class GraphSchemaWrapper implements StatisticSchema {
     @Override
     public boolean isColumnId() {
         return this.isColumnId;
+    }
+
+    @Override
+    public String schemaJson() {
+        return this.schemeJson;
     }
 
     @Override

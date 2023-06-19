@@ -22,10 +22,12 @@ pub type GraphProxyResult<T> = Result<T, GraphProxyError>;
 pub enum GraphProxyError {
     /// Query storage error
     QueryStoreError(String),
-    /// Query storage error
+    /// Write storage error
     WriteGraphError(String),
     /// filter push down error
     FilterPushDownError(String),
+    /// Cluster info missing error
+    ClusterInfoMissing(String),
     /// Not supported error
     UnSupported(String),
 }
@@ -43,6 +45,9 @@ impl GraphProxyError {
         GraphProxyError::FilterPushDownError(e.to_string())
     }
 
+    pub fn cluster_info_missing(e: &str) -> Self {
+        GraphProxyError::ClusterInfoMissing(e.to_string())
+    }
     pub fn unsupported_error(e: &str) -> Self {
         GraphProxyError::UnSupported(e.to_string())
     }
@@ -57,6 +62,9 @@ impl std::fmt::Display for GraphProxyError {
                 write!(f, "Filter push down error in graph_proxy {}", e)
             }
             GraphProxyError::UnSupported(e) => write!(f, "Op not supported error in graph_proxy {}", e),
+            GraphProxyError::ClusterInfoMissing(e) => {
+                write!(f, "Cluster info missing error in graph_proxy {}", e)
+            }
         }
     }
 }

@@ -20,9 +20,9 @@ mod gs_store;
 #[cfg(feature = "with_global_query")]
 mod vineyard_store;
 
-pub use csr_store::{create_csr_store, CsrPartition};
+pub use csr_store::create_csr_store;
 pub use exp_store::{create_exp_store, SimplePartition};
 #[cfg(feature = "with_global_query")]
-pub use gs_store::{create_gs_store, GrootMultiPartition, VineyardMultiPartition};
+pub use gs_store::{create_gs_store, GraphScopeStore, GrootMultiPartition, VineyardMultiPartition};
 #[cfg(feature = "with_global_query")]
 pub use vineyard_store::VineyardGraphWriter;

@@ -1,8 +1,8 @@
 # Getting Started
 
-This tutorial provides a quick overview of GraphScope's features. 
-To begin, we will install GraphScope on your local machine using Python. 
-Although most examples in this guide are based on local Python installation, 
+This tutorial provides a quick overview of GraphScope's features.
+To begin, we will install GraphScope on your local machine using Python.
+Although most examples in this guide are based on local Python installation,
 it also works on a Kubernetes cluster.
 
 You can easily install GraphScope through pip:
@@ -37,7 +37,7 @@ python3.9
 
 ## One-stop Graph Processing
 
-We will use a walking-through example to demonstrate how to use GraphScope to 
+We will use a walking-through example to demonstrate how to use GraphScope to
 process various graph computation tasks in a one-stop manner.
 
 The example targets node classification on a citation network.
@@ -54,7 +54,7 @@ GraphScope models graph data as property graph, in which the edges/vertices are 
      alt="Sample of property graph."
      width="80%">
 
-Sample of property graph 
+Sample of property graph
 :::
 
 This graph has four kinds of vertices, labeled as paper, author, institution, and field_of_study. There are four kinds of edges connecting them, each kind of edge has a label and specifies the vertex labels for its two ends. For example, cites edges connect two vertices labeled paper. Another example is writes, it requires the source vertex is labeled author and the destination is a paper vertex. All the vertices and edges may have properties. e.g., paper vertices have properties like features, publish year, subject label, etc.
@@ -237,8 +237,32 @@ print(ret.to_dataframe(selector={'id': 'v.id', 'distance': 'r'})
 ````
 
 ## Graph Interactive Query Quick Start
+With the `graphscope` package already installed, you can effortlessly engage with a graph on your local machine.
+You simply need to create the `gremlin` instance to serve as the conduit for submitting all Gremlin queries.
 
-TODO(Robin):
+````{dropdown} Example: Run Interactive Queries in GraphScope
+```python
+
+import graphscope as gs
+from graphscope.dataset.modern_graph import load_modern_graph
+
+gs.set_option(show_log=True)
+
+# load the modern graph as example.
+#(modern graph is an example property graph for Gremlin queries given by Apache at https://tinkerpop.apache.org/docs/current/tutorials/getting-started/)
+graph = load_modern_graph()
+
+# Hereafter, you can use the `graph` object to create an `gremlin` query session
+g = gs.gremlin(graph)
+# then `execute` any supported gremlin query.
+q1 = g.execute('g.V().count()')
+print(q1.all())   # should print [6]
+
+q2 = g.execute('g.V().hasLabel(\'person\')')
+print(q2.all())  # should print [[v[2], v[3], v[0], v[1]]]
+```
+````
+
 
 ## Graph Learning Quick Start
 

@@ -51,7 +51,7 @@ Create chart name and version as used by the chart label.
 Return the proper graphscope-store image name
 */}}
 {{- define "graphscope-store.image" -}}
-{{ include "common.images.image" (dict "imageRoot" .Values.image "global" .Values.global "DefaultTag" .Chart.AppVersion ) }}
+{{ include "common.images.image" (dict "imageRoot" .Values.image "global" .Values.global ) }}
 {{- end -}}
 
 {{/*

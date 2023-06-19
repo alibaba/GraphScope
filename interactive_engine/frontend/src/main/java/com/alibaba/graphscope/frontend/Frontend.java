@@ -1,7 +1,7 @@
 package com.alibaba.graphscope.frontend;
 
-import com.alibaba.graphscope.common.client.HostsChannelFetcher;
-import com.alibaba.graphscope.common.client.RpcChannelFetcher;
+import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
+import com.alibaba.graphscope.common.client.channel.HostsRpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.GraphConfig;
@@ -34,12 +34,11 @@ public class Frontend implements AutoCloseable {
         String vineyardSchemaPath = GraphConfig.GRAPH_SCHEMA.get(configs);
         logger.info("Read schema from vineyard schema file {}", vineyardSchemaPath);
         IrMetaFetcher irMetaFetcher = new VineyardMetaFetcher(vineyardSchemaPath);
-        RpcChannelFetcher channelFetcher = new HostsChannelFetcher(configs);
+        ChannelFetcher channelFetcher = new HostsRpcChannelFetcher(configs);
         int port = FrontendConfig.FRONTEND_SERVICE_PORT.get(configs);
         IrMetaQueryCallback queryCallback = new IrMetaQueryCallback(irMetaFetcher);
         server = new IrGremlinServer(port);
-        server.start(
-                configs, irMetaFetcher, channelFetcher, queryCallback, TestGraphFactory.VINEYARD);
+        server.start(configs, channelFetcher, queryCallback, TestGraphFactory.VINEYARD);
     }
 
     @Override

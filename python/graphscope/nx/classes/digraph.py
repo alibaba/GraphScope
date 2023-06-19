@@ -29,7 +29,7 @@ from networkx.classes.reportviews import OutDegreeView
 
 from graphscope.client.session import get_default_session
 from graphscope.client.session import get_session_by_id
-from graphscope.framework.dag_utils import copy_graph
+from graphscope.framework import dag_utils
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
@@ -295,6 +295,12 @@ class DiGraph(Graph):
         self._saved_signature = self.signature
         self._is_client_view = False
 
+        # statically create the unload op
+        if self.op is None:
+            self._unload_op = None
+        else:
+            self._unload_op = dag_utils.unload_graph(self)
+
     @property
     @clear_mutation_cache
     @patch_docstring(RefDiGraph.adj)
@@ -494,7 +500,7 @@ class DiGraph(Graph):
             g = self.__class__(create_empty_in_engine=False)
             g.graph = self.graph
             g.name = self.name
-            op = copy_graph(self, "reverse")
+            op = dag_utils.copy_graph(self, "reverse")
             g._op = op
             graph_def = op.eval(leaf=False)
             g._key = graph_def.key

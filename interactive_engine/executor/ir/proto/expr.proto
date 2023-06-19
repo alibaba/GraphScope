@@ -117,12 +117,19 @@ message VariableKeys {
   repeated Variable keys = 1;
 }
 
+// dynamic param
+message DynamicParam {
+  string name = 1;
+  int32 index = 2;
+  common.IrDataType data_type = 3;
+}
+
 message Case {
   message WhenThen {
     Expression when_expression = 1;
     Expression then_result_expression = 2;
   }
-  // optional, if not set, it is a simple case expression, else it is a searched case expression 
+  // optional, if not set, it is a simple case expression, else it is a searched case expression
   Expression input_expression = 1;
   repeated WhenThen when_then_expressions = 2;
   Expression else_result_expression = 3;
@@ -142,6 +149,8 @@ message ExprOpr {
     Brace brace = 6;
     VariableKeys vars = 7;
     VariableKeys var_map = 8;
+    // dynamic param in expression
+    DynamicParam param = 9;
     Case case = 9;
   }
   // The data of type of ExprOpr

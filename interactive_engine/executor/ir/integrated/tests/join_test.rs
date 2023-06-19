@@ -24,7 +24,6 @@ mod test {
     use graph_store::ldbc::LDBCVertexParser;
     use ir_common::generated::algebra as algebra_pb;
     use ir_common::generated::common as common_pb;
-    use ir_common::generated::physical as pb;
     use ir_physical_client::physical_builder::*;
     use pegasus_server::JobRequest;
     use runtime::process::entry::Entry;
@@ -35,19 +34,21 @@ mod test {
     // g.V().match( __.as("a").hasLabel("person").has("name","marko").out("knows").as("b"), __.as("b").out("created").as("c"))
     fn init_join_request(join_kind: i32) -> JobRequest {
         // all vertices
-        let source_opr_1 = pb::Scan {
+        let source_opr_1 = algebra_pb::Scan {
             scan_opt: 0,
-            alias: Some(TAG_A),
+            alias: Some(TAG_A.into()),
             params: Some(query_params(vec![], vec![], None)),
             idx_predicate: None,
+            meta_data: None,
         };
 
         // person vertices
-        let source_opr_2 = pb::Scan {
+        let source_opr_2 = algebra_pb::Scan {
             scan_opt: 0,
-            alias: Some(TAG_A),
+            alias: Some(TAG_A.into()),
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let mut job_builder = JobBuilder::default();

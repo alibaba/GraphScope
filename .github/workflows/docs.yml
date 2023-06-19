@@ -1,11 +1,14 @@
 name: Docs
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
       - docs
       - dev/docs
+    tags:
+      - "v*"
   pull_request_target:
     branches:
       - main
@@ -223,8 +226,8 @@ jobs:
         shopt -s extglob
         rm google-java-format-1.13.0-all-deps.jar* || true
 
-        git config user.email github-actions@github.com
-        git config user.name github-actions
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
         tag=$(git describe --exact-match --tags HEAD 2>/dev/null || true)
 
@@ -257,6 +260,6 @@ jobs:
         rm -rf ../analytical_engine/java || true
 
         git add -A
-        git commit --amend --no-edit -m "Generate latest docs on CI, from commit ${{ github.sha }}." --author "github-actions <github-actions@github.com>" -s --date="$(date -R)"
+        git commit --amend --no-edit -m "Generate latest docs on CI, from commit ${{ github.sha }}." --author "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>" -s --date="$(date -R)"
         git push -f origin gh-pages
 

@@ -184,6 +184,7 @@ message CreateInteractiveInstanceRequest {
   string session_id = 1;
   int64 object_id = 2;
   string schema_path = 3;
+  map<string, string> params = 4;
 };
 
 message CreateInteractiveInstanceResponse {

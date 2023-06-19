@@ -31,7 +31,7 @@ use pegasus_common::impl_as_any;
 use crate::apis::{read_id, write_id, Details, DynDetails, Element, GraphElement, PropertyValue, ID};
 use crate::utils::expr::eval::Context;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Edge {
     id: ID,
     label: Option<LabelId>,

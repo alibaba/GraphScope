@@ -347,7 +347,7 @@ sudo make install
 
 ### Building Docker images
 
-GraphScope ships with a [Dockerfile](k8s/graphscope.Dockerfile) that can build docker images for releasing. The images are built on a `builder` image with all dependencies installed and copied to
+GraphScope ships with a [Dockerfile](k8s/dockerfiles/graphscope-dev.Dockerfile) that can build docker images for releasing. The images are built on a `builder` image with all dependencies installed and copied to
 a `runtime-base` image. To build images with latest version of GraphScope, go to the `k8s/internal` directory under root directory and run this command.
 
 ```bash

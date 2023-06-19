@@ -20,15 +20,6 @@ spec:
     - name: port
       port: {{ .Values.store.service.port }}
       targetPort: port
-    - name: graph
-      port: {{ .Values.store.service.graph }}
-      targetPort: graph
-    - name: query
-      port: {{ .Values.store.service.query }}
-      targetPort: query
-    - name: engine
-      port: {{ .Values.store.service.engine }}
-      targetPort: engine
     - name: gaia-rpc
       port: {{ .Values.store.service.gaiaRpc }}
       targetPort: gaia-rpc

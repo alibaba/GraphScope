@@ -3,7 +3,7 @@ gremlinpython==3.6.3rc1
 grpcio>=1.49
 grpcio-tools>=1.49
 kubernetes>=24.2.0
-msgpack
+msgpack>=1.0.5
 mypy-protobuf>=3.4.0
 nest_asyncio
 networkx==2.8.0;python_version>="3.8"
@@ -20,6 +20,7 @@ ujson;python_version>="3.11"
 PyYAML
 rich
 tqdm
+click
 vineyard>=0.15.0;sys_platform!="win32"
 vineyard-io>=0.15.0;sys_platform!="win32"
 

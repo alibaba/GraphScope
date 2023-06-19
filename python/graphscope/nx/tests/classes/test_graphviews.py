@@ -29,7 +29,7 @@ from graphscope.nx.utils.misc import edges_equal
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestReverseView(test_gvs.TestReverseView):
-    def setup(self):
+    def setup_method(self):
         self.G = nx.path_graph(9, create_using=nx.DiGraph())
         self.rv = self.G.reverse(copy=False)
         # self.rv = nx.reverse_view(self.G)
@@ -67,7 +67,7 @@ class TestReverseView(test_gvs.TestReverseView):
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestToDirected(test_gvs.TestToDirected):
-    def setup(self):
+    def setup_method(self):
         self.G = nx.path_graph(9)
         self.dv = nx.to_directed(self.G)
 
@@ -87,7 +87,7 @@ class TestToDirected(test_gvs.TestToDirected):
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestToUndirected(test_gvs.TestToUndirected):
-    def setup(self):
+    def setup_method(self):
         self.DG = nx.path_graph(9, create_using=nx.DiGraph())
         self.uv = nx.to_undirected(self.DG)
 

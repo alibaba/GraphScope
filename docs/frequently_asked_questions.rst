@@ -32,7 +32,8 @@ If you don't find an answer to your question here, feel free to file an `Issues`
 
        graphscope.set_option(show_log=True)
 
-    If you are running GraphScope in k8s, you can use `kubectl describe/logs <https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands>`_ to check the log/status of the cluster. If the disk storage is accessible(on local or via Pods), you may also find logs in `/tmp/gs/runtime/logs`.
+    If you are running GraphScope in k8s, you can use `kubectl describe/logs <https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands>`_ to check the log/status of the pods of GraphScope. 
+    If the disk storage is accessible(on local or via Pods), you may also find logs in `/var/log/graphscope/current` or `$HOME/.local/log/graphscope`.
 
 
 4. Why I find more Pods than expected with command `kubectl get pod`?

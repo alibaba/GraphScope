@@ -18,5 +18,5 @@ mod partitioner;
 mod read_graph;
 mod translation;
 
-pub use partitioner::{GrootMultiPartition, VineyardMultiPartition};
-pub use read_graph::create_gs_store;
+pub use partitioner::*;
+pub use read_graph::{create_gs_store, GraphScopeStore};

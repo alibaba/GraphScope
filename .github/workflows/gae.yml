@@ -3,6 +3,7 @@ name: GraphScope GAE CI
 on:
   # Trigger the workflow on push or pull request,
   # but only for the main branch
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -98,6 +99,7 @@ jobs:
 
     - name: Upload Coverage
       uses: codecov/codecov-action@v3
+      continue-on-error: true
       with:
         file: ./python/coverage.xml
-        fail_ci_if_error: true
+        fail_ci_if_error: false

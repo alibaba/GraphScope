@@ -166,7 +166,7 @@ impl<E: Entry + 'static> FilterMapFunction<Record, Record> for ExpandOrIntersect
                         unreachable!()
                     }
                 });
-                if let Some(pre_entry) = input.get_column_mut(&self.edge_or_end_v_tag) {
+                if let Some(pre_entry) = input.get_mut(Some(self.edge_or_end_v_tag)) {
                     // the case of expansion and intersection
                     let pre_intersection = pre_entry
                         .as_any_mut()

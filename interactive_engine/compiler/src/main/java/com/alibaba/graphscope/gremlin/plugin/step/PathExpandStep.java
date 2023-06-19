@@ -97,13 +97,14 @@ public class PathExpandStep extends ExpandFusionStep<Vertex> {
                                 + " insensitive)");
             }
         } else if (key.equals("ResultOpt")) {
-            if (value.equals("AllV") || value.equals("EndV")) {
+            if (value.equals("AllV") || value.equals("EndV") || value.equals("AllVE")) {
                 this.resultOpt = ResultOpt.valueOf(value);
             } else {
                 throw new ExtendGremlinStepException(
                         "value "
                                 + originalVal
-                                + " is invalid, use ALL_V or END_V instead (case insensitive)");
+                                + " is invalid, use ALL_V, END_V, ALL_VE instead (case"
+                                + " insensitive)");
             }
         } else if (key.equals("Until")) {
             this.untilCondition = ObjectUtils.requireNonEmpty(originalVal);

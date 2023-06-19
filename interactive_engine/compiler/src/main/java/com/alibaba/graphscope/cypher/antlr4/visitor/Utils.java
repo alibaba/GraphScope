@@ -175,8 +175,7 @@ public abstract class Utils {
                             GraphStdOperatorTable.EQUALS,
                             variable,
                             expressionVisitor
-                                    .visitOC_StringListNullPredicateExpression(
-                                            mapCtx.oC_StringListNullPredicateExpression(i))
+                                    .visitOC_Expression(mapCtx.oC_Expression(i))
                                     .getExpr()));
         }
         return filters;

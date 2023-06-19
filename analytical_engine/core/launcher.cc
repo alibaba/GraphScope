@@ -86,6 +86,9 @@ void VineyardServer::Start() {
                     " --size " + FLAGS_vineyard_shared_mem +
                     " --etcd_endpoint " + FLAGS_etcd_endpoint +
                     " --etcd_prefix vineyard.gsa." + std::to_string(ts);
+  if (comm_spec_.worker_num() == comm_spec_.local_num()) {
+    cmd += " --meta local";
+  }
   auto env = boost::this_process::environment();
   // Set verbosity level to 2 can get rid of most of vineyard server's
   // debugging output

@@ -87,7 +87,9 @@ class AbstractLauncher(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def create_interactive_instance(self, object_id: int, schema_path: str):
+    def create_interactive_instance(
+        self, object_id: int, schema_path: str, params: dict
+    ):
         pass
 
     @abstractmethod

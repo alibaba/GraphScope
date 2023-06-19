@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
@@ -24,7 +25,9 @@ import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalValues;
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -163,6 +166,25 @@ public class FilterTest {
                 "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                         + " alias=[DEFAULT], fusedFilter=[[>(DEFAULT.age, 10)]], opt=[VERTEX])",
                 filter.explain().trim());
+    }
+
+    // Match (:person {age > $age})
+    @Test
+    public void greater_5_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        SourceConfig sourceConfig =
+                new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
+        RexCall greater =
+                (RexCall)
+                        builder.source(sourceConfig)
+                                .call(
+                                        GraphStdOperatorTable.GREATER_THAN,
+                                        builder.variable(null, "age"),
+                                        ((GraphRexBuilder) builder.getRexBuilder())
+                                                .makeGraphDynamicParam("age", 0));
+        Assert.assertEquals(">(DEFAULT.age, ?0)", greater.toString());
+        Assert.assertEquals(
+                SqlTypeName.INTEGER, greater.getOperands().get(1).getType().getSqlTypeName());
     }
 
     // g.V().hasLabel("person").where(expr("@.age > 20 and @.name == marko"))

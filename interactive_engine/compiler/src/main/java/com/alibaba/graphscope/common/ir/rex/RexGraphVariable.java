@@ -16,10 +16,10 @@
 
 package com.alibaba.graphscope.common.ir.rex;
 
-import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexChecker;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexVisitor;
 import org.apache.commons.lang3.StringUtils;
@@ -81,12 +81,7 @@ public class RexGraphVariable extends RexInputRef {
 
     @Override
     public <R> R accept(RexVisitor<R> rexVisitor) {
-        return (rexVisitor instanceof RexVariableAliasCollector
-                        || rexVisitor instanceof RexVariableAliasConverter
-                        || rexVisitor instanceof RexTmpVariableConverter
-                        || rexVisitor instanceof RexToProtoConverter)
-                ? rexVisitor.visitInputRef(this)
-                : null;
+        return (rexVisitor instanceof RexChecker) ? null : rexVisitor.visitInputRef(this);
     }
 
     @Override

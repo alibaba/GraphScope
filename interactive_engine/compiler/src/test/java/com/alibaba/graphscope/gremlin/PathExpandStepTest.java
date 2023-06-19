@@ -59,7 +59,7 @@ public class PathExpandStepTest {
         Assert.assertEquals("knows", label.name);
     }
 
-    // g.V().out("1..2").with("Path_Opt", "Simple").with("Result_Opt", "AllV")
+    // g.V().out("1..2").with("Path_Opt", "Simple").with("Result_Opt", "ALL_V")
     @Test
     public void g_V_path_expand_with_test() {
         Traversal traversal =

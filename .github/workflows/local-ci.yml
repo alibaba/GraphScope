@@ -3,6 +3,7 @@ name: GraphScope CI on Local
 on:
   # Trigger the workflow on push or pull request,
   # but only for the main branch
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -235,7 +236,7 @@ jobs:
 
     - name: Build Wheels
       run: |
-        # sleep infinity
+        #sleep infinity
         git submodule update --init
         cd ${GITHUB_WORKSPACE}/learning_engine/graph-learn && git submodule update --init third_party/pybind11
 
@@ -312,6 +313,7 @@ jobs:
       - name: Upload GIE log
         if: failure()
         uses: actions/upload-artifact@v3
+        continue-on-error: true
         with:
           name: gie-log
           path: ~/.local/log/graphscope
@@ -378,6 +380,7 @@ jobs:
     - name: Upload Coverage
       if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
       uses: codecov/codecov-action@v3
+      continue-on-error: true
       with:
         file: ./coverage.xml
         fail_ci_if_error: false
