@@ -21,8 +21,10 @@ import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
+import com.google.common.base.Preconditions;
 
 import org.apache.calcite.rex.*;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 
 /**
@@ -41,8 +43,38 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
         if (!this.deep) {
             return null;
         }
-        OuterExpression.Expression.Builder exprBuilder = OuterExpression.Expression.newBuilder();
         SqlOperator operator = call.getOperator();
+        if (operator.getKind() == SqlKind.CASE) {
+            return visitCase(call);
+        } else {
+            return visitOperator(call);
+        }
+    }
+
+    private OuterExpression.Expression visitCase(RexCall call) {
+        OuterExpression.Case.Builder caseBuilder = OuterExpression.Case.newBuilder();
+        int operandCount = call.getOperands().size();
+        Preconditions.checkArgument(operandCount > 2 && (operandCount & 1) == 1);
+        for (int i = 1; i < operandCount - 1; i += 2) {
+            RexNode whenNode = call.getOperands().get(i - 1);
+            RexNode thenNode = call.getOperands().get(i);
+            caseBuilder.addWhenThenExpressions(
+                    OuterExpression.Case.WhenThen.newBuilder()
+                            .setWhenExpression(whenNode.accept(this))
+                            .setThenResultExpression(thenNode.accept(this)));
+        }
+        caseBuilder.setElseResultExpression(call.getOperands().get(operandCount - 1).accept(this));
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setCase(caseBuilder)
+                                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
+                .build();
+    }
+
+    private OuterExpression.Expression visitOperator(RexCall call) {
+        SqlOperator operator = call.getOperator();
+        OuterExpression.Expression.Builder exprBuilder = OuterExpression.Expression.newBuilder();
         // left-associative
         if (operator.getLeftPrec() <= operator.getRightPrec()) {
             for (int i = 0; i < call.getOperands().size(); ++i) {

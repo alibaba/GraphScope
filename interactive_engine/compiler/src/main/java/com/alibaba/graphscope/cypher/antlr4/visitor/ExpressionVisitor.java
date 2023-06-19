@@ -25,7 +25,9 @@ import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.cypher.antlr4.visitor.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlOperator;
@@ -253,6 +255,32 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         return new ExprVisitorResult(
                 ImmutableList.of(aggCall),
                 RexTmpVariable.of(alias, ((GraphAggCall) aggCall).getType()));
+    }
+
+    @Override
+    public ExprVisitorResult visitOC_CaseExpression(CypherGSParser.OC_CaseExpressionContext ctx) {
+        ObjectUtils.requireNonEmpty(
+                ctx.oC_Expression(), "case expression should have 'else' statement");
+        ExprVisitorResult inputExpr =
+                (ctx.oC_Expression().size() == 1) ? null : visitOC_Expression(ctx.oC_Expression(0));
+        List<RexNode> operands = Lists.newArrayList();
+        for (CypherGSParser.OC_CaseAlternativeContext whenThen : ctx.oC_CaseAlternative()) {
+            Preconditions.checkArgument(
+                    whenThen.oC_Expression().size() == 2,
+                    "whenThen expression should have 2 parts");
+            ExprVisitorResult whenExpr = visitOC_Expression(whenThen.oC_Expression(0));
+            if (inputExpr != null) {
+                operands.add(builder.equals(inputExpr.getExpr(), whenExpr.getExpr()));
+            } else {
+                operands.add(whenExpr.getExpr());
+            }
+            ExprVisitorResult thenExpr = visitOC_Expression(whenThen.oC_Expression(1));
+            operands.add(thenExpr.getExpr());
+        }
+        ExprVisitorResult elseExpr =
+                visitOC_Expression(ctx.oC_Expression(ctx.oC_Expression().size() - 1));
+        operands.add(elseExpr.getExpr());
+        return new ExprVisitorResult(builder.call(GraphStdOperatorTable.CASE, operands));
     }
 
     private ExprVisitorResult binaryCall(

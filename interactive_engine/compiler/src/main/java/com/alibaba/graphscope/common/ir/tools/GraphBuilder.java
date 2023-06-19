@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
+import static java.util.Objects.requireNonNull;
+
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
@@ -27,8 +29,8 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphRelCollations;
-import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.rex.*;
+import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
@@ -39,6 +41,7 @@ import com.alibaba.graphscope.gremlin.Utils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
@@ -60,8 +63,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Integrate interfaces to build algebra structures,
@@ -463,27 +464,29 @@ public class GraphBuilder extends RelBuilder {
             throw new UnsupportedOperationException(
                     "operator " + operator.getKind().name() + " not supported");
         }
-        operandList = inferOperandTypes(operator, operandList);
         RexCallBinding callBinding =
                 new RexCallBinding(getTypeFactory(), operator, operandList, ImmutableList.of());
         // check count of operands, if fail throw exceptions
         operator.validRexOperands(callBinding.getOperandCount(), Litmus.THROW);
         // check type of each operand, if fail throw exceptions
         operator.checkOperandTypes(callBinding, true);
-        // derive type
-        RelDataType type = operator.inferReturnType(callBinding);
+        // derive return type
+        RelDataType returnType = operator.inferReturnType(callBinding);
+        // derive unknown types of operands
+        operandList = inferOperandTypes(operator, returnType, operandList);
         final RexBuilder builder = cluster.getRexBuilder();
-        return builder.makeCall(type, operator, operandList);
+        return builder.makeCall(returnType, operator, operandList);
     }
 
-    private List<RexNode> inferOperandTypes(SqlOperator operator, List<RexNode> operandList) {
+    private List<RexNode> inferOperandTypes(
+            SqlOperator operator, RelDataType returnType, List<RexNode> operandList) {
         if (operator.getOperandTypeInference() != null
                 && operandList.stream()
                         .anyMatch((t) -> t.getType().getSqlTypeName() == SqlTypeName.UNKNOWN)) {
             RexCallBinding callBinding =
                     new RexCallBinding(getTypeFactory(), operator, operandList, ImmutableList.of());
             RelDataType[] newTypes = callBinding.collectOperandTypes().toArray(new RelDataType[0]);
-            operator.getOperandTypeInference().inferOperandTypes(callBinding, null, newTypes);
+            operator.getOperandTypeInference().inferOperandTypes(callBinding, returnType, newTypes);
             List<RexNode> typeInferredOperands = new ArrayList<>(operandList.size());
             GraphRexBuilder rexBuilder = (GraphRexBuilder) this.getRexBuilder();
             for (int i = 0; i < operandList.size(); ++i) {
@@ -506,7 +509,8 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.OR
                 || sqlKind == SqlKind.DESCENDING
                 || (sqlKind == SqlKind.OTHER_FUNCTION && operator.getName().equals("POWER"))
-                || (sqlKind == SqlKind.MINUS_PREFIX);
+                || (sqlKind == SqlKind.MINUS_PREFIX)
+                || sqlKind == SqlKind.CASE;
     }
 
     @Override

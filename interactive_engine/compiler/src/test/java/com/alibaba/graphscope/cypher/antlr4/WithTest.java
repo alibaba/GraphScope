@@ -105,4 +105,37 @@ public class WithTest {
                     + " alias=[a], opt=[VERTEX])",
                 project.explain().trim());
     }
+
+    // test simple case expression
+    @Test
+    public void with_7_test() {
+        RelNode project =
+                Utils.eval(
+                                "Match (a:person) Return CASE a.name WHEN 'marko' THEN 1 WHEN"
+                                        + " 'vadas' THEN 2 ELSE 3 END as d")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(d=[CASE(=(a.name, 'marko'), 1, =(a.name, 'vadas'), 2, 3)],"
+                        + " isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])",
+                project.explain().trim());
+    }
+
+    // test searched case expression
+    @Test
+    public void with_8_test() {
+        RelNode project =
+                Utils.eval(
+                                "Match (a:person) Return CASE WHEN a.name = 'marko' THEN 1 WHEN"
+                                        + " a.age > 10 THEN 2 ELSE 3 END as d")
+                        .build();
+        System.out.println(project.explain());
+        Assert.assertEquals(
+                "GraphLogicalProject(d=[CASE(=(a.name, 'marko'), 1, >(a.age, 10), 2, 3)],"
+                        + " isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])",
+                project.explain().trim());
+    }
 }

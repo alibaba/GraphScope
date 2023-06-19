@@ -129,10 +129,8 @@ message Case {
     Expression when_expression = 1;
     Expression then_result_expression = 2;
   }
-  // optional, if not set, it is a simple case expression, else it is a searched case expression
-  Expression input_expression = 1;
-  repeated WhenThen when_then_expressions = 2;
-  Expression else_result_expression = 3;
+  repeated WhenThen when_then_expressions = 1;
+  Expression else_result_expression = 2;
 }
 
 // An operator of expression is one of Logical, Arithmetic, Const and Variable.
@@ -151,10 +149,10 @@ message ExprOpr {
     VariableKeys var_map = 8;
     // dynamic param in expression
     DynamicParam param = 9;
-    Case case = 9;
+    Case case = 10;
   }
   // The data of type of ExprOpr
-  common.IrDataType node_type = 10;
+  common.IrDataType node_type = 11;
 }
 
 // An inner representation of an expression

@@ -250,10 +250,27 @@ oC_Atom
         | oC_FunctionInvocation
         | oC_CountAny
         | oC_Parameter
+        | oC_CaseExpression
         ;
 
 oC_Parameter
     : '$' ( oC_SymbolicName ) ;
+
+oC_CaseExpression
+    :  ( ( CASE ( SP? oC_CaseAlternative )+ ) | ( CASE SP? oC_Expression ( SP? oC_CaseAlternative )+ ) ) ( SP? ELSE SP? oC_Expression )? SP? END ;
+
+CASE : ( 'C' | 'c' ) ( 'A' | 'a' ) ( 'S' | 's' ) ( 'E' | 'e' ) ;
+
+ELSE : ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'S' | 's' ) ( 'E' | 'e' ) ;
+
+END : ( 'E' | 'e' ) ( 'N' | 'n' ) ( 'D' | 'd' ) ;
+
+oC_CaseAlternative
+    :  WHEN SP? oC_Expression SP? THEN SP? oC_Expression ;
+
+WHEN : ( 'W' | 'w' ) ( 'H' | 'h' ) ( 'E' | 'e' ) ( 'N' | 'n' ) ;
+
+THEN : ( 'T' | 't' ) ( 'H' | 'h' ) ( 'E' | 'e' ) ( 'N' | 'n' ) ;
 
 oC_CountAny
     : ( COUNT SP? '(' SP? '*' SP? ')' )

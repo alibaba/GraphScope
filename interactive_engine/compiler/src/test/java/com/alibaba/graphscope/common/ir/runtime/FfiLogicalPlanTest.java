@@ -25,9 +25,11 @@ import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rex.RexNode;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -144,6 +146,40 @@ public class FfiLogicalPlanTest {
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("ffi_logical_plan_3.json"),
                     ffiBuilder.explain());
+        }
+    }
+
+    // Match (a:person) Return case when a.name = 'marko' then 1 else 3 end as case
+    @Test
+    public void logical_plan_4_test() throws Exception {
+        GraphBuilder builder =
+                Utils.mockGraphBuilder()
+                        .source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "a"));
+        RexNode caseExpr =
+                builder.call(
+                        GraphStdOperatorTable.CASE,
+                        builder.call(
+                                GraphStdOperatorTable.EQUALS,
+                                builder.variable("a", "name"),
+                                builder.literal("marko")),
+                        builder.literal(1),
+                        builder.literal(3));
+        RelNode project =
+                builder.project(ImmutableList.of(caseExpr), ImmutableList.of("case")).build();
+        Assert.assertEquals(
+                "GraphLogicalProject(case=[CASE(=(a.name, 'marko'), 1, 3)], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])",
+                project.explain().trim());
+        try (PhysicalBuilder<byte[]> ffiBuilder =
+                new FfiPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project, false))) {
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("case_when.json"), ffiBuilder.explain());
         }
     }
 
