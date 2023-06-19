@@ -252,6 +252,8 @@ enum ParamKey {
   FD = 323;  // file descriptor
   SOURCE = 324;
   WRITE_OPTIONS = 325;
+  SERIALIZATION_OPTIONS = 326;
+  DESERIALIZATION_OPTIONS = 327;
 
   // large attr
   CHUNK_NAME = 341;
