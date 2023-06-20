@@ -254,7 +254,7 @@ enum ParamKey {
   CHUNK_TYPE = 342;
 
   GRAPH_LIBRARY_PATH = 400;
-    //serialization path
+  // serialization path
   GRAPH_SERIALIZATION_PATH = 401;
 
 
