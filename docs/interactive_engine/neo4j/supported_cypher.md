@@ -85,10 +85,10 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | Comparison | String starts with | STARTS WITH | starts with  | <input type="checkbox" disabled  />|  planned |
 | Comparison | String ends with | ENDS WITH | ends with | <input type="checkbox" disabled  />|  planned |
 | Comparison | String contains | CONTAINS | contains | <input type="checkbox" disabled  />|  planned |
-| Boolean | Conjunction | AND | && |  <input type="checkbox" disabled checked /> |   |
-| Boolean | Disjunction | OR | \|\| |  <input type="checkbox" disabled checked /> |   |
-| Boolean | Exclusive Disjunction | XOR | planned |  <input type="checkbox" disabled /> | planned |
-| Boolean | Negation | NOT | ! |  <input type="checkbox" disabled checked /> |   |
+| Boolean | Conjunction | AND | and |  <input type="checkbox" disabled checked /> |   |
+| Boolean | Disjunction | OR | or |  <input type="checkbox" disabled checked /> |   |
+| Boolean | Exclusive Disjunction | XOR | xor |  <input type="checkbox" disabled /> | planned |
+| Boolean | Negation | NOT | not |  <input type="checkbox" disabled checked /> |   |
 | BitOpr  | Bit and | via function | & |  <input type="checkbox" disabled checked /> |  |
 | BitOpr  | Bit or | via function | \| |  <input type="checkbox" disabled checked /> |  |
 | Boolean | Bit xor | via function | ^ |  <input type="checkbox" disabled checked /> |   |
