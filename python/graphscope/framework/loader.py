@@ -94,7 +94,9 @@ class Loader(object):
     Loader can take various data sources, and assemble necessary information into a AttrValue.
     """
 
-    def __init__(self, source, delimiter=",", header_row=True, filetype=None, **kwargs):
+    def __init__(
+        self, source, delimiter=",", sep=",", header_row=True, filetype=None, **kwargs
+    ):
         """Initialize a loader with configurable options.
         Note: Loader cannot be reused since it may change inner state when constructing
         information for loading a graph.
@@ -140,11 +142,11 @@ class Loader(object):
         self.options = CSVOptions()
         check_argument(
             isinstance(delimiter, str) and len(delimiter) == 1,
-            "The delimiter must be a single charactor, cannot be '%s'" % delimiter,
+            "The delimiter must be a single character, cannot be '%s'" % delimiter,
         )
         self.options.delimiter = delimiter
         self.options.header_row = header_row
-        # metas for data source is numpy or dataframe
+        # meta for data source is numpy or dataframe
         self.deduced_properties = None
         # extra args directly passed to storage system
         # find more details in fsspec

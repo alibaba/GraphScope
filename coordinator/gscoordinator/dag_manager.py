@@ -66,8 +66,6 @@ class DAGManager(object):
 
     _interactive_engine_split_op = [
         types_pb2.SUBGRAPH,
-        types_pb2.GREMLIN_QUERY,
-        types_pb2.FETCH_GREMLIN_RESULT,
     ]
 
     _learning_engine_split_op = []

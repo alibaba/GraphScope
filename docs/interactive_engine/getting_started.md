@@ -69,25 +69,32 @@ graph = load_modern_graph()
 g = gs.gremlin(graph)
 # then `execute` any supported gremlin query.
 q1 = g.execute('g.V().count()')
-print(q1.all())   # should print [6]
+print(q1.all().result())   # should print [6]
 
 q2 = g.execute('g.V().hasLabel(\'person\')')
-print(q2.all())  # should print [[v[2], v[3], v[0], v[1]]]
+print(q2.all().result())  # should print [[v[2], v[3], v[0], v[1]]]
 ```
 
 You may see something like:
 ```Shell
 ...
 ... [INFO][coordinator:453]: Built interactive frontend xxx.xxx.xxx.xxx:pppp for graph xxx
-... [INFO][op_executor:455]: execute gremlin query
 [6]
 ...
-... [INFO][op_executor:455]: execute gremlin query
 [v[2], v[3], v[0], v[1]]
 ...
 ```
 
 The number 6 is printed, which is the number of vertices in modern graph.
+
+### Retrieve the gremlin client
+
+The `g` returned by `gs.gremlin()` is a wrapper around `Client` of `gremlinpython`, you could get the `Client` by
+
+```python
+client = g.gremlin_client
+print(client.submit('g.V()').all().result())
+```
 
 ### Customize Configurations for GIE instance
 

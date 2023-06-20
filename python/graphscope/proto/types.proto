@@ -108,9 +108,6 @@ enum OperationType {
   DESERIALIZE_GRAPH = 26; // desrialize graph
 
   SUBGRAPH = 32;  // subgraph in interactive query
-  GREMLIN_QUERY = 33;  // queries on gremlin engine
-  FETCH_GREMLIN_RESULT = 34;
-
 
   DATA_SOURCE = 46;  // loader
   DATA_SINK = 47;
