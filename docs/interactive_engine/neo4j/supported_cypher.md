@@ -88,7 +88,7 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | Boolean | Conjunction | AND | and |  <input type="checkbox" disabled checked /> |   |
 | Boolean | Disjunction | OR | or |  <input type="checkbox" disabled checked /> |   |
 | Boolean | Exclusive Disjunction | XOR | xor |  <input type="checkbox" disabled /> | planned |
-| Boolean | Negation | NOT | not |  <input type="checkbox" disabled checked /> |   |
+| Boolean | Negation | NOT | not |  <input type="checkbox" disabled /> | planned  |
 | BitOpr  | Bit and | via function | & |  <input type="checkbox" disabled checked /> |  |
 | BitOpr  | Bit or | via function | \| |  <input type="checkbox" disabled checked /> |  |
 | Boolean | Bit xor | via function | ^ |  <input type="checkbox" disabled checked /> |   |
