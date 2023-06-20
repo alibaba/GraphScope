@@ -25,17 +25,16 @@ AUTH = ("", "")  # We have not implemented authentication yet
 def print_top_10(driver):
     records, _, _ = driver.execute_query(
         "MATCH (n) RETURN n Limit 10",
-        # For now, GIE only supports one graph,
-        # and its name is not important.
-        database_="", routing_=RoutingControl.READ,
+        routing_=RoutingControl.READ,
     )
     for record in records:
         print(record["n"])
 
 
-    with GraphDatabase.driver(URI, auth=AUTH) as driver:
-        print_top_10(driver)
+with GraphDatabase.driver(URI, auth=AUTH) as driver:
+    print_top_10(driver)
 ```
+
 
 ## Connecting via Cypher-Shell
 1. Download and extract `cypher-shell`

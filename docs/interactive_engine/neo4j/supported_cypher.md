@@ -23,7 +23,7 @@ The available data types stored in the vertices (equivalent of nodes in Cypher) 
 | Integer  | INTEGER | int32/uint32/int64/uint64 | <input type="checkbox" disabled checked /> |   |
 | Float  | FLOAT | float/double |  <input type="checkbox" disabled checked />  |   |
 | String | STRING | string | <input type="checkbox" disabled checked />  |    |
-| Bytes| BYTES | bytes | <input type="checkbox" disabled checked />  |   |
+| Bytes| BYTE_ARRAY | bytes | <input type="checkbox" disabled checked />  |   |
 | Placeholder | NULL | none |  <input type="checkbox" disabled  />  |   Planned  |
 | Temporal | DATE | date | <input type="checkbox" disabled  />  |  Planned  |
 | Temporal | DATETIME (ZONED) | datetime (Zoned) | <input type="checkbox" disabled  />  | Planned    |
@@ -87,6 +87,7 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | Comparison | String contains | CONTAINS | contains | <input type="checkbox" disabled  />|  planned |
 | Boolean | Conjunction | AND | && |  <input type="checkbox" disabled checked /> |   |
 | Boolean | Disjunction | OR | \|\| |  <input type="checkbox" disabled checked /> |   |
+| Boolean | Exclusive Disjunction | XOR | planned |  <input type="checkbox" disabled /> | planned |
 | Boolean | Negation | NOT | ! |  <input type="checkbox" disabled checked /> |   |
 | BitOpr  | Bit and | via function | & |  <input type="checkbox" disabled checked /> |  |
 | BitOpr  | Bit or | via function | \| |  <input type="checkbox" disabled checked /> |  |
