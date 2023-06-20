@@ -43,4 +43,9 @@ public class HostURIChannelFetcher implements ChannelFetcher<URI> {
                 .map(k -> URI.create(schema + "://" + k))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public Type getType() {
+        return Type.HTTP;
+    }
 }

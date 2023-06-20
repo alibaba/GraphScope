@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.runtime.ffi;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
@@ -130,9 +131,8 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
     @Override
     public byte[] build() {
         appendSink(new IntByReference(this.lastIdx));
-        int servers = PegasusConfig.PEGASUS_HOSTS.get(graphConfig).split(",").length;
-        int workers = PegasusConfig.PEGASUS_WORKER_NUM.get(graphConfig);
-        FfiData.ByValue ffiData = LIB.buildPhysicalPlan(ptrPlan, workers, servers);
+        FfiData.ByValue ffiData =
+                LIB.buildPhysicalPlan(ptrPlan, getEngineWorkerNum(), getEngineServerNum());
         checkFfiResult(ffiData.error);
         byte[] bytes = ffiData.getBytes();
         ffiData.close();
@@ -177,5 +177,25 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
     private void appendSink(IntByReference oprIdx) {
         Pointer ptrSink = LIB.initSinkOperator();
         checkFfiResult(LIB.appendSinkOperator(ptrPlan, ptrSink, oprIdx.getValue(), oprIdx));
+    }
+
+    private int getEngineWorkerNum() {
+        switch (FrontendConfig.ENGINE_TYPE.get(this.graphConfig)) {
+            case "pegasus":
+                return PegasusConfig.PEGASUS_WORKER_NUM.get(graphConfig);
+            case "hiactor":
+            default:
+                return 1;
+        }
+    }
+
+    private int getEngineServerNum() {
+        switch (FrontendConfig.ENGINE_TYPE.get(this.graphConfig)) {
+            case "pegasus":
+                return PegasusConfig.PEGASUS_HOSTS.get(graphConfig).split(",").length;
+            case "hiactor":
+            default:
+                return 1;
+        }
     }
 }

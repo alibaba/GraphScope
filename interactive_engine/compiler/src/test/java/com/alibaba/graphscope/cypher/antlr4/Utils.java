@@ -17,24 +17,12 @@
 package com.alibaba.graphscope.cypher.antlr4;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.GraphBuilderVisitor;
-import com.alibaba.graphscope.gremlin.plugin.script.AntlrCypherScriptEngine;
-
-import org.antlr.v4.runtime.tree.ParseTree;
-
-import javax.script.Bindings;
-import javax.script.ScriptContext;
-import javax.script.SimpleBindings;
-import javax.script.SimpleScriptContext;
 
 public abstract class Utils {
     public static final GraphBuilder eval(String query) {
-        AntlrCypherScriptEngine scriptEngine = new AntlrCypherScriptEngine();
-        Bindings globalBindings = new SimpleBindings();
-        ScriptContext context = new SimpleScriptContext();
-        context.setBindings(globalBindings, ScriptContext.ENGINE_SCOPE);
-        ParseTree parseTree = (ParseTree) scriptEngine.eval(query, context);
-        return new GraphBuilderVisitor(com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder())
-                .visit(parseTree);
+        GraphBuilder graphBuilder = com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder();
+        return new GraphBuilderVisitor(graphBuilder).visit(new CypherAntlr4Parser().parse(query));
     }
 }

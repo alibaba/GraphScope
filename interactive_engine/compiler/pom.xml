@@ -121,6 +121,10 @@
             <artifactId>sdk-common</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.immutables</groupId>
             <artifactId>value</artifactId>
             <exclusions>
@@ -219,7 +223,7 @@
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>libs/</classpathPrefix>
                             <mainClass>
-                                com.alibaba.graphscope.common.SubmitPlanServiceMain
+                                com.alibaba.graphscope.GraphServer
                             </mainClass>
                         </manifest>
                     </archive>
