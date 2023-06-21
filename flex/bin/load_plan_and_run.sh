@@ -45,16 +45,77 @@ if [ ! -f ${CMAKE_TEMPLATE_PATH} ]; then
     exit 1
 fi
 
-
-compile_so(){
-    #check input params size == 2
+cypher_to_plan(){
     if [ $# -ne 2 ]; then
-        echo "Usage: $0 input_file output_dir, but receive: "$#
+        echo "Usage: $0 input_file output_file, but receive: "$#
+        exit 1
+    fi
+    # check GIE_HOME set
+    if [ -z ${GIE_HOME} ]; then
+        echo "GIE_HOME not set."
         exit 1
     fi
     input_path=$1
-    output_dir=$2
-    echo ${input_path}", "${output_dir}
+    output_path=$2
+    # find java executable
+    JAVA_EXECUTABLE=$(which java)
+    if [ -z ${JAVA_EXECUTABLE} ]; then
+        # try find from JAVA_HOME
+        if [ -z ${JAVA_HOME} ]; then
+            echo "JAVA_HOME not set."
+            exit 1
+        else
+            JAVA_EXECUTABLE=${JAVA_HOME}/bin/java
+        fi
+        exit 1
+    fi
+    echo "Java executable = ${JAVA_EXECUTABLE}"
+    echo "---------------------------"
+    echo "Find compiler exists"
+    # read from file ${input_path}
+    cypher_query=$(cat ${input_path})
+    echo "Find cypher query:"
+    echo "---------------------------"
+    echo ${cypher_query}
+    echo "---------------------------"
+
+    pushd ${GIE_HOME}"/compiler/"
+    compiler_jar=${GIE_HOME}"/compiler/target/compiler-0.0.1-SNAPSHOT.jar"
+    #check exists
+    if [ ! -f ${compiler_jar} ]; then
+        echo "Compiler jar = ${compiler_jar} not exists."
+        echo "Fail to find compiler jar."
+        exit 1
+    fi
+    cmd="make physical_plan query='${cypher_query}' physical='${output_path}'"
+    echo "running physical plan genration with "${cmd}
+    eval ${cmd}
+    popd
+
+    echo "---------------------------"
+    #check output 
+    if [ ! -f ${output_path} ]; then
+        echo "Output file = ${output_path} not exists."
+        echo "Fail to generate physical plan."
+        exit 1
+    fi
+}
+
+
+compile_so(){
+    #check input params size eq 2 or 3
+    if [ $# -ne 2 ] && [ $# -ne 3 ]; then
+        echo "Usage: $0 input_file work_dir [output_dir]"
+        exit 1
+    fi
+    input_path=$1
+    work_dir=$2
+    if [ $# -eq 3 ]; then
+        output_dir=$3
+    fi
+    echo "Input path = ${input_path}"
+    echo "Work dir = ${work_dir}"
+    echo "Output dir = ${output_dir}"
 
     last_file_name=$(basename ${input_path})
 
@@ -66,17 +127,23 @@ compile_so(){
     elif [[ $last_file_name == *.cc ]]; then
         echo "File havs .cc suffix."
         query_name="${last_file_name%.cc}"
+    elif [[ $last_file_name == *.cypher ]];
+    then
+        echo "File has .cypher suffix."
+        query_name="${last_file_name%.cypher}"
     else 
         echo "Expect a .pb or .cc file"
         exit 1
     fi
-    cur_dir=${output_dir}"/"
+    cur_dir=${work_dir}"/"
     mkdir -p ${cur_dir}
-    output_cc_name=${cur_dir}"/"${query_name}".cc"
+    output_cc_path=${cur_dir}"/"${query_name}".cc"
     if [[ "$(uname)" == "Linux" ]]; then
         output_so_path=${cur_dir}"/lib"${query_name}".so"
+        dst_so_path=${output_dir}"/lib"${query_name}".so"
     elif [[ "$(uname)" == "Darwin" ]]; then
         output_so_path=${cur_dir}"/lib"${query_name}".dylib"
+        dst_so_path=${output_dir}"/lib"${query_name}".dylib"
     else 
         echo "Not support OS."
         exit 1;
@@ -84,14 +151,31 @@ compile_so(){
 
     #only do codegen when receives a .pb file.
     if [[ $last_file_name == *.pb ]]; then
-        cmd="${CODEGEN_RUNNER} ${input_path} ${output_cc_name}"
+        cmd="${CODEGEN_RUNNER} ${input_path} ${output_cc_path}"
         echo "Codegen command = ${cmd}"
         eval ${cmd}
         echo "----------------------------"
+    elif [[ $last_file_name == *.cypher ]]; then
+        echo "Generating code from cypher query"
+        # first do .cypher to .pb
+        output_pb_path=${cur_dir}"/"${query_name}".pb"
+        cypher_to_plan ${input_path} ${output_pb_path}
+        echo "----------------------------"
+        echo "Codegen from cypher query done."
+        echo "----------------------------"
+        cmd="${CODEGEN_RUNNER} ${output_pb_path} ${output_cc_path}"
+        echo "Codegen command = ${cmd}"
+        eval ${cmd}
+        # then. do .pb to .cc
     elif [[ $last_file_name == *.cc ]]; then
-	    cp $input_path ${output_cc_name}
+	    cp $input_path ${output_cc_path}
     fi
     echo "Start running cmake and make"
+    #check output_cc_path exists
+    if [ ! -f ${output_cc_path} ]; then
+        echo "Codegen failed, "${output_cc_path}" not exists."
+        exit 1
+    fi
 
     # copy cmakelist.txt to output path.
     cp ${CMAKE_TEMPLATE_PATH} ${cur_dir}/CMakeLists.txt
@@ -129,7 +213,29 @@ compile_so(){
         exit 1
     fi
     echo "Finish building, output to "${output_so_path}
-    popd 
+    popd
+
+    ################### now copy ##########################
+    # copy output to output_dir
+    if [ ! -z ${output_dir} ]; then
+        mkdir -p ${output_dir}
+    else
+        echo "Output dir not set, skip copying."
+        exit 0
+    fi
+    # check output_dir doesn't contains output_so_name
+    if [ -f ${dst_so_path} ]; then
+        echo "Output dir "${output_dir}" already contains "${query_name}".so"
+        echo "Please remove it first."
+        exit 1
+    fi
+    cp ${output_so_path} ${output_dir}
+    #check dst_so_path exists
+    if [ ! -f ${dst_so_path} ]; then
+        echo "Copy failed, "${dst_so_path}" not exists."
+        exit 1
+    fi
+    echo "Finish copying, output to ${dst_so_path}"
 }
 
 
@@ -142,8 +248,12 @@ run() {
         INPUT="${i#*=}"
         shift # past argument=value
         ;;
-        -o=*|--output_path=*)
-        OUTPUT_PATH="${i#*=}"
+        -w=*|--work_dir=*)
+        WORK_DIR="${i#*=}"
+        shift # past argument=value
+        ;;
+        -o=*|--output_dir=*)
+        OUTPUT_DIR="${i#*=}"
         shift # past argument=value
         ;;
         -*|--*)
@@ -156,13 +266,17 @@ run() {
     done
 
     echo "Input        ="${INPUT}
-    echo "Output path  ="${OUTPUT_PATH}
+    echo "Work dir     ="${WORK_DIR}
+    echo "Output path  ="${OUTPUT_DIR}
     # compile the input file to a .so file, put in $OUTPUT_PATH.
-    compile_so ${INPUT} ${OUTPUT_PATH}
+    compile_so ${INPUT} ${WORK_DIR} ${OUTPUT_DIR}
+    #if output dir is specified, we will copy to output dir.
 }
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 input_file output_dir"
+    echo "Usage: $0 input_file work_dir output_dir"
+    echo "Example: $0 -i=../query/1.pb -w=. -o=."
+    echo "your num args: "$#
     exit 1
 fi
 

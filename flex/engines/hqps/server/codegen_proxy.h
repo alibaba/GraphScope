@@ -1,15 +1,15 @@
 #ifndef CODEGEN_PROXY_H
 #define CODEGEN_PROXY_H
 
-#include <string>
-#include <vector>
 #include <filesystem>
 #include <fstream>
+#include <string>
+#include <vector>
 
 #include "glog/logging.h"
 
-#include "proto_generated_gie/physical.pb.h"
 #include "proto_generated_gie/job_service.pb.h"
+#include "proto_generated_gie/physical.pb.h"
 
 namespace snb {
 namespace ic {
@@ -20,13 +20,11 @@ namespace ic {
 class CodegenProxy {
  public:
   static CodegenProxy& get();
-  CodegenProxy() :initialized_(false) {};
+  CodegenProxy() : initialized_(false){};
 
   ~CodegenProxy() = default;
 
-  bool Initialized(){
-	  return initialized_;
-  }
+  bool Initialized() { return initialized_; }
 
   void Init(std::string working_dir, std::string codegen_bin) {
     working_directory_ = working_dir;
@@ -44,8 +42,8 @@ class CodegenProxy {
     auto work_dir = get_work_directory(next_job_id);
     auto query_name = "query_" + std::to_string(next_job_id);
     std::string plan_path = prepare_next_job_dir(work_dir, query_name, plan);
-    if (plan_path.empty()){
-	    return {};
+    if (plan_path.empty()) {
+      return {};
     }
 
     std::string res_lib_path =
@@ -62,9 +60,9 @@ class CodegenProxy {
   std::string call_codegen_cmd(const std::string& plan_path,
                                const std::string& query_name,
                                const std::string& work_dir) {
-    //TODO: different suffix for different platform
+    // TODO: different suffix for different platform
     std::string res_lib_path = work_dir + "/lib" + query_name + ".so";
-    std::string cmd = codegen_bin_ + " -i=" + plan_path + " -o=" + work_dir;
+    std::string cmd = codegen_bin_ + " -i=" + plan_path + " -w=" + work_dir;
     LOG(INFO) << "Start call codegen cmd: " << cmd;
     auto res = std::system(cmd.c_str());
     if (res != 0) {
@@ -103,11 +101,12 @@ class CodegenProxy {
     LOG(INFO) << "[Cleaning]" << working_dir;
     std::filesystem::path path = working_dir;
     if (std::filesystem::exists(path)) {
-	    size_t num = 0;
-        for (const auto& entry : std::filesystem::directory_iterator(working_dir)){
-          std::filesystem::remove_all(entry.path());
-	  num += 1;
-	}
+      size_t num = 0;
+      for (const auto& entry :
+           std::filesystem::directory_iterator(working_dir)) {
+        std::filesystem::remove_all(entry.path());
+        num += 1;
+      }
       LOG(INFO) << "remove " << num << "files under " << path;
     }
   }
@@ -124,8 +123,8 @@ class CodegenProxy {
     auto ret = plan.SerializeToOstream(&ofs);
     LOG(INFO) << "Dump plan to: " << plan_path
               << ", ret: " << std::to_string(ret);
-    if (!ret){
-        return "";
+    if (!ret) {
+      return "";
     }
 
     return plan_path;

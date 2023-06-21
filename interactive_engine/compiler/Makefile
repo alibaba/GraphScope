@@ -62,11 +62,13 @@ run:
 
 # make physical_plan query='<query in string>' physical='<path to the physical output file>'
 physical_plan:
+	$(info query: $(query) physical: $(physical))
 	cd $(CUR_DIR) && $(java) \
 		-cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
 		-Djna.library.path=../executor/ir/target/release \
 		-Dgraph.schema=${graph.schema} \
 		com.alibaba.graphscope.common.ir.tools.GraphPlanner "$(query)" "$(physical)"
+
 
 # start rpc server
 # make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json 

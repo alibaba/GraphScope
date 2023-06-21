@@ -1,1 +1,1 @@
-:submit MATCH( msg : post | comment { id: $messageId}) <- [:replyOf] - (com : comment) - [:hasCreator] -> (replyAuthor : person), (msg) - [:hasCreator] -> (otherP: person) - [:knows] - (replyAuthor) return replyAuthor
+MATCH( msg : post | comment { id: $messageId}) <- [:replyOf] - (com : comment) - [:hasCreator] -> (replyAuthor : person), (msg) - [:hasCreator] -> (otherP: person) - [:knows] - (replyAuthor) return replyAuthor

@@ -13,54 +13,51 @@
 
 namespace bpo = boost::program_options;
 
-static constexpr const char * CODEGEN_BIN = "load_plan_and_run.sh";
+static constexpr const char* CODEGEN_BIN = "load_plan_and_run.sh";
 
-std::string find_codegen_bin(){
-  //first check whether flex_home env exists
+std::string find_codegen_bin() {
+  // first check whether flex_home env exists
   std::string flex_home;
   std::string codegen_bin;
   char* flex_home_char = getenv("FLEX_HOME");
   if (flex_home_char == nullptr) {
-    //infer flex_home from current binary' directory
+    // infer flex_home from current binary' directory
     char* bin_path = realpath("/proc/self/exe", NULL);
     std::string bin_path_str(bin_path);
-    //flex home should be bin_path/../../
-    std::string flex_home_str = bin_path_str.substr(0, bin_path_str.find_last_of("/"));
-    //usr/loca/bin/
+    // flex home should be bin_path/../../
+    std::string flex_home_str =
+        bin_path_str.substr(0, bin_path_str.find_last_of("/"));
+    // usr/loca/bin/
     flex_home_str = flex_home_str.substr(0, flex_home_str.find_last_of("/"));
-    //usr/local/
+    // usr/local/
 
     LOG(INFO) << "infer flex_home as installed, flex_home: " << flex_home_str;
-    //check codege_bin_path exists
-     codegen_bin = flex_home_str + "/bin/" + CODEGEN_BIN;
-    //if flex_home exists, return flex_home
+    // check codege_bin_path exists
+    codegen_bin = flex_home_str + "/bin/" + CODEGEN_BIN;
+    // if flex_home exists, return flex_home
     if (std::filesystem::exists(codegen_bin)) {
       return codegen_bin;
-    }
-    else {
-      //if not found, try as if it is in build directory
-      //flex/build/
+    } else {
+      // if not found, try as if it is in build directory
+      // flex/build/
       flex_home_str = flex_home_str.substr(0, flex_home_str.find_last_of("/"));
-      //flex/
+      // flex/
       LOG(INFO) << "infer flex_home as build, flex_home: " << flex_home_str;
       codegen_bin = flex_home_str + "/bin/" + CODEGEN_BIN;
       if (std::filesystem::exists(codegen_bin)) {
         return codegen_bin;
-      }
-      else {
+      } else {
         LOG(FATAL) << "codegen bin not exists: ";
         return "";
       }
     }
-  }
-  else {
+  } else {
     flex_home = std::string(flex_home_char);
     LOG(INFO) << "flex_home env exists, flex_home: " << flex_home;
     codegen_bin = flex_home + "/bin/" + CODEGEN_BIN;
     if (std::filesystem::exists(codegen_bin)) {
       return codegen_bin;
-    }
-    else {
+    } else {
       LOG(FATAL) << "codegen bin not exists: ";
       return "";
     }
@@ -75,10 +72,12 @@ int main(int argc, char** argv) {
       "http-port,p", bpo::value<uint16_t>()->default_value(1000),
       "http port of query handler")("plugin-dir,c", bpo::value<std::string>(),
                                     "directory where plugins exists")(
-      "codegen-dir,d", bpo::value<std::string>()->default_value("/tmp/codegen/"), "codegen working directory")(
-      "codegen-bin,g", bpo::value<std::string>(), "codegen binary path")
-      ("graph-yaml,y", bpo::value<std::string>(), "graph yaml path")
-      ("grape-data-path,a", bpo::value<std::string>(), "grape data path");
+      "codegen-dir,d",
+      bpo::value<std::string>()->default_value("/tmp/codegen/"),
+      "codegen working directory")("codegen-bin,g", bpo::value<std::string>(),
+                                   "codegen binary path")(
+      "graph-yaml,y", bpo::value<std::string>(), "graph yaml path")(
+      "grape-data-path,a", bpo::value<std::string>(), "grape data path");
 
   bpo::variables_map vm;
   bpo::store(bpo::command_line_parser(argc, argv).options(desc).run(), vm);
@@ -108,14 +107,12 @@ int main(int argc, char** argv) {
     LOG(INFO) << "codegen-bin is not specified";
     LOG(INFO) << "Try to find with relative path: ";
     codegen_bin = find_codegen_bin();
-  }
-  else {
+  } else {
     LOG(INFO) << "codegen-bin is specified";
     codegen_bin = vm["codegen-bin"].as<std::string>();
   }
 
   LOG(INFO) << "codegen bin: " << codegen_bin;
-
 
   // check codegen bin exists
   if (!std::filesystem::exists(codegen_bin)) {
@@ -137,14 +134,14 @@ int main(int argc, char** argv) {
 
   if (vm.count("grape-data-path")) {
     auto dir = vm["grape-data-path"].as<std::string>();
-    if (vm.count("graph-yaml")){
+    if (vm.count("graph-yaml")) {
       auto graph_yaml = vm["graph-yaml"].as<std::string>();
-      std::cout << "Start load grape data from " << dir << " with graph yaml " << graph_yaml << std::endl;
+      std::cout << "Start load grape data from " << dir << " with graph yaml "
+                << graph_yaml << std::endl;
       gs::GrapeGraphInterface::get().Open(graph_yaml, dir);
-    }
-    else {
-    std::cout << "Start load grape data from " << dir << std::endl;
-    gs::GrapeGraphInterface::get().Open(dir);
+    } else {
+      std::cout << "Start load grape data from " << dir << std::endl;
+      gs::GrapeGraphInterface::get().Open(dir);
     }
   } else {
     std::cout << "grape data path is required" << std::endl;

@@ -1,1 +1,1 @@
-:submit MATCH(p : post | comment {id : $messageId}) - [:hasCreator] -> (friend : person) return friend.id as peronId, friend.firstName as personFirstName, friend.lastName As personLastName
+MATCH(p : post | comment {id : $messageId}) - [:hasCreator] -> (friend : person) return friend.id as peronId, friend.firstName as personFirstName, friend.lastName As personLastName
