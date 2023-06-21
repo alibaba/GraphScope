@@ -1078,42 +1078,10 @@ class Graph(GraphInterface):
         Args:
             path (str): supported storages are local, hdfs, oss, s3
         """
-        try:
-            import vineyard
-            import vineyard.io
-        except ImportError:
-            raise RuntimeError(
-                "Saving context to locations requires 'vineyard', "
-                "please install those two dependencies via "
-                "\n"
-                "\n"
-                "    pip3 install vineyard vineyard-io"
-                "\n"
-                "\n"
-            )
 
-        sess = self._session
-        deployment = "kubernetes" if sess.info["type"] == "k8s" else "ssh"
-        conf = sess.info["engine_config"]
-        vineyard_endpoint = conf["vineyard_rpc_endpoint"]
-        vineyard_ipc_socket = conf["vineyard_socket"]
-        if sess.info["type"] == "k8s":
-            hosts = [
-                "{}:{}".format(sess.info["namespace"], s)
-                for s in sess.info["engine_hosts"].split(",")
-            ]
-        else:  # type == "hosts"
-            hosts = sess.info["engine_hosts"].split(",")
-        vineyard.io.serialize(
-            path,
-            vineyard.ObjectID(self._vineyard_id),
-            type="global",
-            vineyard_ipc_socket=vineyard_ipc_socket,
-            vineyard_endpoint=vineyard_endpoint,
-            storage_options=kwargs,
-            deployment=deployment,
-            hosts=hosts,
-        )
+        op = dag_utils.save_graph_to(self, path, self._vineyard_id, **kwargs)
+        self._session.dag.add_op(op)
+        return self._session._wrapper(op)
 
     @classmethod
     def load_from(cls, path, sess, **kwargs):
@@ -1131,41 +1099,8 @@ class Graph(GraphInterface):
             `Graph`: A new graph object. Schema and data is supposed to be
                 identical with the one that called serialized method.
         """
-        try:
-            import vineyard
-            import vineyard.io
-        except ImportError:
-            raise RuntimeError(
-                "Saving context to locations requires 'vineyard', "
-                "please install those two dependencies via "
-                "\n"
-                "\n"
-                "    pip3 install vineyard vineyard-io"
-                "\n"
-                "\n"
-            )
-
-        deployment = "kubernetes" if sess.info["type"] == "k8s" else "ssh"
-        conf = sess.info["engine_config"]
-        vineyard_endpoint = conf["vineyard_rpc_endpoint"]
-        vineyard_ipc_socket = conf["vineyard_socket"]
-        if sess.info["type"] == "k8s":
-            hosts = [
-                "{}:{}".format(sess.info["namespace"], s)
-                for s in sess.info["engine_hosts"].split(",")
-            ]
-        else:  # type == "hosts"
-            hosts = sess.info["engine_hosts"].split(",")
-        graph_id = vineyard.io.deserialize(
-            path,
-            type="global",
-            vineyard_ipc_socket=vineyard_ipc_socket,
-            vineyard_endpoint=vineyard_endpoint,
-            storage_options=kwargs,
-            deployment=deployment,
-            hosts=hosts,
-        )
-        return sess._wrapper(GraphDAGNode(sess, vineyard.ObjectID(graph_id)))
+        op = dag_utils.load_graph_from(path, sess, **kwargs)
+        return sess._wrapper(GraphDAGNode(sess, op))
 
     def archive(self, path):
         """Archive graph gar format files base on the graph info.
