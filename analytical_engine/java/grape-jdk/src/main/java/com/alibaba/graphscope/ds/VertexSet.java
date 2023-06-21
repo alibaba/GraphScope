@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.ds;
 
 import com.alibaba.fastffi.FFITypeFactory;
+
 import java.util.BitSet;
 
 /**
@@ -35,7 +36,7 @@ import java.util.BitSet;
 public class VertexSet {
     //    private BitSet bs;
     private Bitset bs;
-    static private Bitset.Factory factory = FFITypeFactory.getFactory("grape::Bitset");
+    private static Bitset.Factory factory = FFITypeFactory.getFactory("grape::Bitset");
     private long left;
     // right is exclusived
     private long right;
@@ -48,7 +49,7 @@ public class VertexSet {
     }
 
     public VertexSet(long start, long end) {
-        left =  start;
+        left = start;
         right = end;
         bs = factory.create();
         bs.init(right - left);
@@ -61,7 +62,7 @@ public class VertexSet {
         bs.init(right - left);
     }
 
-    public long count(){
+    public long count() {
         return bs.count();
     }
 
@@ -90,7 +91,7 @@ public class VertexSet {
     }
 
     public boolean get(long vid) {
-        return bs.getBit( vid - left);
+        return bs.getBit(vid - left);
     }
 
     public void set(int vid) {
@@ -116,20 +117,16 @@ public class VertexSet {
      * @param newValue value to be bound to querying vertex.
      */
     public void set(Vertex<Long> vertex, boolean newValue) {
-        if (newValue){
+        if (newValue) {
             bs.setBit(vertex.getValue() - left);
-        }
-        else {
+        } else {
             bs.resetBit(vertex.getValue());
         }
-
     }
 
     public void set(long vid) {
-        bs.setBit( vid - left);
+        bs.setBit(vid - left);
     }
-
-
 
     public boolean empty() {
         return bs.count() <= 0;
@@ -143,13 +140,13 @@ public class VertexSet {
      * @return empty in this range or not.
      */
     public boolean partialEmpty(int l, int r) {
-        for (long i = l; i < r; ++i){
+        for (long i = l; i < r; ++i) {
             if (bs.getBit(i)) return false;
         }
         return true;
     }
 
-    public void insert(Vertex<Long> vertex){
+    public void insert(Vertex<Long> vertex) {
         bs.getBit(vertex.getValue());
     }
 
