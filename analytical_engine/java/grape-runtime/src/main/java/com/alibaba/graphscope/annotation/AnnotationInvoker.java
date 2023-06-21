@@ -53,6 +53,7 @@ import com.alibaba.fastffi.FFIGenBatch;
             @FFIGen(type = "com.alibaba.graphscope.parallel.message.DoubleMsg"),
             @FFIGen(type = "com.alibaba.graphscope.parallel.message.LongMsg"),
             @FFIGen(type = "com.alibaba.graphscope.parallel.message.IntMsg"),
+            @FFIGen(type = "com.alibaba.graphscope.ds.Bitset"),
             @FFIGen(type = "com.alibaba.graphscope.arrow.Status"),
             @FFIGen(
                     type = "com.alibaba.graphscope.stdcxx.StdUnorderedMap",
