@@ -90,13 +90,6 @@ int main(int argc, char** argv) {
 
   uint32_t shard_num = vm["shard-num"].as<uint32_t>();
   uint16_t http_port = vm["http-port"].as<uint16_t>();
-  if (vm.count("plugin-dir") == 0) {
-    LOG(INFO) << "plugin-dir is not specified" << std::endl;
-  } else {
-    std::string plugin_dir = vm["plugin-dir"].as<std::string>();
-    LOG(INFO) << "Load plugins from dir: " << plugin_dir;
-    gs::StoredProcedureManager::get().LoadFromPluginDir(plugin_dir);
-  }
 
   std::string codegen_dir = vm["codegen-dir"].as<std::string>();
 
@@ -146,6 +139,15 @@ int main(int argc, char** argv) {
   } else {
     std::cout << "grape data path is required" << std::endl;
     return 0;
+  }
+
+  // add plugins after graph store init
+  if (vm.count("plugin-dir") == 0) {
+    LOG(INFO) << "plugin-dir is not specified" << std::endl;
+  } else {
+    std::string plugin_dir = vm["plugin-dir"].as<std::string>();
+    LOG(INFO) << "Load plugins from dir: " << plugin_dir;
+    gs::StoredProcedureManager::get().LoadFromPluginDir(plugin_dir);
   }
 
   snb::ic::CodegenProxy::get().Init(codegen_dir, codegen_bin);

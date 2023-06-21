@@ -80,7 +80,7 @@ else()
         include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
 endif()
 
-add_library(${QUERY_NAME} SHARED ${PROJECT_SOURCE_DIR}/${QUERY_NAME}.cc)
+add_library(${QUERY_NAME} SHARED ${PROJECT_SOURCE_DIR}/${QUERY_NAME}.cc ${FLEX_INCLUDE_PREFIX}/flex/utils/app_utils.cc)
 target_include_directories(${QUERY_NAME} PUBLIC ${FLEX_INCLUDE_PREFIX} ${FLEX_INCLUDE_PREFIX}/flex/build/engines/hqps/)
 #target_link_directories(${QUERY_NAME} PUBLIC ${GRAPHSCOPE_INSTALL_DIR}/build/)
 target_link_libraries(${QUERY_NAME} PUBLIC hqps_plan_proto flex_mutable_csr_graph ${GLOG_LIBRARIES})

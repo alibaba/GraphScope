@@ -1,0 +1,30 @@
+# This can be co-generated with the so
+name: "ic3"
+description: "A stored procedures for the ldbc complex interactive workload 2"
+mode: READ  # WRITE, SCHEMA
+extension: ".so"
+library: /workspaces/plugins/libic3_cypher.so  # To specify the directory to the stored procedure
+params:
+  - name: "countryXName"
+    type: "string"
+  - name: "countryYName"
+    type: "string"
+  - name: "personId"  # The name of the parameter
+    type: "long"  # The type of the parameter, string, int, float, double, bool
+  - name: "startDate"
+    type: "long"
+  - name: "endDate"
+    type: "long"
+returns:
+  - name: "personId"
+    type: "long"
+  - name: "personFirstName"
+    type: "string"
+  - name: "personLastName"
+    type: "string"
+  - name: "xCount"
+    type: "integer"
+  - name: "yCount"
+    type: "integer"
+  - name: "count"
+    type: "integer"

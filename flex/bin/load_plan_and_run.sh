@@ -79,6 +79,10 @@ cypher_to_plan(){
     echo ${cypher_query}
     echo "---------------------------"
 
+    #get abs path of input_path
+    real_input_path=$(realpath ${input_path})
+    real_output_path=$(realpath ${output_path})
+
     pushd ${GIE_HOME}"/compiler/"
     compiler_jar=${GIE_HOME}"/compiler/target/compiler-0.0.1-SNAPSHOT.jar"
     #check exists
@@ -87,7 +91,7 @@ cypher_to_plan(){
         echo "Fail to find compiler jar."
         exit 1
     fi
-    cmd="make physical_plan query='${cypher_query}' physical='${output_path}'"
+    cmd="make physical_plan query='${real_input_path}' physical='${real_output_path}'"
     echo "running physical plan genration with "${cmd}
     eval ${cmd}
     popd
@@ -265,9 +269,17 @@ run() {
     esac
     done
 
+
     echo "Input        ="${INPUT}
     echo "Work dir     ="${WORK_DIR}
     echo "Output path  ="${OUTPUT_DIR}
+
+    # check input exist
+    if [ ! -f ${INPUT} ]; then
+        echo "Input file "${INPUT}" not exists."
+        exit 1
+    fi
+
     # compile the input file to a .so file, put in $OUTPUT_PATH.
     compile_so ${INPUT} ${WORK_DIR} ${OUTPUT_DIR}
     #if output dir is specified, we will copy to output dir.
