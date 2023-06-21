@@ -18,6 +18,8 @@ package com.alibaba.graphscope.gremlin.service;
 
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.auth.AuthManager;
@@ -29,9 +31,6 @@ import com.alibaba.graphscope.gremlin.plugin.processor.IrOpLoader;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 
-import io.netty.channel.Channel;
-
-import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.Settings;
@@ -41,48 +40,62 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 
 public class IrGremlinServer implements AutoCloseable {
-    private GremlinServer gremlinServer;
-    private Settings settings;
-    private Graph graph;
-    private GraphTraversalSource g;
+    private final Configs configs;
+    private final GraphPlanner graphPlanner;
+    private final ChannelFetcher channelFetcher;
+    private final IrMetaQueryCallback metaQueryCallback;
+    private final GraphProperties testGraph;
 
-    public IrGremlinServer() {
+    private GremlinServer gremlinServer;
+    private final Settings settings;
+    private final Graph graph;
+    private final GraphTraversalSource g;
+
+    public IrGremlinServer(
+            Configs configs,
+            GraphPlanner graphPlanner,
+            ChannelFetcher channelFetcher,
+            IrMetaQueryCallback metaQueryCallback,
+            GraphProperties testGraph) {
+        this.configs = configs;
+        this.graphPlanner = graphPlanner;
+        this.channelFetcher = channelFetcher;
+        this.metaQueryCallback = metaQueryCallback;
+        this.testGraph = testGraph;
         InputStream input =
                 getClass().getClassLoader().getResourceAsStream("conf/gremlin-server.yaml");
         this.settings = Settings.read(input);
         this.settings.host = "0.0.0.0";
+        int port = FrontendConfig.GREMLIN_SERVER_PORT.get(configs);
+        if (port >= 0) {
+            this.settings.port = port;
+        }
         this.graph = TinkerFactory.createModern();
         this.g = this.graph.traversal(IrCustomizedTraversalSource.class);
     }
 
-    public IrGremlinServer(int gremlinPort) {
-        this();
-        this.settings.port = (gremlinPort >= 0) ? gremlinPort : settings.port;
-    }
-
-    public void start(
-            Configs configs,
-            ChannelFetcher fetcher,
-            IrMetaQueryCallback metaQueryCallback,
-            GraphProperties testGraph)
-            throws Exception {
+    public void start() throws Exception {
         AbstractOpProcessor standardProcessor =
-                new IrStandardOpProcessor(configs, fetcher, metaQueryCallback, graph, g);
+                new IrStandardOpProcessor(
+                        configs, graphPlanner, channelFetcher, metaQueryCallback, graph, g);
         IrOpLoader.addProcessor(standardProcessor.getName(), standardProcessor);
         AbstractOpProcessor testProcessor =
-                new IrTestOpProcessor(configs, fetcher, metaQueryCallback, graph, g, testGraph);
+                new IrTestOpProcessor(
+                        configs,
+                        graphPlanner,
+                        channelFetcher,
+                        metaQueryCallback,
+                        graph,
+                        g,
+                        testGraph);
         IrOpLoader.addProcessor(testProcessor.getName(), testProcessor);
 
         AuthManager authManager = new DefaultAuthManager(configs);
         AuthManagerReference.setAuthManager(authManager);
 
         this.gremlinServer = new GremlinServer(settings);
-
         ServerGremlinExecutor serverGremlinExecutor =
                 Utils.getFieldValue(
                         GremlinServer.class, this.gremlinServer, "serverGremlinExecutor");
@@ -97,17 +110,5 @@ public class IrGremlinServer implements AutoCloseable {
         if (this.gremlinServer != null) {
             this.gremlinServer.stop();
         }
-    }
-
-    public int getGremlinServerPort() throws Exception {
-        Field ch = this.gremlinServer.getClass().getDeclaredField("ch");
-        ch.setAccessible(true);
-        Channel o = (Channel) ch.get(this.gremlinServer);
-        SocketAddress localAddr = o.localAddress();
-        return ((InetSocketAddress) localAddr).getPort();
-    }
-
-    public GremlinExecutor getGremlinExecutor() {
-        return gremlinServer.getServerGremlinExecutor().getGremlinExecutor();
     }
 }

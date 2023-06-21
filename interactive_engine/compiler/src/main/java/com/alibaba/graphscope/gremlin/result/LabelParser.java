@@ -41,11 +41,11 @@ public abstract class LabelParser {
     }
 
     /**
-     * parse label id to name for each value in original values
+     * parse label id to name for each value in {@code values}
      * @param values original values before parsing
-     * @param tag with stepOrTraversal help to decide the {@link LabelType}
+     * @param tag with stepOrTraversal help to decide the {@code LabelType}
      * @param stepOrTraversal
-     * @param parent parent of the stepOrTraversal
+     * @param parent is the parent of {@code stepOrTraversal} in gremlin traversal
      * @return
      */
     public Object parseLabel(Object values, String tag, Object stepOrTraversal, Step parent) {

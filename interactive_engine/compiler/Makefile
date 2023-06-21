@@ -53,13 +53,12 @@ submit:
 
 run:
 	cd $(CUR_DIR) && $(java) \
-	  -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 \
 	  -cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
 	  -Djna.library.path=../executor/ir/target/release \
 	  -Dgraph.schema=${graph.schema} \
 	  -Dgraph.store=${graph.store} \
 	  -Dpegasus.hosts=${pegasus.hosts} \
-	  com.alibaba.graphscope.gremlin.service.GraphServiceMain
+	  com.alibaba.graphscope.GraphServer
 
 # make physical_plan query='<query in string>' physical='<path to the physical output file>'
 physical_plan:
