@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.ds;
 
+import com.alibaba.fastffi.FFITypeFactory;
+
 import java.util.BitSet;
 
 /**
@@ -32,59 +34,68 @@ import java.util.BitSet;
  * @see DenseVertexSet
  */
 public class VertexSet {
-    private BitSet bs;
-    private int left;
+    //    private BitSet bs;
+    private Bitset bs;
+    private static Bitset.Factory factory = FFITypeFactory.getFactory("grape::Bitset");
+    private long left;
     // right is exclusived
-    private int right;
+    private long right;
 
     public VertexSet(int start, int end) {
         left = start;
         right = end;
-        bs = new BitSet(right - left);
+        bs = factory.create();
+        bs.init(right - left);
     }
 
     public VertexSet(long start, long end) {
-        left = (int) start;
-        right = (int) end;
-        bs = new BitSet(right - left);
+        left = start;
+        right = end;
+        bs = factory.create();
+        bs.init(right - left);
     }
 
     public VertexSet(VertexRange<Long> vertices) {
-        left = vertices.beginValue().intValue();
-        right = vertices.endValue().intValue();
-        bs = new BitSet(right - left);
+        left = vertices.beginValue();
+        right = vertices.endValue();
+        bs = factory.create();
+        bs.init(right - left);
     }
 
-    public int getLeft() {
+    public long count() {
+        return bs.count();
+    }
+
+    public long getLeft() {
         return left;
     }
 
-    public int getRight() {
+    public long getRight() {
         return right;
     }
 
-    public BitSet getBitSet() {
+    public Bitset getBitSet() {
         return bs;
     }
 
     public boolean exist(int vid) {
-        return bs.get(vid - left);
+        return bs.getBit(vid - left);
     }
 
     public boolean get(int vid) {
-        return bs.get(vid - left);
+        return bs.getBit(vid - left);
     }
 
     public boolean get(Vertex<Long> vertex) {
-        return bs.get(vertex.getValue().intValue() - left);
+        return bs.getBit(vertex.getValue() - left);
     }
 
     public boolean get(long vid) {
-        return bs.get((int) vid - left);
+        return bs.getBit(vid - left);
     }
 
     public void set(int vid) {
-        bs.set(vid - left);
+        bs.setBit(vid - left);
     }
 
     /**
@@ -96,7 +107,7 @@ public class VertexSet {
      * @param vertex input vertex.
      */
     public void set(Vertex<Long> vertex) {
-        bs.set(vertex.getValue().intValue() - left);
+        bs.setBit(vertex.getValue() - left);
     }
 
     /**
@@ -106,23 +117,19 @@ public class VertexSet {
      * @param newValue value to be bound to querying vertex.
      */
     public void set(Vertex<Long> vertex, boolean newValue) {
-        bs.set(vertex.getValue().intValue() - left, newValue);
+        if (newValue) {
+            bs.setBit(vertex.getValue() - left);
+        } else {
+            bs.resetBit(vertex.getValue());
+        }
     }
 
     public void set(long vid) {
-        bs.set((int) vid - left);
-    }
-
-    public void insert(int vid, boolean value) {
-        bs.set(vid - left, value);
-    }
-
-    public void insert(Vertex<Long> vertex) {
-        bs.set(vertex.getValue().intValue() - left);
+        bs.setBit(vid - left);
     }
 
     public boolean empty() {
-        return bs.cardinality() <= 0;
+        return bs.count() <= 0;
     }
 
     /**
@@ -133,18 +140,19 @@ public class VertexSet {
      * @return empty in this range or not.
      */
     public boolean partialEmpty(int l, int r) {
-        int nextTrue = bs.nextSetBit(l);
-        if (nextTrue >= r || nextTrue == -1) {
-            return true;
+        for (long i = l; i < r; ++i) {
+            if (bs.getBit(i)) return false;
         }
-        return false;
+        return true;
+    }
+
+    public void insert(Vertex<Long> vertex) {
+        bs.getBit(vertex.getValue());
     }
 
     /** Erase current status. */
     public void clear() {
         bs.clear();
-        // expand the bitset to expected range.
-        bs.set(right - left, false);
     }
 
     /**
@@ -153,9 +161,7 @@ public class VertexSet {
      * @param other Another vertex set
      */
     public void assign(VertexSet other) {
-        this.left = other.getLeft();
-        this.right = other.getRight();
-        this.bs.clear();
-        this.bs = (BitSet) other.getBitSet().clone();
+        Bitset otherBitset = other.bs;
+        bs.copy(otherBitset);
     }
 }

@@ -172,7 +172,7 @@ public class WCC implements ParallelAppBase<Long, Long, Long, Double, WCCContext
         messageManager.parallelProcess(
                 frag, ctx.threadNum, ctx.executor, msgSupplier, msgReceiveConsumer);
 
-        double rate = (double) ctx.currModified.getBitSet().cardinality() / ctx.innerVerticesNum;
+        double rate = (double) ctx.currModified.getBitSet().count() / ctx.innerVerticesNum;
         if (rate > 0.1) {
             PropagateLabelPull(frag, ctx, messageManager);
         } else {
