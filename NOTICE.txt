@@ -2164,6 +2164,13 @@ License: MIT
 By: Ika
 Copyright (c) Ika <ikatyang@gmail.com> (https://github.com/ikatyang)
 
+
+### flat_hash_map
+License: Boost Software License - Version 1.0
+By: skarupke
+Repository: <git+https://github.com/skarupke/flat_hash_map>
+Copyright (c) 2017 Malte Skarupke
+
 --------------------------------------------------------------------------------
 Package Title: prometheus-client (0.14.1)
 --------------------------------------------------------------------------------
