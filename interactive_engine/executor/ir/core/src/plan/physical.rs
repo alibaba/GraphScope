@@ -28,7 +28,7 @@ use ir_common::generated::common as common_pb;
 use ir_common::generated::common::expr_opr::Item;
 use ir_common::generated::physical as physical_pb;
 use ir_common::KeyId;
-use ir_physical_client::physical_builder::{JobBuilder, Plan};
+use ir_physical_client::physical_builder::PlanBuilder;
 
 use crate::error::{IrError, IrResult};
 use crate::glogue::combine_get_v_by_query_params;
@@ -37,11 +37,11 @@ use crate::plan::meta::PlanMeta;
 
 /// A trait for building physical plan (pegasus) from the logical plan
 pub trait AsPhysical {
-    /// To add pegasus's `JobBuilder`
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()>;
+    /// To add pegasus's `PlanBuilder`
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()>;
 
     /// To conduct necessary post processing before transforming into a physical plan.
-    fn post_process(&mut self, _builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn post_process(&mut self, _builder: &mut PlanBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         Ok(())
     }
 }
@@ -61,7 +61,7 @@ pub trait AsPhysical {
 //    Although we only need a single property, we still need to cache it since the property would be used remotely (e.g., in global ordering).
 //    Thus, before `order()`, we shuffle to "a", and cache "a.name", and then do the ordering.
 fn post_process_vars(
-    builder: &mut JobBuilder, plan_meta: &mut PlanMeta, is_order_or_group: bool,
+    builder: &mut PlanBuilder, plan_meta: &mut PlanMeta, is_order_or_group: bool,
 ) -> IrResult<()> {
     if plan_meta.is_partition() {
         if let Some(node_meta) = plan_meta.get_curr_node_meta() {
@@ -122,21 +122,21 @@ fn post_process_vars(
 }
 
 impl AsPhysical for pb::Project {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut project = self.clone();
         project.post_process(builder, plan_meta)?;
         builder.project(project);
         Ok(())
     }
 
-    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn post_process(&mut self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         post_process_vars(builder, plan_meta, false)?;
         Ok(())
     }
 }
 
 impl AsPhysical for pb::Select {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         // This is the case when g.V().out().has(xxx), which was like Source + EdgeExpand(ExpandV) + Filter in logical plan.
         // This would be refined as:
         // In Logical Plan: `Source + EdgeExpand(ExpandE) + GetV`
@@ -180,14 +180,14 @@ impl AsPhysical for pb::Select {
         Ok(())
     }
 
-    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn post_process(&mut self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         post_process_vars(builder, plan_meta, false)?;
         Ok(())
     }
 }
 
 impl AsPhysical for pb::Scan {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         let scan = self.clone();
         builder.add_scan_source(scan);
         Ok(())
@@ -195,14 +195,14 @@ impl AsPhysical for pb::Scan {
 }
 
 impl AsPhysical for pb::EdgeExpand {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut xpd = self.clone();
         xpd.post_process(builder, plan_meta)?;
         builder.edge_expand(xpd);
         Ok(())
     }
 
-    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn post_process(&mut self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if plan_meta.is_partition() {
             builder.shuffle(self.v_tag.clone());
             // Notice that if expand edges, we need to carry its demanded properties,
@@ -227,7 +227,7 @@ impl AsPhysical for pb::EdgeExpand {
 }
 
 impl AsPhysical for pb::PathExpand {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         // [range.lower, range.upper)
         let range = self
             .hop_range
@@ -247,10 +247,6 @@ impl AsPhysical for pb::PathExpand {
         if let Some(expand_base) = path_expand.base.as_mut() {
             let edge_expand = expand_base.edge_expand.as_mut();
             let getv = expand_base.get_v.as_mut();
-            let edge_expand_meta = edge_expand
-                .as_ref()
-                .map(|opr| opr.meta_data.clone())
-                .unwrap_or(None);
             if edge_expand.is_some() && getv.is_none() {
                 // Must be the case of EdgeExpand with Opt=Vertex
                 if edge_expand.unwrap().expand_opt != pb::edge_expand::ExpandOpt::Vertex as i32 {
@@ -292,10 +288,7 @@ impl AsPhysical for pb::PathExpand {
             }
 
             path_expand.post_process(builder, plan_meta)?;
-            // Set the Metadata of PathExpand to the Metadata of EdgeExpand
-            builder
-                .path_expand(path_expand)
-                .with_meta_data(edge_expand_meta);
+            builder.path_expand(path_expand);
 
             Ok(())
         } else {
@@ -303,7 +296,7 @@ impl AsPhysical for pb::PathExpand {
         }
     }
 
-    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn post_process(&mut self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         post_process_vars(builder, plan_meta, false)?;
         if plan_meta.is_partition() {
             builder.shuffle(self.start_tag.clone());
@@ -317,7 +310,7 @@ impl AsPhysical for pb::PathExpand {
 // 2. `GetV` is GetV(Adj) (i.e., opt=Start/End/Other) without any filters or further query semantics.
 // 3. the direction should be: outE + inV = out; inE + outV = in; and bothE + otherV = both
 // In addition, if PathExpand + GetV, make opt of GetV to be `End`.
-fn build_and_try_fuse_get_v(builder: &mut JobBuilder, mut get_v: pb::GetV) -> IrResult<()> {
+fn build_and_try_fuse_get_v(builder: &mut PlanBuilder, mut get_v: pb::GetV) -> IrResult<()> {
     if get_v.opt == 4 {
         return Err(IrError::Unsupported("Try to fuse GetV with Opt=Self into ExpandE".to_string()));
     }
@@ -363,7 +356,7 @@ fn build_and_try_fuse_get_v(builder: &mut JobBuilder, mut get_v: pb::GetV) -> Ir
 }
 
 impl AsPhysical for pb::GetV {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         // Currently, the case of `g.V().out().has(xxx)` would be translated into `Source + EdgeExpand(ExpandV) + Filter` in logical plan.
         // This would be refined as:
         // In Logical Plan: `Source + EdgeExpand(ExpandE) + GetV(GetAdj)`
@@ -406,7 +399,7 @@ impl AsPhysical for pb::GetV {
 }
 
 impl AsPhysical for pb::As {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         let project_new_alias = pb::Project {
             mappings: vec![pb::project::ExprAlias {
                 expr: str_to_expr_pb("@".to_string()).ok(),
@@ -421,7 +414,7 @@ impl AsPhysical for pb::As {
 }
 
 impl AsPhysical for pb::Limit {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         let range = self
             .range
             .as_ref()
@@ -435,7 +428,7 @@ impl AsPhysical for pb::Limit {
 }
 
 impl AsPhysical for pb::OrderBy {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(range) = &self.limit {
             if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
                 Err(IrError::InvalidRange(range.lower, range.upper))?
@@ -447,48 +440,48 @@ impl AsPhysical for pb::OrderBy {
         Ok(())
     }
 
-    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn post_process(&mut self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         post_process_vars(builder, plan_meta, true)?;
         Ok(())
     }
 }
 
 impl AsPhysical for pb::Dedup {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut dedup = self.clone();
         dedup.post_process(builder, plan_meta)?;
         builder.dedup(dedup);
         Ok(())
     }
 
-    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn post_process(&mut self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         post_process_vars(builder, plan_meta, false)?;
         Ok(())
     }
 }
 
 impl AsPhysical for pb::GroupBy {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut group = self.clone();
         group.post_process(builder, plan_meta)?;
         builder.group(group);
         Ok(())
     }
-    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn post_process(&mut self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         post_process_vars(builder, plan_meta, true)?;
         Ok(())
     }
 }
 
 impl AsPhysical for pb::Unfold {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         builder.unfold(self.clone());
         Ok(())
     }
 }
 
 impl AsPhysical for pb::Sink {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut sink_opr = self.clone();
         let target = self
             .sink_target
@@ -540,7 +533,7 @@ impl AsPhysical for pb::Sink {
 }
 
 impl AsPhysical for pb::logical_plan::Operator {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         use pb::logical_plan::operator::Opr::*;
         if let Some(opr) = &self.opr {
             match opr {
@@ -568,7 +561,7 @@ impl AsPhysical for pb::logical_plan::Operator {
 }
 
 impl AsPhysical for NodeType {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         plan_meta.set_curr_node(self.borrow().id);
         self.borrow()
             .opr
@@ -611,7 +604,7 @@ fn extract_project_single_tag(node: NodeType) -> Option<common_pb::NameOrId> {
 }
 
 impl AsPhysical for LogicalPlan {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         use pb::logical_plan::operator::Opr::*;
         let mut _prev_node_opt: Option<NodeType> = None;
         let mut curr_node_opt = self.get_first_node();
@@ -621,7 +614,7 @@ impl AsPhysical for LogicalPlan {
             let curr_node = curr_node_opt.as_ref().unwrap();
             let curr_node_id = curr_node.borrow().id;
             if let Some(Apply(apply_opr)) = curr_node.borrow().opr.opr.as_ref() {
-                let mut sub_bldr = JobBuilder::default();
+                let mut sub_bldr = PlanBuilder::default();
                 if let Some(subplan) = self.extract_subplan(curr_node.clone()) {
                     let mut expand_degree_opt = None;
                     if subplan.len() <= 2 {
@@ -679,10 +672,9 @@ impl AsPhysical for LogicalPlan {
                         });
                     } else {
                         subplan.add_job_builder(&mut sub_bldr, plan_meta)?;
-                        let plan = sub_bldr.take_plan();
                         builder.apply(
                             unsafe { std::mem::transmute(apply_opr.join_kind) },
-                            plan,
+                            sub_bldr,
                             apply_opr.alias.clone(),
                         );
                     }
@@ -702,11 +694,11 @@ impl AsPhysical for LogicalPlan {
                 curr_node_opt = self.get_node(next_node_id);
             } else if curr_node.borrow().children.len() >= 2 {
                 let (merge_node_opt, subplans) = self.get_branch_plans(curr_node.clone());
-                let mut plans: Vec<Plan> = vec![];
+                let mut plans: Vec<PlanBuilder> = vec![];
                 for subplan in &subplans {
-                    let mut sub_bldr = JobBuilder::new(builder.conf.clone());
+                    let mut sub_bldr = PlanBuilder::default();
                     subplan.add_job_builder(&mut sub_bldr, plan_meta)?;
-                    plans.push(sub_bldr.take_plan());
+                    plans.push(sub_bldr);
                 }
 
                 if let Some(merge_node) = merge_node_opt.clone() {
@@ -786,7 +778,7 @@ impl AsPhysical for LogicalPlan {
 //     2) EdgeExpand with Opt = ExpandE, which is to expand and intersect on edges (although, not considered in Pattern yet);
 
 fn add_intersect_job_builder(
-    builder: &mut JobBuilder, plan_meta: &mut PlanMeta, intersect_opr: &pb::Intersect,
+    builder: &mut PlanBuilder, plan_meta: &mut PlanMeta, intersect_opr: &pb::Intersect,
     subplans: &Vec<LogicalPlan>,
 ) -> IrResult<()> {
     use pb::logical_plan::operator::Opr::*;
@@ -796,7 +788,7 @@ fn add_intersect_job_builder(
         .as_ref()
         .ok_or(IrError::ParsePbError("Empty tag in `Intersect` opr".into()))?;
     let mut auxilia: Option<pb::GetV> = None;
-    let mut intersect_plans: Vec<Plan> = vec![];
+    let mut intersect_plans: Vec<PlanBuilder> = vec![];
     for subplan in subplans {
         // subplan would be like:
         // 1. vec![ExpandE, GetV] for edge expand to intersect;
@@ -807,7 +799,7 @@ fn add_intersect_job_builder(
                 subplan
             )))?
         }
-        let mut sub_bldr = JobBuilder::new(builder.conf.clone());
+        let mut sub_bldr = PlanBuilder::default();
         let first_opr = subplan
             .get_first_node()
             .ok_or(IrError::InvalidPattern("First node missing for Intersection's subplan".to_string()))?;
@@ -906,8 +898,7 @@ fn add_intersect_job_builder(
                 }
             }
         }
-        let sub_plan = sub_bldr.take_plan();
-        intersect_plans.push(sub_plan);
+        intersect_plans.push(sub_bldr);
     }
     // intersect
     builder.intersect(intersect_plans, intersect_tag.clone());
@@ -1050,25 +1041,25 @@ mod test {
             .unwrap();
         plan.append_operator_as_node(build_sink().into(), vec![1])
             .unwrap();
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.edge_expand(build_edgexpd(1, vec![], None));
         expected_builder.sink(build_sink());
 
         assert_eq!(job_builder, expected_builder);
 
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.shuffle(None);
         expected_builder.edge_expand(build_edgexpd(1, vec![], None));
@@ -1091,12 +1082,12 @@ mod test {
             .unwrap();
         plan.append_operator_as_node(build_sink().into(), vec![2])
             .unwrap();
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.edge_expand(build_edgexpd(0, vec![], None));
         expected_builder.get_v(build_auxilia_with_predicates("@.birthday == 20220101"));
@@ -1104,13 +1095,13 @@ mod test {
 
         assert_eq!(job_builder, expected_builder);
 
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.shuffle(None);
         expected_builder.edge_expand(build_edgexpd(0, vec![], None));
@@ -1133,12 +1124,12 @@ mod test {
             .unwrap();
         plan.append_operator_as_node(build_sink().into(), vec![2])
             .unwrap();
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.edge_expand(build_edgexpd(0, vec![], None));
         expected_builder.select(build_select("@.~label == \"person\""));
@@ -1165,12 +1156,12 @@ mod test {
             .unwrap();
         plan.append_operator_as_node(build_sink().into(), vec![3])
             .unwrap();
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.edge_expand(build_edgexpd(0, vec![], Some(0.into())));
         expected_builder.edge_expand(build_edgexpd(0, vec![], Some(1.into())));
@@ -1179,13 +1170,13 @@ mod test {
 
         assert_eq!(job_builder, expected_builder);
 
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.shuffle(None);
         expected_builder.edge_expand(build_edgexpd(0, vec![], Some(0.into())));
@@ -1221,12 +1212,12 @@ mod test {
             .unwrap();
         plan.append_operator_as_node(build_sink().into(), vec![2])
             .unwrap();
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.edge_expand(build_edgexpd(0, vec![], Some(0.into())));
         expected_builder.project(build_project("{@0.name, @0.id, @0.age}"));
@@ -1234,13 +1225,13 @@ mod test {
 
         assert_eq!(job_builder, expected_builder);
 
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.shuffle(None);
         expected_builder.edge_expand(build_edgexpd(0, vec![], Some(0.into())));
@@ -1270,13 +1261,13 @@ mod test {
             .unwrap();
         plan.append_operator_as_node(build_sink().into(), vec![2])
             .unwrap();
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.shuffle(None);
         expected_builder.edge_expand(build_edgexpd(0, vec![], Some(0.into())));
@@ -1306,12 +1297,12 @@ mod test {
         plan.append_operator_as_node(build_sink().into(), vec![3])
             .unwrap();
 
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.select(build_select("@.~label == \"person\""));
         expected_builder.get_v(build_auxilia_with_predicates("@.age == 27"));
@@ -1320,13 +1311,13 @@ mod test {
 
         assert_eq!(job_builder, expected_builder);
 
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.select(build_select("@.~label == \"person\""));
         expected_builder.shuffle(None);
@@ -1352,12 +1343,12 @@ mod test {
             .unwrap();
         plan.append_operator_as_node(build_sink().into(), vec![3])
             .unwrap();
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         // a fused ExpandV
         expected_builder.edge_expand(build_edgexpd(0, vec![], Some(0.into())));
@@ -1366,13 +1357,13 @@ mod test {
 
         assert_eq!(job_builder, expected_builder);
 
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.shuffle(None);
         // a fused ExpandV
@@ -1419,12 +1410,12 @@ mod test {
         .unwrap();
         plan.append_operator_as_node(build_sink().into(), vec![2])
             .unwrap();
-        let mut job_builder = JobBuilder::default();
+        let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         // a fused ExpandV
         expected_builder.edge_expand(build_edgexpd(0, vec![], None));
@@ -1471,13 +1462,13 @@ mod test {
         logical_plan
             .append_operator_as_node(build_sink().into(), vec![3])
             .unwrap();
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut plan_meta = logical_plan.meta.clone();
         let _ = logical_plan.add_job_builder(&mut builder, &mut plan_meta);
 
         let auxilia = build_auxilia_with_predicates("@.id == 10");
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(source_opr);
         expected_builder.get_v(auxilia);
         expected_builder.edge_expand(expand_opr);
@@ -1513,13 +1504,13 @@ mod test {
         logical_plan
             .append_operator_as_node(project_opr.clone().into(), vec![0])
             .unwrap(); // node 1
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut plan_meta = PlanMeta::default();
         logical_plan
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(source_opr);
         expected_builder.project(project_opr);
         assert_eq!(builder, expected_builder);
@@ -1560,27 +1551,27 @@ mod test {
             .unwrap(); // node 1
 
         // Case without partition
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut plan_meta = PlanMeta::default();
         logical_plan
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(source_opr.clone());
         expected_builder.path_expand(path_opr.clone());
 
         assert_eq!(builder, expected_builder);
 
         // Case with partition
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut plan_meta = PlanMeta::default();
         plan_meta = plan_meta.with_partition();
         logical_plan
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(source_opr);
         expected_builder.shuffle(None);
         expected_builder.path_expand(path_opr);
@@ -1649,27 +1640,27 @@ mod test {
             .unwrap(); // node 1
 
         // Case without partition
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut plan_meta = PlanMeta::default();
         logical_plan
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(source_opr.clone());
         expected_builder.path_expand(fused_path_opr.clone());
 
         assert_eq!(builder, expected_builder);
 
         // // Case with partition
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut plan_meta = PlanMeta::default();
         plan_meta = plan_meta.with_partition();
         logical_plan
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(source_opr);
         expected_builder.shuffle(None);
         expected_builder.path_expand(fused_path_opr);
@@ -1761,27 +1752,27 @@ mod test {
             .unwrap(); // node 1
 
         // Case without partition
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut plan_meta = PlanMeta::default();
         logical_plan
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(source_opr.clone());
         expected_builder.path_expand(expected_path_opr.clone());
 
         assert_eq!(builder, expected_builder);
 
         // Case with partition
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut plan_meta = PlanMeta::default();
         plan_meta = plan_meta.with_partition();
         logical_plan
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(source_opr);
         expected_builder.shuffle(None);
         expected_builder.path_expand(expected_path_opr);
@@ -1805,11 +1796,11 @@ mod test {
         logical_plan
             .append_operator_as_node(topby_opr.clone().into(), vec![0])
             .unwrap(); // node 1
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut plan_meta = PlanMeta::default();
         let _ = logical_plan.add_job_builder(&mut builder, &mut plan_meta);
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(source_opr);
         expected_builder.order(topby_opr);
 
@@ -1870,25 +1861,25 @@ mod test {
         plan.append_operator_as_node(project.clone().into(), vec![opr_id])
             .unwrap();
 
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut meta = plan.meta.clone();
         plan.add_job_builder(&mut builder, &mut meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(scan);
         let auxilia = build_auxilia_with_predicates("@.lang == \"Java\"");
 
-        let mut sub_builder = JobBuilder::default();
+        let mut sub_builder = PlanBuilder::default();
         sub_builder
             .shuffle(None)
             .edge_expand(expand.clone())
             .shuffle(None)
             .get_v(auxilia.clone());
-        let apply_subplan = sub_builder.take_plan();
+
         expected_builder.apply(
             unsafe { std::mem::transmute(4) }, // SEMI
-            apply_subplan,
+            sub_builder,
             None,
         );
         expected_builder.shuffle(Some(0.into()));
@@ -1934,12 +1925,12 @@ mod test {
         plan.append_operator_as_node(apply.clone().into(), vec![opr_id])
             .unwrap();
 
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut meta = plan.meta.clone();
         plan.add_job_builder(&mut builder, &mut meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(scan);
         expected_builder.shuffle(None);
         expected_builder.project(pb::Project {
@@ -2008,12 +1999,12 @@ mod test {
         plan.append_operator_as_node(apply.clone(), vec![opr_id])
             .unwrap();
 
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut meta = plan.meta.clone();
         plan.add_job_builder(&mut builder, &mut meta)
             .unwrap();
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(scan);
         expected_builder.shuffle(Some(0.into()));
         expected_builder.project(pb::Project {
@@ -2075,21 +2066,21 @@ mod test {
         logical_plan
             .append_operator_as_node(limit_opr.clone().into(), vec![4])
             .unwrap(); // node 5
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut plan_meta = PlanMeta::default();
         let _ = logical_plan.add_job_builder(&mut builder, &mut plan_meta);
 
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(source_opr);
-        let mut left_builder = JobBuilder::default();
-        let mut right_builder = JobBuilder::default();
+        let mut left_builder = PlanBuilder::default();
+        let mut right_builder = PlanBuilder::default();
         left_builder.edge_expand(expand_opr.clone());
         right_builder.edge_expand(expand_opr.clone());
         right_builder.edge_expand(expand_opr);
         expected_builder.join(
             unsafe { std::mem::transmute(0) }, // INNER
-            left_builder.take_plan(),
-            right_builder.take_plan(),
+            left_builder,
+            right_builder,
             vec![],
             vec![],
         );
@@ -2186,7 +2177,7 @@ mod test {
         logical_plan
             .append_operator_as_node(intersect_opr.clone().into(), vec![4, 6])
             .unwrap(); // node 7
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut plan_meta = PlanMeta::default();
         logical_plan
             .add_job_builder(&mut builder, &mut plan_meta)
@@ -2202,15 +2193,15 @@ mod test {
             alias: Some(1.into()),
             meta_data: None,
         };
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(source_opr);
         expected_builder.edge_expand(fused_expand_ab_opr_vertex);
 
-        let mut sub_builder_1 = JobBuilder::default();
-        let mut sub_builder_2 = JobBuilder::default();
+        let mut sub_builder_1 = PlanBuilder::default();
+        let mut sub_builder_2 = PlanBuilder::default();
         sub_builder_1.edge_expand(expand_ac_opr_vertex.clone());
         sub_builder_2.edge_expand(expand_bc_opr_vertex.clone());
-        expected_builder.intersect(vec![sub_builder_1.take_plan(), sub_builder_2.take_plan()], 2.into());
+        expected_builder.intersect(vec![sub_builder_1, sub_builder_2], 2.into());
         expected_builder.unfold(unfold_opr);
         assert_eq!(builder, expected_builder);
     }
@@ -2307,7 +2298,7 @@ mod test {
         logical_plan
             .append_operator_as_node(intersect_opr.clone().into(), vec![4, 6])
             .unwrap(); // node 7
-        let mut builder = JobBuilder::default();
+        let mut builder = PlanBuilder::default();
         let mut plan_meta = PlanMeta::default();
         logical_plan
             .add_job_builder(&mut builder, &mut plan_meta)
@@ -2323,15 +2314,15 @@ mod test {
             alias: Some(1.into()),
             meta_data: None,
         };
-        let mut expected_builder = JobBuilder::default();
+        let mut expected_builder = PlanBuilder::default();
         expected_builder.add_scan_source(source_opr);
         expected_builder.edge_expand(fused_expand_ab_opr_vertex);
 
-        let mut sub_builder_1 = JobBuilder::default();
-        let mut sub_builder_2 = JobBuilder::default();
+        let mut sub_builder_1 = PlanBuilder::default();
+        let mut sub_builder_2 = PlanBuilder::default();
         sub_builder_1.edge_expand(expand_ac_opr_vertex.clone());
         sub_builder_2.edge_expand(expand_bc_opr_vertex.clone());
-        expected_builder.intersect(vec![sub_builder_1.take_plan(), sub_builder_2.take_plan()], 2.into());
+        expected_builder.intersect(vec![sub_builder_1, sub_builder_2], 2.into());
         expected_builder.unfold(unfold_opr);
         expected_builder.get_v(get_c_filter);
         assert_eq!(builder, expected_builder);

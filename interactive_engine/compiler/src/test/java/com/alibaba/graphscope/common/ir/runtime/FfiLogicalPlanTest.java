@@ -121,8 +121,34 @@ public class FfiLogicalPlanTest {
         }
     }
 
+    // Match (n) Return distinct n;
     @Test
     public void logical_plan_3_test() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode project =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "n"))
+                        .aggregate(builder.groupKey(builder.variable("n")))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[n], aliases=[n]}], values=[[]])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[n], opt=[VERTEX])",
+                project.explain().trim());
+        try (PhysicalBuilder<byte[]> ffiBuilder =
+                new FfiPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project, false))) {
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("ffi_logical_plan_3.json"),
+                    ffiBuilder.explain());
+        }
+    }
+
+    @Test
+    public void logical_plan_4_test() throws Exception {
         LogicalPlan logicalPlan =
                 com.alibaba.graphscope.cypher.antlr4.Utils.evalLogicalPlan(
                         "Call query_ic2(10l, 20120112l)");

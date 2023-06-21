@@ -739,11 +739,119 @@ class OperationExecutor:
                 op_result = self._process_data_source(op, dag_bodies, loader_op_bodies)
             elif op.op == types_pb2.DATA_SINK:
                 op_result = self._process_data_sink(op)
+            elif op.op == types_pb2.SERIALIZE_GRAPH:
+                op_result = self._process_serialize_graph(op)
+            elif op.op == types_pb2.DESERIALIZE_GRAPH:
+                op_result = self._process_deserialize_graph(op)
             else:
                 raise RuntimeError("Unsupported op type: " + str(op.op))
             response_head.results.append(op_result)
             self._op_result_pool[op.key] = op_result
         return message_pb2.RunStepResponse(head=response_head), []
+
+    def _process_serialize_graph(self, op: op_def_pb2.OpDef):
+        try:
+            import vineyard
+            import vineyard.io
+        except ImportError:
+            raise RuntimeError(
+                "Saving context to locations requires 'vineyard', "
+                "please install those two dependencies via "
+                "\n"
+                "\n"
+                "    pip3 install vineyard vineyard-io"
+                "\n"
+                "\n"
+            )
+        storage_options = json.loads(op.attr[types_pb2.STORAGE_OPTIONS].s.decode())
+        engine_config = self.get_analytical_engine_config()
+        if self._launcher.type() == types_pb2.HOSTS:
+            vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
+        else:
+            vineyard_endpoint = self._launcher._vineyard_internal_endpoint
+        vineyard_ipc_socket = engine_config["vineyard_socket"]
+        deployment, hosts = self._launcher.get_vineyard_stream_info()
+        path = op.attr[types_pb2.GRAPH_SERIALIZATION_PATH].s.decode()
+        obj_id = op.attr[types_pb2.VINEYARD_ID].i
+        logger.info("serialize graph %d  to %s", obj_id, path)
+        vineyard.io.serialize(
+            path,
+            vineyard.ObjectID(obj_id),
+            type="global",
+            vineyard_ipc_socket=vineyard_ipc_socket,
+            vineyard_endpoint=vineyard_endpoint,
+            storage_options=storage_options,
+            deployment=deployment,
+            hosts=hosts,
+        )
+        logger.info("Finish serialization")
+        return op_def_pb2.OpResult(code=OK, key=op.key)
+
+    def _process_deserialize_graph(self, op: op_def_pb2.OpDef):
+        try:
+            import vineyard
+            import vineyard.io
+        except ImportError:
+            raise RuntimeError(
+                "Saving context to locations requires 'vineyard', "
+                "please install those two dependencies via "
+                "\n"
+                "\n"
+                "    pip3 install vineyard vineyard-io"
+                "\n"
+                "\n"
+            )
+        storage_options = json.loads(op.attr[types_pb2.STORAGE_OPTIONS].s.decode())
+        engine_config = self.get_analytical_engine_config()
+        if self._launcher.type() == types_pb2.HOSTS:
+            vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
+        else:
+            vineyard_endpoint = self._launcher._vineyard_internal_endpoint
+        vineyard_ipc_socket = engine_config["vineyard_socket"]
+        deployment, hosts = self._launcher.get_vineyard_stream_info()
+        path = op.attr[types_pb2.GRAPH_SERIALIZATION_PATH].s.decode()
+        logger.info("Deserialize graph from %s", path)
+        graph_id = vineyard.io.deserialize(
+            path,
+            type="global",
+            vineyard_ipc_socket=vineyard_ipc_socket,
+            vineyard_endpoint=vineyard_endpoint,
+            storage_options=storage_options,
+            deployment=deployment,
+            hosts=hosts,
+        )
+        logger.info("Finish deserialization, graph id: %d", graph_id)
+        # create graph_def
+        # run create graph on analytical engine
+        create_graph_op = create_single_op_dag(
+            types_pb2.CREATE_GRAPH,
+            config={
+                types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(
+                    graph_def_pb2.ARROW_PROPERTY
+                ),
+                types_pb2.OID_TYPE: utils.s_to_attr("int64_t"),
+                types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
+                types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(True),
+                types_pb2.VINEYARD_ID: utils.i_to_attr(int(graph_id)),
+            },
+        )
+        try:
+            response_head, response_body = self.run_on_analytical_engine(
+                create_graph_op, [], {}
+            )
+        except grpc.RpcError as e:
+            logger.error(
+                "Create graph failed, code: %s, details: %s",
+                e.code().name,
+                e.details(),
+            )
+            if e.code() == grpc.StatusCode.INTERNAL:
+                raise AnalyticalEngineInternalError(e.details())
+            else:
+                raise
+        logger.info("response head, %s , body %s", response_head, response_body)
+        response_head.head.results[0].key = op.key
+        return response_head.head.results[0]
 
     def _process_data_sink(self, op: op_def_pb2.OpDef):
         import vineyard

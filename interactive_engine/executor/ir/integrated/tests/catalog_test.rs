@@ -36,7 +36,7 @@ mod test {
     use ir_core::plan::meta::{PlanMeta, STORE_META};
     use ir_core::plan::physical::AsPhysical;
     use ir_core::{plan::meta::Schema, JsonIO};
-    use ir_physical_client::physical_builder::JobBuilder;
+    use ir_physical_client::physical_builder::{JobBuilder, PlanBuilder};
     use pegasus::result::ResultStream;
 
     use crate::common::test::*;
@@ -1655,10 +1655,11 @@ mod test {
                 .unwrap(),
         );
         println!("{:?}", plan);
-        let mut job_builder = JobBuilder::default();
+        let mut plan_builder = PlanBuilder::default();
         let mut plan_meta = plan.get_meta().clone();
-        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+        plan.add_job_builder(&mut plan_builder, &mut plan_meta)
             .unwrap();
+        let job_builder = JobBuilder::with_plan(plan_builder);
         let request = job_builder.build().unwrap();
         submit_query(request, 2)
     }
@@ -1941,10 +1942,11 @@ mod test {
                 .generate_simple_extend_match_plan()
                 .unwrap(),
         );
-        let mut job_builder = JobBuilder::default();
+        let mut plan_builder = PlanBuilder::default();
         let mut plan_meta = plan.get_meta().clone();
-        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+        plan.add_job_builder(&mut plan_builder, &mut plan_meta)
             .unwrap();
+        let job_builder = JobBuilder::with_plan(plan_builder);
         let request = job_builder.build().unwrap();
         let mut results = submit_query(request, 2);
         let mut count = 0;

@@ -16,11 +16,16 @@
 
 package com.alibaba.graphscope.common.ir.runtime.type;
 
+import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
+import org.apache.commons.lang3.ObjectUtils;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -29,16 +34,21 @@ import java.util.Objects;
  */
 public class PhysicalNode<T> extends AbstractRelNode {
     private final RelNode original;
-    private final T node;
+    private final List<T> nodes;
 
-    protected PhysicalNode(RelOptCluster cluster, RelTraitSet traitSet, RelNode original, T node) {
+    protected PhysicalNode(
+            RelOptCluster cluster, RelTraitSet traitSet, RelNode original, List<T> nodes) {
         super(cluster, traitSet);
         this.original = Objects.requireNonNull(original);
-        this.node = Objects.requireNonNull(node);
+        this.nodes = ObjectUtils.requireNonEmpty(nodes);
     }
 
     public PhysicalNode(RelNode original, T node) {
-        this(original.getCluster(), RelTraitSet.createEmpty(), original, node);
+        this(original.getCluster(), RelTraitSet.createEmpty(), original, ImmutableList.of(node));
+    }
+
+    public PhysicalNode(RelNode original, List<T> nodes) {
+        this(original.getCluster(), RelTraitSet.createEmpty(), original, nodes);
     }
 
     public RelNode getOriginal() {
@@ -46,6 +56,10 @@ public class PhysicalNode<T> extends AbstractRelNode {
     }
 
     public T getNode() {
-        return node;
+        return nodes.get(0);
+    }
+
+    public List<T> getNodes() {
+        return Collections.unmodifiableList(nodes);
     }
 }

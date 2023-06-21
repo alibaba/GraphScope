@@ -26,6 +26,7 @@ import com.alibaba.pegasus.RpcChannel;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
+import com.google.protobuf.ByteString;
 
 import io.grpc.Status;
 
@@ -56,7 +57,9 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
         }
         RpcClient rpcClient = rpcClientRef.get();
         PegasusClient.JobRequest jobRequest =
-                PegasusClient.JobRequest.parseFrom((byte[]) request.getRequestPhysical().build());
+                PegasusClient.JobRequest.newBuilder()
+                        .setPlan(ByteString.copyFrom((byte[]) request.getRequestPhysical().build()))
+                        .build();
         PegasusClient.JobConfig jobConfig =
                 PegasusClient.JobConfig.newBuilder()
                         .setJobId(request.getRequestId())
