@@ -53,6 +53,7 @@ submit:
 
 run:
 	cd $(CUR_DIR) && $(java) \
+	  -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 \
 	  -cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
 	  -Djna.library.path=../executor/ir/target/release \
 	  -Dgraph.schema=${graph.schema} \
