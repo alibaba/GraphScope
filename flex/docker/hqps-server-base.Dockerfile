@@ -31,19 +31,10 @@ RUN cd /root && \
 
 RUN cp /usr/local/lib/libgrape-lite.so /usr/lib/libgrape-lite.so
 
-RUN git clone https://github.com/alibaba/hiactor.git && cd hiactor && git checkout e16949ca53 && \
+RUN git clone https://github.com/zhanglei1949/hiactor.git && cd hiactor && \
     git submodule update --init --recursive && ./seastar/seastar/install-dependencies.sh && mkdir build && cd build && \
     cmake -DHiactor_DEMOS=OFF -DHiactor_TESTING=OFF -DHiactor_DPDK=OFF -DHiactor_CXX_DIALECT=gnu++17 -DSeastar_CXX_FLAGS="-DSEASTAR_DEFAULT_ALLOCATOR -mno-avx512" .. && \
     make -j && make install
 
 #install protobuf
 RUN apt-get install -y protobuf-compiler libprotobuf-dev
-
-# install java and maven
-RUN apt-get update -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install default-jdk -y && \
-    apt-get install maven -y
-
-# install rust
-RUN curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal && \
-    source "$HOME/.cargo/env"
