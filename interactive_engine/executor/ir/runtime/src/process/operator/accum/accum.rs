@@ -190,6 +190,7 @@ impl AccumFactoryGen for pb::GroupBy {
                 Err(ParsePbError::from("accum value alias is missing in MultiAccum"))?
             }
             let entry_accumulator = match agg_kind {
+                Aggregate::First => Err(ParsePbError::from("first is not supported"))?,
                 Aggregate::Count => EntryAccumulator::ToCount(Count { value: 0, _ph: Default::default() }),
                 Aggregate::ToList => EntryAccumulator::ToList(ToList { inner: vec![] }),
                 Aggregate::Min => EntryAccumulator::ToMin(Minimum { min: None }),

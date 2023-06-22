@@ -38,3 +38,10 @@ RUN git clone https://github.com/zhanglei1949/hiactor.git && cd hiactor && \
 
 #install protobuf
 RUN apt-get install -y protobuf-compiler libprotobuf-dev
+
+RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
+  sh -s -- -y --profile minimal && \
+  chmod +x "$HOME/.cargo/env" && \
+  echo "$source $HOME/.cargo/env" >> ~/.bashrc && \
+  source "$HOME/.cargo/env" && \
+  bash -c "rustup component add rustfmt"
