@@ -2,7 +2,7 @@ find_package (Hiactor)
 if (Hiactor_FOUND)
   include (${Hiactor_CODEGEN_CMAKE_FILE})
 
-  hiactor_codegen (graph_db_actor_autogen graph_db_actor_autogen
+  hiactor_codegen (graph_db_actor_autogen graph_db_autogen_files
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/server
         INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../)
 
@@ -10,7 +10,7 @@ if (Hiactor_FOUND)
 
   add_library(flex_graph_db_server STATIC
         ${GRAPH_DB_SERVER_SRC_FILES}
-        ${actor_autogen_files})
+        ${graph_db_autogen_files})
   add_dependencies(flex_graph_db_server graph_db_actor_autogen)
   target_compile_options (flex_graph_db_server
         PUBLIC

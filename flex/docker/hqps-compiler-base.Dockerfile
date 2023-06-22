@@ -22,6 +22,17 @@ RUN apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install default-jdk -y && \
     apt-get install maven -y
 
+RUN apt-get install -y vim wget git g++ curl make cmake
+
 # install rust
-RUN curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal && \
-    source "$HOME/.cargo/env"
+# RUN curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal && \
+#    sh "$HOME/.cargo/env"
+
+RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
+  sh -s -- -y --profile minimal && \
+  chmod +x "$HOME/.cargo/env" && \
+  echo "$source $HOME/.cargo/env" >> ~/.bashrc && \
+  source "$HOME/.cargo/env" && \
+  bash -c "rustup component add rustfmt"
+
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib

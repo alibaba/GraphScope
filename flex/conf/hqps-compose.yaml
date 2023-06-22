@@ -16,3 +16,20 @@ services:
 #    command : ["./hiactor-compiler", "-c", "config.yaml"] # command to start hqps_compiler
     depends_on:
       - engine 
+
+
+
+# to start compiler
+# we need to create a new ir.compiler.properties, can copy to /Graphscope/interactive_engine/conf/ir.compiler.properties
+# set graph_schema
+# hiactor.hosts
+# graph.store.
+# graph.planner
+# gremlin.server.disabled: true
+
+
+# to start server,
+# graph.yaml
+# thread num
+# http_port
+# data_path.
