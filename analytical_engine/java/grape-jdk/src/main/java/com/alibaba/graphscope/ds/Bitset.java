@@ -20,15 +20,7 @@ import static com.alibaba.graphscope.utils.CppClassName.GRAPE_BIT_SET;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_BIT_SET_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_WORKER_COMM_SPEC_H;
 
-import com.alibaba.fastffi.CXXHead;
-import com.alibaba.fastffi.CXXPointer;
-import com.alibaba.fastffi.CXXReference;
-import com.alibaba.fastffi.FFIFactory;
-import com.alibaba.fastffi.FFIGen;
-import com.alibaba.fastffi.FFINameAlias;
-import com.alibaba.fastffi.FFIPointer;
-import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.fastffi.FFITypeFactory;
+import com.alibaba.fastffi.*;
 
 @FFIGen
 @CXXHead(value = {GRAPE_WORKER_COMM_SPEC_H, GRAPE_BIT_SET_H})
@@ -58,6 +50,8 @@ public interface Bitset extends FFIPointer, CXXPointer {
      * @return true if empty.
      */
     boolean empty();
+
+    void copy(@FFIConst @CXXReference Bitset other);
 
     /**
      * Check empty or not in parallel.
