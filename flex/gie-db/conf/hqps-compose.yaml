@@ -8,17 +8,22 @@ services:
     container_name: hqps-server
 #    command : ["./hiactor-server", "-c", "config.yaml"] # command to start hqps_server
     volumes : 
-      - /home/zhanglei/code/GraphScope/flex/gie-db:/opt/gie-db/
-      - /home/zhanglei/gstest/:/opt/gstest/
+      - /home/zhanglei/code/GraphScope/flex/gie-db:/home/zhanglei/code/GraphScope/flex/gie-db
+      - /home/zhanglei/gstest/:/home/zhanglei/gstest/
   compiler:
     tty: true
     image: "hqps-compiler-runtime:latest"
-    ports: 
-    - "7687:7687"
+    ports:
+      - 6362:6362
+      - 7474:7474
+      - 7687:7687
     container_name: hqps-compiler
 #    command : ["./hiactor-compiler", "-c", "config.yaml"] # command to start hqps_compiler
     depends_on:
       - engine 
+    volumes:
+      - /home/zhanglei/code/GraphScope/flex/gie-db:/home/zhanglei/code/GraphScope/flex/gie-db
+
 
 
 

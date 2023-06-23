@@ -1,4 +1,4 @@
-graph_dir: /opt/gstest/flex/ldbc-sf01-long-date/
+graph_dir: /home/zhanglei/gstest/flex/ldbc-sf01-long-date/
 
 graph:
   file_format: ldbc_snb

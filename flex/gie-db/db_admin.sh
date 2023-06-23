@@ -40,8 +40,8 @@ DB_HOME="$(
   pwd -P
 )"
 info "DB_HOME = ${DB_HOME}"
-# the DB_HOME will be mount into docker container as /opt/gie-db/
-DOCKER_DB_HOME="/opt/gie-db/"
+# the DB_HOME will be mount into docker container the same directory
+DOCKER_DB_HOME="${DB_HOME}"
 #find hqps.compose.yaml
 if [ -f "${DB_HOME}/conf/hqps-compose.yaml" ]; then
   info "find hqps-compose.yaml"
@@ -50,14 +50,19 @@ else
   exit 1
 fi
 HQPS_COMPOSE_YAML="${DB_HOME}/conf/hqps-compose.yaml"
-INTERACTIVE_YAML="${DB_HOME}/gs_interactive.yaml"
+INTERACTIVE_YAML="${DOCKER_DB_HOME}/gs_interactive.yaml"
 
-SERVER_PORT=`yq '.dbms.server.port' ${INTERACTIVE_YAML}`
-echo "SERVER_PORT = ${SERVER_PORT}"
 
 # DB data path, where we stores the graph-data
 DB_DATA_PATH="${DB_HOME}/data"
 DOCKER_DATA_PATH="${DOCKER_DB_HOME}/data"
+
+DOCKER_LOG_PATH="${DOCKER_DB_HOME}/logs"
+DB_LOG_PATH="${DB_HOME}/logs"
+# create if not exists
+mkdir -p "${DB_LOG_PATH}"
+
+
 
 # parse the args and set the variables.
 # start-server
@@ -151,8 +156,7 @@ function import_graph(){
   DST_GRAPH_PATH="${DOCKER_DATA_PATH}/${graph_name}"
 
   # docker-compose exec command to load the graph
-  cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec engine /GraphScope/flex/build/bin/graph_db_loader ${config}  \
-    ${DST_GRAPH_PATH} 1"
+  cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec -it engine bash -c \"cd ${DB_HOME}; /GraphScope/flex/build/bin/graph_db_loader ${config} ${DST_GRAPH_PATH} 1\"; exit $?"
   info "Running cmd: ${cmd}"
   eval ${cmd}
 
@@ -194,20 +198,54 @@ function do_server() {
   esac
 }
 
+function kill_server(){
+  info "kill the server"
+  cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec -d engine pkill sync_server"
+  info "Running cmd: ${cmd}"
+  eval ${cmd}
+  info "kill the server"
+}
+
+function kill_compiler(){
+  info "kill the compiler"
+  cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec -d compiler pkill compiler-0.0.1-SNAPSHOT.jar"
+  info "Running cmd: ${cmd}"
+  eval ${cmd}
+}
+
+function check_server_up(){
+  info "check server is up"
+  cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec engine ps aux | grep sync_server"
+  info "Running cmd: ${cmd}"
+  eval ${cmd}
+}
+
+function check_compiler_up(){
+  info "check compiler is up"
+  cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec compiler ps aux | grep compiler-0.0.1-SNAPSHOT.jar"
+  info "Running cmd: ${cmd}"
+  eval ${cmd}
+}
+
 function do_service(){
   # expect [start/stop] [graph]
   # check num args
-  if [ $# -ne 2 ]; then
-    err "service need 2 arguments, but got $#"
+  if [ $# -lt 1 ]; then
+    err "service need 1 arguments, but got $#"
     usage
     exit 1
   fi
+  service_cmd=$1
 
   # start sync_server and compiler make run
-  service_cmd=$1
+
   graph_name=$2
+  graph_schema_path=$3
+  graph_stored_procedures=$4
   info "service_cmd = ${service_cmd}"
   info "graph_name = ${graph_name}"
+  info "graph_schema_path = ${graph_schema_path}"
+  info "graph_stored_procedures = ${graph_stored_procedures}"
   graph_dir_path="${DB_DATA_PATH}/${graph_name}"
   # check graph_dir_path exists
   if [ ! -d "${graph_dir_path}" ]; then
@@ -221,22 +259,83 @@ function do_service(){
   case $1 in
   start)
     info "starting the hqps service"
-    cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec engine /GraphScope/flex/build/bin/sync_server -p ${SERVER_PORT}  \
-       -s 1 --grape-data-path ${docker_graph_dir_path}"
+    # check varaibles
+    if [ -z "${graph_name}" ]; then
+      err "graph_name is empty"
+      exit 1
+    fi
+    if [ -z "${graph_schema_path}" ]; then
+      err "graph_schema_path is empty"
+      exit 1
+    fi
+    if [ -z "${graph_stored_procedures}" ]; then
+      info "graph_stored_procedures is empty"
+    fi
+    # kill the sync_server and compiler
+    HPQS_COMPILER_LOG="${DOCKER_LOG_PATH}/compiler_${graph_name}.log"
+    HPQS_SERVER_LOG="${DOCKER_LOG_PATH}/server_${graph_name}.log"
+    kill_server
+    kill_compiler
+    info "start server"
+    #if stored_procedure is specified
+    if [ ! -z "${graph_stored_procedures}" ]; then
+      cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec -it engine  bash -c \"/GraphScope/flex/build/bin/sync_server -c ${INTERACTIVE_YAML}  \
+       --grape-data-path ${docker_graph_dir_path} -p ${graph_stored_procedures} > ${HPQS_SERVER_LOG} 2>&1 &\""
+    else 
+      cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec -d engine /GraphScope/flex/build/bin/sync_server -c ${INTERACTIVE_YAML}"
+      cmd=${cmd}" --grape-data-path ${docker_graph_dir_path} > ${HPQS_SERVER_LOG} 2>&1 &"
+    fi
+    info "Running cmd: ${cmd}"
+    eval `${cmd}`
+    sleep 2
+    check_server_up
+
+    info "start compiler"
+
+    # create a ir.compiler.properties for this graph.
+
+    # pass the path to ir.compiler.properties for this graph.
+
+    GIE_HOME="/GraphScope/interactive_engine"
+    cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec -d compiler "
+    cmd=${cmd}"bash -c \""
+    cmd=${cmd}"cd ${DB_HOME}; "
+    cmd=${cmd}"nohup java -cp \".:${GIE_HOME}/compiler/target/libs/*:${GIE_HOME}/compiler/target/compiler-0.0.1-SNAPSHOT.jar\" "
+    cmd=${cmd}" -Djna.library.path=${GIE_HOME}/executor/ir/target/release"
+    cmd=${cmd}" -Dgraph.schema=${graph_schema_path}"
+    cmd=${cmd}" -Dstored.procedures=${graph_stored_procedures}"
+    cmd=${cmd}" -Dgraph.store=exp"
+    cmd=${cmd}" com.alibaba.graphscope.GraphServer > ${HPQS_COMPILER_LOG} 2>&1 &"
+    cmd=${cmd}"\""
     info "Running cmd: ${cmd}"
     eval ${cmd}
+    sleep 3
+    check_compiler_up
+    info "success start the hqps service"
     ;;
   stop)
     info "stop the service"
-    cmd="docker-compose -f ${HQPS_COMPOSE_YAML} down"
-    info "Running cmd: ${cmd}"
-    eval ${cmd}
+    kill_server
+    kill_compiler
     ;;
   restart)
     info "restart the service"
-    cmd="docker-compose -f ${HQPS_COMPOSE_YAML} down"
+    kill_server
+    info "start server"
+    cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec -d engine /GraphScope/flex/build/bin/sync_server -c ${INTERACTIVE_YAML}  \
+       --grape-data-path ${docker_graph_dir_path}"
     info "Running cmd: ${cmd}"
-    cmd="docker-compose -f ${HQPS_COMPOSE_YAML} up -d"
+    eval `${cmd}`
+
+    info "start compiler"
+    kill_compiler
+    cmd='docker-compose -f ${HQPS_COMPOSE_YAML} exec engine \ 
+       java -cp ".:${GIE_HOME}/compiler/target/libs/*:${GIE_HOME}/compiler/target/compiler-0.0.1-SNAPSHOT.jar" \
+       -Djna.library.path=${GIE_HOME}/executor/ir/target/release \
+       -Dgraph.schema=${graph_schema_path} \
+       -Dstored.procedures=${graph_stored_procedures} \
+       -Dgraph.store=exp \
+       com.alibaba.graphscope.GraphServer > ${HPQS_COMPILER_LOG} 2>&1 &'
     info "Running cmd: ${cmd}"
     eval ${cmd}
     ;;
