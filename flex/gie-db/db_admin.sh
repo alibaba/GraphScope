@@ -19,18 +19,24 @@ info() {
 # DB HOME, find the HOME using relative path.
 # this script should be located at $DB_HOME/bin/db_admin.sh
 DB_HOME="$(
-  cd "$(dirname "$0")/../" >/dev/null 2>&1
+  cd "$(dirname "$0")/" >/dev/null 2>&1
   pwd -P
 )"
 info "DB_HOME = ${DB_HOME}"
+# the DB_HOME will be mount into docker container as /opt/gie-db/
+DOCKER_DB_HOME="/opt/gie-db"
 #find hqps.compose.yaml
 if [ -f "${DB_HOME}/conf/hqps-compose.yaml" ]; then
   info "find hqps-compose.yaml"
 else
-  err "can not find hqps-compose.yaml"
+  err "can not find hqps-compose.yaml "${DB_HOME}"/conf/hqps-compose.yaml"
   exit 1
 fi
 HQPS_COMPOSE_YAML="${DB_HOME}/conf/hqps-compose.yaml"
+
+# DB data path, where we stores the graph-data
+DB_DATA_PATH="${DB_HOME}/data"
+DOCKER_DATA_PATH="${DOCKER_DB_HOME}/data"
 
 # parse the args and set the variables.
 # start-server
@@ -50,6 +56,17 @@ function usage() {
     compiler start             start the compiler
     compiler stop              stop the compiler
     compiler restart           restart the compiler
+    import -n [--name] <graph_name> -c [--config] <path-to-graph-config-yaml> 
+                               import a graph into database
+    compile <sourcefile[.cc, .cypher] -o [--output_dir] <output-directory>
+                                compile cypher/.cc to dynamic library
+EOF
+}
+function import_graph_usage(){
+  cat << EOF
+    import <graph_name> -c [--config] <path-to-graph-config-yaml> 
+                            import a graph into database
+                          
 EOF
 }
 
@@ -62,6 +79,69 @@ function check_enviroment(){
   #check docker compose
   if ! [ -x "$(command -v docker-compose)" ]; then
     err "docker-compose is not installed, please install docker-compose first."
+    exit 1
+  fi
+}
+
+function import_graph(){
+  # check variable numbers equals to 4
+  if [ $# -ne 4 ]; then
+    err "import graph need 4 arguments, but got $#"
+
+    exit 1
+  fi
+
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+    -c | --config)
+      config="$2"
+      shift # past argument
+      shift
+      ;;
+    -n | --name)
+      graph_name="$1"
+      shift
+      shift
+      ;;
+    *)
+      err "unknown option $1"
+      import_graph_usage
+      exit 1
+      ;;
+    esac
+  done
+
+  echo "graph_name = ${graph_name}"
+  echo "config = ${config}"
+  # check whether config file exists
+  if [ ! -f "${config}" ]; then
+    err "config file ${config} does not exist"
+    exit 1
+  fi
+  # check whether graph_name is empty
+  if [ -z "${graph_name}" ]; then
+    err "graph_name is empty"
+    exit 1
+  fi
+  # check whether DB_DATA_PATH/graph_name exists
+  if [ -d "${DB_DATA_PATH}/${graph_name}" ]; then
+    err "graph ${graph_name} already exists"
+    exit 1
+  fi
+
+  # to find inside the docker container, we need to use the DOCKER_DATA_PATH
+  DST_GRAPH_PATH="${DOCKER_DATA_PATH}/${graph_name}"
+
+  # docker-compose exec command to load the graph
+  cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec engine --workdir /GraphScope/flex/build/ ./bin/graph_db_loader ${config}  \
+    ${DST_GRAPH_PATH}"
+  info "Running cmd: ${cmd}"
+  eval ${cmd}
+
+  # check graph is loaded by check DB_DATA_PATH/graph_name/init_snapshot.bin" exists
+  if [ ! -f "${DB_DATA_PATH}/${graph_name}/init_snapshot.bin" ]; then
+    err "graph ${graph_name} is not loaded"
     exit 1
   fi
 }
@@ -120,6 +200,12 @@ while [[ $# -gt 0 ]]; do
     do_compiler "$compiler_cmd"
     shift # past argument
     shift
+    ;;
+  import)
+    #shirf and pass all command to import_graph func
+    info "import graph..."
+    shift
+    import_graph "$@"
     ;;
   *) # unknown option
     err "unknown option $1"

@@ -1,11 +1,12 @@
-#include <string>
 #include <iostream>
+#include <string>
 
 #include "flex/storages/mutable_csr/graph_db.h"
 
 int main(int argc, char** argv) {
   if (argc < 4) {
-    std::cout << "Usage: " << argv[0] << " <yaml_path> <work_dir> <thread_num>" << std::endl;
+    std::cout << "Usage: " << argv[0] << " <yaml_path> <work_dir> <thread_num>"
+              << std::endl;
     return 0;
   }
   std::string yaml_path = argv[1];

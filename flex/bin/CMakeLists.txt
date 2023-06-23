@@ -39,4 +39,12 @@ if (BUILD_HQPS)
         # install load_plan_and_run.sh
         install(PROGRAMS load_plan_and_run.sh DESTINATION bin)
     endif ()
+
+    # build graph_db_loader
+        add_executable(graph_db_loader graph_db_loader.cc)
+        target_link_libraries(graph_db_loader flex_mutable_csr_graph ${GLOG_LIBRARIES} ${LIBGRAPELITE_LIBRARIES})
+        install(TARGETS graph_db_loader
+                RUNTIME DESTINATION bin
+                ARCHIVE DESTINATION lib
+                LIBRARY DESTINATION lib)
 endif()

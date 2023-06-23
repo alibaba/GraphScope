@@ -1,7 +1,7 @@
 version: '3' # version of docker-compose
 services:
   engine:
-    image: "registry.cn-hongkong.aliyuncs.com/graphscope/hiactor-server:v0.0.1"
+    image: "hqps-server-runtime:latest"
     ports:
      - "10000:10000"
     container_name: hqps-server
@@ -9,9 +9,9 @@ services:
     volumes : 
       - /home/zhanglei/gie-db:/root/db_config # mount db directory
   compiler:
-    image: "registry.cn-hongkong.aliyuncs.com/graphscope/hiactor-server:v0.0.1"
+    image: "hqps-compiler-runtime:latest"
     ports: 
-    - "8182:8182"
+    - "7687:7687"
     container_name: hqps-compiler
 #    command : ["./hiactor-compiler", "-c", "config.yaml"] # command to start hqps_compiler
     depends_on:
