@@ -1,0 +1,85 @@
+---
+name: modern
+storeType: csr  # v6d, groot, gart
+xCsrParams:  # per-graph level parameters for csr
+  Ordering: by_src # csr specific configurations are prefixed with xCsr, consistent with X- headers in HTTP/1.1 specification, like X-forwarded-for, or application/x-www-form-urlencoded
+  Xxx: yyy  ## other configuration
+procedures:
+  directory: plugins  # default plugins
+  enableLists:
+    - "example_*"  # regex match
+    - ldbc_ic1   # exact match
+# store-related configurations:
+schema:
+  vertexTypes:
+    - typeId: 0
+      typeName: person
+      xCsrParams:  # Per-vertexType level parameters for csr
+        replicationStrategy: once # per vertextype level config
+        reservedSpace: yyy
+      properties:
+      - propertyId: 0
+        propertyName: id
+        propertyType:
+          primitiveType: DT_UNSIGNED_INT64
+      - propertyId: 1
+        propertyName: name
+        propertyType:
+          primitiveType: DT_STRING
+      - propertyId: 2
+        propertyName: age
+        propertyType:
+          primitiveType: DT_UNSIGNED_INT32
+      - propertyId: 3
+        propertyName: embedding
+        propertyType:
+          xCsrType:  # A data type specific to csr store
+            Tensor:
+              shape: [1,2,3]
+              dtype: DT_UNSIGNED_INT32
+      primaryKeyIds:
+      - 0
+    - typeId: 1
+      typeName: software
+      properties:
+      - propertyId: 0
+        propertyName: id
+        propertyType:
+          primitiveType: DT_UNSIGNED_INT64
+      - propertyId: 1
+        propertyName: name
+        propertyType: DT_STRING
+      - propertyId: 2
+        propertyName: lang
+        propertyType: DT_STRING
+      - propertyId: 3
+        propertyName: creationDateTime
+        propertyType:
+          dateTime:
+            dateTimeFormat: DTF_YYYY_MM_DD_HH_MM_SS_SSS
+            timeZoneFormat: TZF_UTC
+      primaryKeyIds:
+      - 0
+  edgeTypes:
+    - typeId: 0
+      typeName: knows
+      properties:
+      - propertyId: 0
+        propertyName: weight
+        propertyType:
+          primitiveType: DT_DOUBLE
+      vertexTypePairRelations:
+      - srcTypeId: 0
+        dstTypeId: 0
+        relation: MANY_TO_MANY
+    - typeId: 1
+      typeName: created
+      properties:
+      - propertyId: 0
+        propertyName: weight
+        propertyType:
+          primitiveType: DT_DOUBLE
+      vertexTypePairRelations:
+      - srcTypeId: 0
+        dstTypeId: 1
+        relation: MANY_TO_MANY

@@ -1,0 +1,87 @@
+---
+  graph: modern
+  loadingConfig:
+    dataSource: file  # file, oss, s3, hdfs
+    fileSystemPrefix: "file://"  # file://, oss://, s3://, hdfs://
+    dataLocation: "/path/to/raw/data"
+    method: append # append, overwrite
+    metaData:
+      delimiter: "|"  # other loading configuration places here
+  vertexMappings:
+    vertex_types:
+        - type_name: "person"  # must align with the schema
+          dataSourceName: "person.csv"
+          # Define how each data filed, after splitting, map with the property in the schema
+          # The data field has index start from 0
+          # It is not necessary to load all data fields, therefore, the mapping can be partial
+          #  but guarantee that the number of loaded data fields is equal to the number of properties
+          mappings:
+            - property: "id"
+              dataField:
+                index: 0    # can be omitted if the index is the same as the property index
+                name: "id"  # can be omitted if the name is not known
+            - property: "name"
+              dataField:
+                index: 1
+                name: "name"
+            - property: "age"
+              dataField:
+                index: 2
+                name: "age"
+        - type_name: "software"
+          dataSourceName: "software.csv"
+          mappings:
+            - dataField:
+                index: 0      # can be omitted if the index is the same as the property index
+                name: "id"    # can be omitted if the name is not known
+              property: "id"  # must align with the schema
+            - dataField:
+                index: 1
+                name: "name"
+              property: "name"
+            - dataField:
+                index: 2
+                name: "lang"
+              property: "lang"
+            - dataField:
+                index: 3
+                name: "creationDateTime"
+              property: "creationDateTime"
+  edgeMappings:
+    edge_types:
+      - type_pair:
+          edge: "knows"
+          source_vertex:  "person"
+          destination_vertex:  "person"
+        dataSourceName: "person_knows_person.csv"
+        sourceVertexMappings:
+          - dataField:
+            index: 0
+            name: "src_id"
+        destinationVertexMappings:
+          - dataField:
+            index: 1
+            name: "dst_id"
+        dataFieldMappings:
+          - property: "weight"
+            dataField:
+              index: 2
+              name: "weight"
+      - type_pair:
+          edge: "created"
+          source_vertex: "person"
+          destination_vertex: "software"
+        dataSourceName: "person_created_software.csv"
+        sourceVertexMappings:
+          - dataField:
+            index: 0
+            name: "src_id"
+        destinationVertexMappings:
+          - dataField:
+            index: 1
+            name: "dst_id"
+        dataFieldMappings:
+          - property: "weight"
+            dataField:
+              index: 2
+              name: "weight"

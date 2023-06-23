@@ -1,0 +1,13 @@
+# This can be co-generated with the so
+name: "example.allnodes"
+description: "A stored procedures for the modern graph workload 1"
+mode: READ  # WRITE, SCHEMA
+extension: ".so"
+library: libexample.so  # To specify the directory to the stored procedure
+params:
+  - name: "name"  # The name of the parameter
+    index: 0,
+    type: "string"  # The type of the parameter, string, int, float, double, bool
+  - name: "age"
+    index: 1,
+    type: "int"

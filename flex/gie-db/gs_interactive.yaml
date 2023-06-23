@@ -1,0 +1,16 @@
+
+---
+gs.interactive.dbms:
+  version: 0.0.1
+  directories:
+    - data: data  # by default data
+    - logs: logs  # by default logs
+    - lib: lib    # by default lib
+  logLevel: INFO # default INFO
+  endpoint:
+    defaultListenAddress: "0.0.0.0"  # default localhost
+    - httpConnector:   # for cypher, there may be other connectors, such as bolt_connector, https_connector
+      enabled: true   # default false
+      listenAddress: ":7474"  # default 7474
+  defaultGraph: "modern"  # configure the graph to be loaded while starting the service
+  # may include other configuration items of other engines
