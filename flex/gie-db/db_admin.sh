@@ -16,6 +16,23 @@ info() {
   echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] -INFO- $* ${NC}"
 }
 
+function parse_yaml {
+   local prefix=$2
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\):|\1|" \
+        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/2;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+      }
+   }'
+}
+
 # DB HOME, find the HOME using relative path.
 # this script should be located at $DB_HOME/bin/db_admin.sh
 DB_HOME="$(
@@ -24,7 +41,7 @@ DB_HOME="$(
 )"
 info "DB_HOME = ${DB_HOME}"
 # the DB_HOME will be mount into docker container as /opt/gie-db/
-DOCKER_DB_HOME="/opt/gie-db"
+DOCKER_DB_HOME="/opt/gie-db/"
 #find hqps.compose.yaml
 if [ -f "${DB_HOME}/conf/hqps-compose.yaml" ]; then
   info "find hqps-compose.yaml"
@@ -33,6 +50,10 @@ else
   exit 1
 fi
 HQPS_COMPOSE_YAML="${DB_HOME}/conf/hqps-compose.yaml"
+INTERACTIVE_YAML="${DB_HOME}/gs_interactive.yaml"
+
+SERVER_PORT=`yq '.dbms.server.port' ${INTERACTIVE_YAML}`
+echo "SERVER_PORT = ${SERVER_PORT}"
 
 # DB data path, where we stores the graph-data
 DB_DATA_PATH="${DB_HOME}/data"
@@ -100,7 +121,7 @@ function import_graph(){
       shift
       ;;
     -n | --name)
-      graph_name="$1"
+      graph_name="$2"
       shift
       shift
       ;;
@@ -115,10 +136,6 @@ function import_graph(){
   echo "graph_name = ${graph_name}"
   echo "config = ${config}"
   # check whether config file exists
-  if [ ! -f "${config}" ]; then
-    err "config file ${config} does not exist"
-    exit 1
-  fi
   # check whether graph_name is empty
   if [ -z "${graph_name}" ]; then
     err "graph_name is empty"
@@ -134,8 +151,8 @@ function import_graph(){
   DST_GRAPH_PATH="${DOCKER_DATA_PATH}/${graph_name}"
 
   # docker-compose exec command to load the graph
-  cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec engine --workdir /GraphScope/flex/build/ ./bin/graph_db_loader ${config}  \
-    ${DST_GRAPH_PATH}"
+  cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec engine /GraphScope/flex/build/bin/graph_db_loader ${config}  \
+    ${DST_GRAPH_PATH} 1"
   info "Running cmd: ${cmd}"
   eval ${cmd}
 
@@ -153,11 +170,13 @@ function do_server() {
     info "start the server"
     cmd="docker-compose -f ${HQPS_COMPOSE_YAML} up -d"
     info "Running cmd: ${cmd}"
+    eval ${cmd}
     ;;
   stop)
     info "stop the server"
     cmd="docker-compose -f ${HQPS_COMPOSE_YAML} down"
     info "Running cmd: ${cmd}"
+    eval ${cmd}
     ;;
   restart)
     info "restart the server"
@@ -165,9 +184,64 @@ function do_server() {
     info "Running cmd: ${cmd}"
     cmd="docker-compose -f ${HQPS_COMPOSE_YAML} up -d"
     info "Running cmd: ${cmd}"
+    eval ${cmd}
     ;;
   *)
     err "unknown server command $1"
+    usage
+    exit 1
+    ;;
+  esac
+}
+
+function do_service(){
+  # expect [start/stop] [graph]
+  # check num args
+  if [ $# -ne 2 ]; then
+    err "service need 2 arguments, but got $#"
+    usage
+    exit 1
+  fi
+
+  # start sync_server and compiler make run
+  service_cmd=$1
+  graph_name=$2
+  info "service_cmd = ${service_cmd}"
+  info "graph_name = ${graph_name}"
+  graph_dir_path="${DB_DATA_PATH}/${graph_name}"
+  # check graph_dir_path exists
+  if [ ! -d "${graph_dir_path}" ]; then
+    err "graph ${graph_name} does not exist"
+    exit 1
+  fi
+
+  docker_graph_dir_path="${DOCKER_DATA_PATH}/${graph_name}"
+
+  info "[Service] $1"
+  case $1 in
+  start)
+    info "starting the hqps service"
+    cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec engine /GraphScope/flex/build/bin/sync_server -p ${SERVER_PORT}  \
+       -s 1 --grape-data-path ${docker_graph_dir_path}"
+    info "Running cmd: ${cmd}"
+    eval ${cmd}
+    ;;
+  stop)
+    info "stop the service"
+    cmd="docker-compose -f ${HQPS_COMPOSE_YAML} down"
+    info "Running cmd: ${cmd}"
+    eval ${cmd}
+    ;;
+  restart)
+    info "restart the service"
+    cmd="docker-compose -f ${HQPS_COMPOSE_YAML} down"
+    info "Running cmd: ${cmd}"
+    cmd="docker-compose -f ${HQPS_COMPOSE_YAML} up -d"
+    info "Running cmd: ${cmd}"
+    eval ${cmd}
+    ;;
+  *)
+    err "unknown service command $1"
     usage
     exit 1
     ;;
@@ -195,17 +269,18 @@ while [[ $# -gt 0 ]]; do
     shift # past argument
     shift
     ;;
-  compiler)
-    compiler_cmd="$2"
-    do_compiler "$compiler_cmd"
+  service)
+    info "service: "
     shift # past argument
-    shift
+    do_service "$@"
+    exit 0
     ;;
   import)
     #shirf and pass all command to import_graph func
     info "import graph..."
     shift
     import_graph "$@"
+    exit 0
     ;;
   *) # unknown option
     err "unknown option $1"

@@ -67,17 +67,15 @@ std::string find_codegen_bin() {
 int main(int argc, char** argv) {
   bpo::options_description desc("Usage:");
   desc.add_options()("help,h", "Display help messages")(
-      "shard-num,s", bpo::value<uint32_t>()->default_value(1),
-      "shard number of actor system")(
-      "http-port,p", bpo::value<uint16_t>()->default_value(1000),
-      "http port of query handler")("plugin-dir,c", bpo::value<std::string>(),
+      "server-config,c", bpo::value<std::string>(),
+      "path to server config yaml")("plugin-dir,p", bpo::value<std::string>(),
                                     "directory where plugins exists")(
       "codegen-dir,d",
       bpo::value<std::string>()->default_value("/tmp/codegen/"),
-      "codegen working directory")("codegen-bin,g", bpo::value<std::string>(),
+      "codegen working directory")("codegen-bin,b", bpo::value<std::string>(),
                                    "codegen binary path")(
       "graph-yaml,y", bpo::value<std::string>(), "graph yaml path")(
-      "grape-data-path,a", bpo::value<std::string>(), "grape data path");
+      "grape-data-path,g", bpo::value<std::string>(), "grape data path");
 
   bpo::variables_map vm;
   bpo::store(bpo::command_line_parser(argc, argv).options(desc).run(), vm);
@@ -88,8 +86,44 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  uint32_t shard_num = vm["shard-num"].as<uint32_t>();
-  uint16_t http_port = vm["http-port"].as<uint16_t>();
+  uint32_t shard_num = 1;
+  uint16_t http_port = 10000;
+  if (vm.count("server-config") != 0) {
+    std::string server_config_path = vm["server-config"].as<std::string>();
+    // check file exists
+    if (!std::filesystem::exists(server_config_path)) {
+      LOG(ERROR) << "server-config not exists: " << server_config_path;
+      return 0;
+    }
+    YAML::Node config = YAML::LoadFile(server_config_path);
+    auto dbms_node = config["dbms"];
+    if (dbms_node) {
+      auto server_node = dbms_node["server"];
+      if (!server_node) {
+        LOG(ERROR) << "dbms.server config not found";
+        return 0;
+      }
+      auto shard_num_node = server_node["shared_num"];
+      if (shard_num_node) {
+        shard_num = shard_num_node.as<uint32_t>();
+      } else {
+        LOG(INFO) << "shared_num not found, use default value 1";
+      }
+      auto http_port_node = dbms_node["port"];
+      if (http_port_node) {
+        http_port = http_port_node.as<uint16_t>();
+      } else {
+        LOG(INFO) << "http_port not found, use default value 10000";
+      }
+    } else {
+      LOG(ERROR) << "dbms config not found";
+      return 0;
+    }
+  } else {
+    LOG(INFO) << "server-config is not specified, use default config";
+  }
+  LOG(INFO) << "shard_num: " << shard_num;
+  LOG(INFO) << "http_port: " << http_port;
 
   std::string codegen_dir = vm["codegen-dir"].as<std::string>();
 

@@ -1,14 +1,17 @@
 version: '3' # version of docker-compose
 services:
   engine:
+    tty: true
     image: "hqps-server-runtime:latest"
     ports:
      - "10000:10000"
     container_name: hqps-server
 #    command : ["./hiactor-server", "-c", "config.yaml"] # command to start hqps_server
     volumes : 
-      - /home/zhanglei/gie-db:/root/db_config # mount db directory
+      - /home/zhanglei/code/GraphScope/flex/gie-db:/opt/gie-db/
+      - /home/zhanglei/gstest/:/opt/gstest/
   compiler:
+    tty: true
     image: "hqps-compiler-runtime:latest"
     ports: 
     - "7687:7687"
