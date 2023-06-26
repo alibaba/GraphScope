@@ -93,3 +93,4 @@ flex/docs/*
 flex/gie-db/data/sf01/
 flex/gie-db/data/
 flex/gie-db/logs/
+flex/gie-db/plugins/*

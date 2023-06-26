@@ -224,6 +224,27 @@ function kill_compiler(){
   info "kill the compiler"
 }
 
+function start_compiler(){
+    config_path=$1
+    # check config_path exists
+    GIE_HOME="/GraphScope/interactive_engine"
+
+    if [ ! -f "${config_path}" ]; then
+      err "config file ${config_path} does not exist"
+      exit 1
+    fi
+    cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec -d compiler "
+    cmd=${cmd}"bash -c \""
+    cmd=${cmd}"cd ${DB_HOME}; "
+    cmd=${cmd}"nohup java -cp \"${GIE_HOME}/compiler/target/libs/*:${GIE_HOME}/compiler/target/compiler-0.0.1-SNAPSHOT.jar\" "
+    cmd=${cmd}" -Djna.library.path=${GIE_HOME}/executor/ir/target/release"
+    cmd=${cmd}" com.alibaba.graphscope.GraphServer ${config_path} > ${HPQS_COMPILER_LOG}"
+    cmd=${cmd}"\""
+    info "Running cmd: ${cmd}"
+    eval ${cmd}
+    sleep 3
+}
+
 function check_server_up(){
   info "check server is up"
   cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec engine ps aux | grep sync_server"
@@ -307,20 +328,9 @@ function do_service(){
 
     # pass the path to ir.compiler.properties for this graph.
 
-    GIE_HOME="/GraphScope/interactive_engine"
-    cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec -d compiler "
-    cmd=${cmd}"bash -c \""
-    cmd=${cmd}"cd ${DB_HOME}; "
-    cmd=${cmd}"nohup java -cp \".:${GIE_HOME}/compiler/target/libs/*:${GIE_HOME}/compiler/target/compiler-0.0.1-SNAPSHOT.jar\" "
-    cmd=${cmd}" -Djna.library.path=${GIE_HOME}/executor/ir/target/release"
-    cmd=${cmd}" -Dgraph.schema=${graph_schema_path}"
-    cmd=${cmd}" -Dstored.procedures=${graph_stored_procedures}"
-    cmd=${cmd}" -Dgraph.store=exp"
-    cmd=${cmd}" com.alibaba.graphscope.GraphServer > ${HPQS_COMPILER_LOG}"
-    cmd=${cmd}"\""
-    info "Running cmd: ${cmd}"
-    eval ${cmd}
-    sleep 3
+
+    start_compiler ${IR_CONF_PROPERT_FILE}
+
     check_compiler_up
     info "success start the hqps service"
     ;;
@@ -345,15 +355,9 @@ function do_service(){
 
     info "start compiler"
     kill_compiler
-    cmd='docker-compose -f ${HQPS_COMPOSE_YAML} exec engine \ 
-       java -cp ".:${GIE_HOME}/compiler/target/libs/*:${GIE_HOME}/compiler/target/compiler-0.0.1-SNAPSHOT.jar" \
-       -Djna.library.path=${GIE_HOME}/executor/ir/target/release \
-       -Dgraph.schema=${graph_schema_path} \
-       -Dstored.procedures=${graph_stored_procedures} \
-       -Dgraph.store=exp \
-       com.alibaba.graphscope.GraphServer > ${HPQS_COMPILER_LOG} 2>&1 &'
-    info "Running cmd: ${cmd}"
-    eval ${cmd}
+
+    start_compiler
+    info "finish restart compiler and server"
     ;;
   *)
     err "unknown service command $1"
@@ -427,9 +431,9 @@ function add_stored_procedure(){
   file_name=$(basename "${file_path}")
   file_name="${file_name%.*}"
   # set output_file to dynamic lib with different suffix on different os
-  if [[ "$(uname)" == "linux-gnu"* ]]; then
+  if [[ "$(uname)" == "Linux" ]]; then
     output_file="${output_dir}/lib${file_name}.so"
-  elif [[ "$(uname)" == "darwin"* ]]; then
+  elif [[ "$(uname)" == "Darwin" ]]; then
     output_file="${output_dir}/lib${file_name}.dylib"
   else
     err "unknown os type"

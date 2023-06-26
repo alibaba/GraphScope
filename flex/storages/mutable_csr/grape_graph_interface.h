@@ -712,7 +712,7 @@ class GrapeGraphInterface {
     initialized_ = true;
   }
 
-  void Open(const std::string& data_path){
+  void Open(const std::string& data_path) {
     graph_.Init("", data_path, 1);
     initialized_ = true;
   }
@@ -739,12 +739,25 @@ class GrapeGraphInterface {
   void ScanVertices(int64_t time_stamp, const label_id_t& label_id,
                     const std::tuple<PropT...>& props,
                     const FUNC_T& func) const {
-    // std::tuple<std::shared_ptr<TypedRefColumn<T>>...> columns;
-    // get_tuple_column_from_graph(graph_, label_id, prop_names, columns);
     auto columns =
         get_tuple_column_from_graph_with_property(graph_, label_id, props);
     auto vnum = graph_.graph().vertex_num(label_id);
     std::tuple<typename PropT::prop_t...> t;
+    for (auto v = 0; v != vnum; ++v) {
+      get_tuple_from_hete_column_tuple(v, t, columns);
+      func(v, t);
+    }
+  }
+
+  // scan vertices with PropertySelector.
+  template <typename FUNC_T, typename... Selector>
+  void ScanVerticesV2(int64_t time_stamp, const label_id_t& label_id,
+                      const std::tuple<Selector...>& selectors,
+                      const FUNC_T& func) const {
+    auto columns =
+        get_tuple_column_from_graph_with_property(graph_, label_id, selectors);
+    auto vnum = graph_.graph().vertex_num(label_id);
+    std::tuple<typename Selector::prop_t...> t;
     for (auto v = 0; v != vnum; ++v) {
       get_tuple_from_hete_column_tuple(v, t, columns);
       func(v, t);

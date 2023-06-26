@@ -35,6 +35,19 @@ class Scan {
       TwoLabelVertexSet<vertex_id_t, label_id_t, grape::EmptyType>;
 
   // scan vertex with expression, support label_key in expression,
+  template <typename FUNC, typename... Selector>
+  static vertex_set_t ScanVertexV2(int64_t time_stamp,
+                                   const GRAPH_INTERFACE& graph,
+                                   const label_id_t& v_label_id,
+                                   const FUNC& func,
+                                   const std::tuple<Selector...>& selectors) {
+    auto gids =
+        scan_vertex2_impl(time_stamp, graph, v_label_id, func, selectors);
+    return MakeDefaultRowVertexSet<vertex_id_t, label_id_t>(std::move(gids),
+                                                            v_label_id);
+  }
+
+  // scan vertex with expression, support label_key in expression,
   template <typename FUNC>
   static vertex_set_t ScanVertex(int64_t time_stamp,
                                  const GRAPH_INTERFACE& graph,
@@ -112,6 +125,24 @@ class Scan {
     };
 
     graph.template ScanVertices(time_stamp, v_label_id, props, filter);
+    return gids;
+  }
+
+  template <typename FUNC, typename... Selector>
+  static std::vector<vertex_id_t> scan_vertex2_impl(
+      int64_t time_stamp, const GRAPH_INTERFACE& graph,
+      const label_id_t& v_label_id, const FUNC& func,
+      const std::tuple<Selector...>& selectors) {
+    std::vector<vertex_id_t> gids;
+    auto filter =
+        [&](vertex_id_t v,
+            const std::tuple<typename Selector::prop_t...>& real_props) {
+          if (apply_on_tuple(func, real_props)) {
+            gids.push_back(v);
+          }
+        };
+
+    graph.template ScanVerticesV2(time_stamp, v_label_id, selectors, filter);
     return gids;
   }
 };
