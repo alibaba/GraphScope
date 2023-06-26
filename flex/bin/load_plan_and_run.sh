@@ -86,7 +86,7 @@ cypher_to_plan(){
     real_input_path=$(realpath ${input_path})
     real_output_path=$(realpath ${output_path})
 
-    # pushd ${GIE_HOME}"/compiler/"
+    pushd ${DB_HOME}
     compiler_jar=${GIE_HOME}"/compiler/target/compiler-0.0.1-SNAPSHOT.jar"
     #check exists
     if [ ! -f ${compiler_jar} ]; then
@@ -95,12 +95,12 @@ cypher_to_plan(){
         exit 1
     fi
     # cmd="make physical_plan query='${real_input_path}' physical='${real_output_path}'"
-    cmd="java -jar -cp \"${DB_HOME}:${GIE_HOME}/target/*:${compiler_jar}\""
+    cmd="java -cp \"${DB_HOME}:${GIE_HOME}/compiler/target/libs/*:${compiler_jar}\""
     cmd=${cmd}" -Djna.library.path=${GIE_HOME}/executor/ir/target/release/"
     cmd=${cmd}" com.alibaba.graphscope.common.ir.tools.GraphPlanner \"${real_input_path}\" \"${real_output_path}\""
     echo "running physical plan genration with "${cmd}
     eval ${cmd}
-    # popd
+    popd
 
     echo "---------------------------"
     #check output 
