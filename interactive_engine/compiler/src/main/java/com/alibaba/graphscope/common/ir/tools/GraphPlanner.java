@@ -183,21 +183,20 @@ public class GraphPlanner {
     }
 
     public static void main(String[] args) throws Exception {
-        Configs configs = new Configs("conf/ir.compiler.properties", FileLoadType.RELATIVE_PATH);
-        ExperimentalMetaFetcher metaFetcher = new ExperimentalMetaFetcher(configs);
-        if (args.length < 2 || args[0].isEmpty() || args[1].isEmpty()) {
+        if (args.length < 3 || args[0].isEmpty() || args[1].isEmpty() || args[2].isEmpty()) {
             throw new IllegalArgumentException(
-                    "usage: make physical_plan query='<query in string>' physical='<path to the"
-                            + " physical output file>'");
+                    "must specify three parameters: <path to the config file>, <query in string>,"
+                            + " <path to the physical output file>");
         }
-        String query = args[0];
+        Configs configs = new Configs(args[0], FileLoadType.RELATIVE_PATH);
+        ExperimentalMetaFetcher metaFetcher = new ExperimentalMetaFetcher(configs);
         GraphPlanner planner = new GraphPlanner(configs);
         Antlr4Parser cypherParser = new CypherAntlr4Parser();
         PlannerInstance instance =
-                planner.instance(cypherParser.parse(query), metaFetcher.fetch().get());
+                planner.instance(cypherParser.parse(args[1]), metaFetcher.fetch().get());
         Summary summary = instance.plan();
         try (PhysicalBuilder<byte[]> physicalBuilder = summary.getPhysicalBuilder()) {
-            FileUtils.writeByteArrayToFile(new File(args[1]), physicalBuilder.build());
+            FileUtils.writeByteArrayToFile(new File(args[2]), physicalBuilder.build());
         }
     }
 }
