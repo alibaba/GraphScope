@@ -225,6 +225,6 @@ def test_simulate_eager(sess):
 def test_across_engine(sess):
     g_node = load_p2p_network(sess)
     interactive = sess.gremlin(g_node)
-    res = interactive.execute("g.V().count()").all()
-    res = sess.run(res)
+    res = interactive.execute("g.V().count()").all().result()
+    # res = sess.run(res)
     assert res[0] == 62586
