@@ -606,28 +606,6 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         }
     },
 
-    ID_STEP {
-        @Override
-        public InterOpBase apply(Step step) {
-            ProjectOp projectOp = new ProjectOp();
-            String expr = "@." + ArgUtils.ID;
-            projectOp.setExprWithAlias(
-                    new OpArg(Collections.singletonList(Pair.with(expr, ArgUtils.asNoneAlias()))));
-            return projectOp;
-        }
-    },
-
-    LABEL_STEP {
-        @Override
-        public InterOpBase apply(Step step) {
-            ProjectOp projectOp = new ProjectOp();
-            String expr = "@." + ArgUtils.LABEL;
-            projectOp.setExprWithAlias(
-                    new OpArg(Collections.singletonList(Pair.with(expr, ArgUtils.asNoneAlias()))));
-            return projectOp;
-        }
-    },
-
     CONSTANT_STEP {
         @Override
         public InterOpBase apply(Step step) {
