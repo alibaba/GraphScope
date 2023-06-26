@@ -13,12 +13,20 @@ else()
         message(FATAL_ERROR "QueryName not set")
 endif()
 
-# the path where we can find graphscope headers and graphscope libs.
+# the path where we can find graphscope headers
 if (FLEX_INCLUDE_PREFIX)
-        message("graphscope install dir ${FLEX_INCLUDE_PREFIX}")
+        message("flex header install dir ${FLEX_INCLUDE_PREFIX}")
 else()
         message(FATAL_ERROR "FLEX_INCLUDE_PREFIX not set")
 endif()
+
+# the path where we can find graphscope libs.
+if (FLEX_LIB_DIR)
+        message("flex lib install dir ${FLEX_LIB_DIR}")
+else()
+        message(FATAL_ERROR "FLEX_LIB_DIR not set")
+endif()
+link_directories(${FLEX_LIB_DIR})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
@@ -82,5 +90,4 @@ endif()
 
 add_library(${QUERY_NAME} SHARED ${PROJECT_SOURCE_DIR}/${QUERY_NAME}.cc ${FLEX_INCLUDE_PREFIX}/flex/utils/app_utils.cc)
 target_include_directories(${QUERY_NAME} PUBLIC ${FLEX_INCLUDE_PREFIX} ${FLEX_INCLUDE_PREFIX}/flex/build/engines/hqps/)
-#target_link_directories(${QUERY_NAME} PUBLIC ${GRAPHSCOPE_INSTALL_DIR}/build/)
 target_link_libraries(${QUERY_NAME} PUBLIC hqps_plan_proto flex_mutable_csr_graph ${GLOG_LIBRARIES})

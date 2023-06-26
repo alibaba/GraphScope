@@ -17,6 +17,7 @@ else
     echo "try FLEX_HOME"${FLEX_INCLUDE}" exists."
     CODEGEN_RUNNER=${FLEX_HOME}/bin/gen_query_from_plan
     CMAKE_TEMPLATE_PATH=${FLEX_HOME}/include/flex/codegen/template/CMakeLists.txt.template
+    FLEX_LIB_DIR=${FLEX_HOME}/lib/
 fi
 
 FLEX_INCLUDE=${FLEX_HOME}/../
@@ -28,6 +29,7 @@ if [ ! -d ${FLEX_INCLUDE} ]; then
 else
     CODEGEN_RUNNER=${FLEX_HOME}/build/codegen/gen_query_from_plan
     CMAKE_TEMPLATE_PATH=${FLEX_HOME}/codegen/template/CMakeLists.txt.template
+    FLEX_LIB_DIR=${FLEX_HOME}/build/lib/
 fi
 
 echo "Codegen runner = ${CODEGEN_RUNNER}"
@@ -185,7 +187,7 @@ compile_so(){
     cp ${CMAKE_TEMPLATE_PATH} ${cur_dir}/CMakeLists.txt
     # run cmake and make in output path.
     pushd ${cur_dir}
-    cmd="cmake . -DQUERY_NAME=${query_name} -DFLEX_INCLUDE_PREFIX=${FLEX_INCLUDE}"
+    cmd="cmake . -DQUERY_NAME=${query_name} -DFLEX_INCLUDE_PREFIX=${FLEX_INCLUDE} -DFLEX_LIB_DIR=${FLEX_LIB_DIR}"
     # if CMAKE_CXX_COMPILER is set, use it.
     if [ ! -z ${CMAKE_CXX_COMPILER} ]; then
         cmd=${cmd}" -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
@@ -287,7 +289,7 @@ run() {
 
 if [ $# -lt 2 ]; then
     echo "Usage: $0 input_file work_dir output_dir"
-    echo "Example: $0 -i=../query/1.pb -w=. -o=."
+    echo "Example: $0 -i=../query/1.pb -w=/tmp/codegen -o=/plugin/"
     echo "your num args: "$#
     exit 1
 fi

@@ -62,6 +62,7 @@ DB_LOG_PATH="${DB_HOME}/logs"
 # create if not exists
 mkdir -p "${DB_LOG_PATH}"
 
+HQPS_ENGINE_CONTAINER_NAME="hqps-server"
 
 
 # parse the args and set the variables.
@@ -93,6 +94,15 @@ function import_graph_usage(){
     import <graph_name> -c [--config] <path-to-graph-config-yaml> 
                             import a graph into database
                           
+EOF
+}
+
+function stored_procedure_usage(){
+  cat << EOF
+    db_admin.sh add_stored_procedure -i <sourcefile[.cc, .cypher] -o [--output_dir] <output-directory>
+                                compile cypher/.cc to dynamic library
+    db_admin.sh remove_stored_procedure -n <stored_procedure_name>
+                                remove stored procedure
 EOF
 }
 
@@ -211,6 +221,7 @@ function kill_compiler(){
   cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec -d compiler pkill compiler-0.0.1-SNAPSHOT.jar"
   info "Running cmd: ${cmd}"
   eval ${cmd}
+  info "kill the compiler"
 }
 
 function check_server_up(){
@@ -305,7 +316,7 @@ function do_service(){
     cmd=${cmd}" -Dgraph.schema=${graph_schema_path}"
     cmd=${cmd}" -Dstored.procedures=${graph_stored_procedures}"
     cmd=${cmd}" -Dgraph.store=exp"
-    cmd=${cmd}" com.alibaba.graphscope.GraphServer > ${HPQS_COMPILER_LOG} 2>&1 &"
+    cmd=${cmd}" com.alibaba.graphscope.GraphServer > ${HPQS_COMPILER_LOG}"
     cmd=${cmd}"\""
     info "Running cmd: ${cmd}"
     eval ${cmd}
@@ -317,6 +328,11 @@ function do_service(){
     info "stop the service"
     kill_server
     kill_compiler
+    ;;
+  status)
+    info "check the service status"
+    check_server_up
+    check_compiler_up
     ;;
   restart)
     info "restart the service"
@@ -342,6 +358,104 @@ function do_service(){
   *)
     err "unknown service command $1"
     usage
+    exit 1
+    ;;
+  esac
+}
+
+function add_stored_procedure(){
+    # check args num == 4
+  if [ $# -ne 4 ]; then
+    err "stored_procedure command need 4 args"
+    stored_procedure_usage
+    exit 1
+  fi
+
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+
+    case $key in
+    -i | --input)
+      file_path="$2"
+      shift # past argument
+      shift
+      ;;
+    -o | --output)
+      output_dir="$2"
+      shift # past argument
+      shift
+      ;;
+    *)
+      err "unknown option $1"
+      stored_procedure_usage
+      exit 1
+      ;;
+    esac
+  done
+
+  #get real_file_path
+  file_path=$(realpath "${file_path}")
+  output_dir=$(realpath "${output_dir}")
+  echo "file_path: ${file_path}"
+  echo "output_dir: ${output_dir}"
+
+  # the path to output_dir should be able to accessed in container
+  # check file exist
+  if [ ! -f "${file_path}" ]; then
+    err "file ${file_path} not exist"
+    exit 1
+  fi
+
+  # check output_dir exist
+  if [ ! -d "${output_dir}" ]; then
+    info "output_dir ${output_dir} not exist"
+    info "create output_dir ${output_dir}"
+    mkdir -p "${output_dir}"
+  fi
+
+  # copy file to container
+  file_name=$(basename "${file_path}")
+  cmd="docker cp ${file_path} ${HQPS_ENGINE_CONTAINER_NAME}:/tmp/${file_name}"
+  eval ${cmd} || exit 1
+  docker_file_name="/tmp/${file_name}"
+
+  cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec engine bash -c \"/GraphScope/flex/bin/load_plan_and_run.sh -i=${docker_file_name} -w=/tmp/codegen/ -o=${output_dir} \""
+  echo "Running cmd: ${cmd}"
+  eval ${cmd}
+  # check output exists
+  # get the file_name of file_path
+  file_name=$(basename "${file_path}")
+  file_name="${file_name%.*}"
+  # set output_file to dynamic lib with different suffix on different os
+  if [[ "$(uname)" == "linux-gnu"* ]]; then
+    output_file="${output_dir}/lib${file_name}.so"
+  elif [[ "$(uname)" == "darwin"* ]]; then
+    output_file="${output_dir}/lib${file_name}.dylib"
+  else
+    err "unknown os type"
+    exit 1
+  fi
+
+  if [ ! -f "${output_file}" ]; then
+    err "output file ${output_file} not exist"
+    exit 1
+  fi
+  info "success generate dynamic lib ${output_file}"
+}
+
+# accept the .cypher file or a .cc file to generate dynamic lib from it
+# how to remove?
+function do_stored_procedure(){
+  key="$1"
+  case $key in
+  add)
+    shift # past argument
+    add_stored_procedure "$@"
+    exit 0
+    ;;
+  *)
+    err "unknown stored_procedure command $1"
+    stored_procedure_usage
     exit 1
     ;;
   esac
@@ -379,6 +493,12 @@ while [[ $# -gt 0 ]]; do
     info "import graph..."
     shift
     import_graph "$@"
+    exit 0
+    ;;
+  stored_procedure)
+    info "stored_procedure: "
+    shift # past argument
+    do_stored_procedure "$@"
     exit 0
     ;;
   *) # unknown option

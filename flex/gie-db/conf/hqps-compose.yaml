@@ -13,10 +13,7 @@ services:
   compiler:
     tty: true
     image: "hqps-compiler-runtime:latest"
-    ports:
-      - 6362:6362
-      - 7474:7474
-      - 7687:7687
+    network_mode: "host"
     container_name: hqps-compiler
 #    command : ["./hiactor-compiler", "-c", "config.yaml"] # command to start hqps_compiler
     depends_on:
@@ -26,7 +23,9 @@ services:
 
 
 
-
+      # - 6362:6362
+      # - 7474:7474
+      # - 7687:7687
 # to start compiler
 # we need to create a new ir.compiler.properties, can copy to /Graphscope/interactive_engine/conf/ir.compiler.properties
 # set graph_schema
