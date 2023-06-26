@@ -187,7 +187,16 @@ int main(int argc, char** argv) {
     gs::StoredProcedureManager::get().LoadFromPluginDir(plugin_dir);
   }
 
-  snb::ic::CodegenProxy::get().Init(codegen_dir, codegen_bin);
+  // db-home
+  std::string db_home;
+  if (vm.count("db-home") == 0) {
+    LOG(FATAL) << "db-home is not specified" << std::endl;
+  } else {
+    std::string db_home = vm["db-home"].as<std::string>();
+    LOG(INFO) << "db-home: " << db_home;
+  }
+
+  snb::ic::CodegenProxy::get().Init(codegen_dir, codegen_bin, db_home);
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
