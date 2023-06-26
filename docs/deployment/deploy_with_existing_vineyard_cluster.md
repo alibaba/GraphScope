@@ -1,20 +1,32 @@
 # Deploy with Existing Vineyard Cluster
 
-If you have already deployed a vineyard cluster, you can easily deploy GraphScope on the existing cluster and reuse the vineyard data such as graph with several GraphScope sessions. This will allow you to load a graph to the existing vineyard cluster and then reuse it with multiple GraphScope sessions, without needing to deploy a separate vineyard cluster for each session.
+If you have already deployed a vineyard cluster, you can easily deploy GraphScope on the existing cluster and reuse the vineyard data such as graph with several GraphScope sessions. This will allow you to load a graph to the existing vineyard cluster and then reuse it with multiple GraphScope sessions, without the need to deploy a separate vineyard cluster for each session
 
 :::{figure-md}
 
-<img src="../images/session_connect_vineyard_cluster.png"
+<img src="../images/default_session.png"
+     alt="GraphScope default session"
+     width="80%">
+
+Create a default GraphScope session
+:::
+
+If you create a default GraphScope session, all engines including Vineyard are bundled in the same pod, so that they can be deployed on
+any node within the Kubernetes cluster. However, this creates a closed Vineyard cluster, which is only accessible to the GraphScope session. When the session is closed, the Vineyard cluster is also deleted, and it cannot be accessed by other GraphScope sessions.
+
+
+:::{figure-md}
+
+<img src="../images/session_with_vineyard_cluster.png"
      alt="GraphScope sessions connect to an existing vineyard cluster"
      width="80%">
 
-GraphScope sessions connect to an existing vineyard cluster for data sharing
+Connecting GraphScope sessions to an existing vineyard cluster for data sharing
 :::
 
-The figure above shows that GraphScope sessions can share the data in the same vineyard cluster as the engines are deployed on the same node of the Kubernetes cluster and connected to the same vineyard socket. This is a common use case for vineyard clusters, as it allows multiple sessions to reuse the same graphs as long as the vineyard cluster is alive.
+The figure above shows that GraphScope sessions can share the data in the same vineyard cluster as the engines in different sessions are deployed on the same node within the Kubernetes cluster and connected to the same vineyard socket. Multiple sessions can reuse the same graph as long as the vineyard cluster is alive. This is a common use pattern of vineyard on Kubernetes.
 
 If you don't want to reserve the vineyard cluster for a long time, you can store the graphs in the vineyard cluster in the persistent storage, and then load the data from the persistent storage to the vineyard cluster when you need it. For more details, please refer to [Persistent storage of graphs on the Kubernetes cluster](./persistent_storage_of_graphs_on_k8s.md).
-
 
 Next provides step-by-step instructions on how to do this.
 
@@ -50,21 +62,28 @@ python3 -m pip install vineyard
 ```
 
 By default, the Vineyard cluster consists of three Vineyard instances and three etcd instances. 
-However, since we only have one node in the Kubernetes cluster, we need to specify the number of Vineyard instances and etcd instances using the `vineyard_replicas` and `vineyard_etcd_replicas` parameters. DON'T set the number of Vineyard instances and etcd instances to be greater than the number of nodes in the Kubernetes cluster.
+However, since we only have one node in the Kubernetes cluster, we need to specify the number of Vineyard instances and etcd instances using the `vineyard_replicas` and `vineyard_etcd_replicas` parameters. DON'T set the number of Vineyard instances and etcd instances to be greater than the number of nodes in the Kubernetes cluster. Instead, the number of vineyard replicas and the number of engine pods can be set independently.
+
+Create and check the namespace `vineyard-system` as follows.
+
+```bash
+$ kubectl create namespace vineyard-system
+namespace/vineyard-system created
+$ kubectl get namespace vineyard-system
+NAME              STATUS   AGE
+vineyard-system   Active   33s
+```
 
 To deploy a simple Vineyard cluster with one Vineyard instance and one etcd instance, follow the next step:
 
 ```python
 import vineyard
 
-# The default namespace is `vineyard-system` and the default deployment name is `vineyardd-sample`. Also, the command will create the namespace if it doesn't exist.
-# For more details about the parameters, please refer to the doc of vineyardctl
+# The default deployment name is `vineyardd-sample` and the default namespace is `vineyard-system`. Also, you can specify the deployment name and namespace by `name` parameter and `namespace` parameter. For more details about the parameters, please refer to the doc of vineyardctl
 # https://github.com/v6d-io/v6d/blob/main/k8s/cmd/README.md
 # Notice, all character `-` in the parameter of vineyardctl should be replaced with `_` in the python API
 vineyard.deploy.vineyardctl.deploy.vineyard_deployment(
     vineyard_replicas=1, 
-    vineyard_etcd_replicas=1, 
-    create_namespace=True
 )
 ```
 
@@ -78,6 +97,17 @@ NAME                               READY   STATUS    RESTARTS   AGE
 etcd0                              1/1     Running   0          73m
 vineyardd-sample-5db59987f-vr2fg   1/1     Running   0          73m
 ```
+
+## The lifecycle of a vineyard cluster
+
+If you deploy the vineyard cluster with the vineyardctl API, it will persist until you manually delete it. The vineyard cluster will not be affected by quitting the GraphScope session. You can delete the vineyard cluster with the following command:
+
+```python
+import vineyard
+vineyard.deploy.vineyardctl.delete.vineyard_deployment()
+```
+
+However, if you do not deploy the vineyard cluster beforehand, it will be created when you create a GraphScope session with the specified vineyard deployment name and namespace. The vineyard cluster will be deleted when you close the GraphScope session.
 
 ## Load the dataset to the Kubernetes cluster
 
@@ -178,6 +208,7 @@ If you see the output above, that means you have successfully reused the existin
 Delete the Vineyard cluster by
 
 ```python
+# the default vineyard deployment name is `vineyardd-sample` and namespace is `vineyard-system`, if you don't specify the arguments when you create the vineyard cluster, you can delete it as follows 
 vineyard.deploy.vineyardctl.delete.vineyard_deployment()
 ```
 
