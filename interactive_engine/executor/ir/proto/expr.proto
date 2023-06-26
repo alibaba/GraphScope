@@ -125,11 +125,16 @@ message DynamicParam {
 }
 
 message Case {
+  // Pair of when <expr> then <expr>
   message WhenThen {
     Expression when_expression = 1;
     Expression then_result_expression = 2;
   }
+  // A case operator always follows with a sequence of when_then pairs, e.g.
+  // CASE WHEN a.name == 'Marko' THEN 1
+  //      WHEN a.name == 'John' THEN 2
   repeated WhenThen when_then_expressions = 1;
+  // The trailed else expression:  ELSE 3
   Expression else_result_expression = 2;
 }
 

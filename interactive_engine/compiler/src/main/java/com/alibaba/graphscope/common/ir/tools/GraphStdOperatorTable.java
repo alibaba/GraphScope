@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import com.alibaba.graphscope.common.ir.rex.operator.GraphCaseOperator;
+import com.alibaba.graphscope.common.ir.rex.operator.CaseOperator;
 
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.SqlMonotonicBinaryOperator;
@@ -178,5 +178,5 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     GraphInferTypes.FIRST_KNOWN,
                     OperandTypes.COMPARABLE_ORDERED_COMPARABLE_ORDERED);
 
-    public static final SqlOperator CASE = new GraphCaseOperator(GraphInferTypes.RETURN_TYPE);
+    public static final SqlOperator CASE = new CaseOperator(GraphInferTypes.RETURN_TYPE);
 }

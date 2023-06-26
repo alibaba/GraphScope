@@ -34,9 +34,9 @@ import org.apache.calcite.sql.type.SqlTypeUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GraphCaseOperator extends SqlOperator {
+public class CaseOperator extends SqlOperator {
 
-    public GraphCaseOperator(SqlOperandTypeInference operandTypeInference) {
+    public CaseOperator(SqlOperandTypeInference operandTypeInference) {
         super("CASE", SqlKind.CASE, MDX_PRECEDENCE, true, null, operandTypeInference, null);
     }
 
