@@ -46,6 +46,7 @@ import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -67,7 +68,6 @@ import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.SimpleBindings;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
@@ -77,6 +77,8 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
+
+import javax.script.SimpleBindings;
 
 public class IrStandardOpProcessor extends StandardOpProcessor {
     private static Logger metricLogger = LoggerFactory.getLogger("MetricLog");
