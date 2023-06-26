@@ -64,12 +64,12 @@ def sssp(graph, src=0, weight=None):
     if not isinstance(graph, GraphDAGNode):
         if graph.schema.edata_type == graph_def_pb2.NULLVALUE:
             raise RuntimeError(
-                "The edge data is empty, and the edge data type should be"\
+                "The edge data is empty, and the edge data type should be"
                 " integers or floating point numbers to run SSSP."
             )
         if graph.schema.edata_type == graph_def_pb2.STRING:
             raise RuntimeError(
-                "The edge data type is string, and the edge data type should be"\
+                "The edge data type is string, and the edge data type should be"
                 " integers or floating point numbers to run SSSP."
             )
     return AppAssets(algo="sssp", context="vertex_data")(graph, src)
