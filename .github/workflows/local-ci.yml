@@ -300,7 +300,7 @@ jobs:
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        if: true
+        if: false
 
       - name: Run Minimum Test
         env:
