@@ -256,10 +256,10 @@ graph = load_modern_graph()
 g = gs.gremlin(graph)
 # then `execute` any supported gremlin query.
 q1 = g.execute('g.V().count()')
-print(q1.all())   # should print [6]
+print(q1.all().result())   # should print [6]
 
 q2 = g.execute('g.V().hasLabel(\'person\')')
-print(q2.all())  # should print [[v[2], v[3], v[0], v[1]]]
+print(q2.all().result())  # should print [[v[2], v[3], v[0], v[1]]]
 ```
 ````
 

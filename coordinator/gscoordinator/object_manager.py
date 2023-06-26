@@ -35,12 +35,11 @@ class GraphMeta(object):
         self.schema_path = schema_path
 
 
-class InteractiveQueryManager(object):
-    def __init__(self, object_id, endpoint=None):
+class InteractiveInstanceManager(object):
+    def __init__(self, object_id):
         self.type = "gie_manager"
-        # graph object id in vineyard
         self.object_id = object_id
-        self.endpoint = endpoint
+        self.endpoint = None
         self.client = None
 
     def set_endpoint(self, endpoint):
@@ -51,7 +50,6 @@ class InteractiveQueryManager(object):
             try:
                 self.client.close()
             except Exception:
-                # TODO(siyuan): throws no event loop exception with tornado 5.1.1
                 pass
 
     def submit(self, message, bindings=None, request_options=None):
@@ -60,13 +58,6 @@ class InteractiveQueryManager(object):
                 raise RuntimeError("InteractiveQueryManager's endpoint cannot be None")
             self.client = Client(f"ws://{self.endpoint}/gremlin", "g")
         return self.client.submit(message, bindings, request_options)
-
-
-class GremlinResultSet(object):
-    def __init__(self, key, result_set):
-        self.key = key
-        self.type = "result_set"
-        self.result_set = result_set
 
 
 class LearningInstanceManager(object):
