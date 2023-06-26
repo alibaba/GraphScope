@@ -257,7 +257,13 @@ oC_Parameter
     : '$' ( oC_SymbolicName ) ;
 
 oC_CaseExpression
-    :  ( ( CASE ( SP? oC_CaseAlternative )+ ) | ( CASE SP? oC_Expression ( SP? oC_CaseAlternative )+ ) ) ( SP? ELSE SP? oC_Expression )? SP? END ;
+    :  ( ( CASE ( SP? oC_CaseAlternative )+ ) | ( CASE SP? oC_InputExpression ( SP? oC_CaseAlternative )+ ) ) ( SP? ELSE SP? oC_ElseExpression )? SP? END ;
+
+oC_InputExpression
+    : oC_Expression ;
+
+oC_ElseExpression
+    : oC_Expression ;
 
 CASE : ( 'C' | 'c' ) ( 'A' | 'a' ) ( 'S' | 's' ) ( 'E' | 'e' ) ;
 

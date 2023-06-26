@@ -259,10 +259,10 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     @Override
     public ExprVisitorResult visitOC_CaseExpression(CypherGSParser.OC_CaseExpressionContext ctx) {
-        ObjectUtils.requireNonEmpty(
-                ctx.oC_Expression(), "case expression should have 'else' statement");
         ExprVisitorResult inputExpr =
-                (ctx.oC_Expression().size() == 1) ? null : visitOC_Expression(ctx.oC_Expression(0));
+                ctx.oC_InputExpression() == null
+                        ? null
+                        : visitOC_InputExpression(ctx.oC_InputExpression());
         List<RexNode> operands = Lists.newArrayList();
         for (CypherGSParser.OC_CaseAlternativeContext whenThen : ctx.oC_CaseAlternative()) {
             Preconditions.checkArgument(
@@ -277,8 +277,11 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
             ExprVisitorResult thenExpr = visitOC_Expression(whenThen.oC_Expression(1));
             operands.add(thenExpr.getExpr());
         }
+        // if else expression is omitted, the default value is null
         ExprVisitorResult elseExpr =
-                visitOC_Expression(ctx.oC_Expression(ctx.oC_Expression().size() - 1));
+                ctx.oC_ElseExpression() == null
+                        ? new ExprVisitorResult(builder.literal(null))
+                        : visitOC_ElseExpression(ctx.oC_ElseExpression());
         operands.add(elseExpr.getExpr());
         return new ExprVisitorResult(builder.call(GraphStdOperatorTable.CASE, operands));
     }

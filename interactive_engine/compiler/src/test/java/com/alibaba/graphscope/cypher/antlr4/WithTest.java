@@ -130,10 +130,25 @@ public class WithTest {
                                 "Match (a:person) Return CASE WHEN a.name = 'marko' THEN 1 WHEN"
                                         + " a.age > 10 THEN 2 ELSE 3 END as d")
                         .build();
-        System.out.println(project.explain());
         Assert.assertEquals(
                 "GraphLogicalProject(d=[CASE(=(a.name, 'marko'), 1, >(a.age, 10), 2, 3)],"
                         + " isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])",
+                project.explain().trim());
+    }
+
+    // else expression is omitted: case a.name when 'marko' then 1 when 'josh' then 2 end
+    @Test
+    public void with_9_test() {
+        RelNode project =
+                Utils.eval(
+                                "Match (a:person) Return CASE a.name WHEN 'marko' THEN 1 WHEN"
+                                        + " 'josh' THEN 2 END as d")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(d=[CASE(=(a.name, 'marko'), 1, =(a.name, 'josh'), 2,"
+                        + " null:NULL)], isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])",
                 project.explain().trim());
