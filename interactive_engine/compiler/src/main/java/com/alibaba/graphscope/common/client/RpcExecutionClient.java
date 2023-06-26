@@ -26,30 +26,40 @@ import com.alibaba.pegasus.RpcChannel;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
+import com.google.protobuf.ByteString;
 
 import io.grpc.Status;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * rpc client to send request to pegasus engine service
  */
 public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
     private final Configs graphConfig;
-    private final RpcClient rpcClient;
+    private final AtomicReference<RpcClient> rpcClientRef;
 
     public RpcExecutionClient(Configs graphConfig, ChannelFetcher<RpcChannel> channelFetcher) {
         super(channelFetcher);
         this.graphConfig = graphConfig;
-        this.rpcClient =
-                new RpcClient(
-                        PegasusConfig.PEGASUS_GRPC_TIMEOUT.get(graphConfig),
-                        channelFetcher.fetch());
+        this.rpcClientRef = new AtomicReference<>();
     }
 
     @Override
     public void submit(ExecutionRequest request, ExecutionResponseListener listener)
             throws Exception {
+        if (rpcClientRef.get() == null) {
+            rpcClientRef.compareAndSet(
+                    null,
+                    new RpcClient(
+                            PegasusConfig.PEGASUS_GRPC_TIMEOUT.get(graphConfig),
+                            channelFetcher.fetch()));
+        }
+        RpcClient rpcClient = rpcClientRef.get();
         PegasusClient.JobRequest jobRequest =
-                PegasusClient.JobRequest.parseFrom((byte[]) request.getRequestPhysical().build());
+                PegasusClient.JobRequest.newBuilder()
+                        .setPlan(ByteString.copyFrom((byte[]) request.getRequestPhysical().build()))
+                        .build();
         PegasusClient.JobConfig jobConfig =
                 PegasusClient.JobConfig.newBuilder()
                         .setJobId(request.getRequestId())
@@ -65,7 +75,7 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
                                         .build())
                         .build();
         jobRequest = jobRequest.toBuilder().setConf(jobConfig).build();
-        this.rpcClient.submit(
+        rpcClient.submit(
                 jobRequest,
                 new ResultProcessor() {
                     @Override
@@ -92,8 +102,8 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
 
     @Override
     public void close() throws Exception {
-        if (rpcClient != null) {
-            this.rpcClient.shutdown();
+        if (rpcClientRef.get() != null) {
+            rpcClientRef.get().shutdown();
         }
     }
 }

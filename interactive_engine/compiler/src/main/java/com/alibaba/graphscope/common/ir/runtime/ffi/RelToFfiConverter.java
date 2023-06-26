@@ -25,6 +25,7 @@ import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
+import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
@@ -50,6 +51,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexVariable;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -168,7 +170,9 @@ public class RelToFfiConverter implements GraphRelShuttle {
                                                     ptrPattern,
                                                     new FfiPbPointer.ByValue(k.toByteArray())));
                                 });
-                return new PhysicalNode(match, ptrPattern);
+                // add dummy source
+                Pointer ptrScan = LIB.initScanOperator(Utils.ffiScanOpt(GraphOpt.Source.VERTEX));
+                return new PhysicalNode(match, ImmutableList.of(ptrScan, ptrPattern));
             case OPTIONAL:
             case ANTI:
             default:
@@ -192,7 +196,9 @@ public class RelToFfiConverter implements GraphRelShuttle {
                                     LIB.addPatternMeta(
                                             ptrPattern, new FfiPbPointer.ByValue(k.toByteArray())));
                         });
-        return new PhysicalNode(match, ptrPattern);
+        // add dummy source
+        Pointer ptrScan = LIB.initScanOperator(Utils.ffiScanOpt(GraphOpt.Source.VERTEX));
+        return new PhysicalNode(match, ImmutableList.of(ptrScan, ptrPattern));
     }
 
     @Override
@@ -239,7 +245,47 @@ public class RelToFfiConverter implements GraphRelShuttle {
     public PhysicalNode visit(GraphLogicalAggregate aggregate) {
         List<GraphAggCall> groupCalls = aggregate.getAggCalls();
         if (groupCalls.isEmpty()) { // transform to project + dedup by keys
-            return new PhysicalNode(aggregate, null);
+            GraphGroupKeys keys = aggregate.getGroupKey();
+            Preconditions.checkArgument(
+                    keys.groupKeyCount() > 0,
+                    "group keys should not be empty while group calls is empty");
+            List<RelDataTypeField> fields = aggregate.getRowType().getFieldList();
+            Pointer ptrProject = LIB.initProjectOperator(false);
+            for (int i = 0; i < keys.groupKeyCount(); ++i) {
+                RexNode var = keys.getVariables().get(i);
+                Preconditions.checkArgument(
+                        var instanceof RexGraphVariable,
+                        "each group key should be type %s, but is %s",
+                        RexGraphVariable.class,
+                        var.getClass());
+                OuterExpression.Expression expr =
+                        var.accept(new RexToProtoConverter(true, isColumnId));
+                int aliasId;
+                if (i >= fields.size()
+                        || (aliasId = fields.get(i).getIndex()) == AliasInference.DEFAULT_ID) {
+                    throw new IllegalArgumentException(
+                            "each group key should have an alias if need dedup");
+                }
+                checkFfiResult(
+                        LIB.addProjectExprPbAlias(
+                                ptrProject,
+                                new FfiPbPointer.ByValue(expr.toByteArray()),
+                                ArgUtils.asAlias(aliasId)));
+            }
+            Pointer ptrDedup = LIB.initDedupOperator();
+            for (int i = 0; i < keys.groupKeyCount(); ++i) {
+                RelDataTypeField field = fields.get(i);
+                RexVariable rexVar =
+                        RexGraphVariable.of(field.getIndex(), field.getName(), field.getType());
+                OuterExpression.Variable exprVar =
+                        rexVar.accept(new RexToProtoConverter(true, isColumnId))
+                                .getOperators(0)
+                                .getVar();
+                checkFfiResult(
+                        LIB.addDedupKeyPb(
+                                ptrDedup, new FfiPbPointer.ByValue(exprVar.toByteArray())));
+            }
+            return new PhysicalNode(aggregate, ImmutableList.of(ptrProject, ptrDedup));
         }
         Pointer ptrGroup = LIB.initGroupbyOperator();
         List<RelDataTypeField> fields = aggregate.getRowType().getFieldList();

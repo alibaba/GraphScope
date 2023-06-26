@@ -58,7 +58,7 @@ run:
 	  -Dgraph.schema=${graph.schema} \
 	  -Dgraph.store=${graph.store} \
 	  -Dpegasus.hosts=${pegasus.hosts} \
-	  com.alibaba.graphscope.gremlin.service.GraphServiceMain
+	  com.alibaba.graphscope.GraphServer
 
 # make physical_plan query='<query in string>' physical='<path to the physical output file>'
 physical_plan:

@@ -223,7 +223,10 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(Protobuf REQUIRED)
+find_package(Protobuf CONFIG QUIET)
+if (NOT Protobuf_FOUND)
+    find_package(Protobuf REQUIRED)
+endif()
 include_directories(${Protobuf_INCLUDE_DIRS})
 
 if (ENABLE_JAVA_SDK)
