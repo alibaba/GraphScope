@@ -26,12 +26,14 @@ class CodegenProxy {
 
   bool Initialized() { return initialized_; }
 
-  void Init(std::string working_dir, std::string codegen_bin) {
+  void Init(std::string working_dir, std::string codegen_bin,
+            std::string db_home) {
     working_directory_ = working_dir;
     codegen_bin_ = codegen_bin;
+    db_home_ = db_home;
     initialized_ = true;
     LOG(INFO) << "CodegenProxy working dir: " << working_directory_
-              << ",codegen bin " << codegen_bin_;
+              << ",codegen bin " << codegen_bin_ << ", db_home: " << db_home_;
   }
 
   // Do gen
@@ -62,7 +64,8 @@ class CodegenProxy {
                                const std::string& work_dir) {
     // TODO: different suffix for different platform
     std::string res_lib_path = work_dir + "/lib" + query_name + ".so";
-    std::string cmd = codegen_bin_ + " -i=" + plan_path + " -w=" + work_dir;
+    std::string cmd = codegen_bin_ + " -i=" + plan_path + " -w=" + work_dir +
+                      " -db_home=" + db_home_;
     LOG(INFO) << "Start call codegen cmd: " << cmd;
     auto res = std::system(cmd.c_str());
     if (res != 0) {
@@ -132,6 +135,7 @@ class CodegenProxy {
 
   std::string working_directory_;
   std::string codegen_bin_;
+  std::string db_home_;
   std::atomic<int32_t> next_job_id_{0};
   bool initialized_;
 };

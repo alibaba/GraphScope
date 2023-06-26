@@ -48,8 +48,8 @@ if [ ! -f ${CMAKE_TEMPLATE_PATH} ]; then
 fi
 
 cypher_to_plan(){
-    if [ $# -ne 2 ]; then
-        echo "Usage: $0 input_file output_file, but receive: "$#
+    if [ $# -ne 3 ]; then
+        echo "Usage: $0 <input_file> <output_file> <db_home>, but receive: "$#
         exit 1
     fi
     # check GIE_HOME set
@@ -59,6 +59,7 @@ cypher_to_plan(){
     fi
     input_path=$1
     output_path=$2
+    DB_HOME=$3
     # find java executable
     JAVA_EXECUTABLE=$(which java)
     if [ -z ${JAVA_EXECUTABLE} ]; then
@@ -85,7 +86,7 @@ cypher_to_plan(){
     real_input_path=$(realpath ${input_path})
     real_output_path=$(realpath ${output_path})
 
-    pushd ${GIE_HOME}"/compiler/"
+    # pushd ${GIE_HOME}"/compiler/"
     compiler_jar=${GIE_HOME}"/compiler/target/compiler-0.0.1-SNAPSHOT.jar"
     #check exists
     if [ ! -f ${compiler_jar} ]; then
@@ -93,10 +94,13 @@ cypher_to_plan(){
         echo "Fail to find compiler jar."
         exit 1
     fi
-    cmd="make physical_plan query='${real_input_path}' physical='${real_output_path}'"
+    # cmd="make physical_plan query='${real_input_path}' physical='${real_output_path}'"
+    cmd="java -jar -cp \"${DB_HOME}:${GIE_HOME}/target/*:${compiler_jar}\""
+    cmd=${cmd}" -Djna.library.path=${GIE_HOME}/executor/ir/target/release/"
+    cmd=${cmd}" com.alibaba.graphscope.common.ir.tools.GraphPlanner \"${real_input_path}\" \"${real_output_path}\""
     echo "running physical plan genration with "${cmd}
     eval ${cmd}
-    popd
+    # popd
 
     echo "---------------------------"
     #check output 
@@ -110,17 +114,19 @@ cypher_to_plan(){
 
 compile_so(){
     #check input params size eq 2 or 3
-    if [ $# -ne 2 ] && [ $# -ne 3 ]; then
-        echo "Usage: $0 input_file work_dir [output_dir]"
+    if [ $# -ne 3 ] && [ $# -ne 4 ]; then
+        echo "Usage: $0 input_file work_dir db_home [output_dir]"
         exit 1
     fi
     input_path=$1
     work_dir=$2
-    if [ $# -eq 3 ]; then
-        output_dir=$3
+    db_home=$3
+    if [ $# -eq 4 ]; then
+        output_dir=$2
     fi
     echo "Input path = ${input_path}"
     echo "Work dir = ${work_dir}"
+    echo "DB home = ${db_home}"
     echo "Output dir = ${output_dir}"
 
     last_file_name=$(basename ${input_path})
@@ -165,7 +171,7 @@ compile_so(){
         echo "Generating code from cypher query"
         # first do .cypher to .pb
         output_pb_path=${cur_dir}"/"${query_name}".pb"
-        cypher_to_plan ${input_path} ${output_pb_path}
+        cypher_to_plan ${input_path} ${output_pb_path} ${DB_HOME}
         echo "----------------------------"
         echo "Codegen from cypher query done."
         echo "----------------------------"
@@ -262,6 +268,10 @@ run() {
         OUTPUT_DIR="${i#*=}"
         shift # past argument=value
         ;;
+        --db_home=*)
+        DB_HOME="${i#*=}"
+        shift # past argument=value
+        ;;
         -*|--*)
         echo "Unknown option $i"
         exit 1
@@ -275,6 +285,7 @@ run() {
     echo "Input        ="${INPUT}
     echo "Work dir     ="${WORK_DIR}
     echo "Output path  ="${OUTPUT_DIR}
+    echo "DB home      ="${DB_HOME}
 
     # check input exist
     if [ ! -f ${INPUT} ]; then
@@ -283,7 +294,7 @@ run() {
     fi
 
     # compile the input file to a .so file, put in $OUTPUT_PATH.
-    compile_so ${INPUT} ${WORK_DIR} ${OUTPUT_DIR}
+    compile_so ${INPUT} ${WORK_DIR} ${OUTPUT_DIR} ${DB_HOME}
     #if output dir is specified, we will copy to output dir.
 }
 

@@ -419,7 +419,7 @@ function add_stored_procedure(){
   eval ${cmd} || exit 1
   docker_file_name="/tmp/${file_name}"
 
-  cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec engine bash -c \"/GraphScope/flex/bin/load_plan_and_run.sh -i=${docker_file_name} -w=/tmp/codegen/ -o=${output_dir} \""
+  cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec engine bash -c \"/GraphScope/flex/bin/load_plan_and_run.sh --db_home=${DB_HOME} -i=${docker_file_name} -w=/tmp/codegen/ -o=${output_dir} \""
   echo "Running cmd: ${cmd}"
   eval ${cmd}
   # check output exists

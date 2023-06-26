@@ -75,6 +75,9 @@ int main(int argc, char** argv) {
       "codegen working directory")("codegen-bin,b", bpo::value<std::string>(),
                                    "codegen binary path")(
       "graph-yaml,y", bpo::value<std::string>(), "graph yaml path")(
+      "db-home", bpo::value<std::string>(), "db home path")(
+      "graph-schema", bpo::value<std::string>(),
+      "path to graph schema, used by gie")(
       "grape-data-path,g", bpo::value<std::string>(), "grape data path");
 
   bpo::variables_map vm;
