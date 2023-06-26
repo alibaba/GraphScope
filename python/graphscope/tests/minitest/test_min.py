@@ -241,7 +241,7 @@ def test_demo_with_default_session(ogbn_small_script):
         ],
     )
 
-    # hyperparameters config.
+    # hyperparameter config.
     train_gcn(
         lg,
         node_type="paper",
