@@ -364,9 +364,7 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.add_column.html">graphscope.framework.dag_utils.add_column</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.graph_to_numpy.html">graphscope.framework.dag_utils.graph_to_numpy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.graph_to_dataframe.html">graphscope.framework.dag_utils.graph_to_dataframe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.gremlin_query.html">graphscope.framework.dag_utils.gremlin_query</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -923,10 +921,10 @@ Example: Run Interactive Queries in GraphScope<div class="summary-down docutils"
 <span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
 <span class="c1"># then `execute` any supported gremlin query.</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().count()&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">q1</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>   <span class="c1"># should print [6]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">q1</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>   <span class="c1"># should print [6]</span>
 
 <span class="n">q2</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().hasLabel(</span><span class="se">\&#39;</span><span class="s1">person</span><span class="se">\&#39;</span><span class="s1">)&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">q2</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>  <span class="c1"># should print [[v[2], v[3], v[0], v[1]]]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">q2</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>  <span class="c1"># should print [[v[2], v[3], v[0], v[1]]]</span>
 </pre></div>
 </div>
 </div>

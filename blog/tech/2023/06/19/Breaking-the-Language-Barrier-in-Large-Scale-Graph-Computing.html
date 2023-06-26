@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Breaking the Language Barrier in Large Scale Graph Computing</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2023-06-19">19 Jun 2023</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2023-06-19">19 Jun 2023</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Breaking the Language Barrier in Large Scale Graph Computing</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2023-06-19-title-picture.jpg" alt="Grape-JDK" />
+In this blog, we present <a href="https://github.com/alibaba/GraphScope/tree/main/analytical_engine/java"><strong>GRAPE-JDK</strong></a>,
+an efficient cross-language graph analysis development kit of GraphScope. <strong>GRAPE-JDK</strong> enables users to write customized graph algorithms in Java and run them efficiently on GraphScope by addressing various challenges in cross-language graph computation.
+In this way, Java algorithms developed based on <strong>GRAPE-JDK</strong> can achieve performance similar to C++ algorithms.</p>
+
+<h3 id="the-demand-and-challenges-of-cross-language-graph-analysis">The Demand and Challenges of Cross-language Graph Analysis</h3>
+
+<p>Graph analytics is a critical aspect of processing tasks involving graphs. 
+One notable example of a graph analysis algorithm is the widely used single-source shortest path (SSSP) algorithm. 
+The graph analytical engine in GraphScope is derived from <a href="https://dl.acm.org/doi/abs/10.1145/3282488">GRAPE</a>, as documented in the research paper available at GRAPE. This engine incorporates various pre-built graph analysis algorithms, including SSSP and PageRank, among others, which users can readily invoke for their analytical needs.</p>
+
+<p>In real-world production scenarios, customization of general algorithms is often required to accommodate specific business logic. 
+As a result, developers frequently need to develop their own algorithms tailored to their needs. 
+Java is widely adopted as the predominant language within big data ecosystems, making it an ideal choice for implementing these algorithms.
+However, when utilizing GraphScope’s graph analytical engine, relying solely on the C++ interface can present significant obstacles for developers. 
+Directly implementing algorithms in Java would be more seamless and efficient for them. 
+Therefore, there exists a demand for enabling users to leverage Java for implementing customized graph algorithms and seamlessly executing them on the GraphScope graph analytical engine. 
+This approach would address practical requirements while facilitating a smoother integration of user-developed algorithms into the system.</p>
+
+<p>To meet the user’s requirement for conducting cross-language graph analysis, we have developed a Java SDK that builds upon the graph analysis engine GRAPE, which is primarily implemented in C++.
+In such scenarios, a natural solution is to employ the <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/jni/">Java Native Interface (JNI)</a>, which serves as the standard framework for Foreign Function Interface (FFI) on the Java Virtual Machine (JVM). 
+By utilizing JNI, we can overcome the limitations of Java by accessing system hardware resources at a lower level, similar to C++.
+To leverage JNI effectively, it requires writing wrapper code in C++ and compiling it into a dynamic library, granting us the ability to seamlessly utilize its functionalities. 
+This approach facilitates the seamless integration of Java and C++ components, enabling developers to harness the full potential of both languages within the graph analysis process.</p>
+
+<p><img src="/blog/assets/images/2023-06-19-jni.jpg" alt="JNI：Briding Java and C++" height="36px" width="36px" /></p>
+
+<p>Therefore, we can find a straightforward and intuitive solution: employing the raw JNI to create wrapper code that bridges Java and C++. 
+This approach allows us to encapsulate the C++ interface of the graph computing engine as a Java interface, making it accessible to users.
+However, this native solution has inherent limitations that render it inadequate for meeting the demands of large-scale graph computing. 
+It confronts several challenges in following three aspects:</p>
+
+<h4 id="challenge-1-difficulty-in-jni-programming">Challenge 1: Difficulty in JNI Programming</h4>
+<p>Directly using JNI for cross-language programming poses challenges in development, debugging, and maintenance.</p>
+
+<ul>
+  <li><strong>Development</strong>: In order to enable Java to interact/communicate with C++, programmers need to write 
+a large amount of error-prone and boilerplate code, as shown in the code block. 
+And JNI code often involves pointer conversion, which increases the risk of errors.</li>
+</ul>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">JNIEXPORT</span> <span class="kt">void</span> <span class="n">JNICALL</span> <span class="nf">Java_com_alibaba_graphscope_stdcxx_StdVector_1cxx_10x8cbe72bf_nativeClear</span><span class="p">(</span><span class="n">JNIEnv</span><span class="o">*</span><span class="p">,</span> <span class="n">jclass</span><span class="p">,</span> <span class="n">jlong</span> <span class="n">ptr</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">gs</span><span class="o">::</span><span class="n">VertexArrayDefault</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;&gt;*&gt;</span><span class="p">(</span><span class="n">ptr</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">clear</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p><strong>Debugging</strong>: The written JNI code needs to be compiled into a dynamic library by a C++/C compiler
+for the JVM to load and invoke the functions defined in it. The compilation and debugging of JNI code is also a painful process.</p>
+  </li>
+  <li>
+    <p><strong>Maintenance</strong>: The cost of maintaining JNI code is also high. As JNI code is highly dependent on C++ native code, 
+when the C++ interface and implementation of the graph computing engine change, programmers must manually modify the JNI implementation to adapt.</p>
+  </li>
+</ul>
+
+<h4 id="challenge-2-huge-overhead-of-cross-language-access">Challenge 2: Huge Overhead of Cross-language Access</h4>
+<p>Although JNI provides sufficient APIs for communication between Java and C++, the overhead it brings 
+due to its cross-language nature is huge. According to our research, the overhead that JNI may introduce in actual 
+large-scale graph computing scenarios mainly comes from the following call overheads.</p>
+
+<ul>
+  <li>
+    <p><strong>The overhead of JNI function calls</strong>. There is already a considerable overhead in calling the JNI function itself,
+ including accessing Java Objects in the JNI code implementation, which is a very <a href="http://www.mastercorp.free.fr/Ing1/Cours/Java/java_lesson1/doc/Tutorial/performance/JPNativeCode_fm.htm">time-consuming operation</a>.</p>
+  </li>
+  <li>
+    <p><strong>Java native methods cannot be inlined by the JVM</strong>. In Java, optimization of code is mainly done by the JVM. For frequently called Java methods,
+the JVM can avoid the overhead of function calls by inlining them. However, for native methods implemented by JNI, the JVM cannot optimize them. 
+In data-intensive scenarios such as graph computing, accessing data stored in C++ memory through JNI from Java is a frequent operation. Therefore, native methods that cannot be inlined will be a significant overhead during program execution.</p>
+  </li>
+  <li>
+    <p><strong>Java native methods cannot be optimized by JIT</strong>. Native methods have already been compiled into binary code by C++/C compiler, so it is not possible for the JVM to optimize them through JIT.</p>
+  </li>
+</ul>
+
+<h4 id="challenge-3-support-for-user-defined-data-structures">Challenge 3: Support for User-defined Data Structures</h4>
+
+<p>In some complex real-world production scenarios,Users often have a great demand for customizing vertex data type,
+edge data type, and even message types. Relying solely on JNI cannot achieve this because every time a user defines a new data type,
+we need to implement it in C++ and then write JNI methods to map it to Java.</p>
+
+<h3 id="design-and-implementation">Design and Implementation</h3>
+
+<p>To overcome these challenges, the GraphScope team worked closely with the JVM team at Alibaba Cloud Programming Language and Compiler 
+to design and implement a high-performance and user-friendly cross-language graph computing solution.
+At the same time, the development of <strong>GRAPE-JDK</strong> also led to a modern and advanced FFI (Foreign Function Interface) framework: 
+<strong>FastFFI</strong> (open-sourced on GitHub: <a href="https://github.com/alibaba/fastFFI">alibaba/fastFFI</a>. 
+The position of GRAPE-SDK in the GraphScope system is shown below.</p>
+
+<p><img src="/blog/assets/images/2023-06-19-grape-jdk-pos.jpg" alt="GRAPE-JDK in GraphScope" /></p>
+
+<h4 id="fastffi">FastFFI</h4>
+
+<p>The functionality of <strong>GRAPE-JDK</strong> depends on <strong>FastFFI</strong>. <strong>FastFFI</strong> is a modern, advanced, and efficient Java FFI framework
+whose features are derived from our exploration of cross-language programming between Java and C++ in GRAPE-JDK. 
+<strong>FastFFI</strong> successfully overcomes the three challenges mentioned above.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Challenge</th>
+      <th style="text-align: center">Solution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">The difficulty of JNI programming</td>
+      <td style="text-align: center">FastFFI’s code generation framework</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">Huge overhead of cross-language access</td>
+      <td style="text-align: center">FastFFI’s LLVM4JNI: Converting LLVM bitcode to Java Bytecode.</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">Support for user-defined data structures</td>
+      <td style="text-align: center">FastFFI’s <code class="language-plaintext highlighter-rouge">@FFIMirror</code> technique</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>FastFFI</strong> can be divided into two parts, FFI-SDK and LLVM4JNI-SDK. FFI-SDK provides comprehensive JNI development support, reducing the complexity of programming. LLVM4JNI-SDK provides JNI code optimization support to improve runtime performance. For more information about FastFFI, please refer to <a href="https://github.com/alibaba/fastFFI">FastFFI</a>.</p>
+
+<h4 id="grape-jdk">GRAPE-JDK</h4>
+
+<p>Based on the JNI support provided by FastFFI, we developed the Java PIE SDK for GRAPE: <strong>GRAPE-JDK</strong>. 
+Taking Vertex as an example, we will introduce how <strong>FastFFI</strong> reduces the complexity of JNI development and improves performance.</p>
+
+<h3 id="the-mapping-between-c-and-java-classes">The Mapping between C++ and Java Classes</h3>
+<p>As the most basic abstraction in the graph, Vertex often has a unique ID and attribute (vertex data). For example, in GRAPE, the interface abstraction of a vertex is as follows</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">class</span> <span class="nc">Vertex</span> <span class="p">{</span>
+ <span class="nl">public:</span>
+  <span class="n">Vertex</span><span class="p">()</span> <span class="p">{}</span>
+  <span class="o">~</span><span class="n">Vertex</span><span class="p">()</span> <span class="p">{}</span>
+  <span class="c1">//Other code fragments are omitted here, see full code at</span>
+  <span class="c1">// https://github.com/alibaba/libgrape-lite/blob/master/grape/utils/vertex_array.h#L36</span>
+  
+  <span class="c1">// Get the id bound with this vertex.</span>
+  <span class="kr">inline</span> <span class="n">T</span> <span class="n">GetValue</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span> <span class="k">return</span> <span class="n">value_</span><span class="p">;</span> <span class="p">}</span>
+
+  <span class="c1">// Set the id bound with this vertex.</span>
+  <span class="kr">inline</span> <span class="kt">void</span> <span class="nf">SetValue</span><span class="p">(</span><span class="n">T</span> <span class="n">value</span><span class="p">)</span> <span class="p">{</span> <span class="n">value_</span> <span class="o">=</span> <span class="n">value</span><span class="p">;</span> <span class="p">}</span>
+
+ <span class="k">private</span><span class="o">:</span>
+  <span class="n">T</span> <span class="n">value_</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>In order to map the C++ Vertex class to Java, all we need to do is to write the following code in Java.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@FFIGen</span><span class="o">(</span><span class="n">library</span> <span class="o">=</span> <span class="s">"grape-jni"</span><span class="o">)</span>
+<span class="nd">@CXXHead</span><span class="o">(</span><span class="s">"grape/utils/vertex_array.h"</span><span class="o">)</span>
+<span class="nd">@FFITypeAlias</span><span class="o">(</span><span class="s">"grape::Vertex"</span><span class="o">)</span>
+<span class="nd">@CXXTemplate</span><span class="o">(</span>
+        <span class="n">cxx</span> <span class="o">=</span> <span class="o">{</span><span class="s">"uint64_t"</span><span class="o">},</span>
+        <span class="n">java</span> <span class="o">=</span> <span class="o">{</span><span class="s">"Long"</span><span class="o">})</span>
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Vertex</span><span class="o">&lt;</span><span class="no">VID_T</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="nc">FFIPointer</span> <span class="o">{</span>
+    <span class="no">VID_T</span> <span class="nf">GetValue</span><span class="o">();</span>
+
+    <span class="kt">void</span> <span class="nf">SetValue</span><span class="o">(</span><span class="no">VID_T</span> <span class="n">id</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">@FFIGen</code> and <code class="language-plaintext highlighter-rouge">@CXXHead</code> are both Java annotations. By providing additional information through annotations, we can generate code
+during the compilation of Java code. For example, <code class="language-plaintext highlighter-rouge">@CXXHead("grape/utils/vertex_array.h")</code> specifies that the generated 
+C++ code needs to include the header file <code class="language-plaintext highlighter-rouge">grape/utils/vertex_array.h</code>.</p>
+
+<p>After compilation, <code class="language-plaintext highlighter-rouge">Vertex.java</code> will generate two sets of code, one of which is the implementation 
+class of the Java Vertex interface, which defines the corresponding native methods.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Vertex_cxx_0xaccf3424</span> <span class="kd">extends</span> <span class="nc">FFIPointerImpl</span> <span class="kd">implements</span> <span class="nc">Vertex</span><span class="o">&lt;</span><span class="nc">Long</span><span class="o">&gt;</span> <span class="o">{</span>
+
+  <span class="kd">public</span> <span class="nf">Vertex_cxx_0xaccf3424</span><span class="o">(</span><span class="kd">final</span> <span class="kt">long</span> <span class="n">address</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kd">super</span><span class="o">(</span><span class="n">address</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="kd">public</span> <span class="nc">Long</span> <span class="nf">GetValue</span><span class="o">()</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="n">java</span><span class="o">.</span><span class="na">lang</span><span class="o">.</span><span class="na">Long</span><span class="o">(</span><span class="n">nativeGetValue</span><span class="o">(</span><span class="n">address</span><span class="o">));</span>
+  <span class="o">}</span>
+  <span class="c1">//The actual working native method.</span>
+  <span class="kd">public</span> <span class="kd">static</span> <span class="kd">native</span> <span class="kt">long</span> <span class="nf">nativeGetValue</span><span class="o">(</span><span class="kt">long</span> <span class="n">ptr</span><span class="o">);</span>
+
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">SetValue</span><span class="o">(</span><span class="nc">Long</span> <span class="n">arg0</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">nativeSetValue</span><span class="o">(</span><span class="n">address</span><span class="o">,</span> <span class="n">arg0</span><span class="o">);</span>
+  <span class="o">}</span>
+  <span class="c1">// The actual working native method.</span>
+  <span class="kd">public</span> <span class="kd">static</span> <span class="kd">native</span> <span class="kt">void</span> <span class="nf">nativeSetValue</span><span class="o">(</span><span class="kt">long</span> <span class="n">ptr</span><span class="o">,</span> <span class="kt">long</span> <span class="n">arg00</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Also, there will be a <code class="language-plaintext highlighter-rouge">.cc</code> file containing the implementation of the native methods after compilation</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// headers are omitted.</span>
+<span class="cp">#ifdef __cplusplus
+</span><span class="k">extern</span> <span class="s">"C"</span> <span class="p">{</span>
+<span class="cp">#endif
+</span>
+<span class="n">JNIEXPORT</span>
+<span class="n">jlong</span> <span class="n">JNICALL</span> <span class="n">Java_com_alibaba_graphscope_ds_Vertex_1cxx_10xaccf3424_nativeGetValue</span><span class="p">(</span><span class="n">JNIEnv</span><span class="o">*</span><span class="p">,</span> <span class="n">jclass</span><span class="p">,</span> <span class="n">jlong</span> <span class="n">ptr</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">jlong</span><span class="p">)(</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">grape</span><span class="o">::</span><span class="n">Vertex</span><span class="o">&lt;</span><span class="kt">uint64_t</span><span class="o">&gt;*&gt;</span><span class="p">(</span><span class="n">ptr</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">GetValue</span><span class="p">());</span>
+<span class="p">}</span>
+
+<span class="n">JNIEXPORT</span>
+<span class="kt">void</span> <span class="n">JNICALL</span> <span class="nf">Java_com_alibaba_graphscope_ds_Vertex_1cxx_10xaccf3424_nativeSetValue</span><span class="p">(</span><span class="n">JNIEnv</span><span class="o">*</span><span class="p">,</span> <span class="n">jclass</span><span class="p">,</span> <span class="n">jlong</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">jlong</span> <span class="n">arg0</span> <span class="cm">/* arg00 */</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">grape</span><span class="o">::</span><span class="n">Vertex</span><span class="o">&lt;</span><span class="kt">uint64_t</span><span class="o">&gt;*&gt;</span><span class="p">(</span><span class="n">ptr</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">SetValue</span><span class="p">(</span><span class="n">arg0</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="cp">#ifdef __cplusplus
+</span><span class="p">}</span>
+<span class="cp">#endif
+</span></code></pre></div></div>
+
+<p>Similarly, we can map any C++ class to a Java class.</p>
+
+<h4 id="ffimirroruser-defined-data-structures">FFIMirror：User-defined Data Structures</h4>
+
+<p>In GRAPE-JDK, we support users to create a customized data structure that has no corresponding C++ implementation, and use it as the data type for vertex ID, vertex or edge. You only need to use the <code class="language-plaintext highlighter-rouge">@FFIMirror</code> annotation to decorate your own defined interface. For example, we can define a simple data structure containing only <code class="language-plaintext highlighter-rouge">long</code> and <code class="language-plaintext highlighter-rouge">double</code> fields. During compilation, the corresponding C++ code, JNI code, and Java implementation class code will be automatically generated.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@FFIMirror</span>
+<span class="nd">@FFINameSpace</span><span class="o">(</span><span class="s">"sample"</span><span class="o">)</span>
+<span class="nd">@FFITypeAlias</span><span class="o">(</span><span class="s">"MyData"</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">MyData</span>  <span class="kd">extends</span> <span class="nc">CXXPointer</span> <span class="o">{</span>
+    <span class="c1">//Get the long field.</span>
+    <span class="nd">@FFIGetter</span> <span class="kt">long</span> <span class="nf">longField</span><span class="o">();</span>
+     <span class="c1">//Set the long field.</span>
+    <span class="nd">@FFISetter</span> <span class="kt">void</span> <span class="nf">longField</span><span class="o">(</span><span class="kt">long</span> <span class="n">value</span><span class="o">);</span>
+    
+    <span class="nd">@FFIGetter</span> <span class="kt">double</span> <span class="nf">doubleField</span><span class="o">();</span>
+    <span class="nd">@FFISetter</span> <span class="kt">void</span> <span class="nf">doubleField</span><span class="o">(</span><span class="kt">double</span> <span class="n">value</span><span class="o">);</span>
+
+    <span class="c1">//Create MyData with this factory</span>
+    <span class="nc">MyData</span><span class="o">.</span><span class="na">Factory</span> <span class="n">factory</span> <span class="o">=</span> <span class="nc">FFITypeFactory</span><span class="o">.</span><span class="na">getFactory</span><span class="o">(</span><span class="nc">MyData</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+    <span class="nd">@FFIFactory</span>
+    <span class="kd">interface</span> <span class="nc">Factory</span> <span class="o">{</span>
+        <span class="nc">MyData</span> <span class="nf">create</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Next, similar to regular JNI projects, after compiling the obtained <code class="language-plaintext highlighter-rouge">.cc</code> files and linking them into a dynamic library,
+we can load them into Java through <code class="language-plaintext highlighter-rouge">System.loadLibrary()</code> and access C++ objects and methods in Java</p>
+
+<p>As we can see, the implementation of <strong>GRAPE-JDK</strong> based on <strong>FastFFI</strong> perfectly solves the difficulties in development,
+debugging, and maintenance in cross-language programming with JNI, and meets the needs of users for customized data types</p>
+
+<h3 id="optimizing-jni">Optimizing JNI</h3>
+
+<p><a href="https://github.com/alibaba/fastFFI/tree/main/llvm4jni">LLVM4JNI-SDK</a> is a “BitCode to ByteCode” conversion tool implemented entirely in Java. The working principle of LLVM4JNI 
+is to analyze LLVM-IR (JNI code is embedded in the dynamic library binary by using option <a href="https://reviews.llvm.org/D68213"><code class="language-plaintext highlighter-rouge">-mllvm=-lto-embed-bitcode</code></a>
+when compiling with LLVM11), select the code that can be converted to Java bytecode (not all LLVM IR can be converted to bytecode), 
+generate bytecode, and finally replace the corresponding Java native methods.</p>
+
+<p>For example, for the Vertex defined earlier, when running LLVM4JNI for optimization, we will replace the native methods in the Vertex implementation class:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Vertex_cxx_0xaccf3424</span> <span class="kd">extends</span> <span class="nc">FFIPointerImpl</span> <span class="kd">implements</span> <span class="nc">Vertex</span><span class="o">&lt;</span><span class="nc">Long</span><span class="o">&gt;</span> <span class="o">{</span>
+  <span class="c1">//Notice that this a no longer a native method now!</span>
+  <span class="kd">public</span> <span class="kd">static</span> <span class="kt">long</span> <span class="nf">nativeGetValue</span><span class="o">(</span><span class="kt">long</span> <span class="n">ptr</span><span class="o">){</span>
+      <span class="k">return</span> <span class="nc">JavaRuntime</span><span class="o">.</span><span class="na">getLong</span><span class="o">(</span><span class="n">var0</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">nativeSetValue</span><span class="o">(</span><span class="kt">long</span> <span class="n">ptr</span><span class="o">,</span> <span class="kt">long</span> <span class="n">arg00</span><span class="o">){</span>
+       <span class="nc">JavaRuntime</span><span class="o">.</span><span class="na">putLong</span><span class="o">(</span><span class="n">ptr</span><span class="o">,</span> <span class="n">arg00</span><span class="o">);</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>As we can see in lines 3 and 7, the original native methods are replaced with normal Java methods,
+and the implementation in the methods uses JavaRuntime, which is a wrapper for Java
+<code class="language-plaintext highlighter-rouge">UNSAFE</code> in LLVM4JNI-runtime and essentially still uses UNSAFE to access off-heap memory.
+By replacing native methods with Java methods, we avoid significant overhead in JNI calls</p>
+
+<h3 id="user-interface">User Interface</h3>
+
+<p>By exposing only a simple programming model interface, <code class="language-plaintext highlighter-rouge">ParallelAppBase</code>, we can hide the complex implementation of GRAPE-JDK.
+Users do not need to know anything about the underlying implementation. They only need to inherit the interface and implement 
+the two methods, <code class="language-plaintext highlighter-rouge">PEval</code> and <code class="language-plaintext highlighter-rouge">IncEval</code>, to run the algorithm on the GraphScope graph analysis engine. 
+For more tutorials, please refer to <a href="https://graphscope.io/docs/analytics_engine.html#run-algorithm-in-java">GAE-java-tutorial</a>.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Traverse</span> <span class="kd">implements</span> <span class="nc">ParallelAppBase</span><span class="o">&lt;</span><span class="nc">Long</span><span class="o">,</span> <span class="nc">Long</span><span class="o">,</span> <span class="nc">Double</span><span class="o">,</span> <span class="nc">Long</span><span class="o">,</span> <span class="nc">TraverseContext</span><span class="o">&gt;,</span>
+    <span class="nc">ParallelEngine</span> <span class="o">{</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">PEval</span><span class="o">(</span><span class="nc">IFragment</span><span class="o">&lt;</span><span class="nc">Long</span><span class="o">,</span> <span class="nc">Long</span><span class="o">,</span> <span class="nc">Double</span><span class="o">,</span> <span class="nc">Long</span><span class="o">&gt;</span> <span class="n">fragment</span><span class="o">,</span>
+        <span class="nc">ParallelContextBase</span><span class="o">&lt;</span><span class="nc">Long</span><span class="o">,</span> <span class="nc">Long</span><span class="o">,</span> <span class="nc">Double</span><span class="o">,</span> <span class="nc">Long</span><span class="o">&gt;</span> <span class="n">context</span><span class="o">,</span>
+        <span class="nc">ParallelMessageManager</span> <span class="n">messageManager</span><span class="o">)</span> <span class="o">{</span>
+           
+    <span class="o">}</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">IncEval</span><span class="o">(</span><span class="nc">IFragment</span><span class="o">&lt;</span><span class="nc">Long</span><span class="o">,</span> <span class="nc">Long</span><span class="o">,</span> <span class="nc">Double</span><span class="o">,</span> <span class="nc">Long</span><span class="o">&gt;</span> <span class="n">fragment</span><span class="o">,</span>
+        <span class="nc">ParallelContextBase</span><span class="o">&lt;</span><span class="nc">Long</span><span class="o">,</span> <span class="nc">Long</span><span class="o">,</span> <span class="nc">Double</span><span class="o">,</span> <span class="nc">Long</span><span class="o">&gt;</span> <span class="n">context</span><span class="o">,</span>
+        <span class="nc">ParallelMessageManager</span> <span class="n">messageManager</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+<span class="o">}</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">TraverseContext</span> <span class="kd">extends</span>
+    <span class="nc">VertexDataContext</span><span class="o">&lt;</span><span class="nc">IFragment</span><span class="o">&lt;</span><span class="nc">Long</span><span class="o">,</span> <span class="nc">Long</span><span class="o">,</span> <span class="nc">Double</span><span class="o">,</span> <span class="nc">Long</span><span class="o">&gt;,</span> <span class="nc">Long</span><span class="o">&gt;</span> <span class="kd">implements</span> <span class="nc">ParallelContextBase</span><span class="o">&lt;</span><span class="nc">Long</span><span class="o">,</span><span class="nc">Long</span><span class="o">,</span><span class="nc">Double</span><span class="o">,</span><span class="nc">Long</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">Init</span><span class="o">(</span><span class="nc">IFragment</span><span class="o">&lt;</span><span class="nc">Long</span><span class="o">,</span> <span class="nc">Long</span><span class="o">,</span> <span class="nc">Double</span><span class="o">,</span> <span class="nc">Long</span><span class="o">&gt;</span> <span class="n">frag</span><span class="o">,</span>
+        <span class="nc">ParallelMessageManager</span> <span class="n">messageManager</span><span class="o">,</span> <span class="nc">JSONObject</span> <span class="n">jsonObject</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">Output</span><span class="o">(</span><span class="nc">IFragment</span><span class="o">&lt;</span><span class="nc">Long</span><span class="o">,</span> <span class="nc">Long</span><span class="o">,</span> <span class="nc">Double</span><span class="o">,</span> <span class="nc">Long</span><span class="o">&gt;</span> <span class="n">frag</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="performance">Performance</h3>
+
+<p>To verify the running performance of <strong>GRAPE-JDK</strong> in large-scale graph computing scenarios, 
+we conducted tests on datasets with hundreds of millions of vertices and billions of edges provided by <a href="https://graphalytics.org/">LDBC Graphalytics</a>
+for various common algorithms.
+The test configuration was 4 clusters with 400GB of memory and 96 cores, and 4 GraphScope workers. 
+For specific performance test report results, please refer to <a href="https://github.com/alibaba/GraphScope/blob/main/analytical_engine/java/performance.md">GRAPE-JDK performance report</a>.
+Here we take the SSSP and PageRank algorithms as examples to show the experimental results.</p>
+
+<h4 id="java-app-vs-c-app">Java App vs C++ App</h4>
+
+<p>First, we compare the performance gap between the Java-SSSP algorithm based on <strong>GRAPE-JDK</strong> and the CPP-SSSP algorithm based on libgrape-lite on the <code class="language-plaintext highlighter-rouge">com-fiendster</code> and <code class="language-plaintext highlighter-rouge">Datagen-9_0-fb</code> datasets. We can see that the overall performance gap between the Java app and the C++ app is about 2 times.</p>
+
+<p><img src="/blog/assets/images/2023-06-19-perf-datagen.jpg" alt="SSSP on Dategen-9_0-fb" />
+<img src="/blog/assets/images/2023-06-19-perf-com.jpg" alt="SSSP on ccom-friendster" /></p>
+
+<h4 id="performance-improvement-brought-by-llvm4jni">Performance Improvement Brought by LLVM4JNI</h4>
+
+<p>LLVM4JNI has brought significant performance improvements to <strong>GRAPE-JDK</strong>. As shown in the table below, the Java-PageRank algorithm 
+implemented using <strong>GRAPE-JDK</strong> is now approaching the performance of CPP-PageRank. In cases with high concurrency, 
+the time is very close to C++ (such as the column with a concurrency of 32 in the second table).</p>
+
+<p>Performance result is shown in the following two tables.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center"> </th>
+      <th style="text-align: center">threads</th>
+      <th style="text-align: center">1</th>
+      <th style="text-align: center">2</th>
+      <th style="text-align: center">4</th>
+      <th style="text-align: center">8</th>
+      <th style="text-align: center">16</th>
+      <th style="text-align: center">32</th>
+      <th style="text-align: center">64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">Com-friendster</td>
+      <td style="text-align: center">C++ time</td>
+      <td style="text-align: center">567</td>
+      <td style="text-align: center">325</td>
+      <td style="text-align: center">149</td>
+      <td style="text-align: center">78</td>
+      <td style="text-align: center">39</td>
+      <td style="text-align: center">37</td>
+      <td style="text-align: center">43</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">Com-friendster</td>
+      <td style="text-align: center">Java time</td>
+      <td style="text-align: center">3166</td>
+      <td style="text-align: center">1651</td>
+      <td style="text-align: center">621</td>
+      <td style="text-align: center">373</td>
+      <td style="text-align: center">197</td>
+      <td style="text-align: center">107</td>
+      <td style="text-align: center">147</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">Com-friendster</td>
+      <td style="text-align: center">Java(+LLVM4JNI) time</td>
+      <td style="text-align: center">743</td>
+      <td style="text-align: center">377</td>
+      <td style="text-align: center">202</td>
+      <td style="text-align: center">99</td>
+      <td style="text-align: center">53</td>
+      <td style="text-align: center">38</td>
+      <td style="text-align: center">48</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center"> </th>
+      <th style="text-align: center">threads</th>
+      <th style="text-align: center">1</th>
+      <th style="text-align: center">2</th>
+      <th style="text-align: center">4</th>
+      <th style="text-align: center">8</th>
+      <th style="text-align: center">16</th>
+      <th style="text-align: center">32</th>
+      <th style="text-align: center">64</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">datagen-9_0-fb</td>
+      <td style="text-align: center">C++ time</td>
+      <td style="text-align: center">253</td>
+      <td style="text-align: center">113</td>
+      <td style="text-align: center">65</td>
+      <td style="text-align: center">33</td>
+      <td style="text-align: center">22</td>
+      <td style="text-align: center">17</td>
+      <td style="text-align: center">17</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">datagen-9_0-fb</td>
+      <td style="text-align: center">Java time</td>
+      <td style="text-align: center">1439</td>
+      <td style="text-align: center">770</td>
+      <td style="text-align: center">358</td>
+      <td style="text-align: center">162</td>
+      <td style="text-align: center">85</td>
+      <td style="text-align: center">64</td>
+      <td style="text-align: center">74</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">datagen-9_0-fb</td>
+      <td style="text-align: center">Java(+LLVM4JNI) time</td>
+      <td style="text-align: center">393</td>
+      <td style="text-align: center">172</td>
+      <td style="text-align: center">85</td>
+      <td style="text-align: center">41</td>
+      <td style="text-align: center">26</td>
+      <td style="text-align: center">23</td>
+      <td style="text-align: center">22</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>In this blog, we briefly introduce GRAPE-JDK, a cross-language graph analysis toolkit foe GraphScope.
+With the help of the modern FFI framework <strong>FastFFI</strong>, <strong>GRAPE-JDK</strong> not only provides a friendly user interface
+for Java users but also has efficient graph query performance.
+We welcome everyone to try <a href="https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_java"><strong>GRAPE-JDK tutorial</strong></a> and provide valuable feedback on usage suggestions.</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Breaking the Language Barrier in Large Scale Graph Computing&amp;url=https://graphscope.io/tech/2023/06/19/Breaking-the-Language-Barrier-in-Large-Scale-Graph-Computing.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2023/06/19/Breaking-the-Language-Barrier-in-Large-Scale-Graph-Computing.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2023/06/19/Breaking-the-Language-Barrier-in-Large-Scale-Graph-Computing.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2023 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+    
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+</body>
+</html>

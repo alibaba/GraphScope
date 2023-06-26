@@ -5,12 +5,466 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 20 Jun 2023 09:41:24 +0000</pubDate>
-    <lastBuildDate>Tue, 20 Jun 2023 09:41:24 +0000</lastBuildDate>
+    <pubDate>Mon, 26 Jun 2023 08:24:22 +0000</pubDate>
+    <lastBuildDate>Mon, 26 Jun 2023 08:24:22 +0000</lastBuildDate>
     <generator>Jekyll v4.3.2</generator>
     
       <item>
-        <title>Analyzing graph with GraphScope in the Style of NetworkX</title>
+        <title>Breaking the Language Barrier in Large Scale Graph Computing</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-06-19-title-picture.jpg&quot; alt=&quot;Grape-JDK&quot; /&gt;
+In this blog, we present &lt;a href=&quot;https://github.com/alibaba/GraphScope/tree/main/analytical_engine/java&quot;&gt;&lt;strong&gt;GRAPE-JDK&lt;/strong&gt;&lt;/a&gt;,
+an efficient cross-language graph analysis development kit of GraphScope. &lt;strong&gt;GRAPE-JDK&lt;/strong&gt; enables users to write customized graph algorithms in Java and run them efficiently on GraphScope by addressing various challenges in cross-language graph computation.
+In this way, Java algorithms developed based on &lt;strong&gt;GRAPE-JDK&lt;/strong&gt; can achieve performance similar to C++ algorithms.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-demand-and-challenges-of-cross-language-graph-analysis&quot;&gt;The Demand and Challenges of Cross-language Graph Analysis&lt;/h3&gt;
+
+&lt;p&gt;Graph analytics is a critical aspect of processing tasks involving graphs. 
+One notable example of a graph analysis algorithm is the widely used single-source shortest path (SSSP) algorithm. 
+The graph analytical engine in GraphScope is derived from &lt;a href=&quot;https://dl.acm.org/doi/abs/10.1145/3282488&quot;&gt;GRAPE&lt;/a&gt;, as documented in the research paper available at GRAPE. This engine incorporates various pre-built graph analysis algorithms, including SSSP and PageRank, among others, which users can readily invoke for their analytical needs.&lt;/p&gt;
+
+&lt;p&gt;In real-world production scenarios, customization of general algorithms is often required to accommodate specific business logic. 
+As a result, developers frequently need to develop their own algorithms tailored to their needs. 
+Java is widely adopted as the predominant language within big data ecosystems, making it an ideal choice for implementing these algorithms.
+However, when utilizing GraphScope’s graph analytical engine, relying solely on the C++ interface can present significant obstacles for developers. 
+Directly implementing algorithms in Java would be more seamless and efficient for them. 
+Therefore, there exists a demand for enabling users to leverage Java for implementing customized graph algorithms and seamlessly executing them on the GraphScope graph analytical engine. 
+This approach would address practical requirements while facilitating a smoother integration of user-developed algorithms into the system.&lt;/p&gt;
+
+&lt;p&gt;To meet the user’s requirement for conducting cross-language graph analysis, we have developed a Java SDK that builds upon the graph analysis engine GRAPE, which is primarily implemented in C++.
+In such scenarios, a natural solution is to employ the &lt;a href=&quot;https://docs.oracle.com/javase/8/docs/technotes/guides/jni/&quot;&gt;Java Native Interface (JNI)&lt;/a&gt;, which serves as the standard framework for Foreign Function Interface (FFI) on the Java Virtual Machine (JVM). 
+By utilizing JNI, we can overcome the limitations of Java by accessing system hardware resources at a lower level, similar to C++.
+To leverage JNI effectively, it requires writing wrapper code in C++ and compiling it into a dynamic library, granting us the ability to seamlessly utilize its functionalities. 
+This approach facilitates the seamless integration of Java and C++ components, enabling developers to harness the full potential of both languages within the graph analysis process.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-06-19-jni.jpg&quot; alt=&quot;JNI：Briding Java and C++&quot; height=&quot;36px&quot; width=&quot;36px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Therefore, we can find a straightforward and intuitive solution: employing the raw JNI to create wrapper code that bridges Java and C++. 
+This approach allows us to encapsulate the C++ interface of the graph computing engine as a Java interface, making it accessible to users.
+However, this native solution has inherent limitations that render it inadequate for meeting the demands of large-scale graph computing. 
+It confronts several challenges in following three aspects:&lt;/p&gt;
+
+&lt;h4 id=&quot;challenge-1-difficulty-in-jni-programming&quot;&gt;Challenge 1: Difficulty in JNI Programming&lt;/h4&gt;
+&lt;p&gt;Directly using JNI for cross-language programming poses challenges in development, debugging, and maintenance.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Development&lt;/strong&gt;: In order to enable Java to interact/communicate with C++, programmers need to write 
+a large amount of error-prone and boilerplate code, as shown in the code block. 
+And JNI code often involves pointer conversion, which increases the risk of errors.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;JNIEXPORT&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;JNICALL&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Java_com_alibaba_graphscope_stdcxx_StdVector_1cxx_10x8cbe72bf_nativeClear&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;JNIEnv&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jclass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jlong&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;reinterpret_cast&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;VertexArrayDefault&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;double&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;*&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clear&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Debugging&lt;/strong&gt;: The written JNI code needs to be compiled into a dynamic library by a C++/C compiler
+for the JVM to load and invoke the functions defined in it. The compilation and debugging of JNI code is also a painful process.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Maintenance&lt;/strong&gt;: The cost of maintaining JNI code is also high. As JNI code is highly dependent on C++ native code, 
+when the C++ interface and implementation of the graph computing engine change, programmers must manually modify the JNI implementation to adapt.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;challenge-2-huge-overhead-of-cross-language-access&quot;&gt;Challenge 2: Huge Overhead of Cross-language Access&lt;/h4&gt;
+&lt;p&gt;Although JNI provides sufficient APIs for communication between Java and C++, the overhead it brings 
+due to its cross-language nature is huge. According to our research, the overhead that JNI may introduce in actual 
+large-scale graph computing scenarios mainly comes from the following call overheads.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;The overhead of JNI function calls&lt;/strong&gt;. There is already a considerable overhead in calling the JNI function itself,
+ including accessing Java Objects in the JNI code implementation, which is a very &lt;a href=&quot;http://www.mastercorp.free.fr/Ing1/Cours/Java/java_lesson1/doc/Tutorial/performance/JPNativeCode_fm.htm&quot;&gt;time-consuming operation&lt;/a&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Java native methods cannot be inlined by the JVM&lt;/strong&gt;. In Java, optimization of code is mainly done by the JVM. For frequently called Java methods,
+the JVM can avoid the overhead of function calls by inlining them. However, for native methods implemented by JNI, the JVM cannot optimize them. 
+In data-intensive scenarios such as graph computing, accessing data stored in C++ memory through JNI from Java is a frequent operation. Therefore, native methods that cannot be inlined will be a significant overhead during program execution.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Java native methods cannot be optimized by JIT&lt;/strong&gt;. Native methods have already been compiled into binary code by C++/C compiler, so it is not possible for the JVM to optimize them through JIT.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;challenge-3-support-for-user-defined-data-structures&quot;&gt;Challenge 3: Support for User-defined Data Structures&lt;/h4&gt;
+
+&lt;p&gt;In some complex real-world production scenarios,Users often have a great demand for customizing vertex data type,
+edge data type, and even message types. Relying solely on JNI cannot achieve this because every time a user defines a new data type,
+we need to implement it in C++ and then write JNI methods to map it to Java.&lt;/p&gt;
+
+&lt;h3 id=&quot;design-and-implementation&quot;&gt;Design and Implementation&lt;/h3&gt;
+
+&lt;p&gt;To overcome these challenges, the GraphScope team worked closely with the JVM team at Alibaba Cloud Programming Language and Compiler 
+to design and implement a high-performance and user-friendly cross-language graph computing solution.
+At the same time, the development of &lt;strong&gt;GRAPE-JDK&lt;/strong&gt; also led to a modern and advanced FFI (Foreign Function Interface) framework: 
+&lt;strong&gt;FastFFI&lt;/strong&gt; (open-sourced on GitHub: &lt;a href=&quot;https://github.com/alibaba/fastFFI&quot;&gt;alibaba/fastFFI&lt;/a&gt;. 
+The position of GRAPE-SDK in the GraphScope system is shown below.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-06-19-grape-jdk-pos.jpg&quot; alt=&quot;GRAPE-JDK in GraphScope&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;fastffi&quot;&gt;FastFFI&lt;/h4&gt;
+
+&lt;p&gt;The functionality of &lt;strong&gt;GRAPE-JDK&lt;/strong&gt; depends on &lt;strong&gt;FastFFI&lt;/strong&gt;. &lt;strong&gt;FastFFI&lt;/strong&gt; is a modern, advanced, and efficient Java FFI framework
+whose features are derived from our exploration of cross-language programming between Java and C++ in GRAPE-JDK. 
+&lt;strong&gt;FastFFI&lt;/strong&gt; successfully overcomes the three challenges mentioned above.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Challenge&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Solution&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;The difficulty of JNI programming&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;FastFFI’s code generation framework&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Huge overhead of cross-language access&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;FastFFI’s LLVM4JNI: Converting LLVM bitcode to Java Bytecode.&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Support for user-defined data structures&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;FastFFI’s &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;@FFIMirror&lt;/code&gt; technique&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;strong&gt;FastFFI&lt;/strong&gt; can be divided into two parts, FFI-SDK and LLVM4JNI-SDK. FFI-SDK provides comprehensive JNI development support, reducing the complexity of programming. LLVM4JNI-SDK provides JNI code optimization support to improve runtime performance. For more information about FastFFI, please refer to &lt;a href=&quot;https://github.com/alibaba/fastFFI&quot;&gt;FastFFI&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&quot;grape-jdk&quot;&gt;GRAPE-JDK&lt;/h4&gt;
+
+&lt;p&gt;Based on the JNI support provided by FastFFI, we developed the Java PIE SDK for GRAPE: &lt;strong&gt;GRAPE-JDK&lt;/strong&gt;. 
+Taking Vertex as an example, we will introduce how &lt;strong&gt;FastFFI&lt;/strong&gt; reduces the complexity of JNI development and improves performance.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-mapping-between-c-and-java-classes&quot;&gt;The Mapping between C++ and Java Classes&lt;/h3&gt;
+&lt;p&gt;As the most basic abstraction in the graph, Vertex often has a unique ID and attribute (vertex data). For example, in GRAPE, the interface abstraction of a vertex is as follows&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;template&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;typename&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+ &lt;span class=&quot;nl&quot;&gt;public:&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;//Other code fragments are omitted here, see full code at&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// https://github.com/alibaba/libgrape-lite/blob/master/grape/utils/vertex_array.h#L36&lt;/span&gt;
+  
+  &lt;span class=&quot;c1&quot;&gt;// Get the id bound with this vertex.&lt;/span&gt;
+  &lt;span class=&quot;kr&quot;&gt;inline&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GetValue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;// Set the id bound with this vertex.&lt;/span&gt;
+  &lt;span class=&quot;kr&quot;&gt;inline&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SetValue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+ &lt;span class=&quot;k&quot;&gt;private&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In order to map the C++ Vertex class to Java, all we need to do is to write the following code in Java.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@FFIGen&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;library&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;grape-jni&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@CXXHead&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;grape/utils/vertex_array.h&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@FFITypeAlias&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;grape::Vertex&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@CXXTemplate&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;cxx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;uint64_t&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;},&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;java&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Long&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;})&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Vertex&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;VID_T&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;FFIPointer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;no&quot;&gt;VID_T&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;GetValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+
+    &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SetValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;VID_T&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;@FFIGen&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;@CXXHead&lt;/code&gt; are both Java annotations. By providing additional information through annotations, we can generate code
+during the compilation of Java code. For example, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;@CXXHead(&quot;grape/utils/vertex_array.h&quot;)&lt;/code&gt; specifies that the generated 
+C++ code needs to include the header file &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grape/utils/vertex_array.h&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;After compilation, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Vertex.java&lt;/code&gt; will generate two sets of code, one of which is the implementation 
+class of the Java Vertex interface, which defines the corresponding native methods.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Vertex_cxx_0xaccf3424&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;FFIPointerImpl&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;implements&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Vertex&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+  &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Vertex_cxx_0xaccf3424&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;super&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;GetValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;java&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;lang&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nativeGetValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;//The actual working native method.&lt;/span&gt;
+  &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;native&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;nativeGetValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+  &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SetValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arg0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;nativeSetValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arg0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// The actual working native method.&lt;/span&gt;
+  &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;native&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;nativeSetValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arg00&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Also, there will be a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.cc&lt;/code&gt; file containing the implementation of the native methods after compilation&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// headers are omitted.&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;#ifdef __cplusplus
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;extern&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;C&quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;#endif
+&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;JNIEXPORT&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;jlong&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;JNICALL&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Java_com_alibaba_graphscope_ds_Vertex_1cxx_10xaccf3424_nativeGetValue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;JNIEnv&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jclass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jlong&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;jlong&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;reinterpret_cast&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grape&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;uint64_t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;*&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetValue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;JNIEXPORT&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;JNICALL&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Java_com_alibaba_graphscope_ds_Vertex_1cxx_10xaccf3424_nativeSetValue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;JNIEnv&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jclass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jlong&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jlong&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arg0&lt;/span&gt; &lt;span class=&quot;cm&quot;&gt;/* arg00 */&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;reinterpret_cast&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grape&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;uint64_t&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;*&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SetValue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arg0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;#ifdef __cplusplus
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;#endif
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Similarly, we can map any C++ class to a Java class.&lt;/p&gt;
+
+&lt;h4 id=&quot;ffimirroruser-defined-data-structures&quot;&gt;FFIMirror：User-defined Data Structures&lt;/h4&gt;
+
+&lt;p&gt;In GRAPE-JDK, we support users to create a customized data structure that has no corresponding C++ implementation, and use it as the data type for vertex ID, vertex or edge. You only need to use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;@FFIMirror&lt;/code&gt; annotation to decorate your own defined interface. For example, we can define a simple data structure containing only &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;long&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;double&lt;/code&gt; fields. During compilation, the corresponding C++ code, JNI code, and Java implementation class code will be automatically generated.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nd&quot;&gt;@FFIMirror&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@FFINameSpace&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;sample&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;@FFITypeAlias&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;MyData&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;MyData&lt;/span&gt;  &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;CXXPointer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;//Get the long field.&lt;/span&gt;
+    &lt;span class=&quot;nd&quot;&gt;@FFIGetter&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;longField&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+     &lt;span class=&quot;c1&quot;&gt;//Set the long field.&lt;/span&gt;
+    &lt;span class=&quot;nd&quot;&gt;@FFISetter&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;longField&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    
+    &lt;span class=&quot;nd&quot;&gt;@FFIGetter&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;double&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;doubleField&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;nd&quot;&gt;@FFISetter&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;doubleField&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;double&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//Create MyData with this factory&lt;/span&gt;
+    &lt;span class=&quot;nc&quot;&gt;MyData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;Factory&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;factory&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;FFITypeFactory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getFactory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;MyData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;nd&quot;&gt;@FFIFactory&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Factory&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nc&quot;&gt;MyData&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Next, similar to regular JNI projects, after compiling the obtained &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.cc&lt;/code&gt; files and linking them into a dynamic library,
+we can load them into Java through &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;System.loadLibrary()&lt;/code&gt; and access C++ objects and methods in Java&lt;/p&gt;
+
+&lt;p&gt;As we can see, the implementation of &lt;strong&gt;GRAPE-JDK&lt;/strong&gt; based on &lt;strong&gt;FastFFI&lt;/strong&gt; perfectly solves the difficulties in development,
+debugging, and maintenance in cross-language programming with JNI, and meets the needs of users for customized data types&lt;/p&gt;
+
+&lt;h3 id=&quot;optimizing-jni&quot;&gt;Optimizing JNI&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/alibaba/fastFFI/tree/main/llvm4jni&quot;&gt;LLVM4JNI-SDK&lt;/a&gt; is a “BitCode to ByteCode” conversion tool implemented entirely in Java. The working principle of LLVM4JNI 
+is to analyze LLVM-IR (JNI code is embedded in the dynamic library binary by using option &lt;a href=&quot;https://reviews.llvm.org/D68213&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-mllvm=-lto-embed-bitcode&lt;/code&gt;&lt;/a&gt;
+when compiling with LLVM11), select the code that can be converted to Java bytecode (not all LLVM IR can be converted to bytecode), 
+generate bytecode, and finally replace the corresponding Java native methods.&lt;/p&gt;
+
+&lt;p&gt;For example, for the Vertex defined earlier, when running LLVM4JNI for optimization, we will replace the native methods in the Vertex implementation class:&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Vertex_cxx_0xaccf3424&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;FFIPointerImpl&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;implements&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Vertex&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;//Notice that this a no longer a native method now!&lt;/span&gt;
+  &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;nativeGetValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;){&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;JavaRuntime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getLong&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;var0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;nativeSetValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arg00&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;){&lt;/span&gt;
+       &lt;span class=&quot;nc&quot;&gt;JavaRuntime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;putLong&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arg00&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;As we can see in lines 3 and 7, the original native methods are replaced with normal Java methods,
+and the implementation in the methods uses JavaRuntime, which is a wrapper for Java
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;UNSAFE&lt;/code&gt; in LLVM4JNI-runtime and essentially still uses UNSAFE to access off-heap memory.
+By replacing native methods with Java methods, we avoid significant overhead in JNI calls&lt;/p&gt;
+
+&lt;h3 id=&quot;user-interface&quot;&gt;User Interface&lt;/h3&gt;
+
+&lt;p&gt;By exposing only a simple programming model interface, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ParallelAppBase&lt;/code&gt;, we can hide the complex implementation of GRAPE-JDK.
+Users do not need to know anything about the underlying implementation. They only need to inherit the interface and implement 
+the two methods, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PEval&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;IncEval&lt;/code&gt;, to run the algorithm on the GraphScope graph analysis engine. 
+For more tutorials, please refer to &lt;a href=&quot;https://graphscope.io/docs/analytics_engine.html#run-algorithm-in-java&quot;&gt;GAE-java-tutorial&lt;/a&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Traverse&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;implements&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ParallelAppBase&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Double&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TraverseContext&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;,&lt;/span&gt;
+    &lt;span class=&quot;nc&quot;&gt;ParallelEngine&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;PEval&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;IFragment&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Double&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fragment&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nc&quot;&gt;ParallelContextBase&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Double&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nc&quot;&gt;ParallelMessageManager&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;messageManager&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+           
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;IncEval&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;IFragment&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Double&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fragment&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nc&quot;&gt;ParallelContextBase&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Double&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nc&quot;&gt;ParallelMessageManager&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;messageManager&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TraverseContext&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt;
+    &lt;span class=&quot;nc&quot;&gt;VertexDataContext&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;IFragment&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Double&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;implements&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ParallelContextBase&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Double&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Init&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;IFragment&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Double&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;frag&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;nc&quot;&gt;ParallelMessageManager&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;messageManager&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;JSONObject&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jsonObject&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Output&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;IFragment&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Double&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Long&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;frag&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;performance&quot;&gt;Performance&lt;/h3&gt;
+
+&lt;p&gt;To verify the running performance of &lt;strong&gt;GRAPE-JDK&lt;/strong&gt; in large-scale graph computing scenarios, 
+we conducted tests on datasets with hundreds of millions of vertices and billions of edges provided by &lt;a href=&quot;https://graphalytics.org/&quot;&gt;LDBC Graphalytics&lt;/a&gt;
+for various common algorithms.
+The test configuration was 4 clusters with 400GB of memory and 96 cores, and 4 GraphScope workers. 
+For specific performance test report results, please refer to &lt;a href=&quot;https://github.com/alibaba/GraphScope/blob/main/analytical_engine/java/performance.md&quot;&gt;GRAPE-JDK performance report&lt;/a&gt;.
+Here we take the SSSP and PageRank algorithms as examples to show the experimental results.&lt;/p&gt;
+
+&lt;h4 id=&quot;java-app-vs-c-app&quot;&gt;Java App vs C++ App&lt;/h4&gt;
+
+&lt;p&gt;First, we compare the performance gap between the Java-SSSP algorithm based on &lt;strong&gt;GRAPE-JDK&lt;/strong&gt; and the CPP-SSSP algorithm based on libgrape-lite on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;com-fiendster&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Datagen-9_0-fb&lt;/code&gt; datasets. We can see that the overall performance gap between the Java app and the C++ app is about 2 times.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-06-19-perf-datagen.jpg&quot; alt=&quot;SSSP on Dategen-9_0-fb&quot; /&gt;
+&lt;img src=&quot;/blog/assets/images/2023-06-19-perf-com.jpg&quot; alt=&quot;SSSP on ccom-friendster&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;performance-improvement-brought-by-llvm4jni&quot;&gt;Performance Improvement Brought by LLVM4JNI&lt;/h4&gt;
+
+&lt;p&gt;LLVM4JNI has brought significant performance improvements to &lt;strong&gt;GRAPE-JDK&lt;/strong&gt;. As shown in the table below, the Java-PageRank algorithm 
+implemented using &lt;strong&gt;GRAPE-JDK&lt;/strong&gt; is now approaching the performance of CPP-PageRank. In cases with high concurrency, 
+the time is very close to C++ (such as the column with a concurrency of 32 in the second table).&lt;/p&gt;
+
+&lt;p&gt;Performance result is shown in the following two tables.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt; &lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;threads&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;1&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;2&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;4&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;8&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;16&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;32&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;64&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Com-friendster&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;C++ time&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;567&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;325&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;149&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;78&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;39&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;37&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;43&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Com-friendster&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Java time&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;3166&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;1651&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;621&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;373&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;197&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;107&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;147&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Com-friendster&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Java(+LLVM4JNI) time&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;743&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;377&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;202&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;99&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;53&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;38&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;48&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt; &lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;threads&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;1&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;2&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;4&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;8&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;16&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;32&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;64&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;datagen-9_0-fb&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;C++ time&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;253&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;113&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;65&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;33&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;22&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;17&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;17&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;datagen-9_0-fb&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Java time&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;1439&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;770&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;358&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;162&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;85&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;64&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;74&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;datagen-9_0-fb&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Java(+LLVM4JNI) time&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;393&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;172&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;85&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;41&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;26&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;23&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;22&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;In this blog, we briefly introduce GRAPE-JDK, a cross-language graph analysis toolkit foe GraphScope.
+With the help of the modern FFI framework &lt;strong&gt;FastFFI&lt;/strong&gt;, &lt;strong&gt;GRAPE-JDK&lt;/strong&gt; not only provides a friendly user interface
+for Java users but also has efficient graph query performance.
+We welcome everyone to try &lt;a href=&quot;https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_java&quot;&gt;&lt;strong&gt;GRAPE-JDK tutorial&lt;/strong&gt;&lt;/a&gt; and provide valuable feedback on usage suggestions.&lt;/p&gt;
+</description>
+        <pubDate>Mon, 19 Jun 2023 11:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2023/06/19/Breaking-the-Language-Barrier-in-Large-Scale-Graph-Computing.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/06/19/Breaking-the-Language-Barrier-in-Large-Scale-Graph-Computing.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
+    
+      <item>
+        <title>Analyzing Graphs with GraphScope in the Style of NetworkX</title>
         <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-06-13-title-picture.jpg&quot; alt=&quot;GraphScope-NetworkX&quot; /&gt;
 This article demonstrate how to analyze graph with GraphScope in the style of NetworkX.
 NetworkX is a tool for graph theory and complex network modeling developed in Python
@@ -1110,47 +1564,6 @@ We are delighted to present the release of GraphScope 0.14.0. This release is co
         <pubDate>Thu, 09 Jun 2022 03:33:20 +0000</pubDate>
         <link>https://graphscope.io/blog/releasenotes/2022/06/09/release-notes-0.14.0.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2022/06/09/release-notes-0.14.0.html</guid>
-        
-        
-        <category>ReleaseNotes</category>
-        
-      </item>
-    
-      <item>
-        <title>Release Notes: v0.13.0</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/release_note_t.png&quot; alt=&quot;release-note&quot; /&gt;
-We are delighted to announce the release of GraphScope v0.13.0. This release is focused on providing a JupyterLab extension for GraphScope to make your graph computation workflows better. In addition, we continuously work on improving performance of GraphScope, and developer usability.&lt;/p&gt;
-
-&lt;p&gt;We highlight the following improvements included in this release:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;Introducing a JupyterLab extension for GraphScope. Currently, it supports the following functions:
-    &lt;ul&gt;
-      &lt;li&gt;Providing a graphical user interface for monitoring status of some variables (e.g., &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;session&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;graph&lt;/code&gt;) in your GraphScope program;&lt;/li&gt;
-      &lt;li&gt;Supporting to define data schema and load graph data in an interactive way;&lt;/li&gt;
-      &lt;li&gt;The extension has been integrated into our &lt;a href=&quot;https://try.graphscope.app/&quot;&gt;GraphScope Playground&lt;/a&gt;.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Performance improvement:
-    &lt;ul&gt;
-      &lt;li&gt;Adding data caching mechanism in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NetworkX&lt;/code&gt; module to improve the performance;&lt;/li&gt;
-      &lt;li&gt;Optimizing the performance of converting &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arrow_fragment&lt;/code&gt; to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dynamic_fragment&lt;/code&gt; with multi-thread.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Bug fixes and other enhancements:
-    &lt;ul&gt;
-      &lt;li&gt;Fixing compilation failure in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cdlp&lt;/code&gt; with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arrow_flatten_fragment&lt;/code&gt;;&lt;/li&gt;
-      &lt;li&gt;Supporting primary key index in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Groot&lt;/code&gt;;&lt;/li&gt;
-      &lt;li&gt;Adding &lt;a href=&quot;https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.cluster.average_clustering.html&quot;&gt;average clustering&lt;/a&gt; as built-in applications.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;For more detailed improvements that have been made in this release, please refer to the complete &lt;a href=&quot;https://github.com/alibaba/GraphScope/releases/tag/v0.13.0&quot;&gt;changelog&lt;/a&gt;.&lt;/p&gt;
-</description>
-        <pubDate>Sat, 07 May 2022 03:33:20 +0000</pubDate>
-        <link>https://graphscope.io/blog/releasenotes/2022/05/07/release-notes-0.13.0.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2022/05/07/release-notes-0.13.0.html</guid>
         
         
         <category>ReleaseNotes</category>

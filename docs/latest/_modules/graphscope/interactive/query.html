@@ -353,9 +353,7 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.add_column.html">graphscope.framework.dag_utils.add_column</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.graph_to_numpy.html">graphscope.framework.dag_utils.graph_to_numpy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.graph_to_dataframe.html">graphscope.framework.dag_utils.graph_to_dataframe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_query.html">graphscope.framework.dag_utils.gremlin_query</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -669,12 +667,11 @@ MathJax = {
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 
+<span class="kn">from</span> <span class="nn">gremlin_python.driver.client</span> <span class="kn">import</span> <span class="n">Client</span>
 <span class="kn">from</span> <span class="nn">gremlin_python.driver.driver_remote_connection</span> <span class="kn">import</span> <span class="n">DriverRemoteConnection</span>
 <span class="kn">from</span> <span class="nn">gremlin_python.process.anonymous_traversal</span> <span class="kn">import</span> <span class="n">traversal</span>
 
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag</span> <span class="kn">import</span> <span class="n">DAGNode</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">fetch_gremlin_result</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">gremlin_query</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">gremlin_to_subgraph</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;graphscope&quot;</span><span class="p">)</span>
@@ -687,55 +684,6 @@ MathJax = {
     <span class="n">Running</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">Failed</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="n">Closed</span> <span class="o">=</span> <span class="mi">3</span>
-
-
-<span class="k">class</span> <span class="nc">ResultSetDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class represents a result set node in a DAG.</span>
-
-<span class="sd">    This is a wrapper for :class:`gremlin_python.driver.resultset.ResultSet`,</span>
-<span class="sd">    and you can get the result by :method:`one()` or :method:`all()`.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interactive</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">interactive</span><span class="o">.</span><span class="n">session</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
-        <span class="c1"># add op to dag</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">one</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;See details in :method:`gremlin_python.driver.resultset.ResultSet.one`&quot;&quot;&quot;</span>
-        <span class="c1"># avoid circular import</span>
-        <span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="kn">import</span> <span class="n">ResultDAGNode</span>
-
-        <span class="n">op</span> <span class="o">=</span> <span class="n">fetch_gremlin_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;one&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;See details in :method:`gremlin_python.driver.resultset.ResultSet.all`</span>
-
-<span class="sd">        Note that this method is equal to `ResultSet.all().result()`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># avoid circular import</span>
-        <span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="kn">import</span> <span class="n">ResultDAGNode</span>
-
-        <span class="n">op</span> <span class="o">=</span> <span class="n">fetch_gremlin_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
-
-
-<span class="k">class</span> <span class="nc">ResultSet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_set_node</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span> <span class="o">=</span> <span class="n">result_set_node</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">session</span>
-        <span class="c1"># copy and set op evaluated</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">evaluated</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">one</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">one</span><span class="p">())</span>
-
-    <span class="k">def</span> <span class="nf">all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
 
 
 <div class="viewcode-block" id="InteractiveQuery"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery">[docs]</a><span class="k">class</span> <span class="nc">InteractiveQuery</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -755,17 +703,19 @@ MathJax = {
 
 <div class="viewcode-block" id="InteractiveQuery.__init__"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">frontend_endpoint</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct a :class:`InteractiveQuery` object.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># graph object id stored in vineyard</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">_session</span>
         <span class="n">frontend_endpoint</span> <span class="o">=</span> <span class="n">frontend_endpoint</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;ws://</span><span class="si">{</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">/gremlin&quot;</span> <span class="k">for</span> <span class="n">endpoint</span> <span class="ow">in</span> <span class="n">frontend_endpoint</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_client</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">False</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">graph_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The gremlin graph url can be used with any standard gremlin console, e.g., tinkerpop.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The gremlin graph url can be used with any standard gremlin console,</span>
+<span class="sd">        e.g., tinkerpop.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span>
 
     <span class="nd">@property</span>
@@ -781,6 +731,10 @@ MathJax = {
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">session_id</span>
 
 <div class="viewcode-block" id="InteractiveQuery.execute"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A simple wrapper around `submit`, for compatibility&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="n">request_options</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="InteractiveQuery.submit"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.submit">[docs]</a>    <span class="k">def</span> <span class="nf">submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute gremlin querying scripts.</span>
 
 <span class="sd">        Args:</span>
@@ -791,17 +745,18 @@ MathJax = {
 <span class="sd">            }</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            :class:`graphscope.framework.context.ResultDAGNode`:</span>
-<span class="sd">                A result holds the gremlin result, evaluated in eager mode.</span>
+<span class="sd">            :class:`gremlin_python.driver.client.ResultSet`:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">gremlin_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="n">ResultSetDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gremlin_client</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="n">request_options</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="InteractiveQuery.submit"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.submit">[docs]</a>    <span class="k">def</span> <span class="nf">submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="p">)</span></div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gremlin_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;g&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_client</span>
 
 <div class="viewcode-block" id="InteractiveQuery.subgraph"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.subgraph">[docs]</a>    <span class="k">def</span> <span class="nf">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a subgraph, which input is the result of the execution of `gremlin_script`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a subgraph, which input is the executor result of `gremlin_script`.</span>
 
 <span class="sd">        Any gremlin script that output a set of edges can be used to construct a subgraph.</span>
 
@@ -860,6 +815,11 @@ MathJax = {
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span><span class="p">:</span>  <span class="c1"># noqa: E722</span>
+                <span class="k">pass</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="k">except</span><span class="p">:</span>  <span class="c1"># noqa: E722</span>
                 <span class="k">pass</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_close_interactive_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>

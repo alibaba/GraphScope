@@ -353,9 +353,7 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.add_column.html">graphscope.framework.dag_utils.add_column</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.graph_to_numpy.html">graphscope.framework.dag_utils.graph_to_numpy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.graph_to_dataframe.html">graphscope.framework.dag_utils.graph_to_dataframe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_query.html">graphscope.framework.dag_utils.gremlin_query</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -743,7 +741,9 @@ MathJax = {
 <span class="sd">    Loader can take various data sources, and assemble necessary information into a AttrValue.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Loader.__init__"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.loader.Loader.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">header_row</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Loader.__init__"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.loader.Loader.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">header_row</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filetype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a loader with configurable options.</span>
 <span class="sd">        Note: Loader cannot be reused since it may change inner state when constructing</span>
 <span class="sd">        information for loading a graph.</span>
@@ -789,11 +789,11 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">CSVOptions</span><span class="p">()</span>
         <span class="n">check_argument</span><span class="p">(</span>
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">delimiter</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
-            <span class="s2">&quot;The delimiter must be a single charactor, cannot be &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">delimiter</span><span class="p">,</span>
+            <span class="s2">&quot;The delimiter must be a single character, cannot be &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">delimiter</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">delimiter</span> <span class="o">=</span> <span class="n">delimiter</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">header_row</span> <span class="o">=</span> <span class="n">header_row</span>
-        <span class="c1"># metas for data source is numpy or dataframe</span>
+        <span class="c1"># meta for data source is numpy or dataframe</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">deduced_properties</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># extra args directly passed to storage system</span>
         <span class="c1"># find more details in fsspec</span>

@@ -353,9 +353,7 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.add_column.html">graphscope.framework.dag_utils.add_column</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.graph_to_numpy.html">graphscope.framework.dag_utils.graph_to_numpy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.graph_to_dataframe.html">graphscope.framework.dag_utils.graph_to_dataframe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_query.html">graphscope.framework.dag_utils.gremlin_query</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -1634,38 +1632,6 @@ MathJax = {
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="gremlin_query"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_query.html#graphscope.framework.dag_utils.gremlin_query">[docs]</a><span class="k">def</span> <span class="nf">gremlin_query</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Execute a gremlin query.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        interactive_query (:class:`graphscope.interactive.query.InteractiveQueryDAGNode`):</span>
-<span class="sd">            The GIE instance holds the graph that gremlin query on.</span>
-<span class="sd">        query (str):</span>
-<span class="sd">            Scripts that written in gremlin quering language.</span>
-<span class="sd">        request_options (dict, optional): gremlin request options. format:</span>
-<span class="sd">            {</span>
-<span class="sd">                &quot;engine&quot;: &quot;gae&quot;</span>
-<span class="sd">            }</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        An op to execute a gremlin query on the GIE instance.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_QUERY_MESSAGE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
-    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">VINEYARD_ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">i_to_attr</span><span class="p">(</span><span class="n">interactive_query</span><span class="o">.</span><span class="n">object_id</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">request_options</span><span class="p">:</span>
-        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_REQUEST_OPTIONS</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span>
-            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request_options</span><span class="p">)</span>
-        <span class="p">)</span>
-    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
-        <span class="n">interactive_query</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GREMLIN_QUERY</span><span class="p">,</span>
-        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GREMLIN_RESULTS</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span></div>
-
-
 <div class="viewcode-block" id="gremlin_to_subgraph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html#graphscope.framework.dag_utils.gremlin_to_subgraph">[docs]</a><span class="k">def</span> <span class="nf">gremlin_to_subgraph</span><span class="p">(</span>
     <span class="n">interactive_query</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span>
 <span class="p">):</span>
@@ -1699,29 +1665,6 @@ MathJax = {
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">SUBGRAPH</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span></div>
-
-
-<div class="viewcode-block" id="fetch_gremlin_result"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html#graphscope.framework.dag_utils.fetch_gremlin_result">[docs]</a><span class="k">def</span> <span class="nf">fetch_gremlin_result</span><span class="p">(</span><span class="n">result_set</span><span class="p">,</span> <span class="n">fetch_type</span><span class="o">=</span><span class="s2">&quot;one&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fetch the gremlin query result.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        result_set (:class:`raphscope.interactive.query.ResultSetDAGNode`):</span>
-<span class="sd">            The instance holds the resultSet in coordinator that can fetch the gremlin result from.</span>
-<span class="sd">        fetch_type (str): &quot;one&quot; or &quot;all&quot;. Defaults to &quot;one&quot;.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        An op to fetch the gremlin result.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_FETCH_RESULT_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">fetch_type</span><span class="p">)</span>
-    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
-        <span class="n">result_set</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">FETCH_GREMLIN_RESULT</span><span class="p">,</span>
-        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">result_set</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
-        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">RESULTS</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">op</span></div>
 
