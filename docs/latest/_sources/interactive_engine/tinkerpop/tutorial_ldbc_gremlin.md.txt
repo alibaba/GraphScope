@@ -44,7 +44,7 @@ in a large cluster.
 ```
 
 Currently, GIE supports Gremlin as its query language.
-After loading the LDBC graph and initializing the engine, we can submit gremlin queries to GIE through `g.execute(GREMLIN_QUERIES)` easily.
+After loading the LDBC graph and initializing the engine, we can submit Gremlin queries to GIE through `g.execute(GREMLIN_QUERIES)` easily.
 
 For example, if we want to count there are how many vertices and edges in the LDBC graph, we can simply write the following python codes:
 
@@ -83,7 +83,7 @@ It is very common to use SQL sentences to retrieve data from relational database
 
 ### Retrieve Vertices and Edges
 
-As shown in the last tutorial, we can easily retrieve vertices and edges from graph through `g.V()` and `g.E()` gremlin steps.
+As shown in the last tutorial, we can easily retrieve vertices and edges from graph through `g.V()` and `g.E()` Gremlin steps.
 
 ```python
 # then `execute` any supported gremlin query.
@@ -116,9 +116,9 @@ For edges, still the number inside the first `[]` represents its id. The content
 
 ### Apply Some Filters
 
-In most cases, we don't need to retrieve all the vertices and edges from the graph, as we may only care about a small portion of them. Therefore, GIE with gremlin provides you with some filtering operations to help find the data you are interested in.
+In most cases, we don't need to retrieve all the vertices and edges from the graph, as we may only care about a small portion of them. Therefore, GIE with Gremlin provides you with some filtering operations to help find the data you are interested in.
 
-If you only want to extract a vertex/edge with the given id, you can write gremlin sentence `g.V(id)` in GIE. (`g.E(id)` will be supported in the future)
+If you only want to extract a vertex/edge with the given id, you can write Gremlin sentence `g.V(id)` in GIE. (`g.E(id)` will be supported in the future)
 
 ```python
 # Retrieve vertex with id 1
@@ -132,7 +132,7 @@ The output should be like:
 [v[1]]
 ```
 
-Sometimes, you may want to retrieve vertices/edges having a specific label, you can use `haveLabel(label)` step in gremlin. For example, the following codes show how to find all person vertices.
+Sometimes, you may want to retrieve vertices/edges having a specific label, you can use `haveLabel(label)` step in Gremlin. For example, the following codes show how to find all person vertices.
 
 ```python
 # Retrieve vertices having label 'person'
@@ -209,11 +209,11 @@ print(q2.all())
 print(q3.all())
 ```
 
-Here are more [references](https://tinkerpop.apache.org/docs/3.6.2/reference/#has-step) about `has(...)` step in gremlin.
+Here are more [references](https://tinkerpop.apache.org/docs/3.6.2/reference/#has-step) about `has(...)` step in Gremlin.
 
 ### Extract Property Values
 
-Sometimes, you may more curious about the property values of the vertices/edges. With GIE, you can easily  use `values(PROPERTY_NAME)` gremlin step to extract the vertices/edges' property value.
+Sometimes, you may more curious about the property values of the vertices/edges. With GIE, you can easily  use `values(PROPERTY_NAME)` Gremlin step to extract the vertices/edges' property value.
 
 For example, you have already known that vertex(id=38416) is a comment, and you are interested in its content, then you can write the following codes in GIE:
 
@@ -316,11 +316,11 @@ The main difference between Property Graph and Relational Database is that Prope
 
 In GIE, we call such walk as  **Graph Traversal**: This type of workload involves traversing the graph from a set of source vertices while satisfying the constraints on the vertices and edges that the traversal passes. Graph traversal differs from the [analytics](https://graphscope.io/docs/latest/graph_analytics_workloads.html) workload as it typically accesses a small portion of the graph rather than the whole graph.
 
-In this tutorial, we would like to discuss how to use gremlin steps to traverse the Property Graph. Furthermore, we will show some examples about how to apply graph traversals in real world data analytics.
+In this tutorial, we would like to discuss how to use Gremlin steps to traverse the Property Graph. Furthermore, we will show some examples about how to apply graph traversals in real world data analytics.
 
 ### Expansion
 
-The most basic unit in Graph Traversal is Expansion, which means starting from a vertex/edge and reaching its adjacencies. GIE currently supports the following expansion steps in gremlin:
+The most basic unit in Graph Traversal is Expansion, which means starting from a vertex/edge and reaching its adjacencies. GIE currently supports the following expansion steps in Gremlin:
 
 - `out()`: Map the vertex to its outgoing adjacent vertices given the edge labels.
 - `in()`: Map the vertex to its incoming adjacent vertices given the edge labels.
@@ -505,7 +505,7 @@ Therefore, the output of the above codes should like:
 
 #### outV(), inV(), bothV() and otherV()
 
-When reaching an edge during the traversal, you may be interested in its incident vertices. Therefore, GIE supports gremlin steps that traverse from source edges to their incident vertices.
+When reaching an edge during the traversal, you may be interested in its incident vertices. Therefore, GIE supports Gremlin steps that traverse from source edges to their incident vertices.
 
 :::{figure-md}
 <img src="../images/out_in_vertices.png"
@@ -576,9 +576,9 @@ The output should be like:
 
 #### Multiple Expansion Steps
 
-You may have already noticed that graph traversal supports multiple expansion steps. For example, in gremlin sentence`g.V(216172782113784483).outE('isLocatedIn').inV()`, `outE('isLocatedIn')` is first expansion and `inV()` is the second expansion.
+You may have already noticed that graph traversal supports multiple expansion steps. For example, in Gremlin sentence`g.V(216172782113784483).outE('isLocatedIn').inV()`, `outE('isLocatedIn')` is first expansion and `inV()` is the second expansion.
 
-The figure illustrates the execution process of this gremlin sentence:
+The figure illustrates the execution process of this Gremlin sentence:
 
 :::{figure-md}
 
@@ -615,19 +615,19 @@ This figure illustrates the execution process:
 Figure 13. The examples of two-hop outgoing vertices.
 :::
 
-Therefore, the output of the gremlin sentence should be like:
+Therefore, the output of the Gremlin sentence should be like:
 
 ```bash
 # The larger place(country) that the person is located in
 [v[288230376151711797]]
 ```
 
-There is one problem of currently introduced gremlin traversal sentences: only the last step's results are kept. Sometimes, you may need to record the intermediate results of the traversal for further analysis, but how? Actually, you can use the `as(TAG)` and `select(TAG 1, TAG 2, ..., TAG N)` steps to keep the intermediate results:
+There is one problem of currently introduced Gremlin traversal sentences: only the last step's results are kept. Sometimes, you may need to record the intermediate results of the traversal for further analysis, but how? Actually, you can use the `as(TAG)` and `select(TAG 1, TAG 2, ..., TAG N)` steps to keep the intermediate results:
 
 - `as(TAG)`: it gives a tag to the step it follows, and then its previous step's value can be accessed through the tag.
 - `select(TAG 1, TAG 2, ..., TAG N)`: select all the values of the steps the given tags refer to.
 
-Extend from previous example, if you want to keep person, smaller place(city) and larger place(country) together in the output, you can write gremlin sentence in GIE like:
+Extend from previous example, if you want to keep person, smaller place(city) and larger place(country) together in the output, you can write Gremlin sentence in GIE like:
 
 ```python
 # a: person, b: city, c: country
@@ -646,7 +646,7 @@ where tag 'a' refers to 'person' vertex, tag 'b' refers to 'city' vertex and tag
 
 #### Expansion from many starting points
 
-Currently, we only discuss the expansion from only one vertex/edges. However, it is very common to write gremlin sentence like `g.V().out()` in GIE. In previous tutorials we have known that `g.V()` will get all the vertices in the graph. Then how to understand the meaning of `g.V().out()`?
+Currently, we only discuss the expansion from only one vertex/edges. However, it is very common to write Gremlin sentence like `g.V().out()` in GIE. In previous tutorials we have known that `g.V()` will get all the vertices in the graph. Then how to understand the meaning of `g.V().out()`?
 
 The explain it more clear, let's firstly look at a much simpler situation: starting from only two vertices. This is a subgraph of LDBC Graph formed by two person vertices' local graphs, where the two person vertices' ids are 216172782113784483 and 216172782113784555.
 
@@ -659,7 +659,7 @@ The explain it more clear, let's firstly look at a much simpler situation: start
 Figure 14. The examples of two local graphs.
 :::
 
-In addition, we further limit the starting points of the traversal to be exactly the two person vertices. Therefore, we can write the following gremlin sentence in GIE:
+In addition, we further limit the starting points of the traversal to be exactly the two person vertices. Therefore, we can write the following Gremlin sentence in GIE:
 
 ```python
 # Traverse from the two source vertices to their adjacent vertices through their incident outgoing edges
@@ -712,7 +712,7 @@ Generally, it is better to understand the expansion and traversal step from trav
 
 - At the very beginning, `g.V()` extracts all the vertices from the graph, and these vertices form the initial traversers: each traverser contains the corresponding vertex.
 - Then `out()` maps every traverser (vertex) to its outgoing adjacent vertices, and these outgoing adjacent vertices form the next series of traversers.
-- Finally, `in()` maps every traverser (vertex) to its incoming adjacent vertices, and these incoming adjacent vertices form the next series of traversers, and it is the final output of the gremlin sentence.
+- Finally, `in()` maps every traverser (vertex) to its incoming adjacent vertices, and these incoming adjacent vertices form the next series of traversers, and it is the final output of the Gremlin sentence.
 
 This figure illustrates the overview of the traverser transformation during the traversal of `g.V().out().in()`.
 
@@ -724,7 +724,7 @@ This figure illustrates the overview of the traverser transformation during the 
 Figure 16. The overview of traversers' transformation.
 :::
 
-In addition, this figure shows the details of the traverser's change after every expansion step and `as(TAG)` step during the execution of gremlin sentence `g.V().as('a').out().as('b').in().as('c')`.
+In addition, this figure shows the details of the traverser's change after every expansion step and `as(TAG)` step during the execution of Gremlin sentence `g.V().as('a').out().as('b').in().as('c')`.
 
 :::{figure-md}
 <img src="../images/traversers_transformation_details.png"
@@ -764,7 +764,7 @@ The output should be like:
 [v[54336], ..., v[33411]]
 ```
 
-Furthermore, for gremlin sentences contain `as(TAG)` steps, we can introduce `where()` step to apply filters on traversers based on the tagged values.
+Furthermore, for Gremlin sentences contain `as(TAG)` steps, we can introduce `where()` step to apply filters on traversers based on the tagged values.
 
 Extend from previous example that we add tag 'a' and 'b' after the two `has(...)` step:
 
@@ -774,7 +774,7 @@ q1 = g.execute('g.V().hasLabel(\'person\')\
                      .in(\'replyOf\').has(\'length\', lt(5)).as(\'b\')')
 ```
 
-If we hope that the vertices of the tag 'a' and 'b' have the same property value on property 'browserUsed', we can add a `where` step and write the following gremlin sentence in GIE:
+If we hope that the vertices of the tag 'a' and 'b' have the same property value on property 'browserUsed', we can add a `where` step and write the following Gremlin sentence in GIE:
 
 ```python
 # Traversers(vertices) after g.V() has label 'person'
@@ -798,7 +798,7 @@ The output should be like:
 
 #### Expansion as filters
 
-In addition, not only can we add filters after expansion steps, but also we can use expansion step as the filtering predicate with `where(...)` step. For example, if we want to extract all the vertices having at least 5 outgoing incident edges, we can write a gremlin sentence with `where(...)` step as following:
+In addition, not only can we add filters after expansion steps, but also we can use expansion step as the filtering predicate with `where(...)` step. For example, if we want to extract all the vertices having at least 5 outgoing incident edges, we can write a Gremlin sentence with `where(...)` step as following:
 
 ```python
 # Retrieve vertices having at least 5 outgoing incident edges
@@ -808,7 +808,7 @@ print(q1.all())
 
 ### Path Expansion (Syntactic Sugar)
 
-Until now, we can use expansion steps, filter steps and auxiliary steps like `as(TAG)` to write complicated gremlin sentences to traverse the graph. However, there are still two shortcomings:
+Until now, we can use expansion steps, filter steps and auxiliary steps like `as(TAG)` to write complicated Gremlin sentences to traverse the graph. However, there are still two shortcomings:
 
 - If we want to find a vertex which is 10-hop(edges) away from the current vertex, we need to write expansion step 10 times, which is very cost-ineffective.
 - The number of hops from the source to the destination is arbitrary. For example, if we want to find all vertices which can be reached from a source vertex within 3-hops, it can not be solved by already introduced steps.
@@ -833,7 +833,7 @@ Figure 18. The examples of path expansion.
 :::
 ### Real Applications
 
-Graph traversal enables us to conduct more complicated data analytics on the graph. 
+Graph traversal enables us to conduct more complicated data analytics on the graph.
 
 For example, the path `comment-hasCreator->person->isLocatedIn->city-isPartOf->country` can help to determine the nationality of `comments`. Therefore,  we can calculate the histogram of comment length for comments from China easily with GIE:
 
@@ -978,16 +978,16 @@ or can be illustrated as a graph pattern as shown in the following.
 Figure 21. Pattern: two person know each other and study at the same university.
 :::
 
-Then you aim to find all the matched subgraphs that are [isomorphic](https://en.wikipedia.org/wiki/Graph_isomorphism) to the pattern. Under graph isomorphism, a subgraph and the pattern are matched if, when there is an edge between vertices in the pattern, there is an equivalent edge between two matched vertices in the subgraph. In addition, a vertex in the subgraph cannot match multiple pattern vertices. 
+Then you aim to find all the matched subgraphs that are [isomorphic](https://en.wikipedia.org/wiki/Graph_isomorphism) to the pattern. Under graph isomorphism, a subgraph and the pattern are matched if, when there is an edge between vertices in the pattern, there is an equivalent edge between two matched vertices in the subgraph. In addition, a vertex in the subgraph cannot match multiple pattern vertices.
 
-For example, this is a local graph of university vertex(id = 144115188075858884) in the LDBC Graph: 
+For example, this is a local graph of university vertex(id = 144115188075858884) in the LDBC Graph:
 
 :::{figure-md}
 <img src="../images/local_person_person_university.png"
      alt="local_person_person_university"
      width="50%">
 
-Figure 22. Local graph of a university vertex. 
+Figure 22. Local graph of a university vertex.
 :::
 
 and here are the matched subgraphs in this local graph:
@@ -997,7 +997,7 @@ and here are the matched subgraphs in this local graph:
      alt="matched_person_person_university"
      width="50%">
 
-Figure 23. Three matched subgraphs in the local graph. 
+Figure 23. Three matched subgraphs in the local graph.
 :::
 
 The matched instances in the local graph are:
@@ -1036,7 +1036,7 @@ q1 = g.execute('g.V().match(__.as(\'person1\').both(\'knows\').as(\'person2\'),\
 print(q1.all())
 ```
 
-The output should be the same as the previous self-written pattern matching sentences: 
+The output should be the same as the previous self-written pattern matching sentences:
 
 ```bash
 [{'person2': v[216172782113784361],
@@ -1084,10 +1084,10 @@ This figure illustrates the pattern:
      alt="bi19_right_lower_corner"
      width="50%">
 
-Figure 24. Pattern: two person know each other, and one person creates a comment replying a message created by the other. 
+Figure 24. Pattern: two person know each other, and one person creates a comment replying a message created by the other.
 :::
 
-We can easily match this pattern with gremlin `match(...)` step:
+We can easily match this pattern with Gremlin `match(...)` step:
 
 ```python
 # pA and pB know each other
@@ -1124,13 +1124,13 @@ The output should be like:
 ```
 ## Relational Operations
 
-Then we would like to introduce more relational operations of gremlin steps that GIE supports. 
+Then we would like to introduce more relational operations of Gremlin steps that GIE supports.
 
 ### Filter Steps
 
 #### `hasId()`
 
-In previous tutorial, we have introduced that you can use `g.V(id)` to pick out the vertex having specific required global id from the graph. But, what if we want to apply filters based on global id during the traversal? 
+In previous tutorial, we have introduced that you can use `g.V(id)` to pick out the vertex having specific required global id from the graph. But, what if we want to apply filters based on global id during the traversal?
 
 You can use the `hasId(id)` step to achieve the purpose. For example, if you want the expanded vertex exactly having global id 144115188075861858, you can write the following codes in GIE:
 
@@ -1162,11 +1162,11 @@ The output would be:
  v[504403158265495555]]
 ```
 
-which are all the vertices whose local id is 0. 
+which are all the vertices whose local id is 0.
 
 #### `where()`
 
-In previous tutorial, we have introduced that `where()` step in gremlin sentences having `as()` steps can be used to filter traversers based on the tagged values:
+In previous tutorial, we have introduced that `where()` step in Gremlin sentences having `as()` steps can be used to filter traversers based on the tagged values:
 
 ```python
 # vertex tagged as 'a' should be the same as vertex 'tagged' as b
@@ -1181,9 +1181,9 @@ The output should be like:
 [v[216172782113783808], v[216172782113783808], v[216172782113783808]]
 ```
 
-In addition, `where()` step can be followed by a `by(...)` step to provide much more powerful functionalities: the selected entities may not need to compare themselves, but compare their properties. 
+In addition, `where()` step can be followed by a `by(...)` step to provide much more powerful functionalities: the selected entities may not need to compare themselves, but compare their properties.
 
-For example, the following gremlin sentence require vertex 'a' and 'b' having the value on same 'firstName' :
+For example, the following Gremlin sentence require vertex 'a' and 'b' having the value on same 'firstName' :
 
 ```python
 # vertex tagged as 'a' and 'b' should have the same property 'name'
@@ -1217,7 +1217,7 @@ The output should be like:
 
 #### `dedup()`
 
-Suppose that you are interested in how many forums having members from India, and you may write the following gremlin sentence in GIE:
+Suppose that you are interested in how many forums having members from India, and you may write the following Gremlin sentence in GIE:
 
 ```python
 # Aim to count how may forums have members from India
@@ -1229,12 +1229,12 @@ print(q1.all())
 The output is `[8248]`. It seems to have no problem. However, how many forums are there in the graph?
 
 ```python
-# Count how many forums are there in the graph 
+# Count how many forums are there in the graph
 q1 = g.execute('g.V().hasLabel(\'forum\').count()')
 print(q1.all())
 ```
 
- The output is `[8101]`. Here comes the problem: the number of forums having members from India is even larger than the total number of forums. It is impossible! Actually,  when we count how many forums having members from India with previous graph traversal, the last step `.in(\'hasMember\')` will lead to many duplicates, because it is very common for different people to join the same forum. 
+ The output is `[8101]`. Here comes the problem: the number of forums having members from India is even larger than the total number of forums. It is impossible! Actually,  when we count how many forums having members from India with previous graph traversal, the last step `.in(\'hasMember\')` will lead to many duplicates, because it is very common for different people to join the same forum.
 
 Therefore, `dedup()` step is designed to remove the duplicates among traversers. After we add the `dedup()` step before the `count()`, the statistics result is back to normal:
 
@@ -1245,9 +1245,9 @@ q1 = g.execute('g.V().hasLabel(\'place\').has(\'name\', \'India\')\
 print(q1.all())
 ```
 
-The output is `[2822]`. 
+The output is `[2822]`.
 
-For gremlin sentence containing `as()` step, we can also `dedup(TAG)` remove duplicates according to specific tagged entities. For example, the following  gremlin sentence also counts how may forums have members from India, but the traverser starts from `forum`. To remove the duplicates, we `dedup('a')`, where 'a' is the tagged`forum` vertices. 
+For Gremlin sentence containing `as()` step, we can also `dedup(TAG)` remove duplicates according to specific tagged entities. For example, the following  Gremlin sentence also counts how may forums have members from India, but the traverser starts from `forum`. To remove the duplicates, we `dedup('a')`, where 'a' is the tagged`forum` vertices.
 
 ```python
 # Count how may forums have members from India
@@ -1257,9 +1257,9 @@ q1 = g.execute('g.V().hasLabel(\'forum\').as(\'a\').out(\'hasMember\')\
 print(q1)
 ```
 
-The output is also `[2822]`. 
+The output is also `[2822]`.
 
-In addition, we can `dedup(TAG1, TAG2, ...)` to remove duplicates by the composition of several tagged entires. For example, the following gremlin sentence counts there are how many different related `(country, forum)` pairs in the graph.
+In addition, we can `dedup(TAG1, TAG2, ...)` to remove duplicates by the composition of several tagged entires. For example, the following Gremlin sentence counts there are how many different related `(country, forum)` pairs in the graph.
 
 ```python
 # Count how many different related (country, forum) pairs in the graph
@@ -1285,7 +1285,7 @@ The output should be `[432]`.
 
 #### `id()` and `label()`
 
-In previous tutorial, we have taught to use `values(PROPERTY)` to project an entity (vertex or edge) to its property's value. However, to extract the global id and label, we may need to separate steps: `id()` and `label()`: 
+In previous tutorial, we have taught to use `values(PROPERTY)` to project an entity (vertex or edge) to its property's value. However, to extract the global id and label, we may need to separate steps: `id()` and `label()`:
 
 ```python
 # Get vertex(id=72057594037927936) ’s id
@@ -1306,7 +1306,7 @@ The output should be like:
 [3, ..., 3]
 ```
 
-Note that `id()` step is not equivalent to `values(\'id\')`, where the latter one project an entity (vertex or edge) to its local id! For example: 
+Note that `id()` step is not equivalent to `values(\'id\')`, where the latter one project an entity (vertex or edge) to its local id! For example:
 
 ```python
 # Get vertex(id=72057594037927936) ’s local id
@@ -1345,7 +1345,7 @@ The output should be like:
 
 #### `valueMap()`
 
-`value(PROPERTY)` step can only map an entity(vertex or edge) to one of its property's value. What if we want to extract many properties's value at the same time? 
+`value(PROPERTY)` step can only map an entity(vertex or edge) to one of its property's value. What if we want to extract many properties's value at the same time?
 
 `valueMap(PROPERTY1, PROPERTI2, ...)` step provides such ability. For example, the following code extracts `person` vertices' `firstName` and `lastName` together by `valueMap(...)` step.
 
@@ -1365,9 +1365,9 @@ The output should be like:
 
 #### `select()`
 
-As introduced previously, for a gremlin sentence containing `as()` step, we can use `select(TAG1, TAG2, ...)` step to extract the tagged entities we want. Just as `where()` and `dedup()` step, we can add a `by(...)` step after it to further extract the property's value of the tagged entities. 
+As introduced previously, for a Gremlin sentence containing `as()` step, we can use `select(TAG1, TAG2, ...)` step to extract the tagged entities we want. Just as `where()` and `dedup()` step, we can add a `by(...)` step after it to further extract the property's value of the tagged entities.
 
-For example, the following gremlin sentence picked the tagged 'a' vertex's `firstName`. 
+For example, the following Gremlin sentence picked the tagged 'a' vertex's `firstName`.
 
 ```python
 # Extract tagged 'a' vertex's firstName
@@ -1380,7 +1380,7 @@ The output should be like:
 ```bash
 ['Mahinda', 'Eli', 'Joseph',... ]
 ```
-Actually, contents inside the `by(...)` step can be a sub-traversal. For example, the following gremlin sentence extract tagged 'a' vertex's out degree. 
+Actually, contents inside the `by(...)` step can be a sub-traversal. For example, the following Gremlin sentence extract tagged 'a' vertex's out degree.
 ```python
 # Extract tagged 'a' vertex's out degree
 q1 = g.execute('g.V().hasLabel(\'person\').as(\'a\').select(\'a\').by(out().count())')
@@ -1486,7 +1486,7 @@ The output should be like:
 
 #### `group()`
 
-It is a very common need to divide traversers into different groups according to some values or conditions, called group keys.  Gremlin provides `group()` step to achieve this purpose. 
+It is a very common need to divide traversers into different groups according to some values or conditions, called group keys.  Gremlin provides `group()` step to achieve this purpose.
 
 The group key should be contained in the `by()` step following the `group()` step. The group key can be either a:
 
@@ -1508,7 +1508,7 @@ The output should be like:
  {'female': [..., v[216172782113784707], v[216172782113784708], v[216172782113784709]]]
 ```
 
-You can also divide the vertices into groups according to their out degrees that the vertices belongs to the same group having the same out degree: 
+You can also divide the vertices into groups according to their out degrees that the vertices belongs to the same group having the same out degree:
 
 ```python
 # divide the vertices into groups according to their out degrees
@@ -1517,8 +1517,8 @@ print(q1.all())
 ```
 
 ```bash
-[{11: [v[216172782113783910], v[216172782113784104], v[216172782113784207], v[216172782113784318]], 
-  24: [v[216172782113784305], v[216172782113784597], v[216172782113784693], v[216172782113784018], v[216172782113784092], v[216172782113784108], v[216172782113784161], v[216172782113784162]], 
+[{11: [v[216172782113783910], v[216172782113784104], v[216172782113784207], v[216172782113784318]],
+  24: [v[216172782113784305], v[216172782113784597], v[216172782113784693], v[216172782113784018], v[216172782113784092], v[216172782113784108], v[216172782113784161], v[216172782113784162]],
   73: [v[216172782113783875], v[216172782113783932], v[216172782113784057], v[216172782113784068] ......}]
 ```
 
@@ -1540,9 +1540,9 @@ Therefore, it is strongly suggested to add meaningful group key in the `by()` st
 
 #### `groupCount()`
 
-Sometimes, we only care about there are how many entities in the group. Therefore, it is unnecessary to use `group()` step to get the complete group with every entities inside it.  
+Sometimes, we only care about there are how many entities in the group. Therefore, it is unnecessary to use `group()` step to get the complete group with every entities inside it.
 
-We can simply use `groupCount()` step to achieve this purpose. The usage of `groupCount()` step is almost the same as `group()` step, but it will return the count instead of the complete group. For example, the following code calculates there are how many males and females in the graph. 
+We can simply use `groupCount()` step to achieve this purpose. The usage of `groupCount()` step is almost the same as `group()` step, but it will return the count instead of the complete group. For example, the following code calculates there are how many males and females in the graph.
 
 ```python
 # Count the number of males and females
@@ -1558,7 +1558,7 @@ The output should be like:
 
 ### Order Step
 
-By default, the output of gremlin's sentence in GIE is not ordered. Therefore, gremlin provides `order()` step to order all the objects in the traversal up to this point and then emit them one-by-one in their ordered sequence.
+By default, the output of Gremlin's sentence in GIE is not ordered. Therefore, Gremlin provides `order()` step to order all the objects in the traversal up to this point and then emit them one-by-one in their ordered sequence.
 
 As the same as `group()` step, the order key should be placed in the `by()` step following `order()` step. If there's no `by()` step or the content of `by()` step is empty, it will use the default setting of order:
 
@@ -1577,12 +1577,12 @@ The output should be like:
 [v[216172782113783808], v[216172782113783809], v[216172782113783810], v[216172782113783811], v[216172782113783812], ......, ]
 ```
 
-The same as `group()` step, you can add either 
+The same as `group()` step, you can add either
 
-- Property name or 
-- sub-traversal sentence which will generate a single value 
+- Property name or
+- sub-traversal sentence which will generate a single value
 
-to the `by()` step as the order key. In addition, you can determine whether the order is `acsending` or `descending` in the second parameter of the `by()` step. 
+to the `by()` step as the order key. In addition, you can determine whether the order is `acsending` or `descending` in the second parameter of the `by()` step.
 
 For example:
 
@@ -1613,7 +1613,7 @@ The output should be like:
 
 ### Limit Step
 
-Gremlin sentences always generate a lot of traversers, but sometimes we only need some of them. Therefore, gremlin provides `limit()` step to filter the objects in the traversal by the number of them to pass through the stream, where only the first n objects are allowed as defined by the limit argument. 
+Gremlin sentences always generate a lot of traversers, but sometimes we only need some of them. Therefore, Gremlin provides `limit()` step to filter the objects in the traversal by the number of them to pass through the stream, where only the first n objects are allowed as defined by the limit argument.
 
 For example, if you want to extract 10 person vertices from the graph, you can write:
 
@@ -1645,9 +1645,9 @@ The output should be like:
 
 ### Expression(Syntax Sugar)
 
-Currently, it is still kind of complicated when we need to apply many predicates together to the traversers. 
+Currently, it is still kind of complicated when we need to apply many predicates together to the traversers.
 
-For example, if you want to find all `male` `persons` that are `created` after `2012-01-01`, you may need two `has(...)` steps. The first `has()` step keeps all the `persons` whose `gender` property has value `male`, and the second `has()` step filters out all the `persons` whose `creationDate` property has value earlier than `2012-01-01`. 
+For example, if you want to find all `male` `persons` that are `created` after `2012-01-01`, you may need two `has(...)` steps. The first `has()` step keeps all the `persons` whose `gender` property has value `male`, and the second `has()` step filters out all the `persons` whose `creationDate` property has value earlier than `2012-01-01`.
 
 ```python
 # Find all male persons that are created after 2012-01-01
@@ -1741,7 +1741,7 @@ The output should be like:
 
 ## Complex Queries
 
-In this tutorial, we will mainly discuss how to use GIE with gremlin sentences to make some complex queries. The queries we choose are mainly from LDBC BI Workload.
+In this tutorial, we will mainly discuss how to use GIE with Gremlin sentences to make some complex queries. The queries we choose are mainly from LDBC BI Workload.
 
 ### LDBC BI2
 
@@ -1753,19 +1753,19 @@ In this tutorial, we will mainly discuss how to use GIE with gremlin sentences t
 Figure 25. LDBC BI Query2.
 :::
 
-This figure illustrates LDBC BI2 query. This query aims to find the `Tags` under a given `TagClass` that were used in `Messages` during in the 100-day time window starting at date and compare it with the 100-day time window that follows. For the `Tags` and for both time windows, compute the count of `Messages`. 
+This figure illustrates LDBC BI2 query. This query aims to find the `Tags` under a given `TagClass` that were used in `Messages` during in the 100-day time window starting at date and compare it with the 100-day time window that follows. For the `Tags` and for both time windows, compute the count of `Messages`.
 
-The key to this query is creating two sub execution branches to count the two windows separately. We can use gremlin's `by()` step to achieve the purpose. Assume the `TagClass's name='Actor'` `$date='2012-01-01'`, `$date+100='2012-04-09'$` and `$date+200='2012-07-18'`:
+The key to this query is creating two sub execution branches to count the two windows separately. We can use Gremlin's `by()` step to achieve the purpose. Assume the `TagClass's name='Actor'` `$date='2012-01-01'`, `$date+100='2012-04-09'$` and `$date+200='2012-07-18'`:
 
 1. Firstly, we have to find all `Tags` related to the given `TagClass`
 
    `g.V().has(\'tagclass\', \'name\', \'Actor\').in(\'hasType\').as(\'tag\')`
 
-2. Then, we need to count for the first window: all the messages created from `2012-01-01` to `2012-04-09` and having the specific `Tag`. Since there are two separate counting tasks, we have to use `select()` followed by `by(...)` step to create a new sub branch to execute the task. 
+2. Then, we need to count for the first window: all the messages created from `2012-01-01` to `2012-04-09` and having the specific `Tag`. Since there are two separate counting tasks, we have to use `select()` followed by `by(...)` step to create a new sub branch to execute the task.
 
    `.select("tag").by(__.in(\'hasTag\').hasLabel(\'comment\').has(\'creationDate\', inside(\'2012-01-01\', \'2012-04-09\')).dedup().count()).as(\'count1\')`
 
-3. Next, we need to count for the second window: all the messages created from `2012-04-09` to `2012-07-18` and having the specific `Tag`. Still, we use `select()` followed by `by(...)` step to create a new sub branch to execute the task. 
+3. Next, we need to count for the second window: all the messages created from `2012-04-09` to `2012-07-18` and having the specific `Tag`. Still, we use `select()` followed by `by(...)` step to create a new sub branch to execute the task.
 
    `.select("tag").by(__.in(\'hasTag\').hasLabel(\'comment\').has(\'creationDate\', inside(\'2012-04-09\', \'2012-07-18\')).dedup().count()).as(\'count2\')\`
 
@@ -1812,14 +1812,14 @@ The output should be like:
 Figure 26. LDBC BI Query3.
 :::
 
-This figure illustrates LDBC BI3 query. Given a `TagClass` and `Country`, this query aims to find all the `Forums` created in the given `Country`, containing at least one `Message` with `Tags` belonging directly to the given `TagClass`, and count the `Messages` by the `Forum` which contains them. 
+This figure illustrates LDBC BI3 query. Given a `TagClass` and `Country`, this query aims to find all the `Forums` created in the given `Country`, containing at least one `Message` with `Tags` belonging directly to the given `TagClass`, and count the `Messages` by the `Forum` which contains them.
 
 The location of a `Forum` is identified by the location of the Forum’s moderator. Here comes another question, how to determine whether the forum contains a message directly related to the given `TagClass` or not? We assume that a message is contained by a forum if:
 
 - It replies a post contained by the forum
 - It replies a message contained by the forum
 
-Therefore, we can use `out(1..)`  path expand step in gremlin to find all the messages contained by a forum. However, the infinite path length may lead to serious computation cost. Therefore, the upper bound of the path expand is set to 6. Then we can use another two `out('hasTag')` and `out('hasType')` step followed by the filter `has('name', TAGCLASS)` to determine whether the message has required tag or not. 
+Therefore, we can use `out(1..)`  path expand step in Gremlin to find all the messages contained by a forum. However, the infinite path length may lead to serious computation cost. Therefore, the upper bound of the path expand is set to 6. Then we can use another two `out('hasTag')` and `out('hasType')` step followed by the filter `has('name', TAGCLASS)` to determine whether the message has required tag or not.
 
 Assume the `Country's name = 'China'` and `TagClass's name = 'Song'`, we can write in GIE as:
 
@@ -1881,9 +1881,9 @@ The output should be like:
 Figure 27. LDBC BI Query4(Left Part).
 :::
 
-This figure illustrates the left part of the LDBC BI4 query. The query aims to find the top 100 forum of every country based on the memberCount, and the forum should be created after the given date. 
+This figure illustrates the left part of the LDBC BI4 query. The query aims to find the top 100 forum of every country based on the memberCount, and the forum should be created after the given date.
 
-Since GIE doesn't provide global storage currently, we cannot pick out the top 100 forums of every country using gremlin sentence directly. We can retrieve a tuple of `(country, forum, country_count)` at first. 
+Since GIE doesn't provide global storage currently, we cannot pick out the top 100 forums of every country using Gremlin sentence directly. We can retrieve a tuple of `(country, forum, country_count)` at first.
 
 Assume `Forum's creationDate > '2012-01-01'`, we can write in GIE as
 
@@ -1975,7 +1975,7 @@ This figure illustrates LDBC BI11 query. This query aims to find three persons t
 - a, b, c live in the same country
 - their relationship('knows') were created in the range [`startDate`, `endDate`]
 
- It is easy to use gremlin's `match(...)` step to describe this query. Assume the `Country's name=China`, the `startDate='2012-01-01'`, the `endDate='2012-07-01'`:
+ It is easy to use Gremlin's `match(...)` step to describe this query. Assume the `Country's name=China`, the `startDate='2012-01-01'`, the `endDate='2012-07-01'`:
 
 ```python
 q1 = g.execute('g.V().match(__.as(\'a\').bothE(\'knows\')\
@@ -1999,7 +1999,7 @@ The output should be like:
 
 ```bash
 # Query results for ldbc bi11 query
-[{'a': v[216172782113784091], 'b': v[216172782113783882], 'c': v[216172782113784250]}, ......, 
+[{'a': v[216172782113784091], 'b': v[216172782113783882], 'c': v[216172782113784250]}, ......,
  {'a': v[216172782113784403], 'b': v[216172782113784537], 'c': v[216172782113784122]}]
 ```
 
@@ -2015,11 +2015,11 @@ Figure 29. LDBC BI Query14.
 
 This figure illustrates LDBC BI14 query. Here is its purpose:
 
-Consider all pairs of people (`person1`, `person2`) such that 
+Consider all pairs of people (`person1`, `person2`) such that
 
-1. they know each other, 
-2. one is located in a City of Country `country1`, 
-3. and the other is located in a City of Country `country2`. 
+1. they know each other,
+2. one is located in a City of Country `country1`,
+3. and the other is located in a City of Country `country2`.
 
 For each City of Country `country1`, return the highest scoring pair. The score of a pair is defined as the sum of the subscores awarded for the following kinds of interaction. The initial value is score = 0.
 
