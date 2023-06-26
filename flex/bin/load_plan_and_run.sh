@@ -122,7 +122,9 @@ compile_so(){
     work_dir=$2
     db_home=$3
     if [ $# -eq 4 ]; then
-        output_dir=$2
+        output_dir=$4
+    else
+        output_dir=${work_dir}
     fi
     echo "Input path = ${input_path}"
     echo "Work dir = ${work_dir}"
@@ -294,7 +296,7 @@ run() {
     fi
 
     # compile the input file to a .so file, put in $OUTPUT_PATH.
-    compile_so ${INPUT} ${WORK_DIR} ${OUTPUT_DIR} ${DB_HOME}
+    compile_so ${INPUT} ${WORK_DIR} ${DB_HOME} ${OUTPUT_DIR} 
     #if output dir is specified, we will copy to output dir.
 }
 
