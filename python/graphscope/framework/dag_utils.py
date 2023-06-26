@@ -985,38 +985,6 @@ def graph_to_dataframe(graph, selector=None, vertex_range=None):
     return op
 
 
-def gremlin_query(interactive_query, query, request_options=None):
-    """Execute a gremlin query.
-
-    Args:
-        interactive_query (:class:`graphscope.interactive.query.InteractiveQueryDAGNode`):
-            The GIE instance holds the graph that gremlin query on.
-        query (str):
-            Scripts that written in gremlin quering language.
-        request_options (dict, optional): gremlin request options. format:
-            {
-                "engine": "gae"
-            }
-
-    Returns:
-        An op to execute a gremlin query on the GIE instance.
-    """
-    config = {}
-    config[types_pb2.GIE_GREMLIN_QUERY_MESSAGE] = utils.s_to_attr(query)
-    config[types_pb2.VINEYARD_ID] = utils.i_to_attr(interactive_query.object_id)
-    if request_options:
-        config[types_pb2.GIE_GREMLIN_REQUEST_OPTIONS] = utils.s_to_attr(
-            json.dumps(request_options)
-        )
-    op = Operation(
-        interactive_query.session_id,
-        types_pb2.GREMLIN_QUERY,
-        config=config,
-        output_types=types_pb2.GREMLIN_RESULTS,
-    )
-    return op
-
-
 def gremlin_to_subgraph(
     interactive_query, gremlin_script, request_options=None, oid_type="int64"
 ):
@@ -1054,29 +1022,6 @@ def gremlin_to_subgraph(
     return op
 
 
-def fetch_gremlin_result(result_set, fetch_type="one"):
-    """Fetch the gremlin query result.
-
-    Args:
-        result_set (:class:`raphscope.interactive.query.ResultSetDAGNode`):
-            The instance holds the resultSet in coordinator that can fetch the gremlin result from.
-        fetch_type (str): "one" or "all". Defaults to "one".
-
-    Returns:
-        An op to fetch the gremlin result.
-    """
-    config = {}
-    config[types_pb2.GIE_GREMLIN_FETCH_RESULT_TYPE] = utils.s_to_attr(fetch_type)
-    op = Operation(
-        result_set.session_id,
-        types_pb2.FETCH_GREMLIN_RESULT,
-        config=config,
-        inputs=[result_set.op],
-        output_types=types_pb2.RESULTS,
-    )
-    return op
-
-
 def archive_graph(graph, path):
     """Archive a graph to gar format with a path.
 
@@ -1101,5 +1046,49 @@ def archive_graph(graph, path):
         config=config,
         inputs=[graph.op],
         output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
+def save_graph_to(
+    graph,
+    path: str,
+    vineyard_id,
+    **kwargs,
+):
+    """Serialize graph to the specified location
+
+    Args:
+        graph (:class:`graphscope.framework.graph.GraphDAGNode`): Source graph.
+        path (str): The path to serialize the graph, on each worker.
+
+    Returns:
+        An op to serialize the graph to a path.
+    """
+    config = {
+        types_pb2.GRAPH_SERIALIZATION_PATH: utils.s_to_attr(path),
+        types_pb2.VINEYARD_ID: utils.i_to_attr(vineyard_id),
+        types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(kwargs)),
+    }
+    op = Operation(
+        graph.session_id,
+        types_pb2.SERIALIZE_GRAPH,
+        config=config,
+        inputs=[graph.op],
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
+def load_graph_from(path: str, sess, **kwargs):
+    config = {
+        types_pb2.GRAPH_SERIALIZATION_PATH: utils.s_to_attr(path),
+        types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(kwargs)),
+    }
+    op = Operation(
+        sess.session_id,
+        types_pb2.DESERIALIZE_GRAPH,
+        config=config,
+        output_types=types_pb2.GRAPH,
     )
     return op

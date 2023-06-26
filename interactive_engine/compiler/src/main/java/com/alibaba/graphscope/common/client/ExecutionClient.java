@@ -19,9 +19,11 @@ package com.alibaba.graphscope.common.client;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
+import com.alibaba.graphscope.common.config.Configs;
 
 /**
  * client to submit request to remote engine service
+ *
  * @param <C>
  */
 public abstract class ExecutionClient<C> {
@@ -35,4 +37,17 @@ public abstract class ExecutionClient<C> {
             throws Exception;
 
     public abstract void close() throws Exception;
+
+    public static class Factory {
+        public static ExecutionClient create(Configs configs, ChannelFetcher channelFetcher) {
+            switch (channelFetcher.getType()) {
+                case RPC:
+                    return new RpcExecutionClient(configs, channelFetcher);
+                case HTTP:
+                    return new HttpExecutionClient(configs, channelFetcher);
+                default:
+                    throw new IllegalArgumentException("unknown channel fetcher type");
+            }
+        }
+    }
 }

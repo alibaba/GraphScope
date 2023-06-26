@@ -60,6 +60,4 @@ BuiltIn operations
    add_column
    graph_to_numpy
    graph_to_dataframe
-   gremlin_query
    gremlin_to_subgraph
-   fetch_gremlin_result

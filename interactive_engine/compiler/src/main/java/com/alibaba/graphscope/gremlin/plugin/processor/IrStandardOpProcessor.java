@@ -30,29 +30,22 @@ import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
-import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
-import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.Utils;
-import com.alibaba.graphscope.gremlin.plugin.script.AntlrCypherScriptEngineFactory;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngineFactory;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ExpandFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
-import com.alibaba.graphscope.gremlin.result.processor.CypherResultProcessor;
 import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
-import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.apache.calcite.rel.hint.RelHint;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -75,7 +68,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -105,6 +97,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
 
     public IrStandardOpProcessor(
             Configs configs,
+            GraphPlanner graphPlanner,
             ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
             Graph graph,
@@ -115,7 +108,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.rpcClient =
                 new RpcClient(PegasusConfig.PEGASUS_GRPC_TIMEOUT.get(configs), fetcher.fetch());
         this.metaQueryCallback = metaQueryCallback;
-        this.graphPlanner = new GraphPlanner(configs);
+        this.graphPlanner = graphPlanner;
     }
 
     @Override
@@ -130,8 +123,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         Map<String, Object> args = msg.getArgs();
         String script = (String) args.get("gremlin");
 
-        // replace with antlr parser
-        String language = getLanguageFromRequest(msg);
+        String language = AntlrGremlinScriptEngineFactory.LANGUAGE_NAME;
 
         long jobId = JOB_ID_COUNTER.incrementAndGet();
         IrMeta irMeta = metaQueryCallback.beforeExec();
@@ -261,27 +253,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         }
     }
 
-    protected String getLanguageFromRequest(RequestMessage msg) {
-        Map<String, Object> args = msg.getArgs();
-        if (args.containsKey("bindings")) {
-            Map<String, Object> bindings = (Map<String, Object>) args.get("bindings");
-            if (bindings.containsKey("language")) {
-                return (String) bindings.get("language");
-            }
-        }
-        // hack ways to get language opt from gremlin console, for this is the only remote
-        // configurations can be set in the console
-        if (args.containsKey("aliases")) {
-            Map<String, String> aliases = (Map<String, String>) args.get("aliases");
-            for (Map.Entry<String, String> alias : aliases.entrySet()) {
-                if (alias.getValue().equals("graph")) {
-                    return alias.getKey();
-                }
-            }
-        }
-        return AntlrGremlinScriptEngineFactory.LANGUAGE_NAME;
-    }
-
     protected GremlinExecutor.LifeCycle createLifeCycle(
             Context ctx,
             Supplier<GremlinExecutor> gremlinExecutorSupplier,
@@ -296,8 +267,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                 args.containsKey("evaluationTimeout")
                         ? ((Number) args.get("evaluationTimeout")).longValue()
                         : settings.getEvaluationTimeout();
-        // replace with antlr parser
-        String language = getLanguageFromRequest(msg);
         return GremlinExecutor.LifeCycle.build()
                 .evaluationTimeoutOverride(seto)
                 .beforeEval(
@@ -328,23 +297,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                             jobId,
                                             script,
                                             irMeta);
-                                } else if (o != null && o instanceof ParseTree) {
-                                    GraphPlanner.PlannerInstance instance =
-                                            graphPlanner.instance((ParseTree) o, irMeta);
-                                    GraphPlanner.Summary summary = instance.plan();
-                                    if (language.equals(
-                                            AntlrGremlinScriptEngineFactory.LANGUAGE_NAME)) {
-                                        // todo: handle gremlin results
-                                    } else if (language.equals(
-                                            AntlrCypherScriptEngineFactory.LANGUAGE_NAME)) {
-                                        processRelNode(
-                                                summary,
-                                                new CypherResultProcessor(ctx, summary),
-                                                jobId,
-                                                script,
-                                                irMeta,
-                                                ctx);
-                                    }
                                 }
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
@@ -395,68 +347,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();
         this.rpcClient.submit(request, resultProcessor);
-    }
-
-    protected void processRelNode(
-            GraphPlanner.Summary summary,
-            ResultProcessor resultProcessor,
-            long jobId,
-            String script,
-            IrMeta irMeta,
-            Context ctx)
-            throws Exception {
-        String jobName = "ir_plan_" + jobId;
-        LogicalPlan logicalPlan = summary.getLogicalPlan();
-        if (logicalPlan.isReturnEmpty()) {
-            logger.info(
-                    "gremlin query \"{}\", job conf name \"{}\", logical plan\n {}",
-                    script,
-                    jobName,
-                    logicalPlan.explain());
-            // return empty results to the client
-            RequestMessage msg = ctx.getRequestMessage();
-            ctx.writeAndFlush(
-                    ResponseMessage.build(msg).code(ResponseStatusCode.NO_CONTENT).create());
-        } else {
-            try (PhysicalBuilder<byte[]> physicalBuilder = summary.getPhysicalBuilder()) {
-                byte[] physicalPlanBytes = physicalBuilder.build();
-                // print script and jobName with ir plan
-                logger.info(
-                        "gremlin query \"{}\", job conf name \"{}\", ir core plan {}",
-                        script,
-                        jobName,
-                        physicalBuilder.explain());
-                PegasusClient.JobRequest request =
-                        PegasusClient.JobRequest.newBuilder()
-                                .setPlan(ByteString.copyFrom(physicalPlanBytes))
-                                .build();
-                PegasusClient.JobConfig jobConfig =
-                        PegasusClient.JobConfig.newBuilder()
-                                .setJobId(jobId)
-                                .setJobName(jobName)
-                                .setWorkers(PegasusConfig.PEGASUS_WORKER_NUM.get(configs))
-                                .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(configs))
-                                .setMemoryLimit(PegasusConfig.PEGASUS_MEMORY_LIMIT.get(configs))
-                                .setBatchCapacity(
-                                        PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(configs))
-                                .setTimeLimit(PegasusConfig.PEGASUS_TIMEOUT.get(configs))
-                                .setAll(PegasusClient.Empty.newBuilder().build())
-                                .build();
-                request = request.toBuilder().setConf(jobConfig).build();
-                this.rpcClient.submit(request, resultProcessor);
-            }
-        }
-    }
-
-    protected List<RelHint> getPlanHints(IrMeta irMeta) {
-        int servers = PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length;
-        int workers = PegasusConfig.PEGASUS_WORKER_NUM.get(configs);
-        return ImmutableList.of(
-                RelHint.builder("plan")
-                        .hintOption("servers", String.valueOf(servers))
-                        .hintOption("workers", String.valueOf(workers))
-                        .hintOption("isColumnId", String.valueOf(irMeta.getSchema().isColumnId()))
-                        .build());
     }
 
     public static void applyStrategies(Traversal traversal) {

@@ -66,8 +66,6 @@ class DAGManager(object):
 
     _interactive_engine_split_op = [
         types_pb2.SUBGRAPH,
-        types_pb2.GREMLIN_QUERY,
-        types_pb2.FETCH_GREMLIN_RESULT,
     ]
 
     _learning_engine_split_op = []
@@ -75,6 +73,8 @@ class DAGManager(object):
     _coordinator_split_op = [
         types_pb2.DATA_SOURCE,  # spawn an io stream to read/write data from/to vineyard
         types_pb2.DATA_SINK,  # spawn an io stream to read/write data from/to vineyard
+        types_pb2.SERIALIZE_GRAPH,  # serialize graph to path via vineyard
+        types_pb2.DESERIALIZE_GRAPH,  # deserialize graph from path via vineyard
     ]
 
     def __init__(self, request_iterator: Sequence[message_pb2.RunStepRequest]):
