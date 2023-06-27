@@ -9,7 +9,7 @@ on:
       - dev/docs
     tags:
       - "v*"
-  pull_request_target:
+  pull_request:
     branches:
       - main
       - docs
@@ -49,12 +49,12 @@ jobs:
         node-version: 16
 
     - name: Leave a marker
-      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request_target' }}
+      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request' }}
       run: |
         touch ${GITHUB_WORKSPACE}/preview-the-docs.mark
 
     - name: Leave the comment on pull request when started
-      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request_target' }}
+      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request' }}
       uses: actions-cool/maintain-one-comment@v3
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -171,7 +171,7 @@ jobs:
         fi
 
     - name: Preview using surge
-      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request_target' }}
+      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request' }}
       run: |
         npm install -g surge
         surge ./docs/_build/latest/html \
@@ -179,7 +179,7 @@ jobs:
               --token ${{ secrets.SURGE_TOKEN }}
 
     - name: Leave the comment on pull request when succeed
-      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request_target' }}
+      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request' }}
       uses: actions-cool/maintain-one-comment@v3
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
