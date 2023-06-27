@@ -12,5 +12,5 @@ dbms:
       listenAddress: ":7474" 
   defaultGraph: "modern" 
   server:
-    port: 10000
+    http_port: 10001
     shared_num: 1

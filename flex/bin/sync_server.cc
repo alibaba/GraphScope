@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
       } else {
         LOG(INFO) << "shared_num not found, use default value 1";
       }
-      auto http_port_node = dbms_node["port"];
+      auto http_port_node = server_node["port"];
       if (http_port_node) {
         http_port = http_port_node.as<uint16_t>();
       } else {

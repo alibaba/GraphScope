@@ -64,6 +64,8 @@ mkdir -p "${DB_LOG_PATH}"
 
 HQPS_ENGINE_CONTAINER_NAME="hqps-server"
 
+IR_CONF_PROPERT_FILE="${DB_HOME}/conf/ir.compiler.properties"
+
 
 # parse the args and set the variables.
 # start-server
@@ -309,16 +311,16 @@ function do_service(){
     kill_server
     kill_compiler
     info "start server"
+    cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec -d engine  bash -c \"/GraphScope/flex/build/bin/sync_server -c ${INTERACTIVE_YAML}"
+    cmd=${cmd}" --grape-data-path ${docker_graph_dir_path} "
+    cmd=${cmd}" --db-home ${DB_HOME} "
     #if stored_procedure is specified
     if [ ! -z "${graph_stored_procedures}" ]; then
-      cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec -it engine  bash -c \"/GraphScope/flex/build/bin/sync_server -c ${INTERACTIVE_YAML}  \
-       --grape-data-path ${docker_graph_dir_path} -p ${graph_stored_procedures} > ${HPQS_SERVER_LOG} 2>&1 &\""
-    else 
-      cmd="docker-compose -f ${HQPS_COMPOSE_YAML} exec -d engine /GraphScope/flex/build/bin/sync_server -c ${INTERACTIVE_YAML}"
-      cmd=${cmd}" --grape-data-path ${docker_graph_dir_path} > ${HPQS_SERVER_LOG} 2>&1 &"
+        cmd=${cmd}" -p ${graph_stored_procedures}"
     fi
+    cmd=${cmd}" > ${HPQS_SERVER_LOG} 2>&1\""
     info "Running cmd: ${cmd}"
-    eval `${cmd}`
+    eval ${cmd}
     sleep 2
     check_server_up
 
@@ -328,7 +330,11 @@ function do_service(){
 
     # pass the path to ir.compiler.properties for this graph.
 
-
+    #check ir_conf_properties_file exists
+    if [ ! -f "${IR_CONF_PROPERT_FILE}" ]; then
+      err "ir_conf_properties_file ${IR_CONF_PROPERT_FILE} does not exist"
+      exit 1
+    fi
     start_compiler ${IR_CONF_PROPERT_FILE}
 
     check_compiler_up
