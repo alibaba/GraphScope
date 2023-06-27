@@ -24,7 +24,7 @@ public class IdLabelTest {
     public void g_V_id_test() {
         Traversal traversal = g.V().id();
         Step step = traversal.asAdmin().getEndStep();
-        ProjectOp op = (ProjectOp) StepTransformFactory.ID_STEP.apply(step);
+        ProjectOp op = (ProjectOp) StepTransformFactory.VALUES_STEP.apply(step);
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("@.~id", exprWithAlias.get(0).getValue0());
@@ -35,7 +35,7 @@ public class IdLabelTest {
     public void g_V_label_test() {
         Traversal traversal = g.V().label();
         Step step = traversal.asAdmin().getEndStep();
-        ProjectOp op = (ProjectOp) StepTransformFactory.LABEL_STEP.apply(step);
+        ProjectOp op = (ProjectOp) StepTransformFactory.VALUES_STEP.apply(step);
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("@.~label", exprWithAlias.get(0).getValue0());

@@ -30,7 +30,6 @@ from graphscope.proto.error_codes_pb2 import OK
 
 from gscoordinator.monitor import Monitor
 from gscoordinator.object_manager import GraphMeta
-from gscoordinator.object_manager import GremlinResultSet
 from gscoordinator.object_manager import LibMeta
 from gscoordinator.utils import ANALYTICAL_BUILTIN_SPACE
 from gscoordinator.utils import ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH
@@ -441,11 +440,7 @@ class OperationExecutor:
         for op in dag_def.op:
             self._key_to_op[op.key] = op
             op_pre_process(op, self._op_result_pool, self._key_to_op)
-            if op.op == types_pb2.GREMLIN_QUERY:
-                op_result = self._execute_gremlin_query(op)
-            elif op.op == types_pb2.FETCH_GREMLIN_RESULT:
-                op_result = self._fetch_gremlin_result(op)
-            elif op.op == types_pb2.SUBGRAPH:
+            if op.op == types_pb2.SUBGRAPH:
                 op_result = self._gremlin_to_subgraph(op)
             else:
                 raise RuntimeError("Unsupported op type: " + str(op.op))
@@ -453,39 +448,6 @@ class OperationExecutor:
             # record op result
             self._op_result_pool[op.key] = op_result
         return message_pb2.RunStepResponse(head=response_head), []
-
-    def _execute_gremlin_query(self, op: op_def_pb2.OpDef):
-        logger.debug("execute gremlin query")
-        message = op.attr[types_pb2.GIE_GREMLIN_QUERY_MESSAGE].s.decode()
-        request_options = None
-        if types_pb2.GIE_GREMLIN_REQUEST_OPTIONS in op.attr:
-            request_options = json.loads(
-                op.attr[types_pb2.GIE_GREMLIN_REQUEST_OPTIONS].s.decode()
-            )
-        object_id = op.attr[types_pb2.VINEYARD_ID].i
-        gremlin_client = self._object_manager.get(object_id)
-        rlt = gremlin_client.submit(message, request_options=request_options)
-        logger.debug("put %s, client %s", op.key, gremlin_client)
-        self._object_manager.put(op.key, GremlinResultSet(op.key, rlt))
-        return op_def_pb2.OpResult(code=OK, key=op.key)
-
-    def _fetch_gremlin_result(self, op: op_def_pb2.OpDef):
-        fetch_result_type = op.attr[types_pb2.GIE_GREMLIN_FETCH_RESULT_TYPE].s.decode()
-        key_of_parent_op = op.parents[0]
-        result_set = self._object_manager.get(key_of_parent_op).result_set
-        if fetch_result_type == "one":
-            rlt = result_set.one()
-        elif fetch_result_type == "all":
-            rlt = result_set.all().result()
-        else:
-            raise RuntimeError("Not supported fetch result type: " + fetch_result_type)
-        # Large data should be fetched use gremlin pagination
-        # meta = op_def_pb2.OpResult.Meta(has_large_result=True)
-        return op_def_pb2.OpResult(
-            code=OK,
-            key=op.key,
-            result=pickle.dumps(rlt),
-        )
 
     def _gremlin_to_subgraph(self, op: op_def_pb2.OpDef):
         gremlin_script = op.attr[types_pb2.GIE_GREMLIN_QUERY_MESSAGE].s.decode()
