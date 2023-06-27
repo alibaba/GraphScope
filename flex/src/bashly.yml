@@ -1,0 +1,32 @@
+name: flexbuild
+help: Utility script to build artifacts for GraphScope Flex
+version: 0.1.0
+
+# environment_variables:
+# - name: api_key
+#   help: Set your API key
+
+args:
+- name: source
+  help: SOURCE_DIR to build
+  default: .
+
+flags:
+- long: --app
+  short: -a
+  arg: atype
+  required: true
+  allowed: [db, olap]
+  help: Application type.
+
+- long: --components
+  short: -c
+  arg: cpns
+  required: true
+  help: Selected components for Flex build
+  allowed: [cppsp, hiactor, mcsr, grape]
+  repeatable: true
+
+examples:
+- ./flexbuild --app db -c cppsp -c hiactor
+- ./flexbuild --app olap --components grape
