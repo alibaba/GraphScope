@@ -25,6 +25,7 @@ import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 
 import java.util.*;
+import java.util.stream.*;
 
 // values("name") -> key: head, value: "marko"
 // valueMap("name") -> key: head, value: {name, "marko"}
@@ -59,35 +60,7 @@ public class ProjectResultParser extends LabelParser implements GremlinResultPar
                                         (Map)
                                                 projectResult.computeIfAbsent(
                                                         tag, k1 -> new HashMap<>());
-                                projectTags.forEach(
-                                        (k, v) -> {
-                                            if (!(v instanceof EmptyValue)) {
-                                                String nameOrId = null;
-                                                if (k
-                                                        instanceof
-                                                        List) { // valueMap("name") -> Map<["",
-                                                    // "name"], value>
-                                                    nameOrId = (String) ((List) k).get(1);
-                                                } else if (k
-                                                        instanceof
-                                                        String) { // valueMap() -> Map<"name",
-                                                    // value>
-                                                    nameOrId = (String) k;
-                                                } else if (k
-                                                        instanceof
-                                                        Number) { // valueMap() -> Map<1, value>
-                                                    nameOrId = String.valueOf(k);
-                                                }
-                                                if (nameOrId == null || nameOrId.isEmpty()) {
-                                                    throw new GremlinResultParserException(
-                                                            "map value should have property"
-                                                                    + " key");
-                                                }
-                                                String property = getPropertyName(nameOrId);
-                                                tagEntry.put(
-                                                        property, Collections.singletonList(v));
-                                            }
-                                        });
+                                tagEntry.putAll(flatMap(projectTags));
                             } else {
                                 if (!(parseEntry instanceof EmptyValue)) {
                                     projectResult.put(tag, parseEntry);
@@ -102,6 +75,42 @@ public class ProjectResultParser extends LabelParser implements GremlinResultPar
         } else {
             return parseLabel;
         }
+    }
+
+    // {~label: "person", ~all: {name: "marko"}} -> {~label: "person", name: "marko"}
+    private Map<String, Object> flatMap(Map<String, Object> map) {
+        Map<String, Object> result = new HashMap<>();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            Object k = entry.getKey();
+            Object v = entry.getValue();
+            if (v instanceof Map) {
+                result.putAll(flatMap((Map<String, Object>) v));
+            } else {
+                if (!(v instanceof EmptyValue)) {
+                    String nameOrId = null;
+                    if (k instanceof List) { // valueMap("name") -> Map<["", "name"], value>
+                        nameOrId = (String) ((List) k).get(1);
+                    } else if (k
+                            instanceof
+                            String) { // valueMap() -> Map<"name",
+                        // value>
+                        nameOrId = (String) k;
+                    } else if (k
+                            instanceof
+                            Number) { // valueMap() -> Map<1, value>
+                        nameOrId = String.valueOf(k);
+                    }
+                    if (nameOrId == null || nameOrId.isEmpty()) {
+                        throw new GremlinResultParserException(
+                                "map value should have property"
+                                        + " key");
+                    }
+                    String property = getPropertyName(nameOrId);
+                    result.put(property, Collections.singletonList(v));
+                }
+            }
+        }
+        return result;
     }
 
     // a_1 -> a, i.e. g.V().as("a").select("a")

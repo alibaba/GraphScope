@@ -94,6 +94,29 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                 } else if (step instanceof IdStep) {
                     return (new ExprResult())
                             .addTagExpr("", Optional.of("@." + T.id.getAccessor())); // @.~id
+                } else if (step instanceof ElementMapStep) {  // elementMap(..)
+                    StringBuilder stringBuilder = new StringBuilder();
+                    stringBuilder.append("{");
+                    // id
+                    stringBuilder.append("@." + ArgUtils.ID + ",");
+                    // label
+                    stringBuilder.append("@." + ArgUtils.LABEL + ",");
+                    // properties
+                    String[] mapKeys = ((ElementMapStep) step).getPropertyKeys();
+                    if (mapKeys.length > 0) {
+                        for (int i = 0; i < mapKeys.length; ++i) {
+                          if (i > 0) {
+                              stringBuilder.append(",");
+                          }
+                          stringBuilder.append("@." + mapKeys[i]);
+                        }
+                    } else {
+                        // elementMap() -> @.~all
+                         stringBuilder.append("@." + ArgUtils.PROPERTY_ALL);
+                    }
+                    stringBuilder.append("}");
+                    return (new ExprResult())
+                            .addTagExpr("", Optional.of(stringBuilder.toString()));
                 } else if (step instanceof SelectOneStep || step instanceof SelectStep) {
                     // select('a'), select('a').by()
                     // select('a').by('name'/values/valueMap)
