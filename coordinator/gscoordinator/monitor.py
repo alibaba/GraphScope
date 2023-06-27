@@ -55,8 +55,6 @@ op_name_dict = {
     22: "INDUCE_SUBGRAPH",
     23: "UNLOAD_CONTEXT",
     32: "SUBGRAPH",
-    33: "GREMLIN_QUERY",
-    34: "FETCH_GREMLIN_RESULT",
     46: "DATA_SOURCE",
     47: "DATA_SINK",
     50: "CONTEXT_TO_NUMPY",

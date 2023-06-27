@@ -71,7 +71,6 @@ enum OutputType {
   VINEYARD_TENSOR = 6;
   VINEYARD_DATAFRAME = 7;
   INTERACTIVE_QUERY = 8;
-  GREMLIN_RESULTS = 9;
   LEARNING_GRAPH = 10;
   NULL_OUTPUT = 101;
 };
@@ -108,9 +107,6 @@ enum OperationType {
   DESERIALIZE_GRAPH = 26; // desrialize graph
 
   SUBGRAPH = 32;  // subgraph in interactive query
-  GREMLIN_QUERY = 33;  // queries on gremlin engine
-  FETCH_GREMLIN_RESULT = 34;
-
 
   DATA_SOURCE = 46;  // loader
   DATA_SINK = 47;
@@ -170,7 +166,6 @@ enum ParamKey {
   GRAPH_TEMPLATE_CLASS = 23;
 
   REPARTITION_STRATEGY = 24;
-  NFRAG = 25;
   PARAM = 26;
 
   DISTRIBUTED = 27;

@@ -144,13 +144,6 @@ class _FetchHandler(object):
             return DynamicVertexDataContext(context_dag_node, ret["context_key"])
         return Context(context_dag_node, ret["context_key"], ret["context_schema"])
 
-    def _rebuild_gremlin_results(self, seq, op_result: op_def_pb2.OpResult):
-        from graphscope.interactive.query import ResultSet
-
-        # get result set node as base
-        result_set_dag_node = self._fetches[seq]
-        return ResultSet(result_set_dag_node)
-
     def wrap_results(self, response: message_pb2.RunStepResponse):  # noqa: C901
         rets = list()
         for seq, op in enumerate(self._ops):
@@ -159,8 +152,6 @@ class _FetchHandler(object):
                     if op.output_types == types_pb2.RESULTS:
                         if op.type == types_pb2.RUN_APP:
                             rets.append(self._rebuild_context(seq, op_result))
-                        elif op.type == types_pb2.FETCH_GREMLIN_RESULT:
-                            rets.append(pickle.loads(op_result.result))
                         elif op.type == types_pb2.REPORT_GRAPH:
                             rets.append(OutArchive(op_result.result))
                         else:
@@ -168,8 +159,6 @@ class _FetchHandler(object):
                             rets.append(
                                 op_result.result.decode("utf-8", errors="ignore")
                             )
-                    if op.output_types == types_pb2.GREMLIN_RESULTS:
-                        rets.append(self._rebuild_gremlin_results(seq, op_result))
                     if op.output_types == types_pb2.GRAPH:
                         rets.append(self._rebuild_graph(seq, op_result))
                     if op.output_types == types_pb2.APP:

@@ -241,7 +241,7 @@ def test_demo_with_default_session(ogbn_small_script):
         ],
     )
 
-    # hyperparameters config.
+    # hyperparameter config.
     train_gcn(
         lg,
         node_type="paper",
@@ -289,8 +289,8 @@ def test_modern_graph(parallel_executors, num_workers, threads_per_worker):
 
         g0 = load_modern_graph(session)
         interactive0 = session.gremlin(g0)
-        nodes = interactive0.execute(vquery).all()
-        edges = interactive0.execute(equery).all()
+        nodes = interactive0.execute(vquery).all().result()
+        edges = interactive0.execute(equery).all().result()
 
         logger.info("nodes = %s", nodes)
         logger.info("edges = %s", edges)
@@ -300,8 +300,8 @@ def test_modern_graph(parallel_executors, num_workers, threads_per_worker):
         g1 = interactive0.subgraph("g.E()")
         interactive0.close()
         interactive1 = session.gremlin(g1)
-        subgraph_nodes = interactive1.execute(vquery).all()
-        subgraph_edges = interactive1.execute(equery).all()
+        subgraph_nodes = interactive1.execute(vquery).all().result()
+        subgraph_edges = interactive1.execute(equery).all().result()
         logger.info("subgraph nodes = %s", subgraph_nodes)
         logger.info("subgraph edges = %s", subgraph_edges)
         interactive1.close()
