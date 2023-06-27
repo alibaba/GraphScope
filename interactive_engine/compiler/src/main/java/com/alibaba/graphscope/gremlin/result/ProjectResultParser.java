@@ -23,9 +23,10 @@ import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertyMapStep;
+import org.apache.tinkerpop.gremlin.structure.T;
 
 import java.util.*;
-import java.util.stream.*;
 
 // values("name") -> key: head, value: "marko"
 // valueMap("name") -> key: head, value: {name, "marko"}
@@ -47,7 +48,7 @@ public class ProjectResultParser extends LabelParser implements GremlinResultPar
     @Override
     public Object parseFrom(IrResult.Results results) {
         IrResult.Record record = results.getRecord();
-        Map<String, Object> projectResult = new LinkedHashMap<>();
+        Map<Object, Object> projectResult = new LinkedHashMap<>();
         record.getColumnsList()
                 .forEach(
                         column -> {
@@ -59,7 +60,7 @@ public class ProjectResultParser extends LabelParser implements GremlinResultPar
                                 Map tagEntry =
                                         (Map)
                                                 projectResult.computeIfAbsent(
-                                                        tag, k1 -> new HashMap<>());
+                                                        tag, k1 -> new LinkedHashMap<>());
                                 tagEntry.putAll(flatMap(projectTags));
                             } else {
                                 if (!(parseEntry instanceof EmptyValue)) {
@@ -78,8 +79,8 @@ public class ProjectResultParser extends LabelParser implements GremlinResultPar
     }
 
     // {~label: "person", ~all: {name: "marko"}} -> {~label: "person", name: "marko"}
-    private Map<String, Object> flatMap(Map<String, Object> map) {
-        Map<String, Object> result = new HashMap<>();
+    private Map<Object, Object> flatMap(Map<String, Object> map) {
+        Map<Object, Object> result = new LinkedHashMap<>();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             Object k = entry.getKey();
             Object v = entry.getValue();
@@ -90,23 +91,26 @@ public class ProjectResultParser extends LabelParser implements GremlinResultPar
                     String nameOrId = null;
                     if (k instanceof List) { // valueMap("name") -> Map<["", "name"], value>
                         nameOrId = (String) ((List) k).get(1);
-                    } else if (k
-                            instanceof
-                            String) { // valueMap() -> Map<"name",
+                    } else if (k instanceof String) { // valueMap() -> Map<"name",
                         // value>
                         nameOrId = (String) k;
-                    } else if (k
-                            instanceof
-                            Number) { // valueMap() -> Map<1, value>
+                    } else if (k instanceof Number) { // valueMap() -> Map<1, value>
                         nameOrId = String.valueOf(k);
                     }
                     if (nameOrId == null || nameOrId.isEmpty()) {
                         throw new GremlinResultParserException(
-                                "map value should have property"
-                                        + " key");
+                                "map value should have property" + " key");
                     }
                     String property = getPropertyName(nameOrId);
-                    result.put(property, Collections.singletonList(v));
+                    if (step instanceof PropertyMapStep) {
+                        result.put(property, Collections.singletonList(v));
+                    } else if (property.equals(T.id.getAccessor())) {
+                        result.put(T.id, v);
+                    } else if (property.equals(T.label.getAccessor())) {
+                        result.put(T.label, v);
+                    } else {
+                        result.put(property, v);
+                    }
                 }
             }
         }
