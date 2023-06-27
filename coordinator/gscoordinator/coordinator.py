@@ -59,7 +59,7 @@ from gscoordinator.dag_manager import DAGManager
 from gscoordinator.dag_manager import GSEngine
 from gscoordinator.kubernetes_launcher import KubernetesClusterLauncher
 from gscoordinator.monitor import Monitor
-from gscoordinator.object_manager import InteractiveQueryManager
+from gscoordinator.object_manager import InteractiveInstanceManager
 from gscoordinator.object_manager import LearningInstanceManager
 from gscoordinator.object_manager import ObjectManager
 from gscoordinator.op_executor import OperationExecutor
@@ -454,7 +454,7 @@ class CoordinatorServiceServicer(
             proc = self._launcher.create_interactive_instance(
                 object_id, schema_path, params
             )
-            gie_manager = InteractiveQueryManager(object_id)
+            gie_manager = InteractiveInstanceManager(object_id)
             # Put it to object_manager to ensure it could be killed during coordinator cleanup
             # If coordinator is shutdown by force when creating interactive instance
             self._object_manager.put(object_id, gie_manager)

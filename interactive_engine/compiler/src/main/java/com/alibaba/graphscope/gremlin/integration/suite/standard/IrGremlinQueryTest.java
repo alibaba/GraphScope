@@ -26,11 +26,16 @@ import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Column;
+import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
@@ -54,6 +59,16 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Object>
             get_g_V_matchXa_out_b__b_in_cX_select_c_out_dedup_values();
+
+    public abstract Traversal<Vertex, String> get_g_V_has_name_marko_label();
+
+    public abstract Traversal<Vertex, Object> get_g_V_has_name_marko_select_by_T_label();
+
+    public abstract Traversal<Vertex, Object> get_g_V_has_name_marko_select_by_label();
+
+    public abstract Traversal<Edge, String> get_g_E_has_weight_0_5_f_label();
+
+    public abstract Traversal<Vertex, Map<String, Object>> get_g_V_a_out_b_select_a_b_by_label_id();
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
@@ -211,6 +226,47 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals(2, counter);
     }
 
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_has_name_marko_label() {
+        final Traversal<Vertex, String> traversal = get_g_V_has_name_marko_label();
+        printTraversalForm(traversal);
+        Assert.assertEquals("person", traversal.next());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_E_has_weight_0_5_f_label() {
+        final Traversal<Edge, String> traversal = get_g_E_has_weight_0_5_f_label();
+        printTraversalForm(traversal);
+        Assert.assertEquals("knows", traversal.next());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_has_name_marko_select_by_T_label() {
+        final Traversal<Vertex, Object> traversal = get_g_V_has_name_marko_select_by_T_label();
+        printTraversalForm(traversal);
+        Assert.assertEquals("person", traversal.next());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_has_name_marko_select_by_label() {
+        final Traversal<Vertex, Object> traversal = get_g_V_has_name_marko_select_by_label();
+        printTraversalForm(traversal);
+        Assert.assertEquals("person", traversal.next());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_a_out_b_select_a_b_by_label_id() {
+        final Traversal<Vertex, Map<String, Object>> traversal =
+                get_g_V_a_out_b_select_a_b_by_label_id();
+        printTraversalForm(traversal);
+        Assert.assertEquals("{a=person, b=lop}", traversal.next().toString());
+    }
+
     public static class Traversals extends IrGremlinQueryTest {
 
         @Override
@@ -270,6 +326,38 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                     .out("knows")
                     .dedup()
                     .values("name");
+        }
+
+        @Override
+        public Traversal<Vertex, String> get_g_V_has_name_marko_label() {
+            return g.V().has("name", "marko").label();
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_has_name_marko_select_by_T_label() {
+            return g.V().has("name", "marko").as("a").select("a").by(T.label);
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_has_name_marko_select_by_label() {
+            return g.V().has("name", "marko").as("a").select("a").by(__.label());
+        }
+
+        @Override
+        public Traversal<Edge, String> get_g_E_has_weight_0_5_f_label() {
+            return g.E().has("weight", 0.5f).label();
+        }
+
+        @Override
+        public Traversal<Vertex, Map<String, Object>> get_g_V_a_out_b_select_a_b_by_label_id() {
+            return g.V().has("name", "marko")
+                    .as("a")
+                    .out()
+                    .has("name", "lop")
+                    .as("b")
+                    .select("a", "b")
+                    .by(label())
+                    .by("name");
         }
     }
 }
