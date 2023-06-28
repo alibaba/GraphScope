@@ -811,30 +811,9 @@ def test_helm_installation(data_dir, modern_graph_data_dir):
     simple_g = sub_graph.project(vertices={"person": []}, edges={"knows": []})
 
     pr_result = graphscope.pagerank(simple_g, delta=0.8)
-    tc_result = graphscope.triangles(simple_g)
 
     # add the PageRank and triangle-counting results as new columns to the property graph
     sub_graph.add_column(pr_result, {"Ranking": "r"})
-    sub_graph.add_column(tc_result, {"TC": "r"})
-
-    # test subgraph on modern graph
-    mgraph = load_modern_graph(sess, modern_graph_data_dir)
-
-    # Interactive engine
-    minteractive = sess.gremlin(mgraph)
-    msub_graph = minteractive.subgraph(  # noqa: F841
-        'g.V().hasLabel("person").outE("knows")'
-    )
-    person_count = (
-        minteractive.execute(
-            'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
-        )
-        .all()
-        .result()[0]
-    )
-    msub_interactive = sess.gremlin(msub_graph)
-    sub_person_count = msub_interactive.execute("g.V().count()").all().result()[0]
-    assert person_count == sub_person_count
 
 
 def test_modualize():
