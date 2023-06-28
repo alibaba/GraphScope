@@ -772,7 +772,7 @@ Prepare data and engine for learning<div class="summary-down docutils">
 <div class="summary-up docutils">
 <svg version="1.1" width="24" height="24" class="octicon octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
 </summary><div class="summary-content card-body docutils">
-<p class="card-text">In our example, we train a Graph Convolutional Network (GCN) model to classify the nodes (papers) into 349 categories, each representing a venue (e.g., pre-print or conference). To accomplish this, we first launch a learning engine and construct a graph with features, following the previous step.</p>
+<p class="card-text">In our example, we train a supervised GraphSAGE model to classify the nodes (papers) into 349 categories, each representing a venue (e.g., pre-print or conference). To accomplish this, we first launch a learning engine and construct a graph with features, following the previous step.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define the features for learning</span>
 <span class="n">paper_features</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;feat_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">128</span><span class="p">)]</span>
 
@@ -810,8 +810,8 @@ Define the training process and run it<div class="summary-down docutils">
 <span class="kn">from</span> <span class="nn">graphscope.learning.examples</span> <span class="kn">import</span> <span class="n">EgoSAGESupervisedDataLoader</span>
 <span class="kn">from</span> <span class="nn">graphscope.learning.examples.tf.trainer</span> <span class="kn">import</span> <span class="n">LocalTrainer</span>
 
-<span class="c1"># supervised GCN.</span>
-<span class="k">def</span> <span class="nf">train_gcn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node_type</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">,</span> <span class="n">class_num</span><span class="p">,</span> <span class="n">features_num</span><span class="p">,</span>
+<span class="c1"># supervised GraphSAGE.</span>
+<span class="k">def</span> <span class="nf">train_sage</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node_type</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">,</span> <span class="n">class_num</span><span class="p">,</span> <span class="n">features_num</span><span class="p">,</span>
               <span class="n">hops_num</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">nbrs_num</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
               <span class="n">hidden_dim</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">in_drop_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
 <span class="p">):</span>
@@ -852,7 +852,7 @@ Define the training process and run it<div class="summary-down docutils">
     <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">train_data</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">)</span>
     <span class="n">trainer</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">test_data</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">test_acc</span><span class="p">)</span>
 
-<span class="n">train_gcn</span><span class="p">(</span><span class="n">lg</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="n">edge_type</span><span class="o">=</span><span class="s2">&quot;cites&quot;</span><span class="p">,</span>
+<span class="n">train_sage</span><span class="p">(</span><span class="n">lg</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="n">edge_type</span><span class="o">=</span><span class="s2">&quot;cites&quot;</span><span class="p">,</span>
           <span class="n">class_num</span><span class="o">=</span><span class="mi">349</span><span class="p">,</span>  <span class="c1"># output dimension</span>
           <span class="n">features_num</span><span class="o">=</span><span class="mi">130</span><span class="p">,</span>  <span class="c1"># input dimension, 128 + kcore + triangle count</span>
 <span class="p">)</span>
@@ -931,8 +931,96 @@ Example: Run Interactive Queries in GraphScope<div class="summary-down docutils"
 </details></div>
 <div class="section" id="graph-learning-quick-start">
 <h2>Graph Learning Quick Start<a class="headerlink" href="#graph-learning-quick-start" title="Permalink to this heading">#</a></h2>
-<p>TODO(LiSu):</p>
+<p>GNN model training with GraphScope is easy and straightforward. You can use the <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> package to train a GNN model on your local machine. Note that
+<code class="docutils literal notranslate"><span class="pre">tensorflow</span></code> is required to run the following example.</p>
+<details class="sphinx-bs dropdown card mb-3">
+<summary class="summary-title card-header">
+Example: Training GraphSAGE Model in GraphScope<div class="summary-down docutils">
+<svg version="1.1" width="24" height="24" class="octicon octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
+<div class="summary-up docutils">
+<svg version="1.1" width="24" height="24" class="octicon octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
+</summary><div class="summary-content card-body docutils">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+<span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_ogbn_mag</span>
+
+<span class="n">g</span> <span class="o">=</span> <span class="n">load_ogbn_mag</span><span class="p">()</span>
+
+<span class="c1"># define the features for learning</span>
+<span class="n">paper_features</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;feat_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">128</span><span class="p">)]</span>
+
+<span class="c1"># launch a learning engine.</span>
+<span class="n">lg</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">graphlearn</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="n">paper_features</span><span class="p">)],</span>
+                  <span class="n">edges</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="s2">&quot;cites&quot;</span><span class="p">,</span> <span class="s2">&quot;paper&quot;</span><span class="p">)],</span>
+                  <span class="n">gen_labels</span><span class="o">=</span><span class="p">[</span>
+                      <span class="p">(</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">75</span><span class="p">)),</span>
+                      <span class="p">(</span><span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="mi">75</span><span class="p">,</span> <span class="mi">85</span><span class="p">)),</span>
+                      <span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="mi">85</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
+                  <span class="p">])</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># https://www.tensorflow.org/guide/migrate</span>
+    <span class="kn">import</span> <span class="nn">tensorflow.compat.v1</span> <span class="k">as</span> <span class="nn">tf</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">disable_v2_behavior</span><span class="p">()</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="kn">import</span> <span class="nn">graphscope.learning</span>
+<span class="kn">from</span> <span class="nn">graphscope.learning.examples</span> <span class="kn">import</span> <span class="n">EgoGraphSAGE</span>
+<span class="kn">from</span> <span class="nn">graphscope.learning.examples</span> <span class="kn">import</span> <span class="n">EgoSAGESupervisedDataLoader</span>
+<span class="kn">from</span> <span class="nn">graphscope.learning.examples.tf.trainer</span> <span class="kn">import</span> <span class="n">LocalTrainer</span>
+
+<span class="c1"># supervised GraphSAGE</span>
+<span class="k">def</span> <span class="nf">train_sage</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node_type</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">,</span> <span class="n">class_num</span><span class="p">,</span> <span class="n">features_num</span><span class="p">,</span>
+              <span class="n">hops_num</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">nbrs_num</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+              <span class="n">hidden_dim</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">in_drop_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">graphscope</span><span class="o">.</span><span class="n">learning</span><span class="o">.</span><span class="n">reset_default_tf_graph</span><span class="p">()</span>
+
+    <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">features_num</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">hidden_dim</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">hops_num</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">class_num</span><span class="p">]</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">EgoGraphSAGE</span><span class="p">(</span><span class="n">dimensions</span><span class="p">,</span> <span class="n">act_func</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="n">in_drop_rate</span><span class="p">)</span>
+
+    <span class="c1"># prepare train dataset</span>
+    <span class="n">train_data</span> <span class="o">=</span> <span class="n">EgoSAGESupervisedDataLoader</span><span class="p">(</span>
+        <span class="n">graph</span><span class="p">,</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">learning</span><span class="o">.</span><span class="n">Mask</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
+        <span class="n">node_type</span><span class="o">=</span><span class="n">node_type</span><span class="p">,</span> <span class="n">edge_type</span><span class="o">=</span><span class="n">edge_type</span><span class="p">,</span> <span class="n">nbrs_num</span><span class="o">=</span><span class="n">nbrs_num</span><span class="p">,</span> <span class="n">hops_num</span><span class="o">=</span><span class="n">hops_num</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">train_embedding</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">train_data</span><span class="o">.</span><span class="n">src_ego</span><span class="p">)</span>
+    <span class="n">train_labels</span> <span class="o">=</span> <span class="n">train_data</span><span class="o">.</span><span class="n">src_ego</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">labels</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">sparse_softmax_cross_entropy_with_logits</span><span class="p">(</span>
+            <span class="n">labels</span><span class="o">=</span><span class="n">train_labels</span><span class="p">,</span> <span class="n">logits</span><span class="o">=</span><span class="n">train_embedding</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">AdamOptimizer</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">)</span>
+
+    <span class="c1"># prepare test dataset</span>
+    <span class="n">test_data</span> <span class="o">=</span> <span class="n">EgoSAGESupervisedDataLoader</span><span class="p">(</span>
+        <span class="n">graph</span><span class="p">,</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">learning</span><span class="o">.</span><span class="n">Mask</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
+        <span class="n">node_type</span><span class="o">=</span><span class="n">node_type</span><span class="p">,</span> <span class="n">edge_type</span><span class="o">=</span><span class="n">edge_type</span><span class="p">,</span> <span class="n">nbrs_num</span><span class="o">=</span><span class="n">nbrs_num</span><span class="p">,</span> <span class="n">hops_num</span><span class="o">=</span><span class="n">hops_num</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">test_embedding</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">test_data</span><span class="o">.</span><span class="n">src_ego</span><span class="p">)</span>
+    <span class="n">test_labels</span> <span class="o">=</span> <span class="n">test_data</span><span class="o">.</span><span class="n">src_ego</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">labels</span>
+    <span class="n">test_indices</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">test_embedding</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">output_type</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">test_acc</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">div</span><span class="p">(</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">test_indices</span><span class="p">,</span> <span class="n">test_labels</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)),</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">test_labels</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="c1"># train and test</span>
+    <span class="n">trainer</span> <span class="o">=</span> <span class="n">LocalTrainer</span><span class="p">()</span>
+    <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">train_data</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">)</span>
+    <span class="n">trainer</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">test_data</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">test_acc</span><span class="p">)</span>
+
+<span class="n">train_sage</span><span class="p">(</span><span class="n">lg</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="n">edge_type</span><span class="o">=</span><span class="s2">&quot;cites&quot;</span><span class="p">,</span>
+          <span class="n">class_num</span><span class="o">=</span><span class="mi">349</span><span class="p">,</span>  <span class="c1"># output dimension</span>
+          <span class="n">features_num</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>  <span class="c1"># input dimension</span>
+<span class="p">)</span>
+
+</pre></div>
 </div>
+</div>
+</details></div>
 </div>
 
         </article>
