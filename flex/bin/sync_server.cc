@@ -68,8 +68,7 @@ int main(int argc, char** argv) {
   bpo::options_description desc("Usage:");
   desc.add_options()("help,h", "Display help messages")(
       "server-config,c", bpo::value<std::string>(),
-      "path to server config yaml")("plugin-dir,p", bpo::value<std::string>(),
-                                    "directory where plugins exists")(
+      "path to server config yaml")(
       "codegen-dir,d",
       bpo::value<std::string>()->default_value("/tmp/codegen/"),
       "codegen working directory")("codegen-bin,b", bpo::value<std::string>(),
@@ -91,6 +90,7 @@ int main(int argc, char** argv) {
 
   uint32_t shard_num = 1;
   uint16_t http_port = 10000;
+  std::string plugin_dir;
   if (vm.count("server-config") != 0) {
     std::string server_config_path = vm["server-config"].as<std::string>();
     // check file exists
@@ -118,6 +118,12 @@ int main(int argc, char** argv) {
       } else {
         LOG(INFO) << "http_port not found, use default value 10000";
       }
+      auto plugin_dir_node = server_node["plugin_dir"];
+      if (plugin_dir_node) {
+        plugin_dir = plugin_dir_node.as<std::string>();
+      } else {
+        LOG(INFO) << "plugin_dir not found";
+      }
     } else {
       LOG(ERROR) << "dbms config not found";
       return 0;
@@ -127,6 +133,7 @@ int main(int argc, char** argv) {
   }
   LOG(INFO) << "shard_num: " << shard_num;
   LOG(INFO) << "http_port: " << http_port;
+  LOG(INFO) << "plugin_dir: " << plugin_dir;
 
   std::string codegen_dir = vm["codegen-dir"].as<std::string>();
 
@@ -178,11 +185,7 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  // add plugins after graph store init
-  if (vm.count("plugin-dir") == 0) {
-    LOG(INFO) << "plugin-dir is not specified" << std::endl;
-  } else {
-    std::string plugin_dir = vm["plugin-dir"].as<std::string>();
+  if (!plugin_dir.empty()) {
     LOG(INFO) << "Load plugins from dir: " << plugin_dir;
     gs::StoredProcedureManager::get().LoadFromPluginDir(plugin_dir);
   }

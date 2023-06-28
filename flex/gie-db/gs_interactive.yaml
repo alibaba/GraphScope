@@ -14,3 +14,4 @@ dbms:
   server:
     port: 10001
     shared_num: 1
+    plugin_dir: "/home/zhanglei/code/GraphScope/flex/gie-db/plugins/"

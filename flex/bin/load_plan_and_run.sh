@@ -149,7 +149,7 @@ compile_so(){
         echo "Expect a .pb or .cc file"
         exit 1
     fi
-    cur_dir=${work_dir}"/"
+    cur_dir=${work_dir}
     mkdir -p ${cur_dir}
     output_cc_path=${cur_dir}"/"${query_name}".cc"
     if [[ "$(uname)" == "Linux" ]]; then
