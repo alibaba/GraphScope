@@ -53,6 +53,7 @@ public class GremlinResultAnalyzer {
                     || Utils.equalClass(step, SelectStep.class)
                     || Utils.equalClass(step, PropertiesStep.class)
                     || Utils.equalClass(step, PropertyMapStep.class)
+                    || Utils.equalClass(step, ElementMapStep.class)
                     || Utils.equalClass(step, TraversalMapStep.class)
                     || Utils.equalClass(step, MatchStep.class)
                     || Utils.equalClass(step, ExprStep.class)
