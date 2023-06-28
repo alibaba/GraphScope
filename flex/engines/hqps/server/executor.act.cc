@@ -6,16 +6,13 @@
 #include "flex/engines/hqps/server/stored_procedure.h"
 #include "flex/utils/app_utils.h"
 
-
 #include <seastar/core/print.hh>
 #include "proto_generated_gie/physical.pb.h"
 #include "proto_generated_gie/results.pb.h"
 
-
 #define RECEIVE_JOB_REQUEST
 
 namespace snb::ic {
-
 
 executor::~executor() {}
 
@@ -48,8 +45,6 @@ seastar::future<query_result> executor::run_query(query_param&& param) {
   return seastar::make_ready_future<query_result>(std::move(content));
 }
 
-
-
 seastar::future<query_result> executor::run_adhoc_query(query_param&& param) {
   LOG(INFO) << "Run adhoc query";
   // The received query's pay load shoud be able to deserialze to physical plan
@@ -65,17 +60,19 @@ seastar::future<query_result> executor::run_adhoc_query(query_param&& param) {
   LOG(INFO) << "Deserialize physical job request" << str_length;
 
   // Currenly compilers sends the jobRequest, but we expect the physical plan.
-  protocol::JobRequest job_request;
-  bool ret = job_request.ParseFromArray(str.data(), str.size());
-  if (ret) {
-  } else {
-    LOG(ERROR) << "Fail to parse job request";
-    seastar::sstring reply;
-    return seastar::make_ready_future<query_result>(std::move(reply));
-  }
+  // protocol::JobRequest job_request;
+  // physical::PhysicalPlan physical_plan;
+  // bool ret = physical_plan.ParseFromArray(str.data(), str.size());
+  // if (ret) {
+  //   LOG(INFO) << "Successfully parse physical plan: "
+  //             << physical_plan.plan_size();
+  // } else {
+  //   LOG(ERROR) << "Fail to parse job request";
+  //   seastar::sstring reply;
+  //   return seastar::make_ready_future<query_result>(std::move(reply));
+  // }
   physical::PhysicalPlan plan;
-  auto& plan_str = job_request.plan();  // copy?
-  ret = plan.ParseFromArray(plan_str.data(), plan_str.size());
+  bool ret = plan.ParseFromArray(str_data, str_length);
   if (ret) {
     LOG(INFO) << "Parse physical plan: " << plan.DebugString();
   } else {

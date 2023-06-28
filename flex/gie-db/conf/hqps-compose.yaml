@@ -3,8 +3,7 @@ services:
   engine:
     tty: true
     image: "hqps-server-runtime:latest"
-    ports:
-     - "10001:10001"
+    network_mode: "host"
     container_name: hqps-server
 #    command : ["./hiactor-server", "-c", "config.yaml"] # command to start hqps_server
     volumes : 
