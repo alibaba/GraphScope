@@ -1,9 +1,9 @@
-echo "# this file is located in 'src/root_command.sh'"
-echo "# you can edit it freely and regenerate (it will not be overwritten)"
-inspect_args
+# echo "# this file is located in 'src/root_command.sh'"
+# echo "# you can edit it freely and regenerate (it will not be overwritten)"
+# inspect_args
 
 if [ ${args[--app]} == "db" ]; then
-  package_name="graphscope_flex_" + ${args[--app]}
+  package_name="graphscope_flex_${args[--app]}"
   comps=''
   eval "comps=(${args[components]})"
   for i in "${comps[@]}"; do
