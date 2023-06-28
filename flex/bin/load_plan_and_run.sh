@@ -230,6 +230,11 @@ compile_so(){
     popd
 
     ################### now copy ##########################
+    # if dst_so_path eq output_so_path, skip copying.
+    if [ ${dst_so_path} == ${output_so_path} ]; then
+        echo "Output dir is same as work dir, skip copying."
+        exit 0
+    fi
     # copy output to output_dir
     if [ ! -z ${output_dir} ]; then
         mkdir -p ${output_dir}
