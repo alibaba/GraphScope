@@ -7,9 +7,10 @@ version: 0.1.0
 #   help: Set your API key
 
 args:
-- name: source
-  help: SOURCE_DIR to build
-  default: .
+- name: components
+  help: components to include and link
+  required: true
+  repeatable: true
 
 flags:
 - long: --app
@@ -19,14 +20,6 @@ flags:
   allowed: [db, olap]
   help: Application type.
 
-- long: --components
-  short: -c
-  arg: cpns
-  required: true
-  help: Selected components for Flex build
-  allowed: [cppsp, hiactor, mcsr, grape]
-  repeatable: true
-
 examples:
-- ./flexbuild --app db -c cppsp -c hiactor
-- ./flexbuild --app olap --components grape
+- ./flexbuild cppsp hiactor --app db
+- ./flexbuild grape --app olap

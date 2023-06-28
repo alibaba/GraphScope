@@ -70,7 +70,9 @@ add_subdirectory(engines)
 add_subdirectory(bin)
 
 
-set(CPACK_PACKAGE_NAME "graphscope_flex")
+if (NOT DEFINED CPACK_PACKAGE_NAME)
+  set(CPACK_PACKAGE_NAME "graphscope_flex")
+endif ()
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Flex module of GraphScope")
 set(CPACK_PACKAGE_VENDOR "GraphScope")
 set(CPACK_PACKAGE_VERSION ${FLEX_VERSION})
