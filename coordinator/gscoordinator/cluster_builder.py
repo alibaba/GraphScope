@@ -1,3 +1,21 @@
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# Copyright 2020-2023 Alibaba Group Holding Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import base64
 import json
 import logging
@@ -5,22 +23,8 @@ import os
 
 try:
     from kubernetes import client as kube_client
-    from kubernetes import config as kube_config
-    from kubernetes import watch as kube_watch
-    from kubernetes.client import AppsV1Api
-    from kubernetes.client import CoreV1Api
-    from kubernetes.client.rest import ApiException as K8SApiException
-    from kubernetes.config import ConfigException as K8SConfigException
 except ImportError:
     kube_client = None
-    kube_config = None
-    kube_watch = None
-    AppsV1Api = None
-    CoreV1Api = None
-    K8SApiException = None
-    K8SConfigException = None
-
-from pprint import pprint
 
 from graphscope.deploy.kubernetes.resource_builder import ResourceBuilder
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
