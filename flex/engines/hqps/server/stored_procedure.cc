@@ -1,4 +1,5 @@
 #include "flex/engines/hqps/server/stored_procedure.h"
+#include "flex/engines/graph_db/database/graph_db.h"
 
 namespace gs {
 
@@ -19,7 +20,7 @@ void put_argment(Encoder& encoder, const query::Argument& argment) {
     encoder.put_string(value.str());
     break;
   default:
-    LOG(ERROR) << "Not recognizable param type" << static_cast<int>(item_case) ;
+    LOG(ERROR) << "Not recognizable param type" << static_cast<int>(item_case);
   }
 }
 
@@ -130,21 +131,19 @@ std::vector<StoredProcedureMeta> parse_stored_procedures(
 }
 
 std::shared_ptr<BaseStoredProcedure> create_stored_procedure_impl(
-    int32_t procedure_id, const std::string& procedure_path) {
-  auto& grape_store = gs::GrapeGraphInterface::get();
+    int32_t procedure_id, const std::string& procedure_path, int32_t shard_id) {
   auto time_stamp = std::numeric_limits<int64_t>::max() - 1;
-  if (grape_store.Initialized()) {
-    return std::make_shared<gs::CypherStoredProcedure<gs::GrapeGraphInterface>>(
-        procedure_id, procedure_path, grape_store, time_stamp,
-        GraphStoreType::Grape);
-  }  else {
-    LOG(FATAL) << "No available graph store";
-  }
+  gs::GrapeGraphInterface graph_store(gs::GraphDB::get().GetSession(shard_id));
+
+  return std::make_shared<gs::CypherStoredProcedure<gs::GrapeGraphInterface>>(
+      procedure_id, procedure_path, graph_store, time_stamp,
+      GraphStoreType::Grape);
 }
 
-std::string load_and_run(int32_t job_id, const std::string& lib_path) {
+std::string load_and_run(int32_t job_id, const std::string& lib_path,
+                         int32_t shard_id) {
   auto temp_stored_procedure =
-      gs::create_stored_procedure_impl(job_id, lib_path);
+      gs::create_stored_procedure_impl(job_id, lib_path, shard_id);
   LOG(INFO) << "Create stored procedure: " << temp_stored_procedure->ToString();
   std::vector<char> empty;
   gs::Decoder input_decoder(empty.data(), empty.size());

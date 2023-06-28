@@ -1,5 +1,5 @@
+#include "flex/engines/hqps/database/grape_graph_interface.h"
 #include "flex/utils/app_utils.h"
-#include "flex/storages/mutable_csr/grape_graph_interface.h"
 
 #include "flex/engines/hqps/app/example/is/is1.h"
 #include "flex/engines/hqps/app/example/is/is2.h"
@@ -21,10 +21,8 @@
 #include "flex/engines/hqps/app/example/ic/ic5.h"
 #include "flex/engines/hqps/app/example/ic/ic6.h"
 #include "flex/engines/hqps/app/example/ic/ic7.h"
-#include "flex/engines/hqps/app/example/ic/ic7.h"
 #include "flex/engines/hqps/app/example/ic/ic8.h"
 #include "flex/engines/hqps/app/example/ic/ic9.h"
-
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -253,19 +251,30 @@ void validate_codegen(const GRAPH_INTERFACE& graph,
 }
 
 int main(int argc, char** argv) {
-  if (argc < 3) {
-    LOG(INFO) << "Usage: " << argv[0] << " <validate_dir> <work_dir>";
+  if (argc < 5) {
+    LOG(INFO) << "Usage: " << argv[0]
+              << " <validate_dir> <graph_schema_path> <bulk_load_config_path "
+                 "<data_path>>";
     return 0;
   }
 
   std::string validate_dir = argv[1];
-  std::string work_dir = argv[2];
+  std::string graph_schema_path = argv[2];
+  std::string bulk_load_config_path = argv[3];
+  std::string data_path = argv[4];
 
-  gs::GrapeGraphInterface graph;
-  graph.Open(work_dir);
+  double t0 = -grape::GetCurrentTime();
+  auto& db = gs::GraphDB::get();
+
+  auto ret = gs::Schema::LoadFromYaml(graph_schema_path, bulk_load_config_path);
+  db.Init(std::get<0>(ret), std::get<1>(ret), std::get<2>(ret),
+          std::get<3>(ret), data_path, 1);
+
+  t0 += grape::GetCurrentTime();
+
+  gs::GrapeGraphInterface graph(gs::GraphDB::get().GetSession(0));
   // validate_all(graph, validate_dir);
   validate_codegen(graph, validate_dir);
-
 
   return 0;
 }

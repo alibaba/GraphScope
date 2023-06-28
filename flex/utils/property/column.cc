@@ -89,4 +89,26 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
   }
 }
 
+std::shared_ptr<RefColumnBase> CreateRefColumn(
+    std::shared_ptr<ColumnBase> column) {
+  auto type = column->type();
+  if (type == PropertyType::kInt32) {
+    return std::make_shared<TypedRefColumn<int>>(
+        *std::dynamic_pointer_cast<TypedColumn<int>>(column));
+  } else if (type == PropertyType::kInt64) {
+    return std::make_shared<TypedRefColumn<int64_t>>(
+        *std::dynamic_pointer_cast<TypedColumn<int64_t>>(column));
+  } else if (type == PropertyType::kDate) {
+    return std::make_shared<TypedRefColumn<Date>>(
+        *std::dynamic_pointer_cast<TypedColumn<Date>>(column));
+  } else if (type == PropertyType::kString) {
+    return std::make_shared<TypedRefColumn<std::string_view>>(
+        *std::dynamic_pointer_cast<TypedColumn<std::string_view>>(column));
+  } else {
+    LOG(FATAL) << "unexpected type to create column, "
+               << static_cast<int>(type);
+    return nullptr;
+  }
+}
+
 }  // namespace gs

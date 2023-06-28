@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "flex/engines/hqps/engine/utils/bitset.h"
+#include "grape/util.h"
 
 namespace gs {
 
@@ -374,7 +375,6 @@ auto twoLabelSetFlatImpl(
   return std::make_pair(std::move(res_vids), std::move(res_bitset));
 }
 
-
 template <size_t col_ind, typename data_tuple_t, typename... index_ele_tuple_t,
           typename lid_t>
 auto twoLabelSetFlatImpl(
@@ -405,7 +405,6 @@ auto twoLabelSetFlatImpl(
   return std::make_tuple(std::move(res_vids), std::move(res_data),
                          std::move(res_bitset));
 }
-
 
 template <typename VID_T, typename... T>
 class TwoLabelVertexSetIter {
@@ -760,7 +759,6 @@ class TwoLabelVertexSetImpl {
                        std::move(labels_copied), std::move(copied_named_prop),
                        std::move(std::get<2>(res_vids_and_data_tuples)));
   }
-
 
   // TODO: implement this.
   template <size_t Is, typename... PropT>

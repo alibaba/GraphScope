@@ -4,9 +4,9 @@
 
 #include "flex/engines/hqps/server/service.h"
 
+#include "flex/engines/hqps/database/grape_graph_interface.h"
 #include "flex/engines/hqps/server/codegen_proxy.h"
 #include "flex/engines/hqps/server/stored_procedure.h"
-#include "flex/storages/mutable_csr/grape_graph_interface.h"
 
 #include <yaml-cpp/yaml.h>
 #include <boost/program_options.hpp>
@@ -73,11 +73,13 @@ int main(int argc, char** argv) {
       bpo::value<std::string>()->default_value("/tmp/codegen/"),
       "codegen working directory")("codegen-bin,b", bpo::value<std::string>(),
                                    "codegen binary path")(
-      "graph-yaml,y", bpo::value<std::string>(), "graph yaml path")(
       "db-home", bpo::value<std::string>(), "db home path")(
-      "graph-schema", bpo::value<std::string>(),
-      "path to graph schema, used by gie")(
-      "grape-data-path,g", bpo::value<std::string>(), "grape data path");
+      "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
+      "data-path,d", bpo::value<std::string>(), "data directory path")(
+      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file");
+
+  setenv("TZ", "Asia/Shanghai", 1);
+  tzset();
 
   bpo::variables_map vm;
   bpo::store(bpo::command_line_parser(argc, argv).options(desc).run(), vm);
@@ -157,8 +159,6 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  // check cmakeList exists
-
   // clear codegen dir
   if (std::filesystem::exists(codegen_dir)) {
     LOG(INFO) << "codegen dir exists, clear directory";
@@ -168,26 +168,40 @@ int main(int argc, char** argv) {
     LOG(INFO) << "codegen dir not exists, create directory";
     std::filesystem::create_directory(codegen_dir);
   }
+  // init graph
+  std::string graph_schema_path = "";
+  std::string data_path = "";
+  std::string bulk_load_config_path = "";
 
-  if (vm.count("grape-data-path")) {
-    auto dir = vm["grape-data-path"].as<std::string>();
-    if (vm.count("graph-yaml")) {
-      auto graph_yaml = vm["graph-yaml"].as<std::string>();
-      std::cout << "Start load grape data from " << dir << " with graph yaml "
-                << graph_yaml << std::endl;
-      gs::GrapeGraphInterface::get().Open(graph_yaml, dir);
-    } else {
-      std::cout << "Start load grape data from " << dir << std::endl;
-      gs::GrapeGraphInterface::get().Open(dir);
-    }
-  } else {
-    std::cout << "grape data path is required" << std::endl;
-    return 0;
+  if (!vm.count("graph-config")) {
+    LOG(ERROR) << "graph-config is required";
+    return -1;
+  }
+  graph_schema_path = vm["graph-config"].as<std::string>();
+  if (!vm.count("data-path")) {
+    LOG(ERROR) << "data-path is required";
+    return -1;
+  }
+  data_path = vm["data-path"].as<std::string>();
+  if (vm.count("bulk-load")) {
+    bulk_load_config_path = vm["bulk-load"].as<std::string>();
   }
 
+  double t0 = -grape::GetCurrentTime();
+  auto& db = gs::GraphDB::get();
+
+  auto ret = gs::Schema::LoadFromYaml(graph_schema_path, bulk_load_config_path);
+  db.Init(std::get<0>(ret), std::get<1>(ret), std::get<2>(ret),
+          std::get<3>(ret), data_path, shard_num);
+
+  t0 += grape::GetCurrentTime();
+
+  LOG(INFO) << "Finished loading graph, elapsed " << t0 << " s";
+
+  // loading plugin
   if (!plugin_dir.empty()) {
     LOG(INFO) << "Load plugins from dir: " << plugin_dir;
-    gs::StoredProcedureManager::get().LoadFromPluginDir(plugin_dir);
+    gs::StoredProcedureManager::get().LoadFromPluginDir(plugin_dir, 0);
   }
 
   // db-home
@@ -200,9 +214,6 @@ int main(int argc, char** argv) {
   }
 
   snb::ic::CodegenProxy::get().Init(codegen_dir, codegen_bin, db_home);
-
-  setenv("TZ", "Asia/Shanghai", 1);
-  tzset();
 
   snb::ic::service::get().init(shard_num, http_port, false);
   snb::ic::service::get().run_and_wait_for_exit();

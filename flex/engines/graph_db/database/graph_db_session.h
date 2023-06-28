@@ -60,6 +60,10 @@ class GraphDBSession {
   std::shared_ptr<ColumnBase> get_vertex_property_column(
       uint8_t label, const std::string& col_name) const;
 
+  // Get Ref vertex property column, for hqps
+  std::shared_ptr<RefColumnBase> get_vertex_property_ref_column(
+      uint8_t label, const std::string& col_name) const;
+
   std::vector<char> Eval(const std::string& input);
 
   void GetAppInfo(Encoder& result);

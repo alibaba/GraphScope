@@ -17,6 +17,8 @@ limitations under the License.
 #define STORAGES_RT_MUTABLE_GRAPH_TYPES_H_
 
 #include <stdint.h>
+#include <cstddef>
+#include <limits>
 
 namespace gs {
 
@@ -30,6 +32,12 @@ using timestamp_t = uint32_t;
 using vid_t = uint32_t;
 using oid_t = int64_t;
 using label_t = uint8_t;
+// distance in path.
+using dist_t = int32_t;
+static constexpr label_t INVALID_LABEL_ID = std::numeric_limits<label_t>::max();
+using offset_t = size_t;
+using vertex_set_key_t = size_t;
+static constexpr vid_t INVALID_VID = std::numeric_limits<vid_t>::max();
 
 }  // namespace gs
 

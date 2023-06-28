@@ -100,6 +100,44 @@ using StringColumn = TypedColumn<std::string_view>;
 std::shared_ptr<ColumnBase> CreateColumn(
     PropertyType type, StorageStrategy strategy = StorageStrategy::kMem);
 
+/// Create RefColumn for ease of usage for hqps
+class RefColumnBase {
+ public:
+  virtual ~RefColumnBase() {}
+};
+
+class LabelRefColumn : public RefColumnBase {
+ public:
+  LabelRefColumn(uint8_t label_id) : label_id_(label_id) {}
+  ~LabelRefColumn() {}
+
+  inline uint8_t get_view(size_t index) const { return label_id_; }
+
+ private:
+  uint8_t label_id_;
+};
+
+template <typename T>
+class TypedRefColumn : public RefColumnBase {
+ public:
+  using value_type = T;
+
+  TypedRefColumn(const mmap_array<T>& buffer, StorageStrategy strategy)
+      : buffer_(buffer), strategy_(strategy) {}
+  TypedRefColumn(const TypedColumn<T>& column)
+      : buffer_(column.buffer()), strategy_(column.storage_strategy()) {}
+  ~TypedRefColumn() {}
+
+  inline T get_view(size_t index) const { return buffer_[index]; }
+
+ private:
+  const mmap_array<T>& buffer_;
+  StorageStrategy strategy_;
+};
+
+std::shared_ptr<RefColumnBase> CreateRefColumn(
+    std::shared_ptr<ColumnBase> column);
+
 }  // namespace gs
 
 #endif  // GRAPHSCOPE_PROPERTY_COLUMN_H_

@@ -12,7 +12,7 @@ static constexpr const char* time_stamp = "time_stamp";
 static constexpr const char* graph_var = "graph";
 static constexpr const char* DEFAULT_GRAPH_INTERFACE = "GRAPH_INTERFACE";
 static constexpr const char* DEFAULT_GRAPH_HEADER =
-    "flex/storages/mutable_csr/grape_graph_interface.h";
+    "flex/engines/hqps/database/grape_graph_interface.h";
 static constexpr const char* EDGE_EXPAND_OPT_NAME = "edge_expand_opt";
 static constexpr const char* SORT_OPT_NAME = "sort_opt";
 static constexpr const char* GET_V_OPT_NAME = "get_v_opt";

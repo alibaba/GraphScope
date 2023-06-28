@@ -1,7 +1,7 @@
 
-#include "flex/engines/hqps/engine/sync_engine.h"
 #include "flex/engines/hqps/app/cypher_app_base.h"
-#include "flex/storages/mutable_csr/grape_graph_interface.h"
+#include "flex/engines/hqps/database/grape_graph_interface.h"
+#include "flex/engines/hqps/engine/sync_engine.h"
 
 namespace gs {
 

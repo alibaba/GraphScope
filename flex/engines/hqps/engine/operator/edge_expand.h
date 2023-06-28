@@ -861,9 +861,8 @@ class EdgeExpand {
                 << gs::to_string(dst_label) << " with edge label "
                 << gs::to_string(state.edge_label_);
       auto tmp = state.graph_.template GetEdges<>(
-          state.time_stamp_, src_label, dst_label, state.edge_label_,
-          cur_set.GetVertices(), gs::to_string(state.direction_), state.limit_,
-          {});
+          src_label, dst_label, state.edge_label_, cur_set.GetVertices(),
+          gs::to_string(state.direction_), state.limit_, {});
       res_adj_list_arrays[i].swap(tmp);
       VLOG(10) << "fetch " << res_adj_list_arrays[i].size() << "edges from "
                << cur_set.GetVertices().size() << "vertices";
@@ -932,9 +931,8 @@ class EdgeExpand {
       }
 
       auto tmp = state.graph_.template GetEdges<T...>(
-          state.time_stamp_, src_label, dst_label, state.edge_label_,
-          cur_set.GetVertices(), gs::to_string(state.direction_), state.limit_,
-          prop_names);
+          src_label, dst_label, state.edge_label_, cur_set.GetVertices(),
+          gs::to_string(state.direction_), state.limit_, prop_names);
       res_adj_list_arrays[i].swap(tmp);
       VLOG(10) << "fetch " << res_adj_list_arrays[i].size() << "edges from "
                << cur_set.GetVertices().size() << "vertices";
@@ -1004,8 +1002,8 @@ class EdgeExpand {
       std::vector<int32_t> cur_active_inds;
       std::tie(cur_vids, cur_active_inds) = general_set.GetVertices(i);
       auto tmp = state.graph_.template GetEdges<T...>(
-          state.time_stamp_, src_label, dst_label, state.edge_label_, cur_vids,
-          direction_str, state.limit_, prop_names);
+          src_label, dst_label, state.edge_label_, cur_vids, direction_str,
+          state.limit_, prop_names);
       CHECK(tmp.size() == cur_active_inds.size());
       for (auto j = 0; j < cur_active_inds.size(); ++i) {
         res_adj_list_arrays[cur_active_inds[j]] = tmp.get(j);
@@ -1072,8 +1070,8 @@ class EdgeExpand {
       std::vector<int32_t> cur_active_inds;
       std::tie(cur_vids, cur_active_inds) = general_set.GetVertices(i);
       auto tmp = state.graph_.template GetEdges<T...>(
-          state.time_stamp_, src_label, dst_label, state.edge_label_, cur_vids,
-          direction_str, state.limit_, prop_names);
+          src_label, dst_label, state.edge_label_, cur_vids, direction_str,
+          state.limit_, prop_names);
       CHECK(tmp.size() == cur_active_inds.size());
       LOG(INFO) << "Finish get edges";
       if constexpr (GRAPH_INTERFACE::is_grape) {
@@ -1156,8 +1154,8 @@ class EdgeExpand {
       std::vector<int32_t> cur_active_inds;
       std::tie(cur_vids, cur_active_inds) = general_set.GetVertices(i);
       auto tmp = state.graph_.template GetEdges<>(
-          state.time_stamp_, src_label, dst_label, state.edge_label_, cur_vids,
-          direction_str, state.limit_, {});
+          src_label, dst_label, state.edge_label_, cur_vids, direction_str,
+          state.limit_, {});
       CHECK(tmp.size() == cur_active_inds.size());
       LOG(INFO) << "Finish get edges";
       if constexpr (GRAPH_INTERFACE::is_grape) {
@@ -1230,9 +1228,8 @@ class EdgeExpand {
     }
 
     auto adj_list_array = state.graph_.template GetEdges<T...>(
-        state.time_stamp_, src_label, dst_label, state.edge_label_,
-        cur_set.GetVertices(), gs::to_string(state.direction_), state.limit_,
-        prop_names);
+        src_label, dst_label, state.edge_label_, cur_set.GetVertices(),
+        gs::to_string(state.direction_), state.limit_, prop_names);
 
     std::vector<size_t> offset;
     offset.reserve(cur_set.Size() + 1);
@@ -1325,9 +1322,8 @@ class EdgeExpand {
       }
 
       auto tmp = state.graph_.template GetEdges<>(
-          state.time_stamp_, src_label, dst_label, state.edge_label_,
-          cur_set.GetVertices(), gs::to_string(state.direction_), state.limit_,
-          prop_names);
+          src_label, dst_label, state.edge_label_, cur_set.GetVertices(),
+          gs::to_string(state.direction_), state.limit_, prop_names);
       res_adj_list_arrays[i].swap(tmp);
       VLOG(10) << "fetch " << res_adj_list_arrays[i].size() << "edges from "
                << cur_set.GetVertices().size() << "vertices";
@@ -1397,9 +1393,8 @@ class EdgeExpand {
       }
 
       auto tmp = state.graph_.template GetEdges<>(
-          state.time_stamp_, src_label, dst_label, state.edge_label_,
-          cur_set.GetVertices(), gs::to_string(state.direction_), state.limit_,
-          prop_names);
+          src_label, dst_label, state.edge_label_, cur_set.GetVertices(),
+          gs::to_string(state.direction_), state.limit_, prop_names);
       res_adj_list_arrays[i].swap(tmp);
       VLOG(10) << "fetch " << res_adj_list_arrays[i].size() << "edges from "
                << cur_set.GetVertices().size() << "vertices";
@@ -1453,7 +1448,7 @@ class EdgeExpand {
     LOG(INFO) << "[EdgeExpandENoPropImpl] for single label vertex set. "
               << (int) src_label << " " << (int) dst_label;
     auto adj_list_array = state.graph_.template GetEdges<>(
-        state.time_stamp_, src_label, dst_label, state.edge_label_,
+        src_label, dst_label, state.edge_label_,
         state.cur_vertex_set_.GetVertices(), gs::to_string(state.direction_),
         state.limit_, prop_names);
     LOG(INFO) << "after get edges";
@@ -1496,7 +1491,7 @@ class EdgeExpand {
     VLOG(10) << "before get edges" << gs::to_string(tag_prop.name);
     std::array<std::string, 1> prop_names = {tag_prop.name};
     auto adj_list_array = state.graph_.template GetEdges<T>(
-        state.time_stamp_, src_label, dst_label, state.edge_label_,
+        src_label, dst_label, state.edge_label_,
         state.cur_vertex_set_.GetVertices(), gs::to_string(state.direction_),
         state.limit_, prop_names);
     return adj_list_array;

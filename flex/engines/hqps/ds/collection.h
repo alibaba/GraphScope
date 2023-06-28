@@ -6,10 +6,9 @@
 
 #include "flex/engines/hqps/engine/hqps_utils.h"
 #include "flex/engines/hqps/engine/null_record.h"
-#include "flex/storages/mutable_csr/fragment/ts_property_fragment.h"
-#include "flex/engines/hqps/engine/operator//prop_utils.h"
-#include "flex/storages/mutable_csr/types.h"
+#include "flex/engines/hqps/engine/operator/prop_utils.h"
 #include "flex/engines/hqps/engine/utils/bitset.h"
+#include "flex/storages/rt_mutable_graph/types.h"
 
 #include <boost/functional/hash.hpp>
 
@@ -130,13 +129,6 @@ class CollectionIter {
       : vec_(vec), ind_(ind) {}
 
   T GetElement() const { return vec_[ind_]; }
-
-  // Can only accept entity
-  template <typename PROP_T,
-            typename std::enable_if<(PROP_T::is_entity_col)>::type* = nullptr>
-  T GetProperty(const TSPropertyFragment& frag, PROP_T& prop) const {
-    return vec_[ind_];
-  }
 
   index_ele_tuple_t GetIndexElement() const {
     return std::make_tuple(ind_, vec_[ind_]);

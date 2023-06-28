@@ -13,9 +13,8 @@
 #include "flex/engines/hqps/engine/params.h"
 
 #include "flex/engines/hqps/engine/utils/bitset.h"
-#include "flex/storages/mutable_csr/property/column.h"
-#include "flex/storages/mutable_csr/property/types.h"
-#include "flex/storages/mutable_csr/types.h"
+#include "flex/storages/rt_mutable_graph/types.h"
+#include "flex/utils/property/column.h"
 
 #include "flex/engines/hqps/engine/operator/edge_expand.h"
 #include "flex/engines/hqps/engine/operator/fused_operator.h"
@@ -47,18 +46,6 @@ class SyncEngine : public BaseEngine {
   using vertex_set_t = RowVertexSet<label_id_t, vertex_id_t, T...>;
 
  public:
-  template <typename FUNC, typename... Selector,
-            typename COL_T = default_vertex_set_t>
-  static Context<COL_T, 0, 0, grape::EmptyType> ScanVertexV2(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
-      const label_id_t& v_label, FUNC&& func,
-      std::tuple<Selector...>&& selector) {
-    auto v_set_tuple = Scan<GRAPH_INTERFACE>::template ScanVertexV2(
-        time_stamp, graph, v_label, func, selector);
-
-    return Context<COL_T, 0, 0, grape::EmptyType>(std::move(v_set_tuple));
-  }
-
   template <int res_alias, typename FUNC, typename COL_T = default_vertex_set_t>
   static Context<COL_T, res_alias, 0, grape::EmptyType> ScanVertex(
       int64_t time_stamp, const GRAPH_INTERFACE& graph,

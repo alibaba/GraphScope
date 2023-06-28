@@ -13,10 +13,13 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/database/graph_db_session.h"
+#include <memory>
+
 #include "flex/engines/graph_db/app/app_base.h"
-#include "flex/utils/app_utils.h"
 #include "flex/engines/graph_db/database/graph_db.h"
+#include "flex/engines/graph_db/database/graph_db_session.h"
+#include "flex/utils/app_utils.h"
+#include "flex/utils/property/column.h"
 
 namespace gs {
 
@@ -61,6 +64,24 @@ const Schema& GraphDBSession::schema() const { return db_.schema(); }
 std::shared_ptr<ColumnBase> GraphDBSession::get_vertex_property_column(
     uint8_t label, const std::string& col_name) const {
   return db_.get_vertex_property_column(label, col_name);
+}
+
+std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_property_ref_column(
+    uint8_t label, const std::string& col_name) const {
+  if (col_name == "id" || col_name == "ID" || col_name == "Id" ||
+      col_name == "iD") {
+    return std::make_shared<TypedRefColumn<oid_t>>(
+        db_.graph().lf_indexers_[label].get_keys(), StorageStrategy::kMem);
+  } else if (col_name == "label" || col_name == "Label" ||
+             col_name == "LABEL") {
+    return std::make_shared<LabelRefColumn>(label);
+  } else {
+    auto ptr = db_.get_vertex_property_column(label, col_name);
+    if (ptr) {
+      return CreateRefColumn(ptr);
+    } else
+      return nullptr;
+  }
 }
 
 #define likely(x) __builtin_expect(!!(x), 1)

@@ -6,12 +6,12 @@
 #include "flex/engines/hqps/server/actor_system.h"
 #include "flex/engines/hqps/server/http_handler.h"
 
-#include "flex/storages/mutable_csr/grape_graph_interface.h"
+#include "flex/engines/hqps/database/grape_graph_interface.h"
 
 namespace snb::ic {
 
 class service {
-public:
+ public:
   static service& get() {
     static service instance;
     return instance;
@@ -24,10 +24,10 @@ public:
   void run_and_wait_for_exit();
   void set_exit_state();
 
-private:
+ private:
   service() = default;
 
-private:
+ private:
   std::unique_ptr<actor_system> actor_sys_;
   std::unique_ptr<http_handler> http_hdl_;
   std::atomic<bool> running_{false};

@@ -26,8 +26,6 @@ seastar::future<query_result> executor::run_query(query_param&& param) {
   size_t str_length = str.size();
   LOG(INFO) << "Receive pay load: " << str_length << " bytes";
 
-  auto& grape_store = gs::GrapeGraphInterface::get();
-
   query::Query cur_query;
   {
     CHECK(cur_query.ParseFromArray(str.data(), str.size()));
@@ -103,7 +101,8 @@ seastar::future<query_result> executor::run_adhoc_query(query_param&& param) {
   LOG(INFO) << "Okay, try to run the query of lib path: " << lib_path
             << ", job id: " << job_id;
 
-  seastar::sstring content = gs::load_and_run(job_id, lib_path);
+  seastar::sstring content =
+      gs::load_and_run(job_id, lib_path, hiactor::local_shard_id());
   return seastar::make_ready_future<query_result>(std::move(content));
 }
 

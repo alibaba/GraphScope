@@ -14,12 +14,15 @@
 #include "proto_generated_gie/results.pb.h"
 #include "proto_generated_gie/stored_procedure.pb.h"
 
+#include <hiactor/util/data_type.hh>
+#include <seastar/core/print.hh>
 #include "flex/engines/hqps/app/cypher_app_base.h"
-#include "flex/storages/mutable_csr/grape_graph_interface.h"
+#include "flex/engines/hqps/database/grape_graph_interface.h"
 
 namespace gs {
 
-std::string load_and_run(int32_t job_id, const std::string& lib_path);
+std::string load_and_run(int32_t job_id, const std::string& lib_path,
+                         int32_t shard_id);
 
 // get the handle of the dynamic library, throw error if needed
 void* open_lib(const char* lib_path);
@@ -120,7 +123,7 @@ class CypherStoredProcedure;
 // To support ad-hoc query, and reuse code.
 
 std::shared_ptr<BaseStoredProcedure> create_stored_procedure_impl(
-    int32_t procedure_id, const std::string& procedure_path);
+    int32_t procedure_id, const std::string& procedure_path, int32_t shard_id);
 
 std::vector<std::string> get_yaml_files(const std::string& plugin_dir);
 
@@ -130,23 +133,25 @@ class StoredProcedureManager {
   StoredProcedureManager() {}
 
   // expect multiple query.yaml under this directory.
-  void LoadFromPluginDir(const std::string& plugin_dir) {
+  void LoadFromPluginDir(const std::string& plugin_dir, int32_t shard_id) {
     auto yaml_files = get_yaml_files(plugin_dir);
     auto stored_procedures = parse_from_multiple_yamls(yaml_files);
-    CreateStoredProcedures(stored_procedures);
+    CreateStoredProcedures(stored_procedures, shard_id);
   }
 
-  void LoadFromYaml(const std::string& stored_procedure_yaml) {
+  void LoadFromYaml(const std::string& stored_procedure_yaml,
+                    int32_t shard_id) {
     auto stored_procedures = parse_stored_procedures(stored_procedure_yaml);
-    CreateStoredProcedures(stored_procedures);
+    CreateStoredProcedures(stored_procedures, shard_id);
   }
 
   void CreateStoredProcedures(
-      const std::vector<StoredProcedureMeta>& stored_procedures) {
+      const std::vector<StoredProcedureMeta>& stored_procedures,
+      int32_t shard_id) {
     for (auto i = 0; i < stored_procedures.size(); ++i) {
       stored_procedures_.emplace(
           stored_procedures[i].name,
-          create_stored_procedure_impl(i, stored_procedures[i].path));
+          create_stored_procedure_impl(i, stored_procedures[i].path, shard_id));
     }
 
     LOG(INFO) << "Load [" << stored_procedures_.size() << "] stored procedures";

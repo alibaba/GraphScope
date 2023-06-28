@@ -2,19 +2,20 @@
 #include <cstdlib>
 #include <vector>
 
-#include "flex/engines/hqps/engine/context.h"
 #include "flex/engines/hqps/ds/multi_vertex_set/row_vertex_set.h"
 #include "flex/engines/hqps/ds/multi_vertex_set/two_label_vertex_set.h"
+#include "flex/engines/hqps/engine/context.h"
 #include "flex/engines/hqps/engine/params.h"
-#include "flex/storages/mutable_csr/types.h"
+#include "flex/storages/rt_mutable_graph/types.h"
 
 #include "flex/engines/hqps/engine/base_engine.h"
 
-#include "flex/storages/mutable_csr/grape_graph_interface.h"
-#include "flex/storages/mutable_csr/property/column.h"
+#include "flex/engines/hqps/database/grape_graph_interface.h"
 #include "flex/engines/hqps/engine/operator/project.h"
-#include "grape/grape.h"
+#include "flex/storages/rt_mutable_graph/types.h"
+#include "flex/utils/property/column.h"
 #include "glog/logging.h"
+#include "grape/grape.h"
 
 struct VertexSetTest {};
 struct EdgeSetTest {};
@@ -42,7 +43,7 @@ struct TmpComparator {
 using offset_t = gs::offset_t;
 
 auto make_vertex_set_a() {
-  std::vector<gs::gid_t> vids{0, 1};
+  std::vector<gs::vid_t> vids{0, 1};
   std::vector<std::tuple<int32_t, double>> datas{std::make_tuple(1, 1.0),
                                                  std::make_tuple(2, 2.0)};
   auto res = gs::make_row_vertex_set(std::move(vids), "0", std::move(datas),
@@ -51,7 +52,7 @@ auto make_vertex_set_a() {
 }
 
 auto make_vertex_set_b() {
-  std::vector<gs::gid_t> vids{2, 3, 4, 5};
+  std::vector<gs::vid_t> vids{2, 3, 4, 5};
   std::vector<std::tuple<int32_t, double>> datas{
       std::make_tuple(2, 2.0), std::make_tuple(3, 3.0), std::make_tuple(4, 4.0),
       std::make_tuple(5, 5.0)};
@@ -61,13 +62,13 @@ auto make_vertex_set_b() {
 }
 
 auto make_vertex_set_c() {
-  std::vector<gs::gid_t> vids{0, 1, 4};
+  std::vector<gs::vid_t> vids{0, 1, 4};
   auto res = gs::MakeDefaultRowVertexSet(std::move(vids), "0");
   return res;
 }
 
 auto make_vertex_set_d() {
-  std::vector<gs::gid_t> vids{2, 3, 1, 0};
+  std::vector<gs::vid_t> vids{2, 3, 1, 0};
   auto res = gs::MakeDefaultRowVertexSet(std::move(vids), "0");
   return res;
 }

@@ -1,5 +1,5 @@
+#include "flex/engines/hqps/database/grape_graph_interface.h"
 #include "flex/engines/hqps/engine/sync_engine.h"
-#include "flex/storages/mutable_csr/grape_graph_interface.h"
 
 namespace gs {
 

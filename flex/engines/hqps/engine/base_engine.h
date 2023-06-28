@@ -17,10 +17,9 @@
 #include "flex/engines/hqps/engine/params.h"
 
 #include "flex/engines/hqps/ds/multi_vertex_set/multi_label_vertex_set.h"
-#include "flex/storages/mutable_csr/property/column.h"
-#include "flex/storages/mutable_csr/property/types.h"
-#include "flex/storages/mutable_csr/types.h"
 #include "flex/engines/hqps/engine/utils/bitset.h"
+#include "flex/storages/rt_mutable_graph/types.h"
+#include "flex/utils/property/column.h"
 
 #include "flex/engines/hqps/engine/operator/group_by.h"
 #include "flex/engines/hqps/engine/operator/project.h"

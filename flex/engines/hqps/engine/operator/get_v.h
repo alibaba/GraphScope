@@ -25,8 +25,8 @@ limitations under the License.
 #include "flex/engines/hqps/ds/multi_vertex_set/row_vertex_set.h"
 #include "flex/engines/hqps/engine/hqps_utils.h"
 
-#include "flex/storages/mutable_csr/types.h"
 #include "flex/engines/hqps/engine/utils/bitset.h"
+#include "flex/storages/rt_mutable_graph/types.h"
 
 namespace gs {
 

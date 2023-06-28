@@ -146,6 +146,7 @@ MutablePropertyFragment& GraphDB::graph() { return graph_; }
 
 const Schema& GraphDB::schema() const { return graph_.schema(); }
 
+// TODO: support creating col_name == id and col_name == label
 std::shared_ptr<ColumnBase> GraphDB::get_vertex_property_column(
     uint8_t label, const std::string& col_name) const {
   return graph_.get_vertex_table(label).get_column(col_name);

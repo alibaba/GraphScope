@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 // #include "grape/grape.h"
-#include "flex/storages/mutable_csr/types.h"
+#include "flex/storages/rt_mutable_graph/types.h"
 namespace gs {
 
 template <typename... T>

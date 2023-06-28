@@ -12,9 +12,8 @@
 #include <vector>
 
 #include "flex/engines/hqps/engine/params.h"
-#include "flex/storages/mutable_csr/fragment/ts_property_fragment.h"
-#include "flex/storages/mutable_csr/property/column.h"
-#include "flex/storages/mutable_csr/types.h"
+#include "flex/storages/rt_mutable_graph/types.h"
+#include "flex/utils/property/column.h"
 
 namespace gs {
 
@@ -473,76 +472,6 @@ struct TupleCatT<T1, std::tuple<grape::EmptyType>> {
   using tuple_cat_t = decltype(std::tuple_cat(std::declval<T1>()));
 };
 
-// We use DataGetter to wrapper getting element for a column/vector
-template <typename T>
-struct ColDataGetter {
-  using value_type = T;
-  using element_type = T;
-  std::shared_ptr<gs::TypedColumn<T>> col_;
-  std::string col_name_;
-  ColDataGetter(std::shared_ptr<gs::TypedColumn<T>> ptr, std::string col_name)
-      : col_(ptr), col_name_(col_name) {}
-
-  inline element_type Get(size_t index) const { return col_->get_view(index); }
-  inline element_type Get(size_t index, vid_t vid) const {
-    return col_->get_view(vid);
-  }
-};
-
-struct OidGetter {
-  using value_type = oid_t;
-  using element_type = gs::oid_t;
-  ConstVertexStore vertex_store_;
-  OidGetter(ConstVertexStore&& vertex_store)
-      : vertex_store_(std::move(vertex_store)) {}
-
-  inline element_type Get(size_t index) const {
-    return vertex_store_.get_id(index);
-  }
-  inline element_type Get(size_t index, vid_t vid) const {
-    return vertex_store_.get_id(vid);
-  }
-};
-
-// template <typename T, int N>
-// struct ColMeta {};
-
-// template <typename T>
-// struct ColMeta<T, 0> {
-//   using value_type = T;
-//   using GetterType = ColDataGetter<T>;
-//   std::string col_name_;
-//   const TSPropertyFragment& frag_;
-//   ColMeta(const TSPropertyFragment& frag, std::string col_name)
-//       : frag_(frag), col_name_(col_name) {}
-
-//   ColDataGetter<T> CreateGetter(label_t label) {
-//     auto vertex_store = frag_.GetVertexStore(label);
-//     auto base = vertex_store.get_property_column(col_name_);
-//     auto casted = std::dynamic_pointer_cast<gs::TypedColumn<T>>(base);
-//     CHECK(casted) << "Fail to obtain col getter for " << col_name_;
-//     return ColDataGetter<T>(casted, col_name_);
-//   }
-// };
-
-// oid meta
-// template <typename T>
-// struct ColMeta<T, 1> {
-//   using value_type = T;
-//   using GetterType = OidGetter;
-//   const TSPropertyFragment& frag_;
-
-//   ColMeta(const TSPropertyFragment& frag) : frag_(frag) {}
-//   OidGetter CreateGetter(label_t label) {
-//     return OidGetter(std::move(frag_.GetVertexStore(label)));
-//   }
-// };
-
-// using OidColMeta = ColMeta<oid_t, 1>;
-
-// template <typename T>
-// using PropertyColMeta = ColMeta<T, 0>;
-
 template <typename... ColMetas, size_t... Is>
 auto make_getter_tuple(label_t label, std::tuple<ColMetas...>&& tuple,
                        std::index_sequence<Is...>) {
@@ -566,14 +495,6 @@ using DataOfColumnPtr = typename T::element_type::value_type;
 
 template <typename T>
 using IterOf = typename T::iterator;
-
-template <typename... COL_META>
-auto get_column_tuples(ConstVertexStore& vertex_store, COL_META... col_metas) {
-  auto func = [&](auto& col_meta) {
-    return col_meta.CreateGetter(vertex_store);
-  };
-  return std::make_tuple(func(col_metas)...);
-}
 
 template <typename TUPLE_T, typename CMP>
 using PQ_T = std::priority_queue<TUPLE_T, std::vector<TUPLE_T>, CMP>;
@@ -1007,17 +928,6 @@ class QPSException : public std::exception {
  private:
   std::string _err_msg;
 };
-
-inline void printSchema(const gs::TSPropertyFragment& frag) {
-  for (auto i = 0; i < frag.schema().vertex_label_num(); ++i) {
-    VLOG(10) << "ind" << i << ":vertex label "
-             << frag.schema().get_vertex_label_name(i);
-  }
-  for (auto i = 0; i < frag.schema().edge_label_num(); ++i) {
-    VLOG(10) << "ind" << i << ": edge label "
-             << frag.schema().get_edge_label_name(i);
-  }
-}
 
 }  // namespace gs
 

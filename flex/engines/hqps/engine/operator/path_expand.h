@@ -22,10 +22,9 @@ limitations under the License.
 #include "flex/engines/hqps/engine/hqps_utils.h"
 #include "flex/engines/hqps/engine/params.h"
 
-#include "flex/storages/mutable_csr/property/column.h"
-#include "flex/storages/mutable_csr/property/types.h"
-#include "flex/storages/mutable_csr/types.h"
 #include "flex/engines/hqps/engine/utils/bitset.h"
+#include "flex/storages/rt_mutable_graph/types.h"
+#include "flex/utils/property/column.h"
 
 namespace gs {
 

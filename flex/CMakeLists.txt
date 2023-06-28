@@ -56,6 +56,11 @@ else ()
     include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})
 endif ()
 
+#find boost----------------------------------------------------------------------
+find_package(Boost REQUIRED COMPONENTS system filesystem
+             # required by folly
+             context program_options regex thread)
+
 # Find Doxygen
 if (BUILD_DOC)
     find_package(Doxygen)

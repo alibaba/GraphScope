@@ -1,8 +1,8 @@
 #ifndef ENGINES_HQPS_APP_CYPHER_APP_BASE_H_
 #define ENGINES_HQPS_APP_CYPHER_APP_BASE_H_
 
+#include "flex/engines/hqps/database/grape_graph_interface.h"
 #include "flex/utils/app_utils.h"
-#include "flex/storages/mutable_csr/grape_graph_interface.h"
 #include "proto_generated_gie/results.pb.h"
 
 namespace gs {

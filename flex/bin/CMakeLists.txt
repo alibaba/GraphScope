@@ -28,7 +28,7 @@ install(TARGETS flex_analytical_engine
 if (BUILD_HQPS)
     if (Hiactor_FOUND)
         add_executable(sync_server sync_server.cc)
-        target_link_libraries(sync_server flex_mutable_csr_graph hqps_server hqps_plan_proto ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
+        target_link_libraries(sync_server flex_rt_mutable_graph flex_graph_db hqps_server hqps_plan_proto ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
         
         install(TARGETS sync_server
                 RUNTIME DESTINATION bin
@@ -40,7 +40,7 @@ if (BUILD_HQPS)
 
     # build graph_db_loader
         add_executable(graph_db_loader graph_db_loader.cc)
-        target_link_libraries(graph_db_loader flex_mutable_csr_graph ${GLOG_LIBRARIES} ${LIBGRAPELITE_LIBRARIES})
+        target_link_libraries(graph_db_loader  flex_rt_mutable_graph flex_graph_db ${GLOG_LIBRARIES} ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${Boost_LIBRARIES})
         install(TARGETS graph_db_loader
                 RUNTIME DESTINATION bin
                 ARCHIVE DESTINATION lib

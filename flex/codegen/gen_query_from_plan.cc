@@ -1,6 +1,7 @@
 #include "glog/logging.h"
 
 #include <filesystem>
+#include <fstream>
 #include "proto_generated_gie/common.pb.h"
 #include "proto_generated_gie/physical.pb.h"
 
