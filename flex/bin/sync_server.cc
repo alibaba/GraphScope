@@ -192,7 +192,7 @@ int main(int argc, char** argv) {
   if (vm.count("db-home") == 0) {
     LOG(FATAL) << "db-home is not specified" << std::endl;
   } else {
-    std::string db_home = vm["db-home"].as<std::string>();
+    db_home = vm["db-home"].as<std::string>();
     LOG(INFO) << "db-home: " << db_home;
   }
 
