@@ -16,6 +16,11 @@ root_command() {
   # echo "# you can edit it freely and regenerate (it will not be overwritten)"
   # inspect_args
 
+  SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+  output_dir=`realpath ${args[--output_dir]}`
+  mkdir -p ${output_dir}
+
   if [ ${args[--app]} == "db" ]; then
     package_name="graphscope_flex_${args[--app]}"
     comps=''
@@ -23,15 +28,14 @@ root_command() {
     for i in "${comps[@]}"; do
       package_name="${package_name}_${i}"
     done
-    output_dir=`pwd`
     build_dir=`mktemp -d`
     pushd $build_dir > /dev/null
-    cmd="cmake -DCPACK_PACKAGE_NAME=${package_name} ${output_dir} && make -j && make package && mv ${package_name}*.deb ${output_dir}/"
+    cmd="cmake -DCPACK_PACKAGE_NAME=${package_name} ${SCRIPT_DIR} && make -j && make package && mv ${package_name}*.deb ${output_dir}/"
     echo $cmd
     eval $cmd
     popd > /dev/null
   else
-    echo "not reach db"
+    echo "unexpected app type"
   fi
 
   # TODO: parse args and make.
@@ -73,6 +77,12 @@ flexbuild_usage() {
     printf "    Allowed: db, olap\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "--output_dir, -o NAME"
+    printf "\n"
+    printf "    Default: .\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "--help, -h"
     printf "    Show this help\n"
@@ -91,7 +101,7 @@ flexbuild_usage() {
 
     # :command.usage_examples
     printf "%s\n" "Examples:"
-    printf "  ./flexbuild cppsp hiactor --app db\n"
+    printf "  ./flexbuild cppsp hiactor --app db --output_dir ./output\n"
     printf "  ./flexbuild grape --app olap\n"
     echo
 
@@ -197,6 +207,21 @@ parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --output_dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--output_dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output_dir requires an argument: --output_dir, -o NAME" >&2
+          exit 1
+        fi
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -230,6 +255,9 @@ parse_requirements() {
     printf "missing required flag: --app, -a ATYPE\n" >&2
     exit 1
   fi
+
+  # :command.default_assignments
+  [[ -n ${args['--output_dir']:-} ]] || args['--output_dir']="."
 
   # :command.whitelist_filter
   if [[ ${args['--app']} ]] && [[ ! ${args['--app']} =~ ^(db|olap)$ ]]; then

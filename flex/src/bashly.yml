@@ -20,6 +20,11 @@ flags:
   allowed: [db, olap]
   help: Application type.
 
+- long: --output_dir
+  short: -o
+  arg: name
+  default: .
+
 examples:
-- ./flexbuild cppsp hiactor --app db
+- ./flexbuild cppsp hiactor --app db --output_dir ./output
 - ./flexbuild grape --app olap
