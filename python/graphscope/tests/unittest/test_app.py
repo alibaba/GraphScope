@@ -85,7 +85,7 @@ def test_run_app_on_pandas_graph(p2p_graph_from_pandas, sssp_result):
 def test_run_app_on_directed_graph(
     p2p_project_directed_graph,
     sssp_result,
-    pagerank_local_result,
+    pagerank_local_parallel_result,
     hits_result,
     bfs_result,
     clustering_result,
@@ -133,7 +133,7 @@ def test_run_app_on_directed_graph(
         .sort_values(by=["node"])
         .to_numpy(dtype=float)
     )
-    assert np.allclose(ret_pr, pagerank_local_result["directed"])
+    assert np.allclose(ret_pr, pagerank_local_parallel_result["directed"])
 
     # hits
     ctx_hits = hits(p2p_project_directed_graph, tolerance=0.001)
@@ -224,7 +224,7 @@ def test_run_app_on_directed_graph(
 def test_app_on_undirected_graph(
     p2p_project_undirected_graph,
     sssp_result,
-    pagerank_local_result,
+    pagerank_local_parallel_result,
     bfs_result,
     wcc_result,
     lpa_result,
@@ -262,14 +262,14 @@ def test_app_on_undirected_graph(
         .sort_values(by=["node"])
         .to_numpy(dtype=float)
     )
-    assert np.allclose(r2, pagerank_local_result["undirected"])
+    assert np.allclose(r2, pagerank_local_parallel_result["undirected"])
     ctx3 = pagerank(p2p_project_undirected_graph, 0.85, 10)
     r3 = (
         ctx3.to_dataframe({"node": "v.id", "r": "r"})
         .sort_values(by=["node"])
         .to_numpy(dtype=float)
     )
-    assert np.allclose(r3, pagerank_local_result["undirected"])
+    assert np.allclose(r3, pagerank_local_parallel_result["undirected"])
     # r4 = pagerank(arrow_project_graph, 10, 0.85) # check max_round=10
     # assert r4 is not None
     ctx5 = pagerank(p2p_project_undirected_graph, "0.85", "10")
@@ -278,14 +278,14 @@ def test_app_on_undirected_graph(
         .sort_values(by=["node"])
         .to_numpy(dtype=float)
     )
-    assert np.allclose(r5, pagerank_local_result["undirected"])
+    assert np.allclose(r5, pagerank_local_parallel_result["undirected"])
     ctx6 = pagerank(p2p_project_undirected_graph)
     r6 = (
         ctx6.to_dataframe({"node": "v.id", "r": "r"})
         .sort_values(by=["node"])
         .to_numpy(dtype=float)
     )
-    assert np.allclose(r6, pagerank_local_result["undirected"])
+    assert np.allclose(r6, pagerank_local_parallel_result["undirected"])
     assert np.allclose(
         ctx6.to_dataframe(
             {"node": "v.id", "r": "r"}, vertex_range={"begin": 1, "end": 4}
@@ -293,14 +293,15 @@ def test_app_on_undirected_graph(
         .sort_values(by=["node"])
         .to_numpy(),
         [
-            [1.0, 3.851369917786616],
-            [2.0, 5.808207281313435],
-            [3.0, 1.0284419953876565],
+            [1.0, 1.598779010550939e10],
+            [2.0, 2.117875105210911e10],
+            [3.0, 5.720363611374399e09],
         ],
     )
+
     assert np.allclose(
         sorted(ctx6.to_numpy("r", vertex_range={"begin": 1, "end": 4})),
-        sorted([3.851369917786616, 5.808207281313435, 1.0284419953876565]),
+        sorted([1.598779010550939e10, 2.117875105210911e10, 5.720363611374399e09]),
     )
 
     # bfs
