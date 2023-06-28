@@ -65,7 +65,7 @@ class CodegenProxy {
     // TODO: different suffix for different platform
     std::string res_lib_path = work_dir + "/lib" + query_name + ".so";
     std::string cmd = codegen_bin_ + " -i=" + plan_path + " -w=" + work_dir +
-                      " -db_home=" + db_home_;
+                      " --db_home=" + db_home_;
     LOG(INFO) << "Start call codegen cmd: " << cmd;
     auto res = std::system(cmd.c_str());
     if (res != 0) {
