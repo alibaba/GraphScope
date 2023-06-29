@@ -55,17 +55,17 @@ class QueryIC7 {
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
   // static gs::oid_t oid_param = 6597069767117;
-  std::string person_label = "person";
-  std::string knows_label = "knows";
-  std::string post_label = "post";
-  std::string comment_label = "comment";
-  std::string has_creator_label = "hasCreator";
-  std::string forum_label = "forum";
-  std::string likes_label = "likes";
-  std::string has_member_label = "hasMember";
-  std::string container_of_label = "containerOf";
-  std::string tag_label = "tag";
-  std::string has_tag_label = "hasTag";
+  std::string person_label = "PERSON";
+  std::string knows_label = "KNOWS";
+  std::string post_label = "POST";
+  std::string comment_label = "COMMENT";
+  std::string has_creator_label = "HASCREATOR";
+  std::string forum_label = "FORUM";
+  std::string likes_label = "LIKES";
+  std::string has_member_label = "HASMEMBER";
+  std::string container_of_label = "CONTAINEROF";
+  std::string tag_label = "TAG";
+  std::string has_tag_label = "HASTAG";
   // static std::string_view firstName = "Jack";
 
  public:

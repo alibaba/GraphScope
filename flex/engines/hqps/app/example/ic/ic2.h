@@ -1,8 +1,8 @@
 #ifndef ENGINES_HPQS_APP_EXAMPLE_IC_IC2_H_
 #define ENGINES_HPQS_APP_EXAMPLE_IC_IC2_H_
 
-#include "flex/utils/app_utils.h"
 #include "flex/engines/hqps/engine/sync_engine.h"
+#include "flex/utils/app_utils.h"
 
 namespace gs {
 
@@ -31,11 +31,11 @@ class QueryIC2 {
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
   // static gs::oid_t oid_param = 6597069767117;
-  std::string person_label = "person";
-  std::string knows_label = "knows";
-  std::string post_label = "post";
-  std::string comment_label = "comment";
-  std::string has_creator_label = "hasCreator";
+  std::string person_label = "PERSON";
+  std::string knows_label = "KNOWS";
+  std::string post_label = "POST";
+  std::string comment_label = "COMMENT";
+  std::string has_creator_label = "HASCREATOR";
   // static std::string_view firstName = "Jack";
 
  public:

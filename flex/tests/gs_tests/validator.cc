@@ -209,8 +209,8 @@ void validate_codegen(const GRAPH_INTERFACE& graph,
       graph, validate_dir + "/" + "validation_params_ic1.csv", max_times);
   LOG(INFO) << "Finish IC1 test";
 
-  // validate<GRAPH_INTERFACE, gs::QueryIC2<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic2.csv", max_times);
+  validate<GRAPH_INTERFACE, gs::QueryIC2<GRAPH_INTERFACE>>(
+      graph, validate_dir + "/" + "validation_params_ic2.csv", max_times);
 
   // validate<GRAPH_INTERFACE, gs::QueryIC3<GRAPH_INTERFACE>>(
   //     graph, validate_dir + "/" + "validation_params_ic3.csv", max_times);
@@ -229,9 +229,9 @@ void validate_codegen(const GRAPH_INTERFACE& graph,
   //     true);
   // LOG(INFO) << "Finish IC6 test";
 
-  validate<GRAPH_INTERFACE, gs::QueryIC7<GRAPH_INTERFACE>>(
-      graph, validate_dir + "/" + "validation_params_ic7.csv", max_times);
-  LOG(INFO) << "Finish IC7 test";
+  // validate<GRAPH_INTERFACE, gs::QueryIC7<GRAPH_INTERFACE>>(
+  //     graph, validate_dir + "/" + "validation_params_ic7.csv", max_times);
+  // LOG(INFO) << "Finish IC7 test";
 
   // validate<GRAPH_INTERFACE, gs::QueryIC8<GRAPH_INTERFACE>>(
   //     graph, validate_dir + "/" + "validation_params_ic8.csv", max_times);

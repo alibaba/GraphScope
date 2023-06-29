@@ -261,7 +261,10 @@ void MutablePropertyFragment::initEdges(
       std::tie(ie_[index], oe_[index]) =
           construct_empty_csr<int64_t>(ie_strtagy, oe_strtagy);
     } else {
-      LOG(FATAL) << "Unsupported edge property type.";
+      std::tie(ie_[index], oe_[index]) = construct_csr<int64_t>(
+          filenames, property_types, ie_strtagy, oe_strtagy,
+          lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
+      // LOG(FATAL) << "Unsupported edge property type.";
     }
   } else if (property_types[0] == PropertyType::kString) {
     if (filenames.empty()) {
@@ -459,6 +462,14 @@ inline MutableCsrBase* create_csr(EdgeStrategy es,
       return new MutableCsr<Date>();
     } else if (es == EdgeStrategy::kNone) {
       return new EmptyCsr<Date>();
+    }
+  } else if (properties[0] == PropertyType::kInt64) {
+    if (es == EdgeStrategy::kSingle) {
+      return new SingleMutableCsr<int64_t>();
+    } else if (es == EdgeStrategy::kMultiple) {
+      return new MutableCsr<int64_t>();
+    } else if (es == EdgeStrategy::kNone) {
+      return new EmptyCsr<int64_t>();
     }
   }
   LOG(FATAL) << "not support edge strategy or edge data type";

@@ -65,7 +65,8 @@ bool Schema::contains_vertex_label(const std::string& label) const {
 
 label_t Schema::get_vertex_label_id(const std::string& label) const {
   label_t ret;
-  CHECK(vlabel_indexer_.get_index(label, ret));
+  CHECK(vlabel_indexer_.get_index(label, ret))
+      << "Fail to get label: " << label;
   return ret;
 }
 

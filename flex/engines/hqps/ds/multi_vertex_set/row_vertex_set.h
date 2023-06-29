@@ -7,7 +7,6 @@
 
 #include "flex/engines/hqps/ds/collection.h"
 
-
 // Vertex set in with data in rows.
 namespace gs {
 
@@ -945,7 +944,6 @@ class RowVertexSetImpl {
                        std::move(res_vids_and_data_tuples.second), prop_names_);
   }
 
-
   // size_t... Is denotes the ind of data array need to project.
   //-1 denote it self.
   template <
@@ -1046,6 +1044,7 @@ class RowVertexSetImpl {
     using cur_prop = std::tuple_element_t<Proj_Is, std::tuple<PropT...>>;
     using my_prop = std::tuple_element_t<My_Is, data_tuple_t>;
     LOG(INFO) << "ProjId: " << Proj_Is << ", MyId: " << My_Is << ", "
+              << " input prop_name: " << prop_name << ", "
               << typeid(cur_prop).name() << ", " << typeid(my_prop).name()
               << ",prop_name " << prop_names_[My_Is]
               << ", eq: " << gs::to_string(std::is_same_v<cur_prop, my_prop>);
