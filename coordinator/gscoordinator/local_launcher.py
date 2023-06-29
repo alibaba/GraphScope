@@ -232,7 +232,8 @@ class LocalLauncher(AbstractLauncher):
             str(num_workers),  # server size
             str(self._interactive_port),  # executor port
             str(self._interactive_port + 1),  # executor rpc port
-            str(self._interactive_port + 2 * num_workers),  # frontend port
+            str(self._interactive_port + 2 * num_workers),  # frontend gremlin port
+            str(self._interactive_port + 2 * num_workers + 1),  # frontend cypher port
             self.vineyard_socket,
             params,
         ]

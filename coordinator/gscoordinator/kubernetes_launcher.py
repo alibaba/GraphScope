@@ -947,7 +947,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
     def _create_frontend_service(self):
         logger.info("Creating frontend service...")
-        service = self._engine_cluster.get_interactive_frontend_service(8233)
+        service = self._engine_cluster.get_interactive_frontend_service(8233, 7687)
         service.metadata.owner_references = self._owner_references
         response = self._core_api.create_namespaced_service(self._namespace, service)
         self._resource_object.append(response)

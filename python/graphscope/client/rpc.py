@@ -213,6 +213,7 @@ class GRPCClient(object):
             for k, v in params.items():
                 request.params[str(k)] = str(v)
 
+        print('-'*100, '\n', request, '\n', '-'*100)
         response = self._stub.CreateInteractiveInstance(request)
         return response.gremlin_endpoint
 

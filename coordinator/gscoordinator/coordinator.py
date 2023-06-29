@@ -439,12 +439,13 @@ class CoordinatorServiceServicer(
                 if rlt:
                     return rlt[0].strip()
             return ""
-
+        from termcolor import colored
+        print(colored('I am here at CreateInteractiveInstance', 'green'))
         # frontend endpoint pattern
-        FRONTEND_PATTERN = re.compile("(?<=FRONTEND_ENDPOINT:).*$")
+        FRONTEND_PATTERN = re.compile("(?<=FRONTEND_GREMLIN_ENDPOINT:).*$")
         # frontend external endpoint, for clients that are outside of cluster to connect
         # only available in kubernetes mode, exposed by NodePort or LoadBalancer
-        FRONTEND_EXTERNAL_PATTERN = re.compile("(?<=FRONTEND_EXTERNAL_ENDPOINT:).*$")
+        FRONTEND_EXTERNAL_PATTERN = re.compile("(?<=FRONTEND_EXTERNAL_GREMLIN_ENDPOINT:).*$")
 
         # create instance
         object_id = request.object_id
@@ -465,9 +466,11 @@ class CoordinatorServiceServicer(
             if return_code != 0:
                 raise RuntimeError(f"Error code: {return_code}, message {outs}")
             # match frontend endpoint and check for ready
+            print('*'*200, '\n', outs, '\n', '*'*200)
             endpoint = _match_frontend_endpoint(FRONTEND_PATTERN, outs)
             # coordinator use internal endpoint
             gie_manager.set_endpoint(endpoint)
+            print('*'*200, '\n', endpoint, '\n', '*'*200)
             if check_gremlin_server_ready(endpoint):  # throws TimeoutError
                 logger.info(
                     "Built interactive frontend %s for graph %ld", endpoint, object_id
@@ -481,6 +484,8 @@ class CoordinatorServiceServicer(
             self._object_manager.pop(object_id)
             return message_pb2.CreateInteractiveInstanceResponse()
         external_endpoint = _match_frontend_endpoint(FRONTEND_EXTERNAL_PATTERN, outs)
+        print('+'*200, '\n', outs, '\n', external_endpoint, '\n', '+'*200)
+
         # client use external endpoint (k8s mode), or internal endpoint (standalone mode)
         endpoint = external_endpoint or endpoint
         return message_pb2.CreateInteractiveInstanceResponse(

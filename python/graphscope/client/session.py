@@ -1293,17 +1293,17 @@ class Session(object):
         self._config_params["port"] = None
         self._config_params["vineyard_socket"] = ""
 
-    def gremlin(self, graph, params=None):
-        """Get an interactive engine handler to execute gremlin queries.
+    def interactive(self, graph, params=None):
+        """Get an interactive engine handler to execute gremlin and cypher queries.
 
         It will return an instance of :class:`graphscope.interactive.query.InteractiveQuery`,
 
         .. code:: python
 
             >>> # close and recreate InteractiveQuery.
-            >>> interactive_query = sess.gremlin(g)
+            >>> interactive_query = sess.interactive(g)
             >>> interactive_query.close()
-            >>> interactive_query = sess.gremlin(g)
+            >>> interactive_query = sess.interactive(g)
 
         Args:
             graph (:class:`graphscope.framework.graph.GraphDAGNode`):
@@ -1316,7 +1316,7 @@ class Session(object):
 
         Returns:
             :class:`graphscope.interactive.query.InteractiveQuery`:
-                InteractiveQuery to execute gremlin queries.
+                InteractiveQuery to execute gremlin and cypher queries.
         """
         if self._session_id != graph.session_id:
             raise RuntimeError(
@@ -1720,14 +1720,14 @@ def g(
     )
 
 
-def gremlin(graph, params=None):
-    """Create an interactive engine and get the handler to execute the gremlin queries.
+def interactive(graph, params=None):
+    """Create an interactive engine and get the handler to execute gremlin and cypher queries.
 
-    See params detail in :meth:`graphscope.Session.gremlin`
+    See params detail in :meth:`graphscope.Session.interactive`
 
     Returns:
         :class:`graphscope.interactive.query.InteractiveQueryDAGNode`:
-            InteractiveQuery to execute gremlin queries, evaluated in eager mode.
+            InteractiveQuery to execute gremlin and cypher queries, evaluated in eager mode.
 
     Examples:
 
@@ -1735,13 +1735,13 @@ def gremlin(graph, params=None):
 
         >>> import graphscope
         >>> g = graphscope.g()
-        >>> interactive_query = graphscope.gremlin()
+        >>> interactive_query = graphscope.interactive()
     """
     assert graph is not None, "graph cannot be None"
     assert (
         graph._session is not None
     ), "The graph object is invalid"  # pylint: disable=protected-access
-    return graph._session.gremlin(graph, params)  # pylint: disable=protected-access
+    return graph._session.interactive(graph, params)  # pylint: disable=protected-access
 
 
 def graphlearn(graph, nodes=None, edges=None, gen_labels=None):

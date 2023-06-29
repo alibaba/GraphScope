@@ -38,6 +38,7 @@ class InteractiveQueryStatus(Enum):
     Failed = 2
     Closed = 3
 
+from termcolor import colored
 
 class InteractiveQuery(object):
     """`InteractiveQuery` class, is a simple wrapper around
@@ -55,6 +56,7 @@ class InteractiveQuery(object):
     """
 
     def __init__(self, graph, frontend_endpoint):
+        print(colored(frontend_endpoint, 'red'))
         """Construct a :class:`InteractiveQuery` object."""
         # graph object id stored in vineyard
         self._graph = graph
@@ -104,6 +106,7 @@ class InteractiveQuery(object):
 
     @property
     def gremlin_client(self):
+        print(colored("I'm here in gremlin_client", 'red'))
         if self._gremlin_client is None:
             self._gremlin_client = Client(self._graph_url[0], "g")
         return self._gremlin_client
