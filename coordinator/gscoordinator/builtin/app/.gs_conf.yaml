@@ -7,6 +7,22 @@ app:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
       - gs::DynamicProjectedFragment
+  - algo: pagerank_directed
+    type: cpp_pie
+    class_name: grape::PageRankDirected
+    src: pagerank/pagerank_directed.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
+  - algo: pagerank_opt
+    type: cpp_pie
+    class_name: grape::PageRankOpt
+    src: pagerank/pagerank_opt.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
   - algo: sssp
     type: cpp_pie
     class_name: grape::SSSP
@@ -53,6 +69,12 @@ app:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
       - gs::DynamicProjectedFragment
+  - algo: lcc
+    type: cpp_pie
+    class_name: grape::LCC
+    src: lcc/lcc.h
+    compatible_graph:
+      - gs::DynamicFragment
   - algo: sssp_path
     type: cpp_pie
     class_name: gs::SSSPPath
@@ -116,12 +138,6 @@ app:
     type: cpp_pie
     class_name: gs::KShell
     src: apps/kshell/kshell.h
-    compatible_graph:
-      - gs::DynamicFragment
-  - algo: lcc
-    type: cpp_pie
-    class_name: grape::LCC
-    src: lcc/lcc.h
     compatible_graph:
       - gs::DynamicFragment
   - algo: clustering

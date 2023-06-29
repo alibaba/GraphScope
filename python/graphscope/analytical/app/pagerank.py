@@ -16,18 +16,21 @@
 # limitations under the License.
 #
 
+import logging
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
 from graphscope.framework.app import project_to_simple
 
-__all__ = ["pagerank", "pagerank_nx"]
+__all__ = ["pagerank", "pagerank_opt", "pagerank_nx"]
+
+logger = logging.getLogger("graphscope")
 
 
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def pagerank(graph, delta=0.85, max_round=10):
-    """Evalute PageRank on a graph.
+    """Evaluate PageRank on a graph.
 
     Args:
         graph (:class:`graphscope.Graph`): A simple graph.
@@ -51,9 +54,26 @@ def pagerank(graph, delta=0.85, max_round=10):
         >>> c = graphscope.pagerank(pg, delta=0.85, max_round=10)
         >>> sess.close()
     """
+    if graph.is_directed():
+        algo = "pagerank_directed"
+    else:
+        algo = "pagerank"
     delta = float(delta)
     max_round = int(max_round)
-    return AppAssets(algo="pagerank", context="vertex_data")(graph, delta, max_round)
+    return AppAssets(algo=algo, context="vertex_data")(graph, delta, max_round)
+
+
+@project_to_simple
+@not_compatible_for("arrow_property", "dynamic_property")
+def pagerank_opt(graph, delta=0.85, max_round=10):
+    """Evaluate PageRank on a graph."""
+    if graph.is_directed():
+        logger.warning("PageRankOpt is not designed for directed graph.")
+    delta = float(delta)
+    max_round = int(max_round)
+    return AppAssets(algo="pagerank_opt", context="vertex_data")(
+        graph, delta, max_round
+    )
 
 
 @project_to_simple
