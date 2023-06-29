@@ -74,8 +74,10 @@ public abstract class LabelParser {
             Iterator<Map.Entry> valuesIterator = ((Map) values).entrySet().iterator();
             while (valuesIterator.hasNext()) {
                 Map.Entry valuesEntry = valuesIterator.next();
-                if (!(stepOrTraversal instanceof ElementMapStep)
-                        || valuesEntry.getKey().equals(T.label.getAccessor())) {
+                if (valuesEntry.getValue() instanceof Map) {
+                    parseLabel(valuesEntry.getValue(), tag, stepOrTraversal, parent);
+                } else if (!(stepOrTraversal instanceof ElementMapStep)
+                        || valuesEntry.getKey().equals(T.label)) {
                     valuesEntry.setValue(
                             parseLabelByType(
                                     valuesEntry.getValue(),

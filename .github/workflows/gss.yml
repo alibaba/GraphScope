@@ -149,23 +149,6 @@ jobs:
         docker build -t ${{ env.GSS_IMAGE }}:${SHORT_SHA} \
                 -f .github/workflows/docker/graphscope-store.Dockerfile .
 
-    - name: Prepare the log directory
-      run: |
-        # create the helm installation log directory
-        mkdir -p ${{ github.workspace }}/k8s-ci-helm-installation-logs
-
-        # create the demo fresh of helm installation log directory
-        mkdir -p ${{ github.workspace }}/k8s-ci-demo-fresh-of-helm-installation-logs
-
-        # create the demo script of helm installation with pv log directory
-        mkdir -p ${{ github.workspace }}/k8s-ci-demo-script-of-helm-installation-with-pv-logs
-
-        # create the helm test of helm installation with pv log directory
-        mkdir -p ${{ github.workspace }}/k8s-ci-helm-test-of-helm-installation-with-pv-logs
-
-        # create the demo after restart of helm installation with pv log directory
-        mkdir -p ${{ github.workspace }}/k8s-ci-demo-after-restart-of-helm-installation-with-pv-logs
-
     - name: Setup SSH
       run: |
         ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ''
@@ -263,10 +246,10 @@ jobs:
         MODE: stop
 
     - name: upload the k8s logs to artifact
-      if: ${{ always() }}
+      if: ${{ failure() }}
       uses: actions/upload-artifact@v3
       continue-on-error: true
       with:
         name: k8s-test-logs
-        path: ${{ github.workspace }}/k8s-ci-*-logs
+        path: ${{ github.workspace }}/helm-installation-logs
 

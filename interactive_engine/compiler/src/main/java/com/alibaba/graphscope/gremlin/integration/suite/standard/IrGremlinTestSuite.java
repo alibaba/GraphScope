@@ -64,6 +64,7 @@ public class IrGremlinTestSuite extends AbstractGremlinSuite {
                 VertexTest.Traversals.class,
                 UnfoldTest.Traversals.class,
                 ValueMapTest.Traversals.class,
+                ElementMapTest.Traversals.class,
                 GroupTest.Traversals.class,
                 GroupCountTest.Traversals.class,
 
@@ -100,6 +101,7 @@ public class IrGremlinTestSuite extends AbstractGremlinSuite {
                 VertexTest.Traversals.class,
                 UnfoldTest.Traversals.class,
                 ValueMapTest.Traversals.class,
+                ElementMapTest.Traversals.class,
                 GroupTest.Traversals.class,
                 GroupCountTest.Traversals.class,
 
