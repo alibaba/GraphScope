@@ -1117,13 +1117,13 @@ class ArrowProjectedFragment
                        grape::PrepareConf conf) {
     if (conf.message_strategy ==
         grape::MessageStrategy::kAlongEdgeToOuterVertex) {
-      initDestFidList(true, true, iodst_, iodoffset_);
+      initDestFidList(comm_spec, true, true, iodst_, iodoffset_);
     } else if (conf.message_strategy ==
                grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex) {
-      initDestFidList(true, false, idst_, idoffset_);
+      initDestFidList(comm_spec, true, false, idst_, idoffset_);
     } else if (conf.message_strategy ==
                grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex) {
-      initDestFidList(false, true, odst_, odoffset_);
+      initDestFidList(comm_spec, false, true, odst_, odoffset_);
     }
 
     initOuterVertexRanges();
@@ -1140,8 +1140,10 @@ class ArrowProjectedFragment
       ie_spliters_ptr_.clear();
       oe_spliters_ptr_.clear();
       if (directed_) {
-        initEdgeSpliters(ie_, ie_offsets_begin_, ie_offsets_end_, ie_spliters_);
-        initEdgeSpliters(oe_, oe_offsets_begin_, oe_offsets_end_, oe_spliters_);
+        initEdgeSpliters(comm_spec, ie_, ie_offsets_begin_, ie_offsets_end_,
+                         ie_spliters_);
+        initEdgeSpliters(comm_spec, oe_, oe_offsets_begin_, oe_offsets_end_,
+                         oe_spliters_);
         for (auto& vec : ie_spliters_) {
           ie_spliters_ptr_.push_back(vec.data());
         }
@@ -1149,7 +1151,8 @@ class ArrowProjectedFragment
           oe_spliters_ptr_.push_back(vec.data());
         }
       } else {
-        initEdgeSpliters(oe_, oe_offsets_begin_, oe_offsets_end_, oe_spliters_);
+        initEdgeSpliters(comm_spec, oe_, oe_offsets_begin_, oe_offsets_end_,
+                         oe_spliters_);
         for (auto& vec : oe_spliters_) {
           ie_spliters_ptr_.push_back(vec.data());
           oe_spliters_ptr_.push_back(vec.data());
@@ -1690,7 +1693,7 @@ class ArrowProjectedFragment
             ends[i] = range.second;
           }
         },
-        std::thread::hardware_concurrency());
+        std::thread::hardware_concurrency(), 1024);
     return {};
   }
 
@@ -1721,13 +1724,78 @@ class ArrowProjectedFragment
             bends[i] = range.second.second;
           }
         },
-        std::thread::hardware_concurrency());
+        std::thread::hardware_concurrency(), 1024);
     return {};
   }
 
-  void initDestFidList(bool in_edge, bool out_edge,
-                       std::vector<fid_t>& fid_list,
+  void initDestFidList(const grape::CommSpec& comm_spec, const bool in_edge,
+                       const bool out_edge, std::vector<fid_t>& fid_list,
                        std::vector<fid_t*>& fid_list_offset) {
+    if (!fid_list_offset.empty()) {
+      return;
+    }
+    fid_list_offset.resize(ivnum_ + 1, NULL);
+
+    int concurrency =
+        (std::thread::hardware_concurrency() + comm_spec.local_num() - 1) /
+        comm_spec.local_num();
+
+    // don't use std::vector<bool> due to its specialization
+    std::vector<uint8_t> fid_list_bitmap(ivnum_ * fnum_, 0);
+    std::atomic_size_t fid_list_size(0);
+
+    vineyard::parallel_for(
+        static_cast<vid_t>(0), static_cast<vid_t>(ivnum_),
+        [this, in_edge, out_edge, &fid_list_bitmap,
+         &fid_list_size](const vid_t& offset) {
+          vertex_t v = *(inner_vertices_.begin() + offset);
+          if (in_edge) {
+            auto es = GetIncomingAdjList(v);
+            fid_t last_fid = -1;
+            for (auto& e : es) {
+              fid_t f = GetFragId(e.neighbor());
+              if (f != last_fid && f != fid_ &&
+                  !fid_list_bitmap[offset * fnum_ + f]) {
+                last_fid = f;
+                fid_list_bitmap[offset * fnum_ + f] = 1;
+                fid_list_size.fetch_add(1);
+              }
+            }
+          }
+          if (out_edge) {
+            auto es = GetOutgoingAdjList(v);
+            fid_t last_fid = -1;
+            for (auto& e : es) {
+              fid_t f = GetFragId(e.neighbor());
+              if (f != last_fid && f != fid_ &&
+                  !fid_list_bitmap[offset * fnum_ + f]) {
+                last_fid = f;
+                fid_list_bitmap[offset * fnum_ + f] = 1;
+                fid_list_size.fetch_add(1);
+              }
+            }
+          }
+        },
+        concurrency, 1024);
+
+    fid_list.reserve(fid_list_size.load());
+    fid_list_offset[0] = fid_list.data();
+
+    for (vid_t i = 0; i < ivnum_; ++i) {
+      size_t nonzero = 0;
+      for (fid_t fid = 0; fid < fnum_; ++fid) {
+        if (fid_list_bitmap[i * fnum_ + fid]) {
+          nonzero += 1;
+          fid_list.push_back(fid);
+        }
+      }
+      fid_list_offset[i + 1] = fid_list_offset[i] + nonzero;
+    }
+  }
+
+  void initDestFidListSeq(const bool in_edge, const bool out_edge,
+                          std::vector<fid_t>& fid_list,
+                          std::vector<fid_t*>& fid_list_offset) {
     if (!fid_list_offset.empty()) {
       return;
     }
@@ -1773,6 +1841,7 @@ class ArrowProjectedFragment
   }
 
   void initEdgeSpliters(
+      const grape::CommSpec& comm_spec,
       const std::shared_ptr<arrow::FixedSizeBinaryArray>& edge_list,
       const std::shared_ptr<arrow::Int64Array>& offsets_begin,
       const std::shared_ptr<arrow::Int64Array>& offsets_end,
@@ -1784,28 +1853,38 @@ class ArrowProjectedFragment
     for (auto& vec : spliters) {
       vec.resize(ivnum_);
     }
-    std::vector<int> frag_count;
-    for (vid_t i = 0; i < ivnum_; ++i) {
-      frag_count.clear();
-      frag_count.resize(fnum_, 0);
-      int64_t begin = offsets_begin->Value(i);
-      int64_t end = offsets_end->Value(i);
-      for (int64_t j = begin; j != end; ++j) {
-        const nbr_unit_t* nbr_ptr =
-            reinterpret_cast<const nbr_unit_t*>(edge_list->GetValue(j));
-        vertex_t u(nbr_ptr->vid);
-        fid_t u_fid = GetFragId(u);
-        ++frag_count[u_fid];
-      }
-      begin += frag_count[fid_];
-      frag_count[fid_] = 0;
-      spliters[0][i] = begin;
-      for (fid_t j = 0; j < fnum_; ++j) {
-        begin += frag_count[j];
-        spliters[j + 1][i] = begin;
-      }
-      CHECK_EQ(begin, end);
-    }
+
+    int concurrency =
+        (std::thread::hardware_concurrency() + comm_spec.local_num() - 1) /
+        comm_spec.local_num();
+
+    vineyard::parallel_for(
+        static_cast<vid_t>(0), ivnum_,
+        [this, &offsets_begin, &offsets_end, &edge_list,
+         &spliters](const vid_t i) {
+          std::vector<int> frag_count(fnum_, 0);
+          int64_t begin = offsets_begin->Value(i);
+          int64_t end = offsets_end->Value(i);
+          for (int64_t j = begin; j != end; ++j) {
+            const nbr_unit_t* nbr_ptr =
+                reinterpret_cast<const nbr_unit_t*>(edge_list->GetValue(j));
+            vertex_t u(nbr_ptr->vid);
+            fid_t u_fid = GetFragId(u);
+            ++frag_count[u_fid];
+          }
+          begin += frag_count[fid_];
+          frag_count[fid_] = 0;
+          spliters[0][i] = begin;
+          for (fid_t j = 0; j < fnum_; ++j) {
+            begin += frag_count[j];
+            spliters[j + 1][i] = begin;
+          }
+          if (begin != end) {
+            LOG(ERROR) << "Unexpected edge spliters for ith vertex " << i
+                       << ", begin: " << begin << " vs. end: " << end;
+          }
+        },
+        concurrency, 1024);
   }
 
   void initOuterVertexRanges() {
