@@ -22,15 +22,19 @@ The GraphScope Flex stack (as shown in the figure), consists of multiple compone
 
 ## How to Build
 
-### Prerequisites
-TBF
+### Dependencies
+
+Please use `script/install_deps.sh` to install dependencies.
+Alternatively, you can mannully install a subset of dependencies required by your selected components.
+
+Please refer to [scripts/install_deps.sh](https://github.com/alibaba/GraphScope/blob/main/flex/scripts/install_dependencies.sh) for the full list of dependencies.
 
 ### Building 
-GraphScope Flex comes with a useful script `flexbuild` that allows you to build a customized stack using specific components. `flexbuild` has two main parameters:
 
+GraphScope Flex comes with a useful script `flexbuild` that allows you to build a customized stack using specific components. `flexbuild` has  some parameters and two of them are critical for building:
 
 - argument `COMPONENTS` specifies which "lego bricks" you want to select. The available components are illustrated in figure above or listed in the `--help` section.
-- flag `--app` specifies the applicatin type of the built artifacts you want to build. The available types are `db`, `olap`, `ldbcdriver`, `docker`. (TBD)
+- flag `--app` specifies the applicatin type of the built artifacts you want to build. The available types are `db`, `olap`, `ldbcdriver`, `docker`(WIP).
 
 By selecting and combining the components that best suit your requirements, you can use the `flexbuild` script to create a tailored deployment of GraphScope Flex for your specific use case.
 
@@ -45,7 +49,8 @@ Please use `flexbuild --help` to learn more.
 </div>
 
 BI analysis is for analysts who interactively analyze data in a WebUI. While high concurrency is unlikely, low latency for complex queries is crucial.
-GraphScope Flex compiles Cypher and Gremlin queries into a **unified intermediate representation (IR)** and optimizes it using a **universal query optimizer** and **catalog** module. The optimized IR is passed to **Gaia Codegen** and executed on **Gaia**, a distributed dataflow engine that reduces query latency through data parallelism. Graph data is accessed from a mutable persistent storage via a unified interface.
+
+GraphScope Flex compiles Cypher and Gremlin queries into a **unified intermediate representation (IR)** and optimizes it using a **universal query optimizer** and **catalog** module. The optimized IR is passed to **Gaia Codegen** and executed on **Gaia**, a distributed dataflow engine that reduces query latency through data parallelism. Graph data is accessed from a mutable csr-based persistent storage via a unified interface.
 
 To build the artifacts for this use case, run the following command:
 ```bash
@@ -58,7 +63,7 @@ To build the artifacts for this use case, run the following command:
     <img src="https://graphscope.io/docs/_images/gsflex-case2.png" width="500" alt="GraphScope Flex usecase-2" />
 </div>
 
-For high QPS scenarios like recommendation or searching, GraphScope Flex can be deployed with a different component set. The **compiler** generates an optimized query plan and **Hiactor Codegen** produces a physical plan tailored for **Hiactor**, a high-performance and concurrent actor framework for OLTP-like queries.
+In some service scenarios, e.g., recommendation or searching, the graph queries are coming at an extremely high rate and demands high throughput. In these scenarios, GraphScope Flex can be deployed with a different component set. The **compiler** generates an optimized query plan and **Hiactor Codegen** produces a physical plan tailored for **Hiactor**, a high-performance and concurrent actor framework for OLTP-like queries.
 
 To build the artifacts for this use case, run the following command:
 ```bash
@@ -78,9 +83,9 @@ GraphScope Flex is an efficient and user-friendly platform for performing graph 
 
 To build the artifacts for this use case, run the following command:
 ```bash
-./flexbuild builtin grape-cpu vineyard --app olap
+./flexbuild builtin grape-cpu --app olap
 # or
-./flexbuild builtin grape-gpu vineyard --app ldbcdriver
+./flexbuild builtin grape-gpu --app ldbcdriver
 ```
 
 ### Case 4: For graph learning tasks
@@ -93,5 +98,5 @@ GraphScope Flex's GNN framework supports billion-scale graphs in industrial scen
 
 To build the artifacts for this use case, run the following command:
 ```bash
-./flexbuild gnnmodels graphlearn pyg vineyard --app gnn
+./flexbuild gnnmodels graphlearn tensorflow vineyard --app gnn
 ```

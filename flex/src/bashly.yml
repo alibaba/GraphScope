@@ -8,7 +8,8 @@ version: 0.1.0
 
 args:
 - name: components
-  help: components to include and link
+  help: Components (LEGO bricks) to include and link
+  allowed: [cppsp, builtin, hiactor, gaia, grape-cpu, grape-gpu, vineyard, mcsr]
   required: true
   repeatable: true
 
@@ -17,15 +18,16 @@ flags:
   short: -a
   arg: atype
   required: true
-  allowed: [db, olap, ldbcdriver]
-  help: Application type.
+  allowed: [db, olap, ldbcdriver, gnn]
+  help: Application type
 
 - long: --output_dir
   short: -o
+  help: Output prefix
   arg: name
   default: .
 
 examples:
-- ./flexbuild cppsp hiactor --app db --output_dir ./output
+- ./flexbuild cppsp hiactor mcsr --app db --output_dir ./output
 - ./flexbuild builtin grape-cpu --app olap
 - ./flexbuild builtin grape-gpu --app ldbcdriver
