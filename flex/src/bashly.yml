@@ -17,7 +17,7 @@ flags:
   short: -a
   arg: atype
   required: true
-  allowed: [db, olap]
+  allowed: [db, olap, ldbcdriver]
   help: Application type.
 
 - long: --output_dir
@@ -27,4 +27,5 @@ flags:
 
 examples:
 - ./flexbuild cppsp hiactor --app db --output_dir ./output
-- ./flexbuild grape --app olap
+- ./flexbuild builtin grape-cpu --app olap
+- ./flexbuild builtin grape-gpu --app ldbcdriver
