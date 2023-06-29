@@ -46,7 +46,7 @@ function build_grape_ldbc_driver {
 
   tmp_dir=`mktemp -d`
   pushd ${tmp_dir} > /dev/null
-  cmd="git clone https://github.com/alibaba/libgrape-lite.git && cd libgrape-lite/ldbc_driver/ && mvn package && mv graphalytics-*.bin.tar.gz ${package_name}"
+  cmd="git clone https://github.com/alibaba/libgrape-lite.git && cd libgrape-lite/ldbc_driver/ && mvn package && mv graphalytics-*-bin.tar.gz ${package_name}"
   echo $cmd
   eval $cmd
   popd > /dev/null
