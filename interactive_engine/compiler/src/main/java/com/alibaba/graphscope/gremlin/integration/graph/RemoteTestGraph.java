@@ -1507,6 +1507,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
         method = "g_EX11X",
         reason = "unsupported")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ElementMapTest",
+        method = "g_EX11X_elementMap",
+        reason = "cannot get label and id for out and in vertices")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ElementMapTest",
+        method = "g_V_elementMap",
+        reason = "cannot get label and id for out and in vertices")
 // @Graph.OptOut(
 //        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
 //        method = "g_V_valueMapXname_ageX",

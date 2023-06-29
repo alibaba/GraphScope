@@ -116,7 +116,7 @@ Graph neural networks (GNNs) combines superiority of both graph analytics and ma
 
 ````{dropdown} Prepare data and engine for learning
 
-In our example, we train a Graph Convolutional Network (GCN) model to classify the nodes (papers) into 349 categories, each representing a venue (e.g., pre-print or conference). To accomplish this, we first launch a learning engine and construct a graph with features, following the previous step.
+In our example, we train a supervised GraphSAGE model to classify the nodes (papers) into 349 categories, each representing a venue (e.g., pre-print or conference). To accomplish this, we first launch a learning engine and construct a graph with features, following the previous step.
 
 ```python
 # define the features for learning
@@ -153,8 +153,8 @@ from graphscope.learning.examples import EgoGraphSAGE
 from graphscope.learning.examples import EgoSAGESupervisedDataLoader
 from graphscope.learning.examples.tf.trainer import LocalTrainer
 
-# supervised GCN.
-def train_gcn(graph, node_type, edge_type, class_num, features_num,
+# supervised GraphSAGE.
+def train_sage(graph, node_type, edge_type, class_num, features_num,
               hops_num=2, nbrs_num=[25, 10], epochs=2,
               hidden_dim=256, in_drop_rate=0.5, learning_rate=0.01,
 ):
@@ -195,7 +195,7 @@ def train_gcn(graph, node_type, edge_type, class_num, features_num,
     trainer.train(train_data.iterator, loss, optimizer, epochs=epochs)
     trainer.test(test_data.iterator, test_acc)
 
-train_gcn(lg, node_type="paper", edge_type="cites",
+train_sage(lg, node_type="paper", edge_type="cites",
           class_num=349,  # output dimension
           features_num=130,  # input dimension, 128 + kcore + triangle count
 )
@@ -265,7 +265,89 @@ print(q2.all().result())  # should print [[v[2], v[3], v[0], v[1]]]
 
 
 ## Graph Learning Quick Start
+GNN model training with GraphScope is easy and straightforward. You can use the `graphscope` package to train a GNN model on your local machine. Note that
+`tensorflow` is required to run the following example.
 
-TODO(LiSu):
+````{dropdown} Example: Training GraphSAGE Model in GraphScope
+```python
+
+import graphscope
+from graphscope.dataset import load_ogbn_mag
+
+g = load_ogbn_mag()
+
+# define the features for learning
+paper_features = [f"feat_{i}" for i in range(128)]
+
+# launch a learning engine.
+lg = graphscope.graphlearn(g, nodes=[("paper", paper_features)],
+                  edges=[("paper", "cites", "paper")],
+                  gen_labels=[
+                      ("train", "paper", 100, (0, 75)),
+                      ("val", "paper", 100, (75, 85)),
+                      ("test", "paper", 100, (85, 100))
+                  ])
+
+try:
+    # https://www.tensorflow.org/guide/migrate
+    import tensorflow.compat.v1 as tf
+    tf.disable_v2_behavior()
+except ImportError:
+    import tensorflow as tf
+
+import graphscope.learning
+from graphscope.learning.examples import EgoGraphSAGE
+from graphscope.learning.examples import EgoSAGESupervisedDataLoader
+from graphscope.learning.examples.tf.trainer import LocalTrainer
+
+# supervised GraphSAGE
+def train_sage(graph, node_type, edge_type, class_num, features_num,
+              hops_num=2, nbrs_num=[25, 10], epochs=2,
+              hidden_dim=256, in_drop_rate=0.5, learning_rate=0.01,
+):
+    graphscope.learning.reset_default_tf_graph()
+
+    dimensions = [features_num] + [hidden_dim] * (hops_num - 1) + [class_num]
+    model = EgoGraphSAGE(dimensions, act_func=tf.nn.relu, dropout=in_drop_rate)
+
+    # prepare train dataset
+    train_data = EgoSAGESupervisedDataLoader(
+        graph, graphscope.learning.Mask.TRAIN,
+        node_type=node_type, edge_type=edge_type, nbrs_num=nbrs_num, hops_num=hops_num,
+    )
+    train_embedding = model.forward(train_data.src_ego)
+    train_labels = train_data.src_ego.src.labels
+    loss = tf.reduce_mean(
+        tf.nn.sparse_softmax_cross_entropy_with_logits(
+            labels=train_labels, logits=train_embedding,
+        )
+    )
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+
+    # prepare test dataset
+    test_data = EgoSAGESupervisedDataLoader(
+        graph, graphscope.learning.Mask.TEST,
+        node_type=node_type, edge_type=edge_type, nbrs_num=nbrs_num, hops_num=hops_num,
+    )
+    test_embedding = model.forward(test_data.src_ego)
+    test_labels = test_data.src_ego.src.labels
+    test_indices = tf.math.argmax(test_embedding, 1, output_type=tf.int32)
+    test_acc = tf.div(
+        tf.reduce_sum(tf.cast(tf.math.equal(test_indices, test_labels), tf.float32)),
+        tf.cast(tf.shape(test_labels)[0], tf.float32),
+    )
+
+    # train and test
+    trainer = LocalTrainer()
+    trainer.train(train_data.iterator, loss, optimizer, epochs=epochs)
+    trainer.test(test_data.iterator, test_acc)
+
+train_sage(lg, node_type="paper", edge_type="cites",
+          class_num=349,  # output dimension
+          features_num=128,  # input dimension
+)
+
+```
+````
 
 

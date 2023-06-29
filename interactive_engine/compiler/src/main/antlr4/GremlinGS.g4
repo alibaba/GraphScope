@@ -61,7 +61,8 @@ traversalMethod
     | traversalMethod_inE  // inE()[.outV()]
     | traversalMethod_bothE  // bothE()[.otherV()]
     | traversalMethod_limit    // limit()
-    | traversalMethod_valueMap  // valueMap()
+    | traversalMethod_valueMap // valueMap()
+    | traversalMethod_elementMap // elementMap()
     | traversalMethod_order  // order()
     | traversalMethod_select  // select()
     | traversalMethod_dedup   // dedup()
@@ -199,6 +200,12 @@ traversalMethod_valueMap
     : 'valueMap' LPAREN stringLiteralList RPAREN
     ;
 
+// elementMap()
+// elementMap('s1', ...)
+traversalMethod_elementMap
+    : 'elementMap' LPAREN stringLiteralList RPAREN
+    ;
+
 // order()
 // order().by
 traversalMethod_order
@@ -238,12 +245,14 @@ traversalMethod_select
 // by()
 // by("name")
 // by(valueMap())
+// by(elementMap())
 // by(out().count())
 // by(T.label/T.id)
 traversalMethod_selectby
     : 'by' LPAREN RPAREN
     | 'by' LPAREN stringLiteral RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_valueMap RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_elementMap RPAREN
     | 'by' LPAREN nestedTraversal RPAREN
     | 'by' LPAREN traversalToken RPAREN
     ;

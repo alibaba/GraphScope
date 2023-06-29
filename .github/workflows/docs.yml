@@ -9,7 +9,7 @@ on:
       - dev/docs
     tags:
       - "v*"
-  pull_request_target:
+  pull_request:
     branches:
       - main
       - docs
@@ -26,8 +26,8 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
       with:
-        repository: ${{github.event.pull_request.head.repo.full_name}}
-        ref: ${{github.event.pull_request.head.ref}}
+        repository: ${{ github.event.pull_request.head.repo.full_name }}
+        ref: ${{ github.event.pull_request.head.ref }}
         submodules: true
         fetch-depth: 0
 
@@ -49,12 +49,12 @@ jobs:
         node-version: 16
 
     - name: Leave a marker
-      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request_target' }}
+      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request' }}
       run: |
         touch ${GITHUB_WORKSPACE}/preview-the-docs.mark
 
     - name: Leave the comment on pull request when started
-      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request_target' }}
+      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'alibaba/GraphScope' }}
       uses: actions-cool/maintain-one-comment@v3
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -171,7 +171,7 @@ jobs:
         fi
 
     - name: Preview using surge
-      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request_target' }}
+      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'alibaba/GraphScope' }}
       run: |
         npm install -g surge
         surge ./docs/_build/latest/html \
@@ -179,7 +179,7 @@ jobs:
               --token ${{ secrets.SURGE_TOKEN }}
 
     - name: Leave the comment on pull request when succeed
-      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request_target' }}
+      if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'alibaba/GraphScope' }}
       uses: actions-cool/maintain-one-comment@v3
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -201,7 +201,7 @@ jobs:
         files: "preview-the-docs.mark"
 
     - name: Leave the comment on pull request when failed
-      if: ${{ failure() && steps.check_files.outputs.files_exists == 'true' }}
+      if: ${{ failure() && steps.check_files.outputs.files_exists == 'true' && github.event.pull_request.head.repo.full_name == 'alibaba/GraphScope' }}
       uses: actions-cool/maintain-one-comment@v3
       with:
         token: ${{ secrets.GITHUB_TOKEN }}

@@ -75,7 +75,8 @@ public class InterOpCollectionBuilder {
             } else if (Utils.equalClass(step, PropertiesStep.class)
                     || Utils.equalClass(step, PropertyMapStep.class)
                     || Utils.equalClass(step, LabelStep.class)
-                    || Utils.equalClass(step, IdStep.class)) {
+                    || Utils.equalClass(step, IdStep.class)
+                    || Utils.equalClass(step, ElementMapStep.class)) {
                 opList.add(StepTransformFactory.VALUES_STEP.apply(step));
             } else if (Utils.equalClass(step, IsStep.class)) {
                 opList.add(StepTransformFactory.IS_STEP.apply(step));
