@@ -71,7 +71,7 @@ if [ ${args[--app]} == "db" ]; then
   cmd="cmake -DCPACK_PACKAGE_NAME=${package_name} ${SCRIPT_DIR} && make -j && make package && mv ${package_name}*.deb ${output_dir}/"
   echo $cmd
   eval $cmd
-  ars+=("${output_dir}/${package_name}*.deb")
+  ars+=("${package_name}*.deb")
   popd > /dev/null
 elif [ ${args[--app]} == "olap" ]; then
   target_name="graphscope_flex_${args[--app]}"
@@ -85,7 +85,7 @@ elif [ ${args[--app]} == "olap" ]; then
   elif [[ " ${comps[*]} " =~ " grape-gpu " ]]; then
     build_grape_gpu ${output_dir}/${target_name}
   fi
-  ars+=("${output_dir}/${target_name}")
+  ars+=("${target_name}")
 elif [ ${args[--app]} == "ldbcdriver" ]; then
   target_name="graphscope_flex_olap"
   comps=""
@@ -106,7 +106,7 @@ elif [ ${args[--app]} == "ldbcdriver" ]; then
   package_name="${package_name}-SNAPSHOT-bin.tar.gz"
 
   build_grape_ldbc_driver ${output_dir}/${package_name}
-  ars+=("${output_dir}/${package_name}")
+  ars+=("${package_name}")
 
 elif [ ${args[--app]} == "gnn" ]; then
   target_name="graphscope_flex_gnn_gnnmodels_graphlearn_tensorflow_vineyard"
@@ -115,8 +115,8 @@ elif [ ${args[--app]} == "gnn" ]; then
   mv learning_engine/graph-learn/graphlearn/built/lib/libgraphlearn_shared* ${output_dir}/
   fname=`ls ${output_dir}/libgraphlearn_shared*`
   ext="${fname##*.}"
-  mv ${output_dir}/${fname} ${output_dir}/${target_name}.${ext}
-  ars+=("${output_dir}/${target_name}.${ext}")
+  mv ${fname} ${output_dir}/${target_name}.${ext}
+  ars+=("${target_name}.${ext}")
   popd > /dev/null
 else
   echo "$(red Unsupported composition: ${args[--app]} and ${args[components]})"
