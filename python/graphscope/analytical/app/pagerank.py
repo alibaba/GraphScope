@@ -55,12 +55,27 @@ def pagerank(graph, delta=0.85, max_round=10):
         >>> sess.close()
     """
     if graph.is_directed():
-        algo = "pagerank_directed"
-    else:
-        algo = "pagerank"
+        logger.warning(
+            "PageRank is not designed for directed graph, please use `pagerank_directed`"
+        )
     delta = float(delta)
     max_round = int(max_round)
-    return AppAssets(algo=algo, context="vertex_data")(graph, delta, max_round)
+    return AppAssets(algo="pagerank", context="vertex_data")(graph, delta, max_round)
+
+
+@project_to_simple
+@not_compatible_for("arrow_property", "dynamic_property")
+def pagerank_directed(graph, delta=0.85, max_round=10):
+    """Evaluate PageRank on a graph."""
+    if not graph.is_directed():
+        logger.warning(
+            "PageRank-directed is not designed for undirected graph, please use `pagerank`"
+        )
+    delta = float(delta)
+    max_round = int(max_round)
+    return AppAssets(algo="pagerank_directed", context="vertex_data")(
+        graph, delta, max_round
+    )
 
 
 @project_to_simple
