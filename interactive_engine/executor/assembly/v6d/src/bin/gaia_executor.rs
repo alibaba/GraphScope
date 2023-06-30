@@ -169,7 +169,9 @@ fn sync_global_process_partition_lists(
         if servers.len() > 1 {
             assert_eq!(partitions.len() % servers.len(), 0);
             let nchunk = partitions.len() / servers.len();
-            for (index, server) in servers.iter().enumerate() {
+            let mut sorted_servers = servers.clone();
+            sorted_servers.sort();
+            for (index, server) in sorted_servers.iter().enumerate() {
                 partition_lists.insert(*server, partitions[index * nchunk..(index + 1) * nchunk].to_vec());
             }
         }
