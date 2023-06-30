@@ -96,11 +96,14 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
     }
 
     @Override
-    public void cancel() {}
+    public void cancel() {
+        this.recordIterator.close();
+    }
 
     @Override
     public boolean await() throws Exception {
-        return this.recordIterator.hasNext();
+        boolean hasNext = this.recordIterator.hasNext();
+        return hasNext;
     }
 
     @Override

@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 
 /**
  * client to submit request to remote engine service
@@ -33,7 +34,10 @@ public abstract class ExecutionClient<C> {
         this.channelFetcher = channelFetcher;
     }
 
-    public abstract void submit(ExecutionRequest request, ExecutionResponseListener listener)
+    public abstract void submit(
+            ExecutionRequest request,
+            ExecutionResponseListener listener,
+            QueryTimeoutConfig timeoutConfig)
             throws Exception;
 
     public abstract void close() throws Exception;
