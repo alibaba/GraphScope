@@ -418,7 +418,7 @@ class DynamicFragment
     if (conf.need_split_edges_by_fragment) {
       LOG(ERROR) << "MutableEdgecutFragment cannot split edges by fragment";
     } else if (conf.need_split_edges) {
-      splitEdges();
+      splitEdges(comm_spec);
     }
   }
 
@@ -905,30 +905,37 @@ class DynamicFragment
     return id_parser_.max_local_id() - index - 1;
   }
 
-  void splitEdges() {
+  void splitEdges(const grape::CommSpec& comm_spec) {
     auto& inner_vertices = InnerVertices();
     iespliter_.Init(inner_vertices);
     oespliter_.Init(inner_vertices);
-    int inner_neighbor_count = 0;
-    for (auto& v : inner_vertices) {
-      inner_neighbor_count = 0;
-      auto ie = GetIncomingAdjList(v);
-      for (auto& e : ie) {
-        if (IsInnerVertex(e.neighbor)) {
-          ++inner_neighbor_count;
-        }
-      }
-      iespliter_[v] = get_ie_begin(v) + inner_neighbor_count;
 
-      inner_neighbor_count = 0;
-      auto oe = GetOutgoingAdjList(v);
-      for (auto& e : oe) {
-        if (IsInnerVertex(e.neighbor)) {
-          ++inner_neighbor_count;
-        }
-      }
-      oespliter_[v] = get_oe_begin(v) + inner_neighbor_count;
-    }
+    int concurrency =
+        (std::thread::hardware_concurrency() + comm_spec.local_num() - 1) /
+        comm_spec.local_num();
+    vineyard::parallel_for(
+        static_cast<vid_t>(0), static_cast<vid_t>(inner_vertices.size()),
+        [this, &inner_vertices](const vid_t& offset) {
+          vertex_t v = *(inner_vertices.begin() + offset);
+          size_t inner_neighbor_count = 0;
+          auto ie = GetIncomingAdjList(v);
+          for (auto& e : ie) {
+            if (IsInnerVertex(e.neighbor)) {
+              ++inner_neighbor_count;
+            }
+          }
+          iespliter_[v] = get_ie_begin(v) + inner_neighbor_count;
+
+          inner_neighbor_count = 0;
+          auto oe = GetOutgoingAdjList(v);
+          for (auto& e : oe) {
+            if (IsInnerVertex(e.neighbor)) {
+              ++inner_neighbor_count;
+            }
+          }
+          oespliter_[v] = get_oe_begin(v) + inner_neighbor_count;
+        },
+        concurrency, 1024);
   }
 
   vid_t parseOrAddOuterVertexGid(vid_t gid) {
