@@ -141,7 +141,7 @@ root_command() {
 
   echo "artifacts: "
   for x in "${ars[@]}"; do
-    echo "$(green x) )"
+    echo "$(green $x)"
   done
 
 }
@@ -200,7 +200,7 @@ flexbuild_usage() {
     # :argument.usage
     echo "  COMPONENTS..."
     printf "    Components (LEGO bricks) to include and link\n"
-    printf "    Allowed: cppsp, builtin, hiactor, gaia, grape-cpu, grape-gpu, vineyard, mcsr\n"
+    printf "    Allowed: cppsp, builtin, hiactor, gaia, grape-cpu, grape-gpu, vineyard, mcsr, gnnmodels, graphlearn, tensorflow\n"
     echo
 
     # :command.usage_examples
@@ -386,8 +386,8 @@ parse_requirements() {
   # :command.whitelist_filter
   eval "input_array=(${args[components]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(cppsp|builtin|hiactor|gaia|grape-cpu|grape-gpu|vineyard|mcsr)$ ]]; then
-      printf "%s\n" "components must be one of: cppsp, builtin, hiactor, gaia, grape-cpu, grape-gpu, vineyard, mcsr" >&2
+    if [[ ! $i =~ ^(cppsp|builtin|hiactor|gaia|grape-cpu|grape-gpu|vineyard|mcsr|gnnmodels|graphlearn|tensorflow)$ ]]; then
+      printf "%s\n" "components must be one of: cppsp, builtin, hiactor, gaia, grape-cpu, grape-gpu, vineyard, mcsr, gnnmodels, graphlearn, tensorflow" >&2
       exit 1
     fi
   done

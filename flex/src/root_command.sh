@@ -126,5 +126,5 @@ echo "$(green_bold GraphScope Flex artifacts for customized deployment are built
 echo 
 echo "artifacts: "
 for x in "${ars[@]}"; do
-  echo "$(green x) )"
+  echo "$(green $x)"
 done

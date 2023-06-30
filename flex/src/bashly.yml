@@ -9,7 +9,7 @@ version: 0.1.0
 args:
 - name: components
   help: Components (LEGO bricks) to include and link
-  allowed: [cppsp, builtin, hiactor, gaia, grape-cpu, grape-gpu, vineyard, mcsr]
+  allowed: [cppsp, builtin, hiactor, gaia, grape-cpu, grape-gpu, vineyard, mcsr, gnnmodels, graphlearn, tensorflow]
   required: true
   repeatable: true
 
