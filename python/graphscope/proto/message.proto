@@ -189,7 +189,8 @@ message CreateInteractiveInstanceRequest {
 
 message CreateInteractiveInstanceResponse {
   string gremlin_endpoint = 1;
-  int64 object_id = 2;
+  string cypher_endpoint = 2;
+  int64 object_id = 3;
 };
 
 message CreateLearningInstanceRequest {

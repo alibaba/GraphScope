@@ -1996,8 +1996,8 @@ def check_argument(condition, message=None):
         raise ValueError(f"Check failed: {message}")
 
 
-def check_gremlin_server_ready(endpoint):
-    def _check_task(endpoint):
+def check_server_ready(endpoint, server='gremlin'):
+    def _check_gremlin_task(endpoint):
         from gremlin_python.driver.client import Client
 
         if "MY_POD_NAME" in os.environ:
@@ -2017,12 +2017,32 @@ def check_gremlin_server_ready(endpoint):
             except:  # noqa: E722
                 pass
         return True
+    
+    def _check_cypher_task(endpoint):
+        from neo4j import GraphDatabase, RoutingControl
+
+        if "MY_POD_NAME" in os.environ:
+            # inner kubernetes env
+            if endpoint == "localhost" or endpoint == "127.0.0.1":
+                return True
+            
+        with GraphDatabase.driver(f'neo4j://{endpoint}', auth=("", "")) as driver:
+            _, _, _ = driver.execute_query(
+                "MATCH (n) RETURN n Limit 1",
+                routing_=RoutingControl.READ,
+            )
+        return True
 
     executor = ThreadPoolExecutor(max_workers=20)
 
     begin_time = time.time()
     while True:
-        t = executor.submit(_check_task, endpoint)
+        if server == 'gremlin':
+            t = executor.submit(_check_gremlin_task, endpoint)
+        elif server == 'cypher':
+            t = executor.submit(_check_cypher_task, endpoint)
+        else:
+            raise ValueError(f"Unsupported server type: {server} other than 'gremlin' or 'cypher'")
         try:
             _ = t.result(timeout=30)
         except Exception as e:
@@ -2034,4 +2054,4 @@ def check_gremlin_server_ready(endpoint):
         time.sleep(3)
         if time.time() - begin_time > INTERACTIVE_INSTANCE_TIMEOUT_SECONDS:
             executor.shutdown(wait=False)
-            raise TimeoutError(f"Gremlin check query failed: {error_message}")
+            raise TimeoutError(f"{server.capitalize()} check query failed: {error_message}")

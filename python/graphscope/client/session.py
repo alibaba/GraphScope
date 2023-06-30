@@ -1333,10 +1333,10 @@ class Session(object):
 
         object_id = graph.vineyard_id
         schema_path = graph.schema_path
-        endpoint = self._grpc_client.create_interactive_instance(
+        gremlin_endpoint, cypher_endpoint = self._grpc_client.create_interactive_instance(
             object_id, schema_path, params
         )
-        interactive_query = InteractiveQuery(graph, endpoint)
+        interactive_query = InteractiveQuery(graph, gremlin_endpoint, cypher_endpoint)
         self._interactive_instance_dict[object_id] = interactive_query
         graph._attach_interactive_instance(interactive_query)
         return interactive_query
