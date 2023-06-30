@@ -55,6 +55,7 @@ GraphScope Flex compiles Cypher and Gremlin queries into a **unified intermediat
 To build the artifacts for this use case, run the following command:
 ```bash
 ./flexbuild cypher gaia cppsp mcsr --app db
+# To be supported. Please try scripts for other cases.
 ```
 
 ### Case 2: For high QPS queries
