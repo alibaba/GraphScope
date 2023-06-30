@@ -1,8 +1,8 @@
 app:
   - algo: pagerank
     type: cpp_pie
-    class_name: grape::PageRankLocal
-    src: pagerank/pagerank_local.h
+    class_name: grape::PageRankLocalParallel
+    src: pagerank/pagerank_local_parallel.h
     compatible_graph:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
