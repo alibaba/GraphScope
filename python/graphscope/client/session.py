@@ -1726,6 +1726,12 @@ def g(
         compact_edges,
     )
 
+def gremlin(graph, params=None):
+    """This method is going to be deprecated in the future.
+    Use :meth:`graphscope.interactive` instead.
+    """
+    return interactive(graph, params)
+    
 
 def interactive(graph, params=None):
     """Create an interactive engine and get the handler to execute gremlin and cypher queries.
