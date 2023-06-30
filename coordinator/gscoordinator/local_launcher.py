@@ -238,7 +238,7 @@ class LocalLauncher(AbstractLauncher):
             params,
         ]
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
-        self._interactive_port += 3
+        self._interactive_port += 2 * num_workers + 2
         process = subprocess.Popen(
             cmd,
             start_new_session=True,

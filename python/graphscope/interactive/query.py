@@ -27,8 +27,6 @@ from gremlin_python.process.anonymous_traversal import traversal
 from graphscope.framework.dag import DAGNode
 from graphscope.framework.dag_utils import gremlin_to_subgraph
 
-from neo4j import GraphDatabase
-
 logger = logging.getLogger("graphscope")
 
 
@@ -141,6 +139,7 @@ class InteractiveQuery(object):
     
     @property
     def cypher_driver(self):
+        from neo4j import GraphDatabase
         if self._cypher_driver is None:
             self._cypher_driver = GraphDatabase.driver(self._cypher_url[0], auth=("", ""))
         return self._cypher_driver

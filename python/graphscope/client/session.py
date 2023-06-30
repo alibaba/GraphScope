@@ -1293,6 +1293,13 @@ class Session(object):
         self._config_params["port"] = None
         self._config_params["vineyard_socket"] = ""
 
+    def gremlin(self, graph, params=None):
+        """This method is going to be deprecated.
+        Use :meth:`interactive` to get an interactive engine handler supports
+        both gremlin and cypher queries
+        """
+        return self.interactive(graph, params)
+
     def interactive(self, graph, params=None):
         """Get an interactive engine handler to execute gremlin and cypher queries.
 

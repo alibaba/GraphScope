@@ -2025,12 +2025,17 @@ def check_server_ready(endpoint, server='gremlin'):
             # inner kubernetes env
             if endpoint == "localhost" or endpoint == "127.0.0.1":
                 return True
-            
-        with GraphDatabase.driver(f'neo4j://{endpoint}', auth=("", "")) as driver:
-            _, _, _ = driver.execute_query(
-                "MATCH (n) RETURN n Limit 1",
-                routing_=RoutingControl.READ,
-            )
+
+        try:
+            driver = GraphDatabase.driver(f'neo4j://{endpoint}', auth=("", ""))
+            # May throw
+            _ = driver.execute_query("MATCH (n) RETURN n Limit 1",
+                                     routing_=RoutingControl.READ)
+        finally:
+            try:
+                driver.close()
+            except:  # noqa: E722
+                pass
         return True
 
     executor = ThreadPoolExecutor(max_workers=20)

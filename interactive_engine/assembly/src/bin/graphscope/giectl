@@ -262,6 +262,79 @@ create_gremlin_instance_on_local() {
 }
 
 ##########################
+# create k8s service
+# Globals:
+#   GREMLIN_EXPOSE
+# Arguments:
+    lang: gremlin or cypher
+##########################
+create_k8s_service() {
+  declare -r lang=$1
+  declare -r object_id=$2
+  declare -r instance_id=$3
+  declare -r frontend_deployment_name=$4
+  declare -r frontend_port=$5
+  declare -r frontend_external_port=$6
+
+  if [ "${GREMLIN_EXPOSE}" = "LoadBalancer" ]; then
+    kubectl expose deployment ${frontend_deployment_name} --name=${lang}-${object_id} --port=${frontend_external_port} \
+      --target-port=${frontend_port} --type=LoadBalancer 1>/dev/null 2>&1
+    [ $? -eq 0 ] || exit 1
+    wait_period_seconds=0
+    while true
+    do
+      external_ip=$(kubectl get service ${lang}-${object_id} -ojsonpath='{.status.loadBalancer.ingress[0].ip}') || true
+      if [ -n "${external_ip}" ]; then
+        break
+      fi
+      wait_period_seconds=$(($wait_period_seconds+5))
+      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+        echo "Get ${lang} external ip of ${GREMLIN_EXPOSE} failed."
+        break
+      fi
+      sleep 5
+    done
+  else
+    # NodePort service type
+    kubectl expose deployment ${frontend_deployment_name} --name=${lang}-${object_id} --port=${frontend_external_port} \
+      --target-port=${frontend_port} --type=NodePort 1>/dev/null 2>&1
+    [ $? -eq 0 ] || exit 1
+    wait_period_seconds=0
+    while true
+    do
+      frontend_external_port=$(kubectl describe services ${lang}-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "0-9")
+      if [ -n "${frontend_external_port}" ]; then
+        break
+      fi
+      wait_period_seconds=$(($wait_period_seconds+5))
+      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+        log "Get interactive engine frontend node port failed."
+        break
+      fi
+      sleep 5
+    done
+    wait_period_seconds=0
+    while true
+    do
+      external_ip=$(kubectl describe pods ${frontend_deployment_name} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
+      if [ -n "${external_ip}" ]; then
+        break
+      fi
+      wait_period_seconds=$(($wait_period_seconds+5))
+      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+        log "Get interactive engine frontend ${lang} host ip of ${GREMLIN_EXPOSE} failed."
+        break
+      fi
+      sleep 5
+    done
+  fi
+  # currently support only 1 pod.
+  frontend_ip=$(kubectl get pod -lapp.kubernetes.io/component=frontend,app.kubernetes.io/instance=${instance_id} -o jsonpath='{.items[*].status.podIP}')
+  log "FRONTEND_${lang^^}_ENDPOINT:${frontend_ip}:${frontend_port}"
+  log "FRONTEND_EXTERNAL_${lang^^}_ENDPOINT:${external_ip}:${frontend_external_port}"
+}
+
+##########################
 # create interactive engine instance on k8s.
 # Globals:
 #   None
@@ -341,116 +414,10 @@ create_gremlin_instance_on_k8s() {
   frontend_external_gremlin_port=$(( ((RANDOM<<15)|RANDOM) % 1000 + 50000 ))
   frontend_external_cypher_port=$(( ((RANDOM<<15)|RANDOM) % 1000 + 50000 ))
   frontend_deployment_name=$(kubectl get deployment -lapp.kubernetes.io/component=frontend,app.kubernetes.io/instance=${instance_id},app.kubernetes.io/engine_selector=${engine_selector} -o jsonpath='{.items[*].metadata.name}')
-  if [ "${GREMLIN_EXPOSE}" = "LoadBalancer" ]; then
-    # gremlin
-    kubectl expose deployment ${frontend_deployment_name} --name=gremlin-${object_id} --port=${frontend_external_gremlin_port} \
-      --target-port=${frontend_gremlin_port} --type=LoadBalancer 1>/dev/null 2>&1
-    [ $? -eq 0 ] || exit 1
-    wait_period_seconds=0
-    while true
-    do
-      external_gremlin_ip=$(kubectl get service gremlin-${object_id} -ojsonpath='{.status.loadBalancer.ingress[0].ip}') || true
-      if [ -n "${external_gremlin_ip}" ]; then
-        break
-      fi
-      wait_period_seconds=$(($wait_period_seconds+5))
-      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
-        echo "Get gremlin external ip of ${GREMLIN_EXPOSE} failed."
-        break
-      fi
-      sleep 5
-    done
-    # cypher
-    kubectl expose deployment ${frontend_deployment_name} --name=cypher-${object_id} --port=${frontend_external_cypher_port} \
-      --target-port=${frontend_cypher_port} --type=LoadBalancer 1>/dev/null 2>&1
-    [ $? -eq 0 ] || exit 1
-    wait_period_seconds=0
-    while true
-    do
-      external_cypher_ip=$(kubectl get service cypher-${object_id} -ojsonpath='{.status.loadBalancer.ingress[0].ip}') || true
-      if [ -n "${external_cypher_ip}" ]; then
-        break
-      fi
-      wait_period_seconds=$(($wait_period_seconds+5))
-      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
-        echo "Get cypher external ip of ${GREMLIN_EXPOSE} failed."
-        break
-      fi
-      sleep 5
-    done
-  else
-    # NodePort service type
-    # expose gremlin service
-    kubectl expose deployment ${frontend_deployment_name} --name=gremlin-${object_id} --port=${frontend_external_gremlin_port} \
-      --target-port=${frontend_gremlin_port} --type=NodePort 1>/dev/null 2>&1
-    [ $? -eq 0 ] || exit 1
-    wait_period_seconds=0
-    while true
-    do
-      frontend_external_gremlin_port=$(kubectl describe services gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "0-9")
-      if [ -n "${frontend_external_gremlin_port}" ]; then
-        break
-      fi
-      wait_period_seconds=$(($wait_period_seconds+5))
-      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
-        log "Get interactive engine frontend node port failed."
-        break
-      fi
-      sleep 5
-    done
-    wait_period_seconds=0
-    while true
-    do
-      external_gremlin_ip=$(kubectl describe pods ${frontend_deployment_name} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
-      if [ -n "${external_gremlin_ip}" ]; then
-        break
-      fi
-      wait_period_seconds=$(($wait_period_seconds+5))
-      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
-        log "Get interactive engine frontend gremlin host ip of ${GREMLIN_EXPOSE} failed."
-        break
-      fi
-      sleep 5
-    done
-    # expose cypher service
-    kubectl expose deployment ${frontend_deployment_name} --name=cypher-${object_id} --port=${frontend_external_cypher_port} \
-      --target-port=${frontend_cypher_port} --type=NodePort 1>/dev/null 2>&1
-    [ $? -eq 0 ] || exit 1
-    wait_period_seconds=0
-    while true
-    do
-      frontend_external_cypher_port=$(kubectl describe services cypher-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "0-9")
-      if [ -n "${frontend_external_cypher_port}" ]; then
-        break
-      fi
-      wait_period_seconds=$(($wait_period_seconds+5))
-      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
-        log "Get interactive engine frontend node port failed."
-        break
-      fi
-      sleep 5
-    done
-    wait_period_seconds=0
-    while true
-    do
-      external_cypher_ip=$(kubectl describe pods ${frontend_deployment_name} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
-      if [ -n "${external_cypher_ip}" ]; then
-        break
-      fi
-      wait_period_seconds=$(($wait_period_seconds+5))
-      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
-        log "Get interactive engine frontend cypher host ip of ${GREMLIN_EXPOSE} failed."
-        break
-      fi
-      sleep 5
-    done
-  fi
-  # currently support only 1 pod.
-  frontend_ip=$(kubectl get pod -lapp.kubernetes.io/component=frontend,app.kubernetes.io/instance=${instance_id} -o jsonpath='{.items[*].status.podIP}')
-  log "FRONTEND_GREMLIN_ENDPOINT:${frontend_ip}:${frontend_gremlin_port}"
-  log "FRONTEND_EXTERNAL_GREMLIN_ENDPOINT:${external_gremlin_ip}:${frontend_external_gremlin_port}"
-  log "FRONTEND_CYPHER_ENDPOINT:${frontend_ip}:${frontend_cypher_port}"
-  log "FRONTEND_EXTERNAL_CYPHER_ENDPOINT:${external_cypher_ip}:${frontend_external_cypher_port}"
+  
+  create_k8s_service gremlin ${object_id} ${instance_id} ${frontend_deployment_name} ${frontend_gremlin_port} ${frontend_external_gremlin_port} 
+  create_k8s_serivce cypher ${object_id} ${instance_id} ${frontend_deployment_name} ${frontend_cypher_port} ${frontend_external_cypher_port}
+  
   exit 0
 }
 
