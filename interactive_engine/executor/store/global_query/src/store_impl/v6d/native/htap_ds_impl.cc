@@ -236,15 +236,15 @@ void free_graph_handle(GraphHandleImpl* handle) {
     handle->string_fragments = nullptr;
   }
   if (handle->vertex_map != nullptr) {
-    delete[] handle->vertex_map;
+    delete handle->vertex_map;
     handle->vertex_map = nullptr;
   }
   if (handle->int32_vertex_map != nullptr) {
-    delete[] handle->int32_vertex_map;
+    delete handle->int32_vertex_map;
     handle->int32_vertex_map = nullptr;
   }
   if (handle->string_vertex_map != nullptr) {
-    delete[] handle->string_vertex_map;
+    delete handle->string_vertex_map;
     handle->string_vertex_map = nullptr;
   }
   if (handle->local_fragments != NULL) {
