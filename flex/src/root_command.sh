@@ -71,7 +71,8 @@ if [ ${args[--app]} == "db" ]; then
   cmd="cmake -DCPACK_PACKAGE_NAME=${package_name} ${SCRIPT_DIR} && make -j && make package && mv ${package_name}*.deb ${output_dir}/"
   echo $cmd
   eval $cmd
-  ars+=("${package_name}*.deb")
+  fname=`ls ${output_dir}/*.deb`
+  ars+=("${fname}")
   popd > /dev/null
 elif [ ${args[--app]} == "olap" ]; then
   target_name="graphscope_flex_${args[--app]}"
