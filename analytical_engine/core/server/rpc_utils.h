@@ -135,8 +135,8 @@ class GSParams {
     std::ostringstream ss;
     ss << "GSParams: {";
     for (auto const& kv : params_) {
-      ss << rpc::ParamKey_Name(kv.first) << ": " << kv.second.DebugString()
-         << ", ";
+      ss << rpc::ParamKey_Name(static_cast<rpc::ParamKey>(kv.first)) << ": "
+         << kv.second.DebugString() << ", ";
     }
     ss << "}";
     return ss.str();
