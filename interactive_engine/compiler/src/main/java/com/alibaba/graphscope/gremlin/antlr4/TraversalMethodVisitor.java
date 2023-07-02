@@ -756,7 +756,9 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         Step endStep = graphTraversal.asAdmin().getEndStep();
         if (!(endStep instanceof PathExpandStep)) {
             throw new UnsupportedEvalException(
-                    ctx.getClass(), "with should follow path expand, i.e. out('1..2').with(..)");
+                    ctx.getClass(),
+                    "with should follow source or path expand, i.e. g.with(..) or"
+                            + " out('1..2').with(..)");
         }
         String optKey = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0));
         String optValue = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(1));

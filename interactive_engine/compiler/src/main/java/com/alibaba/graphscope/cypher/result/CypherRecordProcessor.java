@@ -102,8 +102,7 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
 
     @Override
     public boolean await() throws Exception {
-        boolean hasNext = this.recordIterator.hasNext();
-        return hasNext;
+        return this.recordIterator.hasNext();
     }
 
     @Override

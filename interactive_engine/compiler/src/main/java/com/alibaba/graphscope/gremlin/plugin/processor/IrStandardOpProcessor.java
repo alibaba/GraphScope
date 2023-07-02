@@ -260,7 +260,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             String script,
             IrMeta irMeta) {
         QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
-        logger.info("query execution timeout is {}", timeoutConfig);
         return GremlinExecutor.LifeCycle.build()
                 .evaluationTimeoutOverride(timeoutConfig.getExecutionTimeoutMS())
                 .beforeEval(

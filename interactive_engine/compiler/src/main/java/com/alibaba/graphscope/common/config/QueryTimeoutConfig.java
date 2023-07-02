@@ -17,15 +17,18 @@
 package com.alibaba.graphscope.common.config;
 
 public class QueryTimeoutConfig {
-    private final long executionTimeoutMS;
-    private final long channelTimeoutMS;
+    // timeout in milliseconds for engine execution
     private final long engineTimeoutMS;
-    private static final double GRADUAL_FACTOR = 0.1d;
+    // timeout in milliseconds for channel communication
+    private final long channelTimeoutMS;
+    // timeout in milliseconds for total query execution
+    private final long executionTimeoutMS;
+    private static final double GRADUAL_FACTOR = 0.0d;
 
-    public QueryTimeoutConfig(long executionTimeoutMS) {
-        this.executionTimeoutMS = executionTimeoutMS;
-        this.channelTimeoutMS = (long) (executionTimeoutMS * (1 - GRADUAL_FACTOR));
-        this.engineTimeoutMS = (long) (executionTimeoutMS * (1 - 2 * GRADUAL_FACTOR));
+    public QueryTimeoutConfig(long engineTimeoutMS) {
+        this.engineTimeoutMS = engineTimeoutMS;
+        this.channelTimeoutMS = (long) (engineTimeoutMS * (1 + GRADUAL_FACTOR));
+        this.executionTimeoutMS = (long) (engineTimeoutMS * (1 + 2 * GRADUAL_FACTOR));
     }
 
     public long getExecutionTimeoutMS() {
