@@ -1996,7 +1996,7 @@ def check_argument(condition, message=None):
         raise ValueError(f"Check failed: {message}")
 
 
-def check_server_ready(endpoint, server='gremlin'):
+def check_server_ready(endpoint, server="gremlin"):
     def _check_gremlin_task(endpoint):
         from gremlin_python.driver.client import Client
 
@@ -2019,9 +2019,10 @@ def check_server_ready(endpoint, server='gremlin'):
             except:  # noqa: E722
                 pass
         return True
-    
+
     def _check_cypher_task(endpoint):
         from neo4j import GraphDatabase
+
         if "MY_POD_NAME" in os.environ:
             # inner kubernetes env
             if endpoint == "localhost" or endpoint == "127.0.0.1":
@@ -2030,7 +2031,7 @@ def check_server_ready(endpoint, server='gremlin'):
 
         try:
             logger.debug("Try to connect to cypher server.")
-            driver = GraphDatabase.driver(f'neo4j://{endpoint}', auth=("", ""))
+            driver = GraphDatabase.driver(f"neo4j://{endpoint}", auth=("", ""))
             # May throw
             driver.verify_connectivity()
             logger.info("Checked connectivity to cypher server.")
@@ -2045,12 +2046,14 @@ def check_server_ready(endpoint, server='gremlin'):
 
     begin_time = time.time()
     while True:
-        if server == 'gremlin':
+        if server == "gremlin":
             t = executor.submit(_check_gremlin_task, endpoint)
-        elif server == 'cypher':
+        elif server == "cypher":
             t = executor.submit(_check_cypher_task, endpoint)
         else:
-            raise ValueError(f"Unsupported server type: {server} other than 'gremlin' or 'cypher'")
+            raise ValueError(
+                f"Unsupported server type: {server} other than 'gremlin' or 'cypher'"
+            )
         try:
             _ = t.result(timeout=30)
         except Exception as e:
@@ -2062,4 +2065,6 @@ def check_server_ready(endpoint, server='gremlin'):
         time.sleep(3)
         if time.time() - begin_time > INTERACTIVE_INSTANCE_TIMEOUT_SECONDS:
             executor.shutdown(wait=False)
-            raise TimeoutError(f"{server.capitalize()} check query failed: {error_message}")
+            raise TimeoutError(
+                f"{server.capitalize()} check query failed: {error_message}"
+            )

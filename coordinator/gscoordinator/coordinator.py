@@ -439,13 +439,18 @@ class CoordinatorServiceServicer(
                 if rlt:
                     return rlt[0].strip()
             return ""
+
         # frontend endpoint pattern
         FRONTEND_GREMLIN_PATTERN = re.compile("(?<=FRONTEND_GREMLIN_ENDPOINT:).*$")
         FRONTEND_CYPHER_PATTERN = re.compile("(?<=FRONTEND_CYPHER_ENDPOINT:).*$")
         # frontend external endpoint, for clients that are outside of cluster to connect
         # only available in kubernetes mode, exposed by NodePort or LoadBalancer
-        FRONTEND_EXTERNAL_GREMLIN_PATTERN = re.compile("(?<=FRONTEND_EXTERNAL_GREMLIN_ENDPOINT:).*$")
-        FRONTEND_EXTERNAL_CYPHER_PATTERN = re.compile("(?<=FRONTEND_EXTERNAL_CYPHER_ENDPOINT:).*$")
+        FRONTEND_EXTERNAL_GREMLIN_PATTERN = re.compile(
+            "(?<=FRONTEND_EXTERNAL_GREMLIN_ENDPOINT:).*$"
+        )
+        FRONTEND_EXTERNAL_CYPHER_PATTERN = re.compile(
+            "(?<=FRONTEND_EXTERNAL_CYPHER_ENDPOINT:).*$"
+        )
 
         # create instance
         object_id = request.object_id
@@ -471,11 +476,16 @@ class CoordinatorServiceServicer(
             logger.debug("Got endpoints: %s %s", gremlin_endpoint, cypher_endpoint)
             # coordinator use internal endpoint
             gie_manager.set_endpoint(gremlin_endpoint)
-            if (check_server_ready(gremlin_endpoint, server='gremlin') and 
-                check_server_ready(cypher_endpoint, server='cypher')):  # throws TimeoutError
+            if check_server_ready(
+                gremlin_endpoint, server="gremlin"
+            ) and check_server_ready(
+                cypher_endpoint, server="cypher"
+            ):  # throws TimeoutError
                 logger.info(
                     "Built interactive frontend gremlin: %s & cypher: %s for graph %ld",
-                    gremlin_endpoint, cypher_endpoint, object_id
+                    gremlin_endpoint,
+                    cypher_endpoint,
+                    object_id,
                 )
         except Exception as e:
             context.set_code(grpc.StatusCode.ABORTED)
@@ -485,9 +495,17 @@ class CoordinatorServiceServicer(
             self._launcher.close_interactive_instance(object_id)
             self._object_manager.pop(object_id)
             return message_pb2.CreateInteractiveInstanceResponse()
-        external_gremlin_endpoint = _match_frontend_endpoint(FRONTEND_EXTERNAL_GREMLIN_PATTERN, outs)
-        external_cypher_endpoint = _match_frontend_endpoint(FRONTEND_EXTERNAL_CYPHER_PATTERN, outs)
-        logger.debug("Got external endpoints: %s %s", external_gremlin_endpoint, external_cypher_endpoint)
+        external_gremlin_endpoint = _match_frontend_endpoint(
+            FRONTEND_EXTERNAL_GREMLIN_PATTERN, outs
+        )
+        external_cypher_endpoint = _match_frontend_endpoint(
+            FRONTEND_EXTERNAL_CYPHER_PATTERN, outs
+        )
+        logger.debug(
+            "Got external endpoints: %s %s",
+            external_gremlin_endpoint,
+            external_cypher_endpoint,
+        )
 
         # client use external endpoint (k8s mode), or internal endpoint (standalone mode)
         gremlin_endpoint = external_gremlin_endpoint or gremlin_endpoint
@@ -495,7 +513,7 @@ class CoordinatorServiceServicer(
         return message_pb2.CreateInteractiveInstanceResponse(
             gremlin_endpoint=gremlin_endpoint,
             cypher_endpoint=cypher_endpoint,
-            object_id=object_id
+            object_id=object_id,
         )
 
     def CreateLearningInstance(self, request, context):

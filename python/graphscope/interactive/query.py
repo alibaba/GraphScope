@@ -38,6 +38,7 @@ class InteractiveQueryStatus(Enum):
     Failed = 2
     Closed = 3
 
+
 class InteractiveQuery(object):
     """`InteractiveQuery` class, is a simple wrapper around
     `Gremlin-Python <https://pypi.org/project/gremlinpython/>`_,
@@ -59,9 +60,13 @@ class InteractiveQuery(object):
         self._graph = graph
         self._session = graph._session
         frontend_gremlin_endpoint = frontend_gremlin_endpoint.split(",")
-        self._gremlin_url = [f"ws://{endpoint}/gremlin" for endpoint in frontend_gremlin_endpoint]
+        self._gremlin_url = [
+            f"ws://{endpoint}/gremlin" for endpoint in frontend_gremlin_endpoint
+        ]
         frontend_cypher_endpoint = frontend_cypher_endpoint.split(",")
-        self._cypher_url = [f"neo4j://{endpoint}" for endpoint in frontend_cypher_endpoint]
+        self._cypher_url = [
+            f"neo4j://{endpoint}" for endpoint in frontend_cypher_endpoint
+        ]
         self._conn = None
         self._gremlin_client = None
         self._cypher_driver = None
@@ -78,7 +83,7 @@ class InteractiveQuery(object):
         """The gremlin graph url can be used with any standard gremlin console,
         e.g., tinkerpop."""
         return self._gremlin_url
-    
+
     @property
     def cypher_url(self):
         """The cypher graph url can be used with any standard cypher console,
@@ -97,11 +102,11 @@ class InteractiveQuery(object):
     def session_id(self):
         return self._session.session_id
 
-    def execute(self, query, lang='gremlin', request_options=None, **kwargs):
+    def execute(self, query, lang="gremlin", request_options=None, **kwargs):
         """A simple wrapper around `submit`, for compatibility"""
         return self.submit(query, lang, request_options=request_options, **kwargs)
 
-    def submit(self, query, lang='gremlin', request_options=None, **kwargs):
+    def submit(self, query, lang="gremlin", request_options=None, **kwargs):
         """Execute gremlin or cypher querying scripts.
 
         <Gremlin>
@@ -120,35 +125,40 @@ class InteractiveQuery(object):
             query (str): Scripts that written in cypher query language.
             kwargs (dict, optional): Cypher request options. e.g.:
             routing_ = RoutingControl.READ
-        
+
         Returns:
             :class:`neo4j.work.result.Result`:
         """
-        if lang == 'gremlin':
+        if lang == "gremlin":
             return self.gremlin_client.submit(query, request_options=request_options)
-        elif lang == 'cypher':
+        elif lang == "cypher":
             return self.cypher_driver.execute_query(query, **kwargs)
         else:
-            raise ValueError(f"Unsupported query language: {lang} other than gremlin and cypher")
+            raise ValueError(
+                f"Unsupported query language: {lang} other than gremlin and cypher"
+            )
 
     @property
     def gremlin_client(self):
         if self._gremlin_client is None:
             self._gremlin_client = Client(self._gremlin_url[0], "g")
         return self._gremlin_client
-    
+
     @property
     def cypher_driver(self):
         from neo4j import GraphDatabase
+
         if self._cypher_driver is None:
-            self._cypher_driver = GraphDatabase.driver(self._cypher_url[0], auth=("", ""))
+            self._cypher_driver = GraphDatabase.driver(
+                self._cypher_url[0], auth=("", "")
+            )
         return self._cypher_driver
 
-    def subgraph(self, gremlin_script, lang='gremlin', request_options=None):
+    def subgraph(self, gremlin_script, lang="gremlin", request_options=None):
         """We currently only support subgraph using gremlin script.
 
         Create a subgraph, which input is the executor result of `gremlin_script`.
-        
+
         Any gremlin script that output a set of edges can be used to construct a subgraph.
 
         Args:
@@ -162,7 +172,7 @@ class InteractiveQuery(object):
             :class:`graphscope.framework.graph.GraphDAGNode`:
                 A new graph constructed by the gremlin output, that also stored in vineyard.
         """
-        assert lang == 'gremlin', "Only support gremlin script"
+        assert lang == "gremlin", "Only support gremlin script"
         # avoid circular import
         from graphscope.framework.graph import GraphDAGNode
 
@@ -219,7 +229,7 @@ class InteractiveQuery(object):
         if self._cypher_driver is not None:
             try:
                 self._cypher_driver.close()
-            except:
+            except:  # noqa: E722
                 pass
         self._session._close_interactive_instance(self)
         self.closed = True

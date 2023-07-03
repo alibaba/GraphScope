@@ -580,8 +580,10 @@ class EngineCluster:
     def get_interactive_frontend_service(self, gremlin_port, cypher_port):
         name = self.frontend_deployment_name
         service_type = self._service_type
-        ports = [kube_client.V1ServicePort(name="gremlin", port=gremlin_port),
-                 kube_client.V1ServicePort(name="cypher", port=cypher_port)]
+        ports = [
+            kube_client.V1ServicePort(name="gremlin", port=gremlin_port),
+            kube_client.V1ServicePort(name="cypher", port=cypher_port),
+        ]
         service_spec = ResourceBuilder.get_service_spec(
             service_type, ports, self._frontend_labels, None
         )

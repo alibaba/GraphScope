@@ -1340,7 +1340,10 @@ class Session(object):
 
         object_id = graph.vineyard_id
         schema_path = graph.schema_path
-        gremlin_endpoint, cypher_endpoint = self._grpc_client.create_interactive_instance(
+        (
+            gremlin_endpoint,
+            cypher_endpoint,
+        ) = self._grpc_client.create_interactive_instance(
             object_id, schema_path, params
         )
         interactive_query = InteractiveQuery(graph, gremlin_endpoint, cypher_endpoint)
@@ -1726,12 +1729,13 @@ def g(
         compact_edges,
     )
 
+
 def gremlin(graph, params=None):
     """This method is going to be deprecated in the future.
     Use :meth:`graphscope.interactive` instead.
     """
     return interactive(graph, params)
-    
+
 
 def interactive(graph, params=None):
     """Create an interactive engine and get the handler to execute gremlin and cypher queries.
