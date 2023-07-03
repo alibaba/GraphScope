@@ -59,13 +59,13 @@ class IS2 {
     auto expr0 = IS2expr0(personId, gs::NamedProperty<int64_t>("id"));
     auto ctx0 =
         Engine::template ScanVertex<0>(time_stamp, graph, 1, std::move(expr0));
-    auto edge_expand_opt0 = gs::make_edge_expand_opt(
+    auto edge_expand_opt0 = gs::make_edge_expandv_opt(
         gs::Direction::In, (label_id_t) 0, std::array<label_id_t, 2>{3, 2});
 
     auto ctx1 = Engine::template EdgeExpandVMultiLabel<1, 0>(
         time_stamp, graph, std::move(ctx0), std::move(edge_expand_opt0));
 
-    auto edge_expand_opt2 = gs::make_edge_expand_opt(
+    auto edge_expand_opt2 = gs::make_edge_expandv_opt(
         gs::Direction::Out, (label_id_t) 2, (label_id_t) 3);
 
     auto get_v_opt1 =
@@ -75,7 +75,7 @@ class IS2 {
     auto ctx2 = Engine::template PathExpandV<2, 1>(
         time_stamp, graph, std::move(ctx1), std::move(path_opt3));
 
-    auto edge_expand_opt4 = gs::make_edge_expand_opt(
+    auto edge_expand_opt4 = gs::make_edge_expandv_opt(
         gs::Direction::Out, (label_id_t) 0, (label_id_t) 1);
 
     auto ctx3 = Engine::template EdgeExpandV<3, 2>(

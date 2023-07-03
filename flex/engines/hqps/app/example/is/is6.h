@@ -60,7 +60,7 @@ class IS6 {
     auto expr0 = IS6Expr0(messageId, gs::NamedProperty<int64_t>("id"));
     auto ctx0 = Engine::template ScanVertex<0>(
         time_stamp, graph, std::array<label_id_t, 2>{2, 3}, std::move(expr0));
-    auto edge_expand_opt1 = gs::make_edge_expand_opt(
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
         gs::Direction::Out, (label_id_t) 2, (label_id_t) 3);
 
     auto get_v_opt0 =
@@ -70,13 +70,13 @@ class IS6 {
     auto ctx1 = Engine::template PathExpandV<1, 0>(
         time_stamp, graph, std::move(ctx0), std::move(path_opt2));
 
-    auto edge_expand_opt3 = gs::make_edge_expand_opt(
+    auto edge_expand_opt3 = gs::make_edge_expandv_opt(
         gs::Direction::In, (label_id_t) 3, (label_id_t) 4);
 
     auto ctx2 = Engine::template EdgeExpandV<2, 1>(
         time_stamp, graph, std::move(ctx1), std::move(edge_expand_opt3));
 
-    auto edge_expand_opt4 = gs::make_edge_expand_opt(
+    auto edge_expand_opt4 = gs::make_edge_expandv_opt(
         gs::Direction::Out, (label_id_t) 5, (label_id_t) 1);
 
     auto ctx3 = Engine::template EdgeExpandV<3, 2>(

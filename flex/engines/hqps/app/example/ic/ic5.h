@@ -124,7 +124,7 @@ class QueryIC5 {
     // auto ctx0 = Engine::template ScanVertexWithOid<-1>(time_stamp, graph,
     //                                                  person_label_id, id);
 
-    auto edge_expand_opt = gs::make_edge_expand_opt(
+    auto edge_expand_opt = gs::make_edge_expandv_opt(
         gs::Direction::Both, knows_label_id, person_label_id);
     auto get_v_opt = gs::make_getv_opt(
         gs::VOpt::End, std::array<label_id_t, 1>{person_label_id});
@@ -141,7 +141,7 @@ class QueryIC5 {
     IC5Expression1 left_expr1(min_join_date,
                               gs::NamedProperty<int64_t>("joinDate"));
     auto left_edge_expand_opt3 =
-        gs::make_edge_expand_opt(gs::Direction::In, has_member_label_id,
+        gs::make_edge_expandv_opt(gs::Direction::In, has_member_label_id,
                                  forum_label_id, std::move(left_expr1));
     auto left_ctx3 = Engine::template EdgeExpandV<1, 0>(
         time_stamp, graph, std::move(ctx1), std::move(left_edge_expand_opt3));
@@ -151,13 +151,13 @@ class QueryIC5 {
 
     double t2 = -grape::GetCurrentTime();
     // person hasCreator -> post
-    auto right_edge_expand_opt5 = gs::make_edge_expand_opt(
+    auto right_edge_expand_opt5 = gs::make_edge_expandv_opt(
         gs::Direction::In, has_creator_label_id, post_label_id);
     auto right_ctx_2 = Engine::template EdgeExpandV<1, 0>(
         time_stamp, graph, std::move(right_ctx_1),
         std::move(right_edge_expand_opt5));
 
-    auto right_edge_expand_opt6 = gs::make_edge_expand_opt(
+    auto right_edge_expand_opt6 = gs::make_edge_expandv_opt(
         gs::Direction::In, container_of_label_id, forum_label_id);
     auto right_ctx_3 = Engine::template EdgeExpandV<2, 1>(
         time_stamp, graph, std::move(right_ctx_2),

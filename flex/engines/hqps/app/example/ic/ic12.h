@@ -124,38 +124,38 @@ class IC12 {
                                                        person_label_id, id);
     // message
 
-    auto edge_expand_opt1 = gs::make_edge_expand_opt(
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
         gs::Direction::Both, knows_label_id, person_label_id);
     auto ctx1 = Engine::template EdgeExpandV<0, -1>(
         time_stamp, graph, std::move(ctx0), std::move(edge_expand_opt1));
 
-    auto edge_expand_opt2 = gs::make_edge_expand_opt(
+    auto edge_expand_opt2 = gs::make_edge_expandv_opt(
         gs::Direction::In, has_creator_label_id, comment_label_id);
     // message
     auto ctx2 = Engine::template EdgeExpandV<1, 0>(
         time_stamp, graph, std::move(ctx1), std::move(edge_expand_opt2));
 
-    auto edge_expand_opt3 = gs::make_edge_expand_opt(
+    auto edge_expand_opt3 = gs::make_edge_expandv_opt(
         gs::Direction::Out, reply_of_label_id, post_label_id);
     // post
     auto ctx3 = Engine::template EdgeExpandV<2, 1>(
         time_stamp, graph, std::move(ctx2), std::move(edge_expand_opt3));
 
     // tags
-    auto edge_expand_opt4 = gs::make_edge_expand_opt(
+    auto edge_expand_opt4 = gs::make_edge_expandv_opt(
         gs::Direction::Out, has_tag_label_id, tag_label_id);
     auto ctx4 = Engine::template EdgeExpandV<3, 2>(
         time_stamp, graph, std::move(ctx3), std::move(edge_expand_opt4));
 
     // tag classes
-    auto edge_expand_opt5 = gs::make_edge_expand_opt(
+    auto edge_expand_opt5 = gs::make_edge_expandv_opt(
         gs::Direction::Out, has_type_label_id, tag_class_label_id);
     auto ctx5 = Engine::template EdgeExpandV<-1, 3>(
         time_stamp, graph, std::move(ctx4), std::move(edge_expand_opt5));
 
     // PathExpand to find all valid tag classes.
 
-    auto edge_expand_opt6 = gs::make_edge_expand_opt(
+    auto edge_expand_opt6 = gs::make_edge_expandv_opt(
         gs::Direction::Out, is_sub_class_of_label_id, tag_class_label_id);
     auto get_v_opt = gs::make_getv_opt(
         gs::VOpt::End, std::array<label_id_t, 1>{tag_class_label_id});

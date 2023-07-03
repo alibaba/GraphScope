@@ -29,7 +29,7 @@ class Query0 : public HqpsAppBase<GRAPH_INTERFACE> {
     auto expr0 = Query0expr0(personIdQ2, gs::NamedProperty<int64_t>("id"));
     auto ctx0 =
         Engine::template ScanVertex<0>(time_stamp, graph, 1, std::move(expr0));
-    auto edge_expand_opt0 = gs::make_edge_expand_opt(
+    auto edge_expand_opt0 = gs::make_edge_expandv_opt(
         gs::Direction::Both, (label_id_t) 8, (label_id_t) 1);
 
     auto ctx1 = Engine::template EdgeExpandV<1, -1>(
@@ -37,13 +37,13 @@ class Query0 : public HqpsAppBase<GRAPH_INTERFACE> {
 
     auto right_ctx1(ctx1);
 
-    auto edge_expand_opt1 = gs::make_edge_expand_opt(
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
         gs::Direction::Out, (label_id_t) 7, (label_id_t) 0);
 
     auto ctx2 = Engine::template EdgeExpandV<2, -1>(
         time_stamp, graph, std::move(ctx1), std::move(edge_expand_opt1));
 
-    auto right_edge_expand_opt1 = gs::make_edge_expand_opt(
+    auto right_edge_expand_opt1 = gs::make_edge_expandv_opt(
         gs::Direction::Out, (label_id_t) 10, (label_id_t) 5);
 
     auto right_ctx2 = Engine::template EdgeExpandV<2, -1>(

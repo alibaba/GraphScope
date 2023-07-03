@@ -51,7 +51,7 @@ class Query5 : HqpsAppBase<GRAPH_INTERFACE> {
     // auto ctx0 =
     // Engine::template ScanVertex<0>(time_stamp, graph, 1, std::move(expr0));
     auto ctx0 = Engine::template ScanVertexWithOid<0>(time_stamp, graph, 1, id);
-    auto edge_expand_opt1 = gs::make_edge_expand_opt(
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
         gs::Direction::Both, (label_id_t) 8, (label_id_t) 1);
 
     auto get_v_opt0 =
@@ -76,19 +76,19 @@ class Query5 : HqpsAppBase<GRAPH_INTERFACE> {
                                              std::move(get_v_opt4));
     auto right_ctx3(ctx3);
 
-    auto edge_expand_opt5 = gs::make_edge_expand_opt(
+    auto edge_expand_opt5 = gs::make_edge_expandv_opt(
         gs::Direction::Out, (label_id_t) 3, (label_id_t) 3);
 
     auto ctx4 = Engine::template EdgeExpandV<4, 3>(
         time_stamp, graph, std::move(ctx3), std::move(edge_expand_opt5));
 
-    // auto right_edge_expand_opt5 = gs::make_edge_expand_opt(
+    // auto right_edge_expand_opt5 = gs::make_edge_expandv_opt(
     //     gs::Direction::In, (label_id_t) 0, std::array<label_id_t, 2>{3, 2});
     // auto right_ctx4 = Engine::template EdgeExpandVMultiLabel<4, 1>(
     //     time_stamp, graph, std::move(right_ctx3),
     //     std::move(right_edge_expand_opt5));
 
-    auto right_edge_expand_opt5 = gs::make_edge_expand_opt(
+    auto right_edge_expand_opt5 = gs::make_edge_expandv_opt(
         gs::Direction::In, (label_id_t) 0, (label_id_t) 3);
     auto right_ctx4 = Engine::template EdgeExpandV<4, 1>(
         time_stamp, graph, std::move(right_ctx3),

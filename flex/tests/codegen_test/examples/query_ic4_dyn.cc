@@ -63,11 +63,11 @@ class Query4 : HqpsAppBase<GRAPH_INTERFACE> {
     auto ctx0 =
         Engine::template ScanVertexWithOid<-1>(time_stamp, graph, 1, id);
 
-    auto edge_expand_opt = gs::make_edge_expand_opt(gs::Direction::Both, 8, 1);
+    auto edge_expand_opt = gs::make_edge_expandv_opt(gs::Direction::Both, 8, 1);
     auto ctx1 = Engine::template EdgeExpandV<-1, -1>(
         time_stamp, graph, std::move(ctx0), std::move(edge_expand_opt));
 
-    auto edge_expand_opt2 = gs::make_edge_expand_opt(gs::Direction::In, 0, 3);
+    auto edge_expand_opt2 = gs::make_edge_expandv_opt(gs::Direction::In, 0, 3);
     auto ctx2 = Engine::template EdgeExpandV<-1, -1>(
         time_stamp, graph, std::move(ctx1), std::move(edge_expand_opt2));
 
@@ -79,7 +79,7 @@ class Query4 : HqpsAppBase<GRAPH_INTERFACE> {
         time_stamp, graph, std::move(ctx2), std::move(get_v_opt2));
 
     auto edge_expand_opt3 =
-        gs::make_edge_expand_opt(gs::Direction::Out, 1, 7);  // has tag, tag
+        gs::make_edge_expandv_opt(gs::Direction::Out, 1, 7);  // has tag, tag
     auto ctx4 = Engine::template EdgeExpandV<0, -1>(
         time_stamp, graph, std::move(ctx3), std::move(edge_expand_opt3));
 
@@ -87,11 +87,11 @@ class Query4 : HqpsAppBase<GRAPH_INTERFACE> {
     auto ctx_right0 =
         Engine::template ScanVertexWithOid<-1>(time_stamp, graph, 1, id);
 
-    auto edge_expand_opt4 = gs::make_edge_expand_opt(gs::Direction::Both, 8, 1);
+    auto edge_expand_opt4 = gs::make_edge_expandv_opt(gs::Direction::Both, 8, 1);
     auto ctx_right1 = Engine::template EdgeExpandV<-1, -1>(
         time_stamp, graph, std::move(ctx_right0), std::move(edge_expand_opt4));
 
-    auto edge_expand_opt5 = gs::make_edge_expand_opt(gs::Direction::In, 0, 3);
+    auto edge_expand_opt5 = gs::make_edge_expandv_opt(gs::Direction::In, 0, 3);
     auto ctx_right3 = Engine::template EdgeExpandV<-1, -1>(
         time_stamp, graph, std::move(ctx_right1), std::move(edge_expand_opt5));
 
@@ -103,7 +103,7 @@ class Query4 : HqpsAppBase<GRAPH_INTERFACE> {
         time_stamp, graph, std::move(ctx_right3), std::move(get_v_opt3));
 
     auto edge_expand_opt6 =
-        gs::make_edge_expand_opt(gs::Direction::Out, 1, 7);  // has tag, tag
+        gs::make_edge_expandv_opt(gs::Direction::Out, 1, 7);  // has tag, tag
     auto ctx_right5 = Engine::template EdgeExpandV<1, 0>(
         time_stamp, graph, std::move(ctx_right4), std::move(edge_expand_opt6));
 

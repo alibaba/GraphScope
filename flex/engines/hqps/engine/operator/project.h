@@ -296,17 +296,17 @@ class ProjectOp {
   }
 
   // Project with  single mapper
-  template <typename CTX_T, int in_col_id, typename EXPR, typename T>
+  template <typename CTX_T, typename EXPR, typename...SELECTOR, int32_t... in_col_id>
   static auto apply_single_project(
       const GRAPH_INTERFACE& graph, CTX_T& ctx,
-      SingleMapper<in_col_id, EXPR, PropertySelector<T>>& proj_expr) {
+      MultiMapper<EXPR, std::tuple<SELECTOR...>, in_col_id...>& mapper) {
     using expr_trait = gs::function_traits<decltype(std::declval<EXPR>())>;
     using expr_result_t = typename expr_trait::result_type;
     std::vector<expr_result_t> res_vec;
     res_vec.reserve(ctx.GetHead().Size());
-    auto expr = proj_expr.expr_;
+    auto expr = mapper.expr_;
     auto prop_desc =
-        std::tuple{create_prop_desc_from_selector(proj_expr.selector_)};
+        create_prop_descs_from_selectors<in_col_id...>(mapper.selectors_);
     auto prop_getters =
         create_prop_getters_from_prop_desc(graph, ctx, prop_desc);
     LOG(INFO) << "In project with expression, successfully got prop getters";

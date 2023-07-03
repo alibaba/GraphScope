@@ -87,7 +87,7 @@ class IS1 {
     auto expr0 = IS1Expr0(personId, gs::NamedProperty<int64_t>("id"));
     auto ctx0 =
         Engine::template ScanVertex<0>(time_stamp, graph, 1, std::move(expr0));
-    auto edge_expand_opt0 = gs::make_edge_expand_opt(
+    auto edge_expand_opt0 = gs::make_edge_expandv_opt(
         gs::Direction::Out, (label_id_t) 7, (label_id_t) 0);
 
     auto ctx1 = Engine::template EdgeExpandV<1, 0>(

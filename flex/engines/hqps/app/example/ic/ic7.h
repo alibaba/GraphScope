@@ -123,7 +123,7 @@ class QueryIC7 {
                                                       person_label_id, id);
     auto ctx_person(ctx0);  // create a copy
 
-    auto edge_expand_opt = gs::make_edge_expand_opt(
+    auto edge_expand_opt = gs::make_edge_expandv_opt(
         gs::Direction::In, has_creator_label_id,
         std::array<label_id_t, 2>{post_label_id, comment_label_id});
     // message

@@ -56,12 +56,12 @@ using InternalIdSelector = PropertySelector<grape::EmptyType>;
 // @brief Mapping a vertex/edge to new data with expr& selector.
 // @tparam EXPR
 // @tparam ...SELECTOR
-template <typename EXPR, typename SELECTOR_TUPLE, int... in_col_id>
+template <typename EXPR, typename SELECTOR_TUPLE, int32_t... in_col_id>
 struct MultiMapper {
   EXPR expr_;
   SELECTOR_TUPLE selectors_;
   MultiMapper(EXPR&& expr, SELECTOR_TUPLE&& selectors,
-              std::integer_sequence<in_col_id...>)
+              std::integer_sequence<int32_t, in_col_id...>)
       : expr_(std::move(expr)), selectors_(std::move(selectors)) {}
 };
 
@@ -177,9 +177,9 @@ struct AggregateProp<_agg_func, std::tuple<PropertySelector<T>...>,
 
 template <AggFunc _agg_func, typename... T, int... Is>
 auto make_aggregate_prop(std::tuple<PropertySelector<T>...>&& selectors,
-                         std::integer_sequence<int, Is...>) {
+                         std::integer_sequence<int32_t, Is...>) {
   return AggregateProp<_agg_func, std::tuple<PropertySelector<T>...>,
-                       std::integer_sequence<int, Is...>>(std::move(selectors));
+                       std::integer_sequence<int32_t, Is...>>(std::move(selectors));
 }
 
 }  // namespace gs

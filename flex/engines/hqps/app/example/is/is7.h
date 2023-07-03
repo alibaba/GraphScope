@@ -82,13 +82,13 @@ class IS7 {
         time_stamp, graph, std::array<label_id_t, 2>{2, 3}, std::move(expr0));
     auto right_ctx(ctx0);
 
-    auto edge_expand_opt0 = gs::make_edge_expand_opt(
+    auto edge_expand_opt0 = gs::make_edge_expandv_opt(
         gs::Direction::In, (label_id_t) 2, (label_id_t) 2);
 
     auto ctx1 = Engine::template EdgeExpandV<1, 0>(
         time_stamp, graph, std::move(ctx0), std::move(edge_expand_opt0));
 
-    auto edge_expand_opt1 = gs::make_edge_expand_opt(
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
         gs::Direction::Out, (label_id_t) 0, (label_id_t) 1);
 
     auto ctx2 = Engine::template EdgeExpandV<2, 0>(
@@ -100,7 +100,7 @@ class IS7 {
 
     // right side
 
-    auto edge_expand_opt2 = gs::make_edge_expand_opt(
+    auto edge_expand_opt2 = gs::make_edge_expandv_opt(
         gs::Direction::Out, (label_id_t) 0, (label_id_t) 1);
     auto right_ctx1 = Engine::template EdgeExpandV<1, 0>(
         time_stamp, graph, std::move(right_ctx), std::move(edge_expand_opt2));

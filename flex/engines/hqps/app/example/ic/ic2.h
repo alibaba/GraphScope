@@ -96,13 +96,13 @@ class QueryIC2 {
     auto ctx0 = Engine::template ScanVertex<AppendOpt::Temp>(
         graph, person_label_id, std::move(filter));
 
-    auto edge_expand_opt = gs::make_edge_expand_opt(
+    auto edge_expand_opt = gs::make_edge_expandv_opt(
         gs::Direction::Both, knows_label_id, person_label_id);
     auto ctx1 = Engine::template EdgeExpandV<AppendOpt::Persist, LAST_COL>(
         graph, std::move(ctx0), std::move(edge_expand_opt));
 
     std::array<label_id_t, 2> labels{post_label_id, comment_label_id};
-    auto edge_expand_opt2 = gs::make_edge_expand_opt(
+    auto edge_expand_opt2 = gs::make_edge_expandv_opt(
         gs::Direction::In, has_creator_label_id, std::move(labels));
     auto ctx3 =
         Engine::template EdgeExpandVMultiLabel<AppendOpt::Temp, LAST_COL>(

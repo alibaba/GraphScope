@@ -47,13 +47,13 @@ class Query2 : public HqpsAppBase<GRAPH_INTERFACE> {
             gs::PropertySelector<int64_t>("id"))  // property selector
     );
 
-    auto edge_expand_opt0 = gs::make_edge_expand_opt(
+    auto edge_expand_opt0 = gs::make_edge_expandv_opt(
         gs::Direction::Both, (label_id_t) 8, (label_id_t) 1);
 
     auto ctx1 = Engine::template EdgeExpandV<1, 0>(
         time_stamp, graph, std::move(ctx0), std::move(edge_expand_opt0));
 
-    auto edge_expand_opt1 = gs::make_edge_expand_opt(
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
         gs::Direction::In, (label_id_t) 0, std::array<label_id_t, 2>{3, 2});
 
     auto ctx2 = Engine::template EdgeExpandVMultiLabel<-1, 1>(

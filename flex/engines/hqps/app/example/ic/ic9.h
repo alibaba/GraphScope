@@ -106,7 +106,7 @@ class IC9 {
                                                        person_label_id, id);
     // message
 
-    auto edge_expand_opt = gs::make_edge_expand_opt(
+    auto edge_expand_opt = gs::make_edge_expandv_opt(
         gs::Direction::Both, knows_label_id, person_label_id);
     auto get_v_opt = gs::make_getv_opt(
         gs::VOpt::End, std::array<label_id_t, 1>{person_label_id});
@@ -115,7 +115,7 @@ class IC9 {
     auto ctx1_0 = Engine::template PathExpandV<0, -1>(
         time_stamp, graph, std::move(ctx0), std::move(path_expand_opt));
 
-    auto edge_expand_opt2 = gs::make_edge_expand_opt(
+    auto edge_expand_opt2 = gs::make_edge_expandv_opt(
         gs::Direction::In, has_creator_label_id,
         std::array<label_id_t, 2>{post_label_id, comment_label_id});
     // message

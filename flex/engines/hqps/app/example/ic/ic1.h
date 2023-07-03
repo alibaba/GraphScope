@@ -228,7 +228,7 @@ class IC1 {
                                                       person_label_id, id);
 
     double t1 = -grape::GetCurrentTime();
-    auto edge_expand_opt = gs::make_edge_expand_opt(
+    auto edge_expand_opt = gs::make_edge_expandv_opt(
         gs::Direction::Both, knows_label_id, person_label_id);
     auto get_v_opt = gs::make_getv_opt(
         gs::VOpt::End, std::array<label_id_t, 1>{person_label_id});
@@ -269,7 +269,7 @@ class IC1 {
     auto ctx7 = Engine::template GetV<2, -1>(time_stamp, graph, std::move(ctx6),
                                              std::move(get_v_opt6));
 
-    auto edge_expand_opt7 = gs::make_edge_expand_opt(
+    auto edge_expand_opt7 = gs::make_edge_expandv_opt(
         gs::Direction::Out, isLocatedIn_label_id, place_label_id);
     auto ctx8 = Engine::template EdgeExpandV<3, -1>(
         time_stamp, graph, std::move(ctx7), std::move(edge_expand_opt7));
@@ -329,7 +329,7 @@ class IC1 {
     auto ctx12 = Engine::template GetV<3, -1>(
         time_stamp, graph, std::move(ctx11), std::move(get_v_opt9));
 
-    auto edge_expand_opt10 = gs::make_edge_expand_opt(
+    auto edge_expand_opt10 = gs::make_edge_expandv_opt(
         gs::Direction::Out, isLocatedIn_label_id, place_label_id);
     auto ctx13 = Engine::template EdgeExpandV<4, -1>(
         time_stamp, graph, std::move(ctx12), std::move(edge_expand_opt10));
@@ -377,7 +377,7 @@ class IC1 {
     }
 
     // reach out for locationCity
-    auto edge_expand_opt11 = gs::make_edge_expand_opt(
+    auto edge_expand_opt11 = gs::make_edge_expandv_opt(
         gs::Direction::Out, isLocatedIn_label_id, place_label_id);
     auto ctx17 = Engine::template EdgeExpandV<3, 0>(
         time_stamp, graph, std::move(ctx16), std::move(edge_expand_opt11));

@@ -39,7 +39,7 @@ class Query0 {
     auto expr2 = Query0expr1(gs::NamedProperty<int64_t>("id"));
     auto ctx0 =
         Engine::template ScanVertex<0>(time_stamp, graph, 1, std::move(expr2));
-    auto edge_expand_opt1 = gs::make_edge_expand_opt(
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
         gs::Direction::Both, (label_id_t) 12, (label_id_t) 1);
 
     auto get_v_opt0 =

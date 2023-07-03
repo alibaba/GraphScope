@@ -151,7 +151,7 @@ class IC10 {
     // message
 
     // foaf
-    auto edge_expand_opt = gs::make_edge_expand_opt(
+    auto edge_expand_opt = gs::make_edge_expandv_opt(
         gs::Direction::Both, knows_label_id, person_label_id);
     auto get_v_opt = gs::make_getv_opt(
         gs::VOpt::End, std::array<label_id_t, 1>{person_label_id});
@@ -179,7 +179,7 @@ class IC10 {
 
     // calc common score.
     auto lambda_x = [&](auto&& inner_ctx0) {
-      auto edge_expand_opt1 = gs::make_edge_expand_opt(
+      auto edge_expand_opt1 = gs::make_edge_expandv_opt(
           gs::Direction::In, has_creator_label_id, post_label_id);
       //  post
       auto inner_ctx1 = Engine::template EdgeExpandV<1, 0>(
@@ -194,14 +194,14 @@ class IC10 {
         }
       }
 
-      auto edge_expand_opt2 = gs::make_edge_expand_opt(
+      auto edge_expand_opt2 = gs::make_edge_expandv_opt(
           gs::Direction::Out, has_tag_label_id, tag_label_id);
       //  tag
       auto inner_ctx2 = Engine::template EdgeExpandV<-1, 1>(
           time_stamp, graph, std::move(inner_ctx1),
           std::move(edge_expand_opt2));
 
-      auto edge_expand_opt3 = gs::make_edge_expand_opt(
+      auto edge_expand_opt3 = gs::make_edge_expandv_opt(
           gs::Direction::In, has_interest_in_label_id, person_label_id);
       //  person
       auto inner_ctx3 = Engine::template EdgeExpandV<-1, -1>(
@@ -272,7 +272,7 @@ class IC10 {
 
     // lambda in lambda
     auto lambda_y = [&](auto&& inner_ctx0) {
-      auto edge_expand_opt7 = gs::make_edge_expand_opt(
+      auto edge_expand_opt7 = gs::make_edge_expandv_opt(
           gs::Direction::In, has_creator_label_id, post_label_id);
       //  post
       auto ctx7 = Engine::template EdgeExpandV<3, 2>(
@@ -280,14 +280,14 @@ class IC10 {
           std::move(edge_expand_opt7));
 
       auto lambda_yy = [&](auto&& iin_ctx0) {
-        auto edge_expand_opt8 = gs::make_edge_expand_opt(
+        auto edge_expand_opt8 = gs::make_edge_expandv_opt(
             gs::Direction::Out, has_tag_label_id, tag_label_id);
         //  tag
         auto ctx8 = Engine::template EdgeExpandV<-1, 3>(
             time_stamp, graph, std::move(iin_ctx0),
             std::move(edge_expand_opt8));
 
-        auto edge_expand_opt9 = gs::make_edge_expand_opt(
+        auto edge_expand_opt9 = gs::make_edge_expandv_opt(
             gs::Direction::In, has_interest_in_label_id, person_label_id);
         //  person
         auto ctx9 = Engine::template EdgeExpandV<-1, -1>(
@@ -343,7 +343,7 @@ class IC10 {
         Engine::Sort(time_stamp, graph, std::move(ctx8), std::move(pairs));
 
     // get city
-    auto edge_expand_opt10 = gs::make_edge_expand_opt(
+    auto edge_expand_opt10 = gs::make_edge_expandv_opt(
         gs::Direction::Out, is_located_in_label_id, place_label_id);
     auto ctx10 = Engine::template EdgeExpandV<6, 5>(
         time_stamp, graph, std::move(ctx9), std::move(edge_expand_opt10));

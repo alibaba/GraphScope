@@ -117,12 +117,12 @@ class IC4 {
     auto ctx0 = Engine::template ScanVertexWithOid<-1>(time_stamp, graph,
                                                        person_label_id, id);
 
-    auto edge_expand_opt = gs::make_edge_expand_opt(
+    auto edge_expand_opt = gs::make_edge_expandv_opt(
         gs::Direction::Both, knows_label_id, person_label_id);
     auto ctx1 = Engine::template EdgeExpandV<-1, -1>(
         time_stamp, graph, std::move(ctx0), std::move(edge_expand_opt));
 
-    auto edge_expand_opt2 = gs::make_edge_expand_opt(
+    auto edge_expand_opt2 = gs::make_edge_expandv_opt(
         gs::Direction::In, has_creator_label_id, post_label_id);
     auto ctx_post_left = Engine::template EdgeExpandV<-1, -1>(
         time_stamp, graph, std::move(ctx1), std::move(edge_expand_opt2));
@@ -139,7 +139,7 @@ class IC4 {
         time_stamp, graph, std::move(ctx_post_right), std::move(get_v_opt));
     // posts satisfy right condition
 
-    auto edge_expand_opt4 = gs::make_edge_expand_opt(
+    auto edge_expand_opt4 = gs::make_edge_expandv_opt(
         gs::Direction::Out, has_tag_label_id, tag_label_id);
     auto ctx_tag_right = Engine::template EdgeExpandV<1, 0>(
         time_stamp, graph, std::move(ctx_post_filter_right),
@@ -170,7 +170,7 @@ class IC4 {
     auto ctx_post_filter_left = Engine::template GetV<-1, -1>(
         time_stamp, graph, std::move(ctx_post_right), std::move(get_v_opt2));
 
-    auto edge_expand_left = gs::make_edge_expand_opt(
+    auto edge_expand_left = gs::make_edge_expandv_opt(
         gs::Direction::Out, has_tag_label_id, tag_label_id);
     auto ctx_tag_left = Engine::template EdgeExpandV<0, -1>(
         time_stamp, graph, std::move(ctx_post_filter_left),

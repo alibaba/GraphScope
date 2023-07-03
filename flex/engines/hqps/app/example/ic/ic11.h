@@ -146,7 +146,7 @@ class QueryIC11 {
                                                        person_label_id, id);
 
     double t0 = grape::GetCurrentTime();
-    auto edge_expand_opt = gs::make_edge_expand_opt(
+    auto edge_expand_opt = gs::make_edge_expandv_opt(
         gs::Direction::Both, knows_label_id, person_label_id);
     auto get_v_opt = gs::make_getv_opt(
         gs::VOpt::End, std::array<label_id_t, 1>{person_label_id});
@@ -176,7 +176,7 @@ class QueryIC11 {
     get_company_time += t2;
 
     double t3 = grape::GetCurrentTime();
-    auto edge_expand_opt4 = gs::make_edge_expand_opt(
+    auto edge_expand_opt4 = gs::make_edge_expandv_opt(
         gs::Direction::Out, is_locatedIn_label_id, place_label_id);
     auto ctx4 = Engine::template EdgeExpandV<-1, 2>(
         time_stamp, graph, std::move(ctx3), std::move(edge_expand_opt4));

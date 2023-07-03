@@ -308,7 +308,7 @@ class IC14 {
                                                        person_label_id, src_id);
     // message
 
-    auto edge_expand_opt6 = gs::make_edge_expand_opt(
+    auto edge_expand_opt6 = gs::make_edge_expandv_opt(
         gs::Direction::Both, knows_label_id, person_label_id);
     auto get_v_opt = gs::make_getv_opt(
         gs::VOpt::End, std::array<label_id_t, 1>{person_label_id});

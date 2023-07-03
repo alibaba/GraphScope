@@ -178,13 +178,13 @@ class PathExpand {
                           std::move(std::get<2>(tuple)));
   }
 
-  template <typename LabelT, typename EDGE_FILTER_T>
+  template <typename LabelT, typename EDGE_FILTER_T, typename... SELECTOR>
   static std::tuple<std::vector<vertex_id_t>, std::vector<int32_t>,
                     std::vector<offset_t>>
   PathExpandRawV2ForSingleV(
       const GRAPH_INTERFACE& graph, LabelT src_label,
       const std::vector<vertex_id_t>& src_vertices_vec, Range& range,
-      EdgeExpandOpt<LabelT, EDGE_FILTER_T>& edge_expand_opt) {
+      EdgeExpandOpt<LabelT, EDGE_FILTER_T, SELECTOR...>& edge_expand_opt) {
     // auto src_label = vertex_set.GetLabel();
     // auto src_vertices_vec = vertex_set.GetVertices();
     auto src_vertices_size = src_vertices_vec.size();

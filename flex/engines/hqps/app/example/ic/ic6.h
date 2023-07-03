@@ -101,7 +101,7 @@ class IC6 {
     auto ctx0 = Engine::template ScanVertexWithOid<AppendOpt::Temp>(
         graph, person_label_id, id);
 
-    auto edge_expand_opt = gs::make_edge_expand_opt(
+    auto edge_expand_opt = gs::make_edge_expandv_opt(
         gs::Direction::Both, knows_label_id, person_label_id);
     auto get_v_opt = gs::make_getv_opt(
         gs::VOpt::End, std::array<label_id_t, 1>{person_label_id});
@@ -112,13 +112,13 @@ class IC6 {
     LOG(INFO) << "Got " << ctx1.GetHead().Size()
               << " vertices after path expand";
 
-    auto edge_expand_opt4 = gs::make_edge_expand_opt(
+    auto edge_expand_opt4 = gs::make_edge_expandv_opt(
         gs::Direction::In, has_creator_label_id, post_label_id);
     auto ctx4 =
         Engine::template EdgeExpandV<AppendOpt::Persist, INPUT_COL_ID(-1)>(
             graph, std::move(ctx1), std::move(edge_expand_opt4));
 
-    auto edge_expand_opt5 = gs::make_edge_expand_opt(
+    auto edge_expand_opt5 = gs::make_edge_expandv_opt(
         gs::Direction::Out, has_tag_label_id, tag_label_id);
     auto ctx5 = Engine::template EdgeExpandV<AppendOpt::Temp, INPUT_COL_ID(-1)>(
         graph, std::move(ctx4), std::move(edge_expand_opt5));
@@ -159,7 +159,7 @@ class IC6 {
       LOG(INFO) << gs::to_string(ele);
     }
 
-    auto edge_expand_opt8 = gs::make_edge_expand_opt(
+    auto edge_expand_opt8 = gs::make_edge_expandv_opt(
         gs::Direction::Out, has_tag_label_id, tag_label_id);
     auto ctx8 = Engine::template EdgeExpandV<AppendOpt::Temp, INPUT_COL_ID(0)>(
         graph, std::move(ctx7), std::move(edge_expand_opt8));

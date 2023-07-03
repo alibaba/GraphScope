@@ -178,7 +178,7 @@ class IC3 {
                                                        person_label_id, id);
 
     //
-    auto edge_expand_opt = gs::make_edge_expand_opt(
+    auto edge_expand_opt = gs::make_edge_expandv_opt(
         gs::Direction::Both, knows_label_id, person_label_id);
     auto get_v_opt = gs::make_getv_opt(
         gs::VOpt::End, std::array<label_id_t, 1>{person_label_id});
@@ -187,12 +187,12 @@ class IC3 {
     auto ctx1 = Engine::template PathExpandV<0, -1>(
         time_stamp, graph, std::move(ctx0), std::move(path_expand_opt));
 
-    auto edge_expand_opt3 = gs::make_edge_expand_opt(
+    auto edge_expand_opt3 = gs::make_edge_expandv_opt(
         gs::Direction::Out, is_locatedIn_label_id, place_label_id);
     auto ctx2 = Engine::template EdgeExpandV<-1, 0>(
         time_stamp, graph, std::move(ctx1), std::move(edge_expand_opt3));
 
-    auto edge_expand_opt4 = gs::make_edge_expand_opt(
+    auto edge_expand_opt4 = gs::make_edge_expandv_opt(
         gs::Direction::Out, isPartOf_label_id, place_label_id);
     auto ctx3 = Engine::template EdgeExpandV<-1, -1>(
         time_stamp, graph, std::move(ctx2), std::move(edge_expand_opt4));
@@ -211,7 +211,7 @@ class IC3 {
     auto ctx_x0 = Engine::template ScanVertex<-1>(
         time_stamp, graph, place_label_id, std::move(expr_scan0));
 
-    auto edge_expand_opt_x0 = gs::make_edge_expand_opt(
+    auto edge_expand_opt_x0 = gs::make_edge_expandv_opt(
         gs::Direction::In, is_locatedIn_label_id,
         std::array<label_id_t, 2>{post_label_id, comment_label_id});
     // comment and post
@@ -227,7 +227,7 @@ class IC3 {
     auto ctx_x2 = Engine::template GetV<0, -1>(
         time_stamp, graph, std::move(ctx_x1), std::move(get_v_optx));
 
-    auto edge_expand_opt_x1 = gs::make_edge_expand_opt(
+    auto edge_expand_opt_x1 = gs::make_edge_expandv_opt(
         gs::Direction::Out, has_creator_label_id, person_label_id);
     // person
     auto ctx_x3 = Engine::template EdgeExpandV<-1, 0>(
@@ -251,7 +251,7 @@ class IC3 {
     auto ctx_y0 = Engine::template ScanVertex<-1>(
         time_stamp, graph, place_label_id, std::move(expr_scan1));
 
-    auto edge_expand_opt_y0 = gs::make_edge_expand_opt(
+    auto edge_expand_opt_y0 = gs::make_edge_expandv_opt(
         gs::Direction::In, is_locatedIn_label_id,
         std::array<label_id_t, 2>{post_label_id, comment_label_id});
     // comment and post
@@ -267,7 +267,7 @@ class IC3 {
     auto ctx_y2 = Engine::template GetV<0, -1>(
         time_stamp, graph, std::move(ctx_y1), std::move(get_v_opty));
 
-    auto edge_expand_opt_y1 = gs::make_edge_expand_opt(
+    auto edge_expand_opt_y1 = gs::make_edge_expandv_opt(
         gs::Direction::Out, has_creator_label_id, person_label_id);
     // person
     auto ctx_y3 = Engine::template EdgeExpandV<-1, 0>(

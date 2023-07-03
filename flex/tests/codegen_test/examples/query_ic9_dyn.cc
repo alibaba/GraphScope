@@ -66,7 +66,7 @@ class Query9 : public HqpsAppBase<GRAPH_INTERFACE> {
     // Engine::template ScanVertex<0>(time_stamp, graph, 1,
     // std::move(expr0));
     auto ctx0 = Engine::template ScanVertexWithOid<0>(time_stamp, graph, 1, id);
-    auto edge_expand_opt1 = gs::make_edge_expand_opt(
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
         gs::Direction::Both, (label_id_t) 8, (label_id_t) 1);
 
     auto get_v_opt0 =
@@ -76,7 +76,7 @@ class Query9 : public HqpsAppBase<GRAPH_INTERFACE> {
     auto ctx1 = Engine::template PathExpandV<1, 0>(
         time_stamp, graph, std::move(ctx0), std::move(path_opt2));
 
-    auto edge_expand_opt3 = gs::make_edge_expand_opt(
+    auto edge_expand_opt3 = gs::make_edge_expandv_opt(
         gs::Direction::In, (label_id_t) 0, std::array<label_id_t, 2>{3, 2});
 
     auto ctx2 = Engine::template EdgeExpandVMultiLabel<-1, 1>(

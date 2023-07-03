@@ -168,13 +168,14 @@ class SyncEngine : public BaseEngine {
   template <
       AppendOpt append_opt, int input_col_id, typename CTX_HEAD_T,
       int cur_alias, int base_tag, typename... CTX_PREV, typename EDGE_FILTER_T,
+      typename... SELECTOR,
       typename RES_T =
           typename ResultContextT<append_opt, default_vertex_set_t, cur_alias,
                                   CTX_HEAD_T, base_tag, CTX_PREV...>::result_t>
   static RES_T EdgeExpandV(
       const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
-      EdgeExpandOpt<label_id_t, EDGE_FILTER_T>&& edge_expand_opt,
+      EdgeExpandOpt<label_id_t, EDGE_FILTER_T, SELECTOR...>&& edge_expand_opt,
       size_t limit = INT_MAX) {
     auto& select_node = gs::Get<input_col_id>(ctx);
 
@@ -198,11 +199,11 @@ class SyncEngine : public BaseEngine {
   /// @return
   template <int res_alias, int alias_to_use, typename... T, typename CTX_HEAD_T,
             int cur_alias, int base_tag, typename... CTX_PREV, typename LabelT,
-            typename EDGE_FILTER_T>
+            typename EDGE_FILTER_T, typename... SELECTORS>
   static auto EdgeExpandE(
       int64_t time_stamp, const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
-      EdgeExpandEOpt<LabelT, EDGE_FILTER_T, T...>&& edge_expand_opt,
+      EdgeExpandEOpt<LabelT, EDGE_FILTER_T, std::tuple<SELECTORS...>, T...>&& edge_expand_opt,
       size_t limit = INT_MAX) {
     // Unwrap params here.
     auto& select_node = gs::Get<alias_to_use>(ctx);

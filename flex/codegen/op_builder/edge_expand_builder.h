@@ -77,7 +77,7 @@ static std::pair<std::string, std::string> BuildEdgeExpandOpt(
       physical::EdgeExpand::ExpandOpt::EdgeExpand_ExpandOpt_EDGE) {
     ss << "gs::make_edge_expande_opt";
   } else {
-    ss << "gs::make_edge_expand_opt";
+    ss << "gs::make_edge_expandv_opt";
   }
   // check data type
   auto& ir_data_type = meta_data.type();

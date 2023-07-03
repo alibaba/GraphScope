@@ -53,7 +53,7 @@ class Query0 : public HqpsAppBase<GrapeGraphInterface> {
     auto expr0 = Query0expr0(gs::NamedProperty<std::string_view>("name"));
     auto ctx0 =
         Engine::template ScanVertex<0>(time_stamp, graph, 7, std::move(expr0));
-    auto edge_expand_opt0 = gs::make_edge_expand_opt(
+    auto edge_expand_opt0 = gs::make_edge_expandv_opt(
         gs::Direction::In, (label_id_t) 1, (label_id_t) 3);
 
     auto ctx1 = Engine::template EdgeExpandV<-1, 0>(
@@ -63,13 +63,13 @@ class Query0 : public HqpsAppBase<GrapeGraphInterface> {
         make_getv_opt(gs::VOpt::Itself, std::array<label_id_t, 1>{3});
     auto ctx2 = Engine::template GetV<1, -1>(time_stamp, graph, std::move(ctx1),
                                              std::move(get_v_opt1));
-    auto edge_expand_opt2 = gs::make_edge_expand_opt(
+    auto edge_expand_opt2 = gs::make_edge_expandv_opt(
         gs::Direction::Out, (label_id_t) 0, (label_id_t) 1);
 
     auto ctx3 = Engine::template EdgeExpandV<2, 1>(
         time_stamp, graph, std::move(ctx2), std::move(edge_expand_opt2));
 
-    auto edge_expand_opt4 = gs::make_edge_expand_opt(
+    auto edge_expand_opt4 = gs::make_edge_expandv_opt(
         gs::Direction::Both, (label_id_t) 8, (label_id_t) 1);
 
     auto get_v_opt3 =
@@ -85,7 +85,7 @@ class Query0 : public HqpsAppBase<GrapeGraphInterface> {
         gs::VOpt::Itself, std::array<label_id_t, 0>{}, std::move(expr1));
     auto ctx5 = Engine::template GetV<3, -1>(time_stamp, graph, std::move(ctx4),
                                              std::move(get_v_opt6));
-    auto edge_expand_opt7 = gs::make_edge_expand_opt(
+    auto edge_expand_opt7 = gs::make_edge_expandv_opt(
         gs::Direction::Out, (label_id_t) 1, (label_id_t) 7);
 
     auto ctx6 = Engine::template EdgeExpandV<4, 1>(

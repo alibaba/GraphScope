@@ -84,20 +84,20 @@ class IC8 {
     auto ctx0 = Engine::template ScanVertexWithOid<-1>(time_stamp, graph,
                                                        person_label_id, id);
 
-    auto edge_expand_opt = gs::make_edge_expand_opt(
+    auto edge_expand_opt = gs::make_edge_expandv_opt(
         gs::Direction::In, has_creator_label_id,
         std::array<label_id_t, 2>{post_label_id, comment_label_id});
     // message
     auto ctx1 = Engine::template EdgeExpandVMultiLabel<-1, -1>(
         time_stamp, graph, std::move(ctx0), std::move(edge_expand_opt));
 
-    auto edge_expand_opt2 = gs::make_edge_expand_opt(
+    auto edge_expand_opt2 = gs::make_edge_expandv_opt(
         gs::Direction::In, reply_of_label_id, comment_label_id);
     auto ctx2 = Engine::template EdgeExpandV<0, -1>(
         time_stamp, graph, std::move(ctx1), std::move(edge_expand_opt2));
     // replied comment
 
-    auto edge_expand_opt3 = gs::make_edge_expand_opt(
+    auto edge_expand_opt3 = gs::make_edge_expandv_opt(
         gs::Direction::Out, has_creator_label_id, person_label_id);
     auto ctx3 = Engine::template EdgeExpandV<1, 0>(
         time_stamp, graph, std::move(ctx2), std::move(edge_expand_opt3));
