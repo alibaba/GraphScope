@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 // #include "grape/grape.h"
+#include "flex/engines/hqps/engine/utils/operator_utils.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 namespace gs {
 
@@ -162,12 +163,14 @@ struct FalsePredicate {
     return false;
   }
 };
+
+////////////////////////EdgeExpand Params//////////////////////
 // EdgeExpandMsg
 // can use for both edgeExpandE and edgeExpandV
-template <typename LabelT, typename EDGE_FILTER_FUNC>
+template <typename LabelT, typename EDGE_FILTER_FUNC, typename... SELECTOR>
 struct EdgeExpandOpt {
   EdgeExpandOpt(Direction dir, LabelT edge_label, LabelT other_label,
-                EDGE_FILTER_FUNC&& edge_filter)
+                Filter<EDGE_FILTER_FUNC, SELECTOR...>&& edge_filter)
       : dir_(dir),
         edge_label_(edge_label),
         other_label_(std::move(other_label)),
@@ -176,14 +179,15 @@ struct EdgeExpandOpt {
   Direction dir_;
   LabelT edge_label_;
   LabelT other_label_;  // There might be multiple dst labels.
-  EDGE_FILTER_FUNC edge_filter_;
+  Filter<EDGE_FILTER_FUNC, SELECTOR...> edge_filter_;
 };
 
-template <typename LabelT, typename EDGE_FILTER_FUNC, typename... T>
+template <typename LabelT, typename EDGE_FILTER_FUNC, typename... SELECTOR,
+          typename... T>
 struct EdgeExpandEOpt {
   EdgeExpandEOpt(PropNameArray<T...>&& prop_names, Direction dir,
                  LabelT edge_label, LabelT other_label,
-                 EDGE_FILTER_FUNC&& edge_filter)
+                 Filter<EDGE_FILTER_FUNC, SELECTOR...>&& edge_filter)
       : prop_names_(std::move(prop_names)),
         dir_(dir),
         edge_label_(edge_label),
@@ -201,16 +205,16 @@ struct EdgeExpandEOpt {
   Direction dir_;
   LabelT edge_label_;
   LabelT other_label_;  // There might be multiple dst labels.
-  EDGE_FILTER_FUNC edge_filter_;
+  Filter<EDGE_FILTER_FUNC, SELECTOR...> edge_filter_;
 };
 
 template <size_t num_labels, typename LabelT, typename EDGE_FILTER_FUNC,
-          typename... T>
+          typename... SELECTOR, typename... T>
 struct EdgeExpandEMultiLabelOpt {
   EdgeExpandEMultiLabelOpt(PropNameArray<T...>&& prop_names, Direction dir,
                            LabelT edge_label,
                            std::array<LabelT, num_labels> other_label,
-                           EDGE_FILTER_FUNC&& edge_filter)
+                           Filter<EDGE_FILTER_FUNC, SELECTOR...>&& edge_filter)
       : prop_names_(std::move(prop_names)),
         dir_(dir),
         edge_label_(edge_label),
@@ -219,7 +223,7 @@ struct EdgeExpandEMultiLabelOpt {
 
   EdgeExpandEMultiLabelOpt(Direction dir, LabelT edge_label,
                            std::array<LabelT, num_labels> other_label,
-                           EDGE_FILTER_FUNC&& edge_filter)
+                           Filter<EDGE_FILTER_FUNC, SELECTOR...>&& edge_filter)
       : dir_(dir),
         edge_label_(edge_label),
         other_label_(std::move(other_label)),
@@ -307,31 +311,38 @@ auto make_edge_expand_opt(Direction dir, LabelT edge_label, LabelT other_label,
   return EdgeExpandOpt(dir, edge_label, other_label, std::move(func));
 }
 
-template <typename LabelT, size_t num_labels, typename EXPR, typename... T>
-struct GetVOpt {
+template <typename LabelT, size_t num_labels, typename FILTER_T, typename... T>
+struct GetVOpt;
+
+template <typename LabelT, size_t num_labels, typename EXPR,
+          typename... SELECTOR, typename... T>
+struct GetVOpt<LabelT, num_labels, Filter<EXPR, SELECTOR...>, T...> {
   VOpt v_opt_;
   // label of vertices we need.
   std::array<LabelT, num_labels> v_labels_;
   // columns of vertices we need to fetch.
-  std::tuple<NamedProperty<T>...> props_;
-  EXPR expr_;
-  // columns info(like type info is included in expr)
+  Filter<EXPR, SELECTOR...> filter_;
+  std::tuple<PropertySelector<T>...> props_;
 
   GetVOpt(VOpt v_opt, std::array<LabelT, num_labels>&& v_labels,
-          std::tuple<NamedProperty<T>...>&& props, EXPR&& expr)
+          std::tuple<PropertySelector<T>...>&& props,
+          Filter<EXPR, SELECTOR...>&& filter)
       : v_opt_(v_opt),
         v_labels_(std::move(v_labels)),
         props_(std::move(props)),
-        expr_(std::move(expr)) {}
+        filter_(std::move(filter)) {}
 
   GetVOpt(VOpt v_opt, std::array<LabelT, num_labels>&& v_labels,
-          std::tuple<NamedProperty<T>...>&& props)
+          std::tuple<PropertySelector<T>...>&& props)
       : v_opt_(v_opt),
         v_labels_(std::move(v_labels)),
         props_(std::move(props)) {}
 
-  GetVOpt(VOpt v_opt, std::array<LabelT, num_labels>&& v_labels, EXPR&& expr)
-      : v_opt_(v_opt), v_labels_(std::move(v_labels)), expr_(std::move(expr)) {}
+  GetVOpt(VOpt v_opt, std::array<LabelT, num_labels>&& v_labels,
+          Filter<EXPR, SELECTOR...>&& filter)
+      : v_opt_(v_opt),
+        v_labels_(std::move(v_labels)),
+        filter_(std::move(filter)) {}
 
   // Only with v_labels.
   GetVOpt(VOpt v_opt, std::array<LabelT, num_labels>&& v_labels)
@@ -343,34 +354,31 @@ template <typename LabelT, typename EXPR, typename... T>
 using SimpleGetVOpt = GetVOpt<LabelT, 1, EXPR, T...>;
 
 // make get_v opt with labels and props and expr(filters)
-template <typename... T, typename LabelT, size_t num_labels, typename EXPR>
+template <typename... T, typename LabelT, size_t num_labels, typename EXPR,
+          typename... SELECTOR>
 auto make_getv_opt(VOpt v_opt, std::array<LabelT, num_labels>&& v_labels,
-                   PropNameArray<T...>&& props, EXPR&& expr) {
-  return GetVOpt<LabelT, num_labels, EXPR, T...>(
-      v_opt, std::move(v_labels), std::move(props), std::move(expr));
+                   std::tuple<PropertySelector<T>...>&& props,
+                   Filter<EXPR, SELECTOR...>&& filter) {
+  return GetVOpt<LabelT, num_labels, Filter<EXPR, SELECTOR...>, T...>(
+      v_opt, std::move(v_labels), std::move(props), std::move(filter));
 }
 
-template <typename... T, typename LabelT, size_t num_labels, typename EXPR>
+template <typename LabelT, size_t num_labels, typename EXPR,
+          typename... SELECTOR>
 auto make_getv_opt(VOpt v_opt, std::array<LabelT, num_labels>&& v_labels,
-                   std::tuple<NamedProperty<T>...>&& props, EXPR&& expr) {
-  return GetVOpt<LabelT, num_labels, EXPR, T...>(
-      v_opt, std::move(v_labels), std::move(props), std::move(expr));
-}
-
-template <typename LabelT, size_t num_labels, typename EXPR>
-auto make_getv_opt(VOpt v_opt, std::array<LabelT, num_labels>&& v_labels,
-                   EXPR&& expr) {
-  return GetVOpt<LabelT, num_labels, EXPR>(v_opt, std::move(v_labels),
-                                           std::move(expr));
+                   Filter<EXPR, SELECTOR...>&& filter) {
+  return GetVOpt<LabelT, num_labels, Filter<EXPR, SELECTOR...>>(
+      v_opt, std::move(v_labels), std::move(filter));
 }
 
 // make get_v opt with labels and props.
 template <typename... T, typename LabelT, size_t num_labels>
 auto make_getv_opt(VOpt v_opt, std::array<LabelT, num_labels>&& v_labels,
                    PropNameArray<T...>&& props) {
-  return GetVOpt<LabelT, num_labels, TruePredicate, T...>(
+  return GetVOpt<LabelT, num_labels, Filter<TruePredicate>, T...>(
       v_opt, std::move(v_labels), std::move(props));
 }
+
 // make get_v opt with labels.
 // template <typename LabelT, size_t num_labels, typename EXPR>
 // auto make_getv_opt(VOpt v_opt, std::array<LabelT, num_labels>&& v_labels) {
@@ -443,75 +451,11 @@ auto make_shortest_path_opt(
 // Just filter with v_labels.
 template <typename LabelT, size_t num_labels>
 auto make_getv_opt(VOpt v_opt, std::array<LabelT, num_labels>&& v_labels) {
-  return GetVOpt<LabelT, num_labels, TruePredicate>(v_opt, std::move(v_labels));
+  return GetVOpt<LabelT, num_labels, Filter<TruePredicate>>(
+      v_opt, std::move(v_labels));
 }
 
 ///////////////////////Group prams////////////////////////////
-
-enum class AggFunc {
-  SUM = 0,
-  MIN = 1,
-  MAX = 2,
-  COUNT = 3,
-  COUNT_DISTINCT = 4,
-  TO_LIST = 5,
-  TO_SET = 6,
-  AVG = 7,
-  FIRST = 8,
-};
-
-// Get the return type of this aggregation.
-template <AggFunc agg_func, typename T>
-struct AggFuncReturnValue {
-  // default return t;
-  using return_t = T;
-};
-
-template <typename T>
-struct AggFuncReturnValue<AggFunc::COUNT, T> {
-  using return_t = size_t;
-};
-
-template <typename T>
-struct AggFuncReturnValue<AggFunc::COUNT_DISTINCT, T> {
-  using return_t = size_t;
-};
-
-// Physical plan supports aggregate with multiple property, but currently we
-// only support one prop
-//
-// for grouping values, for which key, and to which alias, applying which
-// agg_func.
-// col_ind: the index of property which we will use.
-template <int _tag_id, int _res_alias, AggFunc _agg_func, int _col_ind>
-struct Aggregate {
-  static constexpr int tag_id = _tag_id;
-  static constexpr int res_alias = _res_alias;
-  static constexpr AggFunc agg_func = _agg_func;
-  static constexpr int col_ind = _col_ind;
-};
-
-template <int _res_alias, AggFunc _agg_func, typename PropTs, typename TagIds>
-struct AggregateProp;
-
-template <int _res_alias, AggFunc _agg_func, typename... T, int... Is>
-struct AggregateProp<_res_alias, _agg_func, std::tuple<T...>,
-                     std::integer_sequence<int32_t, Is...>> {
-  static_assert(sizeof...(Is) == sizeof...(T));
-  static constexpr AggFunc agg_func = _agg_func;
-  static constexpr size_t num_vars = sizeof...(T);
-  static constexpr int res_alias = _res_alias;
-  PropNameArray<T...> prop_names_;
-
-  AggregateProp(PropNameArray<T...>&& props) : prop_names_(std::move(props)) {}
-};
-
-template <int _res_alias, AggFunc _agg_func, typename... T, int... Is>
-auto make_aggregate_prop(PropNameArray<T...>&& props,
-                         std::integer_sequence<int, Is...>) {
-  return AggregateProp<_res_alias, _agg_func, std::tuple<T...>,
-                       std::integer_sequence<int, Is...>>(std::move(props));
-}
 
 template <int _tag_id, typename... T>
 struct TagProp {
@@ -537,33 +481,10 @@ struct AliasTagProp {
 
 // Alias the property of multiple tags' multiple propty.
 
-// Project properties from multiple tag to a single tag.
-template <int _res_alias, typename... TAG_PROP>
-struct MultiKeyAliasProp {
-  static constexpr size_t num_tags = sizeof...(TAG_PROP);
-  static constexpr int res_alias = _res_alias;
-
-  // the final prop tuples.
-  // using res_prop_tuple_t = gs::tuple_cat_t<typename
-  // TAG_PROP::prop_tuple_t...>;
-
-  // the property name for projection.
-  std::tuple<TAG_PROP...> tag_props_;
-  MultiKeyAliasProp(TAG_PROP&&... tag_props)
-      : tag_props_(std::forward<TAG_PROP>(tag_props)...) {}
-};
-
-template <int _res_alias, typename... TAG_PROP>
-auto make_multi_key_alias_prop(TAG_PROP&&... tag_props) {
-  return MultiKeyAliasProp<_res_alias, TAG_PROP...>(
-      std::forward<TAG_PROP>(tag_props)...);
-}
-
 // For the grouping key, use which property, and alias to what.
-template <int _tag_id, int _res_alias, int... Is>
+template <int _tag_id, int... Is>
 struct KeyAlias {
   static constexpr int tag_id = _tag_id;
-  static constexpr int res_alias = _res_alias;
 };
 
 template <int _tag_id, int _res_alias>
@@ -598,53 +519,53 @@ auto make_key_alias_prop(PropNameArray<T...>&& names) {
 //   static constexpr int res_alias = _res_alias;
 // };
 // For each group, we use one group key, one group value.
-template <typename _KEY_ALIAS, typename... _AGGREGATE>
-struct GroupOpt {
-  using key_alias_t = _KEY_ALIAS;
-  using agg_tuple_t = std::tuple<_AGGREGATE...>;
-  key_alias_t key_alias_;
-  agg_tuple_t aggregate_;
-  GroupOpt(key_alias_t&& key_alias, agg_tuple_t&& aggregate)
-      : key_alias_(std::move(key_alias)), aggregate_(std::move(aggregate)) {}
+// template <typename _KEY_ALIAS, typename... _AGGREGATE>
+// struct GroupOpt {
+//   using key_alias_t = _KEY_ALIAS;
+//   using agg_tuple_t = std::tuple<_AGGREGATE...>;
+//   key_alias_t key_alias_;
+//   agg_tuple_t aggregate_;
+//   GroupOpt(key_alias_t&& key_alias, agg_tuple_t&& aggregate)
+//       : key_alias_(std::move(key_alias)), aggregate_(std::move(aggregate)) {}
 
-  GroupOpt(key_alias_t&& key_alias, _AGGREGATE&&... aggregate)
-      : key_alias_(std::move(key_alias)),
-        aggregate_(std::forward<_AGGREGATE>(aggregate)...) {}
-};
+//   GroupOpt(key_alias_t&& key_alias, _AGGREGATE&&... aggregate)
+//       : key_alias_(std::move(key_alias)),
+//         aggregate_(std::forward<_AGGREGATE>(aggregate)...) {}
+// };
 
 // group opt contains 2 key alias.
-template <typename _KEY_ALIAS0, typename _KEY_ALIAS1, typename... _AGGREGATE>
-struct GroupOpt2 {
-  using key_alias_t0 = _KEY_ALIAS0;
-  using key_alias_t1 = _KEY_ALIAS1;
-  using agg_tuple_t = std::tuple<_AGGREGATE...>;
-  key_alias_t0 key_alias0_;
-  key_alias_t1 key_alias1_;
-  agg_tuple_t aggregate_;
-  GroupOpt2(key_alias_t0&& key_alias0, key_alias_t1&& key_alias1,
-            agg_tuple_t&& aggregate)
-      : key_alias0_(std::move(key_alias0)),
-        key_alias1_(std::move(key_alias1)),
-        aggregate_(std::move(aggregate)) {}
+// template <typename _KEY_ALIAS0, typename _KEY_ALIAS1, typename... _AGGREGATE>
+// struct GroupOpt2 {
+//   using key_alias_t0 = _KEY_ALIAS0;
+//   using key_alias_t1 = _KEY_ALIAS1;
+//   using agg_tuple_t = std::tuple<_AGGREGATE...>;
+//   key_alias_t0 key_alias0_;
+//   key_alias_t1 key_alias1_;
+//   agg_tuple_t aggregate_;
+//   GroupOpt2(key_alias_t0&& key_alias0, key_alias_t1&& key_alias1,
+//             agg_tuple_t&& aggregate)
+//       : key_alias0_(std::move(key_alias0)),
+//         key_alias1_(std::move(key_alias1)),
+//         aggregate_(std::move(aggregate)) {}
 
-  GroupOpt2(key_alias_t0&& key_alias0, key_alias_t1&& key_alias1,
-            _AGGREGATE&&... aggregate)
-      : key_alias0_(std::move(key_alias0)),
-        key_alias1_(std::move(key_alias1)),
-        aggregate_(std::forward<_AGGREGATE>(aggregate)...) {}
-};
+//   GroupOpt2(key_alias_t0&& key_alias0, key_alias_t1&& key_alias1,
+//             _AGGREGATE&&... aggregate)
+//       : key_alias0_(std::move(key_alias0)),
+//         key_alias1_(std::move(key_alias1)),
+//         aggregate_(std::forward<_AGGREGATE>(aggregate)...) {}
+// };
 
-template <typename KEY_ALIAS, typename... _AGG_T>
-auto make_group_opt(KEY_ALIAS&& key_alias, _AGG_T&&... aggs) {
-  return GroupOpt(std::move(key_alias), std::forward<_AGG_T>(aggs)...);
-}
+// template <typename KEY_ALIAS, typename... _AGG_T>
+// auto make_group_opt(KEY_ALIAS&& key_alias, _AGG_T&&... aggs) {
+//   return GroupOpt(std::move(key_alias), std::forward<_AGG_T>(aggs)...);
+// }
 
-template <typename KEY_ALIAS0, typename KEY_ALIAS1, typename... _AGG_T>
-auto make_group_opt2(KEY_ALIAS0&& key_alias0, KEY_ALIAS1&& key_alias1,
-                     _AGG_T&&... aggs) {
-  return GroupOpt2(std::move(key_alias0), std::move(key_alias1),
-                   std::forward<_AGG_T>(aggs)...);
-}
+// template <typename KEY_ALIAS0, typename KEY_ALIAS1, typename... _AGG_T>
+// auto make_group_opt2(KEY_ALIAS0&& key_alias0, KEY_ALIAS1&& key_alias1,
+//                      _AGG_T&&... aggs) {
+//   return GroupOpt2(std::move(key_alias0), std::move(key_alias1),
+//                    std::forward<_AGG_T>(aggs)...);
+// }
 
 template <typename... _AGGREGATE>
 struct FoldOpt {

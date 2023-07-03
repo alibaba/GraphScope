@@ -21,7 +21,9 @@ limitations under the License.
 
 #include "flex/engines/hqps/engine/hqps_utils.h"
 #include "flex/storages/rt_mutable_graph/types.h"
-#include "grape/grape.h"
+#include "grape/types.h"
+
+#include "flex/engines/hqps/engine/utils/operator_utils.h"
 
 namespace gs {
 
@@ -416,14 +418,29 @@ struct ResultContextTImpl<
   using result_t = Context<NEW_HEAD_T, new_alias, base_tag, CTX_PREV...>;
 };
 
-template <int new_alias, typename NEW_HEAD_T, int old_alias,
+template <AppendOpt append_opt, typename NEW_HEAD_T, int old_alias,
           typename OLD_HEAD_T, int base_tag, typename... CTX_PREV>
 struct ResultContextT {
+  static constexpr int32_t new_alias =
+      ResultColId<append_opt, old_alias, CTX_PREV...>::res_alias;
   using result_t = typename ResultContextTImpl<
       new_alias, NEW_HEAD_T, old_alias, OLD_HEAD_T, base_tag,
       std::tuple<CTX_PREV...>,
       Dummy<new_alias, NEW_HEAD_T, old_alias, OLD_HEAD_T, base_tag,
             CTX_PREV...>>::result_t;
+};
+
+template <AppendOpt append_opt, typename NEW_HEAD_T, int old_alias,
+          typename OLD_HEAD_T, int base_tag>
+struct ResultContextT<append_opt, NEW_HEAD_T, old_alias, OLD_HEAD_T, base_tag,
+                      grape::EmptyType> {
+  static constexpr int32_t new_alias =
+      ResultColId<append_opt, old_alias, grape::EmptyType>::res_alias;
+  using result_t = typename ResultContextTImpl<
+      new_alias, NEW_HEAD_T, old_alias, OLD_HEAD_T, base_tag,
+      std::tuple<grape::EmptyType>,
+      Dummy<new_alias, NEW_HEAD_T, old_alias, OLD_HEAD_T, base_tag,
+            grape::EmptyType>>::result_t;
 };
 
 std::vector<offset_t> obtain_offset_between_tags_impl(
@@ -449,6 +466,7 @@ class Context {
  public:
   using head_t = HEAD_T;
   static constexpr int prev_alias_num = sizeof...(ALIAS_COL);
+  static constexpr int cur_col_id = cur_alias;
   static_assert(cur_alias == -1 || cur_alias == prev_alias_num + base_tag);
   // alias_num equals to the count of aliases, not total alias num, not included
   // ones below base_tag.
@@ -740,8 +758,10 @@ class Context {
   // alias_to_use indicates which column the input offset array is aligned to.
   // we need to transform it to make it align with the ending column.
   template <
-      int res_alias = -1, typename NEW_HEAD_T,
-      typename RES_T = Context<NEW_HEAD_T, res_alias, base_tag, ALIAS_COL...>,
+      AppendOpt opt, typename NEW_HEAD_T,
+      typename RES_T = Context<
+          NEW_HEAD_T, ResultColId<opt, cur_alias, ALIAS_COL...>::res_alias,
+          base_tag, ALIAS_COL...>,
       typename std::enable_if<(cur_alias == -1), NEW_HEAD_T>::type* = nullptr>
   RES_T AddNode(NEW_HEAD_T&& new_node, std::vector<offset_t>&& offset,
                 int alias_to_use = -1) {
@@ -764,16 +784,17 @@ class Context {
   }
 
   // 1. res_alias eq cur_alias, we need to replace the current head node.
-  template <int res_alias = -1, typename NEW_HEAD_T,
-            typename RES_T = typename ResultContextT<
-                res_alias, NEW_HEAD_T, cur_alias, HEAD_T, base_tag,
-                ALIAS_COL...>::result_t,
-            typename std::enable_if<(cur_alias != -1 && cur_alias == res_alias),
-                                    NEW_HEAD_T>::type* = nullptr>
+  template <
+      AppendOpt opt, typename NEW_HEAD_T,
+      typename RES_T = typename ResultContextT<
+          opt, NEW_HEAD_T, cur_alias, HEAD_T, base_tag, ALIAS_COL...>::result_t,
+      typename std::enable_if<(opt == AppendOpt::Replace), NEW_HEAD_T>::type* =
+          nullptr>
   RES_T AddNode(NEW_HEAD_T&& new_node, std::vector<offset_t>&& offset,
                 int alias_to_use = -1) {
     VLOG(10) << "Replace head with cur_alias" << cur_alias
-             << ",res_alias:" << res_alias << ",align to use" << alias_to_use;
+             << ", append opt:" << gs::to_string(opt)
+             << ",align to use:" << alias_to_use;
     // append the offset to the offset array.
     // Make input offset array align with the last set.
     auto new_offset = align_offset(new_node, std::move(offset), offsets_arrays_,
@@ -785,16 +806,18 @@ class Context {
 
   // 2.
   // Replace current Head with new node, if i'm aliased to prev_alias_num.
-  template <int res_alias = -1, typename NEW_HEAD_T,
+  template <AppendOpt append_opt, typename NEW_HEAD_T,
             typename RES_T = typename ResultContextT<
-                res_alias, NEW_HEAD_T, cur_alias, HEAD_T, base_tag,
+                append_opt, NEW_HEAD_T, cur_alias, HEAD_T, base_tag,
                 ALIAS_COL...>::result_t,
-            typename std::enable_if<(cur_alias != -1 && cur_alias != res_alias),
+            typename std::enable_if<(append_opt != AppendOpt::Replace &&
+                                     cur_alias != -1),
                                     NEW_HEAD_T>::type* = nullptr>
   RES_T AddNode(NEW_HEAD_T&& new_node, std::vector<offset_t>&& offset,
                 int alias_to_use = -1) {
     VLOG(10) << "Replace head with cur_alias" << cur_alias
-             << ",res_alias:" << res_alias << ",align to use" << alias_to_use;
+             << ", append opt:" << gs::to_string(append_opt) << ",align to use"
+             << alias_to_use;
     // append the offset to the offset array.
     // Make input offset array align with the last set.
     {
@@ -1332,9 +1355,10 @@ class Context<HEAD_T, cur_alias, base_tag, grape::EmptyType> {
 
   // 0. Replace current HEAD to obtain a new Traversal, if i'm not aliased
   template <
-      int res_alias = -1, typename NEW_HEAD_T,
-      typename RES_T =
-          Context<NEW_HEAD_T, res_alias, base_tag, grape::EmptyType>,
+      AppendOpt opt, typename NEW_HEAD_T,
+      typename RES_T = Context<
+          NEW_HEAD_T, ResultColId<opt, cur_alias, grape::EmptyType>::res_alias,
+          base_tag, grape::EmptyType>,
       typename std::enable_if<(cur_alias == -1), NEW_HEAD_T>::type* = nullptr>
   RES_T AddNode(NEW_HEAD_T&& new_node, std::vector<offset_t>&& offset,
                 int alias_to_use = -1) {  // offset vector and alias_to_use
@@ -1346,8 +1370,10 @@ class Context<HEAD_T, cur_alias, base_tag, grape::EmptyType> {
 
   // 1. Replace current Head with new node, if i'm aliased to 0.
   template <
-      int res_alias = -1, typename NEW_HEAD_T,
-      typename RES_T = Context<NEW_HEAD_T, res_alias, base_tag, HEAD_T>,
+      AppendOpt opt, typename NEW_HEAD_T,
+      typename RES_T = Context<
+          NEW_HEAD_T, ResultColId<opt, cur_alias, grape::EmptyType>::res_alias,
+          base_tag, HEAD_T>,
       typename std::enable_if<(cur_alias != -1), NEW_HEAD_T>::type* = nullptr>
   RES_T AddNode(NEW_HEAD_T&& new_node, std::vector<offset_t>&& offset,
                 int alias_to_use = -1) {

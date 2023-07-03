@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "flex/engines/hqps/engine/params.h"
+#include "flex/engines/hqps/engine/utils/operator_utils.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/property/column.h"
 
@@ -615,6 +616,19 @@ struct to_string_impl<std::array<T, N>> {
 };
 
 template <>
+struct to_string_impl<AppendOpt> {
+  static inline std::string to_string(const AppendOpt& empty) {
+    if (empty == AppendOpt::Persist) {
+      return "Persist";
+    } else if (empty == AppendOpt::Temp) {
+      return "Temp";
+    } else {
+      throw std::runtime_error("Unknown AppendOpt");
+    }
+  }
+};
+
+template <>
 struct to_string_impl<Dist> {
   static inline std::string to_string(const Dist& empty) {
     return std::to_string(empty.dist);
@@ -927,6 +941,28 @@ class QPSException : public std::exception {
 
  private:
   std::string _err_msg;
+};
+
+template <typename T>
+struct function_traits : public function_traits<decltype(&T::operator())> {};
+// For generic types, directly use the result of the signature of its
+// 'operator()'
+
+template <typename ClassType, typename ReturnType, typename... Args>
+struct function_traits<ReturnType (ClassType::*)(Args...) const>
+// we specialize for pointers to member function
+{
+  enum { arity = sizeof...(Args) };
+  // arity is the number of arguments.
+
+  typedef ReturnType result_type;
+
+  template <size_t i>
+  struct arg {
+    typedef typename std::tuple_element<i, std::tuple<Args...>>::type type;
+    // the i-th argument is equivalent to the i-th tuple element of a tuple
+    // composed of those arguments.
+  };
 };
 
 }  // namespace gs

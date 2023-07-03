@@ -49,29 +49,28 @@ class PathExpand {
   using vertex_set_t = RowVertexSet<label_id_t, vertex_id_t, T...>;
   // Path expand to vertices with columns.
 
-  // The length of path is tracked.
-  template <typename VERTEX_SET_T, typename EXPR, typename LabelT,
+  // PathExpand to vertices with vertex properties also retreived
+  template <typename... V_SET_T, typename EXPR, typename LabelT,
             typename EDGE_FILTER_T, typename... T,
             typename std::enable_if<(sizeof...(T) > 0)>::type* = nullptr,
             typename RES_SET_T = vertex_set_t<int32_t, T...>,  // int32_t is the
                                                                // length.
             typename RES_T = std::pair<RES_SET_T, std::vector<offset_t>>>
   static RES_T PathExpandV(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
-      const VERTEX_SET_T& vertex_set,
+      const GRAPH_INTERFACE& graph,
+      const RowVertexSet<LabelT, vertex_id_t, V_SET_T...>& vertex_set,
       PathExpandOpt<LabelT, EXPR, EDGE_FILTER_T, T...>&& path_expand_opt) {
     //
     auto cur_label = vertex_set.GetLabel();
     auto& range = path_expand_opt.range_;
     auto& edge_expand_opt = path_expand_opt.edge_expand_opt_;
     auto& get_v_opt = path_expand_opt.get_v_opt_;
-    auto tuple =
-        PathExpandRawVMultiV(time_stamp, graph, cur_label,
-                             vertex_set.GetVertices(), range, edge_expand_opt);
+    auto tuple = PathExpandRawVMultiV(
+        graph, cur_label, vertex_set.GetVertices(), range, edge_expand_opt);
 
     auto& vids_vec = std::get<0>(tuple);
     auto tuple_vec = graph.template GetVertexPropsFromVid<T...>(
-        time_stamp, cur_label, vids_vec, get_v_opt.props_);
+        cur_label, vids_vec, get_v_opt.props_);
     CHECK(tuple_vec.size() == vids_vec.size());
     // prepend dist info.
     auto new_tuple_vec =
@@ -84,16 +83,13 @@ class PathExpand {
   }
 
   // PathExpandV for row vertex set as input.
-  template <typename VERTEX_SET_T, typename EXPR, typename LabelT,
-            typename EDGE_FILTER_T, typename... T,
-            typename std::enable_if<(VERTEX_SET_T::is_two_label_set &&
-                                     sizeof...(T) == 0)>::type* = nullptr,
-            typename RES_SET_T = vertex_set_t<int32_t>,
+  template <typename... V_SET_T, typename EXPR, typename LabelT,
+            typename EDGE_FILTER_T, typename RES_SET_T = vertex_set_t<int32_t>,
             typename RES_T = std::pair<RES_SET_T, std::vector<offset_t>>>
   static RES_T PathExpandV(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
-      const VERTEX_SET_T& vertex_set,
-      PathExpandOpt<LabelT, EXPR, EDGE_FILTER_T, T...>&& path_expand_opt) {
+      const GRAPH_INTERFACE& graph,
+      const TwoLabelVertexSet<vertex_id_t, LabelT, V_SET_T...>& vertex_set,
+      PathExpandOpt<LabelT, EXPR, EDGE_FILTER_T>&& path_expand_opt) {
     //
     auto& range = path_expand_opt.range_;
     auto& edge_expand_opt = path_expand_opt.edge_expand_opt_;
@@ -107,12 +103,10 @@ class PathExpand {
     std::vector<vertex_id_t> vids_vec0, vids_vec1;
     std::vector<int32_t> dist_vec0, dist_vec1;
     std::vector<offset_t> offsets0, offsets1;
-    std::tie(vids_vec0, dist_vec0, offsets0) =
-        PathExpandRawVMultiV(time_stamp, graph, vertex_set.GetLabel(0),
-                             input_v_0, range, edge_expand_opt);
-    std::tie(vids_vec1, dist_vec1, offsets1) =
-        PathExpandRawVMultiV(time_stamp, graph, vertex_set.GetLabel(1),
-                             input_v_1, range, edge_expand_opt);
+    std::tie(vids_vec0, dist_vec0, offsets0) = PathExpandRawVMultiV(
+        graph, vertex_set.GetLabel(0), input_v_0, range, edge_expand_opt);
+    std::tie(vids_vec1, dist_vec1, offsets1) = PathExpandRawVMultiV(
+        graph, vertex_set.GetLabel(1), input_v_1, range, edge_expand_opt);
     // merge to label output together.
 
     // Default vertex set to vertex set.
@@ -159,24 +153,20 @@ class PathExpand {
   }
 
   // PathExpandV for two_label_vertex set as input.
-  template <typename VERTEX_SET_T, typename EXPR, typename LabelT,
-            typename EDGE_FILTER_T, typename... T,
-            typename std::enable_if<(VERTEX_SET_T::is_row_vertex_set &&
-                                     sizeof...(T) == 0)>::type* = nullptr,
-            typename RES_SET_T = vertex_set_t<int32_t>,
+  template <typename... V_SET_T, typename EXPR, typename LabelT,
+            typename EDGE_FILTER_T, typename RES_SET_T = vertex_set_t<int32_t>,
             typename RES_T = std::pair<RES_SET_T, std::vector<offset_t>>>
   static RES_T PathExpandV(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
-      const VERTEX_SET_T& vertex_set,
-      PathExpandOpt<LabelT, EXPR, EDGE_FILTER_T, T...>&& path_expand_opt) {
+      const GRAPH_INTERFACE& graph,
+      const RowVertexSet<LabelT, vertex_id_t, V_SET_T...>& vertex_set,
+      PathExpandOpt<LabelT, EXPR, EDGE_FILTER_T>&& path_expand_opt) {
     //
     auto cur_label = vertex_set.GetLabel();
     auto& range = path_expand_opt.range_;
     auto& edge_expand_opt = path_expand_opt.edge_expand_opt_;
     auto& get_v_opt = path_expand_opt.get_v_opt_;
-    auto tuple =
-        PathExpandRawVMultiV(time_stamp, graph, cur_label,
-                             vertex_set.GetVertices(), range, edge_expand_opt);
+    auto tuple = PathExpandRawVMultiV(
+        graph, cur_label, vertex_set.GetVertices(), range, edge_expand_opt);
 
     // Default vertex set to vertex set.
     auto& vids_vec = std::get<0>(tuple);
@@ -188,76 +178,11 @@ class PathExpand {
                           std::move(std::get<2>(tuple)));
   }
 
-  template <typename VERTEX_SET_T, typename LabelT, typename EDGE_FILTER_T>
-  static std::tuple<std::vector<vertex_id_t>, std::vector<int32_t>,
-                    std::vector<offset_t>>
-  PathExpandRawV(int64_t time_stamp, const GRAPH_INTERFACE& graph,
-                 const VERTEX_SET_T& vertex_set, Range& range,
-                 EdgeExpandOpt<LabelT, EDGE_FILTER_T>& edge_expand_opt,
-                 bool dedup = true) {
-    std::vector<vertex_id_t> gids;
-    std::vector<int32_t> dists;
-    std::vector<offset_t> offsets;
-    auto src_label = vertex_set.GetLabel();
-    std::unordered_set<vertex_id_t> visited_vertices;
-
-    for (auto src_iter : vertex_set) {
-      auto src_vertex = src_iter.GetVertex();
-      offsets.emplace_back(gids.size());
-      std::vector<std::vector<vertex_id_t>> vids(2);
-      for (size_t cur_hop = 0; cur_hop < range.limit_; ++cur_hop) {
-        size_t cur_ind = cur_hop % 2;
-        if (cur_hop == 0) {
-          // auto insert_res = visited_vertices.insert(src_vertex);
-          // if (insert_res.second) {
-          vids[0].emplace_back(src_vertex);
-          visited_vertices.insert(src_vertex);
-          // }
-        } else {
-          size_t prev_ind = (cur_ind + 1) % 2;
-          vids[cur_ind].clear();
-          if (vids[prev_ind].empty()) {
-            break;
-          }
-
-          auto nbr_list_array = graph.GetOtherVertices(
-              time_stamp, src_label, edge_expand_opt.other_label_,
-              edge_expand_opt.edge_label_, vids[prev_ind],
-              gs::to_string(edge_expand_opt.dir_), INT_MAX);
-          for (auto i = 0; i < vids[prev_ind].size(); ++i) {
-            for (auto nbr : nbr_list_array.get(i)) {
-              auto nbr_gid = nbr.neighbor();
-              auto insert_res = visited_vertices.insert(nbr_gid);
-              if (insert_res.second) {
-                vids[cur_ind].emplace_back(nbr_gid);
-              }
-            }
-          }
-        }
-        if (cur_hop >= range.start_) {
-          // gids.insert(vids[cur_ind]);
-          for (auto i = 0; i < vids[cur_ind].size(); ++i) {
-            dists.emplace_back(cur_hop);
-          }
-          gids.insert(std::end(gids), vids[cur_ind].begin(),
-                      vids[cur_ind].end());
-        }
-        // VLOG(10) << "For hop: " << cur_hop
-        //  << ", got vertex num:" << vids[cur_ind].size();
-      }
-    }
-    offsets.emplace_back(gids.size());
-    VLOG(10) << "Totally " << gids.size() << " end vertices";
-    VLOG(10) << "offset array: " << gs::to_string(offsets);
-    return std::make_tuple(std::move(gids), std::move(dists),
-                           std::move(offsets));
-  }
-
   template <typename LabelT, typename EDGE_FILTER_T>
   static std::tuple<std::vector<vertex_id_t>, std::vector<int32_t>,
                     std::vector<offset_t>>
   PathExpandRawV2ForSingleV(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, LabelT src_label,
+      const GRAPH_INTERFACE& graph, LabelT src_label,
       const std::vector<vertex_id_t>& src_vertices_vec, Range& range,
       EdgeExpandOpt<LabelT, EDGE_FILTER_T>& edge_expand_opt) {
     // auto src_label = vertex_set.GetLabel();
@@ -286,9 +211,8 @@ class PathExpand {
       double t0 = -grape::GetCurrentTime();
       std::vector<size_t> unused;
       std::tie(tmp_vec, unused) = graph.GetOtherVerticesV2(
-          time_stamp, src_label, edge_expand_opt.other_label_,
-          edge_expand_opt.edge_label_, tmp_vec,
-          gs::to_string(edge_expand_opt.dir_), INT_MAX);
+          src_label, edge_expand_opt.other_label_, edge_expand_opt.edge_label_,
+          tmp_vec, gs::to_string(edge_expand_opt.dir_), INT_MAX);
       // remove duplicate
       size_t limit = 0;
       for (auto i = 0; i < tmp_vec.size(); ++i) {
@@ -325,8 +249,7 @@ class PathExpand {
   template <typename LabelT, typename EDGE_FILTER_T>
   static std::tuple<std::vector<vertex_id_t>, std::vector<int32_t>,
                     std::vector<offset_t>>
-  PathExpandRawVMultiV(int64_t time_stamp, const GRAPH_INTERFACE& graph,
-                       LabelT src_label,
+  PathExpandRawVMultiV(const GRAPH_INTERFACE& graph, LabelT src_label,
                        const std::vector<vertex_id_t>& src_vertices_vec,
                        Range& range,
                        EdgeExpandOpt<LabelT, EDGE_FILTER_T>& edge_expand_opt) {
@@ -337,9 +260,8 @@ class PathExpand {
       LOG(INFO)
           << "[NOTE:] PathExpandRawVMultiV is used for single vertex expand, "
              "dedup is enabled.";
-      return PathExpandRawV2ForSingleV(time_stamp, graph, src_label,
-                                       src_vertices_vec, range,
-                                       edge_expand_opt);
+      return PathExpandRawV2ForSingleV(graph, src_label, src_vertices_vec,
+                                       range, edge_expand_opt);
     }
     std::vector<std::vector<vertex_id_t>> gids;
     std::vector<std::vector<offset_t>> offsets;
@@ -365,9 +287,8 @@ class PathExpand {
     for (auto cur_hop = 1; cur_hop < range.limit_; ++cur_hop) {
       double t0 = -grape::GetCurrentTime();
       auto pair = graph.GetOtherVerticesV2(
-          time_stamp, src_label, edge_expand_opt.other_label_,
-          edge_expand_opt.edge_label_, gids[cur_hop - 1],
-          gs::to_string(edge_expand_opt.dir_), INT_MAX);
+          src_label, edge_expand_opt.other_label_, edge_expand_opt.edge_label_,
+          gids[cur_hop - 1], gs::to_string(edge_expand_opt.dir_), INT_MAX);
 
       gids[cur_hop].swap(pair.first);
       CHECK(gids[cur_hop - 1].size() + 1 == pair.second.size());

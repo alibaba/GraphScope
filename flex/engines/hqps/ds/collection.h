@@ -11,6 +11,7 @@
 #include "flex/storages/rt_mutable_graph/types.h"
 
 #include <boost/functional/hash.hpp>
+#include "grape/util.h"
 
 namespace gs {
 
@@ -299,11 +300,10 @@ class Collection {
   }
 
   // project my self.
-  template <int tag_id, int res_tag, int Fs,
+  template <int tag_id, int Fs,
             typename std::enable_if<Fs == -1>::type* = nullptr>
-  self_type_t ProjectWithRepeatArray(
-      std::vector<size_t>&& repeat_array,
-      KeyAlias<tag_id, res_tag, Fs>& key_alias) const {
+  self_type_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+                                     KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<T> res;
     for (auto i = 0; i < repeat_array.size(); ++i) {
       for (auto j = 0; j < repeat_array[i]; ++j) {
@@ -524,7 +524,7 @@ class SumBuilder {
 template <typename GI, typename T, int tag_id>
 class MinBuilder {
  public:
-  MinBuilder(int64_t time_stamp, const Collection<T>& set, const GI& graph,
+  MinBuilder(const Collection<T>& set, const GI& graph,
              PropNameArray<T> prop_names) {
     vec_.resize(set.Size(), std::numeric_limits<T>::max());
   }
@@ -554,7 +554,7 @@ class MinBuilder {
 template <typename GI, typename T, int tag_id>
 class MaxBuilder {
  public:
-  MaxBuilder(int64_t time_stamp, const Collection<T>& set, const GI& graph,
+  MaxBuilder(const Collection<T>& set, const GI& graph,
              PropNameArray<T> prop_names) {
     vec_.resize(set.Size(), std::numeric_limits<T>::min());
   }
@@ -589,7 +589,7 @@ class FirstBuilder;
 template <typename GI, typename C_T, int tag_id>
 class FirstBuilder<GI, Collection<C_T>, grape::EmptyType, tag_id> {
  public:
-  FirstBuilder(int64_t time_stamp, const Collection<C_T>& set, const GI& graph,
+  FirstBuilder(const Collection<C_T>& set, const GI& graph,
                PropNameArray<grape::EmptyType> prop_names) {
     CHECK(prop_names.size() == 1);
     CHECK(prop_names[0] == "none" || prop_names[0] == "None");
@@ -622,7 +622,7 @@ class FirstBuilder<GI, RowVertexSetImpl<LabelT, VID_T, OLD_T...>,
  public:
   using set_t = RowVertexSetImpl<LabelT, VID_T, OLD_T...>;
   using builder_t = RowVertexSetImplBuilder<LabelT, VID_T, OLD_T...>;
-  FirstBuilder(int64_t time_stamp, const set_t& set, const GI& graph,
+  FirstBuilder(const set_t& set, const GI& graph,
                PropNameArray<grape::EmptyType> prop_names)
       : builder_(set.GetLabel(), set.GetPropNames()) {}
 
@@ -651,7 +651,7 @@ class FirstBuilder<GI, RowVertexSetImpl<LabelT, VID_T, grape::EmptyType>,
  public:
   using set_t = RowVertexSetImpl<LabelT, VID_T, grape::EmptyType>;
   using builder_t = RowVertexSetImplBuilder<LabelT, VID_T, grape::EmptyType>;
-  FirstBuilder(int64_t time_stamp, const set_t& set, const GI& graph,
+  FirstBuilder(const set_t& set, const GI& graph,
                PropNameArray<grape::EmptyType> prop_names)
       : builder_(set.GetLabel(), set.GetPropNames()) {}
 
@@ -682,7 +682,7 @@ class FirstBuilder<GI, TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType>,
   using set_t = TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType>;
   using builder_t =
       TwoLabelVertexSetImplBuilder<VID_T, LabelT, grape::EmptyType>;
-  FirstBuilder(int64_t time_stamp, const set_t& set, const GI& graph,
+  FirstBuilder(const set_t& set, const GI& graph,
                PropNameArray<grape::EmptyType> prop_names)
       : builder_(set.Size(), set.GetLabels()) {}
 
@@ -712,7 +712,7 @@ class FirstBuilder<GI, TwoLabelVertexSetImpl<VID_T, LabelT, T...>,
  public:
   using set_t = TwoLabelVertexSetImpl<VID_T, LabelT, T...>;
   using builder_t = TwoLabelVertexSetImplBuilder<VID_T, LabelT, T...>;
-  FirstBuilder(int64_t time_stamp, const set_t& set, const GI& graph,
+  FirstBuilder(const set_t& set, const GI& graph,
                PropNameArray<grape::EmptyType> prop_names)
       // we should use a size which indicate the context size
       : builder_(set.Size(), set.GetLabels()) {}
@@ -751,12 +751,11 @@ class CollectionOfSetBuilder<
   using PROP_GETTER_T =
       RowVertexSetPropGetter<tag_id, graph_prop_getter_t,
                              typename set_t::index_ele_tuple_t>;
-  CollectionOfSetBuilder(int64_t time_stamp,
-                         const RowVertexSetImpl<LabelT, VID_T, OLD_T...>& set,
+  CollectionOfSetBuilder(const RowVertexSetImpl<LabelT, VID_T, OLD_T...>& set,
                          const GRAPH_INTERFACE& graph,
                          PropNameArray<T> prop_names)
-      : prop_getter_(create_prop_getter_impl<tag_id, T>(set, graph, time_stamp,
-                                                        prop_names[0])) {}
+      : prop_getter_(
+            create_prop_getter_impl<tag_id, T>(set, graph, prop_names[0])) {}
 
   // insert tuple at index ind.
   template <typename IND_TUPLE>
@@ -809,8 +808,7 @@ class CollectionOfVecBuilder;
 template <typename T, typename GI, int tag_id>
 class CollectionOfVecBuilder<T, GI, Collection<T>, tag_id> {
  public:
-  CollectionOfVecBuilder(int64_t time_stamp, const GI& graph,
-                         const Collection<T>& set,
+  CollectionOfVecBuilder(const GI& graph, const Collection<T>& set,
                          PropNameArray<T> prop_names) {}
 
   // insert tuple at index ind.
@@ -853,11 +851,10 @@ class CollectionOfVecBuilder<PropT, GRAPH_INTERFACE,
   using PROP_GETTER_T =
       RowVertexSetPropGetter<tag_id, graph_prop_getter_t,
                              typename set_t::index_ele_tuple_t>;
-  CollectionOfVecBuilder(int64_t time_stamp, const set_t& set,
-                         const GRAPH_INTERFACE& graph,
+  CollectionOfVecBuilder(const set_t& set, const GRAPH_INTERFACE& graph,
                          PropNameArray<PropT>& prop_names)
-      : prop_getter_(create_prop_getter_impl<tag_id, PropT>(
-            set, graph, time_stamp, prop_names[0])) {}
+      : prop_getter_(create_prop_getter_impl<tag_id, PropT>(set, graph,
+                                                            prop_names[0])) {}
 
   // insert tuple at index ind.
   template <typename IND_TUPLE>

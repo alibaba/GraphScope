@@ -21,6 +21,7 @@ limitations under the License.
 
 #include "flex/engines/hqps/ds/multi_vertex_set/row_vertex_set.h"
 #include "flex/engines/hqps/ds/multi_vertex_set/two_label_vertex_set.h"
+#include "flex/engines/hqps/engine/utils/operator_utils.h"
 
 namespace gs {
 
@@ -35,37 +36,33 @@ class Scan {
       TwoLabelVertexSet<vertex_id_t, label_id_t, grape::EmptyType>;
 
   // scan vertex with expression, support label_key in expression,
-  template <typename FUNC>
-  static vertex_set_t ScanVertex(int64_t time_stamp,
-                                 const GRAPH_INTERFACE& graph,
-                                 const label_id_t& v_label_id, FUNC&& func) {
-    auto copied_properties(func.Properties());
-    auto gids = scan_vertex1_impl(time_stamp, graph, v_label_id, func,
-                                  copied_properties);
+  template <typename EXPR, typename... SELECTOR>
+  static vertex_set_t ScanVertex(const GRAPH_INTERFACE& graph,
+                                 const label_id_t& v_label_id,
+                                 Filter<EXPR, SELECTOR...>&& filter) {
+    auto expr = filter.expr_;
+    auto selectors = filter.selectors_;
+    auto gids = scan_vertex_with_selector(graph, v_label_id, expr, selectors);
     return MakeDefaultRowVertexSet<vertex_id_t, label_id_t>(std::move(gids),
                                                             v_label_id);
   }
 
   /// @brief Scan Vertex from two labels.
   /// @tparam FUNC
-  /// @param time_stamp
   /// @param graph
   /// @param v_label_id
   /// @param e_label_id
   /// @param func
   /// @return
-  template <size_t N, typename FUNC>
-  static two_label_set_t ScanVertex(int64_t time_stamp,
-                                    const GRAPH_INTERFACE& graph,
+  template <size_t N, typename EXPR, typename... SELECTOR>
+  static two_label_set_t ScanVertex(const GRAPH_INTERFACE& graph,
                                     std::array<label_id_t, N>&& labels,
-                                    FUNC&& func) {
+                                    Filter<EXPR, SELECTOR...>&& filter) {
     static_assert(N == 2, "ScanVertex only support two labels");
-    auto copied_properties(func.Properties());
-    auto copied_func(func);
-    auto gids0 = scan_vertex1_impl(time_stamp, graph, labels[0], func,
-                                   copied_properties);
-    auto gids1 = scan_vertex1_impl(time_stamp, graph, labels[1], copied_func,
-                                   copied_properties);
+    auto expr = filter.expr_;
+    auto selectors = filter.selectors_;
+    auto gids0 = scan_vertex_with_selector(graph, labels[0], expr, selectors);
+    auto gids1 = scan_vertex_with_selector(graph, labels[1], expr, selectors);
 
     // merge gids0 and gids1
     std::vector<vertex_id_t> gids;
@@ -83,26 +80,23 @@ class Scan {
   }
 
   /// @brief Scan vertex with oid
-  /// @param time_stamp
   /// @param graph
   /// @param v_label_id
   /// @param oid
   /// @return
-  static vertex_set_t ScanVertexWithOid(int64_t time_stamp,
-                                        const GRAPH_INTERFACE& graph,
+  static vertex_set_t ScanVertexWithOid(const GRAPH_INTERFACE& graph,
                                         const label_id_t& v_label_id,
                                         int64_t oid) {
     std::vector<vertex_id_t> gids;
-    gids.emplace_back(graph.ScanVerticesWithOid(time_stamp, v_label_id, oid));
+    gids.emplace_back(graph.ScanVerticesWithOid(v_label_id, oid));
     return MakeDefaultRowVertexSet(std::move(gids), v_label_id);
   }
 
  private:
   template <typename FUNC, typename... PropT>
   static std::vector<vertex_id_t> scan_vertex1_impl(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
-      const label_id_t& v_label_id, const FUNC& func,
-      const std::tuple<PropT...>& props) {
+      const GRAPH_INTERFACE& graph, const label_id_t& v_label_id,
+      const FUNC& func, const std::tuple<PropT...>& props) {
     std::vector<vertex_id_t> gids;
     auto filter = [&](vertex_id_t v,
                       const std::tuple<typename PropT::prop_t...>& real_props) {
@@ -111,7 +105,24 @@ class Scan {
       }
     };
 
-    graph.template ScanVertices(time_stamp, v_label_id, props, filter);
+    graph.template ScanVertices(v_label_id, props, filter);
+    return gids;
+  }
+
+  template <typename FUNC, typename... SELECTOR>
+  static std::vector<vertex_id_t> scan_vertex_with_selector(
+      const GRAPH_INTERFACE& graph, const label_id_t& v_label_id,
+      const FUNC& func, const std::tuple<SELECTOR...>& selectors) {
+    std::vector<vertex_id_t> gids;
+    auto filter =
+        [&](vertex_id_t v,
+            const std::tuple<typename SELECTOR::prop_t...>& real_props) {
+          if (apply_on_tuple(func, real_props)) {
+            gids.push_back(v);
+          }
+        };
+
+    graph.template ScanVertices(v_label_id, selectors, filter);
     return gids;
   }
 };

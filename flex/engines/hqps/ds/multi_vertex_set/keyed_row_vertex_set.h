@@ -652,10 +652,9 @@ class KeyedRowVertexSetImpl {
   }
 
   // projectwithRepeatArray, projecting myself
-  template <int tag_id, int res_tag, int Fs,
-            typename std::enable_if_t<Fs == -1>* = nullptr>
+  template <int tag_id, int Fs, typename std::enable_if_t<Fs == -1>* = nullptr>
   self_type_t ProjectWithRepeatArray(std::vector<offset_t>& repeat_array,
-                                     KeyAlias<tag_id, res_tag, Fs>& key_alias) {
+                                     KeyAlias<tag_id, Fs>& key_alias) {
     std::vector<key_t> new_keys;
     std::vector<lid_t> new_vids;
     std::vector<data_tuple_t> new_datas;
@@ -838,10 +837,9 @@ class KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, grape::EmptyType> {
   }
 
   // projectwithRepeatArray, projecting myself
-  template <int tag_id, int res_tag, int Fs,
-            typename std::enable_if_t<Fs == -1>* = nullptr>
+  template <int tag_id, int Fs, typename std::enable_if_t<Fs == -1>* = nullptr>
   self_type_t ProjectWithRepeatArray(std::vector<offset_t>&& repeat_array,
-                                     KeyAlias<tag_id, res_tag, Fs>& key_alias) {
+                                     KeyAlias<tag_id, Fs>& key_alias) {
     std::vector<key_t> new_keys;
     std::vector<lid_t> new_vids;
 

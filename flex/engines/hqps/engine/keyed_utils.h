@@ -3,8 +3,8 @@
 #define GRAPHSCOPE_ENGINE_KEYED_UTILS_H_
 
 #include "flex/engines/hqps/ds/collection.h"
-#include "flex/engines/hqps/ds/multi_vertex_set/general_vertex_set.h"
 #include "flex/engines/hqps/ds/multi_edge_set/adj_edge_set.h"
+#include "flex/engines/hqps/ds/multi_vertex_set/general_vertex_set.h"
 #include "flex/engines/hqps/ds/multi_vertex_set/keyed_row_vertex_set.h"
 #include "flex/engines/hqps/ds/multi_vertex_set/row_vertex_set.h"
 #include "flex/engines/hqps/ds/multi_vertex_set/two_label_vertex_set.h"
@@ -66,10 +66,9 @@ template <typename T, typename KEY_ALIAS_T>
 struct KeyedT;
 
 // group by the vertex set itself
-template <typename LabelT, typename VID_T, typename... T, int tag_id,
-          int res_alias>
+template <typename LabelT, typename VID_T, typename... T>
 struct KeyedT<RowVertexSet<LabelT, VID_T, T...>,
-              AliasTagProp<tag_id, res_alias, grape::EmptyType>> {
+              PropertySelector<grape::EmptyType>> {
   using keyed_set_t = KeyRowedVertexSet<
       LabelT, typename RowVertexSet<LabelT, VID_T, T...>::lid_t,
       typename RowVertexSet<LabelT, VID_T, T...>::lid_t, T...>;
@@ -78,9 +77,9 @@ struct KeyedT<RowVertexSet<LabelT, VID_T, T...>,
 };
 
 // group by the vertex set itself
-template <typename LabelT, typename VID_T, int tag_id, int res_alias>
+template <typename LabelT, typename VID_T>
 struct KeyedT<RowVertexSet<LabelT, VID_T, grape::EmptyType>,
-              AliasTagProp<tag_id, res_alias, grape::EmptyType>> {
+              PropertySelector<grape::EmptyType>> {
   using keyed_set_t = KeyRowedVertexSet<
       LabelT, typename RowVertexSet<LabelT, VID_T, grape::EmptyType>::lid_t,
       typename RowVertexSet<LabelT, VID_T, grape::EmptyType>::lid_t,
@@ -91,29 +90,17 @@ struct KeyedT<RowVertexSet<LabelT, VID_T, grape::EmptyType>,
 };
 
 // group by the vertex set' property
-template <typename LabelT, typename VID_T, typename... T, int tag_id,
-          int res_alias, typename... TS>
-struct KeyedT<RowVertexSet<LabelT, VID_T, T...>,
-              AliasTagProp<tag_id, res_alias, TS...>> {
-  using keyed_set_t = Collection<std::tuple<TS...>>;
+template <typename LabelT, typename VID_T, typename... T, typename PropT>
+struct KeyedT<RowVertexSet<LabelT, VID_T, T...>, PropertySelector<PropT>> {
+  using keyed_set_t = Collection<PropT>;
   // // The builder type.
-  using builder_t = CollectionBuilder<std::tuple<TS...>>;
-};
-
-// group by vertex set's property, only one property
-template <typename LabelT, typename VID_T, typename... T, int tag_id,
-          int res_alias, typename TS>
-struct KeyedT<RowVertexSet<LabelT, VID_T, T...>,
-              AliasTagProp<tag_id, res_alias, TS>> {
-  using keyed_set_t = Collection<TS>;
-  // // The builder type.
-  using builder_t = KeyedCollectionBuilder<TS>;
+  using builder_t = CollectionBuilder<PropT>;
 };
 
 // group by vertex set' id, for generate vertex set.
-template <typename VID_T, typename LabelT, size_t N, int tag_id, int res_alias>
+template <typename VID_T, typename LabelT, size_t N>
 struct KeyedT<GeneralVertexSet<VID_T, LabelT, N>,
-              AliasTagProp<tag_id, res_alias, grape::EmptyType>> {
+              PropertySelector<grape::EmptyType>> {
   using keyed_set_t = KeyRowedVertexSet<
       LabelT, typename RowVertexSet<LabelT, VID_T, grape::EmptyType>::lid_t,
       typename RowVertexSet<LabelT, VID_T, grape::EmptyType>::lid_t,
@@ -142,24 +129,25 @@ struct KeyedAggT<GI, RowVertexSet<LabelT, VID_T, T...>, AggFunc::COUNT,
   using aggregate_res_builder_t = CountBuilder<tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
-      int64_t time_stamp, const RowVertexSet<LabelT, VID_T, T...>& set,
-      const GI& graph, PropNameArray<PropT>& prop_names) {
+      const RowVertexSet<LabelT, VID_T, T...>& set, const GI& graph,
+      std::tuple<PropertySelector<PropT>>& selector) {
     return CountBuilder<tag_id>();
   }
 };
 
 // aggregate count_dist
 template <typename GI, typename LabelT, typename VID_T, typename... T,
-          typename PropT, int tag_id>
+          int tag_id>
 struct KeyedAggT<GI, RowVertexSet<LabelT, VID_T, T...>, AggFunc::COUNT_DISTINCT,
-                 std::tuple<PropT>, std::integer_sequence<int32_t, tag_id>> {
+                 std::tuple<grape::EmptyType>,
+                 std::integer_sequence<int32_t, tag_id>> {
   using agg_res_t = Collection<size_t>;
   // build a counter array.
   using aggregate_res_builder_t = DistinctCountBuilder<1, tag_id, VID_T>;
 
   static aggregate_res_builder_t create_agg_builder(
-      int64_t time_stamp, const RowVertexSet<LabelT, VID_T, T...>& set,
-      const GI& graph, PropNameArray<PropT>& prop_names) {
+      const RowVertexSet<LabelT, VID_T, T...>& set, const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
     return aggregate_res_builder_t(set.GetVertices());
   }
 };
@@ -173,25 +161,25 @@ struct KeyedAggT<GI, TwoLabelVertexSet<VID_T, LabelT, T...>, AggFunc::COUNT,
   using aggregate_res_builder_t = CountBuilder<tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
-      int64_t time_stamp, const TwoLabelVertexSet<VID_T, LabelT, T...>& set,
-      const GI& graph, PropNameArray<PropT>& prop_names) {
+      const TwoLabelVertexSet<VID_T, LabelT, T...>& set, const GI& graph,
+      std::tuple<PropertySelector<PropT>>& selectors) {
     return CountBuilder<tag_id>();
   }
 };
 
 // count distinct for two_label set.
 template <typename GI, typename VID_T, typename LabelT, typename... T,
-          typename PropT, int tag_id>
+          int tag_id>
 struct KeyedAggT<GI, TwoLabelVertexSet<VID_T, LabelT, T...>,
-                 AggFunc::COUNT_DISTINCT, std::tuple<PropT>,
+                 AggFunc::COUNT_DISTINCT, std::tuple<grape::EmptyType>,
                  std::integer_sequence<int32_t, tag_id>> {
   using agg_res_t = Collection<size_t>;
   // build a counter array.
   using aggregate_res_builder_t = DistinctCountBuilder<2, tag_id, VID_T>;
 
   static aggregate_res_builder_t create_agg_builder(
-      int64_t time_stamp, const TwoLabelVertexSet<VID_T, LabelT, T...>& set,
-      const GI& graph, PropNameArray<PropT>& prop_names) {
+      const TwoLabelVertexSet<VID_T, LabelT, T...>& set, const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
     return aggregate_res_builder_t(set.GetBitset(), set.GetVertices());
   }
 };
@@ -206,22 +194,22 @@ struct KeyedAggT<GI, GeneralVertexSet<VID_T, LabelT, N>, AggFunc::COUNT,
   using aggregate_res_builder_t = CountBuilder<tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
-      int64_t time_stamp, const GeneralVertexSet<VID_T, LabelT, N>& set,
-      const GI& graph, PropNameArray<PropT>& prop_names) {
+      const GeneralVertexSet<VID_T, LabelT, N>& set, const GI& graph,
+      std::tuple<PropertySelector<PropT>>& selectors) {
     return CountBuilder<tag_id>();
   }
 };
 
-template <typename GI, typename T, typename PropT, int tag_id>
-struct KeyedAggT<GI, Collection<T>, AggFunc::SUM, std::tuple<PropT>,
+template <typename GI, typename T, int tag_id>
+struct KeyedAggT<GI, Collection<T>, AggFunc::SUM, std::tuple<grape::EmptyType>,
                  std::integer_sequence<int32_t, tag_id>> {
   using agg_res_t = Collection<T>;
   // build a counter array.
   using aggregate_res_builder_t = SumBuilder<T, tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
-      int64_t time_stamp, const Collection<T>& set, const GI& graph,
-      PropNameArray<PropT>& prop_names) {
+      const Collection<T>& set, const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
     return aggregate_res_builder_t();
   }
 };
@@ -236,10 +224,11 @@ struct KeyedAggT<GI, RowVertexSet<LabelT, VID_T, T...>, AggFunc::TO_SET,
                              tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
-      int64_t time_stamp, const RowVertexSet<LabelT, VID_T, T...>& set,
-      const GI& graph, PropNameArray<PropT>& prop_names) {
+      const RowVertexSet<LabelT, VID_T, T...>& set, const GI& graph,
+      std::tuple<PropertySelector<PropT>>& selectors) {
     return CollectionOfSetBuilder<PropT, GI, RowVertexSet<LabelT, VID_T, T...>,
-                                  tag_id>(time_stamp, set, graph, prop_names);
+                                  tag_id>(
+        set, graph, std::array{std::get<0>(selectors).prop_name_});
   }
 };
 
@@ -252,9 +241,10 @@ struct KeyedAggT<GI, Collection<T>, AggFunc::TO_LIST, std::tuple<PropT>,
       CollectionOfVecBuilder<T, GI, Collection<T>, tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
-      int64_t time_stamp, const Collection<T>& set, const GI& graph,
-      PropNameArray<PropT>& prop_names) {
-    return aggregate_res_builder_t(time_stamp, graph, set, prop_names);
+      const Collection<T>& set, const GI& graph,
+      std::tuple<PropertySelector<PropT>>& selectors) {
+    return aggregate_res_builder_t(
+        graph, set, std::array{std::get<0>(selectors).prop_name_});
   }
 };
 
@@ -270,9 +260,10 @@ struct KeyedAggT<GI, RowVertexSet<LabelT, VID_T, T...>, AggFunc::TO_LIST,
                              tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
-      int64_t time_stamp, const RowVertexSet<LabelT, VID_T, T...>& set,
-      const GI& graph, PropNameArray<PropT>& prop_names) {
-    return aggregate_res_builder_t(time_stamp, set, graph, prop_names);
+      const RowVertexSet<LabelT, VID_T, T...>& set, const GI& graph,
+      std::tuple<PropertySelector<PropT>>& selectors) {
+    return aggregate_res_builder_t(set, graph,
+                                   {std::get<0>(selectors).prop_name_});
   }
 };
 
@@ -284,9 +275,10 @@ struct KeyedAggT<GI, Collection<T>, AggFunc::MIN, std::tuple<PropT>,
   using aggregate_res_builder_t = MinBuilder<GI, T, tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
-      int64_t time_stamp, const Collection<T>& set, const GI& graph,
-      PropNameArray<PropT>& prop_names) {
-    return aggregate_res_builder_t(time_stamp, set, graph, prop_names);
+      const Collection<T>& set, const GI& graph,
+      std::tuple<PropertySelector<PropT>>& selectors) {
+    return aggregate_res_builder_t(set, graph,
+                                   {std::get<0>(selectors).prop_name_});
   }
 };
 
@@ -298,9 +290,10 @@ struct KeyedAggT<GI, Collection<T>, AggFunc::MAX, std::tuple<PropT>,
   using aggregate_res_builder_t = MaxBuilder<GI, T, tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
-      int64_t time_stamp, const Collection<T>& set, const GI& graph,
-      PropNameArray<PropT>& prop_names) {
-    return aggregate_res_builder_t(time_stamp, set, graph, prop_names);
+      const Collection<T>& set, const GI& graph,
+      std::tuple<PropertySelector<PropT>>& selectors) {
+    return aggregate_res_builder_t(
+        set, graph, std::array{std::get<0>(selectors).prop_name_});
   }
 };
 
@@ -312,9 +305,10 @@ struct KeyedAggT<GI, Collection<T>, AggFunc::FIRST, std::tuple<PropT>,
       FirstBuilder<GI, Collection<T>, PropT, tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
-      int64_t time_stamp, const Collection<T>& set, const GI& graph,
-      PropNameArray<PropT>& prop_names) {
-    return aggregate_res_builder_t(time_stamp, set, graph, prop_names);
+      const Collection<T>& set, const GI& graph,
+      std::tuple<PropertySelector<PropT>>& selectors) {
+    return aggregate_res_builder_t(
+        set, graph, std::array{std::get<0>(selectors).prop_name_});
   }
 };
 
@@ -331,10 +325,11 @@ struct KeyedAggT<GI, TwoLabelVertexSetImpl<VID_T, LabelT, T...>, AggFunc::FIRST,
                    grape::EmptyType, tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
-      int64_t time_stamp, const old_set_t& set, const GI& graph,
-      PropNameArray<grape::EmptyType>& prop_names) {
+      const old_set_t& set, const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
     auto labels = set.GetLabels();
-    return aggregate_res_builder_t(time_stamp, set, graph, prop_names);
+    return aggregate_res_builder_t(
+        set, graph, std::array{std::get<0>(selectors).prop_name_});
   }
 };
 
@@ -347,7 +342,7 @@ struct KeyedAggT<GI, TwoLabelVertexSetImpl<VID_T, LabelT, T...>, AggFunc::FIRST,
 //   using aggregate_res_builder_t = MaxBuilder<GI, PropT, tag_id>;
 
 //   static aggregate_res_builder_t create_agg_builder(
-//       int64_t time_stamp, const RowVertexSet<LabelT, VID_T, T...>& set,
+//        const RowVertexSet<LabelT, VID_T, T...>& set,
 //       const GI& graph, PropNameArray<PropT>& prop_names) {
 //     return aggregate_res_builder_t(time_stamp, set, graph, prop_names);
 //   }

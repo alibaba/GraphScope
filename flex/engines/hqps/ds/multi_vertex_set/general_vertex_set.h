@@ -5,8 +5,9 @@
 #include <tuple>
 #include <unordered_set>
 #include <vector>
-#include "grape/grape.h"
 #include "flex/engines/hqps/engine/utils/bitset.h"
+#include "grape/types.h"
+#include "grape/util.h"
 
 namespace gs {
 
@@ -283,11 +284,10 @@ class GeneralVertexSet {
     return std::make_pair(std::move(res), std::move(active_ind));
   }
 
-  template <int tag_id, int res_tag, int Fs,
+  template <int tag_id, int Fs,
             typename std::enable_if<Fs == -1>::type* = nullptr>
-  self_type_t ProjectWithRepeatArray(
-      std::vector<size_t>&& repeat_array,
-      KeyAlias<tag_id, res_tag, Fs>& key_alias) const {
+  self_type_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+                                     KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<lid_t> next_vids;
     size_t next_size = 0;
     for (auto i = 0; i < repeat_array.size(); ++i) {
@@ -417,7 +417,7 @@ static std::array<std::vector<int32_t>, num_labels> bitsets_to_vids_inds(
 template <typename... T, typename GRAPH_INTERFACE, typename LabelT,
           size_t num_old_labels>
 static auto get_property_tuple_general(
-    int64_t time_stamp, const GRAPH_INTERFACE& graph,
+    const GRAPH_INTERFACE& graph,
     const GeneralVertexSet<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
                            num_old_labels>& general_set,
     const std::array<std::string, sizeof...(T)>& prop_names) {
@@ -429,8 +429,7 @@ static auto get_property_tuple_general(
   // Get data for multilabel vertices, mixed
   double t1 = -grape::GetCurrentTime();
   auto data_tuples = graph.template GetVertexPropsFromVid<T...>(
-      time_stamp, general_set.GetVertices(), label_array, vids_inds,
-      prop_names);
+      general_set.GetVertices(), label_array, vids_inds, prop_names);
   t1 += grape::GetCurrentTime();
   LOG(INFO) << "get vids cost: " << t0 << ", get props: " << t1;
 
@@ -440,7 +439,7 @@ static auto get_property_tuple_general(
 template <typename... T, typename GRAPH_INTERFACE, typename LabelT,
           size_t num_old_labels>
 static auto get_property_tuple_general(
-    int64_t time_stamp, const GRAPH_INTERFACE& graph,
+    const GRAPH_INTERFACE& graph,
     const GeneralVertexSet<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
                            num_old_labels>& general_set,
     const std::tuple<NamedProperty<T>...>& named_prop) {
@@ -449,8 +448,7 @@ static auto get_property_tuple_general(
   std::apply([&prop_names,
               &ind](auto&&... args) { ((prop_names[ind++] = args.name), ...); },
              named_prop);
-  return get_property_tuple_general<T...>(time_stamp, graph, general_set,
-                                          prop_names);
+  return get_property_tuple_general<T...>(graph, general_set, prop_names);
 }
 
 }  // namespace gs

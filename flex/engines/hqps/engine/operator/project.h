@@ -26,78 +26,51 @@ limitations under the License.
 #include "flex/engines/hqps/engine/context.h"
 #include "flex/engines/hqps/engine/keyed_utils.h"
 #include "flex/engines/hqps/engine/params.h"
+#include "flex/engines/hqps/engine/utils/operator_utils.h"
 
 namespace gs {
 
 template <typename CTX_T, typename KEY_ALIAS>
 struct ResultOfContextKeyAlias;
 
+// project one single property
 template <typename CTX_HEAD_T, int cur_alias, int base_tag,
-          typename... CTX_PREV, int tag_id, int res_alias, int... Is>
+          typename... CTX_PREV, int in_col_id, typename T>
 struct ResultOfContextKeyAlias<
     Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
-    KeyAlias<tag_id, res_alias, Is...>> {
+    IdentityMapper<in_col_id, PropertySelector<T>>> {
   using context_t = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
-  using ctx_node_t = std::remove_reference_t<
-      decltype(std::declval<context_t>().template GetNode<tag_id>())>;
-  using ctx_node_data_tuple = typename gs::TupleCatT<
-      typename ctx_node_t::data_tuple_t,
-      std::tuple<typename ctx_node_t::EntityValueType>>::tuple_cat_t;
-  using result_t = Collection<
-      std::tuple<typename gs::tuple_element<Is, ctx_node_data_tuple>::type...>>;
+  using ctx_node_t = std::remove_reference_t<decltype(
+      std::declval<context_t>().template GetNode<in_col_id>())>;
+  using result_t = Collection<T>;
 };
 
+// project the tag itself.
 template <typename CTX_HEAD_T, int cur_alias, int base_tag,
-          typename... CTX_PREV, int tag_id, int res_alias, typename... T>
+          typename... CTX_PREV, int in_col_id>
 struct ResultOfContextKeyAlias<
     Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
-    AliasTagProp<tag_id, res_alias, T...>> {
+    IdentityMapper<in_col_id, PropertySelector<grape::EmptyType>>> {
   using context_t = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
-  using ctx_node_t = std::remove_reference_t<
-      decltype(std::declval<context_t>().template GetNode<tag_id>())>;
-  // using ctx_node_data_tuple = typename gs::TupleCatT<
-  //     typename ctx_node_t::data_tuple_t,
-  //     std::tuple<typename ctx_node_t::EntityValueType>>::tuple_cat_t;
-  using result_t = Collection<std::tuple<T...>>;
-};
-
-template <typename CTX_HEAD_T, int cur_alias, int base_tag,
-          typename... CTX_PREV, int res_alias, typename... TAG_PROP>
-struct ResultOfContextKeyAlias<
-    Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
-    MultiKeyAliasProp<res_alias, TAG_PROP...>> {
-  using context_t = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
-  using res_tuple_t = gs::tuple_cat_t<typename TAG_PROP::prop_tuple_t...>;
-  // using ctx_node_data_tuple = typename gs::TupleCatT<
-  //     typename ctx_node_t::data_tuple_t,
-  //     std::tuple<typename ctx_node_t::EntityValueType>>::tuple_cat_t;
-  using result_t = Collection<res_tuple_t>;
-};
-
-template <typename CTX_HEAD_T, int cur_alias, int base_tag,
-          typename... CTX_PREV, int tag_id, int res_alias>
-struct ResultOfContextKeyAlias<
-    Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
-    ProjectSelf<tag_id, res_alias>> {
-  using context_t = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
-  using ctx_node_t = std::remove_reference_t<
-      decltype(std::declval<context_t>().template GetNode<tag_id>())>;
+  using ctx_node_t = std::remove_reference_t<decltype(
+      std::declval<context_t>().template GetNode<in_col_id>())>;
   using result_t = ctx_node_t;
 };
 
 // infer the output type of project expr by compiler
-template <typename CTX_HEAD_T, int cur_alias, int base_tag,
-          typename... CTX_PREV, int res_alias, typename RES_T, typename EXPR>
-struct ResultOfContextKeyAlias<
-    Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
-    ProjectExpr<res_alias, RES_T, EXPR>> {
-  using context_t = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
-  // must project to collection
-  // using result_type =
-  // std::remove_reference_t<decltype(std::declval<EXPR>()())>;
-  using result_type = RES_T;
-  using result_t = Collection<result_type>;
-};
+// template <typename CTX_HEAD_T, int cur_alias, int base_tag,
+//           typename... CTX_PREV, int... in_col_id, typename EXPR,
+//           typename... SELECTOR>
+// struct ResultOfContextKeyAlias<
+//     Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
+//     MultiMapper<in_col_id..., EXPR, SELECTOR...>> {
+//   using context_t = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
+//   // geth the expr's operator(SELECTOR...)'s result type, assume receive no
+//   // params
+//   using expr_trait = gs::function_traits<decltype(std::declval<EXPR>())>;
+//   using expr_result_t = typename expr_trait::result_type;
+//   using result_t = Collection<expr_result_t>;
+// };
 
 template <int new_head_alias, typename new_head_t, int cur_alias,
           typename old_head_t, int base_tag, typename tuple>
@@ -107,9 +80,10 @@ template <int new_head_alias, typename new_head_t, int cur_alias,
           typename old_head_t, int base_tag, typename... T>
 struct ResultContextTWithPrevTuple<new_head_alias, new_head_t, cur_alias,
                                    old_head_t, base_tag, std::tuple<T...>> {
+  // FIXME: use correct append_opt
   using result_t =
-      typename ResultContextT<new_head_alias, new_head_t, cur_alias, old_head_t,
-                              base_tag, T...>::result_t;
+      typename ResultContextT<AppendOpt::Persist, new_head_t, cur_alias,
+                              old_head_t, base_tag, T...>::result_t;
 };
 
 template <bool is_append, typename CTX_T, typename PROJECT_OPT>
@@ -184,12 +158,12 @@ class ProjectOp {
   // specialized to append
   // Project a previous tag and append to traversal.
   template <bool is_append, typename CTX_HEAD_T, int cur_alias, int base_tag,
-            typename... CTX_PREV, typename PROJECT_OPT,
+            typename... CTX_PREV, typename... ProjectMapper,
             typename std::enable_if<is_append>::type* = nullptr>
   static auto ProjectImpl(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
+      const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
-      PROJECT_OPT&& project_opt) {
+      std::tuple<ProjectMapper...>&& mappers) {
     auto node_size = gs::Get<-1>(ctx).Size();
     VLOG(10) << "Current head size: " << node_size;
 
@@ -199,41 +173,37 @@ class ProjectOp {
     }
     // VLOG(10) << "finish set offset: " << gs::to_string(offsets);
 
-    return apply_projects<0>(time_stamp, graph, std::move(ctx),
-                             project_opt.key_alias_tuple_, offsets);
+    return apply_projects_append<0>(graph, std::move(ctx), mappers, offsets);
   }
 
   // implementation for project is false, only proj one column
   template <bool is_append, typename CTX_HEAD_T, int cur_alias, int base_tag,
-            typename... CTX_PREV, typename... PROJ_PROPS,
-            typename std::enable_if<!is_append && (sizeof...(PROJ_PROPS) ==
+            typename... CTX_PREV, typename... ProjectMapper,
+            typename std::enable_if<!is_append && (sizeof...(ProjectMapper) ==
                                                    1)>::type* = nullptr>
   static auto ProjectImpl(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
+      const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
-      ProjectOpt<PROJ_PROPS...>&& project_opt) {
+      std::tuple<ProjectMapper...>&& mappers) {
     auto node_size = gs::Get<-1>(ctx).Size();
     VLOG(10) << "Current head size: " << node_size;
 
-    auto head = apply_single_project(time_stamp, graph, ctx,
-                                     std::get<0>(project_opt.key_alias_tuple_));
+    auto head = apply_single_project(graph, ctx, std::get<0>(mappers));
     using new_head_t =
         std::remove_const_t<std::remove_reference_t<decltype(head)>>;
-    using first_alias_t = std::tuple_element_t<0, std::tuple<PROJ_PROPS...>>;
-    return Context<new_head_t, first_alias_t::res_alias,
-                   first_alias_t::res_alias, grape::EmptyType>(std::move(head));
+    return Context<new_head_t, 0, 0, grape::EmptyType>(std::move(head));
   }
 
   // implementation for project is false. project multiple columns
   template <bool is_append, typename CTX_HEAD_T, int cur_alias, int base_tag,
-            typename... CTX_PREV, typename... PROJ_PROPS,
-            typename std::enable_if<!is_append && (sizeof...(PROJ_PROPS) >
+            typename... CTX_PREV, typename... ProjectMapper,
+            typename std::enable_if<!is_append && (sizeof...(ProjectMapper) >
                                                    1)>::type* = nullptr>
   static auto ProjectImpl(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
+      const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
-      ProjectOpt<PROJ_PROPS...>&& project_opt) {
-    static constexpr size_t proj_num = sizeof...(PROJ_PROPS);
+      std::tuple<ProjectMapper...>&& mappers) {
+    static constexpr size_t proj_num = sizeof...(ProjectMapper);
     auto node_size = gs::Get<-1>(ctx).Size();
     // VLOG(10) << "Current head size: " << node_size;
     std::vector<offset_t> offset(node_size + 1, 0);
@@ -247,244 +217,190 @@ class ProjectOp {
     }
 
     // LOG(INFO) << "Projecting columns: " << proj_num;
-    auto head = apply_single_project(
-        time_stamp, graph, ctx,
-        std::get<proj_num - 1>(project_opt.key_alias_tuple_));
+    auto head =
+        apply_single_project(graph, ctx, std::get<proj_num - 1>(mappers));
     auto prev_tuple = apply_single_project_until<proj_num - 1>(
-        time_stamp, graph, ctx, project_opt.key_alias_tuple_,
-        std::make_index_sequence<proj_num - 1>{});
+        graph, ctx, mappers, std::make_index_sequence<proj_num - 1>{});
     using new_head_t =
         std::remove_const_t<std::remove_reference_t<decltype(head)>>;
-    using first_alias_t = std::tuple_element_t<0, std::tuple<PROJ_PROPS...>>;
+    using first_alias_t = std::tuple_element_t<0, std::tuple<ProjectMapper...>>;
     using last_alias_t =
-        std::tuple_element_t<proj_num - 1, std::tuple<PROJ_PROPS...>>;
-    return make_context<first_alias_t::res_alias, last_alias_t::res_alias>(
-        std::move(prev_tuple), std::move(head), std::move(offsets));
+        std::tuple_element_t<proj_num - 1, std::tuple<ProjectMapper...>>;
+    return make_context<0, proj_num - 1>(std::move(prev_tuple), std::move(head),
+                                         std::move(offsets));
   }
 
-  template <size_t Is, typename CTX_T, typename... KEY_ALIAS_PROP,
-            typename std::enable_if<(Is < sizeof...(KEY_ALIAS_PROP) -
+  template <size_t Is, typename CTX_T, typename... ProjectMapper,
+            typename std::enable_if<(Is < sizeof...(ProjectMapper) -
                                               1)>::type* = nullptr>
-  static auto apply_projects(int64_t time_stamp, const GRAPH_INTERFACE& graph,
-                             CTX_T&& ctx,
-                             std::tuple<KEY_ALIAS_PROP...>& key_alias,
-                             std::vector<offset_t>& offsets) {
-    static constexpr int res_alias_tag =
-        std::tuple_element_t<Is, std::tuple<KEY_ALIAS_PROP...>>::res_alias;
-    auto new_node =
-        apply_single_project(time_stamp, graph, ctx, std::get<Is>(key_alias));
+  static auto apply_projects_append(const GRAPH_INTERFACE& graph, CTX_T&& ctx,
+                                    std::tuple<ProjectMapper...>& key_alias,
+                                    std::vector<offset_t>& offsets) {
+    auto new_node = apply_single_project(graph, ctx, std::get<Is>(key_alias));
     std::vector<offset_t> res_offsets(offsets);
-    auto res = ctx.template AddNode<res_alias_tag>(std::move(new_node),
-                                                   std::move(res_offsets));
-    return apply_projects<Is + 1>(time_stamp, graph, std::move(res), key_alias,
-                                  offsets);
+    auto res = ctx.template AddNode<AppendOpt::Persist>(std::move(new_node),
+                                                        std::move(res_offsets));
+    return apply_projects_append<Is + 1>(graph, std::move(res), key_alias,
+                                         offsets);
   }
 
   // For the last element, return the result
-  template <size_t Is, typename CTX_T, typename... KEY_ALIAS_PROP,
-            typename std::enable_if<(Is == sizeof...(KEY_ALIAS_PROP) -
+  template <size_t Is, typename CTX_T, typename... ProjectMapper,
+            typename std::enable_if<(Is == sizeof...(ProjectMapper) -
                                                1)>::type* = nullptr>
-  static auto apply_projects(int64_t time_stamp, const GRAPH_INTERFACE& graph,
-                             CTX_T&& ctx,
-                             std::tuple<KEY_ALIAS_PROP...>& key_alias,
-                             std::vector<offset_t>& offsets) {
-    static constexpr int res_alias_tag =
-        std::tuple_element_t<Is, std::tuple<KEY_ALIAS_PROP...>>::res_alias;
-    auto new_node =
-        apply_single_project(time_stamp, graph, ctx, std::get<Is>(key_alias));
+  static auto apply_projects_append(const GRAPH_INTERFACE& graph, CTX_T&& ctx,
+                                    std::tuple<ProjectMapper...>& key_alias,
+                                    std::vector<offset_t>& offsets) {
+    auto new_node = apply_single_project(graph, ctx, std::get<Is>(key_alias));
     std::vector<offset_t> res_offsets(offsets);
-    return ctx.template AddNode<res_alias_tag>(std::move(new_node),
-                                               std::move(res_offsets));
+    return ctx.template AddNode<AppendOpt::Persist>(std::move(new_node),
+                                                    std::move(res_offsets));
   }
 
   // Apply single project on old context's node until the indicated index of
   // project opts
   template <size_t limit, typename CTX_T, typename... PROJ_PROP, size_t... Is>
   static auto apply_single_project_until(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, CTX_T& ctx,
+      const GRAPH_INTERFACE& graph, CTX_T& ctx,
       std::tuple<PROJ_PROP...>& proj_prop_tuple, std::index_sequence<Is...>) {
     static_assert(limit < sizeof...(PROJ_PROP));
-    return std::make_tuple(apply_single_project(
-        time_stamp, graph, ctx, std::get<Is>(proj_prop_tuple))...);
+    return std::make_tuple(
+        apply_single_project(graph, ctx, std::get<Is>(proj_prop_tuple))...);
   }
 
-  // Apply project with multiple key alias prop.
-  template <typename CTX_T, int res_alias, typename... TAG_PROP>
+  // Apply single project with IdentityMapper.
+  template <typename CTX_T, int in_col_id, typename T>
   static auto apply_single_project(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, CTX_T& ctx,
-      MultiKeyAliasProp<res_alias, TAG_PROP...>& key_alias_prop) {
-    // static_assert(res_alias > CTX_T::max_tag_id);
-    static constexpr size_t num_tag = sizeof...(TAG_PROP);
-    std::array<int, num_tag> tags{TAG_PROP::tag_id...};
-
-    std::vector<std::vector<offset_t>> repeat_array_vec =
-        get_repeat_array_vec_for_tags(ctx, tags);
+      const GRAPH_INTERFACE& graph, CTX_T& ctx,
+      IdentityMapper<in_col_id, PropertySelector<T>>& mapper) {
+    auto& node = ctx.template GetNode<in_col_id>();
     // Create a empty copy.
-    // A col describe what content is used to project
-    return apply_single_project_on_multi_tags_impl(
-        time_stamp, graph, ctx, key_alias_prop, repeat_array_vec,
-        std::make_index_sequence<sizeof...(TAG_PROP)>{});
-  }
-
-  template <typename CTX_T, size_t N>
-  static auto get_repeat_array_vec_for_tags(
-      const CTX_T& ctx, const std::array<int32_t, N>& tags) {
-    std::vector<std::vector<offset_t>> res_vec;
-    for (auto i = 0; i < N; ++i) {
-      int32_t cur_tag = tags[i];
-      auto offset_array = ctx.ObtainOffsetFromTag(cur_tag);
-      auto repeat_array = offset_array_to_repeat_array(std::move(offset_array));
-      VLOG(10) << "repeat array: " << gs::to_string(repeat_array);
-      res_vec.emplace_back(std::move(repeat_array));
-    }
-    return res_vec;
-  }
-
-  // Apply single project with AliasTagProp.
-  template <typename CTX_T, int tag_id, int res_alias, typename... T>
-  static auto apply_single_project(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, CTX_T& ctx,
-      AliasTagProp<tag_id, res_alias, T...>& key_alias_prop) {
-    auto& node = ctx.template GetNode<tag_id>();
-    // Create a empty copy.
-    // VLOG(10) << "begin obtaining offset from tag";
-    auto offset_array = ctx.ObtainOffsetFromTag(tag_id);
-    // VLOG(10) << "Obtains offset to head from tag: " << tag_id
-    //  << ", size: " << offset_array.size();
-    // We need to repeat the selected node with respect to offset_array.
-    // Imitate the iteration result.
-    // convert offset array to repeat times array
+    auto offset_array = ctx.ObtainOffsetFromTag(in_col_id);
     auto repeat_array = offset_array_to_repeat_array(std::move(offset_array));
-    // VLOG(10) << "repeat array: " << gs::to_string(repeat_array);
-    // check whether we get the right array;
-    // auto& head_node = ctx.GetHead();
-
     // A col describe what content is used to project
-    return apply_single_project_impl(time_stamp, graph, node,
-                                     key_alias_prop.tag_prop_, repeat_array);
+    return apply_single_project_impl<T>(
+        graph, node, mapper.selector_.prop_name_, repeat_array);
   }
 
   // Project self.
-  template <typename CTX_T, int tag_id, int res_alias, typename... T>
+  template <typename CTX_T, int in_col_id>
   static auto apply_single_project(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, CTX_T& ctx,
-      ProjectSelf<tag_id, res_alias>& key_alias_prop) {
-    auto& node = ctx.template GetNode<tag_id>();
+      const GRAPH_INTERFACE& graph, CTX_T& ctx,
+      IdentityMapper<in_col_id, InternalIdSelector>& mapper) {
+    auto& node = ctx.template GetNode<in_col_id>();
     // Create a empty copy.
-    auto offset_array = ctx.ObtainOffsetFromTag(tag_id);
-    // VLOG(10) << "Obtains offset to head from tag: " << tag_id
-    //  << gs::to_string(offset_array);
-    // We need to repeat the selected node with respect to offset_array.
-    // Imitate the iteration result.
-    // convert offset array to repeat times array
+    auto offset_array = ctx.ObtainOffsetFromTag(in_col_id);
     auto repeat_array = offset_array_to_repeat_array(std::move(offset_array));
-    // VLOG(10) << "repeat array: " << gs::to_string(repeat_array);
-    // check whether we get the right array;
-    // auto& head_node = ctx.GetHead();
-
-    // A col describe what content is used to project
-    // using cur_node_entity_value_t =
-    //     typename std::remove_reference_t<decltype(node)>::EntityValueType;
-    KeyAlias<tag_id, res_alias, -1> key_alias;
+    KeyAlias<in_col_id, -1> key_alias;
     return node.ProjectWithRepeatArray(std::move(repeat_array), key_alias);
   }
 
-  // Project with expression.
-  template <typename CTX_T, int res_alias, typename RES_T, typename EXPR>
+  // Project with  single mapper
+  template <typename CTX_T, int in_col_id, typename EXPR, typename T>
   static auto apply_single_project(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, CTX_T& ctx,
-      ProjectExpr<res_alias, RES_T, EXPR>& proj_expr) {
-    // using result_type =
-    //     std::remove_reference_t<decltype(std::declval<EXPR>()())>;
-    // using result_type = std::result_of_t<EXPR(void)>;
-    // get the return type of EXPR()
-    using result_type = RES_T;
-    std::vector<result_type> res_vec;
+      const GRAPH_INTERFACE& graph, CTX_T& ctx,
+      SingleMapper<in_col_id, EXPR, PropertySelector<T>>& proj_expr) {
+    using expr_trait = gs::function_traits<decltype(std::declval<EXPR>())>;
+    using expr_result_t = typename expr_trait::result_type;
+    std::vector<expr_result_t> res_vec;
     res_vec.reserve(ctx.GetHead().Size());
     auto expr = proj_expr.expr_;
-    auto tag_props = proj_expr.expr_.Properties();
+    auto prop_desc =
+        std::tuple{create_prop_desc_from_selector(proj_expr.selector_)};
     auto prop_getters =
-        create_prop_getters_from_prop_desc(time_stamp, graph, ctx, tag_props);
+        create_prop_getters_from_prop_desc(graph, ctx, prop_desc);
     LOG(INFO) << "In project with expression, successfully got prop getters";
     for (auto iter : ctx) {
       auto ele_tuple = iter.GetAllElement();
       LOG(INFO) << gs::to_string(ele_tuple);
       res_vec.emplace_back(evaluate_proj_expr(expr, ele_tuple, prop_getters));
     }
-    return Collection<result_type>(std::move(res_vec));
+    return Collection<expr_result_t>(std::move(res_vec));
   }
 
-  // single label vertex set.
-  template <typename LabelT, typename VID_T, typename... SET_T, int _tag_id,
-            typename... T>
-  static auto apply_single_project_impl(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
-      RowVertexSetImpl<LabelT, VID_T, SET_T...>& node,
-      const TagProp<_tag_id, T...>& tag_prop,
-      const std::vector<size_t>& repeat_array) {
-    // LOG(INFO) << "[Single project on RowVertexSet:]" << node.GetLabel()
-    // << ", prop: " << gs::to_string(tag_prop.prop_names_);
-    if constexpr (sizeof...(SET_T) > 0 &&
-                  !std::is_same_v<std::tuple_element_t<0, std::tuple<SET_T...>>,
-                                  grape::EmptyType>) {
-      // LOG(INFO) << ", my props: " << gs::to_string(node.GetPropNames());
-    }
+  // project with multi mapper
+  // template <typename CTX_T, int... in_col_id, typename EXPR,
+  //           typename... SELECTOR>
+  // static auto apply_single_project(
+  //     const GRAPH_INTERFACE& graph, CTX_T& ctx,
+  //     MultiMapper<in_col_id..., EXPR, SELECTOR...>& mapper) {
+  //   using expr_trait = gs::function_traits<decltype(std::declval<EXPR>())>;
+  //   using expr_result_t = typename expr_trait::result_type;
+  //   std::vector<expr_result_t> res_vec;
+  //   res_vec.reserve(ctx.GetHead().Size());
+  //   auto expr = proj_expr.expr_;
+  //   auto prop_desc =
+  //       std::tuple{create_prop_descs_from_selectors(proj_expr.selectors_)};
+  //   auto prop_getters =
+  //       create_prop_getters_from_prop_desc(graph, ctx, prop_desc);
+  //   LOG(INFO) << "In project with expression, successfully got prop getters";
+  //   for (auto iter : ctx) {
+  //     auto ele_tuple = iter.GetAllElement();
+  //     LOG(INFO) << gs::to_string(ele_tuple);
+  //     res_vec.emplace_back(evaluate_proj_expr(expr, ele_tuple,
+  //     prop_getters));
+  //   }
+  //   return Collection<result_type>(std::move(res_vec));
+  // }
 
-    // VLOG(10) << "start fetching properties";
+  ///////////////////Project implementation for all data structures.
+
+  // single label vertex set.
+  template <typename T, typename LabelT, typename VID_T, typename... SET_T>
+  static auto apply_single_project_impl(
+      const GRAPH_INTERFACE& graph,
+      RowVertexSetImpl<LabelT, VID_T, SET_T...>& node,
+      const std::string& prop_name, const std::vector<size_t>& repeat_array) {
     // Get property from storage.
-    auto prop_tuple_vec = graph.template GetVertexPropsFromVid<T...>(
-        time_stamp, node.GetLabel(), node.GetVertices(), tag_prop.prop_names_);
+    auto prop_tuple_vec = graph.template GetVertexPropsFromVid<T>(
+        node.GetLabel(), node.GetVertices(), {prop_name});
     // VLOG(10) << "Finish fetching properties";
-    std::vector<std::tuple<T...>> res_prop_vec;
+    node.fillBuiltinProps(prop_tuple_vec, {prop_name}, repeat_array);
+    std::vector<T> res_prop_vec;
     for (auto i = 0; i < repeat_array.size(); ++i) {
       for (auto j = 0; j < repeat_array[i]; ++j) {
-        res_prop_vec.push_back(prop_tuple_vec[i]);
+        res_prop_vec.push_back(std::get<0>(prop_tuple_vec[i]));
       }
     }
     // check builtin properties.
     // Found if there is any builtin properties need.
-    node.fillBuiltinProps(res_prop_vec, tag_prop.prop_names_, repeat_array);
-    return Collection<std::tuple<T...>>(std::move(res_prop_vec));
+
+    return Collection<T>(std::move(res_prop_vec));
   }
 
   // single keyed label vertex set.
-  template <typename LabelT, typename KEY_T, typename VID_T, typename... SET_T,
-            int _tag_id, typename... T>
+  template <typename T, typename LabelT, typename KEY_T, typename VID_T,
+            typename... SET_T>
   static auto apply_single_project_impl(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
+      const GRAPH_INTERFACE& graph,
       KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, SET_T...>& node,
-      const TagProp<_tag_id, T...>& tag_prop,
-      const std::vector<size_t>& repeat_array) {
+      const std::string& prop_name, const std::vector<size_t>& repeat_array) {
     LOG(INFO) << "[Single project on KeyedRowVertexSet:]" << node.GetLabel();
-    // VLOG(10) << "start fetching properties";
     // Get property from storage.
-    auto prop_tuple_vec = graph.template GetVertexPropsFromVid<T...>(
-        time_stamp, node.GetLabel(), node.GetVertices(), tag_prop.prop_names_);
+    auto prop_tuple_vec = graph.template GetVertexPropsFromVid<T>(
+        node.GetLabel(), node.GetVertices(), {prop_name});
     // VLOG(10) << "Finish fetching properties";
-    std::vector<std::tuple<T...>> res_prop_vec;
+    node.fillBuiltinProps(prop_tuple_vec, {prop_name}, repeat_array);
+    std::vector<T> res_prop_vec;
     for (auto i = 0; i < repeat_array.size(); ++i) {
       for (auto j = 0; j < repeat_array[i]; ++j) {
-        res_prop_vec.push_back(prop_tuple_vec[i]);
+        res_prop_vec.push_back(std::get<0>(prop_tuple_vec[i]));
       }
     }
     // check builtin properties.
     // Found if there is any builtin properties need.
-    node.fillBuiltinProps(res_prop_vec, tag_prop.prop_names_, repeat_array);
-    return Collection<std::tuple<T...>>(std::move(res_prop_vec));
+
+    return Collection<T>(std::move(res_prop_vec));
   }
 
   // project for two label vertex set.
-  template <typename NODE_T, int _tag_id, typename... T,
-            typename std::enable_if<
-                !NODE_T::is_multi_label && !NODE_T::is_collection &&
-                NODE_T::is_vertex_set && NODE_T::is_two_label_set &&
-                !NODE_T::is_general_set>::type* = nullptr>
+  template <typename T, typename VID_T, typename LabelT, typename... SET_T>
   static auto apply_single_project_impl(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, NODE_T& node,
-      const TagProp<_tag_id, T...>& tag_prop,
-      const std::vector<size_t>& repeat_array) {
-    auto tmp_prop_vec = get_property_tuple_two_label<T...>(
-        time_stamp, graph, node, tag_prop.prop_names_);
+      const GRAPH_INTERFACE& graph,
+      TwoLabelVertexSetImpl<VID_T, LabelT, SET_T...>& node,
+      const std::string& prop_name, const std::vector<size_t>& repeat_array) {
+    auto tmp_prop_vec =
+        get_property_tuple_two_label<T>(graph, node, {prop_name});
 
     // make_repeat;
     size_t sum = 0;
@@ -495,77 +411,38 @@ class ProjectOp {
       }
       sum += repeat_array[i];
     }
+    std::vector<T> res_prop_vec;
     if (flag) {
-      return Collection<std::tuple<T...>>(std::move(tmp_prop_vec));
+      //
+
+      {
+        // convert tuple to vector.
+        res_prop_vec.reserve(tmp_prop_vec.size());
+        for (auto& ele : tmp_prop_vec) {
+          res_prop_vec.emplace_back(std::get<0>(ele));
+        }
+      }
+      return Collection<T>(std::move(res_prop_vec));
     } else {
-      std::vector<std::tuple<T...>> res_prop_vec;
       res_prop_vec.reserve(sum);
       for (auto i = 0; i < repeat_array.size(); ++i) {
         for (auto j = 0; j < repeat_array[i]; ++j) {
-          res_prop_vec.push_back(tmp_prop_vec[i]);
+          res_prop_vec.emplace_back(std::get<0>(tmp_prop_vec[i]));
         }
       }
-      return Collection<std::tuple<T...>>(std::move(res_prop_vec));
+      return Collection<T>(std::move(res_prop_vec));
     }
-  }
-
-  // multi label vertex set.
-  template <
-      typename NODE_T, int _tag_id, typename... T,
-      typename std::enable_if<NODE_T::is_multi_label &&
-                              !NODE_T::is_collection && NODE_T::is_vertex_set &&
-                              !NODE_T::is_general_set>::type* = nullptr>
-  static auto apply_single_project_impl(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, NODE_T& multi_set,
-      const TagProp<_tag_id, T...>& tag_prop,
-      const std::vector<size_t>& repeat_array) {
-    VLOG(10) << "start fetching properties";
-    // Get property from storage.
-    static constexpr size_t N = NODE_T::num_labels;
-    std::array<std::vector<std::tuple<T...>>, N> tuples;
-    for (auto i = 0; i < N; ++i) {
-      auto& node = multi_set.GetSet(i);
-      VLOG(10) << "start fetch properties for " << node.GetLabel()
-               << " size: " << node.GetVertices().size();
-      tuples[i] = graph.template GetVertexPropsFromVid<T...>(
-          time_stamp, node.GetLabel(), node.GetVertices(),
-          tag_prop.prop_names_);
-      VLOG(10) << "Finish fetching properties";
-    }
-    std::vector<std::tuple<T...>> res_prop_vec;
-
-    size_t cur_ind = 0;
-    for (auto iter : multi_set) {
-      CHECK(cur_ind <= repeat_array.size());
-      auto cur_label = iter.GetCurInd();
-      auto inner_ind = iter.GetCurSetInnerInd();
-      // VLOG(10) << "cur: " << cur_label << ", " << inner_ind << ", " <<
-      // cur_ind;
-      for (auto j = 0; j < repeat_array[cur_ind]; ++j) {
-        res_prop_vec.push_back(tuples[cur_label][inner_ind]);
-      }
-      cur_ind += 1;
-    }
-    VLOG(10) << "res prop vec size: " << res_prop_vec.size();
-
-    // TODO: support builtin property for multi vertex set
-    return Collection<std::tuple<T...>>(std::move(res_prop_vec));
   }
 
   // general vertex set.
-  template <
-      typename NODE_T, int _tag_id, typename... T,
-      typename std::enable_if<NODE_T::is_general_set &&
-                              !NODE_T::is_collection && NODE_T::is_vertex_set &&
-                              !NODE_T::is_multi_label>::type* = nullptr>
+  template <typename T, typename VID_T, typename LabelT, size_t N>
   static auto apply_single_project_impl(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, NODE_T& multi_set,
-      const TagProp<_tag_id, T...>& tag_prop,
-      const std::vector<size_t>& repeat_array) {
+      const GRAPH_INTERFACE& graph, GeneralVertexSet<VID_T, LabelT, N>& node,
+      const std::string& prop_name_, const std::vector<size_t>& repeat_array) {
     VLOG(10) << "start fetching properties";
-    auto tmp_prop_vec = get_property_tuple_general<T...>(
-        time_stamp, graph, multi_set, tag_prop.prop_names_);
-
+    auto tmp_prop_vec =
+        get_property_tuple_general<T>(graph, node, {prop_name_});
+    std::vector<T> res_prop_vec;
     // make_repeat;
     size_t sum = 0;
     bool flag = true;
@@ -576,102 +453,53 @@ class ProjectOp {
       sum += repeat_array[i];
     }
     if (flag) {
-      return Collection<std::tuple<T...>>(std::move(tmp_prop_vec));
+      {
+        // convert tmp_prop_vec to vector.
+        res_prop_vec.reserve(tmp_prop_vec.size());
+        for (auto& ele : tmp_prop_vec) {
+          res_prop_vec.push_back(ele);
+        }
+      }
+      return Collection<T>(std::move(tmp_prop_vec));
     } else {
-      std::vector<std::tuple<T...>> res_prop_vec;
       res_prop_vec.reserve(sum);
       for (auto i = 0; i < repeat_array.size(); ++i) {
         for (auto j = 0; j < repeat_array[i]; ++j) {
-          res_prop_vec.push_back(tmp_prop_vec[i]);
+          res_prop_vec.push_back(std::get<0>(tmp_prop_vec[i]));
         }
       }
-      return Collection<std::tuple<T...>>(std::move(res_prop_vec));
+      return Collection<T>(std::move(res_prop_vec));
     }
   }
 
   // single label edge set
-  template <typename NODE_T, int _tag_id, typename... T,
+  template <typename T, typename NODE_T,
             typename std::enable_if<NODE_T::is_edge_set>::type* = nullptr>
   static auto apply_single_project_impl(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, NODE_T& node,
-      const TagProp<_tag_id, T...>& tag_prop,
+      const GRAPH_INTERFACE& graph, NODE_T& node, const std::string& prop_name,
       const std::vector<size_t>& repeat_array) {
-    // VLOG(10) << "start fetching properties";
-    // Get property from storage.
-    // auto prop_tuple_vec = graph.template GetVertexPropsFromVid<T...>(
-    //     time_stamp, node.GetLabel(), node.GetVertices(),
-    //     key_alias_prop.prop_names_);
     VLOG(10) << "Finish fetching properties";
-    std::vector<std::tuple<T...>> res_prop_vec;
+    std::vector<std::tuple<T>> tmp_prop_vec;
     {
       size_t sum = 0;
       for (auto v : repeat_array) {
         sum += v;
       }
-      res_prop_vec.resize(sum);
+      tmp_prop_vec.resize(sum);
     }
     // We assume edge properties are already got in getEdges.
-    node.fillBuiltinProps(res_prop_vec, tag_prop.prop_names_, repeat_array);
+    node.fillBuiltinProps(tmp_prop_vec, {prop_name}, repeat_array);
 
-    return Collection<std::tuple<T...>>(std::move(res_prop_vec));
-  }
-
-  // apply
-  template <typename CTX_T, int res_alias, typename... TAG_PROP, size_t... Is>
-  static auto apply_single_project_on_multi_tags_impl(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, CTX_T& ctx,
-      MultiKeyAliasProp<res_alias, TAG_PROP...>& key_alias_prop,
-      const std::vector<std::vector<size_t>>& repeat_array_vec,
-      std::index_sequence<Is...>) {
-    auto collection_tuple = std::make_tuple(apply_single_project_impl(
-        time_stamp, graph, ctx.template GetNode<TAG_PROP::tag_id>(),
-        std::get<Is>(key_alias_prop.tag_props_), repeat_array_vec[Is])...);
-
-    VLOG(10) << "Got collection tuple";
-    // check length;
-    size_t length = get_length<0>(collection_tuple);
-    VLOG(10) << "Finish length check: " << length;
-    // cat tuple
-    // using res_tuple_t =
-    // typename MultiKeyAliasProp<res_alias, TAG_PROP...>::res_prop_tuple_t;
-    using res_tuple_t = gs::tuple_cat_t<typename TAG_PROP::prop_tuple_t...>;
-    std::vector<res_tuple_t> res_vec;
-    res_vec.reserve(length);
-
-    for (auto i = 0; i < length; ++i) {
-      res_vec.emplace_back(
-          std::tuple_cat(std::get<Is>(collection_tuple).Get(i)...));
+    std::vector<T> res_prop_vec;
+    {
+      // convert tmp_prop_vec to vector.
+      res_prop_vec.reserve(tmp_prop_vec.size());
+      for (auto& ele : tmp_prop_vec) {
+        res_prop_vec.push_back(std::get<0>(ele));
+      }
     }
-    return Collection<res_tuple_t>(std::move(res_vec));
-  }
 
-  template <size_t Is, typename... T,
-            typename std::enable_if<(Is == sizeof...(T) - 1)>::type* = nullptr>
-  static size_t get_length(size_t length, std::tuple<T...>& tuple) {
-    if (length == std::get<Is>(tuple).Size()) {
-      return length;
-    } else {
-      LOG(FATAL) << "Check length fail at ind: " << Is;
-      return 0;
-    }
-  }
-
-  template <size_t Is, typename... T,
-            typename std::enable_if<(Is < sizeof...(T) - 1)>::type* = nullptr>
-  static size_t get_length(size_t length, std::tuple<T...>& tuple) {
-    if (length == std::get<Is>(tuple).Size()) {
-      return get_length<Is + 1>(length, tuple);
-    } else {
-      LOG(FATAL) << "Check length fail at ind: " << Is;
-      return 0;
-    }
-  }
-
-  template <size_t Is, typename... T,
-            typename std::enable_if<(Is == 0)>::type* = nullptr>
-  static size_t get_length(std::tuple<T...>& tuple) {
-    size_t length = std::get<Is>(tuple).Size();
-    return get_length<Is + 1>(length, tuple);
+    return Collection<T>(std::move(res_prop_vec));
   }
 
   // evaluate expression in project op

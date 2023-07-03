@@ -234,7 +234,7 @@ class IC1 {
         gs::VOpt::End, std::array<label_id_t, 1>{person_label_id});
     auto path_expand_opt = gs::make_path_expand_opt(
         std::move(edge_expand_opt), std::move(get_v_opt), gs::Range(1, 4));
-    auto ctx1 = Engine::template PathExpandV<-1, 0>(
+    auto ctx1 = Engine::template PathExpandV<AppendOpt::Temp, INPUT_COL_ID(0)>(
         time_stamp, graph, std::move(ctx0), std::move(path_expand_opt));
 
     IC1Expression2 expr3(firstName,
@@ -244,11 +244,6 @@ class IC1 {
         std::move(expr3));
     auto ctx3 = Engine::template GetV<1, -1>(time_stamp, graph, std::move(ctx1),
                                              std::move(get_v_opt3));
-    // // otherPerson -(isLocatedIn) -city
-    // auto edge_expand_opt4 = gs::make_edge_expand_opt<>(
-    //     gs::Direction::Out, isLocatedIn_label_id, place_label_id);
-    // auto ctx4 = Engine::template EdgeExpandV<2, 1>(
-    //     time_stamp, graph, std::move(ctx3), std::move(edge_expand_opt4));
 
     // delete start person
     auto project_opt0 = gs::make_project_opt(gs::ProjectSelf<1, 0>());

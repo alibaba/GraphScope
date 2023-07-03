@@ -6,23 +6,27 @@
 
 namespace gs {
 
-template <typename TAG_PROP>
+struct IC2Expression1 {
+ public:
+  IC2Expression1(oid_t oid) : oid_(oid) {}
+
+  inline bool operator()(oid_t data) const { return oid_ == data; }
+
+ private:
+  oid_t oid_;
+};
+
 class IC2Expression2 {
  public:
-  using tag_prop_t = std::tuple<TAG_PROP>;
-  IC2Expression2(int64_t maxDate, TAG_PROP&& props)
-      : maxDate_(maxDate), props_(std::move(props)) {}
+  IC2Expression2(int64_t maxDate) : maxDate_(maxDate) {}
 
   inline bool operator()(int64_t data) const {
     // auto& cur_date = std::get<0>(data_tuple);
     return data < maxDate_;
   }
 
-  tag_prop_t Properties() const { return std::make_tuple(props_); }
-
  private:
   int64_t maxDate_;
-  TAG_PROP props_;
 };
 
 template <typename GRAPH_INTERFACE>
@@ -85,91 +89,79 @@ class QueryIC2 {
     label_id_t has_creator_label_id = graph.GetEdgeLabelId(has_creator_label);
 
     using Engine = SyncEngine<GRAPH_INTERFACE>;
-    auto ctx0 = Engine::template ScanVertexWithOid<-1>(time_stamp, graph,
-                                                       person_label_id, id);
+    // auto ctx0 = Engine::template ScanVertexWithOid<-1>(time_stamp, graph,
+    //                                                    person_label_id, id);
+    auto filter =
+        gs::make_filter(IC2Expression1(id), gs::PropertySelector<oid_t>("id"));
+    auto ctx0 = Engine::template ScanVertex<AppendOpt::Temp>(
+        graph, person_label_id, std::move(filter));
 
-    double t0 = -grape::GetCurrentTime();
     auto edge_expand_opt = gs::make_edge_expand_opt(
         gs::Direction::Both, knows_label_id, person_label_id);
-    auto ctx1 = Engine::template EdgeExpandV<0, -1>(
-        time_stamp, graph, std::move(ctx0), std::move(edge_expand_opt));
+    auto ctx1 = Engine::template EdgeExpandV<AppendOpt::Persist, LAST_COL>(
+        graph, std::move(ctx0), std::move(edge_expand_opt));
 
     std::array<label_id_t, 2> labels{post_label_id, comment_label_id};
     auto edge_expand_opt2 = gs::make_edge_expand_opt(
         gs::Direction::In, has_creator_label_id, std::move(labels));
+    auto ctx3 =
+        Engine::template EdgeExpandVMultiLabel<AppendOpt::Temp, LAST_COL>(
+            graph, std::move(ctx1), std::move(edge_expand_opt2));
 
-    auto ctx3 = Engine::template EdgeExpandVMultiLabel<1, -1>(
-        time_stamp, graph, std::move(ctx1), std::move(edge_expand_opt2));
+    auto filter2 = gs::make_filter(
+        IC2Expression2(maxDate), gs::PropertySelector<int64_t>("creationDate"));
+    auto ctx5 = Engine::template Select<INPUT_COL_ID(-1)>(
+        graph, std::move(ctx3), std::move(filter2));
 
-    t0 += grape::GetCurrentTime();
-
-    double t1 = -grape::GetCurrentTime();
-    IC2Expression2 expr2(maxDate, gs::NamedProperty<int64_t>("creationDate"));
-    // IC2Expression2 expr2(maxDate, std::move(expr_tag_prop));
-    auto ctx5 =
-        Engine::Select(time_stamp, graph, std::move(ctx3), std::move(expr2));
-    t1 += grape::GetCurrentTime();
-
-    double t2 = -grape::GetCurrentTime();
-    //     gs::OrderingPair<gs::SortOrder::DESC, -1, 0, int64_t> pair0;
     gs::OrderingPropPair<gs::SortOrder::DESC, -1, int64_t> pair0(
         "creationDate");  // creationDate.
-    // gs::OrderingPair<gs::SortOrder::ASC, -1, 1, oid_t> pair1;  // id
-    gs::OrderingPropPair<gs::SortOrder::ASC, -1, oid_t> pair1("id");  // id
-    // IC2SortComparator comparator;
-    // std::move(comparator),
-    auto pairs =
-        gs::make_sort_opt(gs::Range(0, 20), std::move(pair0), std::move(pair1));
-    auto ctx6 =
-        Engine::Sort(time_stamp, graph, std::move(ctx5), std::move(pairs));
-
-    // auto ctx6 = Engine::template GetVAndSort<1, -1>(
-    // time_stamp, graph, std::move(ctx3), std::move(get_v_opt),
-    // std::move(pairs));
-
-    t2 += grape::GetCurrentTime();
+    gs::OrderingPropPair<gs::SortOrder::ASC, -1, oid_t> pair1("id");
+    auto ctx6 = Engine::Sort(graph, std::move(ctx5), gs::Range(0, 20),
+                             std::tuple{pair0, pair1});
 
     // project
-    //@0.id, firstName, lastName,
-    //@1.id, content, imageFile, creationDate.
-    double t3 = -grape::GetCurrentTime();
-    gs::AliasTagProp<0, 0, oid_t, std::string_view, std::string_view> prop_col0(
-        {"id", "firstName", "lastName"});
-    gs::AliasTagProp<1, 1, oid_t, std::string_view, std::string_view, int64_t>
-        prop_col1({"id", "content", "imageFile", "creationDate"});
-    auto proj_opt =
-        gs::make_project_opt(std::move(prop_col0), std::move(prop_col1));
-    auto ctx7 = Engine::template Project<false>(
-        time_stamp, graph, std::move(ctx6), std::move(proj_opt));
-    t3 += grape::GetCurrentTime();
+    // double t3 = -grape::GetCurrentTime();
+    auto mapper1 = gs::make_identity_mapper<0>(PropertySelector<oid_t>("id"));
+    auto mapper2 = gs::make_identity_mapper<0>(
+        PropertySelector<std::string_view>("firstName"));
+    auto mapper3 = gs::make_identity_mapper<0>(
+        PropertySelector<std::string_view>("lastName"));
+    auto mapper4 = gs::make_identity_mapper<1>(PropertySelector<oid_t>("id"));
+    auto mapper5 = gs::make_identity_mapper<1>(
+        PropertySelector<std::string_view>("content"));
+    auto mapper6 = gs::make_identity_mapper<1>(
+        PropertySelector<std::string_view>("imageFile"));
+    auto mapper7 =
+        gs::make_identity_mapper<1>(PropertySelector<int64_t>("creationDate"));
+    auto ctx7 = Engine::template Project<PROJ_TO_NEW>(
+        graph, std::move(ctx6),
+        std::tuple{std::move(mapper1), std::move(mapper2), std::move(mapper3),
+                   std::move(mapper4), std::move(mapper5), std::move(mapper6),
+                   std::move(mapper7)});
 
-    double t4 = -grape::GetCurrentTime();
+    for (auto iter : ctx7) {
+      auto ele = iter.GetAllElement();
+      LOG(INFO) << gs::to_string(ele);
+    }
+
     {
       size_t cnt = 0;
       for (auto iter : ctx7) {
         cnt += 1;
-        // if (cnt < 10) {
-        //    VLOG(10) << gs::to_string(iter.GetAllElement());
-        auto data_tuple = iter.GetAllData();
-        auto col0 = std::get<0>(data_tuple);
-        auto col1 = std::get<1>(data_tuple);
-        output.put_long(std::get<0>(col0));
-        output.put_string_view(std::get<1>(col0));
-        output.put_string_view(std::get<2>(col0));
-        output.put_long(std::get<0>(col1));
-        if (std::get<2>(col1).empty()) {
-          output.put_string_view(std::get<1>(col1));
+        auto ele = iter.GetAllElement();
+        output.put_long(std::get<0>(ele));
+        output.put_string_view(std::get<1>(ele));
+        output.put_string_view(std::get<2>(ele));
+        output.put_long(std::get<3>(ele));
+        if (std::get<4>(ele).empty()) {
+          output.put_string_view(std::get<5>(ele));
           // VLOG(10) << "found imagefile";
         } else {
-          output.put_string_view(std::get<2>(col1));
+          output.put_string_view(std::get<4>(ele));
         }
-        output.put_long(std::get<3>(col1));
+        output.put_long(std::get<6>(ele));
       }
     }
-    t4 += grape::GetCurrentTime();
-    LOG(INFO) << "edge expand cost: " << t0 << ", filter cost: " << t1
-              << ", osrt cost: " << t2 << ", project times: " << t3
-              << ", output time: " << t4;
   }
 };
 

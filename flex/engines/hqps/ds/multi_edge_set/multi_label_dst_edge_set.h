@@ -9,7 +9,7 @@
 #include "flex/engines/hqps/ds/multi_vertex_set/row_vertex_set.h"
 #include "flex/engines/hqps/ds/multi_vertex_set/two_label_vertex_set.h"
 
-#include "grape/grape.h"
+#include "grape/types.h"
 
 namespace gs {
 

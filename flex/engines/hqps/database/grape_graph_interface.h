@@ -9,6 +9,7 @@
 #include "flex/engines/hqps/engine/null_record.h"
 #include "flex/engines/hqps/engine/params.h"
 #include "flex/engines/hqps/engine/utils/bitset.h"
+#include "flex/engines/hqps/engine/utils/operator_utils.h"
 
 #include "grape/util.h"
 
@@ -29,15 +30,15 @@ void get_tuple_from_column_tuple(
 }
 
 template <size_t I = 0, typename... T, typename... COL_T>
-void get_tuple_from_hete_column_tuple(size_t index, std::tuple<T...>& t,
-                                      const std::tuple<COL_T...>& columns) {
+void get_tuple_from_column_tuple(size_t index, std::tuple<T...>& t,
+                                 const std::tuple<COL_T...>& columns) {
   auto ptr = std::get<I>(columns);
   if (ptr) {
     std::get<I>(t) = ptr->get_view(index);
   }
 
   if constexpr (I + 1 < sizeof...(T)) {
-    get_tuple_from_hete_column_tuple<I + 1>(index, t, columns);
+    get_tuple_from_column_tuple<I + 1>(index, t, columns);
   }
 }
 
@@ -57,40 +58,28 @@ void get_tuple_column_from_graph(
   }
 }
 
-template <typename PropT,
-          typename std::enable_if<gs::is_label_key_prop<PropT>::value>::type* =
-              nullptr>
-auto get_single_column_from_graph_with_property(const GraphDBSession& sess,
-                                                label_t label,
-                                                const PropT& prop) {
-  auto prop_name = prop.name;
-  CHECK(prop_name == "label" || prop_name == "Label" || prop_name == "LABEL");
-  return std::make_shared<LabelRefColumn>(label);
+template <typename PropT>
+auto get_single_column_from_graph_with_property(
+    const GraphDBSession& sess, label_t label,
+    const PropertySelector<PropT>& selector) {
+  return std::dynamic_pointer_cast<TypedRefColumn<PropT>>(
+      sess.get_vertex_property_ref_column(label, selector.prop_name_));
 }
 
-template <typename PropT,
-          typename std::enable_if<!gs::is_label_key_prop<PropT>::value>::type* =
-              nullptr>
-auto get_single_column_from_graph_with_property(const GraphDBSession& sess,
-                                                label_t label,
-                                                const PropT& prop) {
-  return std::dynamic_pointer_cast<TypedRefColumn<typename PropT::prop_t>>(
-      sess.get_vertex_property_ref_column(label, prop.name));
-}
-template <typename... PropT, size_t... Is>
+template <typename... SELECTOR, size_t... Is>
 auto get_tuple_column_from_graph_with_property_impl(
     const GraphDBSession& sess, label_t label,
-    const std::tuple<PropT...>& props, std::index_sequence<Is...>) {
+    const std::tuple<SELECTOR...>& selectors, std::index_sequence<Is...>) {
   return std::make_tuple(get_single_column_from_graph_with_property(
-      sess, label, std::get<Is>(props))...);
+      sess, label, std::get<Is>(selectors))...);
 }
 
-template <typename... PropT>
-auto get_tuple_column_from_graph_with_property(
+template <typename... SELECTOR>
+inline auto get_tuple_column_from_graph_with_property(
     const GraphDBSession& sess, label_t label,
-    const std::tuple<PropT...>& props) {
+    const std::tuple<SELECTOR...>& selectors) {
   return get_tuple_column_from_graph_with_property_impl(
-      sess, label, props, std::make_index_sequence<sizeof...(PropT)>());
+      sess, label, selectors, std::make_index_sequence<sizeof...(SELECTOR)>());
 }
 
 /// @brief GrapeGraphInterface is a wrapper of GraphDBSession, which provides
@@ -138,28 +127,29 @@ class GrapeGraphInterface {
     return db_session_.schema().get_edge_label_id(label);
   }
 
-  template <typename FUNC_T, typename... PropT>
-  void ScanVertices(const std::string& label, const std::tuple<PropT...>& props,
+  template <typename FUNC_T, typename... SELECTOR>
+  void ScanVertices(const std::string& label,
+                    const std::tuple<SELECTOR...>& props,
                     const FUNC_T& func) const {
     auto label_id = db_session_.schema().get_vertex_label_id(label);
     return ScanVertices(label_id, props, func);
   }
 
-  template <typename FUNC_T, typename... PropT>
+  template <typename FUNC_T, typename... SELECTOR>
   void ScanVertices(const label_id_t& label_id,
-                    const std::tuple<PropT...>& props,
+                    const std::tuple<SELECTOR...>& selectors,
                     const FUNC_T& func) const {
-    auto columns =
-        get_tuple_column_from_graph_with_property(db_session_, label_id, props);
+    auto columns = get_tuple_column_from_graph_with_property(
+        db_session_, label_id, selectors);
     auto vnum = db_session_.graph().vertex_num(label_id);
-    std::tuple<typename PropT::prop_t...> t;
+    std::tuple<typename SELECTOR::prop_t...> t;
     for (auto v = 0; v != vnum; ++v) {
-      get_tuple_from_hete_column_tuple(v, t, columns);
+      get_tuple_from_column_tuple(v, t, columns);
       func(v, t);
     }
   }
 
-  vertex_id_t ScanVerticesWithOid(int64_t time_stamp, const std::string& label,
+  vertex_id_t ScanVerticesWithOid(const std::string& label,
                                   outer_vertex_id_t oid) const {
     auto label_id = db_session_.schema().get_vertex_label_id(label);
     vertex_id_t vid;
@@ -167,8 +157,7 @@ class GrapeGraphInterface {
     return vid;
   }
 
-  vertex_id_t ScanVerticesWithOid(int64_t time_stamp,
-                                  const label_id_t& label_id,
+  vertex_id_t ScanVerticesWithOid(const label_id_t& label_id,
                                   outer_vertex_id_t oid) const {
     vertex_id_t vid;
     CHECK(db_session_.graph().get_lid(label_id, oid, vid));
@@ -176,7 +165,7 @@ class GrapeGraphInterface {
   }
 
   template <typename FUNC_T>
-  void ScanVerticesWithoutProperty(int64_t ts, const std::string& label,
+  void ScanVerticesWithoutProperty(const std::string& label,
                                    const FUNC_T& func) const {
     auto label_id = db_session_.schema().get_vertex_label_id(label);
     auto vnum = db_session_.graph().vertex_num(label_id);
@@ -188,7 +177,7 @@ class GrapeGraphInterface {
   template <typename... T>
   std::pair<std::vector<vertex_id_t>, std::vector<std::tuple<T...>>>
   GetVertexPropsFromOid(
-      int64_t ts, const std::string& label, const std::vector<int64_t> oids,
+      const std::string& label, const std::vector<int64_t> oids,
       const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
           prop_names) const {
     auto label_id = db_session_.schema().get_vertex_label_id(label);
@@ -207,8 +196,7 @@ class GrapeGraphInterface {
 
   template <typename... T>
   std::vector<std::tuple<T...>> GetVertexPropsFromVid(
-      int64_t ts, const std::string& label,
-      const std::vector<vertex_id_t>& vids,
+      const std::string& label, const std::vector<vertex_id_t>& vids,
       const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
           prop_names) const {
     auto label_id = db_session_.schema().get_vertex_label_id(label);
@@ -221,8 +209,7 @@ class GrapeGraphInterface {
 
   template <typename... T>
   std::vector<std::tuple<T...>> GetVertexPropsFromVid(
-      int64_t ts, const label_id_t& label_id,
-      const std::vector<vertex_id_t>& vids,
+      const label_id_t& label_id, const std::vector<vertex_id_t>& vids,
       const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
           prop_names) const {
     // auto label_id = db_session_.schema().get_vertex_label_id(label);
@@ -238,7 +225,7 @@ class GrapeGraphInterface {
   // NOTE: performance not good, use v2.
   template <typename... T, size_t num_labels>
   std::vector<std::tuple<T...>> GetVertexPropsFromVid(
-      int64_t ts, const std::vector<vertex_id_t>& vids,
+      const std::vector<vertex_id_t>& vids,
       const std::array<std::string, num_labels>& labels,
       const std::array<std::vector<int32_t>, num_labels>& vid_inds,
       const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
@@ -269,7 +256,7 @@ class GrapeGraphInterface {
   template <typename... T, size_t num_labels,
             typename std::enable_if<(num_labels == 2)>::type* = nullptr>
   std::vector<std::tuple<T...>> GetVertexPropsFromVidV2(
-      int64_t ts, const std::vector<vertex_id_t>& vids,
+      const std::vector<vertex_id_t>& vids,
       const std::array<std::string, num_labels>& labels, const Bitset& bitset,
       const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
           prop_names) const {
@@ -295,7 +282,7 @@ class GrapeGraphInterface {
   template <typename... T, size_t num_labels,
             typename std::enable_if<(num_labels == 2)>::type* = nullptr>
   std::vector<std::tuple<T...>> GetVertexPropsFromVidV2(
-      int64_t ts, const std::vector<vertex_id_t>& vids,
+      const std::vector<vertex_id_t>& vids,
       const std::array<label_id_t, num_labels>& labels, const Bitset& bitset,
       const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
           prop_names) const {
@@ -493,39 +480,36 @@ class GrapeGraphInterface {
 
   template <typename... T>
   grape_graph_impl::AdjListArray<T...> GetEdges(
-      timestamp_t ts, const std::string& src_label,
-      const std::string& dst_label, const std::string& edge_label,
-      const std::vector<vertex_id_t>& vids, const std::string& direction_str,
-      size_t limit,
+      const std::string& src_label, const std::string& dst_label,
+      const std::string& edge_label, const std::vector<vertex_id_t>& vids,
+      const std::string& direction_str, size_t limit,
       const std::array<std::string, std::tuple_size_v<std::tuple<T...>>>&
           prop_names) const {
     auto src_label_id = db_session_.schema().get_vertex_label_id(src_label);
     auto dst_label_id = db_session_.schema().get_vertex_label_id(dst_label);
     auto edge_label_id = db_session_.schema().get_edge_label_id(edge_label);
 
-    return GetEdges<T...>(ts, src_label_id, dst_label_id, edge_label_id, vids,
+    return GetEdges<T...>(src_label_id, dst_label_id, edge_label_id, vids,
                           direction_str, limit, prop_names);
   }
 
   std::pair<std::vector<vertex_id_t>, std::vector<size_t>> GetOtherVerticesV2(
-      timestamp_t ts, const std::string& src_label,
-      const std::string& dst_label, const std::string& edge_label,
-      const std::vector<vertex_id_t>& vids, const std::string& direction_str,
-      size_t limit) const {
+      const std::string& src_label, const std::string& dst_label,
+      const std::string& edge_label, const std::vector<vertex_id_t>& vids,
+      const std::string& direction_str, size_t limit) const {
     auto src_label_id = db_session_.schema().get_vertex_label_id(src_label);
     auto dst_label_id = db_session_.schema().get_vertex_label_id(dst_label);
     auto edge_label_id = db_session_.schema().get_edge_label_id(edge_label);
 
-    return GetOtherVerticesV2(ts, src_label_id, dst_label_id, edge_label_id,
-                              vids, direction_str, limit);
+    return GetOtherVerticesV2(src_label_id, dst_label_id, edge_label_id, vids,
+                              direction_str, limit);
   }
 
   // return the vids, and offset array.
   std::pair<std::vector<vertex_id_t>, std::vector<size_t>> GetOtherVerticesV2(
-      timestamp_t ts, const label_id_t& src_label_id,
-      const label_id_t& dst_label_id, const label_id_t& edge_label_id,
-      const std::vector<vertex_id_t>& vids, const std::string& direction_str,
-      size_t limit) const {
+      const label_id_t& src_label_id, const label_id_t& dst_label_id,
+      const label_id_t& edge_label_id, const std::vector<vertex_id_t>& vids,
+      const std::string& direction_str, size_t limit) const {
     std::vector<vertex_id_t> ret_v;
     std::vector<size_t> ret_offset;
 
@@ -546,9 +530,7 @@ class GrapeGraphInterface {
         auto v = vids[i];
         auto iter = csr->edge_iter(v);
         while (iter->is_valid()) {
-          if (iter->get_timestamp() <= ts) {
-            ret_v.emplace_back(iter->get_neighbor());
-          }
+          ret_v.emplace_back(iter->get_neighbor());
           iter->next();
         }
         ret_offset.emplace_back(ret_v.size());
@@ -570,9 +552,7 @@ class GrapeGraphInterface {
         auto v = vids[i];
         auto iter = csr->edge_iter(v);
         while (iter->is_valid()) {
-          if (iter->get_timestamp() <= ts) {
-            ret_v.emplace_back(iter->get_neighbor());
-          }
+          ret_v.emplace_back(iter->get_neighbor());
           iter->next();
         }
         ret_offset.emplace_back(ret_v.size());
@@ -597,18 +577,14 @@ class GrapeGraphInterface {
         {
           auto iter = ie_csr->edge_iter(v);
           while (iter->is_valid()) {
-            if (iter->get_timestamp() <= ts) {
-              ret_v.emplace_back(iter->get_neighbor());
-            }
+            ret_v.emplace_back(iter->get_neighbor());
             iter->next();
           }
         }
         {
           auto iter = oe_csr->edge_iter(v);
           while (iter->is_valid()) {
-            if (iter->get_timestamp() <= ts) {
-              ret_v.emplace_back(iter->get_neighbor());
-            }
+            ret_v.emplace_back(iter->get_neighbor());
             iter->next();
           }
         }
@@ -621,22 +597,20 @@ class GrapeGraphInterface {
   }
 
   grape_graph_impl::NbrListArray GetOtherVertices(
-      timestamp_t ts, const std::string& src_label,
-      const std::string& dst_label, const std::string& edge_label,
-      const std::vector<vertex_id_t>& vids, const std::string& direction_str,
-      size_t limit) const {
+      const std::string& src_label, const std::string& dst_label,
+      const std::string& edge_label, const std::vector<vertex_id_t>& vids,
+      const std::string& direction_str, size_t limit) const {
     auto src_label_id = db_session_.schema().get_vertex_label_id(src_label);
     auto dst_label_id = db_session_.schema().get_vertex_label_id(dst_label);
     auto edge_label_id = db_session_.schema().get_edge_label_id(edge_label);
-    return GetOtherVertices(ts, src_label_id, dst_label_id, edge_label_id, vids,
+    return GetOtherVertices(src_label_id, dst_label_id, edge_label_id, vids,
                             direction_str, limit);
   }
 
   grape_graph_impl::NbrListArray GetOtherVertices(
-      timestamp_t ts, const label_id_t& src_label_id,
-      const label_id_t& dst_label_id, const label_id_t& edge_label_id,
-      const std::vector<vertex_id_t>& vids, const std::string& direction_str,
-      size_t limit) const {
+      const label_id_t& src_label_id, const label_id_t& dst_label_id,
+      const label_id_t& edge_label_id, const std::vector<vertex_id_t>& vids,
+      const std::string& direction_str, size_t limit) const {
     grape_graph_impl::NbrListArray ret;
 
     if (direction_str == "out" || direction_str == "Out" ||
@@ -649,9 +623,7 @@ class GrapeGraphInterface {
         auto iter = csr->edge_iter(v);
         auto& vec = ret.get_vector(i);
         while (iter->is_valid()) {
-          if (iter->get_timestamp() <= ts) {
-            vec.push_back(grape_graph_impl::Nbr(iter->get_neighbor()));
-          }
+          vec.push_back(grape_graph_impl::Nbr(iter->get_neighbor()));
           iter->next();
         }
       }
@@ -665,9 +637,7 @@ class GrapeGraphInterface {
         auto iter = csr->edge_iter(v);
         auto& vec = ret.get_vector(i);
         while (iter->is_valid()) {
-          if (iter->get_timestamp() <= ts) {
-            vec.push_back(grape_graph_impl::Nbr(iter->get_neighbor()));
-          }
+          vec.push_back(grape_graph_impl::Nbr(iter->get_neighbor()));
           iter->next();
         }
       }
@@ -683,16 +653,12 @@ class GrapeGraphInterface {
         auto& vec = ret.get_vector(i);
         auto iter = ocsr->edge_iter(v);
         while (iter->is_valid()) {
-          if (iter->get_timestamp() <= ts) {
-            vec.push_back(grape_graph_impl::Nbr(iter->get_neighbor()));
-          }
+          vec.push_back(grape_graph_impl::Nbr(iter->get_neighbor()));
           iter->next();
         }
         iter = icsr->edge_iter(v);
         while (iter->is_valid()) {
-          if (iter->get_timestamp() <= ts) {
-            vec.push_back(grape_graph_impl::Nbr(iter->get_neighbor()));
-          }
+          vec.push_back(grape_graph_impl::Nbr(iter->get_neighbor()));
           iter->next();
         }
       }
@@ -704,7 +670,7 @@ class GrapeGraphInterface {
 
   template <typename... T>
   grape_graph_impl::MultiPropGetter<T...> GetMultiPropGetter(
-      timestamp_t ts, const std::string& label,
+      const std::string& label,
       const std::array<std::string, sizeof...(T)>& prop_names) const {
     auto label_id = db_session_.schema().get_vertex_label_id(label);
     static constexpr auto ind_seq = std::make_index_sequence<sizeof...(T)>();
@@ -716,7 +682,7 @@ class GrapeGraphInterface {
 
   template <typename... T>
   grape_graph_impl::MultiPropGetter<T...> GetMultiPropGetter(
-      timestamp_t ts, const label_id_t& label_id,
+      const label_id_t& label_id,
       const std::array<std::string, sizeof...(T)>& prop_names) const {
     static constexpr auto ind_seq = std::make_index_sequence<sizeof...(T)>();
     using column_tuple_t = std::tuple<std::shared_ptr<TypedRefColumn<T>>...>;
@@ -727,8 +693,7 @@ class GrapeGraphInterface {
 
   template <typename T>
   grape_graph_impl::SinglePropGetter<T> GetSinglePropGetter(
-      timestamp_t ts, const std::string& label,
-      const std::string& prop_name) const {
+      const std::string& label, const std::string& prop_name) const {
     auto label_id = db_session_.schema().get_vertex_label_id(label);
     using column_t = std::shared_ptr<TypedRefColumn<T>>;
     column_t column;
@@ -739,8 +704,7 @@ class GrapeGraphInterface {
 
   template <typename T>
   grape_graph_impl::SinglePropGetter<T> GetSinglePropGetter(
-      timestamp_t ts, const label_id_t& label_id,
-      const std::string& prop_name) const {
+      const label_id_t& label_id, const std::string& prop_name) const {
     using column_t = std::shared_ptr<TypedRefColumn<T>>;
     column_t column;
     column = std::dynamic_pointer_cast<TypedRefColumn<T>>(

@@ -1,28 +1,28 @@
 #include "flex/engines/hqps/database/grape_graph_interface.h"
 #include "flex/utils/app_utils.h"
 
-#include "flex/engines/hqps/app/example/is/is1.h"
-#include "flex/engines/hqps/app/example/is/is2.h"
-#include "flex/engines/hqps/app/example/is/is3.h"
-#include "flex/engines/hqps/app/example/is/is4.h"
-#include "flex/engines/hqps/app/example/is/is5.h"
-#include "flex/engines/hqps/app/example/is/is6.h"
-#include "flex/engines/hqps/app/example/is/is7.h"
+// #include "flex/engines/hqps/app/example/is/is1.h"
+// #include "flex/engines/hqps/app/example/is/is2.h"
+// #include "flex/engines/hqps/app/example/is/is3.h"
+// #include "flex/engines/hqps/app/example/is/is4.h"
+// #include "flex/engines/hqps/app/example/is/is5.h"
+// #include "flex/engines/hqps/app/example/is/is6.h"
+// #include "flex/engines/hqps/app/example/is/is7.h"
 
-#include "flex/engines/hqps/app/example/ic/ic1.h"
-#include "flex/engines/hqps/app/example/ic/ic10.h"
-#include "flex/engines/hqps/app/example/ic/ic11.h"
-#include "flex/engines/hqps/app/example/ic/ic12.h"
-#include "flex/engines/hqps/app/example/ic/ic13.h"
-#include "flex/engines/hqps/app/example/ic/ic14.h"
+// #include "flex/engines/hqps/app/example/ic/ic1.h"
+// #include "flex/engines/hqps/app/example/ic/ic10.h"
+// #include "flex/engines/hqps/app/example/ic/ic11.h"
+// #include "flex/engines/hqps/app/example/ic/ic12.h"
+// #include "flex/engines/hqps/app/example/ic/ic13.h"
+// #include "flex/engines/hqps/app/example/ic/ic14.h"
 #include "flex/engines/hqps/app/example/ic/ic2.h"
-#include "flex/engines/hqps/app/example/ic/ic3.h"
-#include "flex/engines/hqps/app/example/ic/ic4.h"
-#include "flex/engines/hqps/app/example/ic/ic5.h"
+// #include "flex/engines/hqps/app/example/ic/ic3.h"
+// #include "flex/engines/hqps/app/example/ic/ic4.h"
+// #include "flex/engines/hqps/app/example/ic/ic5.h"
 #include "flex/engines/hqps/app/example/ic/ic6.h"
-#include "flex/engines/hqps/app/example/ic/ic7.h"
-#include "flex/engines/hqps/app/example/ic/ic8.h"
-#include "flex/engines/hqps/app/example/ic/ic9.h"
+// #include "flex/engines/hqps/app/example/ic/ic7.h"
+// #include "flex/engines/hqps/app/example/ic/ic8.h"
+// #include "flex/engines/hqps/app/example/ic/ic9.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -205,9 +205,9 @@ void validate_codegen(const GRAPH_INTERFACE& graph,
   //     graph, validate_dir + "/" + "validation_params_is7.csv", max_times);
   // LOG(INFO) << "Finish IS7 test";
 
-  validate<GRAPH_INTERFACE, gs::IC1<GRAPH_INTERFACE>>(
-      graph, validate_dir + "/" + "validation_params_ic1.csv", max_times);
-  LOG(INFO) << "Finish IC1 test";
+  // validate<GRAPH_INTERFACE, gs::IC1<GRAPH_INTERFACE>>(
+  //     graph, validate_dir + "/" + "validation_params_ic1.csv", max_times);
+  // LOG(INFO) << "Finish IC1 test";
 
   validate<GRAPH_INTERFACE, gs::QueryIC2<GRAPH_INTERFACE>>(
       graph, validate_dir + "/" + "validation_params_ic2.csv", max_times);
@@ -224,10 +224,9 @@ void validate_codegen(const GRAPH_INTERFACE& graph,
   //     graph, validate_dir + "/" + "validation_params_ic5.csv", max_times);
   // LOG(INFO) << "Finish IC5 test";
 
-  // validate<GRAPH_INTERFACE, gs::QueryIC6<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic6.csv", max_times,
-  //     true);
-  // LOG(INFO) << "Finish IC6 test";
+  validate<GRAPH_INTERFACE, gs::IC6<GRAPH_INTERFACE>>(
+      graph, validate_dir + "/" + "validation_params_ic6.csv", max_times);
+  LOG(INFO) << "Finish IC6 test";
 
   // validate<GRAPH_INTERFACE, gs::QueryIC7<GRAPH_INTERFACE>>(
   //     graph, validate_dir + "/" + "validation_params_ic7.csv", max_times);

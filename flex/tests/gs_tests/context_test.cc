@@ -15,7 +15,7 @@
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/property/column.h"
 #include "glog/logging.h"
-#include "grape/grape.h"
+#include "grape/types.h"
 
 struct VertexSetTest {};
 struct EdgeSetTest {};

@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include "flex/engines/hqps/engine/hqps_utils.h"
 #include "flex/engines/hqps/engine/utils/bitset.h"
+#include "grape/util.h"
 
 namespace gs {
 
@@ -302,11 +303,10 @@ class MultiLabelVertexSet {
   */
 
   // project self.
-  template <int tag_id, int res_tag, int Fs,
+  template <int tag_id, int Fs,
             typename std::enable_if<Fs == -1>::type* = nullptr>
-  self_type_t ProjectWithRepeatArray(
-      std::vector<size_t>&& repeat_array,
-      KeyAlias<tag_id, res_tag, Fs>& key_alias) const {
+  self_type_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+                                     KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<std::vector<offset_t>> indices_vec(N);
     std::array<std::vector<offset_t>, N> local_offsets;
 

@@ -26,6 +26,7 @@ limitations under the License.
 #include "flex/engines/hqps/ds/multi_vertex_set/two_label_vertex_set.h"
 #include "flex/engines/hqps/engine/hqps_utils.h"
 #include "flex/engines/hqps/engine/utils/bitset.h"
+#include "flex/engines/hqps/engine/utils/operator_utils.h"
 
 namespace gs {
 
@@ -33,7 +34,6 @@ namespace gs {
 template <typename GRAPH_INTERFACE, typename VERTEX_SET_T,
           typename EDGE_FILTER_T>
 struct EdgeExpandVState {
-  int64_t time_stamp_;
   const GRAPH_INTERFACE& graph_;
   const VERTEX_SET_T& cur_vertex_set_;
   Direction direction_;
@@ -41,13 +41,12 @@ struct EdgeExpandVState {
   size_t limit_;
   EDGE_FILTER_T edge_filter_;
 
-  EdgeExpandVState(int64_t time_stamp, const GRAPH_INTERFACE& frag,
-                   const VERTEX_SET_T& v_set, Direction direction,
+  EdgeExpandVState(const GRAPH_INTERFACE& frag, const VERTEX_SET_T& v_set,
+                   Direction direction,
                    typename GRAPH_INTERFACE::label_id_t edge_label,
                    typename GRAPH_INTERFACE::label_id_t other_label,
                    EDGE_FILTER_T&& edge_filter, size_t limit)
-      : time_stamp_(time_stamp),
-        graph_(frag),
+      : graph_(frag),
         cur_vertex_set_(v_set),
         direction_(direction),
         edge_label_(edge_label),
@@ -60,7 +59,6 @@ struct EdgeExpandVState {
 template <typename GRAPH_INTERFACE, typename VERTEX_SET_T,
           typename EDGE_FILTER_T, typename... T>
 struct EdgeExpandEState {
-  int64_t time_stamp_;
   const GRAPH_INTERFACE& graph_;
   VERTEX_SET_T& cur_vertex_set_;
   Direction direction_;
@@ -69,14 +67,13 @@ struct EdgeExpandEState {
   const EDGE_FILTER_T& edge_filter_;
   size_t limit_;
 
-  EdgeExpandEState(int64_t time_stamp, const GRAPH_INTERFACE& frag,
-                   VERTEX_SET_T& v_set, Direction direction,
+  EdgeExpandEState(const GRAPH_INTERFACE& frag, VERTEX_SET_T& v_set,
+                   Direction direction,
                    typename GRAPH_INTERFACE::label_id_t edge_label,
                    typename GRAPH_INTERFACE::label_id_t other_label,
                    const PropNameArray<T...>& prop_names,
                    const EDGE_FILTER_T& edge_filter, size_t limit)
-      : time_stamp_(time_stamp),
-        graph_(frag),
+      : graph_(frag),
         cur_vertex_set_(v_set),
         direction_(direction),
         edge_label_(edge_label),
@@ -89,7 +86,6 @@ struct EdgeExpandEState {
 template <typename GRAPH_INTERFACE, typename VERTEX_SET_T, size_t num_labels,
           typename EDGE_FILTER_T, typename... T>
 struct EdgeExpandEMutltiDstState {
-  int64_t time_stamp_;
   const GRAPH_INTERFACE& graph_;
   VERTEX_SET_T& cur_vertex_set_;
   Direction direction_;
@@ -100,13 +96,12 @@ struct EdgeExpandEMutltiDstState {
   size_t limit_;
 
   EdgeExpandEMutltiDstState(
-      int64_t time_stamp, const GRAPH_INTERFACE& frag, VERTEX_SET_T& v_set,
-      Direction direction, typename GRAPH_INTERFACE::label_id_t edge_label,
+      const GRAPH_INTERFACE& frag, VERTEX_SET_T& v_set, Direction direction,
+      typename GRAPH_INTERFACE::label_id_t edge_label,
       std::array<typename GRAPH_INTERFACE::label_id_t, num_labels> other_label,
       const PropNameArray<T...>& prop_names, const EDGE_FILTER_T& edge_filter,
       size_t limit)
-      : time_stamp_(time_stamp),
-        graph_(frag),
+      : graph_(frag),
         cur_vertex_set_(v_set),
         direction_(direction),
         edge_label_(edge_label),
@@ -131,19 +126,15 @@ class EdgeExpand {
   /// @param v_sets
   /// @param edge_expand_opt
   /// @return
-  template <
-      typename VERTEX_SET_T, typename EDGE_FILTER_T, typename LabelT,
-      typename RES_T = std::pair<vertex_set_t, std::vector<offset_t>>,
-      typename std::enable_if<IsTruePredicate<EDGE_FILTER_T>::value &&
-                              VERTEX_SET_T::is_row_vertex_set>::type* = nullptr>
-  static RES_T EdgeExpandV(int64_t time_stamp, const GRAPH_INTERFACE& graph,
-                           const VERTEX_SET_T& cur_vertex_set,
-                           Direction direction, LabelT edge_label,
-                           label_id_t other_label, EDGE_FILTER_T&& edge_filter,
-                           size_t limit = INT_MAX) {
-    auto state = EdgeExpandVState(time_stamp, graph, cur_vertex_set, direction,
-                                  edge_label, other_label,
-                                  std::move(edge_filter), limit);
+  template <typename... T, typename EDGE_FILTER_T,
+            typename RES_T = std::pair<vertex_set_t, std::vector<offset_t>>>
+  static RES_T EdgeExpandV(
+      const GRAPH_INTERFACE& graph,
+      const RowVertexSet<label_id_t, vertex_id_t, T...>& cur_vertex_set,
+      Direction direction, label_id_t edge_label, label_id_t other_label,
+      EDGE_FILTER_T&& edge_filter, size_t limit = INT_MAX) {
+    auto state = EdgeExpandVState(graph, cur_vertex_set, direction, edge_label,
+                                  other_label, std::move(edge_filter), limit);
     label_id_t src_label, dst_label;
     if (direction == Direction::In) {
       src_label = other_label;
@@ -162,7 +153,7 @@ class EdgeExpand {
              << ",dst: " << std::to_string(dst_label)
              << ",direction: " << state.direction_;
     auto nbr_list_array = state.graph_.GetOtherVertices(
-        state.time_stamp_, src_label, dst_label, state.edge_label_,
+        src_label, dst_label, state.edge_label_,
         state.cur_vertex_set_.GetVertices(), gs::to_string(state.direction_),
         state.limit_);
     std::vector<vertex_id_t> vids;
@@ -499,13 +490,13 @@ class EdgeExpand {
                 std::pair<GeneralVertexSet<vertex_id_t, label_id_t, num_labels>,
                           std::vector<offset_t>>>
   static RES_T EdgeExpandVMultiLabel(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
-      const VERTEX_SET_T& cur_vertex_set, Direction direction,
-      label_id_t edge_label, std::array<label_id_t, num_labels>& other_labels,
+      const GRAPH_INTERFACE& graph, const VERTEX_SET_T& cur_vertex_set,
+      Direction direction, label_id_t edge_label,
+      std::array<label_id_t, num_labels>& other_labels,
       std::array<EDGE_FILTER_T, num_labels>&& edge_filter,
       std::index_sequence<Is...>) {
     auto tuple = std::make_tuple(EdgeExpandV(
-        time_stamp, graph, cur_vertex_set, direction, edge_label,
+        graph, cur_vertex_set, direction, edge_label,
         std::get<Is>(other_labels), std::move(std::get<Is>(edge_filter)))...);
 
     size_t offset_array_size = std::get<0>(tuple).second.size();
@@ -575,9 +566,9 @@ class EdgeExpand {
                 TwoLabelVertexSet<vertex_id_t, label_id_t, grape::EmptyType>,
                 std::vector<offset_t>>>
   static RES_T EdgeExpandVMultiLabel(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
-      const VERTEX_SET_T& cur_vertex_set, Direction direction,
-      label_id_t edge_label, std::array<label_id_t, num_labels>& other_labels,
+      const GRAPH_INTERFACE& graph, const VERTEX_SET_T& cur_vertex_set,
+      Direction direction, label_id_t edge_label,
+      std::array<label_id_t, num_labels>& other_labels,
       std::array<EDGE_FILTER_T, num_labels>&& edge_filter,
       std::index_sequence<Is...>) {
     label_id_t src_label, dst_label;
@@ -590,8 +581,8 @@ class EdgeExpand {
     }
 
     auto vid_and_offset1 = graph.GetOtherVerticesV2(
-        time_stamp, src_label, dst_label, edge_label,
-        cur_vertex_set.GetVertices(), gs::to_string(direction), INT_MAX);
+        src_label, dst_label, edge_label, cur_vertex_set.GetVertices(),
+        gs::to_string(direction), INT_MAX);
 
     if (direction == Direction::In) {
       src_label = other_labels[1];
@@ -600,8 +591,8 @@ class EdgeExpand {
     }
 
     auto vid_and_offset2 = graph.GetOtherVerticesV2(
-        time_stamp, src_label, dst_label, edge_label,
-        cur_vertex_set.GetVertices(), gs::to_string(direction), INT_MAX);
+        src_label, dst_label, edge_label, cur_vertex_set.GetVertices(),
+        gs::to_string(direction), INT_MAX);
 
     auto& vids1 = vid_and_offset1.first;
     auto& off1 = vid_and_offset1.second;

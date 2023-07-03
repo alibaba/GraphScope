@@ -11,7 +11,7 @@
 
 #include "flex/engines/hqps/database/grape_graph_interface.h"
 
-#include "grape/grape.h"
+#include "grape/types.h"
 
 #include "glog/logging.h"
 
@@ -38,7 +38,8 @@ void work() {
 
   auto set_b = gs::MakeDefaultRowVertexSet(std::move(vids_b0), "b");
 
-  auto ctx_2 = ctx_a.AddNode<1>(std::move(set_b), std::move(off_b0));
+  auto ctx_2 =
+      ctx_a.AddNode<AppendOpt::Persist>(std::move(set_b), std::move(off_b0));
   for (auto iter : ctx_2) {
     VLOG(10) << gs::to_string(iter.GetAllElement());
   }
@@ -47,7 +48,8 @@ void work() {
   std::vector<size_t> off_c0{0, 3, 3, 5};
 
   auto set_c = gs::MakeDefaultRowVertexSet(std::move(vids_c0), "b");
-  auto ctx_3 = ctx_2.AddNode<2>(std::move(set_c), std::move(off_c0));
+  auto ctx_3 =
+      ctx_2.AddNode<AppendOpt::Persist>(std::move(set_c), std::move(off_c0));
   for (auto iter : ctx_3) {
     VLOG(10) << gs::to_string(iter.GetAllElement());
   }

@@ -254,7 +254,7 @@ class SortOp {
   // std::tuple<data_tuple_t, index_ele_tuple_t>,
   // typename RES_T = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV_T...>>
   static auto SortTopK(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
+      const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV_T...>&& ctx,
       std::tuple<ORDER_PAIRS...>&& tuples, size_t limit) {
     VLOG(10) << "[SortTopK]: limit: " << limit
@@ -271,7 +271,7 @@ class SortOp {
     // Assumes input sets doesn't contains properties.
     // we should compare with select properties, but also hold the index
     // info. auto prop_store_cols =
-    //     get_prop_store_cols(tuples, ctx, time_stamp, graph,
+    //     get_prop_store_cols(tuples, ctx,  graph,
     //                         std::make_index_sequence<sizeof...(ORDER_PAIRS)>());
     using ctx_t = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV_T...>;
     using sort_tuple_t = std::tuple<typename ORDER_PAIRS::prop_t..., size_t>;
@@ -285,8 +285,7 @@ class SortOp {
 
     size_t cnt = 0;
     auto sort_prop_getter_tuple = create_prop_getter_tuple(
-        tuples, ctx, graph, time_stamp,
-        std::make_index_sequence<sizeof...(ORDER_PAIRS)>());
+        tuples, ctx, graph, std::make_index_sequence<sizeof...(ORDER_PAIRS)>());
     LOG(INFO) << "Finish create prop getter tuple.";
     GeneralComparator<ctx_t::base_tag_id, ORDER_PAIRS...> comparator(tuples);
 
@@ -359,10 +358,9 @@ class SortOp {
   static auto create_prop_getter_tuple(
       const std::tuple<ORDER_PAIR...>& pairs,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>& ctx,
-      const GRAPH_INTERFACE& graph, int64_t time_stamp,
-      std::index_sequence<Is...>) {
+      const GRAPH_INTERFACE& graph, std::index_sequence<Is...>) {
     return std::make_tuple(create_prop_getter_impl_for_order_pair(
-        std::get<Is>(pairs), ctx, graph, time_stamp)...);
+        std::get<Is>(pairs), ctx, graph)...);
   }
 
   template <typename ORDER_PAIR, typename CTX_HEAD_T, int cur_alias,
@@ -370,11 +368,11 @@ class SortOp {
   static auto create_prop_getter_impl_for_order_pair(
       const ORDER_PAIR& ordering_pair,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>& ctx,
-      const GRAPH_INTERFACE& graph, int64_t time_stamp) {
+      const GRAPH_INTERFACE& graph) {
     static constexpr int tag_id = ORDER_PAIR::tag_id;
     auto& set = ctx.template GetNode<tag_id>();
     return create_prop_getter_impl<tag_id, typename ORDER_PAIR::prop_t>(
-        set, graph, time_stamp, ordering_pair.name);
+        set, graph, ordering_pair.name);
   }
 
   // Get property getter for row vertex set, with ordinary properties.
@@ -382,10 +380,10 @@ class SortOp {
   static auto create_prop_getter_impl_for_order_pair(
       const ORDER_PAIR& ordering_pair,
       const RowVertexSet<LabelT, VID_T, T...>& set,
-      const GRAPH_INTERFACE& graph, int64_t time_stamp) {
+      const GRAPH_INTERFACE& graph) {
     return create_prop_getter_impl<ORDER_PAIR::tag_id,
                                    typename ORDER_PAIR::prop_t>(
-        set, graph, time_stamp, ordering_pair.name);
+        set, graph, ordering_pair.name);
   }
 
   // return a pair of prop_getter, each for one label.
@@ -393,10 +391,10 @@ class SortOp {
   static auto create_prop_getter_impl_for_order_pair(
       const ORDER_PAIR& ordering_pair,
       const TwoLabelVertexSet<VID_T, LabelT, T...>& set,
-      const GRAPH_INTERFACE& graph, int64_t time_stamp) {
+      const GRAPH_INTERFACE& graph) {
     return create_prop_getter_impl<ORDER_PAIR::tag_id,
                                    typename ORDER_PAIR::prop_t>(
-        time_stamp, set, graph, ordering_pair.name);
+        set, graph, ordering_pair.name);
   }
 
   template <typename ORDER_PAIR, typename LabelT, typename KEY_T,
@@ -404,10 +402,10 @@ class SortOp {
   static auto create_prop_getter_impl_for_order_pair(
       const ORDER_PAIR& ordering_pair,
       const KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, T...>& set,
-      const GRAPH_INTERFACE& graph, int64_t time_stamp) {
+      const GRAPH_INTERFACE& graph) {
     return create_prop_getter_impl<ORDER_PAIR::tag_id,
                                    typename ORDER_PAIR::prop_t>(
-        time_stamp, set, graph, ordering_pair.name);
+        set, graph, ordering_pair.name);
   }
 
   template <typename ORDER_PAIR, typename VID_T, typename LabelT, size_t N,
@@ -415,7 +413,7 @@ class SortOp {
   static auto create_prop_getter_impl_for_order_pair(
       const ORDER_PAIR& ordering_pair,
       const FlatEdgeSet<VID_T, LabelT, N, EDATA_T...>& set,
-      const GRAPH_INTERFACE& graph, int64_t time_stamp) {
+      const GRAPH_INTERFACE& graph) {
     return FlatEdgeSetPropGetter<
         ORDER_PAIR::tag_id, typename FlatEdgeSet<VID_T, LabelT, N, EDATA_T...>::
                                 index_ele_tuple_t>();
@@ -426,7 +424,7 @@ class SortOp {
   static auto create_prop_getter_impl_for_order_pair(
       const ORDER_PAIR& ordering_pair,
       const GeneralEdgeSet<N, GI, VID_T, LabelT, EDATA_T...>& set,
-      const GRAPH_INTERFACE& graph, int64_t time_stamp) {
+      const GRAPH_INTERFACE& graph) {
     return GeneralEdgeSetPropGetter<
         ORDER_PAIR::tag_id,
         typename GeneralEdgeSet<N, GI, VID_T, LabelT,
@@ -436,7 +434,7 @@ class SortOp {
   template <typename ORDER_PAIR, typename T>
   static auto create_prop_getter_impl_for_order_pair(
       const ORDER_PAIR& ordering_pair, const Collection<T>& set,
-      const GRAPH_INTERFACE& graph, int64_t time_stamp) {
+      const GRAPH_INTERFACE& graph) {
     CHECK(ordering_pair.name == "None" || ordering_pair.name == "none");
     return CollectionPropGetter<ORDER_PAIR::tag_id, T>();
   }

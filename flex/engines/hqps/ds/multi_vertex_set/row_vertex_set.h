@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "flex/engines/hqps/ds/collection.h"
+#include "grape/util.h"
 
 // Vertex set in with data in rows.
 namespace gs {
@@ -947,36 +948,34 @@ class RowVertexSetImpl {
   // size_t... Is denotes the ind of data array need to project.
   //-1 denote it self.
   template <
-      int tag_id, int res_tag, int Fs, int... Is,
+      int tag_id, int Fs, int... Is,
       typename std::enable_if<(sizeof...(Is) > 0)>::type* = nullptr,
       typename res_t = Collection<std::tuple<
           typename gs::tuple_element<Fs, std::tuple<T..., lid_t>>::type,
           typename gs::tuple_element<Is, std::tuple<T..., lid_t>>::type...>>>
-  res_t ProjectWithRepeatArray(
-      std::vector<size_t>&& repeat_array,
-      KeyAlias<tag_id, res_tag, Fs, Is...>& key_alias) const {
+  res_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+                               KeyAlias<tag_id, Fs, Is...>& key_alias) const {
     auto res_vec = row_project_with_repeat_array_impl(key_alias, repeat_array,
                                                       vids_, data_tuples_);
     return res_t(std::move(res_vec));
   }
 
-  template <int tag_id, int res_tag, int Fs,
+  template <int tag_id, int Fs,
             typename std::enable_if<Fs != -1>::type* = nullptr,
             typename res_t = Collection<std::tuple<
                 typename gs::tuple_element<Fs, std::tuple<T..., lid_t>>::type>>>
   res_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
-                               KeyAlias<tag_id, res_tag, Fs>& key_alias) const {
+                               KeyAlias<tag_id, Fs>& key_alias) const {
     auto res_vec = row_project_with_repeat_array_impl(key_alias, repeat_array,
                                                       vids_, data_tuples_);
     return res_t(std::move(res_vec));
   }
 
   // project my self.
-  template <int tag_id, int res_tag, int Fs,
+  template <int tag_id, int Fs,
             typename std::enable_if<Fs == -1>::type* = nullptr>
-  self_type_t ProjectWithRepeatArray(
-      std::vector<size_t>&& repeat_array,
-      KeyAlias<tag_id, res_tag, Fs>& key_alias) const {
+  self_type_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+                                     KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<lid_t> vids;
     std::vector<data_tuple_t> data_tuples;
     for (auto i = 0; i < repeat_array.size(); ++i) {
@@ -1272,36 +1271,34 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
 
   // size_t... Is denotes the ind of data array need to project.
   //-1 denote it self.
-  template <int tag_id, int res_tag, int Fs, int... Is,
+  template <int tag_id, int Fs, int... Is,
             typename std::enable_if<(sizeof...(Is) > 0)>::type* = nullptr,
             typename res_t = Collection<std::tuple<
                 typename gs::tuple_element<Fs, std::tuple<lid_t>>::type,
                 typename gs::tuple_element<Is, std::tuple<lid_t>>::type...>>>
-  res_t ProjectWithRepeatArray(
-      std::vector<size_t>&& repeat_array,
-      KeyAlias<tag_id, res_tag, Fs, Is...>& key_alias) const {
+  res_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+                               KeyAlias<tag_id, Fs, Is...>& key_alias) const {
     auto res_vec =
         row_project_with_repeat_array_impl(key_alias, repeat_array, vids_);
     return res_t(std::move(res_vec));
   }
 
-  template <int tag_id, int res_tag, int Fs,
-            typename std::enable_if<Fs != -1>::type* = nullptr,
-            typename res_t = Collection<std::tuple<
-                typename gs::tuple_element<Fs, std::tuple<lid_t>>::type>>>
+  template <
+      int tag_id, int Fs, typename std::enable_if<Fs != -1>::type* = nullptr,
+      typename res_t = Collection<
+          std::tuple<typename gs::tuple_element<Fs, std::tuple<lid_t>>::type>>>
   res_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
-                               KeyAlias<tag_id, res_tag, Fs>& key_alias) const {
+                               KeyAlias<tag_id, Fs>& key_alias) const {
     auto res_vec =
         row_project_with_repeat_array_impl(key_alias, repeat_array, vids_);
     return res_t(std::move(res_vec));
   }
 
   // project my self.
-  template <int tag_id, int res_tag, int Fs,
+  template <int tag_id, int Fs,
             typename std::enable_if<Fs == -1>::type* = nullptr>
-  self_type_t ProjectWithRepeatArray(
-      std::vector<size_t>&& repeat_array,
-      KeyAlias<tag_id, res_tag, Fs>& key_alias) const {
+  self_type_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+                                     KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<lid_t> vids;
     for (auto i = 0; i < repeat_array.size(); ++i) {
       for (auto j = 0; j < repeat_array[i]; ++j) {

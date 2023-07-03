@@ -702,11 +702,10 @@ class TwoLabelVertexSetImpl {
     return std::make_pair(std::move(res), std::move(active_ind));
   }
 
-  template <int tag_id, int res_tag, int Fs,
+  template <int tag_id, int Fs,
             typename std::enable_if<Fs == -1>::type* = nullptr>
-  self_type_t ProjectWithRepeatArray(
-      std::vector<size_t>&& repeat_array,
-      KeyAlias<tag_id, res_tag, Fs>& key_alias) const {
+  self_type_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+                                     KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<lid_t> next_vids;
     std::vector<std::tuple<T...>> next_datas;
     size_t next_size = 0;
@@ -957,11 +956,10 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
     return std::make_pair(std::move(res), std::move(active_ind));
   }
 
-  template <int tag_id, int res_tag, int Fs,
+  template <int tag_id, int Fs,
             typename std::enable_if<Fs == -1>::type* = nullptr>
-  self_type_t ProjectWithRepeatArray(
-      std::vector<size_t>&& repeat_array,
-      KeyAlias<tag_id, res_tag, Fs>& key_alias) const {
+  self_type_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+                                     KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<lid_t> next_vids;
     size_t next_size = 0;
     for (auto i = 0; i < repeat_array.size(); ++i) {
@@ -1187,7 +1185,7 @@ two_label_bitset_to_vids_indsV2(const Bitset& bitset,
 template <typename... T, typename GRAPH_INTERFACE, typename LabelT,
           typename... VERTEX_SET_PROP_T>
 static auto get_property_tuple_two_label(
-    int64_t time_stamp, const GRAPH_INTERFACE& graph,
+    const GRAPH_INTERFACE& graph,
     const TwoLabelVertexSet<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
                             VERTEX_SET_PROP_T...>& general_set,
     const std::array<std::string, sizeof...(T)>& prop_names) {
@@ -1200,8 +1198,8 @@ static auto get_property_tuple_two_label(
   // Get data for multilabel vertices, mixed
   // double t1 = -grape::GetCurrentTime();
   auto data_tuples = graph.template GetVertexPropsFromVidV2<T...>(
-      time_stamp, general_set.GetVertices(), label_array,
-      general_set.GetBitset(), prop_names);
+      general_set.GetVertices(), label_array, general_set.GetBitset(),
+      prop_names);
   // t1 += grape::GetCurrentTime();
   // LOG(INFO) << "get vids cost: " << t0 << ", get props: " << t1;
 
@@ -1211,7 +1209,7 @@ static auto get_property_tuple_two_label(
 template <typename GRAPH_INTERFACE, typename LabelT,
           typename... VERTEX_SET_PROP_T, typename... NamedProp>
 static auto get_property_tuple_two_label(
-    int64_t time_stamp, const GRAPH_INTERFACE& graph,
+    const GRAPH_INTERFACE& graph,
     const TwoLabelVertexSetImpl<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
                                 VERTEX_SET_PROP_T...>& general_set,
     const std::tuple<NamedProp...>& named_prop) {
@@ -1222,33 +1220,8 @@ static auto get_property_tuple_two_label(
               &ind](auto&... args) { ((prop_names[ind++] = args.name), ...); },
              named_prop);
   return get_property_tuple_two_label<typename NamedProp::prop_t...>(
-      time_stamp, graph, general_set, prop_names);
+      graph, general_set, prop_names);
 }
-
-// don't get from cache.
-// template <typename T, typename GRAPH_INTERFACE, typename LabelT,
-//           typename... VERTEX_SET_PROP_T>
-// static auto get_property_tuple_two_label_single(
-//     int64_t time_stamp, const GRAPH_INTERFACE& graph,
-//     const TwoLabelVertexSet<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
-//                             VERTEX_SET_PROP_T...>& general_set,
-//     const std::array<std::string, 1>& prop_names) {
-//   double t0 = -grape::GetCurrentTime();
-//   auto& label_array = general_set.GetLabels();
-//   // auto vid_inds = two_label_bitset_to_vids_inds(
-//   //     general_set.GetBitset());
-//   t0 += grape::GetCurrentTime();
-
-//   // Get data for multilabel vertices, mixed
-//   // double t1 = -grape::GetCurrentTime();
-//   auto data_vec = graph.template GetVertexPropFromVid<T>(
-//       time_stamp, general_set.GetVertices(), label_array,
-//       general_set.GetBitset(), prop_names);
-//   // t1 += grape::GetCurrentTime();
-//   // LOG(INFO) << "get vids cost: " << t0 << ", get props: " << t1;
-
-//   return data_vec;
-// }
 
 // template <typename T, typename GRAPH_INTERFACE, typename LabelT,
 //           typename... VERTEX_SET_PROP_T>

@@ -20,9 +20,8 @@ limitations under the License.
 #include <vector>
 
 #include "flex/engines/hqps/ds/multi_vertex_set/multi_label_vertex_set.h"
-#include "flex/engines/hqps/ds/multi_vertex_set/two_label_vertex_set.h"
-// #include "flex/engines/hqps/ds/unkeyed_vertex_set.h"
 #include "flex/engines/hqps/ds/multi_vertex_set/row_vertex_set.h"
+#include "flex/engines/hqps/ds/multi_vertex_set/two_label_vertex_set.h"
 #include "flex/engines/hqps/engine/hqps_utils.h"
 
 #include "flex/engines/hqps/engine/utils/bitset.h"
@@ -41,14 +40,14 @@ class GetVertex {
   using vertex_set_t = RowVertexSet<label_id_t, vertex_id_t, T...>;
 
   template <typename SET_T, typename LabelT, size_t num_labels,
-            typename EXPRESSION,
+            typename EXPRESSION, typename... SELECTOR,
             typename std::enable_if<(SET_T::is_vertex_set)>::type* = nullptr,
             typename RES_T = std::pair<SET_T, std::vector<offset_t>>>
-  static RES_T GetNoPropV(int64_t time_stamp, const GRAPH_INTERFACE& graph,
-                          const SET_T& set,
-                          GetVOpt<LabelT, num_labels, EXPRESSION>& get_v_opt) {
+  static RES_T GetNoPropV(
+      const GRAPH_INTERFACE& graph, const SET_T& set,
+      GetVOpt<LabelT, num_labels, Filter<EXPRESSION, SELECTOR...>>& get_v_opt) {
     // VLOG(10) << "[Get no PropertyV from vertex set]" << set.Size();
-    return GetNoPropVSetFromVertexSet<RES_T>(time_stamp, graph, set, get_v_opt);
+    return GetNoPropVSetFromVertexSet<RES_T>(graph, set, get_v_opt);
   }
 
   // get no propv from common edge set.
@@ -58,10 +57,10 @@ class GetVertex {
                                !SET_T::is_multi_dst_label)>::type* = nullptr,
       typename RES_T = std::pair<default_vertex_set_t, std::vector<offset_t>>>
   static RES_T GetNoPropVFromEdgeSet(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, const SET_T& set,
+      const GRAPH_INTERFACE& graph, const SET_T& set,
       GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
     VLOG(10) << "[Get no PropertyV from edge set]" << set.Size();
-    return GetNoPropVSetFromSingleDstEdgeSet<RES_T>(time_stamp, graph, set,
+    return GetNoPropVSetFromSingleDstEdgeSet<RES_T>(graph, set,
                                                     std::move(get_v_opt));
   }
 
@@ -75,10 +74,10 @@ class GetVertex {
                 TwoLabelVertexSet<vertex_id_t, label_id_t, grape::EmptyType>,
                 std::vector<offset_t>>>
   static RES_T GetNoPropVFromEdgeSet(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, const SET_T& set,
+      const GRAPH_INTERFACE& graph, const SET_T& set,
       GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
     VLOG(10) << "[Get no PropertyV from mutlti dst edge set]" << set.Size();
-    return GetNoPropVSetFromMutliDstEdgeSet<RES_T>(time_stamp, graph, set,
+    return GetNoPropVSetFromMutliDstEdgeSet<RES_T>(graph, set,
                                                    std::move(get_v_opt));
   }
 
@@ -92,10 +91,10 @@ class GetVertex {
                 std::pair<MultiLabelVertexSet<vertex_set_t<T...>, num_labels>,
                           std::vector<offset_t>>>
   static RES_T GetPropertyV(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, const SET_T& set,
+      const GRAPH_INTERFACE& graph, const SET_T& set,
       GetVOpt<LabelT, num_labels, EXPRESSION, T...>&& get_v_opt) {
     VLOG(10) << "[Get PropertyV from vertex set]" << set.Size();
-    return GetMultiPropertyVSetFromVertexSet<RES_T>(time_stamp, graph, set,
+    return GetMultiPropertyVSetFromVertexSet<RES_T>(graph, set,
                                                     std::move(get_v_opt));
   }
 
@@ -103,7 +102,7 @@ class GetVertex {
   template <typename LabelT, typename SET_T, typename... T, size_t num_labels,
             typename EXPRESSION>
   static auto GetPropertyVFromTwoLabelSet(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, const SET_T& set,
+      const GRAPH_INTERFACE& graph, const SET_T& set,
       const GetVOpt<LabelT, num_labels, EXPRESSION, T...>& get_v_opt) {
     auto v_opt = get_v_opt.v_opt_;
     CHECK(v_opt == VOpt::Itself)
@@ -114,8 +113,7 @@ class GetVertex {
     // first extract properties, and create new properties,
     // We assume the expr.props <= props.
     double t0 = -grape::GetCurrentTime();
-    auto property_tuples =
-        get_property_tuple_two_label(time_stamp, graph, set, props);
+    auto property_tuples = get_property_tuple_two_label(graph, set, props);
     auto set_with_tuple =
         set.WithData(std::move(property_tuples), std::move(props));
     t0 += grape::GetCurrentTime();
@@ -142,17 +140,17 @@ class GetVertex {
       typename RES_T = std::pair<TwoLabelVertexSet<vertex_id_t, LabelT, T...>,
                                  std::vector<offset_t>>>
   static RES_T GetPropertyV(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, const SET_T& set,
+      const GRAPH_INTERFACE& graph, const SET_T& set,
       GetVOpt<LabelT, num_labels, EXPRESSION, T...>&& get_v_opt) {
     VLOG(10) << "[Get PropertyV from vertex set]" << set.Size();
-    return GetPropertyVFromTwoLabelSet(time_stamp, graph, set, get_v_opt);
+    return GetPropertyVFromTwoLabelSet(graph, set, get_v_opt);
   }
 
   /// Get vertex with properties from vertex set.
   template <typename RES_T, typename LabelT, typename SET_T, typename... T,
             size_t num_labels, typename EXPRESSION>
   static RES_T GetMultiPropertyVSetFromVertexSet(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, const SET_T& set,
+      const GRAPH_INTERFACE& graph, const SET_T& set,
       GetVOpt<LabelT, num_labels, EXPRESSION, T...>&& get_v_opt) {
     static_assert(SET_T::is_multi_label);
     auto v_opt = get_v_opt.v_opt_;
@@ -160,8 +158,7 @@ class GetVertex {
     auto props = get_v_opt.props_;
     auto expr = get_v_opt.expr_;
 
-    auto result_vertex_and_offset =
-        do_project(time_stamp, graph, v_labels, expr, set);
+    auto result_vertex_and_offset = do_project(graph, v_labels, expr, set);
     /// Then combine columns.
     // TODO: Shrink for vector-based columns.
     // auto col_tuple = GetColTuples(graph result_vertex_and_offset.first,
@@ -169,7 +166,7 @@ class GetVertex {
 
     static constexpr size_t multi_set_size = SET_T::num_labels;
     auto array = get_multi_label_set_properties<T...>(
-        time_stamp, graph, std::move(result_vertex_and_offset.first), props,
+        graph, std::move(result_vertex_and_offset.first), props,
         std::make_index_sequence<multi_set_size>());
     typename RES_T::first_type multi_v_set(std::move(std::get<0>(array)),
                                            std::move(std::get<1>(array)));
@@ -178,8 +175,7 @@ class GetVertex {
   }
 
   template <typename... T, typename SET_T, size_t... Is>
-  static auto get_multi_label_set_properties(int64_t time_stamp,
-                                             const GRAPH_INTERFACE& graph,
+  static auto get_multi_label_set_properties(const GRAPH_INTERFACE& graph,
                                              SET_T&& multi_set,
                                              PropNameArray<T...>& props,
                                              std::index_sequence<Is...>) {
@@ -190,7 +186,7 @@ class GetVertex {
       auto& cur_set = multi_set.GetSet(i);
       VLOG(10) << "set: " << i << ", size: " << cur_set.Size();
       res_data_tuples[i] = graph.template GetVertexPropsFromVid<T...>(
-          time_stamp, cur_set.GetLabel(), cur_set.GetVertices(), props);
+          cur_set.GetLabel(), cur_set.GetVertices(), props);
     }
     VLOG(10) << "Finish get data tuples";
     auto set_array = std::array<res_set_t, num_labels>{make_row_vertex_set(
@@ -203,21 +199,20 @@ class GetVertex {
   }
 
   template <typename RES_T, typename LabelT, size_t num_labels, typename SET_T,
-            typename EXPRESSION>
+            typename EXPRESSION, typename... SELECTOR>
   static RES_T GetNoPropVSetFromVertexSet(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, const SET_T& set,
-      GetVOpt<LabelT, num_labels, EXPRESSION>& get_v_opt) {
+      const GRAPH_INTERFACE& graph, const SET_T& set,
+      GetVOpt<LabelT, num_labels, Filter<EXPRESSION, SELECTOR...>>& get_v_opt) {
     auto v_opt = get_v_opt.v_opt_;
-    auto expr = get_v_opt.expr_;
-    auto props = get_v_opt.props_;
-    return do_project(time_stamp, graph, get_v_opt.v_labels_, expr, set);
+    auto filter = get_v_opt.filter_;
+    return do_project(graph, get_v_opt.v_labels_, filter, set);
   }
 
   // get single label from single dst edge label.
   template <typename RES_T, typename LabelT, size_t num_labels, typename SET_T,
             typename EXPRESSION>
   static RES_T GetNoPropVSetFromSingleDstEdgeSet(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, const SET_T& set,
+      const GRAPH_INTERFACE& graph, const SET_T& set,
       GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
     auto v_opt = get_v_opt.v_opt_;
     auto v_label = get_v_opt.v_labels_[0];
@@ -231,7 +226,7 @@ class GetVertex {
             typename EXPRESSION,
             typename std::enable_if<num_labels == 2>::type* = nullptr>
   static RES_T GetNoPropVSetFromMutliDstEdgeSet(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
+      const GRAPH_INTERFACE& graph,
       const MultiLabelDstEdgeSet<num_labels, GRAPH_INTERFACE, grape::EmptyType>&
           set,
       GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
@@ -242,116 +237,64 @@ class GetVertex {
   }
 
  private:
-  // udf exp with generalset
+  // User-defined expression
+  // for vertex set with multiple labels, i.e. two_label or general vertex set.
+  // do project.
   template <
-      typename LabelT, size_t num_labels, typename EXPRESSION, typename SET_T,
+      typename LabelT, size_t num_labels, typename EXPRESSION,
+      typename... SELECTOR, typename SET_T,
       typename std::enable_if<!std::is_same_v<EXPRESSION, TruePredicate> &&
-                              SET_T::is_general_set>::type* = nullptr>
-  static auto do_project(int64_t time_stamp, const GRAPH_INTERFACE& graph,
+                              (SET_T::is_general_set ||
+                               SET_T::is_two_label_set)>::type* = nullptr>
+  static auto do_project(const GRAPH_INTERFACE& graph,
                          std::array<LabelT, num_labels>& labels,
-                         EXPRESSION& expr, const SET_T& set) {
-    // we need to fetch the properties that will be used for filtering.
-    // TODO: implement general set.
-    auto named_prop = expr.Properties();
+                         Filter<EXPRESSION, SELECTOR...>& filter,
+                         const SET_T& set) {
     double t0 = -grape::GetCurrentTime();
     // array size : num_labels
-    auto property_getters_array = get_prop_getters_from_named_property(
-        time_stamp, graph, set.GetLabels(), named_prop);
+    auto property_getters_array = get_prop_getters_from_selectors(
+        graph, set.GetLabels(), filter.selectors_);
     t0 += grape::GetCurrentTime();
     LOG(INFO) << "Get property tuple for general set of size: " << set.Size()
               << " cost: " << t0;
-    return set.project_vertices(labels, expr, property_getters_array);
-  }
-  // udf exp with two_label set
-  template <
-      typename LabelT, size_t num_labels, typename EXPRESSION, typename SET_T,
-      typename std::enable_if<!std::is_same_v<EXPRESSION, TruePredicate> &&
-                              SET_T::is_two_label_set>::type* = nullptr>
-  static auto do_project(int64_t time_stamp, const GRAPH_INTERFACE& graph,
-                         std::array<LabelT, num_labels>& labels,
-                         EXPRESSION& expr, const SET_T& set) {
-    // we need to fetch the properties that will be used for filtering.
-    // TODO: implement general set.
-    auto named_prop = expr.Properties();
-    double t0 = -grape::GetCurrentTime();
-    auto property_getters_array = get_prop_getters_from_named_property(
-        time_stamp, graph, set.GetLabels(), named_prop);
-    t0 += grape::GetCurrentTime();
-    LOG(INFO) << "Get property tuple for two label set of size: " << set.Size()
-              << " cost: " << t0;
-    return set.project_vertices(labels, expr, property_getters_array);
+    return set.project_vertices(labels, filter.expr_, property_getters_array);
   }
 
   // udf expression with single label.
   template <typename LabelT, size_t num_labels, typename EXPRESSION,
-            typename SET_T,
-            typename std::enable_if<
-                !std::is_same_v<EXPRESSION, TruePredicate> &&
-                !SET_T::is_multi_label && !SET_T::is_two_label_set &&
-                SET_T::is_row_vertex_set>::type* = nullptr>
-  static auto do_project(int64_t time_stamp, const GRAPH_INTERFACE& graph,
-                         std::array<LabelT, num_labels>& labels,
-                         EXPRESSION& expr, SET_T& set) {
-    // we need to fetch the properties that will be used for filtering.
-    auto named_props = expr.Properties();
-    auto property_getters_array = get_prop_getters_from_named_property(
-        time_stamp, graph, set.GetLabel(), named_props);
-    return set.project_vertices(labels, expr, property_getters_array);
+            typename... SELECTOR, typename... V_SET_T>
+  static auto do_project(
+      const GRAPH_INTERFACE& graph, std::array<LabelT, num_labels>& labels,
+      Filter<EXPRESSION, SELECTOR...>& filter,
+      const RowVertexSet<LabelT, vertex_id_t, V_SET_T...>& set) {
+    // TODO: support for multiple selectors
+    auto property_getters_array = std::array{get_prop_getter_from_selectors(
+        graph, set.GetLabel(), filter.selectors_)};
+    return set.project_vertices(labels, filter.expr_, property_getters_array);
   }
 
   // true predicate and single label.
-  template <typename LabelT, size_t num_labels, typename EXPRESSION,
-            typename SET_T,
-            typename std::enable_if<std::is_same_v<EXPRESSION, TruePredicate> &&
-                                    !SET_T::is_multi_label &&
-                                    SET_T::is_row_vertex_set>::type* = nullptr>
-  static auto do_project(int64_t time_stamp, const GRAPH_INTERFACE& graph,
-                         std::array<LabelT, num_labels>& labels,
-                         EXPRESSION& expr, SET_T& set) {
+  template <typename LabelT, size_t num_labels, typename... SELECTOR,
+            typename... V_SET_T>
+  static auto do_project(
+      const GRAPH_INTERFACE& graph, std::array<LabelT, num_labels>& labels,
+      Filter<TruePredicate>& filter,
+      const RowVertexSet<LabelT, vertex_id_t, V_SET_T...>& set) {
     // since expression always returns true, we provide set with a
     // always-return-true prop getter.
     return set.project_vertices(labels);
   }
 
   // True predicate and multi label
-  template <typename LabelT, size_t num_labels, typename EXPRESSION,
-            typename SET_T,
-            typename std::enable_if<std::is_same_v<EXPRESSION, TruePredicate> &&
-                                    SET_T::is_multi_label>::type* = nullptr>
-  static auto do_project(int64_t time_stamp, const GRAPH_INTERFACE& graph,
-                         std::array<LabelT, num_labels>& labels,
-                         EXPRESSION& expr, SET_T& set) {
-    // we need to fetch the properties that will be used for filtering.
-    std::vector<std::vector<std::tuple<>>> property_tuples(set.Size());
-    return set.project_vertices(labels, expr, property_tuples);
-  }
-
-  // true predicate and general set
-  template <typename LabelT, size_t num_labels, typename EXPRESSION,
-            typename SET_T,
-            typename std::enable_if<std::is_same_v<EXPRESSION, TruePredicate> &&
+  template <typename LabelT, size_t num_labels, typename SET_T,
+            typename std::enable_if<SET_T::is_two_label_set ||
                                     SET_T::is_general_set>::type* = nullptr>
-  static auto do_project(int64_t time_stamp, const GRAPH_INTERFACE& graph,
+  static auto do_project(const GRAPH_INTERFACE& graph,
                          std::array<LabelT, num_labels>& labels,
-                         EXPRESSION& expr, SET_T& set) {
+                         Filter<TruePredicate>& filter, const SET_T& set) {
     // we need to fetch the properties that will be used for filtering.
-    // TODO: implement general set.
     std::vector<std::vector<std::tuple<>>> property_tuples(set.Size());
-    return set.project_vertices(labels, expr, property_tuples);
-  }
-
-  // true predicate and two label set
-  template <typename LabelT, size_t num_labels, typename EXPRESSION,
-            typename SET_T,
-            typename std::enable_if<std::is_same_v<EXPRESSION, TruePredicate> &&
-                                    SET_T::is_two_label_set>::type* = nullptr>
-  static auto do_project(int64_t time_stamp, const GRAPH_INTERFACE& graph,
-                         std::array<LabelT, num_labels>& labels,
-                         EXPRESSION& expr, SET_T& set) {
-    // we need to fetch the properties that will be used for filtering.
-    // TODO: implement general set.
-    std::vector<std::vector<std::tuple<>>> property_tuples(set.Size());
-    return set.project_vertices(labels, expr, property_tuples);
+    return set.project_vertices(labels, filter.expr_, property_tuples);
   }
 };
 }  // namespace gs
