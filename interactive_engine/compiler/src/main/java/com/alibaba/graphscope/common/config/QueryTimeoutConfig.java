@@ -23,7 +23,7 @@ public class QueryTimeoutConfig {
     private final long channelTimeoutMS;
     // timeout in milliseconds for total query execution
     private final long executionTimeoutMS;
-    private static final double GRADUAL_FACTOR = 0.0d;
+    private static final double GRADUAL_FACTOR = 0.1d;
 
     public QueryTimeoutConfig(long engineTimeoutMS) {
         this.engineTimeoutMS = engineTimeoutMS;
