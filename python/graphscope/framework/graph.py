@@ -60,6 +60,7 @@ class GraphInterface(metaclass=ABCMeta):
         self._oid_type = "int64"
         self._vertex_map = graph_def_pb2.GLOBAL_VERTEX_MAP
         self._compact_edges = False
+        self._use_perfect_hash = False
 
     @property
     def session_id(self):
@@ -200,6 +201,7 @@ class GraphInterface(metaclass=ABCMeta):
         config[types_pb2.IS_FROM_GAR] = utils.b_to_attr(False)
         config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(self._vertex_map)
         config[types_pb2.COMPACT_EDGES] = utils.b_to_attr(self._compact_edges)
+        config[types_pb2.USE_PERFECT_HASH] = utils.b_to_attr(self._use_perfect_hash)
         return dag_utils.create_graph(
             self.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=None, attrs=config
         )
@@ -244,6 +246,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         retain_oid=True,
         vertex_map: Union[str, int] = "global",
         compact_edges=False,
+        use_perfect_hash=False,
     ):
         """Construct a :class:`GraphDAGNode` object.
 
@@ -265,7 +268,8 @@ class GraphDAGNode(DAGNode, GraphInterface):
                 Defaults to global.
             compact_edges (bool, optional): Compact edges (CSR) using varint and delta encoding. Defaults to False.
                 Note that compact edges helps to half the memory usage of edges in graph data structure, but may cause
-                at most 10%~20% performance degeneration in some algorithms.
+                at most 10%~20% performance degeneration in some algorithms. Defaults to False.
+            use_perfect_hash (bool, optional): Use perfect hash in vertex map to optimize the memory usage. Defaults to False.
         """
 
         super().__init__()
@@ -280,6 +284,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         self._graph_type = graph_def_pb2.ARROW_PROPERTY
         self._vertex_map = utils.vertex_map_type_to_enum(vertex_map)
         self._compact_edges = compact_edges
+        self._use_perfect_hash = use_perfect_hash
 
         # list of pair <parent_op_key, VertexLabel/EdgeLabel>
         self._unsealed_vertices_and_edges = list()
@@ -349,6 +354,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._retain_oid,
             self._vertex_map,
             self._compact_edges,
+            self._use_perfect_hash,
         )
         graph_dag_node._base_graph = self
         return graph_dag_node
@@ -447,7 +453,9 @@ class GraphDAGNode(DAGNode, GraphInterface):
         graph_dag_node = GraphDAGNode(self._session, op)
         return graph_dag_node
 
-    def add_vertices(self, vertices, label="_", properties=None, vid_field=0):
+    def add_vertices(
+        self, vertices, label="_", properties=None, vid_field: Union[int, str] = 0
+    ):
         """Add vertices to the graph, and return a new graph.
 
         Args:
@@ -504,6 +512,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._retain_oid,
             self._vertex_map,
             self._compact_edges,
+            self._use_perfect_hash,
         )
         graph_dag_node._v_labels = v_labels
         graph_dag_node._e_labels = self._e_labels
@@ -519,8 +528,8 @@ class GraphDAGNode(DAGNode, GraphInterface):
         properties=None,
         src_label=None,
         dst_label=None,
-        src_field=0,
-        dst_field=1,
+        src_field: Union[int, str] = 0,
+        dst_field: Union[int, str] = 1,
     ):
         """Add edges to the graph, and return a new graph.
         Here the src_label and dst_label must be both specified or both unspecified,
@@ -665,6 +674,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._retain_oid,
             self._vertex_map,
             self._compact_edges,
+            self._use_perfect_hash,
         )
         graph_dag_node._v_labels = v_labels
         graph_dag_node._e_labels = e_labels
@@ -707,6 +717,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             op,
             vertex_map=self._vertex_map,
             compact_edges=self._compact_edges,
+            use_perfect_hash=self._use_perfect_hash,
         )
         graph_dag_node._base_graph = self
         return graph_dag_node
@@ -773,6 +784,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._retain_oid,
             self._vertex_map,
             self._compact_edges,
+            self._use_perfect_hash,
         )
         graph_dag_node._base_graph = self
         return graph_dag_node
@@ -823,6 +835,7 @@ class Graph(GraphInterface):
 
         self._vertex_map = graph_node._vertex_map
         self._compact_edges = graph_node._compact_edges
+        self._use_perfect_hash = graph_node._use_perfect_hash
 
         self._interactive_instance_list = []
         self._learning_instance_list = []
@@ -840,6 +853,7 @@ class Graph(GraphInterface):
         self._directed = graph_def.directed
         self._is_multigraph = graph_def.is_multigraph
         self._compact_edges = graph_def.compact_edges
+        self._use_perfect_hash = graph_def.use_perfect_hash
         vy_info = graph_def_pb2.VineyardInfoPb()
         graph_def.extension.Unpack(vy_info)
         self._vineyard_id = vy_info.vineyard_id
@@ -1112,7 +1126,9 @@ class Graph(GraphInterface):
         """
         return self._session._wrapper(self._graph_node.archive(path))
 
-    def add_vertices(self, vertices, label="_", properties=None, vid_field=0):
+    def add_vertices(
+        self, vertices, label="_", properties=None, vid_field: Union[int, str] = 0
+    ) -> Union["Graph", GraphDAGNode]:
         if not self.loaded():
             raise RuntimeError("The graph is not loaded")
         return self._session._wrapper(
@@ -1126,9 +1142,9 @@ class Graph(GraphInterface):
         properties=None,
         src_label=None,
         dst_label=None,
-        src_field=0,
-        dst_field=1,
-    ):
+        src_field: Union[int, str] = 0,
+        dst_field: Union[int, str] = 1,
+    ) -> Union["Graph", GraphDAGNode]:
         if not self.loaded():
             raise RuntimeError("The graph is not loaded")
         return self._session._wrapper(
@@ -1141,7 +1157,7 @@ class Graph(GraphInterface):
         self,
         vertices: Mapping[str, Union[List[str], None]],
         edges: Mapping[str, Union[List[str], None]],
-    ):
+    ) -> Union["Graph", GraphDAGNode]:
         if not self.loaded():
             raise RuntimeError("The graph is not loaded")
         return self._session._wrapper(self._graph_node.project(vertices, edges))
@@ -1191,6 +1207,7 @@ class ArchivedGraph(DAGNode):
     """Archived graph node in a DAG"""
 
     def __init__(self, session, op):
+        super().__init__()
         self._session = session
         self._op = op
         # add op to dag

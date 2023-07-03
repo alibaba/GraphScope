@@ -88,6 +88,7 @@ class ProjectSimpleFrame<gs::ArrowProjectedFragment<
     graph_def.set_key(projected_graph_name);
     graph_def.set_graph_type(rpc::graph::ARROW_PROJECTED);
     graph_def.set_compact_edges(input_frag->compact_edges());
+    graph_def.set_use_perfect_hash(input_frag->use_perfect_hash());
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
       graph_def.extension().UnpackTo(&vy_info);
@@ -116,6 +117,7 @@ class ProjectSimpleFrame<gs::ArrowProjectedFragment<
 
     graph_def.set_directed(parent_meta.template GetKeyValue<bool>("directed_"));
     graph_def.set_compact_edges(fragment->compact_edges());
+    graph_def.set_use_perfect_hash(fragment->use_perfect_hash());
 
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
@@ -186,6 +188,7 @@ class ProjectSimpleFrame<
     graph_def.set_key(projected_graph_name);
     graph_def.set_graph_type(rpc::graph::ARROW_FLATTENED);
     graph_def.set_compact_edges(input_frag->compact_edges());
+    graph_def.set_use_perfect_hash(input_frag->use_perfect_hash());
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
       graph_def.extension().UnpackTo(&vy_info);
@@ -235,6 +238,7 @@ class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
     graph_def.set_key(projected_graph_name);
     graph_def.set_graph_type(rpc::graph::DYNAMIC_PROJECTED);
     graph_def.set_compact_edges(false);
+    graph_def.set_use_perfect_hash(false);
     gs::rpc::graph::MutableGraphInfoPb graph_info;
     if (graph_def.has_extension()) {
       graph_def.extension().UnpackTo(&graph_info);

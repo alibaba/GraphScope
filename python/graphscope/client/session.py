@@ -31,6 +31,8 @@ import threading
 import time
 import uuid
 import warnings
+from typing import Any
+from typing import Union
 
 try:
     import vineyard
@@ -52,7 +54,10 @@ from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.hosts.cluster import HostsClusterLauncher
 from graphscope.deploy.kubernetes.cluster import KubernetesClusterLauncher
 from graphscope.deploy.kubernetes.utils import resolve_api_client
+from graphscope.framework.app import App
+from graphscope.framework.context import Context
 from graphscope.framework.dag import Dag
+from graphscope.framework.dag import DAGNode
 from graphscope.framework.errors import FatalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import K8sError
@@ -945,7 +950,7 @@ class Session(object):
             self._default_session.__exit__(None, None, None)
             self._default_session = None
 
-    def _wrapper(self, dag_node):
+    def _wrapper(self, dag_node: DAGNode) -> Union[DAGNode, App, Context, Graph, Any]:
         if self.eager():
             return self.run(dag_node)
         return dag_node
@@ -1251,15 +1256,13 @@ class Session(object):
         retain_oid=True,
         vertex_map="global",
         compact_edges=False,
-    ):
+        use_perfect_hash=False,
+    ) -> Union[Graph, GraphDAGNode]:
         if (
             isinstance(incoming_data, vineyard.ObjectID)
-            and repr(vineyard.ObjectID(incoming_data))
-            in self._vineyard_object_mapping_table
+            and repr(incoming_data) in self._vineyard_object_mapping_table
         ):
-            graph_vineyard_id = self._vineyard_object_mapping_table[
-                repr(vineyard.ObjectID(incoming_data))
-            ]
+            graph_vineyard_id = self._vineyard_object_mapping_table[repr(incoming_data)]
             logger.info("Restore graph from original graph: %s", graph_vineyard_id)
             incoming_data = vineyard.ObjectID(graph_vineyard_id)
         return self._wrapper(
@@ -1272,6 +1275,7 @@ class Session(object):
                 retain_oid,
                 vertex_map,
                 compact_edges,
+                use_perfect_hash,
             )
         )
 
@@ -1629,12 +1633,12 @@ def default_session(session):
     return _default_session_stack.get_controller(session)
 
 
-def has_default_session():
+def has_default_session() -> bool:
     """True if default session exists in current context."""
     return not _default_session_stack.empty()
 
 
-def get_default_session():
+def get_default_session() -> Session:
     """Returns the default session for the current context.
 
     Note that a new session will be created if there is no
@@ -1660,14 +1664,14 @@ class _DefaultSessionStack(object):
         super().__init__()
         self.stack = []
 
-    def get_default(self):
+    def get_default(self) -> Session:
         if not self.stack:
             logger.info("Creating default session ...")
             sess = session(cluster_type="hosts", num_workers=1)
             sess.as_default()
         return self.stack[-1]
 
-    def empty(self):
+    def empty(self) -> bool:
         return len(self.stack) == 0
 
     def reset(self):
@@ -1699,6 +1703,7 @@ def g(
     retain_oid=True,
     vertex_map="global",
     compact_edges=False,
+    use_perfect_hash=False,
 ):
     """Construct a GraphScope graph object on the default session.
 
@@ -1729,6 +1734,7 @@ def g(
         retain_oid,
         vertex_map,
         compact_edges,
+        use_perfect_hash,
     )
 
 

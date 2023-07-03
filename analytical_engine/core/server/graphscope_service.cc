@@ -200,6 +200,9 @@ Status GraphScopeService::HeartBeat(ServerContext* context,
                                            graph_def.is_multigraph());
         merged_graph_def.set_compact_edges(merged_graph_def.compact_edges() ||
                                            graph_def.compact_edges());
+        merged_graph_def.set_use_perfect_hash(
+            merged_graph_def.use_perfect_hash() ||
+            graph_def.use_perfect_hash());
       }
       op_result->mutable_graph_def()->CopyFrom(merged_graph_def);
       break;
