@@ -40,6 +40,7 @@ import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngineFact
 import com.alibaba.graphscope.gremlin.plugin.strategy.ExpandFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
+import com.alibaba.graphscope.gremlin.result.processor.AbstractResultProcessor;
 import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.ResultProcessor;
@@ -149,6 +150,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                 elapsed / 1000000.0f,
                                 startTime);
                         if (t != null) {
+                            if (v instanceof AbstractResultProcessor) {
+                                ((AbstractResultProcessor) v).cancel();
+                            }
                             Optional<Throwable> possibleTemporaryException =
                                     determineIfTemporaryException(t);
                             if (possibleTemporaryException.isPresent()) {

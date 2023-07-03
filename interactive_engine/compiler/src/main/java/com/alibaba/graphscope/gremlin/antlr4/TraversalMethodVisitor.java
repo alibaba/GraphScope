@@ -760,8 +760,9 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                     "with should follow source or path expand, i.e. g.with(..) or"
                             + " out('1..2').with(..)");
         }
-        String optKey = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0));
-        String optValue = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(1));
+        String optKey = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
+        Object optValue =
+                GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral());
         return graphTraversal.with(optKey, optValue);
     }
 

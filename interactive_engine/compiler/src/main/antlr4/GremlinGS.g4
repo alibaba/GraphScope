@@ -27,6 +27,7 @@ query
 // g
 // g.with(ARGS_EVAL_TIMEOUT, 2000L)
 // g.with(Tokens.ARGS_EVAL_TIMEOUT, 2000L)
+// g.with('evaluationTimeout', 2000L)
 traversalSource
     : TRAVERSAL_ROOT (DOT traversalMethod_with) ?
     ;
@@ -169,13 +170,18 @@ traversalMethod_bothE
 // with('UNTIL', expression)
 // with('ARGS_EVAL_TIMEOUT', 2000L) // set evaluation timeout to 2 seconds
 // with('Tokens.ARGS_EVAL_TIMEOUT', 2000L) // set evaluation timeout to 2 seconds
+// with('evaluationTimeout', 2000L) // set evaluation timeout to 2 seconds
 traversalMethod_with
-    : 'with' LPAREN stringLiteral COMMA stringLiteral RPAREN
-    | 'with' LPAREN evaluationTimeoutKey COMMA integerLiteral RPAREN
+    : 'with' LPAREN stringLiteral COMMA genericLiteral RPAREN
+    | 'with' LPAREN evaluationTimeoutKey COMMA evaluationTimeoutValue RPAREN
     ;
 
 evaluationTimeoutKey
     : 'ARGS_EVAL_TIMEOUT' | 'Tokens.ARGS_EVAL_TIMEOUT'
+    ;
+
+evaluationTimeoutValue
+    : integerLiteral
     ;
 
 // outV()
