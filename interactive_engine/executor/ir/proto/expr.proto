@@ -124,6 +124,20 @@ message DynamicParam {
   common.IrDataType data_type = 3;
 }
 
+message Case {
+  // Pair of when <expr> then <expr>
+  message WhenThen {
+    Expression when_expression = 1;
+    Expression then_result_expression = 2;
+  }
+  // A case operator always follows with a sequence of when_then pairs, e.g.
+  // CASE WHEN a.name == 'Marko' THEN 1
+  //      WHEN a.name == 'John' THEN 2
+  repeated WhenThen when_then_expressions = 1;
+  // The trailed else expression:  ELSE 3
+  Expression else_result_expression = 2;
+}
+
 // An operator of expression is one of Logical, Arithmetic, Const and Variable.
 message ExprOpr {
   enum Brace {
@@ -140,9 +154,10 @@ message ExprOpr {
     VariableKeys var_map = 8;
     // dynamic param in expression
     DynamicParam param = 9;
+    Case case = 10;
   }
   // The data of type of ExprOpr
-  common.IrDataType node_type = 10;
+  common.IrDataType node_type = 11;
 }
 
 // An inner representation of an expression

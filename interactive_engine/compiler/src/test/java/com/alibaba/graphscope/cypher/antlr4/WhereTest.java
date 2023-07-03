@@ -92,4 +92,20 @@ public class WhereTest {
                     + "], matchOpt=[INNER])",
                 where.explain().trim());
     }
+
+    @Test
+    public void where_5_test() {
+        RelNode where =
+                Utils.eval(
+                                "Match (a:person) Where (CASE WHEN a.name = 'marko' THEN 1 WHEN"
+                                        + " a.age > 10 THEN 2 ELSE 3 END) > 2 Return a")
+                        .build();
+        System.out.println(where.explain().trim());
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], fusedFilter=[[>(CASE(=(DEFAULT.name, 'marko'), 1, >(DEFAULT.age,"
+                    + " 10), 2, 3), 2)]], opt=[VERTEX])",
+                where.explain().trim());
+    }
 }
