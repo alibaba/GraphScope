@@ -52,6 +52,7 @@ from graphscope.analytical.app.lpa import lpa
 from graphscope.analytical.app.lpa import lpa_u2i
 from graphscope.analytical.app.pagerank import pagerank
 from graphscope.analytical.app.pagerank import pagerank_nx
+from graphscope.analytical.app.pagerank import pagerank_opt
 from graphscope.analytical.app.sssp import sssp
 from graphscope.analytical.app.triangles import triangles
 from graphscope.analytical.app.voterank import voterank

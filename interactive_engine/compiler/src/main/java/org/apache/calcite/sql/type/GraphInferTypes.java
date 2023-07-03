@@ -44,4 +44,22 @@ public abstract class GraphInferTypes {
                 }
                 Arrays.fill(operandTypes, knownType);
             };
+
+    /**
+     * Operand type-inference strategy where an unknown operand type is derived
+     * from the call's return type. If the return type is a record, it must have
+     * the same number of fields as the number of operands.
+     */
+    public static final SqlOperandTypeInference RETURN_TYPE =
+            (callBinding, returnType, operandTypes) -> {
+                RelDataType unknownType = callBinding.getTypeFactory().createUnknownType();
+                for (int i = 0; i < operandTypes.length; ++i) {
+                    if (operandTypes[i].equals(unknownType)) {
+                        operandTypes[i] =
+                                returnType.isStruct()
+                                        ? returnType.getFieldList().get(i).getType()
+                                        : returnType;
+                    }
+                }
+            };
 }

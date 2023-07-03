@@ -1,0 +1,227 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "Scan": {
+            "scan_opt": 0,
+            "alias": {
+              "item": {
+                "Id": 0
+              }
+            },
+            "params": {
+              "tables": [
+                {
+                  "item": {
+                    "Id": 0
+                  }
+                }
+              ],
+              "columns": [],
+              "is_all_columns": false,
+              "limit": null,
+              "predicate": null,
+              "sample_ratio": 1.0,
+              "extra": {}
+            },
+            "idx_predicate": null,
+            "meta_data": {
+              "type": {
+                "type": {
+                  "GraphType": {
+                    "element_opt": 0,
+                    "graph_data_type": [
+                      {
+                        "label": {
+                          "label": 0,
+                          "src_label": null,
+                          "dst_label": null
+                        },
+                        "props": [
+                          {
+                            "prop_id": {
+                              "item": {
+                                "Name": "id"
+                              }
+                            },
+                            "type": 2
+                          },
+                          {
+                            "prop_id": {
+                              "item": {
+                                "Name": "name"
+                              }
+                            },
+                            "type": 4
+                          },
+                          {
+                            "prop_id": {
+                              "item": {
+                                "Name": "age"
+                              }
+                            },
+                            "type": 1
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              "alias": 0
+            }
+          }
+        }
+      },
+      "children": [
+        1
+      ]
+    },
+    {
+      "opr": {
+        "opr": {
+          "Project": {
+            "mappings": [
+              {
+                "expr": {
+                  "operators": [
+                    {
+                      "node_type": {
+                        "type": {
+                          "DataType": 1
+                        }
+                      },
+                      "item": {
+                        "Case": {
+                          "when_then_expressions": [
+                            {
+                              "when_expression": {
+                                "operators": [
+                                  {
+                                    "node_type": {
+                                      "type": {
+                                        "DataType": 4
+                                      }
+                                    },
+                                    "item": {
+                                      "Var": {
+                                        "tag": {
+                                          "item": {
+                                            "Id": 0
+                                          }
+                                        },
+                                        "property": {
+                                          "item": {
+                                            "Key": {
+                                              "item": {
+                                                "Name": "name"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "node_type": {
+                                          "type": {
+                                            "DataType": 4
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "node_type": {
+                                      "type": {
+                                        "DataType": 0
+                                      }
+                                    },
+                                    "item": {
+                                      "Logical": 0
+                                    }
+                                  },
+                                  {
+                                    "node_type": {
+                                      "type": {
+                                        "DataType": 4
+                                      }
+                                    },
+                                    "item": {
+                                      "Const": {
+                                        "item": {
+                                          "Str": "marko"
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "then_result_expression": {
+                                "operators": [
+                                  {
+                                    "node_type": {
+                                      "type": {
+                                        "DataType": 1
+                                      }
+                                    },
+                                    "item": {
+                                      "Const": {
+                                        "item": {
+                                          "I32": 1
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ],
+                          "else_result_expression": {
+                            "operators": [
+                              {
+                                "node_type": {
+                                  "type": {
+                                    "DataType": 1
+                                  }
+                                },
+                                "item": {
+                                  "Const": {
+                                    "item": {
+                                      "I32": 3
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "alias": {
+                  "item": {
+                    "Id": 1
+                  }
+                }
+              }
+            ],
+            "is_append": false,
+            "meta_data": [
+              {
+                "type": {
+                  "type": {
+                    "DataType": 1
+                  }
+                },
+                "alias": 1
+              }
+            ]
+          }
+        }
+      },
+      "children": []
+    }
+  ],
+  "roots": [
+    0
+  ]
+}
