@@ -96,7 +96,9 @@ public class CypherRecordProcessor implements QueryExecution, ExecutionResponseL
     }
 
     @Override
-    public void cancel() {}
+    public void cancel() {
+        this.recordIterator.close();
+    }
 
     @Override
     public boolean await() throws Exception {

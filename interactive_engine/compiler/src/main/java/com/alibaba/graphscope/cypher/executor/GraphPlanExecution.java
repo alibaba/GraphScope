@@ -18,6 +18,7 @@ package com.alibaba.graphscope.cypher.executor;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
+import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
@@ -41,10 +42,15 @@ import java.util.stream.Collectors;
 public class GraphPlanExecution<C> implements StatementResults.SubscribableExecution {
     private final ExecutionClient<C> client;
     private final GraphPlanner.Summary planSummary;
+    private final QueryTimeoutConfig timeoutConfig;
 
-    public GraphPlanExecution(ExecutionClient<C> client, GraphPlanner.Summary planSummary) {
+    public GraphPlanExecution(
+            ExecutionClient<C> client,
+            GraphPlanner.Summary planSummary,
+            QueryTimeoutConfig timeoutConfig) {
         this.client = client;
         this.planSummary = planSummary;
+        this.timeoutConfig = timeoutConfig;
     }
 
     @Override
@@ -60,7 +66,7 @@ public class GraphPlanExecution<C> implements StatementResults.SubscribableExecu
                     new CypherRecordProcessor(
                             new CypherRecordParser(getOutputType(planSummary.getLogicalPlan())),
                             querySubscriber);
-            this.client.submit(request, recordProcessor);
+            this.client.submit(request, recordProcessor, timeoutConfig);
             return recordProcessor;
         } catch (Exception e) {
             throw new RuntimeException(e);
