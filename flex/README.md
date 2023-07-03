@@ -6,8 +6,7 @@ Graph applications in real life have diverse workloads, programming interfaces, 
 - Various deployment modes are needed, such as an offline analytical pipeline for low latency, online services requiring high throughput, or a learning task benefiting from heterogeneous hardware.
 - An all-inclusive solution may not be the best option as it could lead to increased resource and cost requirements.
 
-GraphScope Flex is the next iteration of GraphScope. It features a modular design that reduces resource and cost requirements while providing a seamless, user-friendly experience for flexible deployment.
-
+GraphScope Flex is an ongoing evolution of GraphScope. It champions a modular design that diminishes resource and cost requirements while delivering a seamless, user-friendly interface for flexible deployment. Presently, GraphScope Flex is actively being developed.
 
 ### Architecture
 
