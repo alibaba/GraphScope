@@ -205,10 +205,10 @@ class IC6 {
 
     // gs::AliasTagProp<0, 2, std::string_view> prop_col0({"name"});
     // gs::AliasTagProp<4, 6, gs::oid_t> prop_col1({"id"});
-    auto mapper1 =
-        gs::make_identity_mapper<0>(PropertySelector<std::string_view>("name"));
+    auto mapper1 = gs::make_mapper_with_variable<0>(
+        PropertySelector<std::string_view>("name"));
     auto mapper2 =
-        gs::make_identity_mapper<1>(PropertySelector<grape::EmptyType>());
+        gs::make_mapper_with_variable<1>(PropertySelector<grape::EmptyType>());
     auto ctx12 = Engine::template Project<PROJ_TO_NEW>(
         graph, std::move(ctx11), std::tuple{mapper1, mapper2});
 

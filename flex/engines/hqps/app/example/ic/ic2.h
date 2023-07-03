@@ -121,18 +121,20 @@ class QueryIC2 {
 
     // project
     // double t3 = -grape::GetCurrentTime();
-    auto mapper1 = gs::make_identity_mapper<0>(PropertySelector<oid_t>("id"));
-    auto mapper2 = gs::make_identity_mapper<0>(
+    auto mapper1 =
+        gs::make_mapper_with_variable<0>(PropertySelector<oid_t>("id"));
+    auto mapper2 = gs::make_mapper_with_variable<0>(
         PropertySelector<std::string_view>("firstName"));
-    auto mapper3 = gs::make_identity_mapper<0>(
+    auto mapper3 = gs::make_mapper_with_variable<0>(
         PropertySelector<std::string_view>("lastName"));
-    auto mapper4 = gs::make_identity_mapper<1>(PropertySelector<oid_t>("id"));
-    auto mapper5 = gs::make_identity_mapper<1>(
+    auto mapper4 =
+        gs::make_mapper_with_variable<1>(PropertySelector<oid_t>("id"));
+    auto mapper5 = gs::make_mapper_with_variable<1>(
         PropertySelector<std::string_view>("content"));
-    auto mapper6 = gs::make_identity_mapper<1>(
+    auto mapper6 = gs::make_mapper_with_variable<1>(
         PropertySelector<std::string_view>("imageFile"));
-    auto mapper7 =
-        gs::make_identity_mapper<1>(PropertySelector<int64_t>("creationDate"));
+    auto mapper7 = gs::make_mapper_with_variable<1>(
+        PropertySelector<int64_t>("creationDate"));
     auto ctx7 = Engine::template Project<PROJ_TO_NEW>(
         graph, std::move(ctx6),
         std::tuple{std::move(mapper1), std::move(mapper2), std::move(mapper3),

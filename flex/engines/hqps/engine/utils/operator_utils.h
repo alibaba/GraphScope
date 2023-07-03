@@ -53,26 +53,26 @@ struct PropertySelector {
 
 using InternalIdSelector = PropertySelector<grape::EmptyType>;
 
-/// @brief Mapping a vertex/edge to new data with expr& selector.
-/// @tparam EXPR
-/// @tparam ...SELECTOR
-// template <typename EXPR, typename SELECTOR_TUPLE, int... in_col_id>
-// struct MultiMapper {
-//   EXPR expr_;
-//   SELECTOR_TUPLE selectors_;
-//   MultiMapper(EXPR&& expr, SELECTOR_TUPLE&& selectors,
-//               std::integer_sequence<in_col_id...>)
-//       : expr_(std::move(expr)), selectors_(std::move(selectors)) {}
-// };
+// @brief Mapping a vertex/edge to new data with expr& selector.
+// @tparam EXPR
+// @tparam ...SELECTOR
+template <typename EXPR, typename SELECTOR_TUPLE, int... in_col_id>
+struct MultiMapper {
+  EXPR expr_;
+  SELECTOR_TUPLE selectors_;
+  MultiMapper(EXPR&& expr, SELECTOR_TUPLE&& selectors,
+              std::integer_sequence<in_col_id...>)
+      : expr_(std::move(expr)), selectors_(std::move(selectors)) {}
+};
 
 /// SingleMapper
-template <int in_col_id, typename EXPR, typename SELECTOR>
-struct SingleMapper {
-  EXPR expr_;
-  SELECTOR selector_;
-  SingleMapper(EXPR&& expr, SELECTOR&& selector)
-      : expr_(std::move(expr)), selector_(std::move(selector)) {}
-};
+// template <int in_col_id, typename EXPR, typename SELECTOR>
+// struct SingleMapper {
+//   EXPR expr_;
+//   SELECTOR selector_;
+//   SingleMapper(EXPR&& expr, SELECTOR&&... selector)
+//       : expr_(std::move(expr)), selector_(std::move(selector)) {}
+// };
 
 // Mapping the data selected by selector identically.
 template <int in_col_id, typename SELECTOR>
@@ -99,14 +99,14 @@ struct Filter {
 //       std::integer_sequence<in_col_id...>());
 // }
 
-template <int in_col_id, typename EXPR, typename SELECTOR>
-auto make_single_mapper(EXPR&& expr, SELECTOR&& selector) {
-  return SingleMapper<in_col_id, EXPR, SELECTOR>(std::move(expr),
-                                                 std::move(selector));
+template <int... in_col_id, typename EXPR, typename... SELECTOR>
+auto make_mapper_with_expr(EXPR&& expr, SELECTOR&&... selector) {
+  return MultiMapper<EXPR, std::tuple<SELECTOR...>, in_col_id...>(
+      std::move(expr), std::make_tuple(selector...));
 }
 
 template <int in_col_id, typename SELECTOR>
-auto make_identity_mapper(SELECTOR&& selector) {
+auto make_mapper_with_variable(SELECTOR&& selector) {
   return IdentityMapper<in_col_id, SELECTOR>(std::move(selector));
 }
 
