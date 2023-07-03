@@ -56,18 +56,21 @@ impl GaiaServer {
     }
 
     pub fn add_partition(&mut self, partition_id: PartitionId, graph_partition: Arc<GraphStore>) {
+        println!("add_partition");
         Arc::get_mut(&mut self.graph)
             .unwrap()
             .add_partition(partition_id, graph_partition);
     }
 
     pub fn update_partition_routing(&mut self, partition_id: PartitionId, worker_id: u32) {
+        println!("update_partition_routing");
         Arc::get_mut(&mut self.graph)
             .unwrap()
             .update_partition_routing(partition_id, worker_id);
     }
 
     pub fn start(&'static self) -> GraphResult<(u16, u16)> {
+        // Ok((8001, 8002))
         let gaia_config = make_gaia_config(self.config.clone());
         let gaia_rpc_config = make_gaia_rpc_config(self.config.clone());
         info!("Server config {:?}\nRPC config {:?}", gaia_config, gaia_rpc_config);
@@ -113,6 +116,7 @@ impl GaiaServer {
     }
 
     pub fn update_peer_view(&self, peer_view: Vec<(u64, ServerAddr)>) {
+        println!("update_peer_view");
         self.detector
             .update_peer_view(peer_view.into_iter());
     }

@@ -17,17 +17,20 @@ pub struct JnaResponse {
 
 impl JnaResponse {
     pub fn default() -> Self {
+        println!("Jna response default");
         JnaResponse { success: 1, hasDdl: 0, errMsg: ::std::ptr::null(), data: ::std::ptr::null(), len: 0 }
     }
 
     #[inline]
     pub fn new_success() -> Box<JnaResponse> {
+        println!("Jna response new success");
         let resp = JnaResponse::default();
         Box::new(resp)
     }
 
     #[inline]
     pub fn new_error(msg: &str) -> Box<JnaResponse> {
+        println!("Jna response new error");
         let mut resp = JnaResponse::default();
         resp.success(false);
         resp.has_ddl(false);
@@ -76,9 +79,10 @@ impl fmt::Display for JnaResponse {
 
 impl Drop for JnaResponse {
     fn drop(&mut self) {
+        println!("Jna Response drop fn");
         unsafe {
             if !self.errMsg.is_null() {
-                CString::from_raw(self.errMsg as *mut c_char);
+                drop(CString::from_raw(self.errMsg as *mut c_char));
             }
             if self.len > 0 {
                 Vec::from_raw_parts(self.data as *mut u8, self.len as usize, self.len as usize);
@@ -89,4 +93,9 @@ impl Drop for JnaResponse {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern "C" fn dropJnaResponse(_: Box<JnaResponse>) {}
+pub extern "C" fn dropJnaResponse(_: Box<JnaResponse>) {
+    // info!("Before mem drop");
+    // drop(b);
+    // info!("dropJnaResponse {}, {}", std::mem::size_of::<Box<JnaResponse>>(), std::mem::size_of::<JnaResponse>());
+    // std::mem::drop(b);
+}

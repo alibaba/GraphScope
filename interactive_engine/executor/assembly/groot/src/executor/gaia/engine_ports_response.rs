@@ -28,6 +28,7 @@ pub struct EnginePortsResponse {
 
 impl EnginePortsResponse {
     pub fn new(engine_port: i32, rpc_port: i32) -> Box<EnginePortsResponse> {
+        info!("new EnginePortsResponse");
         Box::new(EnginePortsResponse {
             success: true,
             errMsg: std::ptr::null(),
@@ -37,6 +38,7 @@ impl EnginePortsResponse {
     }
 
     pub fn new_with_error(err_msg: &str) -> Box<EnginePortsResponse> {
+        info!("new EnginePortsResponse with error");
         let msg = CString::new(err_msg).unwrap();
         let response =
             EnginePortsResponse { success: false, errMsg: msg.as_ptr(), enginePort: 0, rpcPort: 0 };
@@ -47,9 +49,10 @@ impl EnginePortsResponse {
 
 impl Drop for EnginePortsResponse {
     fn drop(&mut self) {
+        info!("dropped EnginePortsResponse fn");
         unsafe {
             if !self.errMsg.is_null() {
-                CString::from_raw(self.errMsg as *mut c_char);
+                drop(CString::from_raw(self.errMsg as *mut c_char));
             }
         }
     }
@@ -57,4 +60,6 @@ impl Drop for EnginePortsResponse {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern "C" fn dropEnginePortsResponse(_: Box<EnginePortsResponse>) {}
+pub extern "C" fn dropEnginePortsResponse(_: Box<EnginePortsResponse>) {
+    info!("dropEnginePortsResponse");
+}
