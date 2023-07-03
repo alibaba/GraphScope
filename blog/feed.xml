@@ -5,15 +5,14 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 03 Jul 2023 07:28:31 +0000</pubDate>
-    <lastBuildDate>Mon, 03 Jul 2023 07:28:31 +0000</lastBuildDate>
+    <pubDate>Mon, 03 Jul 2023 08:50:38 +0000</pubDate>
+    <lastBuildDate>Mon, 03 Jul 2023 08:50:38 +0000</lastBuildDate>
     <generator>Jekyll v4.3.2</generator>
     
       <item>
         <title>GAIA-IR: Graph Interactive Query Engine in GraphScope</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-06-28-title-picture.jpg&quot; alt=&quot;GAIA-IR&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;In this blog, we introduce &lt;a href=&quot;https://github.com/alibaba/GraphScope/tree/main/interactive_engine&quot;&gt;&lt;strong&gt;GAIA-IR&lt;/strong&gt;&lt;/a&gt;, an interactive graph query engine for GraphScope. 
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-06-28-title-picture.jpg&quot; alt=&quot;GAIA-IR&quot; /&gt;
+In this blog, we introduce &lt;a href=&quot;https://github.com/alibaba/GraphScope/tree/main/interactive_engine&quot;&gt;&lt;strong&gt;GAIA-IR&lt;/strong&gt;&lt;/a&gt;, an interactive graph query engine for GraphScope. 
 GAIA-IR not only showcases exceptional efficiency in handling Gremlin queries within a distributed framework but also present a unified intermediate representation layer that offers remarkable adaptability for incorporating additional query languages.
 This feature makes the engine scalable, efficient, and user-friendly, rendering it an invaluable tool for individuals engaged in graph databases.&lt;/p&gt;
 
