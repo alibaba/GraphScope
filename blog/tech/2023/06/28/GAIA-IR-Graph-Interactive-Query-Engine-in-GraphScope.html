@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">GAIA-IR: Graph Interactive Query Engine in GraphScope</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2023-06-28">28 Jun 2023</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2023-06-28">28 Jun 2023</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">GAIA-IR: Graph Interactive Query Engine in GraphScope</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2023-06-28-title-picture.jpg" alt="GAIA-IR" /></p>
+
+<p>In this blog, we introduce <a href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine"><strong>GAIA-IR</strong></a>, an interactive graph query engine for GraphScope. 
+GAIA-IR not only showcases exceptional efficiency in handling Gremlin queries within a distributed framework but also present a unified intermediate representation layer that offers remarkable adaptability for incorporating additional query languages.
+This feature makes the engine scalable, efficient, and user-friendly, rendering it an invaluable tool for individuals engaged in graph databases.</p>
+
+<h3 id="background-and-challenges-in-graph-query">Background and Challenges in Graph Query</h3>
+<p>Graph querying is an pivotal tool in the analysis of massive data. <a href="http://tink[label](vscode-file://vscode-app/Applications/Visual%2520Studio%2520Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html)erpop.apache.org/">Gremlin</a>, which is an industry-standard graph query language proposed and maintained by Apache Tinkerpop, is widely used in popular graph databases such as <a href="https://www.orientdb.org/">OrientDB</a>, <a href="https://janusgraph.org/">JanusGraph</a>, <a href="https://azure.microsoft.com/en-us/services/cosmos-db/">Microsoft Cosmos DB</a>, and <a href="https://aws.amazon.com/neptune/">Amazon Neptune</a>. The graph query engine <a href="https://graphscope.io/blog/tech/2021/08/05/GAIA-Deep-Dive-Bounded-Memory-Execution-and-Early-Stop-Optimization-for-Efficient-Graph-Traversal-at-Scale">GAIA</a> in GraphScope is the pioneering system that embrace Gremlin for large-scale distributed environment in the industry. While the versatility exhibited by Gremlin remains its standout advantage, our exploration during GAIA’s design and implementation to support Gremlin has uncovered certain challenges.</p>
+
+<h4 id="drawbacks-in-gaia-system">Drawbacks in GAIA System</h4>
+<p>The GAIA system has the following drawbacks:</p>
+
+<p><strong>D1</strong>: There are a large number of Gremlin operators, and there are also many different ways of expressing the same semantics in graph queries by Gremlin operators. For example, if we want to project entries’ properties, we can get similar results using different operators in Gremlin, such as <code class="language-plaintext highlighter-rouge">elementMap()</code>, <code class="language-plaintext highlighter-rouge">valueMap()</code>, <code class="language-plaintext highlighter-rouge">values()</code>, <code class="language-plaintext highlighter-rouge">select().valueMap()</code>, <code class="language-plaintext highlighter-rouge">project().valueMap()</code>, etc. An example is shown below:</p>
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">gremlin</span><span class="o">&gt;</span> <span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">elementMap</span><span class="o">()</span> 
+<span class="o">==&gt;[</span><span class="nl">id:</span><span class="mi">1</span><span class="o">,</span><span class="nl">label:</span><span class="n">person</span><span class="o">,</span><span class="nl">name:</span><span class="n">marko</span><span class="o">,</span><span class="nl">age:</span><span class="mi">29</span><span class="o">]</span> 
+<span class="o">==&gt;[</span><span class="nl">id:</span><span class="mi">2</span><span class="o">,</span><span class="nl">label:</span><span class="n">person</span><span class="o">,</span><span class="nl">name:</span><span class="n">vadas</span><span class="o">,</span><span class="nl">age:</span><span class="mi">27</span><span class="o">]</span>
+
+<span class="n">gremlin</span><span class="o">&gt;</span> <span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">valueMap</span><span class="o">(</span><span class="s1">'name'</span><span class="o">,</span><span class="s1">'age'</span><span class="o">)</span> 
+<span class="o">==&gt;[</span><span class="nl">name:</span><span class="o">[</span><span class="n">marko</span><span class="o">],</span><span class="nl">age:</span><span class="o">[</span><span class="mi">29</span><span class="o">]]</span> 
+<span class="o">==&gt;[</span><span class="nl">name:</span><span class="o">[</span><span class="n">vadas</span><span class="o">],</span><span class="nl">age:</span><span class="o">[</span><span class="mi">27</span><span class="o">]]</span>
+
+<span class="n">gremlin</span><span class="o">&gt;</span> <span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">as</span><span class="o">(</span><span class="s1">'a'</span><span class="o">).</span><span class="na">select</span><span class="o">(</span><span class="s1">'a'</span><span class="o">).</span><span class="na">by</span><span class="o">(</span><span class="n">valueMap</span><span class="o">(</span><span class="s1">'name'</span><span class="o">,</span> <span class="s1">'age'</span><span class="o">))</span> 
+<span class="o">==&gt;[</span><span class="nl">name:</span><span class="o">[</span><span class="n">marko</span><span class="o">],</span> <span class="nl">age:</span><span class="o">[</span><span class="mi">29</span><span class="o">]]</span> 
+<span class="o">==&gt;[</span><span class="nl">name:</span><span class="o">[</span><span class="n">vadas</span><span class="o">],</span> <span class="nl">age:</span><span class="o">[</span><span class="mi">27</span><span class="o">]]</span>
+
+<span class="n">gremlin</span><span class="o">&gt;</span> <span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">as</span><span class="o">(</span><span class="s1">'a'</span><span class="o">).</span><span class="na">project</span><span class="o">(</span><span class="s1">'a'</span><span class="o">).</span><span class="na">by</span><span class="o">(</span><span class="n">valueMap</span><span class="o">(</span><span class="s1">'name'</span><span class="o">,</span> <span class="s1">'age'</span><span class="o">))</span> 
+<span class="o">==&gt;[</span><span class="nl">a:</span><span class="o">[</span><span class="nl">name:</span><span class="o">[</span><span class="n">marko</span><span class="o">],</span> <span class="nl">age:</span><span class="o">[</span><span class="mi">29</span><span class="o">]]]</span> 
+<span class="o">==&gt;[</span><span class="nl">a:</span><span class="o">[</span><span class="nl">name:</span><span class="o">[</span><span class="n">vadas</span><span class="o">],</span> <span class="nl">age:</span><span class="o">[</span><span class="mi">27</span><span class="o">]]]</span>
+</code></pre></div></div>
+<p>This leads to the redundancy implementations in GAIA to support such Gremlin operators, which is not developer-friendly and has poor scalability.</p>
+
+<p><strong>D2</strong>: GAIA has poor language extensibility. GAIA is a customized implementation of parallel Gremlin queries, while there are now many other commonly used graph querying languages, such as Cypher, GSQL, and the upcoming graph query standard language GQL. If we need to further integrate more querying languages in the future, it is almost impossible to achieve this by extending GAIA.</p>
+
+<p><strong>D3</strong>: Gremlin language has poor support for complex expressions. For example, we may want to find people in the two-degree neighborhood of person <code class="language-plaintext highlighter-rouge">'a'</code> that meet certain <code class="language-plaintext highlighter-rouge">'age'</code> property conditions through the following Gremlin query statement:</p>
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">as</span><span class="o">(</span><span class="s1">'a'</span><span class="o">).</span><span class="na">out</span><span class="o">().</span><span class="na">as</span><span class="o">(</span><span class="s1">'b'</span><span class="o">).</span><span class="na">out</span><span class="o">().</span><span class="na">as</span><span class="o">(</span><span class="s1">'c'</span><span class="o">)</span>
+ <span class="o">.</span><span class="na">where</span><span class="o">(</span><span class="s1">'c'</span><span class="o">,</span> <span class="n">P</span><span class="o">.</span><span class="na">lt</span><span class="o">(</span><span class="s1">'a'</span><span class="o">).</span><span class="na">or</span><span class="o">(</span><span class="n">P</span><span class="o">.</span><span class="na">gt</span><span class="o">(</span><span class="s1">'a'</span><span class="o">).</span><span class="na">and</span><span class="o">(</span><span class="n">P</span><span class="o">.</span><span class="na">gt</span><span class="o">(</span><span class="s1">'b'</span><span class="o">)))).</span><span class="na">by</span><span class="o">(</span><span class="s1">'age'</span><span class="o">)</span>
+</code></pre></div></div>
+<p>Complex nested conditional filtering, like in where(), is not intuitive and user-friendly.</p>
+
+<p><strong>D4</strong>: GAIA lacks well-defined Gremlin syntax specifications and it is difficult to define the scope of support for Gremlin operators and operator combinations in the current system, which is not user-friendly.</p>
+
+<h4 id="solutions-in-gaia-ir-system">Solutions in GAIA-IR System</h4>
+<p>To address the above issues, we further proposed the language-independent and more general intermediate representation layer GAIA-IR (IR in short) to describe the common semantics in graph queries. The operators we abstracted can be divided into two categories: relational operators and graph-related operators. Relational operators mainly correspond to operations on traditional relational databases, such as Projection, Selection, GroupBy, OrderBy, etc., while graph-related operators correspond to operations on graph data, such as queries on graph vertices, graph edges, etc. Through this query language-independent intermediate representation layer, we can solve the problems in GAIA as follows:</p>
+
+<p><strong>A1</strong>. GAIA-IR uses a unified intermediate representation to express operators of similar semantics in Gremlin. For example, we abstract the Project operator to unify the various property acquisition operations in Gremlin mentioned in D1.</p>
+
+<p><strong>A2</strong>. GAIA-IR is independent of the graph query language, which makes it easier to integrate more languages. We only need to translate the operators in different languages to the unified IR operators to naturally support the parallelized implementations, without the need to design for each query language.</p>
+
+<p><strong>A3</strong>. GAIA-IR also provides rich expression support to meet user needs. For example, compared with the example in D3, adding expression support in the <code class="language-plaintext highlighter-rouge">where()</code> operator would be much more intuitive:</p>
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">as</span><span class="o">(</span><span class="s1">'a'</span><span class="o">).</span><span class="na">out</span><span class="o">().</span><span class="na">as</span><span class="o">(</span><span class="s1">'b'</span><span class="o">).</span><span class="na">out</span><span class="o">().</span><span class="na">as</span><span class="o">(</span><span class="s1">'c'</span><span class="o">)</span>
+ <span class="o">.</span><span class="na">where</span><span class="o">(</span><span class="n">expr</span><span class="o">(</span><span class="s2">"@c.age &lt; @a.age || (@c.age &gt; @a.age &amp;&amp; @a.age &gt; @b.age)"</span><span class="o">))</span>
+</code></pre></div></div>
+
+<p><strong>A4</strong>: GAIA-IR introduces the <a href="https://www.antlr.org/">Antlr</a> tool to support Gremlin syntax checking and clarifies the system’s support scope for Gremlin operators and combinations, which is more user-friendly.</p>
+
+<h3 id="design-of-gaia-ir">Design of GAIA-IR</h3>
+<p>Next, we will introduce the overall design of GAIA-IR.</p>
+<h4 id="concepts-in-gaia-ir">Concepts in GAIA-IR</h4>
+<p>First, we introduce some basic concepts in GAIA-IR. GAIA-IR abstracts the basic computations on graph data, providing a unified, concise, and language-independent intermediate representation layer.</p>
+<h5 id="ir-operators">IR Operators</h5>
+<p>Currently, we abstract operators (Graph-Relational Algebra) into two categories: relational operators and graph-related operators:</p>
+<ul>
+  <li>Relational operators include: Projection, Selection, Join, GroupBy, OrderBy, DeDup, Limit, etc., which are consistent with operations on traditional relational databases.</li>
+  <li>Graph-related operators include: GetV, E(dge)-Join, P(ath)-Join, for searching for vertex properties, neighbors (edges), and paths on the graph respectively.</li>
+</ul>
+
+<p>Through these operator abstractions, we can support most graph query scenarios. At the same time, these operator abstractions are not limited by the querying language, making it easy to extend to other query languages.</p>
+<h5 id="ir-data-structure">IR Data Structure</h5>
+<p>In GAIA-IR, we defined the data structure GRecord to represent the input and output of each IR Operator. GRecord is a multi-column structure, and each column has its own alias and value:</p>
+<ul>
+  <li>Alias, which is similar to the alias by <code class="language-plaintext highlighter-rouge">As</code> in SQL. Specifically, to adapt to Gremlin, we provide an additional unique alias – <code class="language-plaintext highlighter-rouge">"HEAD"</code> as an anonymous alias, referring to the output of the previous operator, which is also the input of the current operator.</li>
+  <li>Value, which is of data types includes: 1) Simple data type CommonObject (including int/string/intArray/stringArray, etc.) and 2) Graph data type GraphObject (including Vertex, Edge, and Path).</li>
+</ul>
+
+<p>Next, we give an example to elaborate how to execute a gremlin query in GAIA-IR.</p>
+<h5 id="gremlin-query-example">Gremlin Query Example</h5>
+<p>We support Gremlin by translating Gremlin queries into a series of IR Operators on GRecord. An example is shown below:</p>
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">as</span><span class="o">(</span><span class="s1">'a'</span><span class="o">).</span><span class="na">select</span><span class="o">(</span><span class="s1">'a'</span><span class="o">).</span><span class="na">by</span><span class="o">(</span><span class="n">valueMap</span><span class="o">(</span><span class="s1">'name'</span><span class="o">,</span><span class="s1">'age'</span><span class="o">))</span>
+</code></pre></div></div>
+<p>First, <code class="language-plaintext highlighter-rouge">g.V().as('a')</code> will produce the following intermediate results, with the alias <code class="language-plaintext highlighter-rouge">'a'</code> and data type Vertex:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>GR1</th>
+      <th>Vertex { name:[marko], age:[29] }, Alias: ‘a’</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GR2</td>
+      <td>Vertex { name:[vadas], age:[27] }, Alias: ‘a’</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Then <code class="language-plaintext highlighter-rouge">select('a').by(valueMap('name','age'))</code> would be translated into <code class="language-plaintext highlighter-rouge">Project('{a.name,a.age}')</code>. With <code class="language-plaintext highlighter-rouge">GR1</code> and <code class="language-plaintext highlighter-rouge">GR2</code> as the input of <code class="language-plaintext highlighter-rouge">Project</code>, we can get the output <code class="language-plaintext highlighter-rouge">GR1'</code> and <code class="language-plaintext highlighter-rouge">GR2'</code>, which are the properties we need:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>GR1’</th>
+      <th>CommonObject { a.name:[marko], a.age:[29] }</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GR2’</td>
+      <td>CommonObject { a.name:[vadas], a.age:[27] }</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Similarly, for the Gremlin query <code class="language-plaintext highlighter-rouge">g.V().valueMap('name','age')</code>, we only need to change the aliases of <code class="language-plaintext highlighter-rouge">GR1</code> and <code class="language-plaintext highlighter-rouge">GR2</code> to the anonymous alias <code class="language-plaintext highlighter-rouge">"HEAD"</code> and translate <code class="language-plaintext highlighter-rouge">valueMap('name','age')</code> into <code class="language-plaintext highlighter-rouge">Project("{HEAD.name,HEAD.age}")</code>, which gives the same result. 
+Thus, we can translate Gremlin queries with similar semantics but different operators into a unified intermediate representation. Moreover, for other languages, such as retrieving properties in SQL, we can also translate into the <code class="language-plaintext highlighter-rouge">Project</code> operator in GAIA-IR. This shows that GAIA-IR abstracts a more concise, general, and language-independent intermediate representation layer.</p>
+
+<h3 id="gaia-ir-system-architecture">GAIA-IR System Architecture</h3>
+<p>Next, we present the parallel computing architecture of GAIA-IR for Gremlin, as shown in the following figure:</p>
+
+<p><img src="/blog/assets/images/2023-06-28-gaia-arch.jpg" alt="GAIA-IR-SYSTEM-ARCH" /></p>
+
+<p>Overall, we are compatible with both the official Gremlin Console and Gremlin SDK. After the user submits a Gremlin query:</p>
+<ol>
+  <li>The frontend IR Compiler is responsible for syntax checking of the query. For a valid query, the IR Compiler compiles the query syntax tree into a logical plan consisting of IR Operators through the IR Library API, and further calls the IR Library API to generate a physical plan, which is then sent to the distributed backend engine servers.</li>
+  <li>The backend engine servers pre-launch the distributed graph partitions during the service start-up phase. Upon receiving the physical plan sent by the IR Compiler, the IR Runtime is responsible for parsing the physical plan and constructing an engine-executable execution plan. Specifically, for each IR Operator, the IR Runtime is responsible for generating the corresponding engine-understandable UDF to implement the specific query semantics of the IR Operator. After the calculation is completed, the IR Runtime returns the results back to the IR Compiler, which will be further parsed and returned to the client.</li>
+</ol>
+
+<h3 id="how-to-use-gaia-ir">How to Use GAIA-IR</h3>
+<p>After introducing the overall design of GAIA-IR, we will now explain how to use the GAIA-IR for graph querying.</p>
+<h4 id="deployment">Deployment</h4>
+<p>In our previous <a href="https://graphscope.io/blog/tech/2023/06/11/How-to-Deploy-GraphScope-by-Helm-on-Kubernetes">blogs</a>, we introduced how to deploy GraphScope. As an important implementation of GIE in GraphScope, the overall launch method of GAIA-IR is consistent with GraphScope. Taking Helm deployment as an example, the installation command is as follows:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
+helm install [RELEASE_NAME] graphscope/graphscope-store
+</code></pre></div></div>
+<p>More detailed deployment options can be found in the <a href="https://graphscope.io/docs/">official document</a>.</p>
+
+<h4 id="gremlin-query">Gremlin Query</h4>
+<p>After successfully launching the service, we can query through the Gremlin Server host and port. Taking Gremlin Console as an example, after the service is successfully launched and the data is imported (the specific data import steps can be found in the <a href="https://graphscope.io/docs/storage_engine/groot">official document</a>), we can query by configuring the Gremlin Console. An example is as follows:</p>
+<ol>
+  <li>First, we modify the host and port in the conf/remote.yaml configuration file of the Gremlin Console.</li>
+  <li>Open the Gremlin Console, input the configuration of remote.yaml, and then you can start querying.</li>
+</ol>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">gremlin</span><span class="o">&gt;</span> <span class="o">:</span><span class="n">remote</span> <span class="n">connect</span> <span class="n">tinkerpop</span><span class="o">.</span><span class="na">server</span> <span class="n">conf</span><span class="o">/</span><span class="n">remote</span><span class="o">.</span><span class="na">yaml</span>
+<span class="o">==&gt;</span><span class="n">Configured</span> <span class="n">localhost</span><span class="o">/</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mi">8182</span>
+<span class="n">gremlin</span><span class="o">&gt;</span> <span class="o">:</span><span class="n">remote</span> <span class="n">console</span>
+<span class="o">==&gt;</span><span class="n">All</span> <span class="n">scripts</span> <span class="n">will</span> <span class="n">now</span> <span class="n">be</span> <span class="n">sent</span> <span class="n">to</span> <span class="n">Gremlin</span> <span class="n">Server</span> <span class="o">-</span> <span class="o">[</span><span class="n">localhost</span><span class="o">/</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mi">8182</span><span class="o">]</span> <span class="o">-</span> <span class="n">type</span> <span class="s1">':remote console'</span> <span class="n">to</span> <span class="k">return</span> <span class="n">to</span> <span class="n">local</span> <span class="n">mode</span>
+<span class="n">gremlin</span><span class="o">&gt;</span> <span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">valueMap</span><span class="o">(</span><span class="s1">'name'</span><span class="o">,</span><span class="s1">'age'</span><span class="o">)</span> 
+<span class="o">==&gt;[</span><span class="nl">name:</span><span class="o">[</span><span class="n">marko</span><span class="o">],</span><span class="nl">age:</span><span class="o">[</span><span class="mi">29</span><span class="o">]]</span> 
+<span class="o">==&gt;[</span><span class="nl">name:</span><span class="o">[</span><span class="n">vadas</span><span class="o">],</span><span class="nl">age:</span><span class="o">[</span><span class="mi">27</span><span class="o">]]</span>
+</code></pre></div></div>
+
+<h3 id="conclusion">Conclusion</h3>
+<p>This article describes the design intention and overall architecture of GAIA-IR, as well as how to use the GAIA-IR engine for graph querying. You can find the current release version on <a href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine">GitHub</a>. As the interactive graph query engine of GraphScope, GAIA-IR provides an efficient implementation of parallel Gremlin queries. At the same time, based on the unified intermediate representation of IR, we are supporting more graph query languages, e.g., Cypher. Besides, we also introduce optimization techniques in supporting important scenarios such as pattern matching in graph queries. In future articles, we will introduce more technical details. We will continue to optimize the GAIA-IR system, and we warmly welcome feedback and contributions from the community.</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=GAIA-IR: Graph Interactive Query Engine in GraphScope&amp;url=https://graphscope.io/tech/2023/06/28/GAIA-IR-Graph-Interactive-Query-Engine-in-GraphScope.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2023/06/28/GAIA-IR-Graph-Interactive-Query-Engine-in-GraphScope.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2023/06/28/GAIA-IR-Graph-Interactive-Query-Engine-in-GraphScope.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2023 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+    
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+</body>
+</html>

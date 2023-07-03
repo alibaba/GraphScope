@@ -5,9 +5,175 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 26 Jun 2023 08:24:22 +0000</pubDate>
-    <lastBuildDate>Mon, 26 Jun 2023 08:24:22 +0000</lastBuildDate>
+    <pubDate>Mon, 03 Jul 2023 07:28:31 +0000</pubDate>
+    <lastBuildDate>Mon, 03 Jul 2023 07:28:31 +0000</lastBuildDate>
     <generator>Jekyll v4.3.2</generator>
+    
+      <item>
+        <title>GAIA-IR: Graph Interactive Query Engine in GraphScope</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-06-28-title-picture.jpg&quot; alt=&quot;GAIA-IR&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In this blog, we introduce &lt;a href=&quot;https://github.com/alibaba/GraphScope/tree/main/interactive_engine&quot;&gt;&lt;strong&gt;GAIA-IR&lt;/strong&gt;&lt;/a&gt;, an interactive graph query engine for GraphScope. 
+GAIA-IR not only showcases exceptional efficiency in handling Gremlin queries within a distributed framework but also present a unified intermediate representation layer that offers remarkable adaptability for incorporating additional query languages.
+This feature makes the engine scalable, efficient, and user-friendly, rendering it an invaluable tool for individuals engaged in graph databases.&lt;/p&gt;
+
+&lt;h3 id=&quot;background-and-challenges-in-graph-query&quot;&gt;Background and Challenges in Graph Query&lt;/h3&gt;
+&lt;p&gt;Graph querying is an pivotal tool in the analysis of massive data. &lt;a href=&quot;http://tink[label](vscode-file://vscode-app/Applications/Visual%2520Studio%2520Code.app/Contents/Resources/app/out/vs/code/electron-sandbox/workbench/workbench.html)erpop.apache.org/&quot;&gt;Gremlin&lt;/a&gt;, which is an industry-standard graph query language proposed and maintained by Apache Tinkerpop, is widely used in popular graph databases such as &lt;a href=&quot;https://www.orientdb.org/&quot;&gt;OrientDB&lt;/a&gt;, &lt;a href=&quot;https://janusgraph.org/&quot;&gt;JanusGraph&lt;/a&gt;, &lt;a href=&quot;https://azure.microsoft.com/en-us/services/cosmos-db/&quot;&gt;Microsoft Cosmos DB&lt;/a&gt;, and &lt;a href=&quot;https://aws.amazon.com/neptune/&quot;&gt;Amazon Neptune&lt;/a&gt;. The graph query engine &lt;a href=&quot;https://graphscope.io/blog/tech/2021/08/05/GAIA-Deep-Dive-Bounded-Memory-Execution-and-Early-Stop-Optimization-for-Efficient-Graph-Traversal-at-Scale&quot;&gt;GAIA&lt;/a&gt; in GraphScope is the pioneering system that embrace Gremlin for large-scale distributed environment in the industry. While the versatility exhibited by Gremlin remains its standout advantage, our exploration during GAIA’s design and implementation to support Gremlin has uncovered certain challenges.&lt;/p&gt;
+
+&lt;h4 id=&quot;drawbacks-in-gaia-system&quot;&gt;Drawbacks in GAIA System&lt;/h4&gt;
+&lt;p&gt;The GAIA system has the following drawbacks:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;D1&lt;/strong&gt;: There are a large number of Gremlin operators, and there are also many different ways of expressing the same semantics in graph queries by Gremlin operators. For example, if we want to project entries’ properties, we can get similar results using different operators in Gremlin, such as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;elementMap()&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;valueMap()&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;values()&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;select().valueMap()&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;project().valueMap()&lt;/code&gt;, etc. An example is shown below:&lt;/p&gt;
+&lt;div class=&quot;language-groovy highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;elementMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;==&amp;gt;[&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;id:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;label:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;person&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;name:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;marko&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;age:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;29&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;==&amp;gt;[&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;id:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;label:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;person&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;name:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vadas&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;age:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;27&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;valueMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;name&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;age&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;==&amp;gt;[&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;name:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;marko&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;],&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;age:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;29&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;==&amp;gt;[&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;name:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vadas&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;],&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;age:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;27&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;a&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;select&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;a&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;by&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;valueMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;name&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;age&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;==&amp;gt;[&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;name:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;marko&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;age:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;29&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;==&amp;gt;[&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;name:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vadas&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;age:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;27&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;a&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;project&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;a&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;by&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;valueMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;name&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;age&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;==&amp;gt;[&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;a:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;name:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;marko&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;age:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;29&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]]]&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;==&amp;gt;[&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;a:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;name:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vadas&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;age:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;27&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]]]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;This leads to the redundancy implementations in GAIA to support such Gremlin operators, which is not developer-friendly and has poor scalability.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;D2&lt;/strong&gt;: GAIA has poor language extensibility. GAIA is a customized implementation of parallel Gremlin queries, while there are now many other commonly used graph querying languages, such as Cypher, GSQL, and the upcoming graph query standard language GQL. If we need to further integrate more querying languages in the future, it is almost impossible to achieve this by extending GAIA.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;D3&lt;/strong&gt;: Gremlin language has poor support for complex expressions. For example, we may want to find people in the two-degree neighborhood of person &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;a&apos;&lt;/code&gt; that meet certain &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;age&apos;&lt;/code&gt; property conditions through the following Gremlin query statement:&lt;/p&gt;
+&lt;div class=&quot;language-groovy highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;a&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;b&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;c&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+ &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;c&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;P&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;lt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;a&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;or&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;P&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;gt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;a&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;and&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;P&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;gt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;b&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)))).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;by&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;age&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Complex nested conditional filtering, like in where(), is not intuitive and user-friendly.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;D4&lt;/strong&gt;: GAIA lacks well-defined Gremlin syntax specifications and it is difficult to define the scope of support for Gremlin operators and operator combinations in the current system, which is not user-friendly.&lt;/p&gt;
+
+&lt;h4 id=&quot;solutions-in-gaia-ir-system&quot;&gt;Solutions in GAIA-IR System&lt;/h4&gt;
+&lt;p&gt;To address the above issues, we further proposed the language-independent and more general intermediate representation layer GAIA-IR (IR in short) to describe the common semantics in graph queries. The operators we abstracted can be divided into two categories: relational operators and graph-related operators. Relational operators mainly correspond to operations on traditional relational databases, such as Projection, Selection, GroupBy, OrderBy, etc., while graph-related operators correspond to operations on graph data, such as queries on graph vertices, graph edges, etc. Through this query language-independent intermediate representation layer, we can solve the problems in GAIA as follows:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;A1&lt;/strong&gt;. GAIA-IR uses a unified intermediate representation to express operators of similar semantics in Gremlin. For example, we abstract the Project operator to unify the various property acquisition operations in Gremlin mentioned in D1.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;A2&lt;/strong&gt;. GAIA-IR is independent of the graph query language, which makes it easier to integrate more languages. We only need to translate the operators in different languages to the unified IR operators to naturally support the parallelized implementations, without the need to design for each query language.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;A3&lt;/strong&gt;. GAIA-IR also provides rich expression support to meet user needs. For example, compared with the example in D3, adding expression support in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;where()&lt;/code&gt; operator would be much more intuitive:&lt;/p&gt;
+&lt;div class=&quot;language-groovy highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;a&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;b&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;c&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+ &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;expr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;@c.age &amp;lt; @a.age || (@c.age &amp;gt; @a.age &amp;amp;&amp;amp; @a.age &amp;gt; @b.age)&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;A4&lt;/strong&gt;: GAIA-IR introduces the &lt;a href=&quot;https://www.antlr.org/&quot;&gt;Antlr&lt;/a&gt; tool to support Gremlin syntax checking and clarifies the system’s support scope for Gremlin operators and combinations, which is more user-friendly.&lt;/p&gt;
+
+&lt;h3 id=&quot;design-of-gaia-ir&quot;&gt;Design of GAIA-IR&lt;/h3&gt;
+&lt;p&gt;Next, we will introduce the overall design of GAIA-IR.&lt;/p&gt;
+&lt;h4 id=&quot;concepts-in-gaia-ir&quot;&gt;Concepts in GAIA-IR&lt;/h4&gt;
+&lt;p&gt;First, we introduce some basic concepts in GAIA-IR. GAIA-IR abstracts the basic computations on graph data, providing a unified, concise, and language-independent intermediate representation layer.&lt;/p&gt;
+&lt;h5 id=&quot;ir-operators&quot;&gt;IR Operators&lt;/h5&gt;
+&lt;p&gt;Currently, we abstract operators (Graph-Relational Algebra) into two categories: relational operators and graph-related operators:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Relational operators include: Projection, Selection, Join, GroupBy, OrderBy, DeDup, Limit, etc., which are consistent with operations on traditional relational databases.&lt;/li&gt;
+  &lt;li&gt;Graph-related operators include: GetV, E(dge)-Join, P(ath)-Join, for searching for vertex properties, neighbors (edges), and paths on the graph respectively.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Through these operator abstractions, we can support most graph query scenarios. At the same time, these operator abstractions are not limited by the querying language, making it easy to extend to other query languages.&lt;/p&gt;
+&lt;h5 id=&quot;ir-data-structure&quot;&gt;IR Data Structure&lt;/h5&gt;
+&lt;p&gt;In GAIA-IR, we defined the data structure GRecord to represent the input and output of each IR Operator. GRecord is a multi-column structure, and each column has its own alias and value:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Alias, which is similar to the alias by &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;As&lt;/code&gt; in SQL. Specifically, to adapt to Gremlin, we provide an additional unique alias – &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;HEAD&quot;&lt;/code&gt; as an anonymous alias, referring to the output of the previous operator, which is also the input of the current operator.&lt;/li&gt;
+  &lt;li&gt;Value, which is of data types includes: 1) Simple data type CommonObject (including int/string/intArray/stringArray, etc.) and 2) Graph data type GraphObject (including Vertex, Edge, and Path).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Next, we give an example to elaborate how to execute a gremlin query in GAIA-IR.&lt;/p&gt;
+&lt;h5 id=&quot;gremlin-query-example&quot;&gt;Gremlin Query Example&lt;/h5&gt;
+&lt;p&gt;We support Gremlin by translating Gremlin queries into a series of IR Operators on GRecord. An example is shown below:&lt;/p&gt;
+&lt;div class=&quot;language-groovy highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;a&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;select&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;a&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;by&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;valueMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;name&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;age&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;First, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;g.V().as(&apos;a&apos;)&lt;/code&gt; will produce the following intermediate results, with the alias &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;a&apos;&lt;/code&gt; and data type Vertex:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;GR1&lt;/th&gt;
+      &lt;th&gt;Vertex { name:[marko], age:[29] }, Alias: ‘a’&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;GR2&lt;/td&gt;
+      &lt;td&gt;Vertex { name:[vadas], age:[27] }, Alias: ‘a’&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Then &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;select(&apos;a&apos;).by(valueMap(&apos;name&apos;,&apos;age&apos;))&lt;/code&gt; would be translated into &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Project(&apos;{a.name,a.age}&apos;)&lt;/code&gt;. With &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GR1&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GR2&lt;/code&gt; as the input of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Project&lt;/code&gt;, we can get the output &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GR1&apos;&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GR2&apos;&lt;/code&gt;, which are the properties we need:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;GR1’&lt;/th&gt;
+      &lt;th&gt;CommonObject { a.name:[marko], a.age:[29] }&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;GR2’&lt;/td&gt;
+      &lt;td&gt;CommonObject { a.name:[vadas], a.age:[27] }&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Similarly, for the Gremlin query &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;g.V().valueMap(&apos;name&apos;,&apos;age&apos;)&lt;/code&gt;, we only need to change the aliases of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GR1&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GR2&lt;/code&gt; to the anonymous alias &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;HEAD&quot;&lt;/code&gt; and translate &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;valueMap(&apos;name&apos;,&apos;age&apos;)&lt;/code&gt; into &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Project(&quot;{HEAD.name,HEAD.age}&quot;)&lt;/code&gt;, which gives the same result. 
+Thus, we can translate Gremlin queries with similar semantics but different operators into a unified intermediate representation. Moreover, for other languages, such as retrieving properties in SQL, we can also translate into the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Project&lt;/code&gt; operator in GAIA-IR. This shows that GAIA-IR abstracts a more concise, general, and language-independent intermediate representation layer.&lt;/p&gt;
+
+&lt;h3 id=&quot;gaia-ir-system-architecture&quot;&gt;GAIA-IR System Architecture&lt;/h3&gt;
+&lt;p&gt;Next, we present the parallel computing architecture of GAIA-IR for Gremlin, as shown in the following figure:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-06-28-gaia-arch.jpg&quot; alt=&quot;GAIA-IR-SYSTEM-ARCH&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Overall, we are compatible with both the official Gremlin Console and Gremlin SDK. After the user submits a Gremlin query:&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;The frontend IR Compiler is responsible for syntax checking of the query. For a valid query, the IR Compiler compiles the query syntax tree into a logical plan consisting of IR Operators through the IR Library API, and further calls the IR Library API to generate a physical plan, which is then sent to the distributed backend engine servers.&lt;/li&gt;
+  &lt;li&gt;The backend engine servers pre-launch the distributed graph partitions during the service start-up phase. Upon receiving the physical plan sent by the IR Compiler, the IR Runtime is responsible for parsing the physical plan and constructing an engine-executable execution plan. Specifically, for each IR Operator, the IR Runtime is responsible for generating the corresponding engine-understandable UDF to implement the specific query semantics of the IR Operator. After the calculation is completed, the IR Runtime returns the results back to the IR Compiler, which will be further parsed and returned to the client.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;how-to-use-gaia-ir&quot;&gt;How to Use GAIA-IR&lt;/h3&gt;
+&lt;p&gt;After introducing the overall design of GAIA-IR, we will now explain how to use the GAIA-IR for graph querying.&lt;/p&gt;
+&lt;h4 id=&quot;deployment&quot;&gt;Deployment&lt;/h4&gt;
+&lt;p&gt;In our previous &lt;a href=&quot;https://graphscope.io/blog/tech/2023/06/11/How-to-Deploy-GraphScope-by-Helm-on-Kubernetes&quot;&gt;blogs&lt;/a&gt;, we introduced how to deploy GraphScope. As an important implementation of GIE in GraphScope, the overall launch method of GAIA-IR is consistent with GraphScope. Taking Helm deployment as an example, the installation command is as follows:&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
+helm install [RELEASE_NAME] graphscope/graphscope-store
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;More detailed deployment options can be found in the &lt;a href=&quot;https://graphscope.io/docs/&quot;&gt;official document&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&quot;gremlin-query&quot;&gt;Gremlin Query&lt;/h4&gt;
+&lt;p&gt;After successfully launching the service, we can query through the Gremlin Server host and port. Taking Gremlin Console as an example, after the service is successfully launched and the data is imported (the specific data import steps can be found in the &lt;a href=&quot;https://graphscope.io/docs/storage_engine/groot&quot;&gt;official document&lt;/a&gt;), we can query by configuring the Gremlin Console. An example is as follows:&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;First, we modify the host and port in the conf/remote.yaml configuration file of the Gremlin Console.&lt;/li&gt;
+  &lt;li&gt;Open the Gremlin Console, input the configuration of remote.yaml, and then you can start querying.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;language-groovy highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;remote&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;connect&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tinkerpop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;server&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;remote&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;yaml&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Configured&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;localhost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;127.0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;0.1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;8182&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;remote&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;console&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;All&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;scripts&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;will&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;now&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;be&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sent&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Gremlin&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Server&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;localhost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;127.0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;0.1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;8182&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;:remote console&apos;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;local&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mode&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;gremlin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;valueMap&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;name&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;age&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;==&amp;gt;[&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;name:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;marko&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;],&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;age:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;29&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;==&amp;gt;[&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;name:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vadas&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;],&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;age:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;27&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
+&lt;p&gt;This article describes the design intention and overall architecture of GAIA-IR, as well as how to use the GAIA-IR engine for graph querying. You can find the current release version on &lt;a href=&quot;https://github.com/alibaba/GraphScope/tree/main/interactive_engine&quot;&gt;GitHub&lt;/a&gt;. As the interactive graph query engine of GraphScope, GAIA-IR provides an efficient implementation of parallel Gremlin queries. At the same time, based on the unified intermediate representation of IR, we are supporting more graph query languages, e.g., Cypher. Besides, we also introduce optimization techniques in supporting important scenarios such as pattern matching in graph queries. In future articles, we will introduce more technical details. We will continue to optimize the GAIA-IR system, and we warmly welcome feedback and contributions from the community.&lt;/p&gt;
+</description>
+        <pubDate>Wed, 28 Jun 2023 11:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2023/06/28/GAIA-IR-Graph-Interactive-Query-Engine-in-GraphScope.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/06/28/GAIA-IR-Graph-Interactive-Query-Engine-in-GraphScope.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>Breaking the Language Barrier in Large Scale Graph Computing</title>
@@ -1523,47 +1689,6 @@ We are bringing a number of improvements to GraphScope, alongside the GraphScope
         <pubDate>Tue, 09 Aug 2022 03:33:20 +0000</pubDate>
         <link>https://graphscope.io/blog/releasenotes/2022/08/09/release-notes-0.16.0.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2022/08/09/release-notes-0.16.0.html</guid>
-        
-        
-        <category>ReleaseNotes</category>
-        
-      </item>
-    
-      <item>
-        <title>Release Notes: v0.14.0</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/release_note_t.png&quot; alt=&quot;release-note&quot; /&gt;
-We are delighted to present the release of GraphScope 0.14.0. This release is composed of many updates on backend engines and system stability. The new Graph Interactive Engine (GIE), &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GAIA-IR&lt;/code&gt;, has supported more types of operators and graph schemas for diverse graph queries. Meanwhile, the persistent storage of GraphScope, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Groot&lt;/code&gt;, is further enhanced with a series of new functions. In addition, we continuously work on improving the performance of GraphScope, and developer usability.&lt;/p&gt;
-
-&lt;p&gt;We highlight the following improvements included in this release:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;New supported operators in GAIA-IR:
-    &lt;ul&gt;
-      &lt;li&gt;Support the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;valueMap&lt;/code&gt;operator in Gremlin;&lt;/li&gt;
-      &lt;li&gt;Enable the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;String&lt;/code&gt; type as vertex ID type in graph schemas;&lt;/li&gt;
-      &lt;li&gt;Support to directly access a vertex via primary key.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;More functions on persistent storage of GraphScope:
-    &lt;ul&gt;
-      &lt;li&gt;Support to load dataset from Aliyun OSS;&lt;/li&gt;
-      &lt;li&gt;Enable local GC for the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Groot&lt;/code&gt; storage.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Bug fixes and other enhancements:
-    &lt;ul&gt;
-      &lt;li&gt;Upgrade the NetworkX version from 2.6 to 2.8;&lt;/li&gt;
-      &lt;li&gt;A new algorithm named &lt;a href=&quot;[https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.voterank.html?highlight=voterank#networkx.algorithms.centrality.voterank](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.voterank.html?highlight=voterank#networkx.algorithms.centrality.voterank)&quot;&gt;VoteRank&lt;/a&gt; has been supported in the graph analytics engine;&lt;/li&gt;
-      &lt;li&gt;Fix some bugs when installing dependencies for GraphScope.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;For more detailed improvements that have been made in this release, please refer to the complete &lt;a href=&quot;https://github.com/alibaba/GraphScope/releases/tag/v0.14.0&quot;&gt;changelog&lt;/a&gt;.&lt;/p&gt;
-</description>
-        <pubDate>Thu, 09 Jun 2022 03:33:20 +0000</pubDate>
-        <link>https://graphscope.io/blog/releasenotes/2022/06/09/release-notes-0.14.0.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2022/06/09/release-notes-0.14.0.html</guid>
         
         
         <category>ReleaseNotes</category>
