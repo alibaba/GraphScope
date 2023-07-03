@@ -636,12 +636,13 @@ class KubernetesClusterLauncher(AbstractLauncher):
             container,
             str(self._interactive_port),  # executor port
             str(self._interactive_port + 1),  # executor rpc port
-            str(self._interactive_port + 2),  # frontend port
+            str(self._interactive_port + 2),  # frontend gremlin port
+            str(self._interactive_port + 3),  # frontend cypher port
             self._coordinator_name,
             engine_selector,
             params,
         ]
-        self._interactive_port += 3
+        self._interactive_port += 4
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
         process = subprocess.Popen(
             cmd,

@@ -266,7 +266,12 @@ create_gremlin_instance_on_local() {
 # Globals:
 #   GREMLIN_EXPOSE
 # Arguments:
-    lang: gremlin or cypher
+#   lang: gremlin or cypher
+#   object_id: id of vineyard object
+#   instance_id: id of instance
+#   frontend_deployment_name: name of frontend deployment
+#   frontend_port: port of frontend
+#   frontend_external_port: external port of frontend
 ##########################
 create_k8s_service() {
   declare -r lang=$1
@@ -274,7 +279,7 @@ create_k8s_service() {
   declare -r instance_id=$3
   declare -r frontend_deployment_name=$4
   declare -r frontend_port=$5
-  declare -r frontend_external_port=$6
+  declare frontend_external_port=$6
 
   if [ "${GREMLIN_EXPOSE}" = "LoadBalancer" ]; then
     kubectl expose deployment ${frontend_deployment_name} --name=${lang}-${object_id} --port=${frontend_external_port} \
@@ -388,6 +393,9 @@ create_gremlin_instance_on_k8s() {
       ${GRAPHSCOPE_RUNTIME} ${object_id} ${schema_path} ${pegasus_hosts} ${frontend_gremlin_port} ${frontend_cypher_port} '${params}'"
   kubectl cp ${schema_path} ${frontend_name}:${schema_path}
 
+  log "${frontend_name}"
+  log "${launch_frontend_cmd}"
+
   kubectl exec ${frontend_name} -- /bin/bash -c "${launch_frontend_cmd}"
 
   network_servers=""
@@ -416,8 +424,8 @@ create_gremlin_instance_on_k8s() {
   frontend_deployment_name=$(kubectl get deployment -lapp.kubernetes.io/component=frontend,app.kubernetes.io/instance=${instance_id},app.kubernetes.io/engine_selector=${engine_selector} -o jsonpath='{.items[*].metadata.name}')
   
   create_k8s_service gremlin ${object_id} ${instance_id} ${frontend_deployment_name} ${frontend_gremlin_port} ${frontend_external_gremlin_port} 
-  create_k8s_serivce cypher ${object_id} ${instance_id} ${frontend_deployment_name} ${frontend_cypher_port} ${frontend_external_cypher_port}
-  
+  create_k8s_service cypher ${object_id} ${instance_id} ${frontend_deployment_name} ${frontend_cypher_port} ${frontend_external_cypher_port}
+
   exit 0
 }
 

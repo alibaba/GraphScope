@@ -468,6 +468,7 @@ class CoordinatorServiceServicer(
             # match frontend endpoints and check for ready
             gremlin_endpoint = _match_frontend_endpoint(FRONTEND_GREMLIN_PATTERN, outs)
             cypher_endpoint = _match_frontend_endpoint(FRONTEND_CYPHER_PATTERN, outs)
+            logger.debug("Got endpoints: %s %s", gremlin_endpoint, cypher_endpoint)
             # coordinator use internal endpoint
             gie_manager.set_endpoint(gremlin_endpoint)
             if (check_server_ready(gremlin_endpoint, server='gremlin') and 
@@ -486,6 +487,7 @@ class CoordinatorServiceServicer(
             return message_pb2.CreateInteractiveInstanceResponse()
         external_gremlin_endpoint = _match_frontend_endpoint(FRONTEND_EXTERNAL_GREMLIN_PATTERN, outs)
         external_cypher_endpoint = _match_frontend_endpoint(FRONTEND_EXTERNAL_CYPHER_PATTERN, outs)
+        logger.debug("Got external endpoints: %s %s", external_gremlin_endpoint, external_cypher_endpoint)
 
         # client use external endpoint (k8s mode), or internal endpoint (standalone mode)
         gremlin_endpoint = external_gremlin_endpoint or gremlin_endpoint

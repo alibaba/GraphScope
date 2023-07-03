@@ -2005,12 +2005,14 @@ def check_server_ready(endpoint, server='gremlin'):
             if endpoint == "localhost" or endpoint == "127.0.0.1":
                 # now, used in macOS with docker-desktop kubernetes cluster,
                 # which external ip is 'localhost' when service type is 'LoadBalancer'
+                logger.info("In kubernetes env, gremlin server is ready.")
                 return True
 
         try:
             client = Client(f"ws://{endpoint}/gremlin", "g")
             # May throw
             client.submit("g.V().limit(1)").all().result()
+            logger.info("Gremlin server is ready.")
         finally:
             try:
                 client.close()
@@ -2019,18 +2021,19 @@ def check_server_ready(endpoint, server='gremlin'):
         return True
     
     def _check_cypher_task(endpoint):
-        from neo4j import GraphDatabase, RoutingControl
-
+        from neo4j import GraphDatabase
         if "MY_POD_NAME" in os.environ:
             # inner kubernetes env
             if endpoint == "localhost" or endpoint == "127.0.0.1":
+                logger.info("In kubernetes env, cypher server is ready.")
                 return True
 
         try:
+            logger.debug("Try to connect to cypher server.")
             driver = GraphDatabase.driver(f'neo4j://{endpoint}', auth=("", ""))
             # May throw
-            _ = driver.execute_query("MATCH (n) RETURN n Limit 1",
-                                     routing_=RoutingControl.READ)
+            driver.verify_connectivity()
+            logger.info("Checked connectivity to cypher server.")
         finally:
             try:
                 driver.close()
