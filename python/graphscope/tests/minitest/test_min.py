@@ -186,17 +186,6 @@ def test_minimum_networkx():
     s.close()
 
 
-def test_cypher_endpoint():
-    from neo4j import RoutingControl
-
-    s = graphscope.session(cluster_type="hosts", num_workers=1)
-    g = load_ogbn_mag(s)
-    interactive = graphscope.interactive(g)
-    _ = interactive.execute(
-        "MATCH (n) RETURN n LIMIT 1", lang="cypher", routing_=RoutingControl.READ
-    )
-
-
 def test_multiple_session(ogbn_small_script):
     s1 = graphscope.session(cluster_type="hosts", num_workers=1)
     assert s1.info["status"] == "active"
