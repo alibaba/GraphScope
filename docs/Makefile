@@ -39,10 +39,17 @@ clean:
 	@echo "Building Java doc to $(BUILDDIR)/${TAG}/$@/reference/gae_java"
 
 	cd ${WORKING_DIR}/../analytical_engine/java && \
-	mvn -P javadoc javadoc:aggregate -Dmaven.antrun.skip=true -DskipTests -Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference -Djavadoc.output.destDir=gae_java --quiet \
+	mvn -P javadoc javadoc:aggregate \
+		-Dmaven.antrun.skip=true \
+		-DskipTests \
+		-Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference \
+		-Djavadoc.output.destDir=gae_java \
+		--quiet
 
-	@echo "Building Flex doc to $(BUILDDIR)/${TAG}/$@/reference/flex"
-	@doxygen Doxyfile-flex
+	# sphinx will append the `flex/` part to the output directory
+	@echo "Building Flex doc to $(BUILDDIR)/${TAG}/$@/reference/"
+	@mkdir -p "$(BUILDDIR)/${TAG}/$@/reference/"
+	@cat Doxyfile-flex | sed 's/_build\/latest\/html\/reference\//$(BUILDDIR)\/${TAG}\/$@\/reference\//g' | doxygen -
 
 doxygen:
 	@mkdir -p _build
