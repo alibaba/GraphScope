@@ -252,7 +252,7 @@ jobs:
 
   python-test:
     if: ${{ (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch') }}
-    runs-on: macos-latest
+    runs-on: macos-11
     needs: [build-wheels, build-client-wheels]
     strategy:
       fail-fast: false
