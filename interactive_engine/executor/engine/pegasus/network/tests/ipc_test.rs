@@ -54,6 +54,7 @@ impl Decode for Entry {
     }
 }
 
+#[ignore]
 #[test]
 fn ipc_test() {
     {

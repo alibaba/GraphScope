@@ -28,7 +28,7 @@ jobs:
     - name: Build & Test
       run: |
         echo $(pwd)
-        cd research/engine/pegasus
+        cd interactive_engine/executor/engine/pegasus
         cargo build --verbose
         cargo test --verbose
 
