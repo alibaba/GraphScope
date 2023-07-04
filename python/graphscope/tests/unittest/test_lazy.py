@@ -234,7 +234,7 @@ def test_cypher_endpoint(sess):
     from neo4j import RoutingControl
 
     g_node = load_p2p_network(sess)
-    interactive = graphscope.interactive(g_node)
+    interactive = sess.interactive(g_node)
     records = interactive.execute(
         "MATCH (n) RETURN n LIMIT 1", lang="cypher", routing_=RoutingControl.READ
     )
