@@ -73,9 +73,13 @@ class InteractiveQuery(object):
         self.closed = False
 
     @property
+    def _graph_url(self):
+        """This will be deprecated in the future, use `_gremlin_url` instead."""
+        return self._gremlin_url
+
+    @property
     def graph_url(self):
-        """The gremlin graph url can be used with any standard gremlin console,
-        e.g., tinkerpop."""
+        """This will be deprecated in the future, use `gremlin_url` instead."""
         return self._gremlin_url
 
     @property
