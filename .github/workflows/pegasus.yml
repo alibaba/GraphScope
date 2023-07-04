@@ -4,16 +4,16 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - gaia
     paths:
-      - 'research/engine/pegasus/**'
+      - 'interactive_engine/executor/engine/pegasus/**'
       - '.github/workflows/pegasus.yml'
 
   pull_request:
     branches:
-      - main
+      - gaia
     paths:
-      - 'research/engine/pegasus/**'
+      - 'interactive_engine/executor/engine/pegasus/**'
       - '.github/workflows/pegasus.yml'
 
 env:
