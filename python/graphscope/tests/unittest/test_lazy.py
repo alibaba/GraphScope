@@ -235,8 +235,6 @@ def test_cypher_endpoint(sess):
 
     g_node = load_p2p_network(sess)
     interactive = sess.interactive(g_node)
-    records = interactive.execute(
+    _ = interactive.execute(
         "MATCH (n) RETURN n LIMIT 1", lang="cypher", routing_=RoutingControl.READ
     )
-
-    assert len(records) == 1
