@@ -297,6 +297,7 @@ g.V().constant(1)
 g.V().constant("marko")
 g.V().constant(1.0)
 ```
+
 #### [valueMap()](https://tinkerpop.apache.org/docs/current/reference/#valuemap-step)
 The valueMap()-step is meant to map the graph element to a map of the property entries according to their actual properties. If no property keys are provided, then all property values are retrieved.
 
@@ -307,6 +308,7 @@ g.V().valueMap()
 g.V().valueMap("name")
 g.V().valueMap("name", "age")
 ```
+
 #### [values()](https://tinkerpop.apache.org/docs/current/reference/#values-step)
 The values()-step is meant to map the graph element to the values of the associated properties given the provide property keys. Here we just allow only one property key as the argument to the `values()` to implement the step as a map instead of a flat-map, which may be a little different from the standard Gremlin.
 
@@ -315,6 +317,19 @@ propertyKey - the property to retrieve its value from.
 ```bash
 g.V().values("name")
 ```
+
+#### [elementMap()](https://tinkerpop.apache.org/docs/current/reference/#elementmap-step)
+The elementMap()-step is meant to map the graph element to a map of T.id, T.label and the property values according to the given keys. If no property keys are provided, then all property values are retrieved.
+```
+
+Parameters: </br>
+propertyKeys - the properties to retrieve.
+```bash
+g.V().elementMap()
+g.V().elementMap("name")
+g.V().elementMap("name", "age")
+```
+
 #### [select()](https://tinkerpop.apache.org/docs/current/reference/#select-step)
 The select()-step is meant to map the traverser to the object specified by the selectKey or to a map projection of sideEffect values.
 
@@ -748,14 +763,6 @@ Map the current object to itself.
 ```bash
 g.V().identity()
 g.V().union(identity(), out().out())
-```
-#### elementMap()
-Map the graph element to a map of T.id, T.label and the property values according to the given keys. If no property keys are provided, then all property values are retrieved.
-
-Parameters: </br>
-propertyKeys - the properties to retrieve.
-```bash
-g.V().elementMap()
 ```
 #### path()
 Map the traverser to its path history.
