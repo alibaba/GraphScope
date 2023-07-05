@@ -271,11 +271,26 @@ impl EdgeTypeManager {
     }
 
     fn modify<E, F: Fn(&mut EdgeManagerInner) -> E>(&self, f: F) -> E {
-        let guard = epoch::pin();
-        let inner = self.get_inner(&guard);
-        let mut inner_clone = inner.clone();
+        let guard = &epoch::pin();
+        let mut inner_clone = unsafe {
+            self.inner
+                .load(Ordering::Relaxed, guard)
+                .deref()
+                .clone()
+        };
         let res = f(&mut inner_clone);
-        self.update(inner_clone);
+        let p = self
+            .inner
+            .swap(Owned::new(inner_clone).into_shared(guard), Ordering::Relaxed, guard);
+        if !p.is_null() {
+            unsafe {
+                // guard.defer_destroy(p);
+                guard.defer_unchecked(move || {
+                    trace!("EdgeManagerInner is now being deallocated.");
+                    drop(p.into_owned());
+                });
+            }
+        }
         res
     }
 
@@ -286,11 +301,6 @@ impl EdgeTypeManager {
                 .load(Ordering::Relaxed, guard)
                 .as_raw()
         }
-    }
-
-    fn update(&self, inner: EdgeManagerInner) {
-        self.inner
-            .store(Owned::new(inner), Ordering::Relaxed);
     }
 }
 

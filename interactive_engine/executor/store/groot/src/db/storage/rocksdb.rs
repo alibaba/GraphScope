@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use ::rocksdb::backup::{BackupEngine, BackupEngineOptions, RestoreOptions};
-use ::rocksdb::{DBRawIterator, IngestExternalFileOptions, Options, ReadOptions, DB};
+use ::rocksdb::{DBRawIterator, Env, IngestExternalFileOptions, Options, ReadOptions, DB};
 use rocksdb::{DBCompactionStyle, DBCompressionType, WriteBatch};
 
 use super::{ExternalStorage, ExternalStorageBackup, StorageIter, StorageRes};
@@ -114,8 +114,19 @@ impl ExternalStorage for RocksDB {
     }
 
     fn open_backup_engine(&self, backup_path: &str) -> GraphResult<Box<dyn ExternalStorageBackup>> {
-        let backup_opts = BackupEngineOptions::default();
-        let backup_engine = BackupEngine::open(&backup_opts, backup_path).map_err(|e| {
+        let backup_opts = BackupEngineOptions::new(backup_path).map_err(|e| {
+            let msg = format!(
+                "Gen BackupEngineOptions error for path {}, because {}",
+                backup_path.to_string(),
+                e.into_string()
+            );
+            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+        })?;
+        let env = Env::new().map_err(|e| {
+            let msg = format!("Gen rocksdb Env failed because {}", e.into_string());
+            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+        })?;
+        let backup_engine = BackupEngine::open(&backup_opts, &env).map_err(|e| {
             let msg = format!(
                 "open rocksdb backup engine at {} failed, because {}",
                 backup_path.to_string(),
