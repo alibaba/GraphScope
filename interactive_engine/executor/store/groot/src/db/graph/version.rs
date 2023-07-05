@@ -115,7 +115,9 @@ impl VersionManager {
                 break;
             }
         }
-        self.head.store(head, Ordering::Relaxed);
+        if !ret.is_empty() {
+            self.head.store(head, Ordering::Relaxed);
+        }
         Ok(ret)
     }
 
