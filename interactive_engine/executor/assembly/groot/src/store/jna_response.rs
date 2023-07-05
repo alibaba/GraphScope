@@ -28,7 +28,6 @@ impl JnaResponse {
 
     #[inline]
     pub fn new_error(msg: &str) -> Box<JnaResponse> {
-        println!("Jna response new error");
         let mut resp = JnaResponse::default();
         resp.success(false);
         resp.has_ddl(false);
@@ -90,9 +89,4 @@ impl Drop for JnaResponse {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern "C" fn dropJnaResponse(_: Box<JnaResponse>) {
-    // info!("Before mem drop");
-    // drop(b);
-    // info!("dropJnaResponse {}, {}", std::mem::size_of::<Box<JnaResponse>>(), std::mem::size_of::<JnaResponse>());
-    // std::mem::drop(b);
-}
+pub extern "C" fn dropJnaResponse(_: Box<JnaResponse>) {}

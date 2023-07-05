@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use ::rocksdb::backup::{BackupEngine, BackupEngineOptions, RestoreOptions};
-use ::rocksdb::{DBRawIterator, IngestExternalFileOptions, Options, ReadOptions, DB, Env};
+use ::rocksdb::{DBRawIterator, Env, IngestExternalFileOptions, Options, ReadOptions, DB};
 use rocksdb::{DBCompactionStyle, DBCompressionType, WriteBatch};
 
 use super::{ExternalStorage, ExternalStorageBackup, StorageIter, StorageRes};

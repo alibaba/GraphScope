@@ -70,7 +70,6 @@ impl GaiaServer {
     }
 
     pub fn start(&'static self) -> GraphResult<(u16, u16)> {
-        // Ok((8001, 8002))
         let gaia_config = make_gaia_config(self.config.clone());
         let gaia_rpc_config = make_gaia_rpc_config(self.config.clone());
         info!("Server config {:?}\nRPC config {:?}", gaia_config, gaia_rpc_config);
@@ -252,7 +251,7 @@ impl GaiaServiceListener {
 
 impl ServiceStartListener for GaiaServiceListener {
     fn on_rpc_start(&mut self, server_id: u64, addr: SocketAddr) -> std::io::Result<()> {
-        info!("RPC server of server[{}] start on {}", server_id, addr);
+        trace!("RPC server of server[{}] start on {}", server_id, addr);
         let mut rpc_addr = self
             .rpc_addr
             .lock()
@@ -262,7 +261,7 @@ impl ServiceStartListener for GaiaServiceListener {
     }
 
     fn on_server_start(&mut self, server_id: u64, addr: SocketAddr) -> std::io::Result<()> {
-        info!("compute server[{}] start on {}", server_id, addr);
+        trace!("compute server[{}] start on {}", server_id, addr);
         let mut server_addr = self
             .server_addr
             .lock()
