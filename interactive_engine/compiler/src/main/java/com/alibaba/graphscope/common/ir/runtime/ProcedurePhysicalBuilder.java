@@ -35,17 +35,17 @@ public class ProcedurePhysicalBuilder extends PhysicalBuilder<byte[]> {
         super(logicalPlan);
         this.builder = StoredProcedure.Query.newBuilder();
         RexCall procedureCall = (RexCall) logicalPlan.getProcedureCall();
-        setHQPSQueryProcedureName(procedureCall, builder);
-        setHQPSQueryProcedureArgs(procedureCall, builder);
+        setStoredProcedureName(procedureCall, builder);
+        setStoredProcedureArgs(procedureCall, builder);
     }
 
-    private void setHQPSQueryProcedureName(
+    private void setStoredProcedureName(
             RexCall procedureCall, StoredProcedure.Query.Builder builder) {
         SqlOperator operator = procedureCall.getOperator();
         builder.setQueryName(Common.NameOrId.newBuilder().setName(operator.getName()).build());
     }
 
-    private void setHQPSQueryProcedureArgs(
+    private void setStoredProcedureArgs(
             RexCall procedureCall, StoredProcedure.Query.Builder builder) {
         List<RexNode> operands = procedureCall.getOperands();
         for (int i = 0; i < operands.size(); ++i) {
