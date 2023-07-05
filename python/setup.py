@@ -222,14 +222,21 @@ def build_learning_engine():
     include_dirs.append(ROOT_PATH + "/third_party/glog/build")
     include_dirs.append(ROOT_PATH + "/third_party/protobuf/build/include")
     include_dirs.append(numpy.get_include())
-    # mac M1 support
-    include_dirs.append("/opt/homebrew/include")
-
     library_dirs.append(ROOT_PATH + "/graphlearn/built/lib")
 
     extra_compile_args.append("-D__USE_XOPEN2K8")
     extra_compile_args.append("-std=c++17")
     extra_compile_args.append("-fvisibility=hidden")
+
+    if sys.platform == "darwin":
+        # mac M1 support
+        include_dirs.append("/opt/homebrew/include")
+
+        # explicitly link against protobuf to avoid the error
+        # "illegal thread local variable reference to regular symbol"
+        library_dirs.append("/usr/local/lib")
+        library_dirs.append("/opt/homebrew/lib")
+        libraries.append("protobuf")
 
     libraries.append("graphlearn_shared")
     if sys.platform == "linux" or sys.platform == "linux2":

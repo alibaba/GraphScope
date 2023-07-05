@@ -131,6 +131,17 @@ class GSParams {
 
   const rpc::LargeAttrValue& GetLargeAttr() const { return large_attr_; }
 
+  const std::string DebugString() const {
+    std::ostringstream ss;
+    ss << "GSParams: {";
+    for (auto const& kv : params_) {
+      ss << rpc::ParamKey_Name(static_cast<rpc::ParamKey>(kv.first)) << ": "
+         << kv.second.DebugString() << ", ";
+    }
+    ss << "}";
+    return ss.str();
+  }
+
  private:
   const std::map<int, rpc::AttrValue> params_;
   const rpc::LargeAttrValue& large_attr_;

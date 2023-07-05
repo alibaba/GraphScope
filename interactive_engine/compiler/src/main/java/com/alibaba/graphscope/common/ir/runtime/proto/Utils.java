@@ -38,6 +38,8 @@ import java.util.stream.Collectors;
 public abstract class Utils {
     public static final Common.Value protoValue(RexLiteral literal) {
         switch (literal.getType().getSqlTypeName()) {
+            case NULL:
+                return Common.Value.newBuilder().setNone(Common.None.newBuilder().build()).build();
             case BOOLEAN:
                 return Common.Value.newBuilder().setBoolean((Boolean) literal.getValue()).build();
             case INTEGER:
@@ -176,6 +178,8 @@ public abstract class Utils {
 
     public static final Common.DataType protoBasicDataType(RelDataType basicType) {
         switch (basicType.getSqlTypeName()) {
+            case NULL:
+                return Common.DataType.NONE;
             case BOOLEAN:
                 return Common.DataType.BOOLEAN;
             case INTEGER:

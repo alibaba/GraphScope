@@ -25,8 +25,11 @@ query
     ;
 
 // g
+// g.with(ARGS_EVAL_TIMEOUT, 2000L)
+// g.with(Tokens.ARGS_EVAL_TIMEOUT, 2000L)
+// g.with('evaluationTimeout', 2000L)
 traversalSource
-    : TRAVERSAL_ROOT
+    : TRAVERSAL_ROOT (DOT traversalMethod_with) ?
     ;
 
 // g.rootTraversal()
@@ -61,7 +64,8 @@ traversalMethod
     | traversalMethod_inE  // inE()[.outV()]
     | traversalMethod_bothE  // bothE()[.otherV()]
     | traversalMethod_limit    // limit()
-    | traversalMethod_valueMap  // valueMap()
+    | traversalMethod_valueMap // valueMap()
+    | traversalMethod_elementMap // elementMap()
     | traversalMethod_order  // order()
     | traversalMethod_select  // select()
     | traversalMethod_dedup   // dedup()
@@ -164,8 +168,20 @@ traversalMethod_bothE
 // with('PATH_OPT', 'SIMPLE' | 'ARBITRARY')
 // with('RESULT_OPT', 'ALL_V' | 'END_V')
 // with('UNTIL', expression)
+// with('ARGS_EVAL_TIMEOUT', 2000L) // set evaluation timeout to 2 seconds
+// with('Tokens.ARGS_EVAL_TIMEOUT', 2000L) // set evaluation timeout to 2 seconds
+// with('evaluationTimeout', 2000L) // set evaluation timeout to 2 seconds
 traversalMethod_with
-    : 'with' LPAREN stringLiteral COMMA stringLiteral RPAREN
+    : 'with' LPAREN stringLiteral COMMA genericLiteral RPAREN
+    | 'with' LPAREN evaluationTimeoutKey COMMA evaluationTimeoutValue RPAREN
+    ;
+
+evaluationTimeoutKey
+    : 'ARGS_EVAL_TIMEOUT' | 'Tokens.ARGS_EVAL_TIMEOUT'
+    ;
+
+evaluationTimeoutValue
+    : integerLiteral
     ;
 
 // outV()
@@ -197,6 +213,12 @@ traversalMethod_limit
 // valueMap('s1', ...)
 traversalMethod_valueMap
     : 'valueMap' LPAREN stringLiteralList RPAREN
+    ;
+
+// elementMap()
+// elementMap('s1', ...)
+traversalMethod_elementMap
+    : 'elementMap' LPAREN stringLiteralList RPAREN
     ;
 
 // order()
@@ -238,12 +260,14 @@ traversalMethod_select
 // by()
 // by("name")
 // by(valueMap())
+// by(elementMap())
 // by(out().count())
 // by(T.label/T.id)
 traversalMethod_selectby
     : 'by' LPAREN RPAREN
     | 'by' LPAREN stringLiteral RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_valueMap RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_elementMap RPAREN
     | 'by' LPAREN nestedTraversal RPAREN
     | 'by' LPAREN traversalToken RPAREN
     ;

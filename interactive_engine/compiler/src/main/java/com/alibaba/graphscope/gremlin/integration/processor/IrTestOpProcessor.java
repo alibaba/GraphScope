@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.integration.processor;
 
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
@@ -105,7 +106,8 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                             this.configs),
                                     jobId,
                                     script,
-                                    irMeta);
+                                    irMeta,
+                                    new QueryTimeoutConfig(ctx.getRequestTimeout()));
                             metaQueryCallback.afterExec(irMeta);
                         });
                 return op;

@@ -30,6 +30,7 @@ pub type GraphBackupHandle = *const c_void;
 pub extern "C" fn openGraphBackupEngine(
     handle: GraphHandle, backup_path: *const c_char,
 ) -> GraphBackupHandle {
+    trace!("openGraphBackupEngine");
     unsafe {
         let graph_store = &*(handle as *const GraphStore);
         let slice = CStr::from_ptr(backup_path).to_bytes();
@@ -44,13 +45,15 @@ pub extern "C" fn openGraphBackupEngine(
 #[no_mangle]
 pub extern "C" fn closeGraphBackupEngine(handle: GraphBackupHandle) {
     let ptr = handle as *mut GraphBackupEngine;
+    trace!("closeGraphBackupEngine");
     unsafe {
-        Box::from_raw(ptr);
+        drop(Box::from_raw(ptr));
     }
 }
 
 #[no_mangle]
 pub extern "C" fn createNewBackup(handle: GraphBackupHandle) -> Box<JnaResponse> {
+    trace!("createNewBackup");
     unsafe {
         let graph_be = &mut *(handle as *mut GraphBackupEngine);
         match graph_be.create_new_backup() {
@@ -73,6 +76,7 @@ pub extern "C" fn createNewBackup(handle: GraphBackupHandle) -> Box<JnaResponse>
 
 #[no_mangle]
 pub extern "C" fn deleteBackup(handle: GraphBackupHandle, backup_id: i32) -> Box<JnaResponse> {
+    trace!("deleteBackup");
     unsafe {
         let graph_be = &mut *(handle as *mut GraphBackupEngine);
         match graph_be.delete_backup(backup_id) {
@@ -89,6 +93,7 @@ pub extern "C" fn deleteBackup(handle: GraphBackupHandle, backup_id: i32) -> Box
 pub extern "C" fn restoreFromBackup(
     handle: GraphBackupHandle, restore_path: *const c_char, backup_id: i32,
 ) -> Box<JnaResponse> {
+    trace!("restoreFromBackup");
     unsafe {
         let graph_be = &mut *(handle as *mut GraphBackupEngine);
         let slice = CStr::from_ptr(restore_path).to_bytes();
@@ -105,6 +110,7 @@ pub extern "C" fn restoreFromBackup(
 
 #[no_mangle]
 pub extern "C" fn verifyBackup(handle: GraphBackupHandle, backup_id: i32) -> Box<JnaResponse> {
+    trace!("verifyBackup");
     unsafe {
         let graph_be = &*(handle as *const GraphBackupEngine);
         match graph_be.verify_backup(backup_id) {
@@ -119,6 +125,7 @@ pub extern "C" fn verifyBackup(handle: GraphBackupHandle, backup_id: i32) -> Box
 
 #[no_mangle]
 pub extern "C" fn getBackupList(handle: GraphBackupHandle) -> Box<JnaResponse> {
+    trace!("getBackupList");
     unsafe {
         let graph_be = &*(handle as *const GraphBackupEngine);
         let mut backup_id_list = graph_be.get_backup_list();

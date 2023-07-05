@@ -280,6 +280,13 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
+    public Traversal visitTraversalMethod_elementMap(
+            GremlinGSParser.TraversalMethod_elementMapContext ctx) {
+        return graphTraversal.elementMap(
+                GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
+    }
+
+    @Override
     public Traversal visitTraversalMethod_select(
             GremlinGSParser.TraversalMethod_selectContext ctx) {
         if (ctx.stringLiteral() != null) {
@@ -334,6 +341,15 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                     Traversal nestedTraversal =
                             nestedVisitor.visitTraversalMethod_valueMap(
                                     byCtx.traversalMethod_valueMap());
+                    step.modulateBy(nestedTraversal.asAdmin());
+                } else if (byCtx.traversalMethod_elementMap()
+                        != null) { // select(..).by(elementMap('name'))
+                    TraversalMethodVisitor nestedVisitor =
+                            new TraversalMethodVisitor(
+                                    gvisitor, GremlinAntlrToJava.getTraversalSupplier().get());
+                    Traversal nestedTraversal =
+                            nestedVisitor.visitTraversalMethod_elementMap(
+                                    byCtx.traversalMethod_elementMap());
                     step.modulateBy(nestedTraversal.asAdmin());
                 } else if (byChildCount == 4
                         && byCtx.nestedTraversal() != null) { // select(..).by(out().count())
@@ -740,10 +756,13 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         Step endStep = graphTraversal.asAdmin().getEndStep();
         if (!(endStep instanceof PathExpandStep)) {
             throw new UnsupportedEvalException(
-                    ctx.getClass(), "with should follow path expand, i.e. out('1..2').with(..)");
+                    ctx.getClass(),
+                    "with should follow source or path expand, i.e. g.with(..) or"
+                            + " out('1..2').with(..)");
         }
-        String optKey = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0));
-        String optValue = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(1));
+        String optKey = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
+        Object optValue =
+                GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral());
         return graphTraversal.with(optKey, optValue);
     }
 

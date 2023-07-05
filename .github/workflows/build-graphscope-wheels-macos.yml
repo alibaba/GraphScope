@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   build-wheels:
-    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch')
     runs-on: macos-11
     steps:
     - uses: actions/checkout@v3
@@ -38,6 +38,12 @@ jobs:
         ./gs install-deps dev || true
         ./gs install-deps dev
         echo "export PATH=/usr/local/opt/coreutils/libexec/gnubin:\$PATH" >> ~/.graphscope_env
+
+    - name: Install JDK 11
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu' # See 'Supported distributions' for available options
+        java-version: '11'
 
     - name: Reinstall glog
       run: |
@@ -115,7 +121,7 @@ jobs:
         retention-days: 5
 
   build-client-wheels:
-    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch')
     runs-on: macos-11
     strategy:
       matrix:
@@ -245,8 +251,8 @@ jobs:
         packages_dir: upload_pypi/
 
   python-test:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
-    runs-on: macos-latest
+    if: ${{ (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch') }}
+    runs-on: macos-11
     needs: [build-wheels, build-client-wheels]
     strategy:
       fail-fast: false

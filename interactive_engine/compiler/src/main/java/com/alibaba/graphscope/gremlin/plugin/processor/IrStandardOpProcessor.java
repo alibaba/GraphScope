@@ -29,6 +29,7 @@ import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
+import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
@@ -39,6 +40,7 @@ import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngineFact
 import com.alibaba.graphscope.gremlin.plugin.strategy.ExpandFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
+import com.alibaba.graphscope.gremlin.result.processor.AbstractResultProcessor;
 import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
 import com.alibaba.graphscope.gremlin.service.MetricsPrinter;
 import com.alibaba.pegasus.RpcClient;
@@ -59,7 +61,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.InlineFilterStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversalStrategies;
 import org.apache.tinkerpop.gremlin.server.Context;
-import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.op.AbstractEvalOpProcessor;
 import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
@@ -106,8 +107,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.graph = graph;
         this.g = g;
         this.configs = configs;
-        this.rpcClient =
-                new RpcClient(PegasusConfig.PEGASUS_GRPC_TIMEOUT.get(configs), fetcher.fetch());
+        this.rpcClient = new RpcClient(fetcher.fetch());
         this.metaQueryCallback = metaQueryCallback;
         this.graphPlanner = graphPlanner;
     }
@@ -144,6 +144,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         metaQueryCallback.afterExec(irMeta);
                         if (t != null) {
                             metricsPrinter.stop(false);
+                            if (v instanceof AbstractResultProcessor) {
+                                ((AbstractResultProcessor) v).cancel();
+                            }
                             Optional<Throwable> possibleTemporaryException =
                                     determineIfTemporaryException(t);
                             if (possibleTemporaryException.isPresent()) {
@@ -259,15 +262,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             String script,
             IrMeta irMeta,
             MetricsPrinter metricsPrinter) {
-        final RequestMessage msg = ctx.getRequestMessage();
-        final Settings settings = ctx.getSettings();
-        final Map<String, Object> args = msg.getArgs();
-        long seto =
-                args.containsKey("evaluationTimeout")
-                        ? ((Number) args.get("evaluationTimeout")).longValue()
-                        : settings.getEvaluationTimeout();
+        QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
         return GremlinExecutor.LifeCycle.build()
-                .evaluationTimeoutOverride(seto)
+                .evaluationTimeoutOverride(timeoutConfig.getExecutionTimeoutMS())
                 .beforeEval(
                         b -> {
                             try {
@@ -296,7 +293,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                                     ctx, traversal, metricsPrinter),
                                             jobId,
                                             script,
-                                            irMeta);
+                                            irMeta,
+                                            timeoutConfig);
                                 }
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
@@ -311,7 +309,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             ResultProcessor resultProcessor,
             long jobId,
             String script,
-            IrMeta irMeta)
+            IrMeta irMeta,
+            QueryTimeoutConfig timeoutConfig)
             throws InvalidProtocolBufferException, IOException, RuntimeException {
         InterOpCollection opCollection = (new InterOpCollectionBuilder(traversal)).build();
         // fuse order with limit to topK
@@ -342,11 +341,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(configs))
                         .setMemoryLimit(PegasusConfig.PEGASUS_MEMORY_LIMIT.get(configs))
                         .setBatchCapacity(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(configs))
-                        .setTimeLimit(PegasusConfig.PEGASUS_TIMEOUT.get(configs))
+                        .setTimeLimit(timeoutConfig.getEngineTimeoutMS())
                         .setAll(PegasusClient.Empty.newBuilder().build())
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();
-        this.rpcClient.submit(request, resultProcessor);
+        this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
     }
 
     public static void applyStrategies(Traversal traversal) {

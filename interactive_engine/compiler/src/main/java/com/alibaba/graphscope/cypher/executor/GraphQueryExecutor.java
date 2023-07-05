@@ -19,6 +19,7 @@ package com.alibaba.graphscope.cypher.executor;
 import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
@@ -53,6 +54,7 @@ public class GraphQueryExecutor extends FabricExecutor {
     private final ExecutionClient client;
 
     private final GraphPlanner graphPlanner;
+    private final FabricConfig fabricConfig;
 
     public GraphQueryExecutor(
             FabricConfig config,
@@ -75,6 +77,7 @@ public class GraphQueryExecutor extends FabricExecutor {
                 internalLog,
                 statementLifecycles,
                 fabricWorkerExecutor);
+        this.fabricConfig = config;
         this.graphConfig = graphConfig;
         this.antlr4Parser = antlr4Parser;
         this.graphPlanner = graphPlanner;
@@ -118,7 +121,7 @@ public class GraphQueryExecutor extends FabricExecutor {
                 }
                 QuerySubject querySubject = new QuerySubject.BasicQuerySubject();
                 StatementResults.SubscribableExecution execution =
-                        new GraphPlanExecution(this.client, planSummary);
+                        new GraphPlanExecution(this.client, planSummary, getQueryTimeoutConfig());
                 metaQueryCallback.afterExec(irMeta);
                 StatementResult result = StatementResults.connectVia(execution, querySubject);
                 return result;
@@ -130,5 +133,9 @@ public class GraphQueryExecutor extends FabricExecutor {
                 metaQueryCallback.afterExec(irMeta);
             }
         }
+    }
+
+    private QueryTimeoutConfig getQueryTimeoutConfig() {
+        return new QueryTimeoutConfig(fabricConfig.getTransactionTimeout().toMillis());
     }
 }

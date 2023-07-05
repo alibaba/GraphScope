@@ -121,6 +121,10 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
         }
     }
 
+    public synchronized void cancel() {
+        this.locked = true;
+    }
+
     protected abstract void aggregateResults();
 
     protected void writeResultList(

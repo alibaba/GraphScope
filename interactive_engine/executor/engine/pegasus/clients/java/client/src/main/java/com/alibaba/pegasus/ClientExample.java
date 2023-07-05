@@ -99,7 +99,7 @@ public class ClientExample {
         List<RpcChannel> channels = new ArrayList<>();
         channels.add(rpcChannel0);
         channels.add(rpcChannel1);
-        RpcClient rpcClient = new RpcClient(600000, channels);
+        RpcClient rpcClient = new RpcClient(channels);
 
         logger.info("Will try to send request");
         JobConfig confPb =
@@ -148,7 +148,8 @@ public class ClientExample {
                     public void error(Status status) {
                         resultIterator.fail(status.getCause());
                     }
-                });
+                },
+                600000);
         rpcClient.shutdown();
     }
 }

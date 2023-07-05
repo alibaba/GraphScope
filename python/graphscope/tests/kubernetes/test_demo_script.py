@@ -347,15 +347,21 @@ def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir
     sub_graph = interactive.subgraph(  # noqa: F841
         'g.V().hasLabel("person").outE("knows")'
     )
-    person_count = interactive.execute(
-        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
-    ).all()[0]
-    knows_count = interactive.execute(
-        'g.V().hasLabel("person").outE("knows").count()'
-    ).all()[0]
+    person_count = (
+        interactive.execute(
+            'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+        )
+        .all()
+        .result()[0]
+    )
+    knows_count = (
+        interactive.execute('g.V().hasLabel("person").outE("knows").count()')
+        .all()
+        .result()[0]
+    )
     interactive2 = gs_session_distributed.gremlin(sub_graph)
-    sub_person_count = interactive2.execute("g.V().count()").all()[0]
-    sub_knows_count = interactive2.execute("g.E().count()").all()[0]
+    sub_person_count = interactive2.execute("g.V().count()").all().result()[0]
+    sub_knows_count = interactive2.execute("g.E().count()").all().result()[0]
     assert person_count == sub_person_count
     assert knows_count == sub_knows_count
 
@@ -378,11 +384,15 @@ def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir
     msub_graph = minteractive.subgraph(  # noqa: F841
         'g.V().hasLabel("person").outE("knows")'
     )
-    person_count = minteractive.execute(
-        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
-    ).all()[0]
+    person_count = (
+        minteractive.execute(
+            'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+        )
+        .all()
+        .result()[0]
+    )
     msub_interactive = gs_session_distributed.gremlin(msub_graph)
-    sub_person_count = msub_interactive.execute("g.V().count()").all()[0]
+    sub_person_count = msub_interactive.execute("g.V().count()").all().result()[0]
     assert person_count == sub_person_count
 
     # GNN engine
@@ -401,12 +411,18 @@ def test_demo_with_lazy_mode(
     sub_graph = interactive.subgraph(  # noqa: F841
         'g.V().hasLabel("person").outE("knows")'
     )
-    person_count = interactive.execute(
-        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
-    ).all()[0]
-    knows_count = interactive.execute(
-        'g.V().hasLabel("person").outE("knows").count()'
-    ).all()[0]
+    person_count = (
+        interactive.execute(
+            'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+        )
+        .all()
+        .result()[0]
+    )
+    knows_count = (
+        interactive.execute('g.V().hasLabel("person").outE("knows").count()')
+        .all()
+        .result()[0]
+    )
     assert get_engine_pod_num(interactive_name, namespace) == 1
 
     interactive.close()
@@ -420,8 +436,8 @@ def test_demo_with_lazy_mode(
     interactive2 = gs_session_with_lazy_mode.gremlin(sub_graph)
     assert get_engine_pod_num(interactive2_name, namespace) == 1
 
-    sub_person_count = interactive2.execute("g.V().count()").all()[0]
-    sub_knows_count = interactive2.execute("g.E().count()").all()[0]
+    sub_person_count = interactive2.execute("g.V().count()").all().result()[0]
+    sub_knows_count = interactive2.execute("g.E().count()").all().result()[0]
     assert person_count == sub_person_count
     assert knows_count == sub_knows_count
 
@@ -452,16 +468,20 @@ def test_demo_with_lazy_mode(
     msub_graph = minteractive.subgraph(  # noqa: F841
         'g.V().hasLabel("person").outE("knows")'
     )
-    person_count = minteractive.execute(
-        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
-    ).all()[0]
+    person_count = (
+        minteractive.execute(
+            'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+        )
+        .all()
+        .result()[0]
+    )
 
     minteractive.close()
     # wait for engine pod to be deleted
     wait_for_pod_deletion(minteractive_name, namespace)
     assert get_engine_pod_num(minteractive_name, namespace) == 0
     msub_interactive = gs_session_with_lazy_mode.gremlin(msub_graph)
-    sub_person_count = msub_interactive.execute("g.V().count()").all()[0]
+    sub_person_count = msub_interactive.execute("g.V().count()").all().result()[0]
     assert person_count == sub_person_count
 
     # GNN engine
@@ -505,7 +525,7 @@ def test_query_modern_graph(
     interactive = gs_session.gremlin(graph)
     # query on modern graph
     for q in modern_scripts:
-        result = interactive.execute(q).all()[0]
+        result = interactive.execute(q).all().result()[0]
         assert result == 1
     # traversal on moder graph
     g = interactive.traversal_source()
@@ -608,22 +628,34 @@ def test_store_and_restore_graphs(
     graph = load_modern_graph(old_sess, "/testingdata/modern_graph")
     interactive = old_sess.gremlin(graph)
     graph_vineyard_id = vineyard.ObjectID(graph.vineyard_id)
-    graph_person_count = interactive.execute(
-        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
-    ).all()[0]
-    graph_knows_count = interactive.execute(
-        'g.V().hasLabel("person").outE("knows").count()'
-    ).all()[0]
+    graph_person_count = (
+        interactive.execute(
+            'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+        )
+        .all()
+        .result()[0]
+    )
+    graph_knows_count = (
+        interactive.execute('g.V().hasLabel("person").outE("knows").count()')
+        .all()
+        .result()[0]
+    )
 
     sub_graph = interactive.subgraph(  # noqa: F841
         'g.V().hasLabel("person").outE("knows")'
     )
-    sub_graph_person_count = interactive.execute(
-        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
-    ).all()[0]
-    sub_graph_knows_count = interactive.execute(
-        'g.V().hasLabel("person").outE("knows").count()'
-    ).all()[0]
+    sub_graph_person_count = (
+        interactive.execute(
+            'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+        )
+        .all()
+        .result()[0]
+    )
+    sub_graph_knows_count = (
+        interactive.execute('g.V().hasLabel("person").outE("knows").count()')
+        .all()
+        .result()[0]
+    )
 
     sub_graph_vineyard_id = vineyard.ObjectID(sub_graph.vineyard_id)
     # create the pv and pvc for backup
@@ -667,17 +699,23 @@ def test_store_and_restore_graphs(
 
     new_graph = new_sess.g(vineyard.ObjectID(graph_vineyard_id))
     interactive = new_sess.gremlin(new_graph)
-    new_graph_person_count = interactive.execute(
-        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
-    ).all()[0]
-    new_graph_knows_count = interactive.execute(
-        'g.V().hasLabel("person").outE("knows").count()'
-    ).all()[0]
+    new_graph_person_count = (
+        interactive.execute(
+            'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+        )
+        .all()
+        .result()[0]
+    )
+    new_graph_knows_count = (
+        interactive.execute('g.V().hasLabel("person").outE("knows").count()')
+        .all()
+        .result()[0]
+    )
 
     new_sub_graph = new_sess.g(vineyard.ObjectID(sub_graph_vineyard_id))
     interactive2 = new_sess.gremlin(new_sub_graph)
-    new_sub_graph_person_count = interactive2.execute("g.V().count()").all()[0]
-    new_sub_graph_knows_count = interactive2.execute("g.E().count()").all()[0]
+    new_sub_graph_person_count = interactive2.execute("g.V().count()").all().result()[0]
+    new_sub_graph_knows_count = interactive2.execute("g.E().count()").all().result()[0]
 
     assert graph_person_count == new_graph_person_count
     assert graph_knows_count == new_graph_knows_count
@@ -750,15 +788,21 @@ def test_helm_installation(data_dir, modern_graph_data_dir):
     sub_graph = interactive.subgraph(  # noqa: F841
         'g.V().hasLabel("person").outE("knows")'
     )
-    person_count = interactive.execute(
-        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
-    ).all()[0]
-    knows_count = interactive.execute(
-        'g.V().hasLabel("person").outE("knows").count()'
-    ).all()[0]
+    person_count = (
+        interactive.execute(
+            'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+        )
+        .all()
+        .result()[0]
+    )
+    knows_count = (
+        interactive.execute('g.V().hasLabel("person").outE("knows").count()')
+        .all()
+        .result()[0]
+    )
     interactive2 = sess.gremlin(sub_graph)
-    sub_person_count = interactive2.execute("g.V().count()").all()[0]
-    sub_knows_count = interactive2.execute("g.E().count()").all()[0]
+    sub_person_count = interactive2.execute("g.V().count()").all().result()[0]
+    sub_knows_count = interactive2.execute("g.E().count()").all().result()[0]
     assert person_count == sub_person_count
     assert knows_count == sub_knows_count
 
@@ -767,26 +811,9 @@ def test_helm_installation(data_dir, modern_graph_data_dir):
     simple_g = sub_graph.project(vertices={"person": []}, edges={"knows": []})
 
     pr_result = graphscope.pagerank(simple_g, delta=0.8)
-    tc_result = graphscope.triangles(simple_g)
 
     # add the PageRank and triangle-counting results as new columns to the property graph
     sub_graph.add_column(pr_result, {"Ranking": "r"})
-    sub_graph.add_column(tc_result, {"TC": "r"})
-
-    # test subgraph on modern graph
-    mgraph = load_modern_graph(sess, modern_graph_data_dir)
-
-    # Interactive engine
-    minteractive = sess.gremlin(mgraph)
-    msub_graph = minteractive.subgraph(  # noqa: F841
-        'g.V().hasLabel("person").outE("knows")'
-    )
-    person_count = minteractive.execute(
-        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
-    ).all()[0]
-    msub_interactive = sess.gremlin(msub_graph)
-    sub_person_count = msub_interactive.execute("g.V().count()").all()[0]
-    assert person_count == sub_person_count
 
 
 def test_modualize():

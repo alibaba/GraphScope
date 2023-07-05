@@ -20,12 +20,11 @@ import logging
 from copy import deepcopy
 from enum import Enum
 
+from gremlin_python.driver.client import Client
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.anonymous_traversal import traversal
 
 from graphscope.framework.dag import DAGNode
-from graphscope.framework.dag_utils import fetch_gremlin_result
-from graphscope.framework.dag_utils import gremlin_query
 from graphscope.framework.dag_utils import gremlin_to_subgraph
 
 logger = logging.getLogger("graphscope")
@@ -38,55 +37,6 @@ class InteractiveQueryStatus(Enum):
     Running = 1
     Failed = 2
     Closed = 3
-
-
-class ResultSetDAGNode(DAGNode):
-    """A class represents a result set node in a DAG.
-
-    This is a wrapper for :class:`gremlin_python.driver.resultset.ResultSet`,
-    and you can get the result by :method:`one()` or :method:`all()`.
-    """
-
-    def __init__(self, interactive, op):
-        self._session = interactive.session
-        self._op = op
-        # add op to dag
-        self._session.dag.add_op(self._op)
-
-    def one(self):
-        """See details in :method:`gremlin_python.driver.resultset.ResultSet.one`"""
-        # avoid circular import
-        from graphscope.framework.context import ResultDAGNode
-
-        op = fetch_gremlin_result(self, "one")
-        return ResultDAGNode(self, op)
-
-    def all(self):
-        """See details in :method:`gremlin_python.driver.resultset.ResultSet.all`
-
-        Note that this method is equal to `ResultSet.all().result()`
-        """
-        # avoid circular import
-        from graphscope.framework.context import ResultDAGNode
-
-        op = fetch_gremlin_result(self, "all")
-        return ResultDAGNode(self, op)
-
-
-class ResultSet(object):
-    def __init__(self, result_set_node):
-        self._result_set_node = result_set_node
-        self._session = self._result_set_node.session
-        # copy and set op evaluated
-        self._result_set_node.op = deepcopy(self._result_set_node.op)
-        self._result_set_node.evaluated = True
-        self._session.dag.add_op(self._result_set_node.op)
-
-    def one(self):
-        return self._session._wrapper(self._result_set_node.one())
-
-    def all(self):
-        return self._session._wrapper(self._result_set_node.all())
 
 
 class InteractiveQuery(object):
@@ -106,17 +56,19 @@ class InteractiveQuery(object):
 
     def __init__(self, graph, frontend_endpoint):
         """Construct a :class:`InteractiveQuery` object."""
-        self._conn = None
         # graph object id stored in vineyard
         self._graph = graph
         self._session = graph._session
         frontend_endpoint = frontend_endpoint.split(",")
         self._graph_url = [f"ws://{endpoint}/gremlin" for endpoint in frontend_endpoint]
+        self._conn = None
+        self._gremlin_client = None
         self.closed = False
 
     @property
     def graph_url(self):
-        """The gremlin graph url can be used with any standard gremlin console, e.g., tinkerpop."""
+        """The gremlin graph url can be used with any standard gremlin console,
+        e.g., tinkerpop."""
         return self._graph_url
 
     @property
@@ -132,6 +84,10 @@ class InteractiveQuery(object):
         return self._session.session_id
 
     def execute(self, query, request_options=None):
+        """A simple wrapper around `submit`, for compatibility"""
+        return self.submit(query, request_options=request_options)
+
+    def submit(self, query, request_options=None):
         """Execute gremlin querying scripts.
 
         Args:
@@ -142,17 +98,18 @@ class InteractiveQuery(object):
             }
 
         Returns:
-            :class:`graphscope.framework.context.ResultDAGNode`:
-                A result holds the gremlin result, evaluated in eager mode.
+            :class:`gremlin_python.driver.client.ResultSet`:
         """
-        op = gremlin_query(self, query, request_options)
-        return self._session._wrapper(ResultSetDAGNode(self, op))
+        return self.gremlin_client.submit(query, request_options=request_options)
 
-    def submit(self, query, request_options=None):
-        return self.execute(query, request_options)
+    @property
+    def gremlin_client(self):
+        if self._gremlin_client is None:
+            self._gremlin_client = Client(self._graph_url[0], "g")
+        return self._gremlin_client
 
     def subgraph(self, gremlin_script, request_options=None):
-        """Create a subgraph, which input is the result of the execution of `gremlin_script`.
+        """Create a subgraph, which input is the executor result of `gremlin_script`.
 
         Any gremlin script that output a set of edges can be used to construct a subgraph.
 
@@ -211,6 +168,11 @@ class InteractiveQuery(object):
         if self._conn is not None:
             try:
                 self._conn.close()
+            except:  # noqa: E722
+                pass
+        if self._gremlin_client is not None:
+            try:
+                self._gremlin_client.close()
             except:  # noqa: E722
                 pass
         self._session._close_interactive_instance(self)
