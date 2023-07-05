@@ -17,13 +17,11 @@ pub struct JnaResponse {
 
 impl JnaResponse {
     pub fn default() -> Self {
-        println!("Jna response default");
         JnaResponse { success: 1, hasDdl: 0, errMsg: ::std::ptr::null(), data: ::std::ptr::null(), len: 0 }
     }
 
     #[inline]
     pub fn new_success() -> Box<JnaResponse> {
-        println!("Jna response new success");
         let resp = JnaResponse::default();
         Box::new(resp)
     }
@@ -79,7 +77,6 @@ impl fmt::Display for JnaResponse {
 
 impl Drop for JnaResponse {
     fn drop(&mut self) {
-        println!("Jna Response drop fn");
         unsafe {
             if !self.errMsg.is_null() {
                 drop(CString::from_raw(self.errMsg as *mut c_char));

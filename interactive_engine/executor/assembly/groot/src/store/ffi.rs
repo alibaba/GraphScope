@@ -67,7 +67,7 @@ impl StringSlice {
 
 #[no_mangle]
 pub extern "C" fn OpenPartitionGraph(store_path: *const c_char) -> PartitionGraphHandle {
-    info!("Open partition graph");
+    trace!("Open partition graph");
     unsafe {
         let slice = CStr::from_ptr(store_path).to_bytes();
         let store_path_str = str::from_utf8(slice).unwrap();
@@ -84,7 +84,7 @@ pub extern "C" fn OpenPartitionGraph(store_path: *const c_char) -> PartitionGrap
 pub extern "C" fn GetSnapshot(
     handle: PartitionGraphHandle, snapshot_id: SnapshotId,
 ) -> PartitionSnapshotHandle {
-    info!("Get snapshot");
+    trace!("Get snapshot");
     let graph_store_ptr = unsafe { &*(handle as *const FfiPartitionGraph) };
     let snapshot = graph_store_ptr.get_snapshot(snapshot_id);
     Box::into_raw(Box::new(snapshot)) as PartitionSnapshotHandle
@@ -95,7 +95,7 @@ pub extern "C" fn GetVertex(
     partition_snapshot: PartitionSnapshotHandle, vertex_id: VertexId, label_id: LabelId,
     error: *mut ErrorHandle,
 ) -> VertexHandle {
-    info!("Get vertex");
+    trace!("Get vertex");
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.get_vertex(vertex_id, label_option(label_id), None) {
@@ -118,7 +118,7 @@ pub extern "C" fn GetEdge(
     partition_snapshot: PartitionSnapshotHandle, edge_id: EdgeId, edge_relation: &EdgeKind,
     error: *mut ErrorHandle,
 ) -> EdgeHandle {
-    info!("Get edge");
+    trace!("Get edge");
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.get_edge(edge_id, edge_relation_option(edge_relation), None) {
@@ -140,7 +140,7 @@ pub extern "C" fn GetEdge(
 pub extern "C" fn ScanVertex(
     partition_snapshot: PartitionSnapshotHandle, label_id: LabelId, error: *mut ErrorHandle,
 ) -> VertexIteratorHandle {
-    info!("Scan vertex");
+    trace!("Scan vertex");
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.scan_vertex(label_option(label_id), None, None) {
@@ -158,7 +158,7 @@ pub extern "C" fn ScanVertex(
 pub extern "C" fn ScanEdge(
     partition_snapshot: PartitionSnapshotHandle, edge_relation: &EdgeKind, error: *mut ErrorHandle,
 ) -> EdgeIteratorHandle {
-    info!("Scan edge");
+    trace!("Scan edge");
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.scan_edge(
@@ -181,7 +181,7 @@ pub extern "C" fn GetOutEdges(
     partition_snapshot: PartitionSnapshotHandle, vertex_id: VertexId, edge_label_id: LabelId,
     error: *mut ErrorHandle,
 ) -> EdgeIteratorHandle {
-    info!("Get out edges");
+    trace!("Get out edges");
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.get_out_edges(vertex_id, label_option(edge_label_id), None, None) {
@@ -200,7 +200,7 @@ pub extern "C" fn GetInEdges(
     partition_snapshot: PartitionSnapshotHandle, vertex_id: VertexId, edge_label_id: LabelId,
     error: *mut ErrorHandle,
 ) -> EdgeIteratorHandle {
-    info!("Get in edges");
+    trace!("Get in edges");
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.get_in_edges(vertex_id, label_option(edge_label_id), None, None) {
@@ -219,7 +219,7 @@ pub extern "C" fn GetOutDegree(
     partition_snapshot: PartitionSnapshotHandle, vertex_id: VertexId, edge_relation: &EdgeKind,
     error: *mut ErrorHandle,
 ) -> usize {
-    info!("Get out degree");
+    trace!("Get out degree");
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.get_out_degree(vertex_id, Some(edge_relation.get_edge_label_id())) {
@@ -238,7 +238,7 @@ pub extern "C" fn GetInDegree(
     partition_snapshot: PartitionSnapshotHandle, vertex_id: VertexId, edge_relation: &EdgeKind,
     error: *mut ErrorHandle,
 ) -> usize {
-    info!("Get in degree");
+    trace!("Get in degree");
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.get_in_degree(vertex_id, Some(edge_relation.get_edge_label_id())) {
@@ -257,7 +257,7 @@ pub extern "C" fn GetKthOutEdge(
     partition_snapshot: PartitionSnapshotHandle, vertex_id: VertexId, edge_relation: &EdgeKind,
     k: SerialId, error: *mut ErrorHandle,
 ) -> EdgeHandle {
-    info!("Get kth out edge");
+    trace!("Get kth out edge");
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
         let mut ret: EdgeHandle = ::std::ptr::null();
@@ -281,7 +281,7 @@ pub extern "C" fn GetKthInEdge(
     partition_snapshot: PartitionSnapshotHandle, vertex_id: VertexId, edge_relation: &EdgeKind,
     k: SerialId, error: *mut ErrorHandle,
 ) -> EdgeHandle {
-    info!("Get kth in edge");
+    trace!("Get kth in edge");
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
         let mut ret: EdgeHandle = ::std::ptr::null();
@@ -302,7 +302,7 @@ pub extern "C" fn GetKthInEdge(
 
 #[no_mangle]
 pub extern "C" fn GetSnapshotId(partition_snapshot: PartitionSnapshotHandle) -> SnapshotId {
-    info!("Get snapshot id");
+    trace!("Get snapshot id");
     unsafe {
         let handler = &*(partition_snapshot as *const FfiSnapshot);
         handler.get_snapshot_id()
@@ -315,7 +315,7 @@ pub extern "C" fn GetSnapshotId(partition_snapshot: PartitionSnapshotHandle) -> 
 pub extern "C" fn VertexIteratorNext(
     vertex_iterator_handle: VertexIteratorHandle, error: *mut ErrorHandle,
 ) -> VertexHandle {
-    info!("Vertex iterator next");
+    trace!("Vertex iterator next");
     unsafe {
         let handler = &mut *(vertex_iterator_handle as *mut FfiVertexIterator);
         match handler.next() {
@@ -335,7 +335,7 @@ pub extern "C" fn VertexIteratorNext(
 
 #[no_mangle]
 pub extern "C" fn GetVertexId(vertex_handle: VertexHandle) -> VertexId {
-    info!("Get vertex id");
+    trace!("Get vertex id");
     unsafe {
         let handler = &*(vertex_handle as *const FfiVertex);
         handler.get_vertex_id()
@@ -344,7 +344,7 @@ pub extern "C" fn GetVertexId(vertex_handle: VertexHandle) -> VertexId {
 
 #[no_mangle]
 pub extern "C" fn GetVertexLabelId(vertex_handle: VertexHandle) -> LabelId {
-    info!("Get vertex label id");
+    trace!("Get vertex label id");
     unsafe {
         let handler = &*(vertex_handle as *const FfiVertex);
         handler.get_label_id()
@@ -355,7 +355,7 @@ pub extern "C" fn GetVertexLabelId(vertex_handle: VertexHandle) -> LabelId {
 pub extern "C" fn GetVertexProperty(
     vertex_handle: VertexHandle, property_id: PropertyId,
 ) -> PropertyHandle {
-    info!("Get vertex property");
+    trace!("Get vertex property");
     unsafe {
         let handler = &*(vertex_handle as *const FfiVertex);
         match handler.get_property(property_id) {
@@ -370,7 +370,7 @@ pub extern "C" fn GetVertexProperty(
 
 #[no_mangle]
 pub extern "C" fn GetVertexPropertyIterator(vertex_handle: VertexHandle) -> PropertyIteratorHandle {
-    info!("Get vertex property iterator");
+    trace!("Get vertex property iterator");
     unsafe {
         let handler = &*(vertex_handle as *const FfiVertex);
         let iter_hdl = Box::new(handler.get_property_iterator());
@@ -384,7 +384,7 @@ pub extern "C" fn GetVertexPropertyIterator(vertex_handle: VertexHandle) -> Prop
 pub extern "C" fn EdgeIteratorNext(
     edge_iterator_handle: EdgeIteratorHandle, error: *mut ErrorHandle,
 ) -> EdgeHandle {
-    info!("Edge iterator next");
+    trace!("Edge iterator next");
     unsafe {
         let handler = &mut *(edge_iterator_handle as *mut FfiEdgeIterator);
         match handler.next() {
@@ -404,7 +404,7 @@ pub extern "C" fn EdgeIteratorNext(
 
 #[no_mangle]
 pub extern "C" fn GetEdgeId(edge_handle: EdgeHandle) -> EdgeId {
-    info!("Get edge id");
+    trace!("Get edge id");
     unsafe {
         let handler = &*(edge_handle as *const FfiEdge);
         handler.get_edge_id().clone()
@@ -413,7 +413,7 @@ pub extern "C" fn GetEdgeId(edge_handle: EdgeHandle) -> EdgeId {
 
 #[no_mangle]
 pub extern "C" fn GetEdgeRelation(edge_handle: EdgeHandle) -> EdgeKind {
-    info!("Get edge relation");
+    trace!("Get edge relation");
     unsafe {
         let handler = &*(edge_handle as *const FfiEdge);
         handler.get_edge_relation().clone()
@@ -422,7 +422,7 @@ pub extern "C" fn GetEdgeRelation(edge_handle: EdgeHandle) -> EdgeKind {
 
 #[no_mangle]
 pub extern "C" fn GetEdgeProperty(edge_handle: EdgeHandle, property_id: PropertyId) -> PropertyHandle {
-    info!("Get edge property");
+    trace!("Get edge property");
     unsafe {
         let handler = &*(edge_handle as *const FfiEdge);
         match handler.get_property(property_id) {
@@ -437,7 +437,7 @@ pub extern "C" fn GetEdgeProperty(edge_handle: EdgeHandle, property_id: Property
 
 #[no_mangle]
 pub extern "C" fn GetEdgePropertyIterator(edge_handle: EdgeHandle) -> PropertyIteratorHandle {
-    info!("Get edge property iterator");
+    trace!("Get edge property iterator");
     unsafe {
         let handler = &*(edge_handle as *const FfiEdge);
         let iter_hdl = Box::new(handler.get_property_iterator());
@@ -451,7 +451,7 @@ pub extern "C" fn GetEdgePropertyIterator(edge_handle: EdgeHandle) -> PropertyIt
 pub extern "C" fn PropertyIteratorNext(
     property_iterator_handle: PropertyIteratorHandle, error: *mut ErrorHandle,
 ) -> PropertyHandle {
-    info!("Property iterator next");
+    trace!("Property iterator next");
     unsafe {
         let handler = &mut *(property_iterator_handle as *mut FfiPropertyIterator);
         match handler.next() {
@@ -471,7 +471,7 @@ pub extern "C" fn PropertyIteratorNext(
 
 #[no_mangle]
 pub extern "C" fn GetPropertyId(property_handle: PropertyHandle) -> PropertyId {
-    info!("Get property id");
+    trace!("Get property id");
     unsafe {
         let handler = &*(property_handle as *const FfiProperty);
         handler.get_property_id()
@@ -480,7 +480,7 @@ pub extern "C" fn GetPropertyId(property_handle: PropertyHandle) -> PropertyId {
 
 #[no_mangle]
 pub extern "C" fn GetPropertyAsInt32(property_handle: PropertyHandle, error: *mut ErrorHandle) -> i32 {
-    info!("Get property as int32");
+    trace!("Get property as int32");
     unsafe {
         let handler = &*(property_handle as *const FfiProperty);
         match handler.get_property_value() {
@@ -501,7 +501,7 @@ pub extern "C" fn GetPropertyAsInt32(property_handle: PropertyHandle, error: *mu
 
 #[no_mangle]
 pub extern "C" fn GetPropertyAsInt64(property_handle: PropertyHandle, error: *mut ErrorHandle) -> i64 {
-    info!("Get property as int64");
+    trace!("Get property as int64");
     unsafe {
         let handler = &*(property_handle as *const FfiProperty);
         match handler.get_property_value() {
@@ -522,7 +522,7 @@ pub extern "C" fn GetPropertyAsInt64(property_handle: PropertyHandle, error: *mu
 
 #[no_mangle]
 pub extern "C" fn GetPropertyAsFloat(property_handle: PropertyHandle, error: *mut ErrorHandle) -> f32 {
-    info!("Get property as float");
+    trace!("Get property as float");
     unsafe {
         let handler = &*(property_handle as *const FfiProperty);
         match handler.get_property_value() {
@@ -543,7 +543,7 @@ pub extern "C" fn GetPropertyAsFloat(property_handle: PropertyHandle, error: *mu
 
 #[no_mangle]
 pub extern "C" fn GetPropertyAsDouble(property_handle: PropertyHandle, error: *mut ErrorHandle) -> f64 {
-    info!("Get property as double");
+    trace!("Get property as double");
     unsafe {
         let handler = &*(property_handle as *const FfiProperty);
         match handler.get_property_value() {
@@ -567,7 +567,7 @@ pub extern "C" fn GetPropertyAsDouble(property_handle: PropertyHandle, error: *m
 pub extern "C" fn GetPropertyAsString(
     property_handle: PropertyHandle, error: *mut ErrorHandle,
 ) -> StringSlice {
-    info!("Get property as string");
+    trace!("Get property as string");
     unsafe {
         let handler = &*(property_handle as *const FfiProperty);
         match handler.get_property_value() {
@@ -591,7 +591,7 @@ pub extern "C" fn GetPropertyAsString(
 
 #[no_mangle]
 pub extern "C" fn GetErrorInfo(error_handle: ErrorHandle) -> StringSlice {
-    info!("Get error info");
+    trace!("Get error info");
     unsafe {
         let handler = &*(error_handle as *const GraphError);
         let info = format!("{:?}", handler);
@@ -603,7 +603,7 @@ pub extern "C" fn GetErrorInfo(error_handle: ErrorHandle) -> StringSlice {
 
 #[no_mangle]
 pub extern "C" fn ReleasePartitionGraphHandle(ptr: PartitionGraphHandle) {
-    info!("Release partition graph handle");
+    trace!("Release partition graph handle");
     let handler = ptr as *mut FfiPartitionGraph;
     unsafe {
         drop(Box::from_raw(handler));
@@ -612,7 +612,7 @@ pub extern "C" fn ReleasePartitionGraphHandle(ptr: PartitionGraphHandle) {
 
 #[no_mangle]
 pub extern "C" fn ReleasePartitionSnapshotHandle(ptr: PartitionSnapshotHandle) {
-    info!("Release partition snapshot handle");
+    trace!("Release partition snapshot handle");
     let handler = ptr as *mut FfiSnapshot;
     unsafe {
         drop(Box::from_raw(handler));
@@ -621,7 +621,7 @@ pub extern "C" fn ReleasePartitionSnapshotHandle(ptr: PartitionSnapshotHandle) {
 
 #[no_mangle]
 pub extern "C" fn ReleaseErrorHandle(ptr: ErrorHandle) {
-    info!("Release error handle");
+    trace!("Release error handle");
     let handler = ptr as *mut GraphError;
     unsafe {
         drop(Box::from_raw(handler));
@@ -630,7 +630,7 @@ pub extern "C" fn ReleaseErrorHandle(ptr: ErrorHandle) {
 
 #[no_mangle]
 pub extern "C" fn ReleaseVertexHandle(ptr: VertexHandle) {
-    info!("Release vertex handle");
+    trace!("Release vertex handle");
     let handler = ptr as *mut FfiVertex;
     unsafe {
         drop(Box::from_raw(handler));
@@ -639,7 +639,7 @@ pub extern "C" fn ReleaseVertexHandle(ptr: VertexHandle) {
 
 #[no_mangle]
 pub extern "C" fn ReleaseVertexIteratorHandle(ptr: VertexIteratorHandle) {
-    info!("Release vertex iterator handle");
+    trace!("Release vertex iterator handle");
     let handler = ptr as *mut FfiVertexIterator;
     unsafe {
         drop(Box::from_raw(handler));
@@ -648,7 +648,7 @@ pub extern "C" fn ReleaseVertexIteratorHandle(ptr: VertexIteratorHandle) {
 
 #[no_mangle]
 pub extern "C" fn ReleaseEdgeHandle(ptr: EdgeHandle) {
-    info!("Release edge handle");
+    trace!("Release edge handle");
     let handler = ptr as *mut FfiEdge;
     unsafe {
         drop(Box::from_raw(handler));
@@ -657,7 +657,7 @@ pub extern "C" fn ReleaseEdgeHandle(ptr: EdgeHandle) {
 
 #[no_mangle]
 pub extern "C" fn ReleaseEdgeIteratorHandle(ptr: EdgeIteratorHandle) {
-    info!("Release edge iterator handle");
+    trace!("Release edge iterator handle");
     let handler = ptr as *mut FfiEdgeIterator;
     unsafe {
         drop(Box::from_raw(handler));
@@ -666,7 +666,7 @@ pub extern "C" fn ReleaseEdgeIteratorHandle(ptr: EdgeIteratorHandle) {
 
 #[no_mangle]
 pub extern "C" fn ReleasePropertyHandle(ptr: PropertyHandle) {
-    info!("Release property handle");
+    trace!("Release property handle");
     let handler = ptr as *mut FfiProperty;
     unsafe {
         drop(Box::from_raw(handler));
@@ -675,7 +675,7 @@ pub extern "C" fn ReleasePropertyHandle(ptr: PropertyHandle) {
 
 #[no_mangle]
 pub extern "C" fn ReleasePropertyIteratorHandle(ptr: PropertyIteratorHandle) {
-    info!("Release property iterator handle");
+    trace!("Release property iterator handle");
     let handler = ptr as *mut FfiPropertyIterator;
     unsafe {
         drop(Box::from_raw(handler));
