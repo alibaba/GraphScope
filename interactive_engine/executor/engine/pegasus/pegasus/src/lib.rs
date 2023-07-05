@@ -225,11 +225,11 @@ pub fn shutdown_all() {
 }
 
 pub fn run<DI, DO, F, FN>(conf: JobConf, func: F) -> Result<ResultStream<DO>, JobSubmitError>
-where
-    DI: Data,
-    DO: Debug + Send + 'static,
-    F: Fn() -> FN,
-    FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
+    where
+        DI: Data,
+        DO: Debug + Send + 'static,
+        F: Fn() -> FN,
+        FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
 {
     let (tx, rx) = crossbeam_channel::unbounded();
     let sink = ResultSink::new(tx);
@@ -242,12 +242,12 @@ where
 pub fn run_with_resources<DI, DO, F, FN, R>(
     conf: JobConf, mut resource: R, func: F,
 ) -> Result<ResultStream<DO>, JobSubmitError>
-where
-    DI: Data,
-    DO: Debug + Send + 'static,
-    R: PartitionedResource,
-    F: Fn() -> FN,
-    FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
+    where
+        DI: Data,
+        DO: Debug + Send + 'static,
+        R: PartitionedResource,
+        F: Fn() -> FN,
+        FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
 {
     let (tx, rx) = crossbeam_channel::unbounded();
     let sink = ResultSink::new(tx);
@@ -264,10 +264,10 @@ where
 }
 
 pub fn run_opt<DI, DO, F>(conf: JobConf, sink: ResultSink<DO>, mut logic: F) -> Result<(), JobSubmitError>
-where
-    DI: Data,
-    DO: Debug + Send + 'static,
-    F: FnMut(&mut Worker<DI, DO>) -> Result<(), BuildJobError>,
+    where
+        DI: Data,
+        DO: Debug + Send + 'static,
+        F: FnMut(&mut Worker<DI, DO>) -> Result<(), BuildJobError>,
 {
     init_env();
     let cancel_hook = sink.get_cancel_hook().clone();
@@ -296,7 +296,9 @@ where
             Worker::new(&conf, worker_id, &peer_guard, sink.clone(), span)
         });
         let _g = crate::worker_id::guard(worker.id);
+        info!("Finished set worker id");
         logic(&mut worker)?;
+        info!("Finished build worker");
         workers.push(worker);
     }
 

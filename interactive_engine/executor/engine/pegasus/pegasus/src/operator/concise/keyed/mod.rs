@@ -22,10 +22,10 @@ use crate::{BuildJobError, Data};
 
 impl<D: Data> KeyBy<D> for Stream<D> {
     fn key_by<K, V, F>(self, selector: F) -> Result<Stream<Pair<K, V>>, BuildJobError>
-    where
-        K: Data + Key,
-        V: Data,
-        F: Fn(D) -> FnResult<(K, V)> + Send + 'static,
+        where
+            K: Data + Key,
+            V: Data,
+            F: Fn(D) -> FnResult<(K, V)> + Send + 'static,
     {
         self.map(move |item| {
             let (key, value) = selector(item)?;
@@ -36,7 +36,7 @@ impl<D: Data> KeyBy<D> for Stream<D> {
 
 impl<D: Data + HasKey> PartitionByKey<D> for Stream<D> {
     fn partition_by_key(self) -> Stream<D> {
-        let job_id = crate::worker_id::get_current_worker().job_id;
+        let job_id = self.get_worker_id().job_id;
         let bh = ahash::RandomState::with_seeds(job_id, job_id & 3, job_id & 7, job_id & 15);
         let router = KeyRouter::new(bh);
 

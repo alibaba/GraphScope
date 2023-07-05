@@ -118,7 +118,7 @@ impl<D: Data> BufSlotPtr<D> {
     fn destroy(&mut self) {
         unsafe {
             let ptr = self.ptr;
-            drop(Box::from_raw(ptr.as_ptr()));
+            Box::from_raw(ptr.as_ptr());
         }
     }
 }

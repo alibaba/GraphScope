@@ -123,10 +123,12 @@ impl DataflowBuilder {
             writeln!(plan_desc, "{}", "Operators:\t").ok();
         }
 
+        println!("build 1");
         let mut builds = self.operators.replace(vec![]);
         builds.sort_by_key(|op| op.index());
         let mut operators = Vec::with_capacity(builds.len() + 1);
         // place holder;
+        println!("build 2");
         operators.push(None);
         let mut op_names = vec![];
         op_names.push("root".to_owned());
@@ -137,14 +139,19 @@ impl DataflowBuilder {
         for e in self.edges.borrow().iter() {
             depends.add(e);
         }
-
+        println!("build 3");
         for (i, mut op_b) in builds.drain(..).enumerate() {
             let op_index = op_b.index();
             assert_eq!(i + 1, op_index, "{:?}", op_b.info);
+            println!("build 3-1");
             let inputs_notify = op_b.take_inputs_notify();
+            println!("build 3-2");
             let outputs_cancel = op_b.build_outputs_cancel();
+            println!("build 3-3");
             sch.add_schedule_op(op_index, op_b.info.scope_level, inputs_notify, outputs_cancel);
+            println!("build 3-4");
             let op = op_b.build();
+            println!("build 3-5");
             op_names.push(op.info.name.clone());
             if report {
                 writeln!(plan_desc, "\t{}\t{}({})", op.info.index, op.info.name, op.info.index).ok();
@@ -154,6 +161,7 @@ impl DataflowBuilder {
             }
             operators.push(Some(op));
         }
+        println!("build 4");
         let edges = self.edges.replace(vec![]);
         if report {
             writeln!(plan_desc, "Channels:\t").ok();

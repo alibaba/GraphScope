@@ -78,8 +78,8 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
     }
 
     pub fn dataflow<F>(&mut self, func: F) -> Result<(), BuildJobError>
-    where
-        F: FnOnce(&mut Source<D>, ResultSink<T>) -> Result<(), BuildJobError>,
+        where
+            F: FnOnce(&mut Source<D>, ResultSink<T>) -> Result<(), BuildJobError>,
     {
         // set current worker's id into tls variable to make it accessible at anywhere;
         let _g = crate::worker_id::guard(self.id);
@@ -110,15 +110,21 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         );
         let mut input = Source::new(root_builder.copy_data(), &dfb);
         let output = self.sink.clone();
+        println!("pegasus start build stream");
         func(&mut input, output)?;
+        println!("finish build stream");
         let mut sch = Schedule::new(event_emitter, rx);
         let df = dfb.build(&mut sch)?;
+        println!("finish build stream 1");
         self.task = WorkerTask::Dataflow(df, sch);
         let root = Box::new(root_builder)
             .build()
             .expect("no output;");
+        println!("finish build stream 2");
         let end = EndOfScope::new(Tag::Root, DynPeers::all(), 0, 0);
+        println!("finish build stream 3");
         root.notify_end(end).ok();
+        println!("finish build stream 4");
         root.close().ok();
         Ok(())
     }

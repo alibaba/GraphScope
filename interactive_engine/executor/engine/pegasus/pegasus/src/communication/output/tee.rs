@@ -155,8 +155,8 @@ pub(crate) struct PerChannelPush<D: Data> {
 impl<D: Data> PerChannelPush<D> {
     pub(crate) fn new(
         ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>, ch: CancelHandle,
+        src: u32,
     ) -> Self {
-        let src = crate::worker_id::get_current_worker().index;
         let cancel_handle = ChannelCancelPtr::new(ch_info.scope_level, delta.clone(), ch);
         let re_seq = TidyTagMap::new(ch_info.scope_level);
         PerChannelPush { ch_info, src, delta, push, cancel_handle, re_seq }

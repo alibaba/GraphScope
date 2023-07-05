@@ -53,7 +53,7 @@ pub struct OutputHandle<D: Data> {
 }
 
 impl<D: Data> OutputHandle<D> {
-    pub(crate) fn new(meta: OutputMeta, output: Tee<D>) -> Self {
+    pub(crate) fn new(meta: OutputMeta, output: Tee<D>, src:u32) -> Self {
         let batch_capacity = meta.batch_capacity as usize;
         let scope_level = meta.scope_level;
         debug_worker!(
@@ -63,7 +63,7 @@ impl<D: Data> OutputHandle<D> {
             batch_capacity
         );
         let buf_pool = ScopeBufferPool::new(meta.batch_size, batch_capacity, scope_level);
-        let src = crate::worker_id::get_current_worker().index;
+        println!("Here is runner");
         let parent_level = if scope_level == 0 { 0 } else { scope_level - 1 };
         OutputHandle {
             port: meta.port,
