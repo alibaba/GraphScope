@@ -1,4 +1,4 @@
-Cython>=3.0a6
+Cython>=3.0.0b3
 gremlinpython==3.6.3rc1
 grpcio>=1.49
 grpcio-tools>=1.49
