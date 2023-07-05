@@ -200,6 +200,15 @@ pub struct EdgeTypeManager {
     inner: Atomic<EdgeManagerInner>,
 }
 
+// https://docs.rs/crossbeam-epoch/0.7.2/crossbeam_epoch/struct.Atomic.html#method.into_owned
+impl Drop for EdgeTypeManager {
+    fn drop(&mut self) {
+        unsafe {
+            drop(std::mem::replace(&mut self.inner, Atomic::null()).into_owned());
+        }
+    }
+}
+
 impl EdgeTypeManager {
     pub fn new() -> Self {
         EdgeTypeManager { inner: Atomic::new(EdgeManagerInner::new()) }
@@ -222,8 +231,8 @@ impl EdgeTypeManager {
     }
 
     pub fn get_edge_info(&self, si: SnapshotId, label: LabelId) -> GraphResult<Arc<EdgeInfo>> {
-        let guard = epoch::pin();
-        let inner = self.get_inner(&guard);
+        let guard = &epoch::pin();
+        let inner = self.get_inner(guard);
         let ret = res_unwrap!(inner.get_edge_info(si, label), get_edge, si, label)?;
         Ok(ret)
     }
@@ -237,14 +246,14 @@ impl EdgeTypeManager {
     }
 
     pub fn contains_edge(&self, label: LabelId) -> bool {
-        let guard = epoch::pin();
-        let inner = self.get_inner(&guard);
+        let guard = &epoch::pin();
+        let inner = self.get_inner(guard);
         inner.contains_edge(label)
     }
 
     pub fn contains_edge_kind(&self, si: SnapshotId, kind: &EdgeKind) -> bool {
-        let guard = epoch::pin();
-        let inner = self.get_inner(&guard);
+        let guard = &epoch::pin();
+        let inner = self.get_inner(guard);
         inner.contains_edge_kind(si, kind)
     }
 
@@ -272,24 +281,13 @@ impl EdgeTypeManager {
 
     fn modify<E, F: Fn(&mut EdgeManagerInner) -> E>(&self, f: F) -> E {
         let guard = &epoch::pin();
-        let mut inner_clone = unsafe {
-            self.inner
-                .load(Ordering::Relaxed, guard)
-                .deref()
-                .clone()
-        };
+        let inner = self.inner.load(Ordering::Relaxed, guard);
+        let mut inner_clone = unsafe { inner.deref() }.clone();
         let res = f(&mut inner_clone);
-        let p = self
-            .inner
-            .swap(Owned::new(inner_clone).into_shared(guard), Ordering::Relaxed, guard);
-        if !p.is_null() {
-            unsafe {
-                // guard.defer_destroy(p);
-                guard.defer_unchecked(move || {
-                    trace!("EdgeManagerInner is now being deallocated.");
-                    drop(p.into_owned());
-                });
-            }
+        self.inner
+            .store(Owned::new(inner_clone).into_shared(guard), Ordering::Relaxed);
+        unsafe {
+            guard.defer_destroy(inner);
         }
         res
     }
