@@ -20,8 +20,4 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface StoredProcedures {
     @Nullable StoredProcedureMeta getStoredProcedure(String procedureName);
-
-    static StoredProcedures createEmpty() {
-        return (String producerName) -> null;
-    }
 }

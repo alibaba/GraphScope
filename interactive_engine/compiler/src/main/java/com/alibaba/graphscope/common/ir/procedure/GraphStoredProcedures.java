@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.procedure;
 
-import com.google.common.base.Preconditions;
+import com.alibaba.graphscope.common.ir.procedure.reader.StoredProceduresReader;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -24,32 +24,25 @@ import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 public class GraphStoredProcedures implements StoredProcedures {
-    private static final Logger logger = LoggerFactory.getLogger(GraphStoredProcedures.class);
     private final RelDataTypeFactory typeFactory;
     private final Map<String, StoredProcedureMeta> storedProcedureMetaMap;
 
-    public GraphStoredProcedures(String procedureDir) throws IOException {
+    public GraphStoredProcedures(StoredProceduresReader reader) throws IOException {
         this.typeFactory = new JavaTypeFactoryImpl();
         this.storedProcedureMetaMap = Maps.newLinkedHashMap();
-        File dir = new File(procedureDir);
-        Preconditions.checkArgument(dir.exists() && dir.isDirectory());
-        for (File file : dir.listFiles()) {
-            if (file.getName().endsWith(".yaml")) {
-                StoredProcedureMeta meta = createStoredProcedureMeta(file);
-                this.storedProcedureMetaMap.put(meta.getName(), meta);
-            }
+        for (URI uri : reader.getAllProcedureUris()) {
+            StoredProcedureMeta createdMeta =
+                    createStoredProcedureMeta(reader.getProcedureMeta(uri));
+            this.storedProcedureMetaMap.put(createdMeta.getName(), createdMeta);
         }
     }
 
@@ -58,9 +51,9 @@ public class GraphStoredProcedures implements StoredProcedures {
         return this.storedProcedureMetaMap.get(procedureName);
     }
 
-    private StoredProcedureMeta createStoredProcedureMeta(File yamlFile) throws IOException {
+    private StoredProcedureMeta createStoredProcedureMeta(String procedureMeta) throws IOException {
         Yaml yaml = new Yaml();
-        Map<String, Object> config = yaml.load(new FileInputStream(yamlFile));
+        Map<String, Object> config = yaml.load(procedureMeta);
         String procedureName = (String) config.get("name");
         return new StoredProcedureMeta(
                 procedureName,

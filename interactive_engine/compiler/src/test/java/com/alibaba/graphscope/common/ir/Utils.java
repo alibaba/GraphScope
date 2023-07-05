@@ -71,8 +71,8 @@ public class Utils {
                             ImmutableMap.of(
                                     GraphConfig.GRAPH_SCHEMA.getKey(),
                                     schemaResource.toURI().getPath(),
-                                    GraphConfig.GRAPH_STORED_PROCEDURES.getKey(),
-                                    proceduresResource.toURI().getPath()));
+                                    GraphConfig.GRAPH_STORED_PROCEDURES_URI.getKey(),
+                                    proceduresResource.toURI().toString()));
             return new ExperimentalMetaFetcher(configs).fetch().get();
         } catch (Exception e) {
             throw new RuntimeException(e);
