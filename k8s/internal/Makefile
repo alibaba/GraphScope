@@ -108,10 +108,12 @@ graphscope-manylinux2014-py3-nodocker:
 	sudo yum install java-11-openjdk-devel -y && \
 	sudo yum remove java-1.8.0-openjdk-devel java-1.8.0-openjdk java-1.8.0-openjdk-headless -y && \
 	cd $(WORKING_DIR)/../.. && \
-		if [[ "${ARCH}" == "aarch64" ]]; then python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
+		if [[ "${ARCH}" == "aarch64" ]]; then \
 			export AUDITWHEEL_PLAT=manylinux2014_${ARCH}; \
+			python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
 			python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
 		fi && \
+		sudo rm -rf ./learning_engine/graph-learn/graphlearn/built && \
 		for _ in {1..5}; do if $(MAKE_COMMAND); then succeed=1; break; else succeed=0; fi; done && \
 		if [[ $$succeed == 1 ]]; then echo "Build succeed"; else echo "Build failed"; exit 1; fi && \
 		for _ in {1..5}; do if $(MAKE_INSTALL_COMMAND); then succeed=1; break; else succeed=0; fi; done && \

@@ -31,9 +31,9 @@ public class GraphTraversalSourceVisitor extends GremlinGSBaseVisitor<GraphTrave
 
     @Override
     public GraphTraversalSource visitTraversalSource(GremlinGSParser.TraversalSourceContext ctx) {
-        if (ctx.getChildCount() != 1) {
+        if (ctx.getChildCount() > 3) {
             throw new UnsupportedEvalException(
-                    ctx.getClass(), "supported pattern of source is [g]");
+                    ctx.getClass(), "supported pattern of source is [g] or [g.with(..)]");
         }
         return g;
     }

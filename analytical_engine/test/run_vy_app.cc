@@ -35,7 +35,7 @@
 #include "lcc/lcc.h"
 #include "pagerank/pagerank.h"
 #include "pagerank/pagerank_auto.h"
-#include "pagerank/pagerank_local.h"
+#include "pagerank/pagerank_local_parallel.h"
 #include "sssp/sssp.h"
 #include "wcc/wcc.h"
 
@@ -321,7 +321,7 @@ void RunProjectedPR(std::shared_ptr<ProjectedFragmentType> fragment,
                     const std::string& out_prefix) {
   // using AppType = grape::PageRankAuto<ProjectedFragmentType>;
   using AppType = grape::PageRank<ProjectedFragmentType>;
-  // using AppType = grape::PageRankLocal<ProjectedFragmentType>;
+  // using AppType = grape::PageRankLocalParallel<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();

@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
+import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.pegasus.RpcChannel;
 import com.alibaba.pegasus.RpcClient;
@@ -46,14 +47,13 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
     }
 
     @Override
-    public void submit(ExecutionRequest request, ExecutionResponseListener listener)
+    public void submit(
+            ExecutionRequest request,
+            ExecutionResponseListener listener,
+            QueryTimeoutConfig timeoutConfig)
             throws Exception {
         if (rpcClientRef.get() == null) {
-            rpcClientRef.compareAndSet(
-                    null,
-                    new RpcClient(
-                            PegasusConfig.PEGASUS_GRPC_TIMEOUT.get(graphConfig),
-                            channelFetcher.fetch()));
+            rpcClientRef.compareAndSet(null, new RpcClient(channelFetcher.fetch()));
         }
         RpcClient rpcClient = rpcClientRef.get();
         PegasusClient.JobRequest jobRequest =
@@ -68,7 +68,7 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
                         .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(graphConfig))
                         .setMemoryLimit(PegasusConfig.PEGASUS_MEMORY_LIMIT.get(graphConfig))
                         .setBatchCapacity(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(graphConfig))
-                        .setTimeLimit(PegasusConfig.PEGASUS_TIMEOUT.get(graphConfig))
+                        .setTimeLimit(timeoutConfig.getEngineTimeoutMS())
                         .setAll(
                                 com.alibaba.pegasus.service.protocol.PegasusClient.Empty
                                         .newBuilder()
@@ -97,7 +97,8 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
                     public void error(Status status) {
                         listener.onError(status.asException());
                     }
-                });
+                },
+                timeoutConfig.getChannelTimeoutMS());
     }
 
     @Override

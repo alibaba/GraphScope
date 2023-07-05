@@ -469,6 +469,7 @@ fn process_predicates(
                 Item::Param(param) => {
                     return Err(ExprError::Unsupported(format!("Dynamic Param {:?}", param)))
                 }
+                Item::Case(case) => return Err(ExprError::unsupported(format!("Case When {:?}", case))),
             }
         }
     }

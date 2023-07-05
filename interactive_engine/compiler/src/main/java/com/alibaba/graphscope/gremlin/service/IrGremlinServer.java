@@ -72,6 +72,7 @@ public class IrGremlinServer implements AutoCloseable {
         if (port >= 0) {
             this.settings.port = port;
         }
+        this.settings.evaluationTimeout = FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(configs);
         this.graph = TinkerFactory.createModern();
         this.g = this.graph.traversal(IrCustomizedTraversalSource.class);
     }

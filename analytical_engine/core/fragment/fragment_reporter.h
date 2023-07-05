@@ -18,8 +18,6 @@
 
 #ifdef NETWORKX
 
-#include <glog/logging.h>
-
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -29,6 +27,7 @@
 
 #include "boost/leaf/error.hpp"
 #include "boost/leaf/result.hpp"
+#include "glog/logging.h"
 #include "grape/communication/communicator.h"
 #include "grape/serialization/in_archive.h"
 #include "grape/worker/comm_spec.h"

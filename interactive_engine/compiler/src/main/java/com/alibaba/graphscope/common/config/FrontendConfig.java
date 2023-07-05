@@ -29,5 +29,8 @@ public class FrontendConfig {
     public static final Config<Integer> NEO4J_BOLT_SERVER_PORT =
             Config.intConfig("neo4j.bolt.server.port", 7687);
 
+    public static final Config<Integer> QUERY_EXECUTION_TIMEOUT_MS =
+            Config.intConfig("query.execution.timeout.ms", 3000000);
+
     public static final Config<String> ENGINE_TYPE = Config.stringConfig("engine.type", "pegasus");
 }

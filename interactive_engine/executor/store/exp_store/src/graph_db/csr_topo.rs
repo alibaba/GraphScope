@@ -44,7 +44,7 @@ impl<I: IndexType> MutEdgeVec<I> {
         let mut num_edges = 0;
         // will be sorted via label
         for label in adj.keys().cloned().sorted() {
-            for vec in adj.get_mut(&label) {
+            if let Some(vec) = adj.get_mut(&label) {
                 vec.sort();
                 self.offsets[node]
                     .inner
