@@ -30,7 +30,7 @@ use crate::errors::BuildJobError;
 use crate::graph::{Edge, Port};
 use crate::macros::route::*;
 use crate::operator::{NotifiableOperator, OperatorCore};
-use crate::{Data, JobConf, WorkerId};
+use crate::{Data, JobConf, ServerConf, WorkerId};
 
 #[must_use = "this `Stream` must be consumed"]
 pub struct Stream<D: Data> {
@@ -183,7 +183,9 @@ impl<D: Data> Stream<D> {
             T: OperatorCore,
             F: FnOnce(&OperatorInfo) -> T,
     {
+        println!("server size before clone {}", self.builder.config.servers().len());
         let dfb = self.builder.clone();
+        println!("server size after clone {}", dfb.config.servers().len());
         let partitions = self.partitions;
         println!("Run transform && build channel");
         let op = self.add_operator(name, op_builder)?;

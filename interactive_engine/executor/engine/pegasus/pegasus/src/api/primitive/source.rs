@@ -34,12 +34,13 @@ impl<D: Data> Source<D> {
     }
 
     pub fn input_from<I>(&mut self, source: I) -> Result<Stream<D>, BuildJobError>
-    where
-        I: IntoIterator<Item = D>,
-        I::IntoIter: Send + 'static,
+        where
+            I: IntoIterator<Item=D>,
+            I::IntoIter: Send + 'static,
     {
         let output = self.output.copy_data();
         let output = std::mem::replace(&mut self.output, output);
+        println!("server size in source {}", self.dfb.config.servers().len());
         let stream = Stream::new(output, &self.dfb);
         source.into_dataflow(stream)
     }

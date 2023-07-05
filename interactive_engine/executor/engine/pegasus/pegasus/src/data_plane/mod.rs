@@ -107,7 +107,7 @@ use intra_thread::{ThreadPull, ThreadPush};
 
 use crate::config::ServerConf;
 
-#[enum_dispatch(Push<T>)]
+#[enum_dispatch(Push < T >)]
 pub enum GeneralPush<T: Data> {
     IntraThread(ThreadPush<T>),
     IntraProcess(IntraProcessPush<T>),
@@ -124,7 +124,7 @@ impl<T: Data> GeneralPush<T> {
     }
 }
 
-#[enum_dispatch(Pull<T>)]
+#[enum_dispatch(Pull < T >)]
 pub enum GeneralPull<T: Data> {
     IntraThread(ThreadPull<T>),
     IntraProcess(IntraProcessPull<T>),
@@ -194,11 +194,13 @@ pub fn build_channels<T: Data>(
     let workers = local_workers as usize;
     let servers = server_conf.get_servers();
     if servers.is_empty() {
+        println!("Server len is empty");
         return Ok(build_local_channels(id, workers));
     }
 
     let server_index = server_index as usize;
 
+    println!("Server len is {}", servers.len());
     if servers.len() == 1 && server_index == 0 {
         return Ok(build_local_channels(id, workers));
     }
@@ -392,7 +394,7 @@ mod test {
             server_index as u32,
             servers,
         )
-        .unwrap();
+            .unwrap();
         let servers_len = servers.len();
         if servers_len == 0 {
             run_channel_test(0, workers, &mut ch_resources);
@@ -472,7 +474,7 @@ mod test {
                     server[index as usize].addr,
                     server,
                 )
-                .unwrap();
+                    .unwrap();
                 while !pegasus_network::check_ipc_ready(index + start_index, &vec![2, 3]) {
                     std::thread::sleep(std::time::Duration::from_secs(1));
                 }
@@ -485,14 +487,14 @@ mod test {
                     index as u32,
                     &server_conf,
                 )
-                .unwrap();
+                    .unwrap();
                 let mut ch_resources_second = build_channels::<Vec<u64>>(
                     ChannelId::new(1, 1),
                     local_workers,
                     index as u32,
                     &server_conf,
                 )
-                .unwrap();
+                    .unwrap();
                 let mut channels = vec![];
                 channels.push(ch_resources_first.pop_front().unwrap());
                 channels.push(ch_resources_second.pop_front().unwrap());
@@ -578,7 +580,7 @@ mod test {
                     server[index as usize].addr,
                     server,
                 )
-                .unwrap();
+                    .unwrap();
                 while !pegasus_network::check_ipc_ready(index + start_index, &vec![4, 5]) {
                     std::thread::sleep(std::time::Duration::from_secs(1));
                 }
@@ -590,7 +592,7 @@ mod test {
                     index as u32,
                     &server_conf,
                 )
-                .unwrap();
+                    .unwrap();
                 let mut channel_threads = vec![];
                 let mut local_index = 0;
                 while let Some(ch) = ch_resources.pop_front() {

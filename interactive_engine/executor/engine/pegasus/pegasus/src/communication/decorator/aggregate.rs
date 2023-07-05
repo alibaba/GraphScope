@@ -30,14 +30,14 @@ pub struct AggregateBatchPush<D: Data> {
 }
 
 impl<D: Data> AggregateBatchPush<D> {
-    pub fn new(info: ChannelInfo, pushes: Vec<EventEmitPush<D>>) -> Self {
+    pub fn new(info: ChannelInfo, pushes: Vec<EventEmitPush<D>>, src: u32) -> Self {
         if info.scope_level == 0 {
-            let push = ExchangeByBatchPush::new(info, BatchRoute::AllToOne(0), pushes);
+            let push = ExchangeByBatchPush::new(info, BatchRoute::AllToOne(0), pushes, src);
             AggregateBatchPush { push }
         } else {
             let chancel_handle = DynSingleConsCancelPtr::new(info.scope_level, pushes.len());
             let mut push =
-                ExchangeByBatchPush::new(info, BatchRoute::Dyn(Box::new(ScopedAggregate::new())), pushes);
+                ExchangeByBatchPush::new(info, BatchRoute::Dyn(Box::new(ScopedAggregate::new())), pushes, src);
             push.update_cancel_handle(CancelHandle::DSC(chancel_handle));
             AggregateBatchPush { push }
         }

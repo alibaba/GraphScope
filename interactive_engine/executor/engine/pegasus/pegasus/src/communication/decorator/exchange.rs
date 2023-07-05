@@ -72,9 +72,8 @@ pub(crate) struct ExchangeByDataPush<D: Data> {
 impl<D: Data> ExchangeByDataPush<D> {
     pub(crate) fn new(
         info: ChannelInfo, router: Box<dyn RouteFunction<D>>, buffers: Vec<ScopeBufferPool<D>>,
-        pushes: Vec<EventEmitPush<D>>,
+        pushes: Vec<EventEmitPush<D>>, src: u32,
     ) -> Self {
-        let src = crate::worker_id::get_current_worker().index;
         let len = pushes.len();
         let cancel_handle = MultiConsCancelPtr::new(info.scope_level, len);
         ExchangeByDataPush {
@@ -180,7 +179,7 @@ impl<D: Data> ExchangeByDataPush<D> {
 
     fn update_end(
         &mut self, target: Option<usize>, end: &EndOfScope,
-    ) -> impl Iterator<Item = (u64, u64, DynPeers)> {
+    ) -> impl Iterator<Item=(u64, u64, DynPeers)> {
         let mut push_stat = Vec::with_capacity(self.pushes.len());
         for (index, p) in self.pushes.iter().enumerate() {
             let mut pushes = p.get_push_count(&end.tag).unwrap_or(0) as u64;
@@ -604,10 +603,9 @@ pub struct ExchangeByBatchPush<D: Data> {
 }
 
 impl<D: Data> ExchangeByBatchPush<D> {
-    pub fn new(ch_info: ChannelInfo, route: BatchRoute<D>, pushes: Vec<EventEmitPush<D>>) -> Self {
+    pub fn new(ch_info: ChannelInfo, route: BatchRoute<D>, pushes: Vec<EventEmitPush<D>>, src:u32) -> Self {
         let len = pushes.len();
         let magic = Magic::new(len);
-        let src = crate::worker_id::get_current_worker().index;
         let cancel_handle = match route {
             BatchRoute::AllToOne(t) => CancelHandle::SC(SingleConsCancel::new(t)),
             BatchRoute::Dyn(_) => CancelHandle::MC(MultiConsCancelPtr::new(ch_info.scope_level, len)),
@@ -627,7 +625,7 @@ impl<D: Data> ExchangeByBatchPush<D> {
 
     fn update_end(
         &mut self, target: Option<usize>, end: &EndOfScope,
-    ) -> impl Iterator<Item = (u64, u64, DynPeers)> {
+    ) -> impl Iterator<Item=(u64, u64, DynPeers)> {
         let mut push_stat = Vec::with_capacity(self.pushes.len());
         for (index, p) in self.pushes.iter().enumerate() {
             let mut pushes = p.get_push_count(&end.tag).unwrap_or(0) as u64;
