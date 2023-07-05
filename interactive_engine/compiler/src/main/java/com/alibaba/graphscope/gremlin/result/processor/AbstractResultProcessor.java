@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.gremlin.result.processor;
 
 import com.alibaba.graphscope.common.result.ResultParser;
-import com.alibaba.graphscope.gremlin.service.MetricsPrinter;
+import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 
@@ -48,18 +48,19 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
 
     protected final Context writeResult;
     protected final ResultParser resultParser;
-    protected final MetricsPrinter metricsPrinter;
+    protected final QueryStatusCallback statusCallback;
 
     protected final List<Object> resultCollectors;
     protected final int resultCollectorsBatchSize;
 
-    protected boolean locked;
+    // can write back to gremlin context session if true
+    protected boolean isContextWritable;
 
     protected AbstractResultProcessor(
-            Context writeResult, ResultParser resultParser, MetricsPrinter metricsPrinter) {
+            Context writeResult, ResultParser resultParser, QueryStatusCallback statusCallback) {
         this.writeResult = writeResult;
         this.resultParser = resultParser;
-        this.metricsPrinter = metricsPrinter;
+        this.statusCallback = statusCallback;
 
         RequestMessage msg = writeResult.getRequestMessage();
         Settings settings = writeResult.getSettings();
@@ -70,12 +71,13 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                         msg.optionalArgs(Tokens.ARGS_BATCH_SIZE)
                                 .orElse(settings.resultIterationBatchSize);
         this.resultCollectors = new ArrayList<>(this.resultCollectorsBatchSize);
+        this.isContextWritable = true;
     }
 
     @Override
     public synchronized void process(PegasusClient.JobResponse response) {
         try {
-            if (!locked) {
+            if (isContextWritable) {
                 // send back a page of results if batch size is met and then reset the
                 // resultCollectors
                 if (this.resultCollectors.size() >= this.resultCollectorsBatchSize) {
@@ -87,10 +89,10 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                 resultCollectors.addAll(resultParser.parseFrom(response));
             }
         } catch (Exception e) {
-            logger.error("process response from grpc fail", e);
+            statusCallback.getQueryLogger().error("process response from grpc fail", e);
             // cannot write to this context any more
-            locked = true;
-            metricsPrinter.stop(false);
+            isContextWritable = false;
+            statusCallback.onEnd(false);
             writeResultList(
                     writeResult,
                     Collections.singletonList(e.getMessage()),
@@ -100,9 +102,9 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
 
     @Override
     public synchronized void finish() {
-        if (!locked) {
-            locked = true;
-            metricsPrinter.stop(true);
+        if (isContextWritable) {
+            isContextWritable = false;
+            statusCallback.onEnd(true);
             aggregateResults();
             writeResultList(writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
         }
@@ -111,9 +113,9 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
     @Override
     public synchronized void error(Status status) {
         logger.error("error return from grpc, status {}", status);
-        if (!locked) {
-            locked = true;
-            metricsPrinter.stop(false);
+        if (isContextWritable) {
+            isContextWritable = false;
+            statusCallback.onEnd(false);
             writeResultList(
                     writeResult,
                     Collections.singletonList(status.toString()),
@@ -122,7 +124,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
     }
 
     public synchronized void cancel() {
-        this.locked = true;
+        this.isContextWritable = false;
     }
 
     protected abstract void aggregateResults();

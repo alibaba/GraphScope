@@ -17,8 +17,8 @@
 package com.alibaba.graphscope.gremlin.integration.result;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
-import com.alibaba.graphscope.gremlin.service.MetricsPrinter;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.tinkerpop.gremlin.process.remote.traversal.DefaultRemoteTraverser;
@@ -46,10 +46,10 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
     public GremlinTestResultProcessor(
             Context writeResult,
             Traversal traversal,
-            MetricsPrinter metricsPrinter,
+            QueryStatusCallback statusCallback,
             GraphProperties testGraph,
             Configs configs) {
-        super(writeResult, traversal, metricsPrinter);
+        super(writeResult, traversal, statusCallback);
         this.cachedProperties = testGraph.getProperties(configs);
     }
 

@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.GremlinTestResultProcessor;
+import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngine;
 
@@ -93,21 +94,21 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                             Traversal traversal =
                                     (Traversal) scriptEngine.eval(script, this.context);
                             applyStrategies(traversal);
-
                             long jobId = JOB_ID_COUNTER.incrementAndGet();
                             IrMeta irMeta = metaQueryCallback.beforeExec();
+                            QueryStatusCallback statusCallback =
+                                    createQueryStatusCallback(script, jobId);
                             processTraversal(
                                     traversal,
                                     new GremlinTestResultProcessor(
                                             ctx,
                                             traversal,
-                                            createMetricsPrinter(jobId, script),
+                                            statusCallback,
                                             testGraph,
                                             this.configs),
-                                    jobId,
-                                    script,
                                     irMeta,
-                                    new QueryTimeoutConfig(ctx.getRequestTimeout()));
+                                    new QueryTimeoutConfig(ctx.getRequestTimeout()),
+                                    statusCallback.getQueryLogger());
                             metaQueryCallback.afterExec(irMeta);
                         });
                 return op;
