@@ -200,6 +200,7 @@ pub struct EdgeTypeManager {
     inner: Atomic<EdgeManagerInner>,
 }
 
+// https://docs.rs/crossbeam-epoch/0.7.2/crossbeam_epoch/struct.Atomic.html#method.into_owned
 impl Drop for EdgeTypeManager {
     fn drop(&mut self) {
         unsafe {
@@ -343,12 +344,6 @@ impl EdgeManagerBuilder {
 struct EdgeManagerInner {
     info_map: EdgeInfoMap,
     type_map: EdgeKindMap,
-}
-
-impl Drop for EdgeManagerInner {
-    fn drop(&mut self) {
-        println!("Dropped EdgeManagerInner");
-    }
 }
 
 impl EdgeManagerInner {
