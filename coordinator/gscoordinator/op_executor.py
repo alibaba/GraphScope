@@ -735,7 +735,6 @@ class OperationExecutor:
         deployment, hosts = self._launcher.get_vineyard_stream_info()
         path = op.attr[types_pb2.GRAPH_SERIALIZATION_PATH].s.decode()
         obj_id = op.attr[types_pb2.VINEYARD_ID].i
-        logger.info("serialize graph %d  to %s", obj_id, path)
         vineyard.io.serialize(
             path,
             vineyard.ObjectID(obj_id),
@@ -746,7 +745,6 @@ class OperationExecutor:
             deployment=deployment,
             hosts=hosts,
         )
-        logger.info("Finish serialization")
         return op_def_pb2.OpResult(code=OK, key=op.key)
 
     def _process_deserialize_graph(self, op: op_def_pb2.OpDef):
@@ -772,7 +770,6 @@ class OperationExecutor:
         vineyard_ipc_socket = engine_config["vineyard_socket"]
         deployment, hosts = self._launcher.get_vineyard_stream_info()
         path = op.attr[types_pb2.GRAPH_SERIALIZATION_PATH].s.decode()
-        logger.info("Deserialize graph from %s", path)
         graph_id = vineyard.io.deserialize(
             path,
             type="global",
@@ -782,7 +779,6 @@ class OperationExecutor:
             deployment=deployment,
             hosts=hosts,
         )
-        logger.info("Finish deserialization, graph id: %d", graph_id)
         # create graph_def
         # run create graph on analytical engine
         create_graph_op = create_single_op_dag(
@@ -811,7 +807,6 @@ class OperationExecutor:
                 raise AnalyticalEngineInternalError(e.details())
             else:
                 raise
-        logger.info("response head, %s , body %s", response_head, response_body)
         response_head.head.results[0].key = op.key
         return response_head.head.results[0]
 

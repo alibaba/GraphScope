@@ -152,6 +152,11 @@ def _get_extra_data():  # noqa: C901
             data["/usr/include/rapidjson"] = os.path.join(RUNTIME_ROOT, "include")
             data["/usr/include/msgpack"] = os.path.join(RUNTIME_ROOT, "include")
             data["/usr/include/msgpack.hpp"] = os.path.join(RUNTIME_ROOT, "include")
+            # recent protobuf requires include absl directly
+            if os.path.isdir(f"{GRAPHSCOPE_HOME}/include/absl"):
+                data[f"{GRAPHSCOPE_HOME}/include/absl"] = os.path.join(
+                    RUNTIME_ROOT, "include"
+                )
         elif platform.system() == "Darwin":
             homebrew_prefix = __get_homebrew_prefix()
             data[f"{homebrew_prefix}/include/rapidjson"] = os.path.join(
@@ -163,6 +168,11 @@ def _get_extra_data():  # noqa: C901
             data[f"{homebrew_prefix}/include/msgpack.hpp"] = os.path.join(
                 RUNTIME_ROOT, "include"
             )
+            # recent protobuf requires include absl directly
+            if os.path.isdir(f"{homebrew_prefix}/include/absl"):
+                data[f"{homebrew_prefix}/include/absl"] = os.path.join(
+                    RUNTIME_ROOT, "include"
+                )
     elif name == "gs-apps":
         # precompiled applications
         data = {

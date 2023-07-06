@@ -144,7 +144,7 @@ public class AggregatorManagerNettyImpl
     /**
      * Accept a message from other worker, aggregate to me.
      *
-     * @param aggregatorMessage received message.
+     * @param nettyMessage received message.
      */
     @Override
     public void acceptNettyMessage(NettyMessage nettyMessage) {
