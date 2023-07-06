@@ -187,8 +187,9 @@ public class GraphPlanner {
         ExperimentalMetaFetcher metaFetcher = new ExperimentalMetaFetcher(configs);
         if (args.length < 2 || args[0].isEmpty() || args[1].isEmpty()) {
             throw new IllegalArgumentException(
-                    "usage: make physical_plan query='<query in string>/<file://path_to_query_file>' physical='<path to the"
-                            + " physical output file>'");
+                    "usage: make physical_plan query='<query in"
+                        + " string>/<file://path_to_query_file>' physical='<path to the physical"
+                        + " output file>'");
         }
         String query = args[0];
         if (query.startsWith("file://")) {
