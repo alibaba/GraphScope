@@ -1,6 +1,7 @@
 #ifndef GRAPHSCOPE_ENGINE_QPS_UTILS_H_
 #define GRAPHSCOPE_ENGINE_QPS_UTILS_H_
 
+#include <cxxabi.h>
 #include <array>
 #include <optional>
 #include <queue>
@@ -17,6 +18,17 @@
 #include "flex/utils/property/column.h"
 
 namespace gs {
+
+// demangle a c++ variable's class name
+
+template <typename T>
+std::string demangle(const T& t) {
+  int status;
+  char* demangled = abi::__cxa_demangle(typeid(T).name(), 0, 0, &status);
+  std::string ret(demangled);
+  free(demangled);
+  return ret;
+}
 
 template <typename T>
 struct is_tuple : std::false_type {};
@@ -44,6 +56,13 @@ struct group_key_on_property : public std::true_type {};
 template <int in_tag_id, int res_alias_id>
 struct group_key_on_property<
     AliasTagProp<in_tag_id, res_alias_id, grape::EmptyType>>
+    : public std::false_type {};
+
+template <int col_id, typename T>
+struct group_key_on_property<GroupKey<col_id, T>> : public std::true_type {};
+
+template <int col_id>
+struct group_key_on_property<GroupKey<col_id, grape::EmptyType>>
     : public std::false_type {};
 
 // check edge_dir and vopt consistency

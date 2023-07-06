@@ -733,25 +733,25 @@ class Context {
   //   // merge_offset(offsets_arrays_.back(), new_offsets);
   // }
 
-  template <int res_alias, typename NEW_HEAD_T,
+  template <AppendOpt append_opt, typename NEW_HEAD_T,
             typename std::enable_if<NEW_HEAD_T::is_collection>::type* = nullptr>
   auto ApplyNode(NEW_HEAD_T&& new_head, std::vector<offset_t>&& offset) {
     // Collection
     auto new_set_and_offset = new_head.apply(offset);
     CHECK(std::get<1>(new_set_and_offset).size() == cur_.Size() + 1);
-    return this->template AddNode<res_alias>(
+    return this->template AddNode<append_opt>(
         std::move(std::get<0>(new_set_and_offset)),
         std::move(std::get<1>(new_set_and_offset)));
   }
 
   // For non-collection apply result, just append.
   template <
-      int res_alias, typename NEW_HEAD_T,
+      AppendOpt append_opt, typename NEW_HEAD_T,
       typename std::enable_if<!NEW_HEAD_T::is_collection>::type* = nullptr>
   auto ApplyNode(NEW_HEAD_T&& new_head, std::vector<offset_t>&& offset) {
     CHECK(offset.size() == cur_.Size() + 1);
-    return this->template AddNode<res_alias>(std::move(new_head),
-                                             std::move(offset));
+    return this->template AddNode<append_opt>(std::move(new_head),
+                                              std::move(offset));
   }
 
   // 0. add new node to obtain a new Context, if i'm not aliased
@@ -1332,25 +1332,25 @@ class Context<HEAD_T, cur_alias, base_tag, grape::EmptyType> {
     return res;
   }
 
-  template <int res_alias, typename NEW_HEAD_T,
+  template <AppendOpt append_opt, typename NEW_HEAD_T,
             typename std::enable_if<NEW_HEAD_T::is_collection>::type* = nullptr>
   auto ApplyNode(NEW_HEAD_T&& new_head, std::vector<offset_t>&& offset) {
     // Collection
     auto new_set_and_offset = new_head.apply(offset);
     CHECK(std::get<1>(new_set_and_offset).size() == cur_.Size() + 1);
-    return this->template AddNode<res_alias>(
+    return this->template AddNode<append_opt>(
         std::move(std::get<0>(new_set_and_offset)),
         std::move(std::get<1>(new_set_and_offset)));
   }
 
   // For non-collection apply result, just append.
   template <
-      int res_alias, typename NEW_HEAD_T,
+      AppendOpt append_opt, typename NEW_HEAD_T,
       typename std::enable_if<!NEW_HEAD_T::is_collection>::type* = nullptr>
   auto ApplyNode(NEW_HEAD_T&& new_head, std::vector<offset_t>&& offset) {
     CHECK(offset.size() == cur_.Size() + 1);
-    return this->template AddNode<res_alias>(std::move(new_head),
-                                             std::move(offset));
+    return this->template AddNode<append_opt>(std::move(new_head),
+                                              std::move(offset));
   }
 
   // 0. Replace current HEAD to obtain a new Traversal, if i'm not aliased

@@ -31,6 +31,17 @@ namespace gs {
 // with possible aggregate func.
 
 template <typename CTX_T, typename GROUP_KEY>
+struct CommonBuilderT;
+
+template <typename CTX_T, int col_id>
+struct CommonBuilderT<CTX_T, GroupKey<col_id, grape::EmptyType>> {
+  using set_t = std::remove_const_t<std::remove_reference_t<decltype(
+      std::declval<CTX_T>().template GetNode<col_id>())>>;
+  using builder_t = typename set_t::builder_t;
+  using result_t = typename builder_t::result_t;
+};
+
+template <typename CTX_T, typename GROUP_KEY>
 struct GroupKeyResT;
 
 template <typename CTX_T, int col_id, typename T>
@@ -43,86 +54,111 @@ struct GroupKeyResT<CTX_T, GroupKey<col_id, T>> {
 template <typename CTX_T, typename AGG_T>
 struct GroupValueResT;
 
-// specialization for count for single tag
-// TODO: count for pairs.
-template <typename CTX_T, typename T, int Is>
-struct GroupValueResT<CTX_T, AggregateProp<AggFunc::COUNT, std::tuple<T>,
-                                           std::integer_sequence<int, Is>>> {
-  using result_t = Collection<size_t>;
-};
+template <typename SET_T, AggFunc agg_func, typename SELECTOR_TUPLE>
+struct GroupValueResTImpl;
 
-template <typename CTX_T, int Is>
-struct GroupValueResT<
-    CTX_T, AggregateProp<AggFunc::COUNT_DISTINCT, std::tuple<grape::EmptyType>,
-                         std::integer_sequence<int, Is>>> {
-  using result_t = Collection<size_t>;
-};
-
-template <typename CTX_T, typename T, int Is>
-struct GroupValueResT<CTX_T, AggregateProp<AggFunc::SUM, std::tuple<T>,
+template <typename CTX_T, AggFunc agg_func, typename... SELECTOR, int Is>
+struct GroupValueResT<CTX_T, AggregateProp<agg_func, std::tuple<SELECTOR...>,
                                            std::integer_sequence<int, Is>>> {
   using old_set_t = std::remove_const_t<std::remove_reference_t<decltype(
       std::declval<CTX_T>().template GetNode<Is>())>>;
-  static_assert(old_set_t::is_collection);
-  using result_t = old_set_t;
+  using result_t =
+      typename GroupValueResTImpl<old_set_t, agg_func,
+                                  std::tuple<SELECTOR...>>::result_t;
+};
+
+// specialization for count for single tag
+// TODO: count for pairs.
+template <typename SET_T>
+struct GroupValueResTImpl<SET_T, AggFunc::COUNT,
+                          std::tuple<PropertySelector<grape::EmptyType>>> {
+  using result_t = Collection<size_t>;
+};
+
+template <typename SET_T>
+struct GroupValueResTImpl<SET_T, AggFunc::COUNT_DISTINCT,
+                          std::tuple<PropertySelector<grape::EmptyType>>> {
+  using result_t = Collection<size_t>;
+};
+
+template <typename T>
+struct GroupValueResTImpl<Collection<T>, AggFunc::SUM,
+                          std::tuple<PropertySelector<grape::EmptyType>>> {
+  using result_t = Collection<T>;
 };
 
 // specialization for to_set
 // TODO: to set for pairs.
-template <typename CTX_T, typename T, int Is>
-struct GroupValueResT<CTX_T, AggregateProp<AggFunc::TO_SET, std::tuple<T>,
-                                           std::integer_sequence<int, Is>>> {
+template <typename T>
+struct GroupValueResTImpl<Collection<T>, AggFunc::TO_SET,
+                          std::tuple<PropertySelector<grape::EmptyType>>> {
   using result_t = Collection<std::vector<T>>;
+};
+
+template <typename LabelT, typename VID_T, typename... SET_T, typename PropT>
+struct GroupValueResTImpl<RowVertexSet<LabelT, VID_T, SET_T...>,
+                          AggFunc::TO_SET,
+                          std::tuple<PropertySelector<PropT>>> {
+  using result_t = Collection<std::vector<PropT>>;
 };
 
 // specialization for to_list
 // TODO: to set for pairs.
-template <typename CTX_T, int Is>
-struct GroupValueResT<
-    CTX_T, AggregateProp<AggFunc::TO_LIST, std::tuple<grape::EmptyType>,
-                         std::integer_sequence<int, Is>>> {
-  using old_set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<Is>())>>;
-  static_assert(old_set_t::is_collection);
-  using result_t = Collection<std::vector<typename old_set_t::value_type>>;
-};
-
-// get the vertex's certain properties as list
-template <typename CTX_T, typename T, int Is>
-struct GroupValueResT<CTX_T, AggregateProp<AggFunc::TO_LIST, std::tuple<T>,
-                                           std::integer_sequence<int, Is>>> {
-  using old_set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<Is>())>>;
+template <typename T>
+struct GroupValueResTImpl<Collection<T>, AggFunc::TO_LIST,
+                          std::tuple<PropertySelector<grape::EmptyType>>> {
   using result_t = Collection<std::vector<T>>;
 };
 
+// get the vertex's certain properties as list
+template <typename LabelT, typename VID_T, typename... SET_T, typename PropT>
+struct GroupValueResTImpl<RowVertexSet<LabelT, VID_T, SET_T...>,
+                          AggFunc::TO_LIST,
+                          std::tuple<PropertySelector<PropT>>> {
+  // using old_set_t = std::remove_const_t<std::remove_reference_t<decltype(
+  //     std::declval<CTX_T>().template GetNode<Is>())>>;
+  using result_t = Collection<std::vector<PropT>>;
+};
+
 // get min value
-template <typename CTX_T, typename T, int Is>
-struct GroupValueResT<CTX_T, AggregateProp<AggFunc::MIN, std::tuple<T>,
-                                           std::integer_sequence<int, Is>>> {
-  using old_set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<Is>())>>;
-  static_assert(old_set_t::is_collection);
-  using result_t = Collection<typename old_set_t::value_type>;
+template <typename T>
+struct GroupValueResTImpl<Collection<T>, AggFunc::MIN,
+                          std::tuple<PropertySelector<grape::EmptyType>>> {
+  using result_t = Collection<T>;
 };
 
 // support get max of vertexset's id
-template <typename CTX_T, typename T, int Is>
-struct GroupValueResT<CTX_T, AggregateProp<AggFunc::MAX, std::tuple<T>,
-                                           std::integer_sequence<int, Is>>> {
-  using old_set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<Is>())>>;
+template <typename LabelT, typename VID_T, typename... SET_T, typename T>
+struct GroupValueResTImpl<RowVertexSet<LabelT, VID_T, SET_T...>, AggFunc::MAX,
+                          std::tuple<PropertySelector<T>>> {
   using result_t = Collection<T>;
 };
 
 // support get first from vertexset
-template <typename CTX_T, typename T, int Is>
-struct GroupValueResT<CTX_T, AggregateProp<AggFunc::FIRST, std::tuple<T>,
-                                           std::integer_sequence<int, Is>>> {
-  using old_set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<Is>())>>;
+template <typename LabelT, typename VID_T, typename... SET_T, typename T>
+struct GroupValueResTImpl<RowVertexSet<LabelT, VID_T, SET_T...>, AggFunc::FIRST,
+                          std::tuple<PropertySelector<T>>> {
   // the old_set_t is vertex_set or collection
-  using result_t = typename AggFirst<old_set_t>::result_t;
+  using result_t =
+      typename AggFirst<RowVertexSet<LabelT, VID_T, SET_T...>>::result_t;
+};
+
+// support get first from two label vertex set
+template <typename VID_T, typename LabelT, typename... SET_T>
+struct GroupValueResTImpl<TwoLabelVertexSet<VID_T, LabelT, SET_T...>,
+                          AggFunc::FIRST,
+                          std::tuple<PropertySelector<grape::EmptyType>>> {
+  // the old_set_t is vertex_set or collection
+  using result_t =
+      typename AggFirst<TwoLabelVertexSet<VID_T, LabelT, SET_T...>>::result_t;
+};
+
+// get first from collection
+template <typename T>
+struct GroupValueResTImpl<Collection<T>, AggFunc::FIRST,
+                          std::tuple<PropertySelector<grape::EmptyType>>> {
+  // the old_set_t is vertex_set or collection
+  using result_t = typename AggFirst<Collection<T>>::result_t;
 };
 
 template <typename Head, int new_head_tag, int base_tag, typename PREV>
@@ -162,13 +198,23 @@ struct GroupResT;
 
 // after groupby, we will get a brand new context, and the tag_ids will start
 // from 0.
+template <typename CTX_T, typename GROUP_KEY, typename... AGG_T>
+struct GroupResT<CTX_T, std::tuple<GROUP_KEY>, std::tuple<AGG_T...>> {
+  static constexpr int new_cur_alias = +sizeof...(AGG_T);
+  // result ctx type
+  using result_t = typename Rearrange<
+      new_cur_alias, 0, typename GroupKeyResT<CTX_T, GROUP_KEY>::result_t,
+      typename GroupValueResT<CTX_T, AGG_T>::result_t...>::context_t;
+};
+
+// keyed by two sets
 template <typename CTX_T, typename... GROUP_KEY, typename... AGG_T>
 struct GroupResT<CTX_T, std::tuple<GROUP_KEY...>, std::tuple<AGG_T...>> {
   static constexpr int new_cur_alias =
       sizeof...(GROUP_KEY) + sizeof...(AGG_T) - 1;
   // result ctx type
   using result_t = typename Rearrange<
-      new_cur_alias, 0, typename GroupKeyResT<CTX_T, GROUP_KEY>::result_t...,
+      new_cur_alias, 0, typename CommonBuilderT<CTX_T, GROUP_KEY>::result_t...,
       typename GroupValueResT<CTX_T, AGG_T>::result_t...>::context_t;
 };
 
@@ -177,7 +223,7 @@ struct FoldResT;
 
 // We will return a brand new context.
 template <typename CTX_T, typename... AGG_T>
-struct FoldResT<CTX_T, FoldOpt<AGG_T...>> {
+struct FoldResT<CTX_T, std::tuple<AGG_T...>> {
   // take the largest alias in current context as base_tag.
   static constexpr int base_tag = CTX_T::max_tag_id + 1;
   static constexpr int new_head_tag = base_tag + sizeof...(AGG_T) - 1;
@@ -197,17 +243,16 @@ class GroupByOp {
  public:
   template <typename CTX_HEAD_T, int cur_alias, int base_tag,
             typename... CTX_PREV, typename FOLD_OPT,
-            typename std::enable_if<(FOLD_OPT::num_agg == 1)>::type* = nullptr,
             typename RES_T = typename FoldResT<
                 Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
-                FOLD_OPT>::result_t>
+                std::tuple<FOLD_OPT>>::result_t>
   static RES_T GroupByWithoutKeyImpl(
       const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
-      FOLD_OPT&& group_opt) {
+      std::tuple<FOLD_OPT>&& group_opt) {
     VLOG(10) << "new result_t, base tag: " << RES_T::base_tag_id;
     // Currently we only support to to_count;
-    using agg_tuple_t = typename FOLD_OPT::agg_tuple_t;
+    using agg_tuple_t = std::tuple<FOLD_OPT>;
     using CTX_T = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
     static constexpr size_t agg_num = std::tuple_size_v<agg_tuple_t>;
     static constexpr size_t grouped_value_num = std::tuple_size_v<agg_tuple_t>;
@@ -219,7 +264,7 @@ class GroupByOp {
 
     int start_tag = ctx.get_sub_task_start_tag();
     VLOG(10) << "start tag: " << start_tag;
-    auto& agg_tuple = group_opt.aggregate_;
+    auto& agg_tuple = group_opt;
 
     auto value_set_builder_tuple = create_keyed_value_set_builder_tuple(
         graph, ctx.GetPrevCols(), ctx.GetHead(), agg_tuple,
@@ -228,12 +273,13 @@ class GroupByOp {
 
     for (auto iter : ctx) {
       auto ele_tuple = iter.GetAllIndexElement();
+      auto data_tuple = iter.GetAllData();
       auto start_tag_ind = iter.GetTagOffset(start_tag);
       // indicate at which index the start_tag element is in.
       auto key = start_tag_ind;
 
       insert_to_value_set_builder(value_set_builder_tuple, ele_tuple,
-                                  start_tag_ind);
+                                  data_tuple, start_tag_ind);
     }
     auto value_set_built =
         build_value_set_tuple(std::move(value_set_builder_tuple),
@@ -366,8 +412,8 @@ class GroupByOp {
 
     using CTX_T = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
     static constexpr size_t grouped_value_num = std::tuple_size_v<agg_tuple_t>;
-    static constexpr int keyed_tag_id0 = key_alias0_t::tag_id;
-    static constexpr int keyed_tag_id1 = key_alias1_t::tag_id;
+    static constexpr int keyed_tag_id0 = key_alias0_t::col_id;
+    static constexpr int keyed_tag_id1 = key_alias1_t::col_id;
 
     // the result context must be one-to-one mapping.
 
@@ -398,10 +444,10 @@ class GroupByOp {
 
     if constexpr (!group_key_on_property<key_alias0_t>::value &&
                   !group_key_on_property<key_alias1_t>::value) {
+      // NOTE: here when we create keyed set builder, we don't require it as a
+      // keyed builder,i.e. it doesn't need to deduplicate.
       auto keyed_set_builder0 = old_key_set0.CreateBuilder();
-      LOG(INFO) << "create key set 0";
       auto keyed_set_builder1 = old_key_set1.CreateBuilder();
-      LOG(INFO) << "create key set 1";
       using con_key_ele_t = std::pair<old_key_set_ele0_t, old_key_set_ele1_t>;
       std::unordered_map<con_key_ele_t, int, boost::hash<con_key_ele_t>>
           key_tuple_set;
@@ -436,7 +482,9 @@ class GroupByOp {
 
       auto keyed_set_built0 = keyed_set_builder0.Build();
       auto keyed_set_built1 = keyed_set_builder1.Build();
-      CHECK(keyed_set_built0.Size() == keyed_set_built1.Size());
+      CHECK(keyed_set_built0.Size() == keyed_set_built1.Size())
+          << "size ueq: " << keyed_set_built0.Size() << " "
+          << keyed_set_built1.Size();
 
       auto value_set_built =
           build_value_set_tuple(std::move(value_set_builder_tuple),

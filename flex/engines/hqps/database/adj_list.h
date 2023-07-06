@@ -141,18 +141,12 @@ class AdjList<T> {
     }
 
     void probe_for_next() {
-      while (begin0_ != end0_) {
-        ++begin0_;
-      }
       if (begin0_ != end0_ && begin0_ != NULL) {
         cur_.neighbor_ = begin0_->neighbor;
         std::get<0>(cur_.prop_) = begin0_->data;
         return;
       }
       // ptr= null is ok, since fast fail on neq
-      while (begin1_ != end1_) {
-        ++begin1_;
-      }
 
       if (begin1_ != end1_ && begin1_ != NULL) {
         cur_.neighbor_ = begin1_->neighbor;
@@ -273,17 +267,11 @@ class AdjList<> {
     }
 
     void probe_for_next() {
-      while (begin0_ != end0_) {
-        ++begin0_;
-      }
       if (begin0_ != end0_ && begin0_ != NULL) {
         cur_.neighbor_ = begin0_->neighbor;
         return;
       }
       // ptr= null is ok, since fast fail on neq
-      while (begin1_ != end1_) {
-        ++begin1_;
-      }
 
       if (begin1_ != end1_ && begin1_ != NULL) {
         cur_.neighbor_ = begin1_->neighbor;

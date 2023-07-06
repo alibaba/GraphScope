@@ -69,9 +69,7 @@ struct KeyedT;
 template <typename LabelT, typename VID_T, typename... T>
 struct KeyedT<RowVertexSet<LabelT, VID_T, T...>,
               PropertySelector<grape::EmptyType>> {
-  using keyed_set_t = KeyRowedVertexSet<
-      LabelT, typename RowVertexSet<LabelT, VID_T, T...>::lid_t,
-      typename RowVertexSet<LabelT, VID_T, T...>::lid_t, T...>;
+  using keyed_set_t = KeyedRowVertexSet<LabelT, VID_T, VID_T, T...>;
   // // The builder type.
   using builder_t = KeyedRowVertexSetBuilder<LabelT, VID_T, VID_T, T...>;
 };
@@ -80,10 +78,7 @@ struct KeyedT<RowVertexSet<LabelT, VID_T, T...>,
 template <typename LabelT, typename VID_T>
 struct KeyedT<RowVertexSet<LabelT, VID_T, grape::EmptyType>,
               PropertySelector<grape::EmptyType>> {
-  using keyed_set_t = KeyRowedVertexSet<
-      LabelT, typename RowVertexSet<LabelT, VID_T, grape::EmptyType>::lid_t,
-      typename RowVertexSet<LabelT, VID_T, grape::EmptyType>::lid_t,
-      grape::EmptyType>;
+  using keyed_set_t = KeyedRowVertexSet<LabelT, VID_T, VID_T, grape::EmptyType>;
   // // The builder type.
   using builder_t =
       KeyedRowVertexSetBuilder<LabelT, VID_T, VID_T, grape::EmptyType>;
@@ -94,20 +89,33 @@ template <typename LabelT, typename VID_T, typename... T, typename PropT>
 struct KeyedT<RowVertexSet<LabelT, VID_T, T...>, PropertySelector<PropT>> {
   using keyed_set_t = Collection<PropT>;
   // // The builder type.
-  using builder_t = CollectionBuilder<PropT>;
+  using builder_t = KeyedCollectionBuilder<PropT>;
+};
+
+// key on a keyed row vertex get us a unkeyed set.
+template <typename LabelT, typename KEY_T, typename VID_T, typename... SET_T>
+struct KeyedT<KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, SET_T...>,
+              PropertySelector<grape::EmptyType>> {
+  using keyed_set_t = KeyedRowVertexSetImpl<LabelT, VID_T, SET_T...>;
+  // // The builder type.
+  using builder_t = KeyedRowVertexSetBuilder<LabelT, VID_T, SET_T...>;
 };
 
 // group by vertex set' id, for generate vertex set.
 template <typename VID_T, typename LabelT, size_t N>
 struct KeyedT<GeneralVertexSet<VID_T, LabelT, N>,
               PropertySelector<grape::EmptyType>> {
-  using keyed_set_t = KeyRowedVertexSet<
-      LabelT, typename RowVertexSet<LabelT, VID_T, grape::EmptyType>::lid_t,
-      typename RowVertexSet<LabelT, VID_T, grape::EmptyType>::lid_t,
-      grape::EmptyType>;
+  using keyed_set_t = KeyedRowVertexSet<LabelT, VID_T, VID_T, grape::EmptyType>;
   // // The builder type.
   using builder_t =
       KeyedRowVertexSetBuilder<LabelT, VID_T, VID_T, grape::EmptyType>;
+};
+
+template <typename T>
+struct KeyedT<Collection<T>, PropertySelector<grape::EmptyType>> {
+  using keyed_set_t = Collection<T>;
+  // // The builder type.
+  using builder_t = KeyedCollectionBuilder<T>;
 };
 
 // when keyed with aggregation function, (which we currently only support
@@ -347,6 +355,23 @@ struct KeyedAggT<GI, TwoLabelVertexSetImpl<VID_T, LabelT, T...>, AggFunc::FIRST,
 //     return aggregate_res_builder_t(time_stamp, set, graph, prop_names);
 //   }
 // };
+
+template <typename LabelT, typename KEY_T, typename VID_T, typename... T,
+          typename ELE, typename DATA>
+static inline auto insert_into_builder_v2_impl(
+    KeyedRowVertexSetBuilderImpl<LabelT, KEY_T, VID_T, T...>& builder,
+    const ELE& ele, const DATA& data) {
+  return builder.insert(ele, data);
+}
+
+template <typename LabelT, typename KEY_T, typename VID_T, typename ELE,
+          typename DATA>
+static inline auto insert_into_builder_v2_impl(
+    KeyedRowVertexSetBuilderImpl<LabelT, KEY_T, VID_T, grape::EmptyType>&
+        builder,
+    const ELE& ele, const DATA& data) {
+  return builder.Insert(ele);
+}
 
 // insert_into_bulder_v2_impl
 template <

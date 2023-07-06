@@ -9,20 +9,20 @@
 // #include "flex/engines/hqps/app/example/is/is6.h"
 // #include "flex/engines/hqps/app/example/is/is7.h"
 
-// #include "flex/engines/hqps/app/example/ic/ic1.h"
-// #include "flex/engines/hqps/app/example/ic/ic10.h"
-// #include "flex/engines/hqps/app/example/ic/ic11.h"
-// #include "flex/engines/hqps/app/example/ic/ic12.h"
-// #include "flex/engines/hqps/app/example/ic/ic13.h"
-// #include "flex/engines/hqps/app/example/ic/ic14.h"
+#include "flex/engines/hqps/app/example/ic/ic1.h"
+#include "flex/engines/hqps/app/example/ic/ic10.h"
+#include "flex/engines/hqps/app/example/ic/ic11.h"
+#include "flex/engines/hqps/app/example/ic/ic12.h"
+#include "flex/engines/hqps/app/example/ic/ic13.h"
+#include "flex/engines/hqps/app/example/ic/ic14.h"
 #include "flex/engines/hqps/app/example/ic/ic2.h"
-// #include "flex/engines/hqps/app/example/ic/ic3.h"
-// #include "flex/engines/hqps/app/example/ic/ic4.h"
-// #include "flex/engines/hqps/app/example/ic/ic5.h"
+#include "flex/engines/hqps/app/example/ic/ic3.h"
+#include "flex/engines/hqps/app/example/ic/ic4.h"
+#include "flex/engines/hqps/app/example/ic/ic5.h"
 #include "flex/engines/hqps/app/example/ic/ic6.h"
-// #include "flex/engines/hqps/app/example/ic/ic7.h"
-// #include "flex/engines/hqps/app/example/ic/ic8.h"
-// #include "flex/engines/hqps/app/example/ic/ic9.h"
+#include "flex/engines/hqps/app/example/ic/ic7.h"
+#include "flex/engines/hqps/app/example/ic/ic8.h"
+#include "flex/engines/hqps/app/example/ic/ic9.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -115,138 +115,62 @@ void validate(const GRAPH_INTERFACE& graph, const std::string& filename,
 template <typename GRAPH_INTERFACE>
 void validate_all(const GRAPH_INTERFACE& graph,
                   const std::string& validate_dir) {
-  int max_times = 10;
-  // validate<GRAPH_INTERFACE, gs::IC1<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic1.csv", max_times);
-  // LOG(INFO) << "Finish IC1 test";
-
-  // validate<GRAPH_INTERFACE, gs::IC2<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic2.csv", max_times);
-  // LOG(INFO) << "Finish IC2 test";
-
-  // validate<GRAPH_INTERFACE, gs::IC3<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic3.csv", max_times);
-  // LOG(INFO) << "Finish IC3 test";
-
-  // validate<GRAPH_INTERFACE, gs::IC4<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic4.csv", max_times);
-  // LOG(INFO) << "Finish IC4 test";
-
-  // validate<GRAPH_INTERFACE, gs::IC5<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic5.csv", max_times);
-  // LOG(INFO) << "Finish IC5 test";
-
-  // validate<GRAPH_INTERFACE, gs::IC6<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic6.csv", max_times);
-  // LOG(INFO) << "Finish IC6 test";
-
-  // validate<GRAPH_INTERFACE, gs::IC7<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic7.csv", max_times);
-  // LOG(INFO) << "Finish IC7 test";
-
-  // validate<GRAPH_INTERFACE, gs::IC8<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic8.csv", max_times);
-  // LOG(INFO) << "Finish IC8 test";
-
-  // validate<GRAPH_INTERFACE, gs::IC9<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic9.csv", max_times);
-  // LOG(INFO) << "Finish IC9 test";
-
-  // validate<GRAPH_INTERFACE, gs::IC10<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic10.csv", max_times);
-  // LOG(INFO) << "Finish IC10 test";
-
-  // validate<GRAPH_INTERFACE, gs::IC11<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic11.csv", max_times);
-  // LOG(INFO) << "Finish IC11 test";
-
-  // validate<GRAPH_INTERFACE, gs::IC12<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic12.csv", max_times);
-  // LOG(INFO) << "Finish IC12 test";
-
-  // validate<GRAPH_INTERFACE, gs::IC13<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic13.csv", max_times);
-  // LOG(INFO) << "Finish IC13 test";
-
-  // validate<GRAPH_INTERFACE, gs::IC14<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic14.csv", max_times);
-  // LOG(INFO) << "Finish IC14 test";
-}
-
-template <typename GRAPH_INTERFACE>
-void validate_codegen(const GRAPH_INTERFACE& graph,
-                      const std::string& validate_dir) {
   int max_times = 100;
-  // validate<GRAPH_INTERFACE, gs::IS1<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_is1.csv", max_times);
-  // LOG(INFO) << "Finish IS1 test";
 
-  // validate<GRAPH_INTERFACE, gs::IS2<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_is2.csv", max_times);
-  // LOG(INFO) << "Finish IS2 test";
-
-  // validate<GRAPH_INTERFACE, gs::IS3<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_is3.csv", max_times);
-  // LOG(INFO) << "Finish IS3 test";
-
-  // validate<GRAPH_INTERFACE, gs::IS4<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_is4.csv", max_times);
-  // LOG(INFO) << "Finish IS4 test";
-
-  // validate<GRAPH_INTERFACE, gs::IS5<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_is5.csv", max_times);
-  // LOG(INFO) << "Finish IS5 test";
-
-  // validate<GRAPH_INTERFACE, gs::IS6<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_is6.csv", max_times);
-  // LOG(INFO) << "Finish IS6 test";
-
-  // validate<GRAPH_INTERFACE, gs::IS7<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_is7.csv", max_times);
-  // LOG(INFO) << "Finish IS7 test";
-
-  // validate<GRAPH_INTERFACE, gs::IC1<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic1.csv", max_times);
-  // LOG(INFO) << "Finish IC1 test";
+  validate<GRAPH_INTERFACE, gs::QueryIC1<GRAPH_INTERFACE>>(
+      graph, validate_dir + "/" + "validation_params_ic1.csv", max_times);
+  LOG(INFO) << "Finish IC1 test";
 
   validate<GRAPH_INTERFACE, gs::QueryIC2<GRAPH_INTERFACE>>(
       graph, validate_dir + "/" + "validation_params_ic2.csv", max_times);
 
-  // validate<GRAPH_INTERFACE, gs::QueryIC3<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic3.csv", max_times);
-  // LOG(INFO) << "Finish IC3 test";
+  validate<GRAPH_INTERFACE, gs::QueryIC3<GRAPH_INTERFACE>>(
+      graph, validate_dir + "/" + "validation_params_ic3.csv", max_times);
+  LOG(INFO) << "Finish IC3 test";
 
-  // validate<GRAPH_INTERFACE, gs::QueryIC4<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic4.csv", max_times);
-  // LOG(INFO) << "Finish IC4 test";
+  validate<GRAPH_INTERFACE, gs::QueryIC4<GRAPH_INTERFACE>>(
+      graph, validate_dir + "/" + "validation_params_ic4.csv", max_times);
+  LOG(INFO) << "Finish IC4 test";
 
-  // validate<GRAPH_INTERFACE, gs::QueryIC5<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic5.csv", max_times);
-  // LOG(INFO) << "Finish IC5 test";
+  validate<GRAPH_INTERFACE, gs::QueryIC5<GRAPH_INTERFACE>>(
+      graph, validate_dir + "/" + "validation_params_ic5.csv", max_times);
+  LOG(INFO) << "Finish IC5 test";
 
-  validate<GRAPH_INTERFACE, gs::IC6<GRAPH_INTERFACE>>(
+  validate<GRAPH_INTERFACE, gs::QueryIC6<GRAPH_INTERFACE>>(
       graph, validate_dir + "/" + "validation_params_ic6.csv", max_times);
   LOG(INFO) << "Finish IC6 test";
 
-  // validate<GRAPH_INTERFACE, gs::QueryIC7<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic7.csv", max_times);
-  // LOG(INFO) << "Finish IC7 test";
+  validate<GRAPH_INTERFACE, gs::QueryIC7<GRAPH_INTERFACE>>(
+      graph, validate_dir + "/" + "validation_params_ic7.csv", max_times);
+  LOG(INFO) << "Finish IC7 test";
 
-  // validate<GRAPH_INTERFACE, gs::QueryIC8<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic8.csv", max_times);
-  // LOG(INFO) << "Finish IC8 test";
+  validate<GRAPH_INTERFACE, gs::QueryIC8<GRAPH_INTERFACE>>(
+      graph, validate_dir + "/" + "validation_params_ic8.csv", max_times);
+  LOG(INFO) << "Finish IC8 test";
 
-  // validate<GRAPH_INTERFACE, gs::QueryIC9<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic9.csv", max_times);
-  // LOG(INFO) << "Finish IC9 test";
+  validate<GRAPH_INTERFACE, gs::QueryIC9<GRAPH_INTERFACE>>(
+      graph, validate_dir + "/" + "validation_params_ic9.csv", max_times);
+  LOG(INFO) << "Finish IC9 test";
 
-  // validate<GRAPH_INTERFACE, gs::QueryIC11<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic11.csv", max_times);
-  // LOG(INFO) << "Finish IC11 test";
+  validate<GRAPH_INTERFACE, gs::QueryIC10<GRAPH_INTERFACE>>(
+      graph, validate_dir + "/" + "validation_params_ic10.csv", max_times);
+  LOG(INFO) << "Finish IC10 test";
 
-  // validate<GRAPH_INTERFACE, gs::QueryIC12<GRAPH_INTERFACE>>(
-  //     graph, validate_dir + "/" + "validation_params_ic12.csv", max_times);
-  // LOG(INFO) << "Finish IC12 test";
+  validate<GRAPH_INTERFACE, gs::QueryIC11<GRAPH_INTERFACE>>(
+      graph, validate_dir + "/" + "validation_params_ic11.csv", max_times);
+  LOG(INFO) << "Finish IC11 test";
+
+  validate<GRAPH_INTERFACE, gs::QueryIC12<GRAPH_INTERFACE>>(
+      graph, validate_dir + "/" + "validation_params_ic12.csv", max_times);
+  LOG(INFO) << "Finish IC12 test";
+
+  validate<GRAPH_INTERFACE, gs::QueryIC13<GRAPH_INTERFACE>>(
+      graph, validate_dir + "/" + "validation_params_ic13.csv", max_times);
+  LOG(INFO) << "Finish IC13 test";
+
+  validate<GRAPH_INTERFACE, gs::QueryIC14<GRAPH_INTERFACE>>(
+      graph, validate_dir + "/" + "validation_params_ic14.csv", max_times);
+  LOG(INFO) << "Finish IC14 test";
 }
 
 int main(int argc, char** argv) {
@@ -273,7 +197,7 @@ int main(int argc, char** argv) {
 
   gs::GrapeGraphInterface graph(gs::GraphDB::get().GetSession(0));
   // validate_all(graph, validate_dir);
-  validate_codegen(graph, validate_dir);
+  validate_all(graph, validate_dir);
 
   return 0;
 }

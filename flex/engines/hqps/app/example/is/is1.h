@@ -3,9 +3,9 @@
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include "flex/utils/app_utils.h"
 #include "flex/engines/hqps/engine/context.h"
 #include "flex/engines/hqps/engine/hqps_utils.h"
+#include "flex/utils/app_utils.h"
 
 #include "flex/engines/hqps/engine/sync_engine.h"
 
@@ -32,14 +32,14 @@ class IS1 {
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
   // static gs::oid_t oid_param = 6597069767117;
-  std::string person_label = "person";
-  std::string knows_label = "knows";
-  std::string isLocatedIn_label = "isLocatedIn";
-  std::string place_label = "place";
-  std::string workAt_label = "workAt";
-  std::string studyAt_label = "studyAt";
+  std::string person_label = "PERSON";
+  std::string knows_label = "KNOWS";
+  std::string isLocatedIn_label = "ISLOCATEDIN";
+  std::string place_label = "PLACE";
+  std::string workAt_label = "WORKAT";
+  std::string studyAt_label = "STUDYAT";
 
-  std::string org_label = "organisation";
+  std::string org_label = "ORGANISATION";
   // static std::string_view firstName = "Jack";
 
   using Engine = SyncEngine<GRAPH_INTERFACE>;

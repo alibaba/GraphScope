@@ -60,8 +60,7 @@ template <typename EXPR, typename SELECTOR_TUPLE, int32_t... in_col_id>
 struct MultiMapper {
   EXPR expr_;
   SELECTOR_TUPLE selectors_;
-  MultiMapper(EXPR&& expr, SELECTOR_TUPLE&& selectors,
-              std::integer_sequence<int32_t, in_col_id...>)
+  MultiMapper(EXPR&& expr, SELECTOR_TUPLE&& selectors)
       : expr_(std::move(expr)), selectors_(std::move(selectors)) {}
 };
 
@@ -179,7 +178,8 @@ template <AggFunc _agg_func, typename... T, int... Is>
 auto make_aggregate_prop(std::tuple<PropertySelector<T>...>&& selectors,
                          std::integer_sequence<int32_t, Is...>) {
   return AggregateProp<_agg_func, std::tuple<PropertySelector<T>...>,
-                       std::integer_sequence<int32_t, Is...>>(std::move(selectors));
+                       std::integer_sequence<int32_t, Is...>>(
+      std::move(selectors));
 }
 
 }  // namespace gs

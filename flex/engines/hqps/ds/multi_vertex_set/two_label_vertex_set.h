@@ -704,7 +704,7 @@ class TwoLabelVertexSetImpl {
 
   template <int tag_id, int Fs,
             typename std::enable_if<Fs == -1>::type* = nullptr>
-  self_type_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+  self_type_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
                                      KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<lid_t> next_vids;
     std::vector<std::tuple<T...>> next_datas;
@@ -958,7 +958,7 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
 
   template <int tag_id, int Fs,
             typename std::enable_if<Fs == -1>::type* = nullptr>
-  self_type_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+  self_type_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
                                      KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<lid_t> next_vids;
     size_t next_size = 0;

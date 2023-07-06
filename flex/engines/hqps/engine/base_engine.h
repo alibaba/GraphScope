@@ -99,7 +99,7 @@ class BaseEngine {
       int... alias_to_use, typename CTX_HEAD_T, int cur_alias, int base_tag,
       typename... CTX_PREV,
       typename RES_T = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
-      typename std::enable_if<(sizeof...(alias_to_use) > 0)>::type* = nullptr>
+      typename std::enable_if<(sizeof...(alias_to_use) > 1)>::type* = nullptr>
   static RES_T Dedup(
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx) {
     // get all ele_t of context
@@ -137,8 +137,8 @@ class BaseEngine {
   /// With a apply function, we get the result, and join with current node.
   //  append the result data to current traversal.
   template <
-      int res_alias, JoinKind join_kind, typename CTX_HEAD_T, int cur_alias,
-      int base_tag, typename... CTX_PREV, typename FUNC_T,
+      JoinKind join_kind, typename CTX_HEAD_T, int cur_alias, int base_tag,
+      typename... CTX_PREV, typename FUNC_T,
       typename std::enable_if<join_kind == JoinKind::AntiJoin>::type* = nullptr>
   static auto Apply(Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
                     FUNC_T&& func) {
@@ -150,7 +150,6 @@ class BaseEngine {
     copied_ctx.set_sub_task_start_tag(start_tag);
 
     auto inner_ctx = func(std::move(copied_ctx));
-    CHECK(res_alias == -1) << "Can not have res_alias != -1 in antijoin ";
     // We shall obtain the active indcies in res_ctx via csr offset
     // arrays.
 
@@ -416,7 +415,7 @@ class BaseEngine {
   }
 
   /////////////////////////Apply///////////////////////////////
-  template <int res_alias, JoinKind join_kind, typename CTX_HEAD_T,
+  template <AppendOpt append_opt, JoinKind join_kind, typename CTX_HEAD_T,
             int cur_alias, int base_tag, typename... CTX_PREV, typename FUNC_T,
             typename std::enable_if<join_kind == JoinKind::InnerJoin>::type* =
                 nullptr>
@@ -463,8 +462,8 @@ class BaseEngine {
     // inner_ctx.template ObtainOffsetFromTag<start_tag>();
     // For collections, set default value for non-existing entry.
     // For vertex set, just add.
-    return ctx.template ApplyNode<res_alias>(std::move(inner_ctx_head),
-                                             std::move(tmp_vec));
+    return ctx.template ApplyNode<append_opt>(std::move(inner_ctx_head),
+                                              std::move(tmp_vec));
   }
 
   template <size_t real_x_ind, size_t real_y_ind, typename... BuilderX,
@@ -543,8 +542,12 @@ class BaseEngine {
     using ctx_y_iter_t = typename CTX_Y::iterator;
     using ctx_x_all_ele_t = std::remove_reference_t<decltype(
         std::declval<ctx_x_iter_t>().GetAllElement())>;
+    using ctx_x_all_data_t = std::remove_reference_t<decltype(
+        std::declval<ctx_x_iter_t>().GetAllData())>;
     using ctx_y_all_ele_t = std::remove_reference_t<decltype(
         std::declval<ctx_y_iter_t>().GetAllElement())>;
+    using ctx_y_all_data_t = std::remove_reference_t<decltype(
+        std::declval<ctx_y_iter_t>().GetAllData())>;
     static constexpr size_t x_ele_num = std::tuple_size_v<ctx_x_all_ele_t>;
     static constexpr size_t y_ele_num = std::tuple_size_v<ctx_y_all_ele_t>;
     static constexpr int x_base_tag = CTX_X::base_tag_id;
@@ -557,110 +560,68 @@ class BaseEngine {
         alias_y == -1 ? y_ele_num - 1 : alias_y - y_base_tag;
     using ctx_x_ele_t = std::tuple_element_t<real_x_ind, ctx_x_all_ele_t>;
     using ctx_y_ele_t = std::tuple_element_t<real_y_ind, ctx_y_all_ele_t>;
+    using ctx_y_res_ele_t =
+        typename gs::remove_ith_type<real_y_ind, ctx_y_all_ele_t>::type;
+    using ctx_y_res_data_t =
+        typename gs::remove_ith_type<real_y_ind, ctx_y_all_data_t>::type;
     static_assert(std::is_same_v<ctx_x_ele_t, ctx_y_ele_t>,
                   "Join on different type is not supported.");
 
-    auto builder_tuple_pair =
-        create_builder_tuple<real_x_ind, real_y_ind>(ctx_x, ctx_y);
-    auto builder_tuple = builder_tuple_pair.first;
-    auto key_builder = builder_tuple_pair.second;
+    // auto builder_tuple_pair =
+    //     create_builder_tuple<real_x_ind, real_y_ind>(ctx_x, ctx_y);
+    // auto builder_tuple = builder_tuple_pair.first;
+    // auto key_builder = builder_tuple_pair.second;
+    auto x_builder_tuple_init = ctx_x.CreateSetBuilder();
+    auto y_builder_tuple_init = ctx_y.CreateSetBuilder();
+    auto y_builder_tuple = remove_nth_element<real_y_ind>(y_builder_tuple_init);
+    auto all_builder = std::tuple_cat(x_builder_tuple_init, y_builder_tuple);
 
     double t0 = -grape::GetCurrentTime();
-    std::unordered_map<ctx_x_ele_t, int> join_key_map;
+    std::unordered_map<
+        ctx_x_ele_t, std::vector<std::tuple<ctx_y_res_ele_t, ctx_y_res_data_t>>>
+        join_key_map;
     {
-      auto& x_ele = ctx_x.template GetNode<alias_x>();
-      for (auto iter : x_ele) {
-        auto ele = iter.GetElement();
-        join_key_map[iter.GetElement()] = 1;
+      for (auto iter : ctx_y) {
+        auto y_ele = iter.GetAllElement();
+        auto y_data = iter.GetAllData();
+        auto y_key = std::get<real_y_ind>(y_ele);
+        if (join_key_map.find(y_key) == join_key_map.end()) {
+          join_key_map[y_key] =
+              std::vector<std::tuple<ctx_y_res_ele_t, ctx_y_res_data_t>>();
+        }
+        auto y_res_ele = remove_nth_element<real_y_ind>(y_ele);
+        auto y_res_data = remove_nth_element<real_y_ind>(y_data);
+        join_key_map[y_key].emplace_back(
+            std::make_tuple(y_res_ele, y_res_data));
       }
     }
-    {
-      auto& y_ele = ctx_y.template GetNode<alias_y>();
-      for (auto iter : y_ele) {
-        join_key_map[iter.GetElement()] += 1;
-      }
-    }
-    std::unordered_set<ctx_x_ele_t> join_key_set;
-    for (auto& kv : join_key_map) {
-      if (kv.second == 2) {
-        join_key_set.insert(kv.first);
+    LOG(INFO) << " key map valid num: " << join_key_map.size();
+
+    for (auto x_iter : ctx_x) {
+      auto ele = x_iter.GetAllElement();
+      auto data = x_iter.GetAllData();
+      // the sequence of x_tuple shall not change
+      auto x_key = std::get<real_x_ind>(ele);
+      if (join_key_map.find(x_key) != join_key_map.end()) {
+        for (auto y_res : join_key_map[x_key]) {
+          auto y_res_ele = std::get<0>(y_res);
+          auto y_res_data = std::get<1>(y_res);
+          auto res_ele = std::tuple_cat(ele, y_res_ele);
+          auto res_data = std::tuple_cat(data, y_res_data);
+          insert_into_builder_v2(all_builder, res_ele, res_data);
+        }
       }
     }
 
-    std::vector<ctx_x_all_ele_t> x_eles;
-    std::vector<ctx_y_all_ele_t> y_eles;
-    x_eles.reserve(ctx_x.GetHead().Size());
-    y_eles.reserve(ctx_y.GetHead().Size());
-    for (auto iter : ctx_x) {
-      auto all_ele = iter.GetAllElement();
-      if (join_key_set.find(std::get<real_x_ind>(all_ele)) !=
-          join_key_set.end()) {
-        x_eles.emplace_back(all_ele);
-      }
-    }
-    for (auto iter : ctx_y) {
-      auto all_ele = iter.GetAllElement();
-      if (join_key_set.find(std::get<real_y_ind>(all_ele)) !=
-          join_key_set.end()) {
-        y_eles.emplace_back(all_ele);
-      }
-    }
-    t0 += grape::GetCurrentTime();
-    LOG(INFO) << "[Join]: extract all eles cost: " << t0
-              << ", total size: " << join_key_set.size();
-
-    double t1 = -grape::GetCurrentTime();
-    sort(x_eles.begin(), x_eles.end(), [](const auto& x, const auto& y) {
-      return std::get<real_x_ind>(x) < std::get<real_x_ind>(y);
-    });
-    sort(y_eles.begin(), y_eles.end(), [](const auto& x, const auto& y) {
-      return std::get<real_y_ind>(x) < std::get<real_y_ind>(y);
-    });
-    t1 += grape::GetCurrentTime();
-    LOG(INFO) << "[Join]: sort ele cost: " << t1;
-
-    // now merge.
-    size_t x_ind = 0;
-    size_t y_ind = 0;
-    while (x_ind < x_eles.size() && y_ind < y_eles.size()) {
-      auto& x_ele = x_eles[x_ind];
-      auto& y_ele = y_eles[y_ind];
-      // concatenate all other indices except for x_alias, y_alias.
-      while (y_ind < y_eles.size() &&
-             std::get<real_x_ind>(x_ele) > std::get<real_y_ind>(y_ele)) {
-        y_ind += 1;
-        y_ele = y_eles[y_ind];
-      }
-      if (y_ind >= y_eles.size()) {
-        break;
-      }
-      if (std::get<real_x_ind>(x_ele) == std::get<real_y_ind>(y_ele)) {
-        // join.
-        insert_into_builder<0, real_x_ind>(
-            builder_tuple, x_ele, std::make_index_sequence<x_ele_num>{});
-        insert_into_builder<x_ele_num - 1, real_y_ind>(
-            builder_tuple, y_ele, std::make_index_sequence<y_ele_num>{});
-        // insert join key.
-        key_builder.Insert(std::get<real_x_ind>(x_ele));
-      }
-      x_ind += 1;
-    }
-
-    // insert key into first_half
-    auto first_half = builder_finish_left<real_x_ind, x_ele_num - 1>(
-        builder_tuple, key_builder);  // [0,)
-    auto second_half =
-        builder_finish_right<x_ele_num - 1, x_ele_num + y_ele_num - 2>(
-            builder_tuple);  // [)
+    auto built_tuple = builder_finish(
+        all_builder, std::make_index_sequence<x_ele_num + y_ele_num - 1>{});
+    LOG(INFO) << "after build, size: " << std::get<0>(built_tuple).Size();
     auto offset_vec = make_offset_vector(x_ele_num + y_ele_num - 2,
-                                         std::get<0>(first_half).Size());
-    VLOG(10) << "after join , the set size: " << std::get<0>(first_half).Size();
+                                         std::get<0>(built_tuple).Size());
     VLOG(10) << "offset vec size:  " << offset_vec.size();
-    // insert key set into tuple.
-    auto tuple_after_insert = std::tuple_cat(first_half, second_half);
     auto prev_tuple =
-        gs::remove_nth_element<x_ele_num + y_ele_num - 2>(tuple_after_insert);
-    auto head_tuple = std::get<x_ele_num + y_ele_num - 2>(tuple_after_insert);
+        gs::remove_nth_element<x_ele_num + y_ele_num - 2>(built_tuple);
+    auto head_tuple = std::get<x_ele_num + y_ele_num - 2>(built_tuple);
 
     return make_context<0, x_ele_num + y_ele_num - 2>(
         std::move(prev_tuple), std::move(head_tuple), std::move(offset_vec));

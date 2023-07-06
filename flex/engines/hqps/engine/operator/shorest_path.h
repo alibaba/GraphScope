@@ -20,8 +20,8 @@ limitations under the License.
 #include <string>
 
 // #include "flex/engines/hqps/ds/unkeyed_vertex_set.h"
-#include "flex/engines/hqps/ds/path.h"
 #include "flex/engines/hqps/ds/multi_vertex_set/row_vertex_set.h"
+#include "flex/engines/hqps/ds/path.h"
 
 namespace gs {
 
@@ -41,15 +41,15 @@ class ShortestPathOp {
                  IsTruePredicate<EDGE_FILTER_T>::value)>::type* = nullptr,
             typename path_set_t = PathSet<vertex_id_t, LabelT>>
   static std::pair<path_set_t, std::vector<size_t>> ShortestPath(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, const SET_T& set,
+      const GRAPH_INTERFACE& graph, const SET_T& set,
       const ShortestPathOpt<LabelT, EXPR, EDGE_FILTER_T, UNTIL_CONDITION, T...>&
           opt) {
     CHECK(set.Size() == 1);
     auto src_label = set.GetLabel();
     // find the vertices that satisfy the condition.
     auto dst_vertices = find_vertices_satisfy_condition(
-        time_stamp, graph, opt.until_condition_, set.GetLabel(),
-        opt.until_condition_.Properties());
+        graph, opt.until_condition_.expr_, set.GetLabel(),
+        opt.until_condition_.selectors_);
     CHECK(dst_vertices.size() == 1);
     CHECK(opt.edge_expand_opt_.other_label_ == src_label);
     CHECK(opt.get_v_opt_.v_labels_[0] == src_label);
@@ -58,9 +58,9 @@ class ShortestPathOp {
     VLOG(10) << "[ShortestPath]: src: " << src_vid << ", dst:" << dst_vid;
     // only support one-to-one shortest path.
 
-    auto path_set = shortest_path_impl(
-        time_stamp, graph, src_vid, dst_vid, opt.edge_expand_opt_.dir_,
-        opt.edge_expand_opt_.edge_label_, src_label);
+    auto path_set =
+        shortest_path_impl(graph, src_vid, dst_vid, opt.edge_expand_opt_.dir_,
+                           opt.edge_expand_opt_.edge_label_, src_label);
 
     std::vector<offset_t> offsets{0, path_set.Size()};
     return std::make_pair(std::move(path_set), std::move(offsets));
@@ -69,9 +69,8 @@ class ShortestPathOp {
  private:
   template <typename LabelT>
   static PathSet<vertex_id_t, LabelT> shortest_path_impl(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, vertex_id_t src_vid,
-      vertex_id_t dst_vid, Direction direction, LabelT edge_label,
-      LabelT vertex_label) {
+      const GRAPH_INTERFACE& graph, vertex_id_t src_vid, vertex_id_t dst_vid,
+      Direction direction, LabelT edge_label, LabelT vertex_label) {
     std::unordered_map<vertex_id_t, int8_t> src_vid_dist;
     std::unordered_map<vertex_id_t, int8_t> dst_vid_dist;
     std::string direction_str = gs::to_string(direction);
@@ -90,9 +89,9 @@ class ShortestPathOp {
         VLOG(10) << "Expand From src, current depth: " << src_dep
                  << " queue size: " << src_q.size();
 
-        expand_from_queue(time_stamp, graph, vertex_label, edge_label,
-                          direction_str, src_dep, src_q, tmp_q, src_vid_dist,
-                          dst_vid_dist, meet_vertices);
+        expand_from_queue(graph, vertex_label, edge_label, direction_str,
+                          src_dep, src_q, tmp_q, src_vid_dist, dst_vid_dist,
+                          meet_vertices);
         if (!meet_vertices.empty()) {
           break;
         }
@@ -100,9 +99,9 @@ class ShortestPathOp {
       } else {
         // expand from dst.
         ++dst_dep;
-        expand_from_queue(time_stamp, graph, vertex_label, edge_label,
-                          direction_str, dst_dep, dst_q, tmp_q, dst_vid_dist,
-                          src_vid_dist, meet_vertices);
+        expand_from_queue(graph, vertex_label, edge_label, direction_str,
+                          dst_dep, dst_q, tmp_q, dst_vid_dist, src_vid_dist,
+                          meet_vertices);
         if (!meet_vertices.empty()) {
           break;
         }
@@ -119,15 +118,15 @@ class ShortestPathOp {
     }
 
     // to find the path.
-    return find_paths(time_stamp, graph, vertex_label, edge_label,
-                      direction_str, meet_vertices, src_vid, dst_vid,
-                      src_vid_dist, dst_vid_dist);
+    return find_paths(graph, vertex_label, edge_label, direction_str,
+                      meet_vertices, src_vid, dst_vid, src_vid_dist,
+                      dst_vid_dist);
   }
 
   template <typename LabelT>
   static void expand_from_queue(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, LabelT v_label,
-      LabelT edge_label, const std::string& direction, int8_t depth,
+      const GRAPH_INTERFACE& graph, LabelT v_label, LabelT edge_label,
+      const std::string& direction, int8_t depth,
       std::queue<vertex_id_t>& src_q, std::queue<vertex_id_t>& tmp_q,
       std::unordered_map<vertex_id_t, int8_t>& cur_vid_dist,
       std::unordered_map<vertex_id_t, int8_t>& other_vid_dist,
@@ -139,9 +138,8 @@ class ShortestPathOp {
       src_q.pop();
       ids_to_query.emplace_back(src_v);
     }
-    auto nbr_list_array =
-        graph.GetOtherVertices(time_stamp, v_label, v_label, edge_label,
-                               ids_to_query, direction, INT_MAX);
+    auto nbr_list_array = graph.GetOtherVertices(
+        v_label, v_label, edge_label, ids_to_query, direction, INT_MAX);
     for (auto i = 0; i < nbr_list_array.size(); ++i) {
       for (auto nbr : nbr_list_array.get(i)) {
         auto v = nbr.neighbor();
@@ -193,10 +191,9 @@ class ShortestPathOp {
 
   template <typename LabelT>
   static PathSet<vertex_id_t, LabelT> find_paths(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, LabelT v_label,
-      LabelT edge_label, const std::string& direction,
-      std::vector<vertex_id_t>& meet_vertices, vertex_id_t src_vid,
-      vertex_id_t dst_vid,
+      const GRAPH_INTERFACE& graph, LabelT v_label, LabelT edge_label,
+      const std::string& direction, std::vector<vertex_id_t>& meet_vertices,
+      vertex_id_t src_vid, vertex_id_t dst_vid,
       std::unordered_map<vertex_id_t, int8_t>& src_vid_dist,
       std::unordered_map<vertex_id_t, int8_t>& dst_vid_dist) {
     std::unordered_set<vertex_id_t> vertex_set;
@@ -218,9 +215,8 @@ class ShortestPathOp {
         tmp_vec.emplace_back(v);
       }
 
-      auto nbr_list_array =
-          graph.GetOtherVertices(time_stamp, v_label, v_label, edge_label,
-                                 tmp_vec, direction, INT_MAX);
+      auto nbr_list_array = graph.GetOtherVertices(v_label, v_label, edge_label,
+                                                   tmp_vec, direction, INT_MAX);
       for (auto i = 0; i < nbr_list_array.size(); ++i) {
         auto cur_v = tmp_vec[i];
         for (auto nbr : nbr_list_array.get(i)) {
@@ -268,18 +264,18 @@ class ShortestPathOp {
 
   template <typename UNTIL_CONDITION, typename LabelT, typename T>
   static std::vector<vertex_id_t> find_vertices_satisfy_condition(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
-      UNTIL_CONDITION& condition, LabelT v_label, NamedProperty<T> prop_names) {
+      const GRAPH_INTERFACE& graph, UNTIL_CONDITION& condition, LabelT v_label,
+      const std::tuple<PropertySelector<T>>& selectors) {
     std::vector<vertex_id_t> gids;
     auto filter = [&](vertex_id_t v, const std::tuple<T>& props) {
-      if (condition(props)) {
+      if (condition(std::get<0>(props))) {
         gids.push_back(v);
       }
     };
     // TODO: make label param?
-    auto names = std::array<std::string, 1>{prop_names.name};
-    graph.template ScanVertices<decltype(filter), T>(time_stamp, v_label, names,
-                                                     filter);
+    // auto names = std::array<std::string,
+    // 1>{std::get<0>(selectors).prop_name_};
+    graph.template ScanVertices(v_label, selectors, filter);
     return gids;
   }
 };

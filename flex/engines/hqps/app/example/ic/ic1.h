@@ -10,31 +10,23 @@
 
 namespace gs {
 
-template <typename TAG_COL>
 class IC1Expression2 {
  public:
-  IC1Expression2(std::string_view param1, TAG_COL&& props)
-      : param1_(param1), props_(props) {}
+  using result_t = bool;
+  IC1Expression2(std::string_view param1) : param1_(param1) {}
 
-  template <typename TUPLE_T>
-  inline bool operator()(TUPLE_T& props) {
+  inline bool operator()(const std::string_view& props) {
     return param1_ == props;
   }
 
-  auto Properties() { return std::make_tuple(props_); }
-
  private:
   std::string_view param1_;
-  TAG_COL props_;
 };
 
-template <typename TAG_COL0, typename TAG_COL1, typename TAG_COL2,
-          typename TAG_COL3>
 class IC1Expression3 {
  public:
-  IC1Expression3(TAG_COL0&& prop0, TAG_COL1&& prop1, TAG_COL2&& prop2,
-                 TAG_COL3&& prop3)
-      : prop0_(prop0), prop1_(prop1), prop2_(prop2), prop3_(prop3) {}
+  using result_t = std::tuple<std::string_view, int32_t, std::string_view>;
+  IC1Expression3() {}
 
   template <typename TUPLE_T>
   inline auto operator()(const TUPLE_T& edge_tuple,
@@ -50,23 +42,13 @@ class IC1Expression3 {
     }
   }
 
-  auto Properties() { return std::make_tuple(prop0_, prop1_, prop2_, prop3_); }
-
  private:
-  std::string_view param1_;
-  TAG_COL0 prop0_;
-  TAG_COL1 prop1_;
-  TAG_COL2 prop2_;
-  TAG_COL3 prop3_;
 };
 
-template <typename TAG_COL0, typename TAG_COL1, typename TAG_COL2,
-          typename TAG_COL3>
 class IC1Expression4 {
  public:
-  IC1Expression4(TAG_COL0&& prop0, TAG_COL1&& prop1, TAG_COL2&& prop2,
-                 TAG_COL3&& prop3)
-      : prop0_(prop0), prop1_(prop1), prop2_(prop2), prop3_(prop3) {}
+  using result_t = std::tuple<std::string_view, int32_t, std::string_view>;
+  IC1Expression4() {}
 
   template <typename TUPLE_T>
   inline auto operator()(const TUPLE_T& edge_tuple,
@@ -85,14 +67,7 @@ class IC1Expression4 {
     }
   }
 
-  auto Properties() { return std::make_tuple(prop0_, prop1_, prop2_, prop3_); }
-
  private:
-  std::string_view param1_;
-  TAG_COL0 prop0_;
-  TAG_COL1 prop1_;
-  TAG_COL2 prop2_;
-  TAG_COL3 prop3_;
 };
 
 template <typename Out>
@@ -112,7 +87,7 @@ std::vector<std::string> split(const std::string_view& s, char delim) {
 }
 
 template <typename GRAPH_INTERFACE>
-class IC1 {
+class QueryIC1 {
   using oid_t = typename GRAPH_INTERFACE::outer_vertex_id_t;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
@@ -208,7 +183,7 @@ class IC1 {
       output.push_back(std::make_pair("", node));
     }
   }
-  void Query(const GRAPH_INTERFACE& graph, int64_t time_stamp, Decoder& input,
+  void Query(const GRAPH_INTERFACE& graph, int64_t ts, Decoder& input,
              Encoder& output) const {
     using Engine = SyncEngine<GRAPH_INTERFACE>;
     using label_id_t = typename GRAPH_INTERFACE::label_id_t;
@@ -224,8 +199,8 @@ class IC1 {
     std::string_view firstName = input.get_string();
     LOG(INFO) << "start ic1 query with: " << id << ", " << firstName;
 
-    auto ctx0 = Engine::template ScanVertexWithOid<0>(time_stamp, graph,
-                                                      person_label_id, id);
+    auto ctx0 = Engine::template ScanVertexWithOid<AppendOpt::Persist>(
+        graph, person_label_id, id);
 
     double t1 = -grape::GetCurrentTime();
     auto edge_expand_opt = gs::make_edge_expandv_opt(
@@ -235,48 +210,68 @@ class IC1 {
     auto path_expand_opt = gs::make_path_expand_opt(
         std::move(edge_expand_opt), std::move(get_v_opt), gs::Range(1, 4));
     auto ctx1 = Engine::template PathExpandV<AppendOpt::Temp, INPUT_COL_ID(0)>(
-        time_stamp, graph, std::move(ctx0), std::move(path_expand_opt));
+        graph, std::move(ctx0), std::move(path_expand_opt));
 
-    IC1Expression2 expr3(firstName,
-                         gs::NamedProperty<std::string_view>("firstName"));
+    auto filter1 =
+        gs::make_filter(IC1Expression2(firstName),
+                        gs::PropertySelector<std::string_view>("firstName"));
     auto get_v_opt3 = gs::make_getv_opt(
         gs::VOpt::Itself, std::array<label_id_t, 1>{person_label_id},
-        std::move(expr3));
-    auto ctx3 = Engine::template GetV<1, -1>(time_stamp, graph, std::move(ctx1),
-                                             std::move(get_v_opt3));
+        std::move(filter1));
+    auto ctx3 = Engine::template GetV<AppendOpt::Persist, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx1), std::move(get_v_opt3));
 
     // delete start person
-    auto project_opt0 = gs::make_project_opt(gs::ProjectSelf<1, 0>());
-    auto ctx5 = Engine::template Project<0>(time_stamp, graph, std::move(ctx3),
-                                            std::move(project_opt0));
+    auto ctx5 = Engine::template Project<PROJ_TO_NEW>(
+        graph, std::move(ctx3),
+        std::tuple{gs::make_mapper_with_variable<1>(
+            PropertySelector<grape::EmptyType>("None"))});
 
     // copy ctx4 for two outer join
     auto ctx5_1(ctx5);
     for (auto iter : ctx5_1) {
-      auto data = iter.GetAllData();
+      auto data = iter.GetAllElement();
       LOG(INFO) << "data: " << gs::to_string(data);
     }
 
-    // workAt(company)->islocatedIn
+    // WORKAT(company)->islocatedIn
     auto edge_expand_opt5 = gs::make_edge_expande_opt<int32_t>(
         gs::PropNameArray<int32_t>{"workFrom"}, gs::Direction::Out,
         workAt_label_id, org_label_id);
-    auto ctx6 = Engine::template EdgeExpandE<1, 0>(
-        time_stamp, graph, std::move(ctx5_1), std::move(edge_expand_opt5));
+    auto ctx6 =
+        Engine::template EdgeExpandE<AppendOpt::Persist, INPUT_COL_ID(0)>(
+            graph, std::move(ctx5_1), std::move(edge_expand_opt5));
+
+    for (auto iter : ctx6) {
+      auto ele = iter.GetAllElement();
+      LOG(INFO) << "workat company: " << gs::to_string(ele);
+    }
 
     auto get_v_opt6 = gs::make_getv_opt(
         gs::VOpt::End, std::array<label_id_t, 1>{org_label_id});
-    auto ctx7 = Engine::template GetV<2, -1>(time_stamp, graph, std::move(ctx6),
-                                             std::move(get_v_opt6));
+    auto ctx7 = Engine::template GetV<AppendOpt::Persist, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx6), std::move(get_v_opt6));
+
+    for (auto iter : ctx7) {
+      auto ele = iter.GetAllElement();
+      LOG(INFO) << "workat company, get company: " << gs::to_string(ele);
+    }
 
     auto edge_expand_opt7 = gs::make_edge_expandv_opt(
         gs::Direction::Out, isLocatedIn_label_id, place_label_id);
-    auto ctx8 = Engine::template EdgeExpandV<3, -1>(
-        time_stamp, graph, std::move(ctx7), std::move(edge_expand_opt7));
+    auto ctx8 =
+        Engine::template EdgeExpandV<AppendOpt::Persist, INPUT_COL_ID(-1)>(
+            graph, std::move(ctx7), std::move(edge_expand_opt7));
+    for (auto iter : ctx8) {
+      auto ele = iter.GetAllElement();
+      LOG(INFO) << "workat company, get company and location: "
+                << gs::to_string(ele);
+    }
 
     // LeftOuterJoin first
-    auto ctx9 = Engine::template Join<0, 0, JoinKind::LeftOuterJoin>(
-        std::move(ctx5), std::move(ctx8));
+    auto ctx9 = Engine::template Join<INPUT_COL_ID(0), INPUT_COL_ID(0),
+                                      JoinKind::LeftOuterJoin>(std::move(ctx5),
+                                                               std::move(ctx8));
     // otherPerson, workAtCompanyEdge, company,
     // workAtCountry
 
@@ -285,54 +280,56 @@ class IC1 {
       LOG(INFO) << gs::to_string(eles);
     }
 
-    auto proj_opt1 = gs::make_project_opt(
-        gs::ProjectSelf<0, 0>(),
-        gs::make_project_expr<
-            1, std::tuple<std::string_view, int32_t, std::string_view>>(
-            IC1Expression3(gs::InnerIdProperty<1>(),
-                           gs::NamedProperty<std::string_view, 2>("name"),
-                           gs::NamedProperty<int32_t, 1>("workFrom"),
-                           gs::NamedProperty<std::string_view, 3>("name"))));
-    auto ctx10 = Engine::template Project<false>(
-        time_stamp, graph, std::move(ctx9), std::move(proj_opt1));
+    auto ctx10 = Engine::template Project<PROJ_TO_NEW>(
+        graph, std::move(ctx9),
+        std::tuple{
+            gs::make_mapper_with_variable<0>(
+                gs::PropertySelector<grape::EmptyType>()),
+            gs::make_mapper_with_expr<1, 2, 1, 3>(
+                IC1Expression3(), gs::PropertySelector<grape::EmptyType>(),
+                gs::PropertySelector<std::string_view>("name"),
+                gs::PropertySelector<int32_t>("workFrom"),
+                gs::PropertySelector<std::string_view>("name"))});
 
-    // collect after project
-    auto group_opt = gs::make_group_opt(
-        gs::AliasTagProp<0, 0, grape::EmptyType>({"None"}),
-        gs::make_aggregate_prop<1, gs::AggFunc::TO_LIST, grape::EmptyType>(
-            {"None"}, std::integer_sequence<int32_t, 1>{}));
-    auto ctx10_1 = Engine::template GroupBy(time_stamp, graph, std::move(ctx10),
-                                            std::move(group_opt));
+    auto ctx10_1 = Engine::template GroupBy(
+        graph, std::move(ctx10),
+        std::tuple{GroupKey<0, grape::EmptyType>(
+            gs::PropertySelector<grape::EmptyType>())},
+        std::tuple{gs::make_aggregate_prop<gs::AggFunc::TO_LIST>(
+            std::tuple{gs::PropertySelector<grape::EmptyType>()},
+            std::integer_sequence<int32_t, 1>{})});
 
     for (auto iter : ctx10_1) {
       auto eles = iter.GetAllElement();
       LOG(INFO) << gs::to_string(eles);
     }
 
-    for (auto iter : ctx10_1) {
-      auto data = iter.GetAllData();
-      LOG(INFO) << "after group : " << gs::to_string(data);
-    }
+    // for (auto iter : ctx10_1) {
+    //   auto data = iter.GetAllData();
+    //   LOG(INFO) << "after group : " << gs::to_string(data);
+    // }
 
-    // studyAt(university)->islocatedIn
-    // otherPerson,  companyInfo
+    // // STUDYAT(university)->islocatedIn
+    // // otherPerson,  companyInfo
     auto ctx10_2(ctx10_1);
 
     auto edge_expand_opt8 = gs::make_edge_expande_opt<int32_t>(
         gs::PropNameArray<int32_t>{"classYear"}, gs::Direction::Out,
         studyAt_label_id, org_label_id);
-    auto ctx11 = Engine::template EdgeExpandE<2, 0>(
-        time_stamp, graph, std::move(ctx10_2), std::move(edge_expand_opt8));
+    auto ctx11 =
+        Engine::template EdgeExpandE<AppendOpt::Persist, INPUT_COL_ID(0)>(
+            graph, std::move(ctx10_2), std::move(edge_expand_opt8));
 
     auto get_v_opt9 = gs::make_getv_opt(
         gs::VOpt::End, std::array<label_id_t, 1>{org_label_id});
-    auto ctx12 = Engine::template GetV<3, -1>(
-        time_stamp, graph, std::move(ctx11), std::move(get_v_opt9));
+    auto ctx12 = Engine::template GetV<AppendOpt::Persist, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx11), std::move(get_v_opt9));
 
     auto edge_expand_opt10 = gs::make_edge_expandv_opt(
         gs::Direction::Out, isLocatedIn_label_id, place_label_id);
-    auto ctx13 = Engine::template EdgeExpandV<4, -1>(
-        time_stamp, graph, std::move(ctx12), std::move(edge_expand_opt10));
+    auto ctx13 =
+        Engine::template EdgeExpandV<AppendOpt::Persist, INPUT_COL_ID(-1)>(
+            graph, std::move(ctx12), std::move(edge_expand_opt10));
 
     // second left outer join
     auto ctx14 = Engine::template Join<0, 1, 0, 1, JoinKind::LeftOuterJoin>(
@@ -345,31 +342,36 @@ class IC1 {
     // otherPerson, companyInfo, studyAtEdge, university, univCity
     LOG(INFO) << "Before project";
 
-    auto proj_opt2 = gs::make_project_opt(
-        gs::ProjectSelf<0, 0>(), gs::ProjectSelf<1, 1>(),
-        gs::make_project_expr<
-            2, std::tuple<std::string_view, int32_t, std::string_view>>(
-            IC1Expression4(gs::InnerIdProperty<2>(),
-                           gs::NamedProperty<std::string_view, 3>("name"),
-                           gs::NamedProperty<int32_t, 2>("classYear"),
-                           gs::NamedProperty<std::string_view, 4>("name"))));
     auto ctx15 = Engine::template Project<false>(
-        time_stamp, graph, std::move(ctx14), std::move(proj_opt2));
+        graph, std::move(ctx14),
+        std::tuple{
+            gs::make_mapper_with_variable<0>(
+                gs::PropertySelector<grape::EmptyType>()),
+            gs::make_mapper_with_variable<1>(
+                gs::PropertySelector<grape::EmptyType>()),
+            gs::make_mapper_with_expr<2, 3, 2, 4>(
+                IC1Expression4(), gs::PropertySelector<grape::EmptyType>(),
+                gs::PropertySelector<std::string_view>("name"),
+                gs::PropertySelector<int32_t>("classYear"),
+                gs::PropertySelector<std::string_view>("name"))});
 
     for (auto iter : ctx15) {
       auto eles = iter.GetAllElement();
       LOG(INFO) << "after project: " << gs::to_string(eles);
     }
+    LOG(INFO) << "demange: " << demangle(ctx15);
 
     // collect after project
     // group by two keys
-    auto group_opt2 = gs::make_group_opt2(
-        gs::AliasTagProp<0, 0, grape::EmptyType>({"None"}),  // key2
-        gs::AliasTagProp<1, 1, grape::EmptyType>({"None"}),  // key1
-        gs::make_aggregate_prop<2, gs::AggFunc::TO_LIST, grape::EmptyType>(
-            {"None"}, std::integer_sequence<int32_t, 2>{}));
-    auto ctx16 = Engine::template GroupBy(time_stamp, graph, std::move(ctx15),
-                                          std::move(group_opt2));
+    auto ctx16 = Engine::template GroupBy(
+        graph, std::move(ctx15),
+        std::tuple{GroupKey<0, grape::EmptyType>(
+                       gs::PropertySelector<grape::EmptyType>()),
+                   GroupKey<1, grape::EmptyType>(
+                       gs::PropertySelector<grape::EmptyType>())},
+        std::tuple{gs::make_aggregate_prop<gs::AggFunc::TO_LIST>(
+            std::tuple{gs::PropertySelector<grape::EmptyType>()},
+            std::integer_sequence<int32_t, 2>{})});
 
     for (auto iter : ctx16) {
       auto eles = iter.GetAllElement();
@@ -379,40 +381,45 @@ class IC1 {
     // reach out for locationCity
     auto edge_expand_opt11 = gs::make_edge_expandv_opt(
         gs::Direction::Out, isLocatedIn_label_id, place_label_id);
-    auto ctx17 = Engine::template EdgeExpandV<3, 0>(
-        time_stamp, graph, std::move(ctx16), std::move(edge_expand_opt11));
+    auto ctx17 =
+        Engine::template EdgeExpandV<AppendOpt::Persist, INPUT_COL_ID(0)>(
+            graph, std::move(ctx16), std::move(edge_expand_opt11));
 
-    gs::OrderingPropPair<gs::SortOrder::ASC, 0, Dist> pair0("dist");  // dist
-    gs::OrderingPropPair<gs::SortOrder::ASC, 0, std::string_view> pair1(
-        "lastName");  // lastName
-    gs::OrderingPropPair<gs::SortOrder::ASC, 0, gs::oid_t> pair2(
-        "id");  // id auto
-    auto sort_opt = gs::make_sort_opt(gs::Range(0, 20), std::move(pair0),
-                                      std::move(pair1), std::move(pair2));
-    auto ctx18 = Engine::template Sort(time_stamp, graph, std::move(ctx17),
-                                       std::move(sort_opt));
+    auto ctx18 = Engine::template Sort(
+        graph, std::move(ctx17), gs::Range(0, 20),
+        std::tuple{
+            gs::OrderingPropPair<gs::SortOrder::ASC, 0, Dist>("dist"),
+            gs::OrderingPropPair<gs::SortOrder::ASC, 0, std::string_view>(
+                "lastName"),
+            gs::OrderingPropPair<gs::SortOrder::ASC, 0, gs::oid_t>("id")});
 
-    for (auto iter : ctx18) {
-      auto data = iter.GetAllData();
-      LOG(INFO) << "after sort : " << gs::to_string(data);
-    }
-
-    // final project
-    auto proj_opt3 = gs::make_project_opt(
-        gs::AliasTagProp<0, 0, gs::oid_t>({"id"}),
-        gs::AliasTagProp<0, 1, std::string_view>({"lastName"}),
-        gs::AliasTagProp<0, 2, int32_t>({"dist"}),
-        gs::AliasTagProp<0, 3, int64_t>({"birthday"}),
-        gs::AliasTagProp<0, 4, int64_t>({"creationDate"}),
-        gs::AliasTagProp<0, 5, std::string_view>({"gender"}),
-        gs::AliasTagProp<0, 6, std::string_view>({"browserUsed"}),
-        gs::AliasTagProp<0, 7, std::string_view>({"locationIP"}),
-        gs::AliasTagProp<0, 8, std::string_view>({"email"}),
-        gs::AliasTagProp<0, 9, std::string_view>({"language"}),
-        gs::AliasTagProp<3, 10, std::string_view>({"name"}),
-        gs::ProjectSelf<1, 11>(), gs::ProjectSelf<2, 12>());
     auto ctx19 = Engine::template Project<false>(
-        time_stamp, graph, std::move(ctx18), std::move(proj_opt3));
+        graph, std::move(ctx18),
+        std::tuple{
+            gs::make_mapper_with_variable<0>(PropertySelector<oid_t>("id")),
+            gs::make_mapper_with_variable<0>(
+                PropertySelector<std::string_view>("lastName")),
+            gs::make_mapper_with_variable<0>(PropertySelector<Dist>("dist")),
+            gs::make_mapper_with_variable<0>(
+                PropertySelector<int64_t>("birthday")),
+            gs::make_mapper_with_variable<0>(
+                PropertySelector<int64_t>("creationDate")),
+            gs::make_mapper_with_variable<0>(
+                PropertySelector<std::string_view>("gender")),
+            gs::make_mapper_with_variable<0>(
+                PropertySelector<std::string_view>("browserUsed")),
+            gs::make_mapper_with_variable<0>(
+                PropertySelector<std::string_view>("locationIP")),
+            gs::make_mapper_with_variable<0>(
+                PropertySelector<std::string_view>("email")),
+            gs::make_mapper_with_variable<0>(
+                PropertySelector<std::string_view>("language")),
+            gs::make_mapper_with_variable<3>(
+                PropertySelector<std::string_view>("name")),
+            gs::make_mapper_with_variable<1>(
+                PropertySelector<grape::EmptyType>()),
+            gs::make_mapper_with_variable<2>(
+                PropertySelector<grape::EmptyType>())});
 
     LOG(INFO) << "End";
     for (auto iter : ctx19) {
@@ -420,7 +427,7 @@ class IC1 {
       LOG(INFO) << gs::to_string(tup);
       output.put_long(std::get<0>(tup));
       output.put_string_view(std::get<1>(tup));
-      output.put_int(std::get<2>(tup));
+      output.put_int(std::get<2>(tup).dist);
       output.put_long(std::get<3>(tup));
       output.put_long(std::get<4>(tup));
       output.put_string_view(std::get<5>(tup));

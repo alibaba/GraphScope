@@ -1,5 +1,0 @@
-working_dir: /tmp/codegen
-cmake_template_relative_path: template/CMakeLists.txt.template
-codegen_install_path: /Users/xiaolei.zl/lei/work/github/ldbc_snb_interactive/codegen/
-#codegen_install_path: /home/graphscope/ldbc_snb_interactive/codegen/
-serialize_plan : true

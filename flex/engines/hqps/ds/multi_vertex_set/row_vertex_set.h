@@ -11,6 +11,83 @@
 // Vertex set in with data in rows.
 namespace gs {
 
+namespace internal {
+
+template <size_t Proj_Is, size_t My_Is, typename... DATA_T, typename... PropT>
+void fillBuiltinPropsImpl(
+    const std::vector<std::tuple<DATA_T...>>& datas,
+    const std::array<std::string, sizeof...(DATA_T)>& set_prop_names,
+    std::vector<std::tuple<PropT...>>& tuples, const std::string& prop_name,
+    const std::vector<offset_t>& repeat_array) {
+  using cur_prop = std::tuple_element_t<Proj_Is, std::tuple<PropT...>>;
+  using my_prop = std::tuple_element_t<My_Is, std::tuple<DATA_T...>>;
+  LOG(INFO) << "ProjId: " << Proj_Is << ", MyId: " << My_Is << ", "
+            << " input prop_name: " << prop_name << ", "
+            << typeid(cur_prop).name() << ", " << typeid(my_prop).name()
+            << ",prop_name " << set_prop_names[My_Is]
+            << ", eq: " << gs::to_string(std::is_same_v<cur_prop, my_prop>);
+  if constexpr (std::is_same_v<cur_prop, my_prop>) {
+    if (prop_name == set_prop_names[My_Is]) {
+      VLOG(10) << "Found builin property " << prop_name;
+      CHECK(repeat_array.size() == datas.size());
+      size_t ind = 0;
+      for (auto i = 0; i < repeat_array.size(); ++i) {
+        for (auto j = 0; j < repeat_array[i]; ++j) {
+          std::get<Proj_Is>(tuples[ind]) = std::get<0>(datas[i]);
+          ind += 1;
+        }
+      }
+    }
+  }
+}
+
+template <size_t Is, typename... DATA_T, typename... PropT, size_t... MyIs>
+void fillBuiltinPropsImpl(
+    const std::vector<std::tuple<DATA_T...>>& datas,
+    const std::array<std::string, sizeof...(DATA_T)>& set_prop_names,
+    std::vector<std::tuple<PropT...>>& tuples, const std::string& prop_name,
+    const std::vector<offset_t>& repeat_array, std::index_sequence<MyIs...>) {
+  (fillBuiltinPropsImpl<Is, MyIs>(datas, set_prop_names, tuples, prop_name,
+                                  repeat_array),
+   ...);
+}
+
+template <typename... DATA_T, typename... PropT, size_t... Is>
+void fillBuiltinPropsImpl(
+    const std::vector<std::tuple<DATA_T...>>& datas,
+    const std::array<std::string, sizeof...(DATA_T)>& set_prop_names,
+    std::vector<std::tuple<PropT...>>& tuples,
+    const PropNameArray<PropT...>& prop_names,
+    const std::vector<offset_t>& repeat_array, std::index_sequence<Is...>) {
+  (fillBuiltinPropsImpl<Is>(datas, set_prop_names, tuples,
+                            std::get<Is>(prop_names), repeat_array,
+                            std::make_index_sequence<sizeof...(DATA_T)>()),
+   ...);
+}
+template <typename... DATA_T, typename... PropT>
+void fillBuiltinPropsImpl(
+    const std::vector<std::tuple<DATA_T...>>& datas,
+    const std::array<std::string, sizeof...(DATA_T)>& set_prop_names,
+    std::vector<std::tuple<PropT...>>& tuples,
+    const PropNameArray<PropT...>& prop_names,
+    const std::vector<offset_t>& repeat_array) {
+  return gs::internal::fillBuiltinPropsImpl(
+      datas, set_prop_names, tuples, prop_names, repeat_array,
+      std::make_index_sequence<sizeof...(PropT)>());
+}
+}  // namespace internal
+
+template <typename... DATA_T, typename... PropT>
+void fillBuiltinPropsImpl(
+    const std::vector<std::tuple<DATA_T...>>& datas,
+    const std::array<std::string, sizeof...(DATA_T)>& set_prop_names,
+    std::vector<std::tuple<PropT...>>& tuples,
+    const PropNameArray<PropT...>& prop_names,
+    const std::vector<offset_t>& repeat_array) {
+  return gs::internal::fillBuiltinPropsImpl(datas, set_prop_names, tuples,
+                                            prop_names, repeat_array);
+}
+
 template <typename LabelT, typename VID_T, typename... T>
 class RowVertexSetImpl;
 
@@ -953,7 +1030,7 @@ class RowVertexSetImpl {
       typename res_t = Collection<std::tuple<
           typename gs::tuple_element<Fs, std::tuple<T..., lid_t>>::type,
           typename gs::tuple_element<Is, std::tuple<T..., lid_t>>::type...>>>
-  res_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+  res_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
                                KeyAlias<tag_id, Fs, Is...>& key_alias) const {
     auto res_vec = row_project_with_repeat_array_impl(key_alias, repeat_array,
                                                       vids_, data_tuples_);
@@ -964,7 +1041,7 @@ class RowVertexSetImpl {
             typename std::enable_if<Fs != -1>::type* = nullptr,
             typename res_t = Collection<std::tuple<
                 typename gs::tuple_element<Fs, std::tuple<T..., lid_t>>::type>>>
-  res_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+  res_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
                                KeyAlias<tag_id, Fs>& key_alias) const {
     auto res_vec = row_project_with_repeat_array_impl(key_alias, repeat_array,
                                                       vids_, data_tuples_);
@@ -974,7 +1051,7 @@ class RowVertexSetImpl {
   // project my self.
   template <int tag_id, int Fs,
             typename std::enable_if<Fs == -1>::type* = nullptr>
-  self_type_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+  self_type_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
                                      KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<lid_t> vids;
     std::vector<data_tuple_t> data_tuples;
@@ -1036,57 +1113,12 @@ class RowVertexSetImpl {
     return std::get<2>(tuple);
   }
 
-  template <size_t Proj_Is, size_t My_Is, typename... PropT>
-  void fillBuiltinPropsImpl(std::vector<std::tuple<PropT...>>& tuples,
-                            const std::string& prop_name,
-                            const std::vector<offset_t>& repeat_array) {
-    using cur_prop = std::tuple_element_t<Proj_Is, std::tuple<PropT...>>;
-    using my_prop = std::tuple_element_t<My_Is, data_tuple_t>;
-    LOG(INFO) << "ProjId: " << Proj_Is << ", MyId: " << My_Is << ", "
-              << " input prop_name: " << prop_name << ", "
-              << typeid(cur_prop).name() << ", " << typeid(my_prop).name()
-              << ",prop_name " << prop_names_[My_Is]
-              << ", eq: " << gs::to_string(std::is_same_v<cur_prop, my_prop>);
-    if constexpr (std::is_same_v<cur_prop, my_prop>) {
-      if (prop_name == prop_names_[My_Is]) {
-        VLOG(10) << "Found builin property " << prop_name;
-        CHECK(repeat_array.size() == vids_.size());
-        size_t ind = 0;
-        for (auto i = 0; i < repeat_array.size(); ++i) {
-          for (auto j = 0; j < repeat_array[i]; ++j) {
-            std::get<Proj_Is>(tuples[ind]) = std::get<0>(data_tuples_[i]);
-            ind += 1;
-          }
-        }
-      }
-    }
-  }
-
-  template <size_t Is, typename... PropT, size_t... MyIs>
-  void fillBuiltinPropsImpl(std::vector<std::tuple<PropT...>>& tuples,
-                            const std::string& prop_name,
-                            const std::vector<offset_t>& repeat_array,
-                            std::index_sequence<MyIs...>) {
-    (fillBuiltinPropsImpl<Is, MyIs>(tuples, prop_name, repeat_array), ...);
-  }
-
-  template <typename... PropT, size_t... Is>
-  void fillBuiltinPropsImpl(std::vector<std::tuple<PropT...>>& tuples,
-                            const PropNameArray<PropT...>& prop_names,
-                            const std::vector<offset_t>& repeat_array,
-                            std::index_sequence<Is...>) {
-    (fillBuiltinPropsImpl<Is, PropT...>(
-         tuples, std::get<Is>(prop_names), repeat_array,
-         std::make_index_sequence<sizeof...(T)>()),
-     ...);
-  }
-
   template <typename... PropT>
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         const PropNameArray<PropT...>& prop_names,
                         const std::vector<offset_t>& repeat_array) {
-    fillBuiltinPropsImpl(tuples, prop_names, repeat_array,
-                         std::make_index_sequence<sizeof...(PropT)>());
+    fillBuiltinPropsImpl(data_tuples_, prop_names_, tuples, prop_names,
+                         repeat_array);
   }
 
   // fill builtin props withour repeat array.
@@ -1094,8 +1126,8 @@ class RowVertexSetImpl {
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         const PropNameArray<PropT...>& prop_names) {
     std::vector<offset_t> repeat_array(vids_.size(), 1);
-    fillBuiltinPropsImpl(tuples, prop_names, repeat_array,
-                         std::make_index_sequence<sizeof...(PropT)>());
+    fillBuiltinPropsImpl(data_tuples_, prop_names_, tuples, prop_names,
+                         repeat_array);
   }
 
   // In places
@@ -1276,7 +1308,7 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
             typename res_t = Collection<std::tuple<
                 typename gs::tuple_element<Fs, std::tuple<lid_t>>::type,
                 typename gs::tuple_element<Is, std::tuple<lid_t>>::type...>>>
-  res_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+  res_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
                                KeyAlias<tag_id, Fs, Is...>& key_alias) const {
     auto res_vec =
         row_project_with_repeat_array_impl(key_alias, repeat_array, vids_);
@@ -1287,7 +1319,7 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
       int tag_id, int Fs, typename std::enable_if<Fs != -1>::type* = nullptr,
       typename res_t = Collection<
           std::tuple<typename gs::tuple_element<Fs, std::tuple<lid_t>>::type>>>
-  res_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+  res_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
                                KeyAlias<tag_id, Fs>& key_alias) const {
     auto res_vec =
         row_project_with_repeat_array_impl(key_alias, repeat_array, vids_);
@@ -1297,7 +1329,7 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
   // project my self.
   template <int tag_id, int Fs,
             typename std::enable_if<Fs == -1>::type* = nullptr>
-  self_type_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+  self_type_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
                                      KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<lid_t> vids;
     for (auto i = 0; i < repeat_array.size(); ++i) {

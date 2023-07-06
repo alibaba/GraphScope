@@ -15,53 +15,44 @@ namespace gs {
 // These expression should be generated.
 // One generated expression can be reused with different params.
 
-template <typename TAG_PROP>
 class IC4Expression1 {
  public:
-  using tag_prop_t = std::tuple<TAG_PROP>;
-  IC4Expression1(int64_t minDate, int64_t maxDate, TAG_PROP&& props)
-      : minDate_(minDate), maxDate_(maxDate), props_(props) {}
+  using result_t = bool;
+  IC4Expression1(int64_t minDate, int64_t maxDate)
+      : minDate_(minDate), maxDate_(maxDate) {}
 
   bool operator()(int64_t date) const {
     return date < maxDate_ && date >= minDate_;
   }
 
-  tag_prop_t Properties() const { return std::make_tuple(props_); }
-
  private:
   int64_t minDate_, maxDate_;
-  TAG_PROP props_;
 };
 
-template <typename TAG_PROP>
 class IC4Expression01 {
  public:
-  using tag_prop_t = std::tuple<TAG_PROP>;
-  IC4Expression01(int64_t minDate, TAG_PROP&& props)
-      : minDate_(minDate), props_(props) {}
+  using result_t = bool;
+  IC4Expression01(int64_t minDate) : minDate_(minDate) {}
 
   bool operator()(int64_t date) const { return date < minDate_; }
 
-  tag_prop_t Properties() const { return std::make_tuple(props_); }
-
  private:
   int64_t minDate_;
-  TAG_PROP props_;
 };
 
 template <typename GRAPH_INTERFACE>
-class IC4 {
+class QueryIC4 {
   using oid_t = typename GRAPH_INTERFACE::outer_vertex_id_t;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
   // static gs::oid_t oid_param = 6597069767117;
-  std::string person_label = "person";
-  std::string knows_label = "knows";
-  std::string post_label = "post";
-  std::string comment_label = "comment";
-  std::string has_creator_label = "hasCreator";
-  std::string has_tag_label = "hasTag";
-  std::string tag_label = "tag";
+  std::string person_label = "PERSON";
+  std::string knows_label = "KNOWS";
+  std::string post_label = "POST";
+  std::string comment_label = "COMMENT";
+  std::string has_creator_label = "HASCREATOR";
+  std::string has_tag_label = "HASTAG";
+  std::string tag_label = "TAG";
   // static std::string_view firstName = "Jack";
 
  public:
@@ -92,7 +83,7 @@ class IC4 {
       output.push_back(std::make_pair("", node));
     }
   }
-  void Query(const GRAPH_INTERFACE& graph, int64_t time_stamp, Decoder& input,
+  void Query(const GRAPH_INTERFACE& graph, int64_t ts, Decoder& input,
              Encoder& output) const {
     using label_id_t = typename GRAPH_INTERFACE::label_id_t;
     label_id_t person_label_id = graph.GetVertexLabelId(person_label);
@@ -108,73 +99,77 @@ class IC4 {
     // convert to int64_t
     int64_t duration_days = input.get_int();
     int64_t end_date = start_date + duration_days * 86400000;
-    // LOG(INFO) << "start: " << start_date << ", " << (duration_days *
-    // 86400000)
-    // << ", end: " << end_date;
     int32_t limit = 10;
 
     using Engine = SyncEngine<GRAPH_INTERFACE>;
-    auto ctx0 = Engine::template ScanVertexWithOid<-1>(time_stamp, graph,
-                                                       person_label_id, id);
+    auto ctx0 = Engine::template ScanVertexWithOid<AppendOpt::Temp>(
+        graph, person_label_id, id);
 
     auto edge_expand_opt = gs::make_edge_expandv_opt(
         gs::Direction::Both, knows_label_id, person_label_id);
-    auto ctx1 = Engine::template EdgeExpandV<-1, -1>(
-        time_stamp, graph, std::move(ctx0), std::move(edge_expand_opt));
+    auto ctx1 = Engine::template EdgeExpandV<AppendOpt::Temp, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx0), std::move(edge_expand_opt));
 
     auto edge_expand_opt2 = gs::make_edge_expandv_opt(
         gs::Direction::In, has_creator_label_id, post_label_id);
-    auto ctx_post_left = Engine::template EdgeExpandV<-1, -1>(
-        time_stamp, graph, std::move(ctx1), std::move(edge_expand_opt2));
+    auto ctx_post_left =
+        Engine::template EdgeExpandV<AppendOpt::Temp, INPUT_COL_ID(-1)>(
+            graph, std::move(ctx1), std::move(edge_expand_opt2));
 
     auto ctx_post_right(ctx_post_left);
     // posts
 
-    IC4Expression1 expr1(start_date, end_date,
-                         gs::NamedProperty<int64_t>("creationDate"));
+    auto filter1 =
+        gs::make_filter(IC4Expression1(start_date, end_date),
+                        gs::PropertySelector<int64_t>("creationDate"));
     auto get_v_opt = gs::make_getv_opt(gs::VOpt::Itself,
                                        std::array<label_id_t, 1>{post_label_id},
-                                       std::move(expr1));
-    auto ctx_post_filter_right = Engine::template GetV<0, -1>(
-        time_stamp, graph, std::move(ctx_post_right), std::move(get_v_opt));
+                                       std::move(filter1));
+    auto ctx_post_filter_right =
+        Engine::template GetV<AppendOpt::Persist, INPUT_COL_ID(-1)>(
+            graph, std::move(ctx_post_right), std::move(get_v_opt));
     // posts satisfy right condition
 
     auto edge_expand_opt4 = gs::make_edge_expandv_opt(
         gs::Direction::Out, has_tag_label_id, tag_label_id);
-    auto ctx_tag_right = Engine::template EdgeExpandV<1, 0>(
-        time_stamp, graph, std::move(ctx_post_filter_right),
-        std::move(edge_expand_opt4));
+    auto ctx_tag_right =
+        Engine::template EdgeExpandV<AppendOpt::Persist, INPUT_COL_ID(0)>(
+            graph, std::move(ctx_post_filter_right),
+            std::move(edge_expand_opt4));
 
     for (auto iter : ctx_tag_right) {
       auto eles = iter.GetAllElement();
       LOG(INFO) << " tag_right: " << gs::to_string(eles);
     }
 
-    gs::AliasTagProp<1, 0, grape::EmptyType> group_key(
-        gs::PropNameArray<grape::EmptyType>{"None"});
-    auto agg0 =
-        gs::make_aggregate_prop<1, gs::AggFunc::COUNT, grape::EmptyType>(
-            gs::PropNameArray<grape::EmptyType>{"None"},
-            std::integer_sequence<int32_t, 0>{});
-    auto group_opt = gs::make_group_opt(std::move(group_key), std::move(agg0));
     auto ctx_tag_group_right = Engine::GroupBy(
-        time_stamp, graph, std::move(ctx_tag_right), std::move(group_opt));
+        graph, std::move(ctx_tag_right),
+        std::tuple{GroupKey<1, grape::EmptyType>(
+            PropertySelector<grape::EmptyType>())},
+        std::tuple{gs::make_aggregate_prop<AggFunc::COUNT>(
+            std::tuple{gs::PropertySelector<grape::EmptyType>()},
+            std::integer_sequence<int32_t, 0>{})}
+
+    );
     // tag, num_post
 
     // get left part
-    gs::NamedProperty<int64_t> tag_prop_left("creationDate");
-    IC4Expression01 expr2(start_date, std::move(tag_prop_left));
+    auto filter =
+        gs::make_filter(IC4Expression01(start_date),
+                        gs::PropertySelector<int64_t>("creationDate"));
     auto get_v_opt2 = gs::make_getv_opt(
         gs::VOpt::Itself, std::array<label_id_t, 1>{post_label_id},
-        std::move(expr2));
-    auto ctx_post_filter_left = Engine::template GetV<-1, -1>(
-        time_stamp, graph, std::move(ctx_post_right), std::move(get_v_opt2));
+        std::move(filter));
+    auto ctx_post_filter_left =
+        Engine::template GetV<AppendOpt::Temp, INPUT_COL_ID(-1)>(
+            graph, std::move(ctx_post_right), std::move(get_v_opt2));
 
     auto edge_expand_left = gs::make_edge_expandv_opt(
         gs::Direction::Out, has_tag_label_id, tag_label_id);
-    auto ctx_tag_left = Engine::template EdgeExpandV<0, -1>(
-        time_stamp, graph, std::move(ctx_post_filter_left),
-        std::move(edge_expand_left));
+    auto ctx_tag_left =
+        Engine::template EdgeExpandV<AppendOpt::Temp, INPUT_COL_ID(-1)>(
+            graph, std::move(ctx_post_filter_left),
+            std::move(edge_expand_left));
 
     for (auto iter : ctx_tag_left) {
       auto eles = iter.GetAllElement();
@@ -187,30 +182,31 @@ class IC4 {
         std::move(ctx_tag_group_right), std::move(ctx_tag_left));
     // after antijoin, we have: tag, num_post
 
-    // gs::OrderingPair<gs::SortOrder::DESC, 2, 0> pair0;  // count
-    // gs::OrderingPair<gs::SortOrder::ASC, 4, 0> pair1;   // name
-    gs::OrderingPropPair<gs::SortOrder::DESC, 0, size_t> pair0(
-        "None");  // indicate the set's element itself.
-    gs::OrderingPropPair<gs::SortOrder::ASC, 1, std::string_view> pair1(
-        "name");  // name
-    // IC4SortComparator sorter;
-    auto pairs = gs::make_sort_opt(gs::Range(0, limit), std::move(pair0),
-                                   std::move(pair1));
-    auto ctx8 = Engine::Sort(time_stamp, graph, std::move(ctx_anti_joined),
-                             std::move(pairs));
+    for (auto iter : ctx_anti_joined) {
+      auto eles = iter.GetAllElement();
+      LOG(INFO) << " tag_right: " << gs::to_string(eles);
+    }
+    LOG(INFO) << "demagles: " << demangle(ctx_anti_joined);
+
+    auto ctx8 = Engine::Sort(
+        graph, std::move(ctx_anti_joined), gs::Range(0, limit),
+        std::tuple{
+            gs::OrderingPropPair<gs::SortOrder::DESC, 1, size_t>(
+                "None"),  // indicate the set's element itself.
+            gs::OrderingPropPair<gs::SortOrder::ASC, 0, std::string_view>(
+                "name")  // name
+        });
 
     // gs::TagProp<-1, std::string_view> name_prop({"name"});
-    gs::AliasTagProp<1, 2, std::string_view> prop_col0({"name"});
-    auto proj_opt = gs::make_project_opt(std::move(prop_col0));
-    auto ctx9 = Engine::template Project<true>(
-        time_stamp, graph, std::move(ctx8), std::move(proj_opt));
+    auto ctx9 = Engine::template Project<PROJ_TO_APPEND>(
+        graph, std::move(ctx8),
+        std::tuple{gs::make_mapper_with_variable<0>(
+            gs::PropertySelector<std::string_view>("name"))});
 
     for (auto iter : ctx9) {
-      // base_tag: 2
-      // VLOG(10) << gs::to_string(iter.GetAllData());
-      auto data_tuple = iter.GetAllData();
+      auto data_tuple = iter.GetAllElement();
       output.put_string_view(std::get<2>(data_tuple));
-      output.put_int(std::get<0>(data_tuple));
+      output.put_int(std::get<1>(data_tuple));
     }
   }
 };

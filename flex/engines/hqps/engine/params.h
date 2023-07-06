@@ -45,24 +45,6 @@ struct is_label_key_prop : std::false_type {};
 template <typename T, int tag_id>
 struct is_label_key_prop<LabelKeyProperty<T, tag_id>> : std::true_type {};
 
-struct Dist {
-  int32_t dist = 0;
-  Dist(int32_t d) : dist(d) {}
-  Dist() : dist(0) {}
-  inline Dist& operator=(int32_t d) {
-    dist = d;
-    return *this;
-  }
-
-  void set(int32_t i) { dist = i; }
-};
-
-inline bool operator<(const Dist& a, const Dist& b) { return a.dist < b.dist; }
-inline bool operator>(const Dist& a, const Dist& b) { return a.dist > b.dist; }
-
-inline bool operator==(const Dist& a, const Dist& b) {
-  return a.dist == b.dist;
-}
 // static constexpr size_t dist_col = 0;
 
 using groot_prop_label_t = std::string;
@@ -153,7 +135,6 @@ struct TruePredicate {
 
 struct TrueFilter {
   TruePredicate expr_;
-
 };
 
 template <typename T>
@@ -187,10 +168,12 @@ struct EdgeExpandOpt {
   Filter<EDGE_FILTER_FUNC, SELECTOR...> edge_filter_;
 };
 
-template<typename LabelT, typename EDGE_FILTER_FUNC, typename Selectors, typename... T>
+template <typename LabelT, typename EDGE_FILTER_FUNC, typename Selectors,
+          typename... T>
 struct EdgeExpandEOpt;
 
-template<size_t num_labels, typename LabelT, typename EDGE_FILTER_FUNC, typename Selectors, typename... T>
+template <size_t num_labels, typename LabelT, typename EDGE_FILTER_FUNC,
+          typename Selectors, typename... T>
 struct EdgeExpandEMultiLabelOpt;
 
 template <typename LabelT, typename EDGE_FILTER_FUNC, typename... SELECTOR,
@@ -221,7 +204,8 @@ struct EdgeExpandEOpt<LabelT, EDGE_FILTER_FUNC, std::tuple<SELECTOR...>, T...> {
 
 template <size_t num_labels, typename LabelT, typename EDGE_FILTER_FUNC,
           typename... SELECTOR, typename... T>
-struct EdgeExpandEMultiLabelOpt<num_labels, LabelT, EDGE_FILTER_FUNC, std::tuple<SELECTOR...>, T...> {
+struct EdgeExpandEMultiLabelOpt<num_labels, LabelT, EDGE_FILTER_FUNC,
+                                std::tuple<SELECTOR...>, T...> {
   EdgeExpandEMultiLabelOpt(PropNameArray<T...>&& prop_names, Direction dir,
                            LabelT edge_label,
                            std::array<LabelT, num_labels> other_label,
@@ -247,25 +231,29 @@ struct EdgeExpandEMultiLabelOpt<num_labels, LabelT, EDGE_FILTER_FUNC, std::tuple
   EDGE_FILTER_FUNC edge_filter_;
 };
 
-template <typename... T, typename LabelT, typename EDGE_FILTER_FUNC, typename... SELECTOR>
+template <typename... T, typename LabelT, typename EDGE_FILTER_FUNC,
+          typename... SELECTOR>
 auto make_edge_expande_opt(PropNameArray<T...>&& prop_names, Direction dir,
-                           LabelT edge_label, LabelT other_label, Filter<EDGE_FILTER_FUNC, SELECTOR...>&& func) {
-  return EdgeExpandEOpt<LabelT, EDGE_FILTER_FUNC,std::tuple<SELECTOR...>, T...>(
-      std::move(prop_names), dir, edge_label, other_label, std::move(func));
+                           LabelT edge_label, LabelT other_label,
+                           Filter<EDGE_FILTER_FUNC, SELECTOR...>&& func) {
+  return EdgeExpandEOpt<LabelT, EDGE_FILTER_FUNC, std::tuple<SELECTOR...>,
+                        T...>(std::move(prop_names), dir, edge_label,
+                              other_label, std::move(func));
 }
 
 template <typename... T, typename LabelT>
 auto make_edge_expande_opt(PropNameArray<T...>&& prop_names, Direction dir,
                            LabelT edge_label, LabelT other_label) {
-  return EdgeExpandEOpt<LabelT, TruePredicate,std::tuple<>, T...>(
-      std::move(prop_names), dir, edge_label, other_label, Filter<TruePredicate>());
+  return EdgeExpandEOpt<LabelT, TruePredicate, std::tuple<>, T...>(
+      std::move(prop_names), dir, edge_label, other_label,
+      Filter<TruePredicate>());
 }
 
 template <typename LabelT>
 auto make_edge_expande_opt(Direction dir, LabelT edge_label,
                            LabelT other_label) {
-  return EdgeExpandEOpt<LabelT, TruePredicate, std::tuple<>>(dir, edge_label, other_label,
-                                               Filter<TruePredicate>());
+  return EdgeExpandEOpt<LabelT, TruePredicate, std::tuple<>>(
+      dir, edge_label, other_label, Filter<TruePredicate>());
 }
 
 template <typename LabelT, size_t N>
@@ -297,28 +285,28 @@ struct EdgeExpandOptMultiLabel {
 
 template <typename LabelT, size_t num_labels>
 auto make_edge_expandv_opt(Direction dir, LabelT edge_label,
-                          std::array<LabelT, num_labels>&& other_labels) {
+                           std::array<LabelT, num_labels>&& other_labels) {
   return EdgeExpandOptMultiLabel(dir, edge_label, std::move(other_labels),
                                  std::array<TruePredicate, num_labels>());
 }
 
 template <typename LabelT, size_t num_labels, typename FUNC>
 auto make_edge_expandv_opt(Direction dir, LabelT edge_label,
-                          std::array<LabelT, num_labels>&& other_labels,
-                          std::array<FUNC, num_labels>&& func) {
+                           std::array<LabelT, num_labels>&& other_labels,
+                           std::array<FUNC, num_labels>&& func) {
   return EdgeExpandOptMultiLabel(dir, edge_label, std::move(other_labels),
                                  std::move(func));
 }
 
 template <typename LabelT>
 inline auto make_edge_expandv_opt(Direction dir, LabelT edge_label,
-                                 LabelT other_label) {
+                                  LabelT other_label) {
   return EdgeExpandOpt(dir, edge_label, other_label, Filter<TruePredicate>());
 }
 
 template <typename LabelT, typename FUNC_T, typename... SELECTOR>
 auto make_edge_expandv_opt(Direction dir, LabelT edge_label, LabelT other_label,
-                          Filter<FUNC_T, SELECTOR...>&& func) {
+                           Filter<FUNC_T, SELECTOR...>&& func) {
   return EdgeExpandOpt(dir, edge_label, other_label, std::move(func));
 }
 
@@ -403,7 +391,7 @@ auto make_getv_opt(VOpt v_opt, std::array<LabelT, num_labels>&& v_labels,
 
 // Path expand with only one dst label.
 // Path expand with until condition.
-template <typename LabelT, typename EXPR, typename EDGE_FILTER_T, 
+template <typename LabelT, typename EXPR, typename EDGE_FILTER_T,
           typename UNTIL_CONDITION, typename... T>
 struct PathExpandOptImpl {
   PathExpandOptImpl(EdgeExpandOpt<LabelT, EDGE_FILTER_T>&& edge_expand_opt,
@@ -442,19 +430,21 @@ auto make_path_expand_opt(
     SimpleGetVOpt<LabelT, EXPR, T...>&& get_v_opt, Range&& range,
     PathOpt path_opt = PathOpt::Arbitrary,
     ResultOpt result_opt = ResultOpt::EndV) {
-  return PathExpandOpt<LabelT, EXPR, EDGE_FILTER_T,T...>(
+  return PathExpandOpt<LabelT, EXPR, EDGE_FILTER_T, T...>(
       std::move(edge_expand_opt), std::move(get_v_opt), std::move(range),
       Filter<TruePredicate>(), path_opt, result_opt);
 }
 
 template <typename LabelT, typename EXPR, typename EDGE_FILTER_T,
-          typename UNTIL_CONDITION, typename... T>
+          typename UNTIL_CONDITION, typename... SELECTOR, typename... T>
 auto make_shortest_path_opt(
     EdgeExpandOpt<LabelT, EDGE_FILTER_T>&& edge_expand_opt,
     SimpleGetVOpt<LabelT, EXPR, T...>&& get_v_opt, Range&& range,
-    UNTIL_CONDITION&& until_condition, PathOpt path_opt = PathOpt::Arbitrary,
+    Filter<UNTIL_CONDITION, SELECTOR...>&& until_condition,
+    PathOpt path_opt = PathOpt::Arbitrary,
     ResultOpt result_opt = ResultOpt::EndV) {
-  return ShortestPathOpt<LabelT, EXPR, EDGE_FILTER_T, UNTIL_CONDITION, T...>(
+  return ShortestPathOpt<LabelT, EXPR, EDGE_FILTER_T,
+                         Filter<UNTIL_CONDITION, SELECTOR...>, T...>(
       std::move(edge_expand_opt), std::move(get_v_opt), std::move(range),
       std::move(until_condition), path_opt, result_opt);
 }

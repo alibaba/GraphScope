@@ -165,13 +165,12 @@ class SyncEngine : public BaseEngine {
   /// @param v_sets
   /// @param edge_expand_opt
   /// @return
-  template <
-      AppendOpt append_opt, int input_col_id, typename CTX_HEAD_T,
-      int cur_alias, int base_tag, typename... CTX_PREV, typename EDGE_FILTER_T,
-      typename... SELECTOR,
-      typename RES_T =
-          typename ResultContextT<append_opt, default_vertex_set_t, cur_alias,
-                                  CTX_HEAD_T, base_tag, CTX_PREV...>::result_t>
+  template <AppendOpt append_opt, int input_col_id, typename CTX_HEAD_T,
+            int cur_alias, int base_tag, typename... CTX_PREV,
+            typename EDGE_FILTER_T, typename... SELECTOR,
+            typename RES_T = typename ResultContextT<
+                append_opt, default_vertex_set_t, cur_alias, CTX_HEAD_T,
+                base_tag, CTX_PREV...>::result_t>
   static RES_T EdgeExpandV(
       const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
@@ -197,24 +196,26 @@ class SyncEngine : public BaseEngine {
   /// @param v_sets
   /// @param edge_expand_opt
   /// @return
-  template <int res_alias, int alias_to_use, typename... T, typename CTX_HEAD_T,
-            int cur_alias, int base_tag, typename... CTX_PREV, typename LabelT,
-            typename EDGE_FILTER_T, typename... SELECTORS>
+  template <AppendOpt append_opt, int alias_to_use, typename... T,
+            typename CTX_HEAD_T, int cur_alias, int base_tag,
+            typename... CTX_PREV, typename LabelT, typename EDGE_FILTER_T,
+            typename... SELECTORS>
   static auto EdgeExpandE(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
+      const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
-      EdgeExpandEOpt<LabelT, EDGE_FILTER_T, std::tuple<SELECTORS...>, T...>&& edge_expand_opt,
+      EdgeExpandEOpt<LabelT, EDGE_FILTER_T, std::tuple<SELECTORS...>, T...>&&
+          edge_expand_opt,
       size_t limit = INT_MAX) {
     // Unwrap params here.
     auto& select_node = gs::Get<alias_to_use>(ctx);
     // Modifiy offsets.
     // pass select node by reference.
     auto pair = EdgeExpand<GRAPH_INTERFACE>::template EdgeExpandE<T...>(
-        time_stamp, graph, select_node, edge_expand_opt.dir_,
-        edge_expand_opt.edge_label_, edge_expand_opt.other_label_,
-        edge_expand_opt.edge_filter_, edge_expand_opt.prop_names_, limit);
+        graph, select_node, edge_expand_opt.dir_, edge_expand_opt.edge_label_,
+        edge_expand_opt.other_label_, edge_expand_opt.edge_filter_,
+        edge_expand_opt.prop_names_, limit);
     // create new context node, update offsets.
-    return ctx.template AddNode<res_alias>(
+    return ctx.template AddNode<append_opt>(
         std::move(pair.first), std::move(pair.second), alias_to_use);
     // old context will be abondon here.
   }
@@ -235,11 +236,12 @@ class SyncEngine : public BaseEngine {
   /// @param edge_expand_opt
   /// @param limit
   /// @return
-  template <int res_alias, int alias_to_use, typename... T, typename CTX_HEAD_T,
-            int cur_alias, int base_tag, typename... CTX_PREV, typename LabelT,
-            size_t num_labels, typename EDGE_FILTER_T>
+  template <AppendOpt append_opt, int alias_to_use, typename... T,
+            typename CTX_HEAD_T, int cur_alias, int base_tag,
+            typename... CTX_PREV, typename LabelT, size_t num_labels,
+            typename EDGE_FILTER_T>
   static auto EdgeExpandE(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
+      const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
       EdgeExpandEMultiLabelOpt<num_labels, LabelT, EDGE_FILTER_T, T...>&&
           edge_expand_opt,
@@ -249,11 +251,11 @@ class SyncEngine : public BaseEngine {
     // Modifiy offsets.
     // pass select node by reference.
     auto pair = EdgeExpand<GRAPH_INTERFACE>::template EdgeExpandE<T...>(
-        time_stamp, graph, select_node, edge_expand_opt.dir_,
-        edge_expand_opt.edge_label_, edge_expand_opt.other_label_,
-        edge_expand_opt.edge_filter_, edge_expand_opt.prop_names_, limit);
+        graph, select_node, edge_expand_opt.dir_, edge_expand_opt.edge_label_,
+        edge_expand_opt.other_label_, edge_expand_opt.edge_filter_,
+        edge_expand_opt.prop_names_, limit);
     // create new context node, update offsets.
-    return ctx.template AddNode<res_alias>(
+    return ctx.template AddNode<append_opt>(
         std::move(pair.first), std::move(pair.second), alias_to_use);
     // old context will be abondon here.
   }
@@ -561,7 +563,7 @@ class SyncEngine : public BaseEngine {
     auto& head = ctx.GetMutableHead();
     auto label = head.GetLabel();
     auto prop_getter_tuple =
-        get_prop_getter_from_selectors(graph, label, selectors);
+        std::array{get_prop_getter_from_selectors(graph, label, selectors)};
     // TODO: implement
     SelectRowVertexSetImpl(ctx, head, prop_getter_tuple, expr,
                            std::make_index_sequence<sizeof...(SELECTOR)>());
@@ -704,14 +706,14 @@ class SyncEngine : public BaseEngine {
   }
 
   template <typename CTX_HEAD_T, int cur_alias, int base_tag,
-            typename... CTX_PREV, typename FOLD_OPT>
+            typename... CTX_PREV, typename... AGG_T>
   static auto GroupByWithoutKey(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
+      const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
-      FOLD_OPT&& fold_opt) {
+      std::tuple<AGG_T...>&& fold_opt) {
     VLOG(10) << "[Group] with fold opt";
     return GroupByOp<GRAPH_INTERFACE>::GroupByWithoutKeyImpl(
-        time_stamp, graph, std::move(ctx), std::move(fold_opt));
+        graph, std::move(ctx), std::move(fold_opt));
   }
 
   //////////////////////////////////////Shortest Path/////////////////////////
@@ -724,7 +726,7 @@ class SyncEngine : public BaseEngine {
                 typename ResultContextT<opt, RES_SET_T, cur_alias, CTX_HEAD_T,
                                         base_tag, CTX_PREV...>::result_t>
   static RES_T ShortestPath(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
+      const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
       ShortestPathOpt<LabelT, EXPR, EDGE_FILTER_T, UNTIL_CONDITION, T...>&&
           shortest_path_opt) {
@@ -738,7 +740,7 @@ class SyncEngine : public BaseEngine {
 
     auto& set = ctx.template GetNode<alias_to_use>();
     auto path_set_and_offset = ShortestPathOp<GRAPH_INTERFACE>::ShortestPath(
-        time_stamp, graph, set, std::move(shortest_path_opt));
+        graph, set, std::move(shortest_path_opt));
     return ctx.template AddNode<opt>(std::move(path_set_and_offset.first),
                                      std::move(path_set_and_offset.second));
   }

@@ -292,16 +292,19 @@ class ProjectOp {
     auto offset_array = ctx.ObtainOffsetFromTag(in_col_id);
     auto repeat_array = offset_array_to_repeat_array(std::move(offset_array));
     KeyAlias<in_col_id, -1> key_alias;
-    return node.ProjectWithRepeatArray(std::move(repeat_array), key_alias);
+    return node.ProjectWithRepeatArray(repeat_array, key_alias);
   }
 
   // Project with  single mapper
-  template <typename CTX_T, typename EXPR, typename...SELECTOR, int32_t... in_col_id>
+  template <typename CTX_T, typename EXPR, typename... SELECTOR,
+            int32_t... in_col_id>
   static auto apply_single_project(
       const GRAPH_INTERFACE& graph, CTX_T& ctx,
       MultiMapper<EXPR, std::tuple<SELECTOR...>, in_col_id...>& mapper) {
-    using expr_trait = gs::function_traits<decltype(std::declval<EXPR>())>;
-    using expr_result_t = typename expr_trait::result_type;
+    // using expr_trait = gs::function_traits<decltype(std::declval<EXPR>())>;
+
+    // using expr_result_t = typename expr_trait::result_type;
+    using expr_result_t = typename EXPR::result_t;
     std::vector<expr_result_t> res_vec;
     res_vec.reserve(ctx.GetHead().Size());
     auto expr = mapper.expr_;
@@ -312,7 +315,6 @@ class ProjectOp {
     LOG(INFO) << "In project with expression, successfully got prop getters";
     for (auto iter : ctx) {
       auto ele_tuple = iter.GetAllElement();
-      LOG(INFO) << gs::to_string(ele_tuple);
       res_vec.emplace_back(evaluate_proj_expr(expr, ele_tuple, prop_getters));
     }
     return Collection<expr_result_t>(std::move(res_vec));

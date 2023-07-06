@@ -13,23 +13,23 @@
 namespace gs {
 
 template <typename GRAPH_INTERFACE>
-class IC8 {
+class QueryIC8 {
   using oid_t = typename GRAPH_INTERFACE::outer_vertex_id_t;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
   // static gs::oid_t oid_param = 6597069767117;
-  std::string person_label = "person";
-  std::string knows_label = "knows";
-  std::string post_label = "post";
-  std::string comment_label = "comment";
-  std::string has_creator_label = "hasCreator";
-  std::string reply_of_label = "replyOf";
-  std::string forum_label = "forum";
-  std::string likes_label = "likes";
-  std::string has_member_label = "hasMember";
-  std::string container_of_label = "containerOf";
-  std::string tag_label = "tag";
-  std::string has_tag_label = "hasTag";
+  std::string person_label = "PERSON";
+  std::string knows_label = "KNOWS";
+  std::string post_label = "POST";
+  std::string comment_label = "COMMENT";
+  std::string has_creator_label = "HASCREATOR";
+  std::string reply_of_label = "REPLYOF";
+  std::string forum_label = "FORUM";
+  std::string likes_label = "LIKES";
+  std::string has_member_label = "HASMEMBER";
+  std::string container_of_label = "CONTAINEROF";
+  std::string tag_label = "TAG";
+  std::string has_tag_label = "HASTAG";
   // static std::string_view firstName = "Jack";
 
  public:
@@ -61,7 +61,7 @@ class IC8 {
       output.push_back(std::make_pair("", node));
     }
   }
-  void Query(const GRAPH_INTERFACE& graph, int64_t time_stamp, Decoder& input,
+  void Query(const GRAPH_INTERFACE& graph, int64_t ts, Decoder& input,
              Encoder& output) const {
     int64_t id = input.get_long();
     int32_t limit = 20;
@@ -81,55 +81,60 @@ class IC8 {
     label_id_t has_tag_label_id = graph.GetEdgeLabelId(has_tag_label);
 
     using Engine = SyncEngine<GRAPH_INTERFACE>;
-    auto ctx0 = Engine::template ScanVertexWithOid<-1>(time_stamp, graph,
-                                                       person_label_id, id);
+    auto ctx0 = Engine::template ScanVertexWithOid<AppendOpt::Temp>(
+        graph, person_label_id, id);
 
     auto edge_expand_opt = gs::make_edge_expandv_opt(
         gs::Direction::In, has_creator_label_id,
         std::array<label_id_t, 2>{post_label_id, comment_label_id});
     // message
-    auto ctx1 = Engine::template EdgeExpandVMultiLabel<-1, -1>(
-        time_stamp, graph, std::move(ctx0), std::move(edge_expand_opt));
+    auto ctx1 = Engine::template EdgeExpandVMultiLabel<AppendOpt::Temp,
+                                                       INPUT_COL_ID(-1)>(
+        graph, std::move(ctx0), std::move(edge_expand_opt));
 
     auto edge_expand_opt2 = gs::make_edge_expandv_opt(
         gs::Direction::In, reply_of_label_id, comment_label_id);
-    auto ctx2 = Engine::template EdgeExpandV<0, -1>(
-        time_stamp, graph, std::move(ctx1), std::move(edge_expand_opt2));
+    auto ctx2 =
+        Engine::template EdgeExpandV<AppendOpt::Persist, INPUT_COL_ID(-1)>(
+            graph, std::move(ctx1), std::move(edge_expand_opt2));
     // replied comment
 
     auto edge_expand_opt3 = gs::make_edge_expandv_opt(
         gs::Direction::Out, has_creator_label_id, person_label_id);
-    auto ctx3 = Engine::template EdgeExpandV<1, 0>(
-        time_stamp, graph, std::move(ctx2), std::move(edge_expand_opt3));
+    auto ctx3 =
+        Engine::template EdgeExpandV<AppendOpt::Persist, INPUT_COL_ID(0)>(
+            graph, std::move(ctx2), std::move(edge_expand_opt3));
 
-    gs::OrderingPropPair<gs::SortOrder::DESC, 0, int64_t> pair0(
-        "creationDate");  // indicate the set's element itself.
-    gs::OrderingPropPair<gs::SortOrder::ASC, 0, gs::oid_t> pair1("id");  // id
-    auto pairs = gs::make_sort_opt(gs::Range(0, limit), std::move(pair0),
-                                   std::move(pair1));
+    auto ctx4 = Engine::Sort(
+        graph, std::move(ctx3), gs::Range(0, limit),
+        std::tuple{
+            gs::OrderingPropPair<gs::SortOrder::DESC, 0, int64_t>(
+                "creationDate"),  // indicate the set's element itself.
+            gs::OrderingPropPair<gs::SortOrder::ASC, 0, gs::oid_t>("id")  // id
+        });
 
-    auto ctx4 =
-        Engine::Sort(time_stamp, graph, std::move(ctx3), std::move(pairs));
-
-    gs::AliasTagProp<0, 2, gs::oid_t, std::string_view, int64_t> prop_col0(
-        {"id", "content", "creationDate"});  // messages
-    gs::AliasTagProp<1, 3, gs::oid_t, std::string_view, std::string_view>
-        prop_col1({"id", "firstName", "lastName"});  // person
-    auto proj_opt4 =
-        gs::make_project_opt(std::move(prop_col0), std::move(prop_col1));
-    auto ctx5 = Engine::template Project<true>(
-        time_stamp, graph, std::move(ctx4), std::move(proj_opt4));
+    auto ctx5 = Engine::template Project<PROJ_TO_NEW>(
+        graph, std::move(ctx4),
+        std::tuple{
+            gs::make_mapper_with_variable<0>(gs::PropertySelector<oid_t>("id")),
+            gs::make_mapper_with_variable<0>(
+                gs::PropertySelector<std::string_view>("content")),
+            gs::make_mapper_with_variable<0>(
+                gs::PropertySelector<int64_t>("creationDate")),
+            gs::make_mapper_with_variable<1>(gs::PropertySelector<oid_t>("id")),
+            gs::make_mapper_with_variable<1>(
+                gs::PropertySelector<std::string_view>("firstName")),
+            gs::make_mapper_with_variable<1>(
+                gs::PropertySelector<std::string_view>("lastName"))});
 
     for (auto iter : ctx5) {
       auto element = iter.GetAllElement();
-      auto& person = std::get<3>(element);
-      auto& cmt = std::get<2>(element);
-      output.put_long(std::get<0>(person));         // person id
-      output.put_string_view(std::get<1>(person));  // person first name
-      output.put_string_view(std::get<2>(person));  // person last name
-      output.put_long(std::get<2>(cmt));            // creaiontdate.
-      output.put_long(std::get<0>(cmt));            // id
-      output.put_string_view(std::get<1>(cmt));     // content
+      output.put_long(std::get<3>(element));         // person id
+      output.put_string_view(std::get<4>(element));  // person first name
+      output.put_string_view(std::get<5>(element));  // person last name
+      output.put_long(std::get<2>(element));         // creaiontdate.
+      output.put_long(std::get<0>(element));         // id
+      output.put_string_view(std::get<1>(element));  // content
     }
   }
 };

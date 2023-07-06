@@ -18,6 +18,9 @@ namespace gs {
 
 //////////////////////////VertexIter///////////////////////
 
+template <typename LabelT, typename KEY_T, typename VID_T, typename... T>
+class KeyedRowVertexSetBuilderImpl;
+
 // 0. Keyed Vector-base vertex set iterator.
 template <typename LabelT, typename KEY_T, typename VID_T, typename... T>
 class KeyedRowVertexSetIter {
@@ -511,7 +514,7 @@ class KeyedRowVertexSetImpl {
   template <typename... Ts>
   using with_data_t = KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, T..., Ts...>;
 
-  using builder_t = RowVertexSetImplBuilder<LabelT, VID_T, T...>;
+  using builder_t = RowVertexSetBuilder<LabelT, VID_T, T...>;
 
   static constexpr VID_T NULL_VID = std::numeric_limits<VID_T>::max();
 
@@ -557,6 +560,8 @@ class KeyedRowVertexSetImpl {
   iterator end() const {
     return iterator(keys_, vids_, datas_, v_label_, keys_.size());
   }
+
+  const std::vector<data_tuple_t>& GetDataVec() const { return datas_; }
 
   size_t Size() const { return keys_.size(); }
 
@@ -653,7 +658,7 @@ class KeyedRowVertexSetImpl {
 
   // projectwithRepeatArray, projecting myself
   template <int tag_id, int Fs, typename std::enable_if_t<Fs == -1>* = nullptr>
-  self_type_t ProjectWithRepeatArray(std::vector<offset_t>& repeat_array,
+  self_type_t ProjectWithRepeatArray(const std::vector<offset_t>& repeat_array,
                                      KeyAlias<tag_id, Fs>& key_alias) {
     std::vector<key_t> new_keys;
     std::vector<lid_t> new_vids;
@@ -682,14 +687,15 @@ class KeyedRowVertexSetImpl {
   template <typename... PropT>
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         const PropNameArray<PropT...>& prop_names) {
-    LOG(WARNING) << " Not implemented";
+    std::vector<offset_t> repeat_array(vids_.size(), 1);
+    fillBuiltinPropsImpl(datas_, prop_names_, tuples, prop_names, repeat_array);
   }
 
   template <typename... PropT>
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         const PropNameArray<PropT...>& prop_names,
-                        const std::vector<offset_t>& offset) {
-    LOG(WARNING) << " Not implemented";
+                        const std::vector<offset_t>& repeat_array) {
+    fillBuiltinPropsImpl(datas_, prop_names_, tuples, prop_names, repeat_array);
   }
 
  protected:
@@ -724,7 +730,7 @@ class KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, grape::EmptyType> {
   template <typename... Ts>
   using with_data_t = KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, Ts...>;
 
-  using builder_t = RowVertexSetImplBuilder<LabelT, VID_T, grape::EmptyType>;
+  using builder_t = RowVertexSetBuilder<LabelT, VID_T, grape::EmptyType>;
 
   static constexpr VID_T NULL_VID = std::numeric_limits<VID_T>::max();
 
@@ -838,7 +844,7 @@ class KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, grape::EmptyType> {
 
   // projectwithRepeatArray, projecting myself
   template <int tag_id, int Fs, typename std::enable_if_t<Fs == -1>* = nullptr>
-  self_type_t ProjectWithRepeatArray(std::vector<offset_t>&& repeat_array,
+  self_type_t ProjectWithRepeatArray(const std::vector<offset_t>& repeat_array,
                                      KeyAlias<tag_id, Fs>& key_alias) {
     std::vector<key_t> new_keys;
     std::vector<lid_t> new_vids;
@@ -880,7 +886,7 @@ class KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, grape::EmptyType> {
 };
 
 template <typename LabelT, typename KEY_T, typename VID_T, typename... T>
-using KeyRowedVertexSet = KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, T...>;
+using KeyedRowVertexSet = KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, T...>;
 
 template <typename LabelT, typename VID_T>
 using DefaultKeyedRowVertexSet =
@@ -890,7 +896,7 @@ template <typename LabelT, typename key_t, typename VID_T, typename... T>
 auto MakeKeyedRowVertexSet(std::vector<key_t>&& keys, std::vector<VID_T>&& vec,
                            std::vector<std::tuple<T...>>&& datas,
                            LabelT label) {
-  return KeyRowedVertexSet<LabelT, key_t, VID_T, T...>(
+  return KeyedRowVertexSet<LabelT, key_t, VID_T, T...>(
       std::move(keys), std::move(vec), std::move(datas), label);
 }
 
@@ -904,7 +910,9 @@ class KeyedRowVertexSetBuilderImpl {
   using data_tuple_t = std::tuple<T...>;
   using build_res_t = KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, T...>;
 
-  KeyedRowVertexSetBuilderImpl(LabelT label) : label_(label), ind_(0) {}
+  KeyedRowVertexSetBuilderImpl(LabelT label,
+                               std::array<std::string, sizeof...(T)> prop_names)
+      : label_(label), prop_names_(prop_names), ind_(0) {}
 
   KeyedRowVertexSetBuilderImpl(const RowVertexSet<LabelT, VID_T, T...>& old_set)
       : label_(old_set.GetLabel()),
@@ -939,6 +947,10 @@ class KeyedRowVertexSetBuilderImpl {
       datas_.emplace_back(data_tuple);
       return ind_++;
     }
+  }
+
+  size_t insert(const std::tuple<VID_T, data_tuple_t>& ele_tuple) {
+    return insert(std::get<0>(ele_tuple), std::get<1>(ele_tuple));
   }
 
   build_res_t Build() {

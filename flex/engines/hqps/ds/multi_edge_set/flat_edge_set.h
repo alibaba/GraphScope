@@ -327,7 +327,7 @@ class FlatEdgeSet {
   // implement ProjectWithRepeatArray
   template <int tag_id, int Fs,
             typename std::enable_if<Fs == -1>::type* = nullptr>
-  self_type_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+  self_type_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
                                      KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<ele_tuple_t> new_vec;
     std::vector<LabelT> new_label_vec;

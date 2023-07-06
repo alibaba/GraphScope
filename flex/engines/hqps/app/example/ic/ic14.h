@@ -1,15 +1,15 @@
 #ifndef ENGINES_HPQS_APP_EXAMPLE_IC_IC14_H_
 #define ENGINES_HPQS_APP_EXAMPLE_IC_IC14_H_
 
+#include <unordered_map>
+#include <vector>
+
 #include <boost/functional/hash.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include "flex/utils/app_utils.h"
 #include "flex/engines/hqps/engine/context.h"
 #include "flex/engines/hqps/engine/hqps_utils.h"
-
-#include <unordered_map>
-#include <vector>
+#include "flex/utils/app_utils.h"
 
 #include "flex/engines/hqps/engine/sync_engine.h"
 
@@ -33,77 +33,55 @@ struct customize_stream<Ch, Traits, double, void> {
 }  // namespace boost
 namespace gs {
 
-template <typename TAG_PROP>
 class IC14Expression0 {
  public:
-  IC14Expression0(oid_t oid, TAG_PROP&& props) : oid_(oid), props_(props) {}
+  IC14Expression0(oid_t oid) : oid_(oid) {}
 
-  template <typename TUPLE_T>
-  bool operator()(const TUPLE_T& data_tuple) const {
-    return std::get<0>(data_tuple) == oid_;
-  }
-
-  TAG_PROP Properties() const { return props_; }
+  bool operator()(const oid_t& data) const { return data == oid_; }
 
  private:
   oid_t oid_;
-  TAG_PROP props_;
 };
 
 template <typename GRAPH_INTERFACE>
-class IC14 {
+class QueryIC14 {
   using oid_t = typename GRAPH_INTERFACE::outer_vertex_id_t;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
   using vertex_pair = std::pair<vertex_id_t, vertex_id_t>;
   using nbr_t = typename GRAPH_INTERFACE::nbr_t;
+  using label_id_t = typename GRAPH_INTERFACE::label_id_t;
 
   // static gs::oid_t oid_param = 6597069767117;
-  std::string person_label = "person";
-  std::string knows_label = "knows";
-  std::string post_label = "post";
-  std::string comment_label = "comment";
-  std::string has_creator_label = "hasCreator";
-  std::string reply_of_label = "replyOf";
-  std::string forum_label = "forum";
-  std::string likes_label = "likes";
-  std::string has_member_label = "hasMember";
-  std::string container_of_label = "containerOf";
-  std::string work_at_label = "workAt";
-  std::string tag_label = "tag";
-  std::string has_tag_label = "hasTag";
-  std::string has_type_label = "hasType";
-  std::string tag_class_label = "tagClass";
-  std::string is_sub_class_of_label = "isSubclassOf";
-  std::string place_label = "place";
-  std::string org_label = "organisation";
-  std::string is_locatedIn_label = "isLocatedIn";
-  std::string replyOf_label = "replyOf";
+  std::string person_label = "PERSON";
+  std::string knows_label = "KNOWS";
+  std::string post_label = "POST";
+  std::string comment_label = "COMMENT";
+  std::string has_creator_label = "HASCREATOR";
+  std::string replyOf_label = "REPLYOF";
+
   // static std::string_view firstName = "Jack";
   void get_post_person_nbrs(
-      vertex_id_t src, int64_t time_stamp, const GRAPH_INTERFACE& graph,
+      vertex_id_t src, const GRAPH_INTERFACE& graph,
       std::unordered_map<vertex_id_t, std::vector<vertex_id_t>>&
           person_to_perons_via_post) const {
     std::vector<vertex_id_t> src_vec{src};
-    auto comment_nbr_list_array =
-        graph.GetOtherVertices(time_stamp, comment_label, person_label,
-                               has_creator_label, src_vec, "In", INT_MAX);
+    auto comment_nbr_list_array = graph.GetOtherVertices(
+        comment_label, person_label, has_creator_label, src_vec, "In", INT_MAX);
     std::vector<vertex_id_t> cmt_ids;
     for (auto v : comment_nbr_list_array.get(0)) {
       cmt_ids.push_back(v.neighbor());
     }
     //
-    auto post_nbr_list_array =
-        graph.GetOtherVertices(time_stamp, comment_label, post_label,
-                               reply_of_label, cmt_ids, "Out", INT_MAX);
+    auto post_nbr_list_array = graph.GetOtherVertices(
+        comment_label, post_label, replyOf_label, cmt_ids, "Out", INT_MAX);
     std::vector<vertex_id_t> post_ids;
     for (auto i = 0; i < post_nbr_list_array.size(); ++i) {
       for (auto nbr : post_nbr_list_array.get(i)) {
         post_ids.push_back(nbr.neighbor());
       }
     }
-    auto person_nbr_list_array =
-        graph.GetOtherVertices(time_stamp, post_label, person_label,
-                               has_creator_label, post_ids, "Out", INT_MAX);
+    auto person_nbr_list_array = graph.GetOtherVertices(
+        post_label, person_label, has_creator_label, post_ids, "Out", INT_MAX);
     std::vector<vertex_id_t> person_ids;
     for (auto i = 0; i < person_nbr_list_array.size(); ++i) {
       for (auto nbr : person_nbr_list_array.get(i)) {
@@ -114,21 +92,19 @@ class IC14 {
   }
 
   void get_cmt_person_nbrs(
-      vertex_id_t src, int64_t time_stamp, const GRAPH_INTERFACE& graph,
+      vertex_id_t src, const GRAPH_INTERFACE& graph,
       std::unordered_map<vertex_id_t, std::vector<vertex_id_t>>&
           person_to_perons_via_cmt) const {
     std::vector<vertex_id_t> src_vec{src};
-    auto comment_nbr_list_array =
-        graph.GetOtherVertices(time_stamp, comment_label, person_label,
-                               has_creator_label, src_vec, "In", INT_MAX);
+    auto comment_nbr_list_array = graph.GetOtherVertices(
+        comment_label, person_label, has_creator_label, src_vec, "In", INT_MAX);
     std::vector<vertex_id_t> cmt_ids;
     for (auto v : comment_nbr_list_array.get(0)) {
       cmt_ids.push_back(v.neighbor());
     }
     //
-    auto post_nbr_list_array =
-        graph.GetOtherVertices(time_stamp, comment_label, comment_label,
-                               reply_of_label, cmt_ids, "Out", INT_MAX);
+    auto post_nbr_list_array = graph.GetOtherVertices(
+        comment_label, comment_label, replyOf_label, cmt_ids, "Out", INT_MAX);
     std::vector<vertex_id_t> post_ids;
     for (auto i = 0; i < post_nbr_list_array.size(); ++i) {
       for (auto nbr : post_nbr_list_array.get(i)) {
@@ -136,8 +112,8 @@ class IC14 {
       }
     }
     auto person_nbr_list_array =
-        graph.GetOtherVertices(time_stamp, comment_label, person_label,
-                               has_creator_label, post_ids, "Out", INT_MAX);
+        graph.GetOtherVertices(comment_label, person_label, has_creator_label,
+                               post_ids, "Out", INT_MAX);
     std::vector<vertex_id_t> person_ids;
     for (auto i = 0; i < person_nbr_list_array.size(); ++i) {
       for (auto nbr : person_nbr_list_array.get(i)) {
@@ -148,17 +124,16 @@ class IC14 {
   }
 
   double get_post_score(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, vertex_id_t src,
-      vertex_id_t dst,
+      const GRAPH_INTERFACE& graph, vertex_id_t src, vertex_id_t dst,
       std::unordered_map<vertex_id_t, std::vector<vertex_id_t>>&
           person_to_perons_via_post) const {
     if (person_to_perons_via_post.find(src) ==
         person_to_perons_via_post.end()) {
-      get_post_person_nbrs(src, time_stamp, graph, person_to_perons_via_post);
+      get_post_person_nbrs(src, graph, person_to_perons_via_post);
     }
     if (person_to_perons_via_post.find(dst) ==
         person_to_perons_via_post.end()) {
-      get_post_person_nbrs(dst, time_stamp, graph, person_to_perons_via_post);
+      get_post_person_nbrs(dst, graph, person_to_perons_via_post);
     }
     size_t cnt = 0;
     for (auto nbr : person_to_perons_via_post[src]) {
@@ -175,15 +150,14 @@ class IC14 {
   }
 
   double get_cmt_score(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, vertex_id_t src,
-      vertex_id_t dst,
+      const GRAPH_INTERFACE& graph, vertex_id_t src, vertex_id_t dst,
       std::unordered_map<vertex_id_t, std::vector<vertex_id_t>>&
           person_to_perons_via_cmt) const {
     if (person_to_perons_via_cmt.find(src) == person_to_perons_via_cmt.end()) {
-      get_cmt_person_nbrs(src, time_stamp, graph, person_to_perons_via_cmt);
+      get_cmt_person_nbrs(src, graph, person_to_perons_via_cmt);
     }
     if (person_to_perons_via_cmt.find(dst) == person_to_perons_via_cmt.end()) {
-      get_cmt_person_nbrs(dst, time_stamp, graph, person_to_perons_via_cmt);
+      get_cmt_person_nbrs(dst, graph, person_to_perons_via_cmt);
     }
     size_t cnt = 0;
     for (auto nbr : person_to_perons_via_cmt[src]) {
@@ -200,21 +174,21 @@ class IC14 {
   }
 
   double cacl_score_impl(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph, vertex_pair& pair,
+      const GRAPH_INTERFACE& graph, vertex_pair& pair,
       std::unordered_map<vertex_id_t, std::vector<vertex_id_t>>&
           person_to_person_via_post,
       std::unordered_map<vertex_id_t, std::vector<vertex_id_t>>&
           person_to_pson_via_cmt) const {
     double score = 0;
-    auto tmp = get_post_score(time_stamp, graph, pair.first, pair.second,
+    auto tmp = get_post_score(graph, pair.first, pair.second,
                               person_to_person_via_post) *
                1.0;
     // VLOG(10) << "pair: " << pair.first << ", " << pair.second
     //          << ", post score:" << tmp;
     score += tmp;
-    tmp = get_cmt_score(time_stamp, graph, pair.first, pair.second,
-                        person_to_pson_via_cmt) *
-          0.5;
+    tmp =
+        get_cmt_score(graph, pair.first, pair.second, person_to_pson_via_cmt) *
+        0.5;
     // VLOG(10) << "pair: " << pair.first << ", " << pair.second
     //          << ", cmt score:" << tmp;
     score += tmp;
@@ -223,8 +197,7 @@ class IC14 {
 
   // the cache should give same result for <l,r> and <r,l>
   double calc_score(
-      int64_t time_stamp, const GRAPH_INTERFACE& graph,
-      const Path<vertex_id_t>& path,
+      const GRAPH_INTERFACE& graph, const Path<vertex_id_t>& path,
       std::unordered_map<vertex_pair, double, boost::hash<vertex_pair>>& cache,
       std::unordered_map<vertex_id_t, std::vector<vertex_id_t>>&
           person_to_person_via_post,
@@ -240,9 +213,8 @@ class IC14 {
       auto pair = std::make_pair(src, dst);
       if (cache.find(pair) == cache.end()) {
         // VLOG(10) << "calc for pair: " << i;
-        cache[pair] =
-            cacl_score_impl(time_stamp, graph, pair, person_to_person_via_post,
-                            person_to_pson_via_cmt);
+        cache[pair] = cacl_score_impl(graph, pair, person_to_person_via_post,
+                                      person_to_pson_via_cmt);
       }
       res += cache[pair];
     }
@@ -294,7 +266,7 @@ class IC14 {
       output.push_back(std::make_pair("", node));
     }
   }
-  void Query(const GRAPH_INTERFACE& graph, int64_t time_stamp, Decoder& input,
+  void Query(const GRAPH_INTERFACE& graph, int64_t ts, Decoder& input,
              Encoder& output) const {
     std::setprecision(1);
     int64_t src_id = input.get_long();
@@ -304,8 +276,9 @@ class IC14 {
     using label_id_t = typename GRAPH_INTERFACE::label_id_t;
     label_id_t person_label_id = graph.GetVertexLabelId(person_label);
     label_id_t knows_label_id = graph.GetEdgeLabelId(knows_label);
-    auto ctx0 = Engine::template ScanVertexWithOid<-1>(time_stamp, graph,
-                                                       person_label_id, src_id);
+
+    auto ctx0 = Engine::template ScanVertexWithOid<AppendOpt::Temp>(
+        graph, person_label_id, src_id);
     // message
 
     auto edge_expand_opt6 = gs::make_edge_expandv_opt(
@@ -313,16 +286,17 @@ class IC14 {
     auto get_v_opt = gs::make_getv_opt(
         gs::VOpt::End, std::array<label_id_t, 1>{person_label_id});
 
-    gs::NamedProperty<oid_t> id_prop("id");
-    IC14Expression0 expr(dst_id, std::move(id_prop));
+    auto filter = gs::make_filter(IC14Expression0(dst_id),
+                                  gs::PropertySelector<oid_t>("id"));
 
     auto shortest_path_opt = gs::make_shortest_path_opt(
         std::move(edge_expand_opt6), std::move(get_v_opt),
-        gs::Range(0, INT_MAX), std::move(expr), PathOpt::Simple,
+        gs::Range(0, INT_MAX), std::move(filter), PathOpt::Simple,
         ResultOpt::AllV);
 
-    auto ctx1 = Engine::template ShortestPath<-1, -1>(
-        time_stamp, graph, std::move(ctx0), std::move(shortest_path_opt));
+    auto ctx1 =
+        Engine::template ShortestPath<AppendOpt::Temp, INPUT_COL_ID(-1)>(
+            graph, std::move(ctx0), std::move(shortest_path_opt));
 
     // apply sub query on path.
     auto paths = ctx1.template GetNode<-1>();
@@ -335,7 +309,7 @@ class IC14 {
         vid_to_post_via_cmt;
 
     for (auto iter : paths) {
-      scores.push_back(calc_score(time_stamp, graph, iter.GetElement(), cache,
+      scores.push_back(calc_score(graph, iter.GetElement(), cache,
                                   vid_to_post_via_post, vid_to_post_via_cmt));
     }
     // VLOG(10) << gs::to_string(scores);
@@ -354,8 +328,8 @@ class IC14 {
       output.put_int((int) vec.size());
 
       std::array<std::string, 1> props{"id"};
-      auto oids = graph.template GetVertexPropsFromVid<oid_t>(
-          time_stamp, person_label, vec, props);
+      auto oids =
+          graph.template GetVertexPropsFromVid<oid_t>(person_label, vec, props);
       for (auto j = 0; j < vec.size(); ++j) {
         output.put_long(std::get<0>(oids[j]));
       }

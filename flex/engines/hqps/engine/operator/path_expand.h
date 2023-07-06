@@ -154,7 +154,7 @@ class PathExpand {
 
   // PathExpandV for two_label_vertex set as input.
   template <typename... V_SET_T, typename EXPR, typename LabelT,
-            typename EDGE_FILTER_T, typename RES_SET_T = vertex_set_t<int32_t>,
+            typename EDGE_FILTER_T, typename RES_SET_T = vertex_set_t<Dist>,
             typename RES_T = std::pair<RES_SET_T, std::vector<offset_t>>>
   static RES_T PathExpandV(
       const GRAPH_INTERFACE& graph,
@@ -179,7 +179,7 @@ class PathExpand {
   }
 
   template <typename LabelT, typename EDGE_FILTER_T, typename... SELECTOR>
-  static std::tuple<std::vector<vertex_id_t>, std::vector<int32_t>,
+  static std::tuple<std::vector<vertex_id_t>, std::vector<Dist>,
                     std::vector<offset_t>>
   PathExpandRawV2ForSingleV(
       const GRAPH_INTERFACE& graph, LabelT src_label,
@@ -196,7 +196,7 @@ class PathExpand {
     // std::vector<std::vector<vertex_id_t>> gids;
     // std::vector<std::vector<offset_t>> offsets;
     std::unordered_set<vertex_id_t> visited_vertices;
-    std::vector<int32_t> dists;
+    std::vector<Dist> dists;
 
     // init for index 0
     tmp_vec.emplace_back(src_id);
@@ -231,6 +231,13 @@ class PathExpand {
             dists.emplace_back(cur_hop);
           }
         }
+      } else {
+        // when cur_hop is not included, we also need to insert vertices into
+        // set, to avoid duplicated.
+        for (auto i = 0; i < tmp_vec.size(); ++i) {
+          auto nbr_gid = tmp_vec[i];
+          visited_vertices.insert(nbr_gid);
+        }
       }
     }
     LOG(INFO) << "visit array time: " << visit_array_time
@@ -247,7 +254,7 @@ class PathExpand {
   // size if 1.
   // const VERTEX_SET_T& vertex_set,
   template <typename LabelT, typename EDGE_FILTER_T>
-  static std::tuple<std::vector<vertex_id_t>, std::vector<int32_t>,
+  static std::tuple<std::vector<vertex_id_t>, std::vector<Dist>,
                     std::vector<offset_t>>
   PathExpandRawVMultiV(const GRAPH_INTERFACE& graph, LabelT src_label,
                        const std::vector<vertex_id_t>& src_vertices_vec,
@@ -304,7 +311,7 @@ class PathExpand {
     // select vetices that are in range.
     std::vector<vertex_id_t> flat_gids;
     std::vector<offset_t> flat_offsets;
-    std::vector<int32_t> dists;
+    std::vector<Dist> dists;
 
     {
       size_t flat_size = 0;

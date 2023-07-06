@@ -28,12 +28,31 @@ enum class EdgeStrategy {
   kMultiple,
 };
 
+struct Dist {
+  int32_t dist = 0;
+  Dist(int32_t d) : dist(d) {}
+  Dist() : dist(0) {}
+  inline Dist& operator=(int32_t d) {
+    dist = d;
+    return *this;
+  }
+
+  void set(int32_t i) { dist = i; }
+};
+
+inline bool operator<(const Dist& a, const Dist& b) { return a.dist < b.dist; }
+inline bool operator>(const Dist& a, const Dist& b) { return a.dist > b.dist; }
+
+inline bool operator==(const Dist& a, const Dist& b) {
+  return a.dist == b.dist;
+}
+
 using timestamp_t = uint32_t;
 using vid_t = uint32_t;
 using oid_t = int64_t;
 using label_t = uint8_t;
 // distance in path.
-using dist_t = int32_t;
+using dist_t = Dist;
 static constexpr label_t INVALID_LABEL_ID = std::numeric_limits<label_t>::max();
 using offset_t = size_t;
 using vertex_set_key_t = size_t;

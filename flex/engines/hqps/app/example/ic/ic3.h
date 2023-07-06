@@ -3,110 +3,85 @@
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include "flex/utils/app_utils.h"
 #include "flex/engines/hqps/engine/context.h"
 #include "flex/engines/hqps/engine/hqps_utils.h"
+#include "flex/utils/app_utils.h"
 
 #include "flex/engines/hqps/engine/sync_engine.h"
 
 namespace gs {
 
-template <typename TAG_COL>
 class IC3Expre0 {
  public:
-  using tag_prop_t = std::tuple<TAG_COL>;
-  IC3Expre0(std::string_view ctr_y_name, TAG_COL&& props)
-      : ctr_y_name_(ctr_y_name), props_(props) {}
+  using result_t = bool;
+  IC3Expre0(std::string_view ctr_y_name) : ctr_y_name_(ctr_y_name) {}
 
   auto operator()(std::string_view country_name) const {
     return country_name == ctr_y_name_;
   }
 
-  tag_prop_t Properties() { return std::make_tuple(props_); }
-
  private:
   std::string_view ctr_y_name_;
-  TAG_COL props_;
 };
 
-template <typename TAG_COL>
 class IC3Expression2 {
  public:
-  using tag_prop_t = std::tuple<TAG_COL>;
-  IC3Expression2(std::string_view param1, std::string_view param2,
-                 TAG_COL&& props)
-      : param1_(param1), param2_(param2), props_(props) {}
+  using result_t = bool;
+  IC3Expression2(std::string_view param1, std::string_view param2)
+      : param1_(param1), param2_(param2) {}
 
-  //   template <typename TUPLE_T>
-  //   bool operator()(TUPLE_T& props) {
   bool operator()(std::string_view country_name) const {
     return param1_ == country_name || param2_ == country_name;
   }
 
-  tag_prop_t Properties() { return std::make_tuple(props_); }
-
  private:
   std::string_view param1_, param2_;
-  TAG_COL props_;
 };
 
-template <typename TAG_COL>
 class IC3Expression3 {
  public:
-  using tag_prop_t = std::tuple<TAG_COL>;
-  IC3Expression3(int64_t start_date, int64_t end_date, TAG_COL&& props)
-      : start_date_(start_date), end_date_(end_date), props_(props) {}
+  using result_t = bool;
+  IC3Expression3(int64_t start_date, int64_t end_date)
+      : start_date_(start_date), end_date_(end_date) {}
 
   //   template <typename TUPLE_T>
   bool operator()(const int64_t date) const {
-    // VLOG(10) << "1: " << start_date_ << ", " << end_date_ << " "
-    //          << std::get<0>(props);
     return date >= start_date_ && date < end_date_;
   }
-
-  tag_prop_t Properties() { return std::make_tuple(props_); }
 
  private:
   int64_t start_date_;
   int64_t end_date_;
-  TAG_COL props_;
 };
 
-template <typename TAG_COL0, typename TAG_COL1>
 class IC3Expression4 {
  public:
-  using tag_prop_t = std::tuple<TAG_COL0, TAG_COL1>;
   using result_t = uint64_t;
-  IC3Expression4(TAG_COL0&& prop0, TAG_COL1&& prop1)
-      : prop0_(std::move(prop0)), prop1_(std::move(prop1)) {}
+  IC3Expression4() {}
 
   auto operator()(uint64_t a, uint64_t b) const { return a + b; }
 
-  tag_prop_t Properties() { return std::make_tuple(prop0_, prop1_); }
-
  private:
-  TAG_COL0 prop0_;
-  TAG_COL1 prop1_;
 };
 
 template <typename GRAPH_INTERFACE>
-class IC3 {
+class QueryIC3 {
   using oid_t = typename GRAPH_INTERFACE::outer_vertex_id_t;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
   // static gs::oid_t oid_param = 6597069767117;
-  std::string person_label = "person";
-  std::string knows_label = "knows";
-  std::string isLocatedIn_label = "isLocatedIn";
-  std::string place_label = "place";
-  std::string workAt_label = "workAt";
-  std::string studyAt_label = "studyAt";
-  std::string is_locatedIn_label = "isLocatedIn";
-  std::string org_label = "organisation";
-  std::string isPartOf_label = "isPartOf";
-  std::string post_label = "post";
-  std::string comment_label = "comment";
-  std::string has_creator_label = "hasCreator";
+  std::string person_label = "PERSON";
+  std::string knows_label = "KNOWS";
+  std::string isLocatedIn_label = "ISLOCATEDIN";
+  std::string place_label = "PLACE";
+  std::string workAt_label = "WORKAT";
+  std::string studyAt_label = "STUDYAT";
+  std::string is_locatedIn_label = "ISLOCATEDIN";
+  std::string org_label = "ORGANISATION";
+  std::string isPartOf_label = "ISPARTOF";
+  std::string post_label = "POST";
+  std::string comment_label = "COMMENT";
+  std::string has_creator_label = "HASCREATOR";
   // static std::string_view firstName = "Jack";
 
   using Engine = SyncEngine<GRAPH_INTERFACE>;
@@ -152,7 +127,7 @@ class IC3 {
       output.push_back(std::make_pair("", node));
     }
   }
-  void Query(const GRAPH_INTERFACE& graph, int64_t time_stamp, Decoder& input,
+  void Query(const GRAPH_INTERFACE& graph, int64_t ts, Decoder& input,
              Encoder& output) const {
     using Engine = SyncEngine<GRAPH_INTERFACE>;
     int64_t id = input.get_long();
@@ -174,116 +149,122 @@ class IC3 {
     label_id_t isPartOf_label_id = graph.GetEdgeLabelId(isPartOf_label);
     label_id_t has_creator_label_id = graph.GetEdgeLabelId(has_creator_label);
 
-    auto ctx0 = Engine::template ScanVertexWithOid<-1>(time_stamp, graph,
-                                                       person_label_id, id);
+    auto ctx0 = Engine::template ScanVertexWithOid<AppendOpt::Temp>(
+        graph, person_label_id, id);
 
-    //
     auto edge_expand_opt = gs::make_edge_expandv_opt(
         gs::Direction::Both, knows_label_id, person_label_id);
     auto get_v_opt = gs::make_getv_opt(
         gs::VOpt::End, std::array<label_id_t, 1>{person_label_id});
     auto path_expand_opt = gs::make_path_expand_opt(
         std::move(edge_expand_opt), std::move(get_v_opt), gs::Range(1, 3));
-    auto ctx1 = Engine::template PathExpandV<0, -1>(
-        time_stamp, graph, std::move(ctx0), std::move(path_expand_opt));
+    auto ctx1 =
+        Engine::template PathExpandV<AppendOpt::Persist, INPUT_COL_ID(-1)>(
+            graph, std::move(ctx0), std::move(path_expand_opt));
 
     auto edge_expand_opt3 = gs::make_edge_expandv_opt(
         gs::Direction::Out, is_locatedIn_label_id, place_label_id);
-    auto ctx2 = Engine::template EdgeExpandV<-1, 0>(
-        time_stamp, graph, std::move(ctx1), std::move(edge_expand_opt3));
+    auto ctx2 = Engine::template EdgeExpandV<AppendOpt::Temp, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx1), std::move(edge_expand_opt3));
 
     auto edge_expand_opt4 = gs::make_edge_expandv_opt(
         gs::Direction::Out, isPartOf_label_id, place_label_id);
-    auto ctx3 = Engine::template EdgeExpandV<-1, -1>(
-        time_stamp, graph, std::move(ctx2), std::move(edge_expand_opt4));
+    auto ctx3 = Engine::template EdgeExpandV<AppendOpt::Temp, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx2), std::move(edge_expand_opt4));
 
-    gs::NamedProperty<std::string_view> tag_prop("name");
-    IC3Expression2 expr2(country_x_name, country_y_name, std::move(tag_prop));
+    auto filter =
+        gs::make_filter(IC3Expression2(country_x_name, country_y_name),
+                        gs::PropertySelector<std::string_view>("name"));
     auto get_v_opt3 = gs::make_getv_opt(
         gs::VOpt::Itself, std::array<label_id_t, 1>{place_label_id},
-        std::move(expr2));
-    auto ctx4 = Engine::template GetV<1, -1>(time_stamp, graph, std::move(ctx3),
-                                             std::move(get_v_opt3));
+        std::move(filter));
+    auto ctx4 = Engine::template GetV<AppendOpt::Temp, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx3), std::move(get_v_opt3));
 
     // ctx_x countryx
-    IC3Expre0 expr_scan0(country_x_name,
-                         gs::NamedProperty<std::string_view>("name"));
-    auto ctx_x0 = Engine::template ScanVertex<-1>(
-        time_stamp, graph, place_label_id, std::move(expr_scan0));
+    auto filter2 =
+        gs::make_filter(IC3Expre0(country_x_name),
+                        gs::PropertySelector<std::string_view>("name"));
+    auto ctx_x0 = Engine::template ScanVertex<AppendOpt::Temp>(
+        graph, place_label_id, std::move(filter2));
 
     auto edge_expand_opt_x0 = gs::make_edge_expandv_opt(
         gs::Direction::In, is_locatedIn_label_id,
         std::array<label_id_t, 2>{post_label_id, comment_label_id});
     // comment and post
-    auto ctx_x1 = Engine::template EdgeExpandVMultiLabel<-1, -1>(
-        time_stamp, graph, std::move(ctx_x0), std::move(edge_expand_opt_x0));
+    auto ctx_x1 = Engine::template EdgeExpandVMultiLabel<AppendOpt::Temp,
+                                                         INPUT_COL_ID(-1)>(
+        graph, std::move(ctx_x0), std::move(edge_expand_opt_x0));
     // filter
-    gs::NamedProperty<int64_t> creation_date_propx("creationDate");
-    IC3Expression3 expr3x(start_date, end_date, std::move(creation_date_propx));
+
+    auto filter3 =
+        gs::make_filter(IC3Expression3(start_date, end_date),
+                        gs::PropertySelector<int64_t>("creationDate"));
     auto get_v_optx = gs::make_getv_opt(
         gs::VOpt::Itself,
         std::array<label_id_t, 2>{post_label_id, comment_label_id},
-        std::move(expr3x));
-    auto ctx_x2 = Engine::template GetV<0, -1>(
-        time_stamp, graph, std::move(ctx_x1), std::move(get_v_optx));
+        std::move(filter3));
+    auto ctx_x2 = Engine::template GetV<AppendOpt::Persist, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx_x1), std::move(get_v_optx));
 
     auto edge_expand_opt_x1 = gs::make_edge_expandv_opt(
         gs::Direction::Out, has_creator_label_id, person_label_id);
     // person
-    auto ctx_x3 = Engine::template EdgeExpandV<-1, 0>(
-        time_stamp, graph, std::move(ctx_x2), std::move(edge_expand_opt_x1));
+    auto ctx_x3 =
+        Engine::template EdgeExpandV<AppendOpt::Temp, INPUT_COL_ID(0)>(
+            graph, std::move(ctx_x2), std::move(edge_expand_opt_x1));
 
     // group by person
-    gs::AliasTagProp<-1, 0, grape::EmptyType> group_keyx(
-        gs::PropNameArray<grape::EmptyType>{"None"});
-    auto aggx =
-        gs::make_aggregate_prop<1, gs::AggFunc::COUNT, grape::EmptyType>(
-            gs::PropNameArray<grape::EmptyType>{"None"},
-            std::integer_sequence<int32_t, 0>{});
-    auto group_optx =
-        gs::make_group_opt(std::move(group_keyx), std::move(aggx));
-    auto ctx_x4 = Engine::GroupBy(time_stamp, graph, std::move(ctx_x3),
-                                  std::move(group_optx));
+
+    auto ctx_x4 = Engine::GroupBy(
+        graph, std::move(ctx_x3),
+        std::tuple{GroupKey<INPUT_COL_ID(-1), grape::EmptyType>()},
+        std::tuple{gs::make_aggregate_prop<gs::AggFunc::COUNT>(
+            std::tuple{gs::PropertySelector<grape::EmptyType>()},
+            std::integer_sequence<int32_t, 0>{})});
     // ctx_x4: person, counts
 
-    IC3Expre0 expr_scan1(country_y_name,
-                         gs::NamedProperty<std::string_view>("name"));
-    auto ctx_y0 = Engine::template ScanVertex<-1>(
-        time_stamp, graph, place_label_id, std::move(expr_scan1));
+    auto filter4 =
+        gs::make_filter(IC3Expre0(country_y_name),
+                        gs::PropertySelector<std::string_view>("name"));
+    auto ctx_y0 = Engine::template ScanVertex<AppendOpt::Temp>(
+        graph, place_label_id, std::move(filter4));
 
     auto edge_expand_opt_y0 = gs::make_edge_expandv_opt(
         gs::Direction::In, is_locatedIn_label_id,
         std::array<label_id_t, 2>{post_label_id, comment_label_id});
     // comment and post
-    auto ctx_y1 = Engine::template EdgeExpandVMultiLabel<-1, -1>(
-        time_stamp, graph, std::move(ctx_y0), std::move(edge_expand_opt_y0));
-    // filter
-    gs::NamedProperty<int64_t> creation_date_propy("creationDate");
-    IC3Expression3 expr3y(start_date, end_date, std::move(creation_date_propy));
+
+    auto ctx_y1 = Engine::template EdgeExpandVMultiLabel<AppendOpt::Temp,
+                                                         INPUT_COL_ID(-1)>(
+        graph, std::move(ctx_y0), std::move(edge_expand_opt_y0));
+
+    auto filter5 =
+        gs::make_filter(IC3Expression3(start_date, end_date),
+                        gs::PropertySelector<int64_t>("creationDate"));
     auto get_v_opty = gs::make_getv_opt(
         gs::VOpt::Itself,
         std::array<label_id_t, 2>{post_label_id, comment_label_id},
-        std::move(expr3y));
-    auto ctx_y2 = Engine::template GetV<0, -1>(
-        time_stamp, graph, std::move(ctx_y1), std::move(get_v_opty));
+        std::move(filter5));
+    auto ctx_y2 = Engine::template GetV<AppendOpt::Persist, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx_y1), std::move(get_v_opty));
 
     auto edge_expand_opt_y1 = gs::make_edge_expandv_opt(
         gs::Direction::Out, has_creator_label_id, person_label_id);
     // person
-    auto ctx_y3 = Engine::template EdgeExpandV<-1, 0>(
-        time_stamp, graph, std::move(ctx_y2), std::move(edge_expand_opt_y1));
+    auto ctx_y3 =
+        Engine::template EdgeExpandV<AppendOpt::Temp, INPUT_COL_ID(0)>(
+            graph, std::move(ctx_y2), std::move(edge_expand_opt_y1));
 
     // group by person
-    gs::AliasTagProp<-1, 0, grape::EmptyType> group_keyy(
-        gs::PropNameArray<grape::EmptyType>{"None"});
-    auto aggy =
-        gs::make_aggregate_prop<1, gs::AggFunc::COUNT, grape::EmptyType>(
-            gs::PropNameArray<grape::EmptyType>{"None"},
-            std::integer_sequence<int32_t, 0>{});
-    auto group_opty =
-        gs::make_group_opt(std::move(group_keyy), std::move(aggy));
-    auto ctx_y4 = Engine::GroupBy(time_stamp, graph, std::move(ctx_y3),
-                                  std::move(group_opty));
+
+    auto ctx_y4 = Engine::GroupBy(
+        graph, std::move(ctx_y3),
+        std::tuple{GroupKey<-1, grape::EmptyType>(
+            PropertySelector<grape::EmptyType>())},
+        std::tuple{gs::make_aggregate_prop<gs::AggFunc::COUNT>(
+            std::tuple{gs::PropertySelector<grape::EmptyType>()},
+            std::integer_sequence<int32_t, 0>{})});
 
     auto ctx_joined = Engine::template Join<0, 0, JoinKind::InnerJoin>(
         std::move(ctx_x4), std::move(ctx_y4));
@@ -298,30 +279,30 @@ class IC3 {
       LOG(INFO) << "eles: " << gs::to_string(eles);
     }
 
-    gs::AliasTagProp<0, 0, gs::oid_t> prop_col0({"id"});
-    gs::AliasTagProp<0, 1, std::string_view> prop_col1({"firstName"});
-    gs::AliasTagProp<0, 2, std::string_view> prop_col2({"lastName"});
-    gs::ProjectSelf<1, 3> prop_col3;
-    gs::ProjectSelf<2, 4> prop_col4;
-    gs::InnerIdProperty<1> x_count;
-    gs::InnerIdProperty<2> y_count;
-
-    IC3Expression4 expr4(std::move(x_count), std::move(y_count));
-    auto prop_col5 = make_project_expr<5, size_t>(std::move(expr4));
-
-    auto proj_opt10 = gs::make_project_opt(
-        std::move(prop_col0), std::move(prop_col1), std::move(prop_col2),
-        std::move(prop_col3), std::move(prop_col4), std::move(prop_col5));
     auto ctx10 = Engine::template Project<false>(
-        time_stamp, graph, std::move(ctx_joined2), std::move(proj_opt10));
+        graph, std::move(ctx_joined2),
+        std::tuple{
+            gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                gs::PropertySelector<gs::oid_t>("id")),
+            gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                gs::PropertySelector<std::string_view>("firstName")),
+            gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                gs::PropertySelector<std::string_view>("lastName")),
+            gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
+                gs::PropertySelector<grape::EmptyType>("")),
+            gs::make_mapper_with_variable<INPUT_COL_ID(2)>(
+                gs::PropertySelector<grape::EmptyType>("")),
+            gs::make_mapper_with_expr<INPUT_COL_ID(1), INPUT_COL_ID(2)>(
+                IC3Expression4(), gs::PropertySelector<grape::EmptyType>(""),
+                gs::PropertySelector<grape::EmptyType>(""))});
 
-    auto sort_opt5 = gs::make_sort_opt(
-        gs::Range(0, 20),
-        gs::OrderingPropPair<gs::SortOrder::DESC, 5, size_t>("None"),
-        gs::OrderingPropPair<gs::SortOrder::ASC, 3, oid_t>("None"));
-
-    auto ctx6 =
-        Engine::Sort(time_stamp, graph, std::move(ctx10), std::move(sort_opt5));
+    auto ctx6 = Engine::Sort(
+        graph, std::move(ctx10), gs::Range(0, 20),
+        std::tuple{
+            gs::OrderingPropPair<gs::SortOrder::DESC, INPUT_COL_ID(5), size_t>(
+                "None"),
+            gs::OrderingPropPair<gs::SortOrder::ASC, INPUT_COL_ID(3), oid_t>(
+                "None")});
     for (auto iter : ctx6) {
       auto eles = iter.GetAllElement();
       output.put_long(std::get<0>(eles));

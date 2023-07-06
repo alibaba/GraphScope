@@ -150,6 +150,26 @@ class InnerIdGetter {
   const std::vector<VID_T>& vids_;
 };
 
+template <int tag_id, typename VID_T, typename... DATA_T>
+class InnerIdDataGetter {
+ public:
+  InnerIdDataGetter(const std::vector<VID_T>& vids,
+                    const std::vector<std::tuple<DATA_T...>>& data)
+      : vids_(vids), data_(data) {}
+
+  std::tuple<VID_T, std::tuple<DATA_T...>> get_view(
+      const std::tuple<size_t, VID_T>& ele) const {
+    auto vid = std::get<1>(ele);
+    auto idx = std::get<0>(ele);
+    CHECK(vid == vids_[idx]);
+    return std::make_tuple(vid, std::get<0>(data_[idx]));
+  }
+
+ private:
+  const std::vector<VID_T>& vids_;
+  const std::vector<std::tuple<DATA_T...>>& data_;
+};
+
 template <int tag_id, typename VID_T, typename... EDATA_T>
 class EdgeSetInnerIdGetter {
  public:
@@ -430,6 +450,41 @@ static auto get_dist_prop_getter(
   }
 }
 
+// getting dist prop for keyed row vertex set
+template <int tag_id, size_t Is = 0, typename LabelT, typename KEY_T,
+          typename VID_T, typename... T>
+static auto get_dist_prop_getter(
+    const KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, T...>& set,
+    const std::array<std::string, sizeof...(T)>& prop_names) {
+  if (prop_names[Is] == "dist" || prop_names[Is] == "Dist") {
+    std::vector<Dist> dists;
+    auto& data_vec = set.GetDataVec();
+    dists.reserve(set.Size());
+    for (auto i = 0; i < data_vec.size(); ++i) {
+      dists.emplace_back(Dist(std::get<Is>(data_vec[i])));
+    }
+    return DistGetter<tag_id,
+                      typename KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T,
+                                                     T...>::index_ele_tuple_t>(
+        std::move(dists));
+  }
+  if constexpr (Is + 1 >= sizeof...(T)) {
+    LOG(WARNING) << "Property dist not found, using default 0";
+    std::vector<Dist> dists;
+    auto set_size = set.Size();
+    dists.reserve(set_size);
+    for (auto i = 0; i < set_size; ++i) {
+      dists.emplace_back(0);
+    }
+    return DistGetter<tag_id,
+                      typename KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T,
+                                                     T...>::index_ele_tuple_t>(
+        std::move(dists));
+  } else {
+    return get_dist_prop_getter<tag_id, Is + 1>(set, prop_names);
+  }
+}
+
 // get for common properties for rwo_vertex_set
 template <
     int tag_id, typename prop_t, typename GRAPH_INTERFACE, typename LabelT,
@@ -465,6 +520,19 @@ static auto create_prop_getter_impl(
   return get_dist_prop_getter<tag_id>(set, set.GetPropNames());
 }
 
+// get dist property for keyed vertex set
+template <
+    int tag_id, typename prop_t, typename GRAPH_INTERFACE, typename LabelT,
+    typename KEY_T, typename VID_T, typename... T,
+    typename std::enable_if<std::is_same_v<prop_t, Dist>>::type* = nullptr>
+static auto create_prop_getter_impl(
+    const KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, T...>& set,
+    const GRAPH_INTERFACE& graph, const std::string& prop_name) {
+  LOG(INFO) << "Getting dist prop getter";
+  CHECK(prop_name == "dist" || prop_name == "Dist");
+  return get_dist_prop_getter<tag_id>(set, set.GetPropNames());
+}
+
 // get for common properties for two_label_vertex_set
 template <int tag_id, typename prop_t, typename GRAPH_INTERFACE, typename VID_T,
           typename LabelT, typename... T>
@@ -488,8 +556,10 @@ static auto create_prop_getter_impl(
 }
 
 // get for common properties for keyed_row_vertex_set
-template <int tag_id, typename prop_t, typename GRAPH_INTERFACE,
-          typename LabelT, typename KEY_T, typename VID_T, typename... T>
+template <
+    int tag_id, typename prop_t, typename GRAPH_INTERFACE, typename LabelT,
+    typename KEY_T, typename VID_T, typename... T,
+    typename std::enable_if<!std::is_same_v<prop_t, Dist>>::type* = nullptr>
 static auto create_prop_getter_impl(
     const KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, T...>& set,
     const GRAPH_INTERFACE& graph, const std::string& prop_name) {
@@ -532,11 +602,11 @@ static auto create_prop_getter_impl(
 template <int tag_id, typename prop_t, typename GI, typename T>
 static auto create_prop_getter_impl(const Collection<T>& set, const GI& graph,
                                     const std::string& prop_name) {
-  CHECK(prop_name == "None" || prop_name == "none");
+  CHECK(prop_name == "None" || prop_name == "none" || prop_name == "");
   return CollectionPropGetter<tag_id, T>();
 }
 
-// create for inner id getter.
+// create inner id getter for row vertex set with props
 template <typename GRAPH_INTERFACE, typename LabelT, typename... SET_Ts,
           int tag_id>
 static auto create_prop_getter_from_prop_desc(
@@ -544,10 +614,19 @@ static auto create_prop_getter_from_prop_desc(
     const RowVertexSetImpl<LabelT, typename GRAPH_INTERFACE::vertex_id_t,
                            SET_Ts...>& set,
     const InnerIdProperty<tag_id>& inner_id_prop) {
+  return InnerIdDataGetter<tag_id, typename GRAPH_INTERFACE::vertex_id_t,
+                           SET_Ts...>(set.GetVertices(), set.GetDataVec());
+}
+// create inner id getter for keyed row vertex set without props
+template <typename GRAPH_INTERFACE, typename LabelT, int tag_id>
+static auto create_prop_getter_from_prop_desc(
+    const GRAPH_INTERFACE& graph,
+    const RowVertexSetImpl<LabelT, typename GRAPH_INTERFACE::vertex_id_t,
+                           grape::EmptyType>& set,
+    const InnerIdProperty<tag_id>& inner_id_prop) {
   return InnerIdGetter<tag_id, typename GRAPH_INTERFACE::vertex_id_t>(
       set.GetVertices());
 }
-
 // create inner_id getter for two label vertex set
 template <typename GRAPH_INTERFACE, typename LabelT, typename... SET_Ts,
           int tag_id>

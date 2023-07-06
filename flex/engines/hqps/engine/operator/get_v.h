@@ -216,8 +216,7 @@ class GetVertex {
       GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
     auto v_opt = get_v_opt.v_opt_;
     auto v_label = get_v_opt.v_labels_[0];
-    auto expr = get_v_opt.expr_;
-    auto props = get_v_opt.props_;
+    auto expr = get_v_opt.filter_.expr_;
     return set.GetVertices(get_v_opt.v_opt_, get_v_opt.v_labels_, expr);
   }
 
@@ -232,7 +231,6 @@ class GetVertex {
       GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
     auto v_opt = get_v_opt.v_opt_;
     auto expr = get_v_opt.expr_;
-    auto props = get_v_opt.props_;
     return set.GetVertices(get_v_opt.v_opt_, get_v_opt.v_labels_, expr);
   }
 

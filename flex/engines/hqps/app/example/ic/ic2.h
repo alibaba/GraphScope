@@ -8,6 +8,7 @@ namespace gs {
 
 struct IC2Expression1 {
  public:
+  using result_t = bool;
   IC2Expression1(oid_t oid) : oid_(oid) {}
 
   inline bool operator()(oid_t data) const { return oid_ == data; }
@@ -18,6 +19,7 @@ struct IC2Expression1 {
 
 class IC2Expression2 {
  public:
+  using result_t = bool;
   IC2Expression2(int64_t maxDate) : maxDate_(maxDate) {}
 
   inline bool operator()(int64_t data) const {

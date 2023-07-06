@@ -15,6 +15,7 @@ namespace gs {
 // tagName == ''
 class IC6Expression2 {
  public:
+  using result_t = bool;
   IC6Expression2(std::string_view param1) : param1_(param1) {}
 
   bool operator()(std::string_view name) const { return name == param1_; }
@@ -25,6 +26,7 @@ class IC6Expression2 {
 
 class IC6Expression3 {
  public:
+  using result_t = bool;
   IC6Expression3(std::string_view param1) : param1_(param1) {}
 
   bool operator()(std::string_view name) { return name != param1_; }
@@ -34,7 +36,7 @@ class IC6Expression3 {
 };
 
 template <typename GRAPH_INTERFACE>
-class IC6 {
+class QueryIC6 {
   using oid_t = typename GRAPH_INTERFACE::outer_vertex_id_t;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 

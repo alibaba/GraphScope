@@ -49,6 +49,7 @@ class CollectionBuilder {
   static constexpr bool is_general_edge_set_builder = false;
   static constexpr bool is_two_label_set_builder = false;
   static constexpr bool is_collection_builder = true;
+  using result_t = Collection<T>;
 
   CollectionBuilder() {}
 
@@ -80,7 +81,10 @@ class KeyedCollectionBuilder {
   static constexpr bool is_general_edge_set_builder = false;
   static constexpr bool is_two_label_set_builder = false;
   static constexpr bool is_collection_builder = true;
+  using result_t = Collection<T>;
   KeyedCollectionBuilder() {}
+
+  KeyedCollectionBuilder(const Collection<T>& old) { vec_.reserve(old.Size()); }
 
   template <typename LabelT, typename VID_T, typename... TS>
   KeyedCollectionBuilder(
@@ -107,6 +111,10 @@ class KeyedCollectionBuilder {
     } else {
       return map_[t];
     }
+  }
+
+  size_t Insert(const std::tuple<size_t, T>& t) {
+    return insert(std::get<1>(t));
   }
 
   Collection<T> Build() {
@@ -302,7 +310,7 @@ class Collection {
   // project my self.
   template <int tag_id, int Fs,
             typename std::enable_if<Fs == -1>::type* = nullptr>
-  self_type_t ProjectWithRepeatArray(std::vector<size_t>&& repeat_array,
+  self_type_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
                                      KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<T> res;
     for (auto i = 0; i < repeat_array.size(); ++i) {
@@ -592,7 +600,8 @@ class FirstBuilder<GI, Collection<C_T>, grape::EmptyType, tag_id> {
   FirstBuilder(const Collection<C_T>& set, const GI& graph,
                PropNameArray<grape::EmptyType> prop_names) {
     CHECK(prop_names.size() == 1);
-    CHECK(prop_names[0] == "none" || prop_names[0] == "None");
+    CHECK(prop_names[0] == "none" || prop_names[0] == "None" ||
+          prop_names[0] == "");
   }
 
   template <typename IND_ELE_T, typename DATA_ELE_T>
