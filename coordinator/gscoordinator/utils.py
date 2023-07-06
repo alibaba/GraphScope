@@ -1996,8 +1996,8 @@ def check_argument(condition, message=None):
         raise ValueError(f"Check failed: {message}")
 
 
-def check_gremlin_server_ready(endpoint):
-    def _check_task(endpoint):
+def check_server_ready(endpoint, server="gremlin"):
+    def _check_gremlin_task(endpoint):
         from gremlin_python.driver.client import Client
 
         if "MY_POD_NAME" in os.environ:
@@ -2005,15 +2005,39 @@ def check_gremlin_server_ready(endpoint):
             if endpoint == "localhost" or endpoint == "127.0.0.1":
                 # now, used in macOS with docker-desktop kubernetes cluster,
                 # which external ip is 'localhost' when service type is 'LoadBalancer'
+                logger.info("In kubernetes env, gremlin server is ready.")
                 return True
 
         try:
             client = Client(f"ws://{endpoint}/gremlin", "g")
             # May throw
             client.submit("g.V().limit(1)").all().result()
+            logger.info("Gremlin server is ready.")
         finally:
             try:
                 client.close()
+            except:  # noqa: E722
+                pass
+        return True
+
+    def _check_cypher_task(endpoint):
+        from neo4j import GraphDatabase
+
+        if "MY_POD_NAME" in os.environ:
+            # inner kubernetes env
+            if endpoint == "localhost" or endpoint == "127.0.0.1":
+                logger.info("In kubernetes env, cypher server is ready.")
+                return True
+
+        try:
+            logger.debug("Try to connect to cypher server.")
+            driver = GraphDatabase.driver(f"neo4j://{endpoint}", auth=("", ""))
+            # May throw
+            driver.verify_connectivity()
+            logger.info("Checked connectivity to cypher server.")
+        finally:
+            try:
+                driver.close()
             except:  # noqa: E722
                 pass
         return True
@@ -2022,7 +2046,14 @@ def check_gremlin_server_ready(endpoint):
 
     begin_time = time.time()
     while True:
-        t = executor.submit(_check_task, endpoint)
+        if server == "gremlin":
+            t = executor.submit(_check_gremlin_task, endpoint)
+        elif server == "cypher":
+            t = executor.submit(_check_cypher_task, endpoint)
+        else:
+            raise ValueError(
+                f"Unsupported server type: {server} other than 'gremlin' or 'cypher'"
+            )
         try:
             _ = t.result(timeout=30)
         except Exception as e:
@@ -2034,4 +2065,6 @@ def check_gremlin_server_ready(endpoint):
         time.sleep(3)
         if time.time() - begin_time > INTERACTIVE_INSTANCE_TIMEOUT_SECONDS:
             executor.shutdown(wait=False)
-            raise TimeoutError(f"Gremlin check query failed: {error_message}")
+            raise TimeoutError(
+                f"{server.capitalize()} check query failed: {error_message}"
+            )
