@@ -636,12 +636,13 @@ class KubernetesClusterLauncher(AbstractLauncher):
             container,
             str(self._interactive_port),  # executor port
             str(self._interactive_port + 1),  # executor rpc port
-            str(self._interactive_port + 2),  # frontend port
+            str(self._interactive_port + 2),  # frontend gremlin port
+            str(self._interactive_port + 3),  # frontend cypher port
             self._coordinator_name,
             engine_selector,
             params,
         ]
-        self._interactive_port += 3
+        self._interactive_port += 4
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
         process = subprocess.Popen(
             cmd,
@@ -947,7 +948,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
     def _create_frontend_service(self):
         logger.info("Creating frontend service...")
-        service = self._engine_cluster.get_interactive_frontend_service(8233)
+        service = self._engine_cluster.get_interactive_frontend_service(8233, 7687)
         service.metadata.owner_references = self._owner_references
         response = self._core_api.create_namespaced_service(self._namespace, service)
         self._resource_object.append(response)

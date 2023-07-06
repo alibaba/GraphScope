@@ -64,7 +64,7 @@ from gscoordinator.object_manager import LearningInstanceManager
 from gscoordinator.object_manager import ObjectManager
 from gscoordinator.op_executor import OperationExecutor
 from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
-from gscoordinator.utils import check_gremlin_server_ready
+from gscoordinator.utils import check_server_ready
 from gscoordinator.utils import create_single_op_dag
 from gscoordinator.utils import str2bool
 from gscoordinator.version import __version__
@@ -441,10 +441,16 @@ class CoordinatorServiceServicer(
             return ""
 
         # frontend endpoint pattern
-        FRONTEND_PATTERN = re.compile("(?<=FRONTEND_ENDPOINT:).*$")
+        FRONTEND_GREMLIN_PATTERN = re.compile("(?<=FRONTEND_GREMLIN_ENDPOINT:).*$")
+        FRONTEND_CYPHER_PATTERN = re.compile("(?<=FRONTEND_CYPHER_ENDPOINT:).*$")
         # frontend external endpoint, for clients that are outside of cluster to connect
         # only available in kubernetes mode, exposed by NodePort or LoadBalancer
-        FRONTEND_EXTERNAL_PATTERN = re.compile("(?<=FRONTEND_EXTERNAL_ENDPOINT:).*$")
+        FRONTEND_EXTERNAL_GREMLIN_PATTERN = re.compile(
+            "(?<=FRONTEND_EXTERNAL_GREMLIN_ENDPOINT:).*$"
+        )
+        FRONTEND_EXTERNAL_CYPHER_PATTERN = re.compile(
+            "(?<=FRONTEND_EXTERNAL_CYPHER_ENDPOINT:).*$"
+        )
 
         # create instance
         object_id = request.object_id
@@ -464,13 +470,22 @@ class CoordinatorServiceServicer(
             return_code = proc.poll()
             if return_code != 0:
                 raise RuntimeError(f"Error code: {return_code}, message {outs}")
-            # match frontend endpoint and check for ready
-            endpoint = _match_frontend_endpoint(FRONTEND_PATTERN, outs)
+            # match frontend endpoints and check for ready
+            gremlin_endpoint = _match_frontend_endpoint(FRONTEND_GREMLIN_PATTERN, outs)
+            cypher_endpoint = _match_frontend_endpoint(FRONTEND_CYPHER_PATTERN, outs)
+            logger.debug("Got endpoints: %s %s", gremlin_endpoint, cypher_endpoint)
             # coordinator use internal endpoint
-            gie_manager.set_endpoint(endpoint)
-            if check_gremlin_server_ready(endpoint):  # throws TimeoutError
+            gie_manager.set_endpoint(gremlin_endpoint)
+            if check_server_ready(
+                gremlin_endpoint, server="gremlin"
+            ) and check_server_ready(
+                cypher_endpoint, server="cypher"
+            ):  # throws TimeoutError
                 logger.info(
-                    "Built interactive frontend %s for graph %ld", endpoint, object_id
+                    "Built interactive frontend gremlin: %s & cypher: %s for graph %ld",
+                    gremlin_endpoint,
+                    cypher_endpoint,
+                    object_id,
                 )
         except Exception as e:
             context.set_code(grpc.StatusCode.ABORTED)
@@ -480,11 +495,25 @@ class CoordinatorServiceServicer(
             self._launcher.close_interactive_instance(object_id)
             self._object_manager.pop(object_id)
             return message_pb2.CreateInteractiveInstanceResponse()
-        external_endpoint = _match_frontend_endpoint(FRONTEND_EXTERNAL_PATTERN, outs)
+        external_gremlin_endpoint = _match_frontend_endpoint(
+            FRONTEND_EXTERNAL_GREMLIN_PATTERN, outs
+        )
+        external_cypher_endpoint = _match_frontend_endpoint(
+            FRONTEND_EXTERNAL_CYPHER_PATTERN, outs
+        )
+        logger.debug(
+            "Got external endpoints: %s %s",
+            external_gremlin_endpoint,
+            external_cypher_endpoint,
+        )
+
         # client use external endpoint (k8s mode), or internal endpoint (standalone mode)
-        endpoint = external_endpoint or endpoint
+        gremlin_endpoint = external_gremlin_endpoint or gremlin_endpoint
+        cypher_endpoint = external_cypher_endpoint or cypher_endpoint
         return message_pb2.CreateInteractiveInstanceResponse(
-            gremlin_endpoint=endpoint, object_id=object_id
+            gremlin_endpoint=gremlin_endpoint,
+            cypher_endpoint=cypher_endpoint,
+            object_id=object_id,
         )
 
     def CreateLearningInstance(self, request, context):

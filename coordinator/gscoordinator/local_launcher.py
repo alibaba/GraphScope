@@ -232,12 +232,13 @@ class LocalLauncher(AbstractLauncher):
             str(num_workers),  # server size
             str(self._interactive_port),  # executor port
             str(self._interactive_port + 1),  # executor rpc port
-            str(self._interactive_port + 2 * num_workers),  # frontend port
+            str(self._interactive_port + 2 * num_workers),  # frontend gremlin port
+            str(self._interactive_port + 2 * num_workers + 1),  # frontend cypher port
             self.vineyard_socket,
             params,
         ]
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
-        self._interactive_port += 3
+        self._interactive_port += 2 * num_workers + 2
         process = subprocess.Popen(
             cmd,
             start_new_session=True,
