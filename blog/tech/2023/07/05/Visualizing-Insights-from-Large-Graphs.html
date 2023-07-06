@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Visualizing Insights from Large Graphs: A Comprehensive Guide to Using G6VP and GraphScope</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2023-07-05">05 Jul 2023</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2023-07-05">05 Jul 2023</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Visualizing Insights from Large Graphs: A Comprehensive Guide to Using G6VP and GraphScope</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2023-07-05-g6vp.jpg" alt="G6VP" />
+GraphScope now supports serving as the backend engine for <a href="https://insight.antv.antgroup.com/">G6VP</a>, an open-sourced graph visualization and analysis platform. With G6VP and GraphScope, users can import graph data and analyze graph data easily. This article mainly introduces how to deploy G6VP and GraphScope and perform data analysis.</p>
+
+<h3 id="what-is-g6vp">What is G6VP</h3>
+
+<p>G6VP is a graph visualization and analysis platform developed by AntV Graph Visualization team of Ant Group. Users can connect their own data in G6VP, including local file uploads or various graph databases, and assemble the rich graph visualization and analysis assets provided by G6VP to perform data analysis, or design and develop their own graph visualization and analysis products, embedding them into their own systems.
+<img src="/blog/assets/images/2023-07-05-g6vp-01.jpeg" alt="" /></p>
+
+<h3 id="deployment-of-g6vp-and-graphscope">Deployment of G6VP and GraphScope</h3>
+
+<p>Currently, G6VP supports GraphScope as a backend service. As G6VP does not have an available online server, the integration and deployment with GraphScope need to be based on Docker images. Currently, G6VP only supports the persistent graph storage (Groot) and graph interactive engine (GIE) in GraphScope. In the future, the docking of other storage and computation engines in GraphScope will be continuously completed, providing an efficient one-stop solution.</p>
+
+<h4 id="image-deployment">Image Deployment</h4>
+
+<p>In this step, you need to deploy the GraphScope service and G6VP HTTP service through docker images. It should be noted that the machine networks where the two services are located can be connected.</p>
+
+<p>We first need to pull and start the image:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:httpserver
+<span class="c"># Start the Image, the port should be mapped in this procedure to ensure the availability of the service</span>
+<span class="c"># 12312 is the Gremlin's query port </span>
+<span class="c"># 9527 is the server port</span>
+docker run <span class="nt">-d</span> <span class="nt">-p</span> 12312:12312 <span class="nt">-p</span> 9527:9527 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:httpserver
+</code></pre></div></div>
+
+<p>After the GraphScope persistent storage (Groot) container is successfully started, the default dataset will be loaded. If you want to import your own dataset, please refer to the <a href="https://graphscope.io/docs/latest/storage_engine/groot">Groot documentation</a>. You can execute the following command to check whether the container is running normally:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Note that when the server is running the container, replace the localhost address with the server IP</span>
+curl http://localhost:9527/api/v1/graph
+</code></pre></div></div>
+
+<p>After successful deployment, the address of the GraphScope engine is <code class="language-plaintext highlighter-rouge">http://localhost:9527</code>, which will be used in the “Access GraphScope Service in G6VP” step later.</p>
+
+<h4 id="start-g6vp-http-service">Start G6VP HTTP Service</h4>
+
+<p>There are two ways to start G6VP HTTP service:</p>
+
+<p><strong>Start directly using the binary installation package</strong><br />
+You need to download <a href="https://github.com/antvis/G6VP/blob/master/release/gi-httpservice.tgz">gi-httpservices.tgz file</a>, unzip gi-httpservice.tgz and enter the file folder to start the service. Before doing that, make sure the NodeJS environment is available on your computer.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>gi-httpservice
+<span class="c"># make sure port 7001 is available</span>
+lsof <span class="nt">-i</span>:7001
+npm run start
+</code></pre></div></div>
+
+<p><strong>Install and start from source code</strong></p>
+
+<p>You need to clone the source code of G6VP from GitHub, enter the folder <code class="language-plaintext highlighter-rouge">G6VP/packages/gi-httpservice</code>, install the dependencies, and start the service:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone https://github.com/antvis/G6VP.git
+<span class="nb">cd </span>G6VP/packages/gi-httpservice
+npm <span class="nb">install
+</span>npm run dev
+</code></pre></div></div>
+
+<p>Now, G6VP http service is running, visit <code class="language-plaintext highlighter-rouge">http://localhost:7001/</code> (7001 is the default port), you will see the tips in the console of browser:</p>
+
+<p><img src="/blog/assets/images/2023-07-05-g6vp-02.jpeg" alt="" /></p>
+
+<h3 id="access-graphscope-service-in-g6vp">Access GraphScope Service in G6VP</h3>
+
+<p>To connect GraphScope service, you need to fill the address of services from previous steps：</p>
+
+<ul>
+  <li>Platform address: The address of G6VP HTTP service, it was <code class="language-plaintext highlighter-rouge">http://localhost:7001</code> from the previous step</li>
+  <li>Engine address: The address of GS service, it was <code class="language-plaintext highlighter-rouge">http://localhost:9527</code> from the previous step</li>
+</ul>
+
+<p><img src="/blog/assets/images/2023-07-05-g6vp-03.jpeg" alt="" /></p>
+
+<p>Click “Connect” button and you will see the tip if it is success, and the subgraph select panel will be shown at below:</p>
+
+<p><img src="/blog/assets/images/2023-07-05-g6vp-04.jpeg" alt="" /></p>
+
+<p>Next you can select a subgraph from “Select Subgraph”. This select dropdown has listed all the graphs in the GraphScope service you started. If there is no option, please checkout if the data importing step is failed. When you click “Analyze”, the page will jump to the list of the datasets, and you will find the dataset you just created:</p>
+
+<p><img src="/blog/assets/images/2023-07-05-g6vp-05.jpeg" alt="" /></p>
+
+<p>Now you can click the blue computer icon on the right of the dataset record in the list to create a workbook with the dataset. You will see the page below and the dataset field is already filled and please name the workbook and then click “Create Canvas”:</p>
+
+<p><img src="/blog/assets/images/2023-07-05-g6vp-06.jpeg" alt="" /></p>
+
+<p>After that, a workbook is successfully created and you will see an empty canvas with configuration panel like this:</p>
+
+<p><img src="/blog/assets/images/2023-07-05-g6vp-07.jpeg" alt="" /></p>
+
+<h3 id="analyze-the-data">Analyze the Data</h3>
+
+<p>After the above steps, you have completed the connection to GraphScope and the creation of data and workbook. Then, you can perform data analysis in the newly created workbook. Now you can configure Gremlin query asset in the workbook, enter the Gremlin query statement, such as <code class="language-plaintext highlighter-rouge">g.V().limit(10)</code> in the figure below, to successfully query the data:</p>
+
+<p><img src="/blog/assets/images/2023-07-05-g6vp-08.jpeg" alt="" /></p>
+
+<p>If you are not satisfy with the nodes and edges’ styles, configuring it on the style panel on the left:</p>
+
+<p><img src="/blog/assets/images/2023-07-05-g6vp-09.jpeg" alt="" /></p>
+
+<p>Select one or brush multiple nodes and right click to expand the neighbors:</p>
+
+<p><img src="/blog/assets/images/2023-07-05-g6vp-10.jpeg" alt="" /></p>
+
+<p>You can configure the neighbor querying asset on the left if it does not meet the requirement:</p>
+
+<p><img src="/blog/assets/images/2023-07-05-g6vp-11.jpeg" alt="" /></p>
+
+<p>In addition, you can use the filter to analyze the statistical info, and there will be an intelligent recommend:</p>
+
+<p><img src="/blog/assets/images/2023-07-05-g6vp-12.jpeg" alt="" /></p>
+
+<p>The introduction above is only about the basic functions. Plenty of fancy graph analysis assets will be found at the assets center.</p>
+
+<p>Last but not least, do not forget to save your workbook after the above operations. Next time you visit G6VP, you will found your workbook at the workbook list. Don’t be worry, the datasets info, workbooks are all cached at your computer. G6VP will not record any user information!</p>
+
+<p>If you want to embed the workbook into your system, export it at the right top “Open”. There will be 3 ways to export:</p>
+
+<p><img src="/blog/assets/images/2023-07-05-g6vp-13.jpeg" alt="" /></p>
+
+<p>More usage and docs can be referred to <a href="https://www.yuque.com/antv/gi">G6VP documentation</a> and <a href="http://github.com/antvis/g6vp">G6VP GitHub repo</a>.</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Visualizing Insights from Large Graphs: A Comprehensive Guide to Using G6VP and GraphScope&amp;url=https://graphscope.io/tech/2023/07/05/Visualizing-Insights-from-Large-Graphs.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2023/07/05/Visualizing-Insights-from-Large-Graphs.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2023/07/05/Visualizing-Insights-from-Large-Graphs.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2023 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+    
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+</body>
+</html>
