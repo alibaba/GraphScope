@@ -223,7 +223,7 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/install_on_local.html">Install GraphScope on Local</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html">Deploy on K8s Cluster</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_with_existing_vineyard_cluster.html">Depoly with Existing Vineyard Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_with_existing_vineyard_cluster.html">Deploy with Existing Vineyard Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/persistent_storage_of_graphs_on_k8s.html">Persistent storage of graphs on the Kubernetes cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment/install_in_offline_env.html">Install GraphScope in offline environment</a></li>
@@ -252,12 +252,20 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/guide_and_examples.html">Guide and Examples</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/tinkerpop_gremlin.html">GIE for Gremlin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/guide_and_examples.html">Guide and Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/faq.html">FAQs for GIE Gremlin Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/cypher_sdk.html">GIE for Cypher</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/supported_cypher.html">Cypher Support</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/design_of_gie.html">Design of GIE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/dev_and_test.html">Dev and Test</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../interactive_engine/faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul>
@@ -278,7 +286,7 @@ MathJax = {
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Utilities</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/how_to_find_logs.html">How to Find logs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gsctl</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utilities/error_codes.html">Error Codes</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Development</span></p>
@@ -290,8 +298,8 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current">
-<li class="toctree-l1 current has-children"><a class="reference internal" href="python_index.html">Python API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2 has-children"><a class="reference internal" href="session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="python_index.html">Python API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -303,13 +311,13 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -350,23 +358,21 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.add_column.html">graphscope.framework.dag_utils.add_column</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.graph_to_numpy.html">graphscope.framework.dag_utils.graph_to_numpy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.graph_to_dataframe.html">graphscope.framework.dag_utils.graph_to_dataframe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.gremlin_query.html">graphscope.framework.dag_utils.gremlin_query</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -401,7 +407,7 @@ MathJax = {
 <li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -512,6 +518,7 @@ MathJax = {
 </li>
 <li class="toctree-l1"><a class="reference internal" href="analytical_engine_index.html">Analytical Engine API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gae_java/index.html">Analytical Engine Java API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flex/index.html">Flex API Reference</a></li>
 </ul>
 
 </div>
@@ -549,6 +556,30 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.23.0/index.html">
+                
+                  v0.23.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
+              <dd><a href="../v0.21.3/index.html">
+                
+                  v0.21.3
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.22.0/index.html">
                 
                   v0.22.0
@@ -564,30 +595,6 @@ MathJax = {
               <dd><a href="../v0.21.0/index.html">
                 
                   v0.21.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.20.0/index.html">
-                
-                  v0.20.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.19.0/index.html">
-                
-                  v0.19.0
                 
               </a></dd>
             
@@ -690,30 +697,20 @@ to get a <cite>GraphTraversalSource</cite> for further traversal.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.execute">
 <span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.execute" title="Permalink to this definition">#</a></dt>
-<dd><p>Execute gremlin querying scripts.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>query</strong> (<em>str</em>) – Scripts that written in gremlin quering language.</p></li>
-<li><p><strong>request_options</strong> (<em>dict</em><em>, </em><em>optional</em>) – Gremlin request options. format:</p></li>
-<li><p><strong>{</strong> – “engine”: “gae”</p></li>
-<li><p><strong>}</strong> – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A result holds the gremlin result, evaluated in eager mode.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.ResultDAGNode" title="graphscope.framework.context.ResultDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.ResultDAGNode</span></code></a></p>
-</dd>
-</dl>
+<dd><p>A simple wrapper around <cite>submit</cite>, for compatibility</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.graph_url">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">graph_url</span></span><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.graph_url" title="Permalink to this definition">#</a></dt>
-<dd><p>The gremlin graph url can be used with any standard gremlin console, e.g., tinkerpop.</p>
+<dd><p>The gremlin graph url can be used with any standard gremlin console,
+e.g., tinkerpop.</p>
 </dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.gremlin_client">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gremlin_client</span></span><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.gremlin_client" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.object_id">
@@ -733,8 +730,8 @@ to get a <cite>GraphTraversalSource</cite> for further traversal.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.subgraph">
 <span class="sig-name descname"><span class="pre">subgraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gremlin_script</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.subgraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.subgraph" title="Permalink to this definition">#</a></dt>
-<dd><p>Create a subgraph, which input is the result of the execution of <cite>gremlin_script</cite>.</p>
-<p>Any gremlin script that output a set of edges can be used to contruct a subgraph.</p>
+<dd><p>Create a subgraph, which input is the executor result of <cite>gremlin_script</cite>.</p>
+<p>Any gremlin script that output a set of edges can be used to construct a subgraph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -756,7 +753,21 @@ to get a <cite>GraphTraversalSource</cite> for further traversal.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.submit">
 <span class="sig-name descname"><span class="pre">submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.submit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.submit" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Execute gremlin querying scripts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query</strong> (<em>str</em>) – Scripts that written in gremlin query language.</p></li>
+<li><p><strong>request_options</strong> (<em>dict</em><em>, </em><em>optional</em>) – Gremlin request options. format:</p></li>
+<li><p><strong>{</strong> – “engine”: “gae”</p></li>
+<li><p><strong>}</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">gremlin_python.driver.client.ResultSet</span></code></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.traversal_source">
@@ -853,6 +864,7 @@ Gremlin traversals to query the remote graph.</p>
 <li><a class="reference internal" href="#graphscope.interactive.query.InteractiveQuery.close"><code class="docutils literal notranslate"><span class="pre">InteractiveQuery.close()</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.interactive.query.InteractiveQuery.execute"><code class="docutils literal notranslate"><span class="pre">InteractiveQuery.execute()</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.interactive.query.InteractiveQuery.graph_url"><code class="docutils literal notranslate"><span class="pre">InteractiveQuery.graph_url</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.interactive.query.InteractiveQuery.gremlin_client"><code class="docutils literal notranslate"><span class="pre">InteractiveQuery.gremlin_client</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.interactive.query.InteractiveQuery.object_id"><code class="docutils literal notranslate"><span class="pre">InteractiveQuery.object_id</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.interactive.query.InteractiveQuery.session"><code class="docutils literal notranslate"><span class="pre">InteractiveQuery.session</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.interactive.query.InteractiveQuery.session_id"><code class="docutils literal notranslate"><span class="pre">InteractiveQuery.session_id</span></code></a></li>

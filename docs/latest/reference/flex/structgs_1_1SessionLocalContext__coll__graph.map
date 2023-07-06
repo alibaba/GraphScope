@@ -1,0 +1,13 @@
+<map id="gs::SessionLocalContext" name="gs::SessionLocalContext">
+<area shape="rect" id="node1" title=" " alt="" coords="217,317,397,344"/>
+<area shape="rect" id="node4" href="$classgs_1_1GraphDB.html" title=" " alt="" coords="411,407,514,433"/>
+<area shape="rect" id="node2" href="$classgs_1_1WalWriter.html" title=" " alt="" coords="197,228,307,255"/>
+<area shape="rect" id="node3" href="$classgs_1_1GraphDBSession.html" title=" " alt="" coords="143,496,297,523"/>
+<area shape="rect" id="node5" href="$classgs_1_1VersionManager.html" title=" " alt="" coords="421,317,571,344"/>
+<area shape="rect" id="node6" href="$classgs_1_1MutablePropertyFragment.html" title=" " alt="" coords="595,317,810,344"/>
+<area shape="rect" id="node7" href="$classgs_1_1Schema.html" title=" " alt="" coords="654,228,751,255"/>
+<area shape="rect" id="node8" href="$classgs_1_1IdIndexer.html" title=" " alt="" coords="633,109,773,151"/>
+<area shape="rect" id="node9" href="$structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="505,5,693,47"/>
+<area shape="rect" id="node10" href="$structgs_1_1GHash.html" title=" " alt="" coords="717,13,899,39"/>
+<area shape="rect" id="node11" href="$classgs_1_1ArenaAllocator.html" title=" " alt="" coords="5,228,147,255"/>
+</map>

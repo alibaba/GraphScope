@@ -562,6 +562,30 @@ MathJax = {
         
           
             
+              <dd><a href="../../../v0.23.0/index.html">
+                
+                  v0.23.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
+              <dd><a href="../../../v0.21.3/index.html">
+                
+                  v0.21.3
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../../v0.22.0/index.html">
                 
                   v0.22.0
@@ -577,30 +601,6 @@ MathJax = {
               <dd><a href="../../../v0.21.0/index.html">
                 
                   v0.21.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../v0.20.0/index.html">
-                
-                  v0.20.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../v0.19.0/index.html">
-                
-                  v0.19.0
                 
               </a></dd>
             
@@ -1053,6 +1053,19 @@ g.V<span class="o">()</span>.valueMap<span class="o">(</span><span class="s2">&q
 <p>Parameters: </br>
 propertyKey - the property to retrieve its value from.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>g.V<span class="o">()</span>.values<span class="o">(</span><span class="s2">&quot;name&quot;</span><span class="o">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="elementmap">
+<h4><a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/#elementmap-step">elementMap()</a><a class="headerlink" href="#elementmap" title="Permalink to this heading">#</a></h4>
+<p>The elementMap()-step is meant to map the graph element to a map of <a class="reference external" href="http://T.id">T.id</a>, T.label and the property values according to the given keys. If no property keys are provided, then all property values are retrieved.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+Parameters: &lt;/br&gt;
+propertyKeys - the properties to retrieve.
+```bash
+g.V().elementMap()
+g.V().elementMap(&quot;name&quot;)
+g.V().elementMap(&quot;name&quot;, &quot;age&quot;)
 </pre></div>
 </div>
 </div>
@@ -1576,15 +1589,6 @@ g.V<span class="o">()</span>.union<span class="o">(</span>identity<span class="o
 </pre></div>
 </div>
 </div>
-<div class="section" id="elementmap">
-<h4>elementMap()<a class="headerlink" href="#elementmap" title="Permalink to this heading">#</a></h4>
-<p>Map the graph element to a map of <a class="reference external" href="http://T.id">T.id</a>, T.label and the property values according to the given keys. If no property keys are provided, then all property values are retrieved.</p>
-<p>Parameters: </br>
-propertyKeys - the properties to retrieve.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>g.V<span class="o">()</span>.elementMap<span class="o">()</span>
-</pre></div>
-</div>
-</div>
 <div class="section" id="path">
 <h4>path()<a class="headerlink" href="#path" title="Permalink to this heading">#</a></h4>
 <p>Map the traverser to its path history.</p>
@@ -1757,6 +1761,7 @@ It is a imperative syntax, not declarative.</p></li>
 <li><a class="reference internal" href="#constant">constant()</a></li>
 <li><a class="reference internal" href="#valuemap">valueMap()</a></li>
 <li><a class="reference internal" href="#values">values()</a></li>
+<li><a class="reference internal" href="#elementmap">elementMap()</a></li>
 <li><a class="reference internal" href="#select">select()</a></li>
 </ul>
 </li>
@@ -1809,7 +1814,6 @@ It is a imperative syntax, not declarative.</p></li>
 <li><a class="reference internal" href="#limitations">Limitations</a><ul>
 <li><a class="reference internal" href="#to-be-supported">To be Supported</a><ul>
 <li><a class="reference internal" href="#identity">identity()</a></li>
-<li><a class="reference internal" href="#elementmap">elementMap()</a></li>
 <li><a class="reference internal" href="#path">path()</a></li>
 <li><a class="reference internal" href="#unfold">unfold()</a></li>
 <li><a class="reference internal" href="#local">local()</a></li>

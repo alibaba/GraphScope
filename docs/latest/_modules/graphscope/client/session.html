@@ -551,6 +551,30 @@ MathJax = {
         
           
             
+              <dd><a href="../../../../v0.23.0/index.html">
+                
+                  v0.23.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
+              <dd><a href="../../../../v0.21.3/index.html">
+                
+                  v0.21.3
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../../../v0.22.0/index.html">
                 
                   v0.22.0
@@ -566,30 +590,6 @@ MathJax = {
               <dd><a href="../../../../v0.21.0/index.html">
                 
                   v0.21.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../../v0.20.0/index.html">
-                
-                  v0.20.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../../v0.19.0/index.html">
-                
-                  v0.19.0
                 
               </a></dd>
             
@@ -1941,16 +1941,23 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
 <div class="viewcode-block" id="Session.gremlin"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.gremlin">[docs]</a>    <span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get an interactive engine handler to execute gremlin queries.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This method is going to be deprecated.</span>
+<span class="sd">        Use :meth:`interactive` to get an interactive engine handler supports</span>
+<span class="sd">        both gremlin and cypher queries</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Session.interactive"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.interactive">[docs]</a>    <span class="k">def</span> <span class="nf">interactive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get an interactive engine handler to execute gremlin and cypher queries.</span>
 
 <span class="sd">        It will return an instance of :class:`graphscope.interactive.query.InteractiveQuery`,</span>
 
 <span class="sd">        .. code:: python</span>
 
 <span class="sd">            &gt;&gt;&gt; # close and recreate InteractiveQuery.</span>
-<span class="sd">            &gt;&gt;&gt; interactive_query = sess.gremlin(g)</span>
+<span class="sd">            &gt;&gt;&gt; interactive_query = sess.interactive(g)</span>
 <span class="sd">            &gt;&gt;&gt; interactive_query.close()</span>
-<span class="sd">            &gt;&gt;&gt; interactive_query = sess.gremlin(g)</span>
+<span class="sd">            &gt;&gt;&gt; interactive_query = sess.interactive(g)</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            graph (:class:`graphscope.framework.graph.GraphDAGNode`):</span>
@@ -1963,7 +1970,7 @@ MathJax = {
 
 <span class="sd">        Returns:</span>
 <span class="sd">            :class:`graphscope.interactive.query.InteractiveQuery`:</span>
-<span class="sd">                InteractiveQuery to execute gremlin queries.</span>
+<span class="sd">                InteractiveQuery to execute gremlin and cypher queries.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">!=</span> <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
@@ -1980,10 +1987,13 @@ MathJax = {
 
         <span class="n">object_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span>
         <span class="n">schema_path</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema_path</span>
-        <span class="n">endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">create_interactive_instance</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="n">gremlin_endpoint</span><span class="p">,</span>
+            <span class="n">cypher_endpoint</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">create_interactive_instance</span><span class="p">(</span>
             <span class="n">object_id</span><span class="p">,</span> <span class="n">schema_path</span><span class="p">,</span> <span class="n">params</span>
         <span class="p">)</span>
-        <span class="n">interactive_query</span> <span class="o">=</span> <span class="n">InteractiveQuery</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">)</span>
+        <span class="n">interactive_query</span> <span class="o">=</span> <span class="n">InteractiveQuery</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">gremlin_endpoint</span><span class="p">,</span> <span class="n">cypher_endpoint</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">object_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">interactive_query</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_attach_interactive_instance</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">interactive_query</span></div>
@@ -2368,13 +2378,20 @@ MathJax = {
 
 
 <div class="viewcode-block" id="gremlin"><a class="viewcode-back" href="../../../reference/generated/graphscope.gremlin.html#graphscope.gremlin">[docs]</a><span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an interactive engine and get the handler to execute the gremlin queries.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This method is going to be deprecated in the future.</span>
+<span class="sd">    Use :meth:`graphscope.interactive` instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span></div>
 
-<span class="sd">    See params detail in :meth:`graphscope.Session.gremlin`</span>
+
+<span class="k">def</span> <span class="nf">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an interactive engine and get the handler to execute gremlin and cypher queries.</span>
+
+<span class="sd">    See params detail in :meth:`graphscope.Session.interactive`</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        :class:`graphscope.interactive.query.InteractiveQueryDAGNode`:</span>
-<span class="sd">            InteractiveQuery to execute gremlin queries, evaluated in eager mode.</span>
+<span class="sd">            InteractiveQuery to execute gremlin and cypher queries, evaluated in eager mode.</span>
 
 <span class="sd">    Examples:</span>
 
@@ -2382,13 +2399,13 @@ MathJax = {
 
 <span class="sd">        &gt;&gt;&gt; import graphscope</span>
 <span class="sd">        &gt;&gt;&gt; g = graphscope.g()</span>
-<span class="sd">        &gt;&gt;&gt; interactive_query = graphscope.gremlin()</span>
+<span class="sd">        &gt;&gt;&gt; interactive_query = graphscope.interactive()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="n">graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;graph cannot be None&quot;</span>
     <span class="k">assert</span> <span class="p">(</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
     <span class="p">),</span> <span class="s2">&quot;The graph object is invalid&quot;</span>  <span class="c1"># pylint: disable=protected-access</span>
-    <span class="k">return</span> <span class="n">graph</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span></div>
+    <span class="k">return</span> <span class="n">graph</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span>
 
 
 <div class="viewcode-block" id="graphlearn"><a class="viewcode-back" href="../../../reference/generated/graphscope.graphlearn.html#graphscope.graphlearn">[docs]</a><span class="k">def</span> <span class="nf">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>

@@ -562,6 +562,30 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.23.0/index.html">
+                
+                  v0.23.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
+              <dd><a href="../../v0.21.3/index.html">
+                
+                  v0.21.3
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.22.0/index.html">
                 
                   v0.22.0
@@ -577,30 +601,6 @@ MathJax = {
               <dd><a href="../../v0.21.0/index.html">
                 
                   v0.21.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.20.0/index.html">
-                
-                  v0.20.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.19.0/index.html">
-                
-                  v0.19.0
                 
               </a></dd>
             
@@ -1056,12 +1056,26 @@ GNN training. The detail is explained in the examples below.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.gremlin">
 <span class="sig-name descname"><span class="pre">gremlin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.gremlin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.gremlin" title="Permalink to this definition">#</a></dt>
-<dd><p>Get an interactive engine handler to execute gremlin queries.</p>
+<dd><p>This method is going to be deprecated.
+Use <a class="reference internal" href="#graphscope.Session.interactive" title="graphscope.Session.interactive"><code class="xref py py-meth docutils literal notranslate"><span class="pre">interactive()</span></code></a> to get an interactive engine handler supports
+both gremlin and cypher queries</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.Session.info">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">info</span></span><a class="headerlink" href="#graphscope.Session.info" title="Permalink to this definition">#</a></dt>
+<dd><p>Show all resource info associated with session in json format.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.Session.interactive">
+<span class="sig-name descname"><span class="pre">interactive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.interactive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.interactive" title="Permalink to this definition">#</a></dt>
+<dd><p>Get an interactive engine handler to execute gremlin and cypher queries.</p>
 <p>It will return an instance of <a class="reference internal" href="interactive.html#graphscope.interactive.query.InteractiveQuery" title="graphscope.interactive.query.InteractiveQuery"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.interactive.query.InteractiveQuery</span></code></a>,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># close and recreate InteractiveQuery.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">interactive_query</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interactive_query</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">interactive_query</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">interactive_query</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interactive_query</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -1078,18 +1092,12 @@ GNN training. The detail is explained in the examples below.</p></li>
 </p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>InteractiveQuery to execute gremlin queries.</p>
+<dd class="field-odd"><p>InteractiveQuery to execute gremlin and cypher queries.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference internal" href="interactive.html#graphscope.interactive.query.InteractiveQuery" title="graphscope.interactive.query.InteractiveQuery"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.interactive.query.InteractiveQuery</span></code></a></p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="graphscope.Session.info">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">info</span></span><a class="headerlink" href="#graphscope.Session.info" title="Permalink to this definition">#</a></dt>
-<dd><p>Show all resource info associated with session in json format.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1198,7 +1206,7 @@ Supported types:
 <td><p>Construct a GraphScope graph object on the default session.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.gremlin.html#graphscope.gremlin" title="graphscope.gremlin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.gremlin</span></code></a>(graph[, params])</p></td>
-<td><p>Create an interactive engine and get the handler to execute the gremlin queries.</p></td>
+<td><p>This method is going to be deprecated in the future.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.graphlearn.html#graphscope.graphlearn" title="graphscope.graphlearn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.graphlearn</span></code></a>(graph[, nodes, edges, ...])</p></td>
 <td><p>Create a graph learning engine.</p></td>
@@ -1283,6 +1291,7 @@ Supported types:
 <li><a class="reference internal" href="#graphscope.Session.graphlearn"><code class="docutils literal notranslate"><span class="pre">Session.graphlearn()</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.Session.gremlin"><code class="docutils literal notranslate"><span class="pre">Session.gremlin()</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.Session.info"><code class="docutils literal notranslate"><span class="pre">Session.info</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.Session.interactive"><code class="docutils literal notranslate"><span class="pre">Session.interactive()</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.Session.learning"><code class="docutils literal notranslate"><span class="pre">Session.learning()</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.Session.load_from"><code class="docutils literal notranslate"><span class="pre">Session.load_from()</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.Session.load_from_gar"><code class="docutils literal notranslate"><span class="pre">Session.load_from_gar()</span></code></a></li>

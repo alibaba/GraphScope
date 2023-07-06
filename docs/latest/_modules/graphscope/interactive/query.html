@@ -551,6 +551,30 @@ MathJax = {
         
           
             
+              <dd><a href="../../../../v0.23.0/index.html">
+                
+                  v0.23.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
+              <dd><a href="../../../../v0.21.3/index.html">
+                
+                  v0.21.3
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../../../v0.22.0/index.html">
                 
                   v0.22.0
@@ -566,30 +590,6 @@ MathJax = {
               <dd><a href="../../../../v0.21.0/index.html">
                 
                   v0.21.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../../v0.20.0/index.html">
-                
-                  v0.20.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../../v0.19.0/index.html">
-                
-                  v0.19.0
                 
               </a></dd>
             
@@ -691,7 +691,7 @@ MathJax = {
 <span class="sd">    `Gremlin-Python &lt;https://pypi.org/project/gremlinpython/&gt;`_,</span>
 <span class="sd">    which implements Gremlin within the Python language.</span>
 <span class="sd">    It also can expose gremlin endpoint which can be used by</span>
-<span class="sd">    any other standard gremlin console, with the method `graph_url()`.</span>
+<span class="sd">    any other standard gremlin console, with the method `gremlin_url()`.</span>
 
 <span class="sd">    It also has a method called `subgraph` which can extract some fragments</span>
 <span class="sd">    from origin graph, produce a new, smaller but concise graph stored in vineyard,</span>
@@ -701,22 +701,45 @@ MathJax = {
 <span class="sd">    to get a `GraphTraversalSource` for further traversal.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="InteractiveQuery.__init__"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">frontend_endpoint</span><span class="p">):</span>
+<div class="viewcode-block" id="InteractiveQuery.__init__"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">frontend_gremlin_endpoint</span><span class="p">,</span> <span class="n">frontend_cypher_endpoint</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct a :class:`InteractiveQuery` object.&quot;&quot;&quot;</span>
         <span class="c1"># graph object id stored in vineyard</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">_session</span>
-        <span class="n">frontend_endpoint</span> <span class="o">=</span> <span class="n">frontend_endpoint</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;ws://</span><span class="si">{</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">/gremlin&quot;</span> <span class="k">for</span> <span class="n">endpoint</span> <span class="ow">in</span> <span class="n">frontend_endpoint</span><span class="p">]</span>
+        <span class="n">frontend_gremlin_endpoint</span> <span class="o">=</span> <span class="n">frontend_gremlin_endpoint</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_url</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;ws://</span><span class="si">{</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">/gremlin&quot;</span> <span class="k">for</span> <span class="n">endpoint</span> <span class="ow">in</span> <span class="n">frontend_gremlin_endpoint</span>
+        <span class="p">]</span>
+        <span class="n">frontend_cypher_endpoint</span> <span class="o">=</span> <span class="n">frontend_cypher_endpoint</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cypher_url</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;neo4j://</span><span class="si">{</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">endpoint</span> <span class="ow">in</span> <span class="n">frontend_cypher_endpoint</span>
+        <span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_client</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cypher_driver</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">False</span></div>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_graph_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This will be deprecated in the future, use `_gremlin_url` instead.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_url</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">graph_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This will be deprecated in the future, use `gremlin_url` instead.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_url</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gremlin_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The gremlin graph url can be used with any standard gremlin console,</span>
 <span class="sd">        e.g., tinkerpop.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_url</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cypher_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The cypher graph url can be used with any standard cypher console,</span>
+<span class="sd">        e.g., neo4j.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cypher_url</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">object_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -730,13 +753,14 @@ MathJax = {
     <span class="k">def</span> <span class="nf">session_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">session_id</span>
 
-<div class="viewcode-block" id="InteractiveQuery.execute"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="InteractiveQuery.execute"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;gremlin&quot;</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A simple wrapper around `submit`, for compatibility&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="n">request_options</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">lang</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="n">request_options</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="InteractiveQuery.submit"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.submit">[docs]</a>    <span class="k">def</span> <span class="nf">submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute gremlin querying scripts.</span>
+<div class="viewcode-block" id="InteractiveQuery.submit"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.submit">[docs]</a>    <span class="k">def</span> <span class="nf">submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;gremlin&quot;</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute gremlin or cypher querying scripts.</span>
 
+<span class="sd">        &lt;Gremlin&gt;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            query (str): Scripts that written in gremlin query language.</span>
 <span class="sd">            request_options (dict, optional): Gremlin request options. format:</span>
@@ -746,17 +770,45 @@ MathJax = {
 
 <span class="sd">        Returns:</span>
 <span class="sd">            :class:`gremlin_python.driver.client.ResultSet`:</span>
+
+<span class="sd">        &lt;Cypher&gt;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            query (str): Scripts that written in cypher query language.</span>
+<span class="sd">            kwargs (dict, optional): Cypher request options. e.g.:</span>
+<span class="sd">            routing_ = RoutingControl.READ</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`neo4j.work.result.Result`:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gremlin_client</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="n">request_options</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">lang</span> <span class="o">==</span> <span class="s2">&quot;gremlin&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gremlin_client</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="n">request_options</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">lang</span> <span class="o">==</span> <span class="s2">&quot;cypher&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cypher_driver</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unsupported query language: </span><span class="si">{</span><span class="n">lang</span><span class="si">}</span><span class="s2"> other than gremlin and cypher&quot;</span>
+            <span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">gremlin_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;g&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_url</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;g&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_client</span>
 
-<div class="viewcode-block" id="InteractiveQuery.subgraph"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.subgraph">[docs]</a>    <span class="k">def</span> <span class="nf">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a subgraph, which input is the executor result of `gremlin_script`.</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cypher_driver</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">neo4j</span> <span class="kn">import</span> <span class="n">GraphDatabase</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cypher_driver</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cypher_driver</span> <span class="o">=</span> <span class="n">GraphDatabase</span><span class="o">.</span><span class="n">driver</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cypher_url</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cypher_driver</span>
+
+<div class="viewcode-block" id="InteractiveQuery.subgraph"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.subgraph">[docs]</a>    <span class="k">def</span> <span class="nf">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;gremlin&quot;</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;We currently only support subgraph using gremlin script.</span>
+
+<span class="sd">        Create a subgraph, which input is the executor result of `gremlin_script`.</span>
 
 <span class="sd">        Any gremlin script that output a set of edges can be used to construct a subgraph.</span>
 
@@ -771,6 +823,7 @@ MathJax = {
 <span class="sd">            :class:`graphscope.framework.graph.GraphDAGNode`:</span>
 <span class="sd">                A new graph constructed by the gremlin output, that also stored in vineyard.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">lang</span> <span class="o">==</span> <span class="s2">&quot;gremlin&quot;</span><span class="p">,</span> <span class="s2">&quot;Only support gremlin script&quot;</span>
         <span class="c1"># avoid circular import</span>
         <span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="kn">import</span> <span class="n">GraphDAGNode</span>
 
@@ -783,7 +836,9 @@ MathJax = {
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="n">GraphDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="InteractiveQuery.traversal_source"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.traversal_source">[docs]</a>    <span class="k">def</span> <span class="nf">traversal_source</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a GraphTraversalSource and return.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;We currently only support traversal_source using gremlin.</span>
+
+<span class="sd">        Create a GraphTraversalSource and return.</span>
 <span class="sd">        Once `g` has been created using a connection, we can start to write</span>
 <span class="sd">        Gremlin traversals to query the remote graph.</span>
 
@@ -805,7 +860,7 @@ MathJax = {
 <span class="sd">            `GraphTraversalSource`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="n">DriverRemoteConnection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;g&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="n">DriverRemoteConnection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_url</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;g&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">traversal</span><span class="p">()</span><span class="o">.</span><span class="n">withRemote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="InteractiveQuery.close"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -820,6 +875,11 @@ MathJax = {
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_gremlin_client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span><span class="p">:</span>  <span class="c1"># noqa: E722</span>
+                <span class="k">pass</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cypher_driver</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cypher_driver</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="k">except</span><span class="p">:</span>  <span class="c1"># noqa: E722</span>
                 <span class="k">pass</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_close_interactive_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
