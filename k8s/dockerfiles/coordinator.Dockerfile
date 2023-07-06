@@ -51,6 +51,9 @@ COPY ./interactive_engine/assembly/src/bin/graphscope/giectl /opt/graphscope/bin
 COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
 RUN sudo chmod a+wrx /tmp
 
+#to make sure neo4j==5.10.0 can be installed
+RUN pip3 install pip==20.3.4
+
 USER graphscope
 WORKDIR /home/graphscope
 

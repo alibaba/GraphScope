@@ -214,7 +214,7 @@ class GRPCClient(object):
                 request.params[str(k)] = str(v)
 
         response = self._stub.CreateInteractiveInstance(request)
-        return response.gremlin_endpoint
+        return response.gremlin_endpoint, response.cypher_endpoint
 
     def create_learning_instance(self, object_id, handle, config):
         request = message_pb2.CreateLearningInstanceRequest(session_id=self._session_id)
