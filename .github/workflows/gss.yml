@@ -167,7 +167,7 @@ jobs:
 
         minikube image load ${{ env.GSS_IMAGE }}:${SHORT_SHA}
 
-    - uses: dashanji/kubernetes-log-export-action@v4
+    - uses: dashanji/kubernetes-log-export-action@v5
       env:
         SHOW_TIMESTAMPS: 'true'
         OUTPUT_DIR: ${{ github.workspace }}/helm-installation-logs
@@ -241,8 +241,9 @@ jobs:
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_after_restart
 
-    - uses: dashanji/kubernetes-log-export-action@v4
+    - uses: dashanji/kubernetes-log-export-action@v5
       env:
+        OUTPUT_DIR: ${{ github.workspace }}/helm-installation-logs
         MODE: stop
 
     - name: upload the k8s logs to artifact
