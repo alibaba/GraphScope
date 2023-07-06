@@ -431,7 +431,7 @@ jobs:
           minikube image load graphscope/learning:${SHORT_SHA}
           echo "loaded learning"
 
-      - uses: dashanji/kubernetes-log-export-action@v4
+      - uses: dashanji/kubernetes-log-export-action@v5
         env:
           SHOW_TIMESTAMPS: 'true'
           OUTPUT_DIR: ${{ github.workspace }}/k8s-ci-helm-installation-logs
@@ -459,14 +459,15 @@ jobs:
 
           python3 -m pytest -s -vvv ./graphscope/tests/kubernetes/test_demo_script.py -k test_helm_installation
 
-      - uses: dashanji/kubernetes-log-export-action@v4
+      - uses: dashanji/kubernetes-log-export-action@v5
         env:
+          OUTPUT_DIR: ${{ github.workspace }}/k8s-ci-helm-installation-logs
           MODE: stop
 
       - name: Delete Helm Cluster
         run: helm delete graphscope
 
-      - uses: dashanji/kubernetes-log-export-action@v4
+      - uses: dashanji/kubernetes-log-export-action@v5
         env:
           SHOW_TIMESTAMPS: 'true'
           OUTPUT_DIR: ${{ github.workspace }}/k8s-ci-demo-script-test-logs
@@ -525,8 +526,9 @@ jobs:
           # Check the result file have successfully written to the given location
           # hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
 
-      - uses: dashanji/kubernetes-log-export-action@v4
+      - uses: dashanji/kubernetes-log-export-action@v5
         env:
+          OUTPUT_DIR: ${{ github.workspace }}/k8s-ci-demo-script-test-logs
           MODE: stop
 
       - name: Upload the k8s logs to artifact
@@ -688,7 +690,7 @@ jobs:
           # install python gremlin client
           pip install gremlinpython
 
-      - uses: dashanji/kubernetes-log-export-action@v4
+      - uses: dashanji/kubernetes-log-export-action@v5
         env:
           SHOW_TIMESTAMPS: 'true'
           OUTPUT_DIR: ${{ github.workspace }}/k8s-failover-logs
@@ -713,8 +715,9 @@ jobs:
           # run failover test
           cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_k8s_failover_ci.sh default test-gie-standalone 2 1
 
-      - uses: dashanji/kubernetes-log-export-action@v4
+      - uses: dashanji/kubernetes-log-export-action@v5
         env:
+          OUTPUT_DIR: ${{ github.workspace }}/k8s-failover-logs
           MODE: stop
 
       - name: upload the k8s logs to artifact

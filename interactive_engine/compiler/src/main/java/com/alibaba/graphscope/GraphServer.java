@@ -88,7 +88,9 @@ public class GraphServer {
                             "dbms.connector.bolt.listen_address",
                             ":" + FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(this.configs),
                             "dbms.connector.bolt.advertised_address",
-                            ":" + FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(this.configs)),
+                            ":" + FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(this.configs),
+                            "dbms.transaction.timeout",
+                            FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(this.configs) + "ms"),
                     false);
         }
     }
