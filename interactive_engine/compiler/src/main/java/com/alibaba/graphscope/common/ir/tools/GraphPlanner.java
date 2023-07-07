@@ -29,7 +29,6 @@ import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
-
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.GraphOptCluster;
@@ -39,7 +38,6 @@ import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexBuilder;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -187,21 +185,17 @@ public class GraphPlanner {
         ExperimentalMetaFetcher metaFetcher = new ExperimentalMetaFetcher(configs);
         if (args.length < 2 || args[0].isEmpty() || args[1].isEmpty()) {
             throw new IllegalArgumentException(
-                    "usage: make physical_plan query='<query in"
-                        + " string>/<file://path_to_query_file>' physical='<path to the physical"
-                        + " output file>'");
+                    "usage: GraphPlanner '<path_to_query_file>' '<path to the physical"
+                            + " output file>'");
         }
-        String query = args[0];
-        if (query.startsWith("file://")) {
-            query = FileUtils.readFileToString(new File(query.substring(7)));
-        }
+        String query = com.alibaba.graphscope.common.utils.FileUtils.readCypherQueryFromFile(args[0]);
         GraphPlanner planner = new GraphPlanner(configs);
         Antlr4Parser cypherParser = new CypherAntlr4Parser();
         PlannerInstance instance =
                 planner.instance(cypherParser.parse(query), metaFetcher.fetch().get());
         Summary summary = instance.plan();
         try (PhysicalBuilder<byte[]> physicalBuilder = summary.getPhysicalBuilder()) {
-            FileUtils.writeByteArrayToFile(new File(args[1]), physicalBuilder.build());
+            org.apache.commons.io.FileUtils.writeByteArrayToFile(new File(args[1]), physicalBuilder.build());
         }
     }
 }
