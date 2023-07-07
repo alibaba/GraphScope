@@ -24,8 +24,10 @@ import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.GremlinTestResultProcessor;
+import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngine;
+
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
@@ -41,12 +43,13 @@ import org.apache.tinkerpop.gremlin.util.function.ThrowingConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.List;
+
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
-import java.util.Arrays;
-import java.util.List;
 
 public class IrTestOpProcessor extends IrStandardOpProcessor {
     private static final Logger logger = LoggerFactory.getLogger(TraversalOpProcessor.class);
@@ -94,14 +97,19 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
 
                             long jobId = graphPlanner.getIdGenerator().getAndIncrement();
                             IrMeta irMeta = metaQueryCallback.beforeExec();
+                            QueryStatusCallback statusCallback =
+                                    createQueryStatusCallback(script, jobId);
                             processTraversal(
                                     traversal,
                                     new GremlinTestResultProcessor(
-                                            ctx, traversal, testGraph, this.configs),
-                                    jobId,
-                                    script,
+                                            ctx,
+                                            traversal,
+                                            statusCallback,
+                                            testGraph,
+                                            this.configs),
                                     irMeta,
-                                    new QueryTimeoutConfig(ctx.getRequestTimeout()));
+                                    new QueryTimeoutConfig(ctx.getRequestTimeout()),
+                                    statusCallback.getQueryLogger());
                             metaQueryCallback.afterExec(irMeta);
                         });
                 return op;

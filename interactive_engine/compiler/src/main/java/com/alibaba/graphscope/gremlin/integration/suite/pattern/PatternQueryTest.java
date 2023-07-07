@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.integration.suite.pattern;
 
 import com.alibaba.graphscope.gremlin.integration.suite.utils.__;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
+
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;

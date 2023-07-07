@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.result.processor;
 
+import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
 import com.alibaba.graphscope.gremlin.result.GroupResultParser;
 
@@ -24,13 +25,15 @@ import org.apache.tinkerpop.gremlin.server.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class GremlinResultProcessor extends AbstractResultProcessor {
     private static Logger logger = LoggerFactory.getLogger(GremlinResultProcessor.class);
 
-    public GremlinResultProcessor(Context writeResult, Traversal traversal) {
-        super(writeResult, GremlinResultAnalyzer.analyze(traversal));
+    public GremlinResultProcessor(
+            Context writeResult, Traversal traversal, QueryStatusCallback statusCallback) {
+        super(writeResult, GremlinResultAnalyzer.analyze(traversal), statusCallback);
     }
 
     // format group result as a single map

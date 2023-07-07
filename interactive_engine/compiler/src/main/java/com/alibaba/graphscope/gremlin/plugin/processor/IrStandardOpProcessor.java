@@ -36,6 +36,9 @@ import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.Utils;
+import com.alibaba.graphscope.gremlin.plugin.MetricsCollector;
+import com.alibaba.graphscope.gremlin.plugin.QueryLogger;
+import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngineFactory;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ExpandFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
@@ -47,6 +50,7 @@ import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -64,10 +68,7 @@ import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.script.SimpleBindings;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
@@ -77,9 +78,9 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
+import javax.script.SimpleBindings;
+
 public class IrStandardOpProcessor extends StandardOpProcessor {
-    private static Logger metricLogger = LoggerFactory.getLogger("MetricLog");
-    private static Logger logger = LoggerFactory.getLogger(IrStandardOpProcessor.class);
     protected Graph graph;
     protected GraphTraversalSource g;
     protected Configs configs;
@@ -111,8 +112,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             final Context ctx,
             final Supplier<GremlinExecutor> gremlinExecutorSupplier,
             final AbstractEvalOpProcessor.BindingSupplier bindingsSupplier) {
-        long startTime = System.currentTimeMillis();
-        com.codahale.metrics.Timer.Context timerContext = evalOpTimer.time();
         RequestMessage msg = ctx.getRequestMessage();
         GremlinExecutor gremlinExecutor = gremlinExecutorSupplier.get();
         Map<String, Object> args = msg.getArgs();
@@ -122,29 +121,18 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
 
         long jobId = graphPlanner.getIdGenerator().getAndIncrement();
         IrMeta irMeta = metaQueryCallback.beforeExec();
+        QueryStatusCallback statusCallback = createQueryStatusCallback(script, jobId);
         GremlinExecutor.LifeCycle lifeCycle =
                 createLifeCycle(
-                        ctx, gremlinExecutorSupplier, bindingsSupplier, jobId, script, irMeta);
+                        ctx, gremlinExecutorSupplier, bindingsSupplier, irMeta, statusCallback);
         try {
             CompletableFuture<Object> evalFuture =
                     gremlinExecutor.eval(script, language, new SimpleBindings(), lifeCycle);
             evalFuture.handle(
                     (v, t) -> {
                         metaQueryCallback.afterExec(irMeta);
-                        long elapsed = timerContext.stop();
-                        logger.info(
-                                "query \"{}\" total execution time is {} ms",
-                                script,
-                                elapsed / 1000000.0f);
-                        boolean isSuccess = (t == null);
-                        metricLogger.info(
-                                "{} | {} | {} | {} | {}",
-                                jobId,
-                                script,
-                                isSuccess,
-                                elapsed / 1000000.0f,
-                                startTime);
                         if (t != null) {
+                            statusCallback.onEnd(false);
                             if (v instanceof AbstractResultProcessor) {
                                 ((AbstractResultProcessor) v).cancel();
                             }
@@ -175,7 +163,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                                             + " increasing the limit given to"
                                                             + " TimedInterruptCustomizerProvider",
                                                     msg);
-                                    logger.warn(errorMessage);
+                                    statusCallback.getQueryLogger().warn(errorMessage);
                                     ctx.writeAndFlush(
                                             ResponseMessage.build(msg)
                                                     .code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
@@ -191,7 +179,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                                     "Script evaluation exceeded the configured"
                                                             + " threshold for request [%s]",
                                                     msg);
-                                    logger.warn(errorMessage, t);
+                                    statusCallback.getQueryLogger().warn(errorMessage, t);
                                     ctx.writeAndFlush(
                                             ResponseMessage.build(msg)
                                                     .code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
@@ -211,7 +199,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                                         + " allowed by the JVM, please split it"
                                                         + " into multiple smaller statements - %s",
                                                     msg);
-                                    logger.warn(errorMessage);
+                                    statusCallback.getQueryLogger().warn(errorMessage);
                                     ctx.writeAndFlush(
                                             ResponseMessage.build(msg)
                                                     .code(
@@ -223,12 +211,14 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                 } else {
                                     errorMessage =
                                             t.getMessage() == null ? t.toString() : t.getMessage();
-                                    logger.warn(
-                                            String.format(
-                                                    "Exception processing a script on request"
-                                                            + " [%s].",
-                                                    msg),
-                                            t);
+                                    statusCallback
+                                            .getQueryLogger()
+                                            .warn(
+                                                    String.format(
+                                                            "Exception processing a script on"
+                                                                    + " request [%s].",
+                                                            msg),
+                                                    t);
                                     ctx.writeAndFlush(
                                             ResponseMessage.build(msg)
                                                     .code(
@@ -251,13 +241,17 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         }
     }
 
+    protected QueryStatusCallback createQueryStatusCallback(String query, long queryId) {
+        return new QueryStatusCallback(
+                new MetricsCollector(evalOpTimer), new QueryLogger(query, queryId));
+    }
+
     protected GremlinExecutor.LifeCycle createLifeCycle(
             Context ctx,
             Supplier<GremlinExecutor> gremlinExecutorSupplier,
             BindingSupplier bindingsSupplier,
-            long jobId,
-            String script,
-            IrMeta irMeta) {
+            IrMeta irMeta,
+            QueryStatusCallback statusCallback) {
         QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
         return GremlinExecutor.LifeCycle.build()
                 .evaluationTimeoutOverride(timeoutConfig.getExecutionTimeoutMS())
@@ -285,11 +279,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                     Traversal traversal = (Traversal) o;
                                     processTraversal(
                                             traversal,
-                                            new GremlinResultProcessor(ctx, traversal),
-                                            jobId,
-                                            script,
+                                            new GremlinResultProcessor(
+                                                    ctx, traversal, statusCallback),
                                             irMeta,
-                                            timeoutConfig);
+                                            timeoutConfig,
+                                            statusCallback.getQueryLogger());
                                 }
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
@@ -302,10 +296,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected void processTraversal(
             Traversal traversal,
             ResultProcessor resultProcessor,
-            long jobId,
-            String script,
             IrMeta irMeta,
-            QueryTimeoutConfig timeoutConfig)
+            QueryTimeoutConfig timeoutConfig,
+            QueryLogger queryLogger)
             throws InvalidProtocolBufferException, IOException, RuntimeException {
         InterOpCollection opCollection = (new InterOpCollectionBuilder(traversal)).build();
         // fuse order with limit to topK
@@ -313,14 +306,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         // add sink operator
         InterOpCollection.process(opCollection);
 
+        long jobId = queryLogger.getQueryId();
         String jobName = "ir_plan_" + jobId;
         IrPlan irPlan = new IrPlan(irMeta, opCollection);
         // print script and jobName with ir plan
-        logger.info(
-                "gremlin query \"{}\", job conf name \"{}\", ir plan {}",
-                script,
-                jobName,
-                irPlan.getPlanAsJson());
+        queryLogger.info("ir plan {}", irPlan.getPlanAsJson());
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes(configs);
         irPlan.close();
 

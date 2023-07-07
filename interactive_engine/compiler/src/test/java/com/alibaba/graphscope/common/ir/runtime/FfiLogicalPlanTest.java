@@ -149,9 +149,20 @@ public class FfiLogicalPlanTest {
         }
     }
 
-    // Match (a:person) Return case when a.name = 'marko' then 1 else 3 end as case
     @Test
     public void logical_plan_4_test() throws Exception {
+        LogicalPlan logicalPlan =
+                com.alibaba.graphscope.cypher.antlr4.Utils.evalLogicalPlan(
+                        "Call query_ic2(10l, 20120112l)");
+        try (PhysicalBuilder<byte[]> ffiBuilder = new ProcedurePhysicalBuilder(logicalPlan)) {
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("call_procedure.json"), ffiBuilder.explain());
+        }
+    }
+
+    // Match (a:person) Return case when a.name = 'marko' then 1 else 3 end as case
+    @Test
+    public void logical_plan_5_test() throws Exception {
         GraphBuilder builder =
                 Utils.mockGraphBuilder()
                         .source(

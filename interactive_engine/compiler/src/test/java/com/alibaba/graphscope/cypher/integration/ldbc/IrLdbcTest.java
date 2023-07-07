@@ -18,6 +18,7 @@ package com.alibaba.graphscope.cypher.integration.ldbc;
 
 import com.alibaba.graphscope.cypher.integration.suite.ldbc.LdbcQueries;
 import com.alibaba.graphscope.cypher.integration.suite.ldbc.QueryContext;
+
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -31,7 +32,8 @@ public class IrLdbcTest {
 
     @BeforeClass
     public static void beforeClass() {
-        String neo4jServerUrl = System.getProperty("neo4j.bolt.server.url", "neo4j://localhost:7687");
+        String neo4jServerUrl =
+                System.getProperty("neo4j.bolt.server.url", "neo4j://localhost:7687");
         session = GraphDatabase.driver(neo4jServerUrl).session();
     }
 
@@ -72,7 +74,7 @@ public class IrLdbcTest {
 
     @AfterClass
     public static void afterClass() {
-        if (session != null){
+        if (session != null) {
             session.close();
         }
     }
