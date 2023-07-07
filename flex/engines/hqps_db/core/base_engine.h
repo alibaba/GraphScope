@@ -36,6 +36,7 @@
 #include "grape/utils/bitset.h"
 
 #include "flex/engines/hqps_db/core/operator/group_by.h"
+#include "flex/engines/hqps_db/core/operator/limit.h"
 #include "flex/engines/hqps_db/core/operator/project.h"
 #include "flex/engines/hqps_db/core/operator/sink.h"
 #include "flex/engines/hqps_db/core/operator/sort.h"
@@ -85,6 +86,13 @@ class BaseEngine {
       tag_ids[i] = i;
     }
     return Sink(ctx, tag_ids);
+  }
+
+  template <typename CTX_HEAD_T, int cur_alias, int base_tag,
+            typename... CTX_PREV>
+  static auto Limit(Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
+                    int32_t lower, int32_t upper) {
+    return LimitOp::Limit(std::move(ctx), lower, upper);
   }
 
   //////////////////////////////////////Dedup/////////////////////////
@@ -138,7 +146,7 @@ class BaseEngine {
     std::unordered_set<dedup_tuple_t, boost::hash<dedup_tuple_t>> dedup_set;
     std::vector<size_t> active_indices;
     std::vector<size_t> new_offset;
-    auto& cur_ = ctx.GetHead();
+    auto& cur_ = ctx.GetMutableHead();
     new_offset.reserve(cur_.Size());
     new_offset.emplace_back(0);
     size_t cnt = 0;
@@ -223,9 +231,9 @@ class BaseEngine {
         typename gs::remove_ith_type<real_y_ind, ctx_y_all_data_t>::type;
     static_assert(std::is_same_v<ctx_x_ele_t, ctx_y_ele_t>,
                   "Join on different type is not supported.");
-    // We shall preserve the records on the left, and append the right context'
-    // columns(which is not in ctx_x) to ctx_x
-    // For CodegenBuilder, the mapping from tagId to tag_ind should be updated.
+    // We shall preserve the records on the left, and append the right
+    // context' columns(which is not in ctx_x) to ctx_x For CodegenBuilder,
+    // the mapping from tagId to tag_ind should be updated.
     auto y_builder_tuple_init = ctx_y.CreateSetBuilder();
     auto x_builder_tuple_init = ctx_x.CreateSetBuilder();
     auto y_builder_tuple = remove_nth_element<real_y_ind>(y_builder_tuple_init);
@@ -349,9 +357,9 @@ class BaseEngine {
                   "Join on different type is not supported.");
     // if
     //   contexpr(y_ele_num == 2) {}
-    // We shall preserve the records on the left, and append the right context'
-    // columns(which is not in ctx_x) to ctx_x
-    // For CodegenBuilder, the mapping from tagId to tag_ind should be updated.
+    // We shall preserve the records on the left, and append the right
+    // context' columns(which is not in ctx_x) to ctx_x For CodegenBuilder,
+    // the mapping from tagId to tag_ind should be updated.
     auto y_builder_tuple_init = ctx_y.CreateSetBuilder();
     auto x_builder_tuple_init = ctx_x.CreateSetBuilder();
     auto y_builder_tuple =
@@ -460,7 +468,7 @@ class BaseEngine {
     // NOTE: With fold op considered, we may lost recording in start_tag, when
     // they are filtered in sub plan.
     // We need to add them back to form a complete result.
-    auto& inner_ctx_head = inner_ctx.GetHead();
+    auto& inner_ctx_head = inner_ctx.GetMutableHead();
     if (ctx.template GetNode<start_tag>().Size() > inner_ctx_head.Size()) {
       VLOG(10) << "Make up empty entries filtered in subplan"
                << ctx.template GetNode<start_tag>().Size() << ", "
@@ -789,7 +797,7 @@ class BaseEngine {
         join_key_set.insert(pair);
       }
     }
-    auto& cur_ = ctx_x.GetHead();
+    auto& cur_ = ctx_x.GetMutableHead();
     LOG(INFO) << "total entry size in set: " << join_key_set.size()
               << ", ctx x size: " << cur_.Size();
     {
@@ -879,7 +887,7 @@ class BaseEngine {
     }
     std::vector<size_t> active_indices;
     std::vector<size_t> new_offsets;
-    auto& x_head = ctx_x.GetHead();
+    auto& x_head = ctx_x.GetMutableHead();
     new_offsets.reserve(x_head.Size() + 1);
     new_offsets.emplace_back(0);
     size_t cur_ind = 0;
@@ -897,8 +905,8 @@ class BaseEngine {
     return std::move(ctx_x);
   }
 
-  // intersect two context on the specified key, it is expected that two context
-  // only differs at the last column
+  // intersect two context on the specified key, it is expected that two
+  // context only differs at the last column
   template <int alias_x, int alias_y, typename CTX_X, typename CTX_Y,
             typename std::enable_if<std::is_same<
                 typename CTX_X::prev_tuple_t,
@@ -928,8 +936,8 @@ class BaseEngine {
     using y_head_ele_t =
         std::tuple_element_t<std::tuple_size_v<ctx_y_all_ele_t> - 1,
                              ctx_y_all_ele_t>;
-    auto& head_x = ctx_x.GetHead();
-    auto& head_y = ctx_y.GetHead();
+    auto& head_x = ctx_x.GetMutableHead();
+    auto& head_y = ctx_y.GetMutableHead();
     auto left_repeat_array = ctx_x.ObtainOffsetFromTag(real_alias_x - 1);
     auto right_repeat_array = ctx_y.ObtainOffsetFromTag(real_alias_y - 1);
     CHECK(left_repeat_array.size() == right_repeat_array.size())
