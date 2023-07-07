@@ -82,7 +82,6 @@ impl DynPeers {
     }
 
     pub fn all(peers: u32) -> Self {
-        println!("process 2");
         DynPeers { mask: PeerSet::All(peers) }
     }
 

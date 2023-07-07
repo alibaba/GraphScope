@@ -482,7 +482,6 @@ impl OperatorBuilder {
                 outputs.push(o);
             }
         }
-        println!("222");
         let core = match self.core {
             GeneralOperator::Simple(op) => {
                 let scope_level = self.info.scope_level;
@@ -493,7 +492,6 @@ impl OperatorBuilder {
             }
             GeneralOperator::Notifiable(op) => op,
         };
-        println!("333");
         Operator {
             info: self.info,
             inputs: self.inputs,

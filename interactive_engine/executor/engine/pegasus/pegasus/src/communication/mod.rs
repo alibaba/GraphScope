@@ -114,11 +114,9 @@ pub(crate) fn build_channel<T: Data>(
                 }
                 CHANNEL_RESOURCES.with(|res| {
                     let mut map = res.borrow_mut();
-                    println!("insert {:?} to channel resource", ch_id);
                     map.insert(ch_id, upcast);
                 })
             }
-            println!("return source from data_plane");
             Ok(ch)
         } else {
             BuildJobError::server_err(format!("channel {} resources is empty;", ch_id.index))

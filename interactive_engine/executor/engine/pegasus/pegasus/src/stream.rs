@@ -310,9 +310,7 @@ impl<D: Data> Stream<D> {
         F: FnOnce(&OperatorInfo) -> T,
     {
         let op_ref = self.add_operator(name, op_builder)?;
-        println!("add sink");
         self.builder.add_sink(op_ref.get_index());
-        println!("finished sink");
         Ok(())
     }
 

@@ -31,7 +31,6 @@ impl<K: Data + Key, V: Data> FoldByKey<K, V> for Stream<Pair<K, V>> {
             F: FnMut(I, V) -> FnResult<I> + Send + 'static,
             B: Fn() -> F + Send + 'static,
     {
-        println!("Start build fold_by_key");
         self.partition_by_key()
             .unary("fold_by_key", |info| {
                 let mut ttm = TidyTagMap::new(info.scope_level);

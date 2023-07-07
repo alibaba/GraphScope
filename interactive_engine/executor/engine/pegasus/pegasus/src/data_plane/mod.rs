@@ -241,17 +241,14 @@ pub fn build_channels<T: Data>(
     }
 
     // prepare remote channels
-    println!("Start build remote channel");
     let mut remote_sends = Vec::<Vec<IPCSender<T>>>::new();
     let mut remote_recv = LinkedList::<IPCReceiver<T>>::new();
     {
         for i in 0..workers {
             let ch_id = encode_channel_id(id, i as u32);
             // use send[j] to send  message to worker[i] at server j
-            println!("Start build remote sender");
             let sends = pegasus_network::ipc_channel_send::<T>(ch_id, my_server_id, &servers, msg_senders)?;
             remote_sends.push(sends);
-            println!("Start build remote receiver");
             let recv =
                 pegasus_network::ipc_channel_recv::<T>(ch_id, my_server_id, &servers, recv_register)?;
             remote_recv.push_back(recv);

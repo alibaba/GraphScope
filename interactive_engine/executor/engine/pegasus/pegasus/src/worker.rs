@@ -121,7 +121,6 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
             self.conf.batch_size as usize,
             self.conf.batch_capacity,
         );
-        println!("server size in dfb is {}", dfb.config.servers().len());
         let mut input = Source::new(root_builder.copy_data(), &dfb);
         let output = self.sink.clone();
         func(&mut input, output)?;

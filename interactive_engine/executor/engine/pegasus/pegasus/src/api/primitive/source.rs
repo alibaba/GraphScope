@@ -40,7 +40,6 @@ impl<D: Data> Source<D> {
     {
         let output = self.output.copy_data();
         let output = std::mem::replace(&mut self.output, output);
-        println!("server size in source {}", self.dfb.config.servers().len());
         let stream = Stream::new(output, &self.dfb);
         source.into_dataflow(stream)
     }

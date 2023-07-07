@@ -187,25 +187,20 @@ impl<T: Data> Channel<T> {
         )?
         .take();
         let worker_index = dfb.worker_id.index as usize;
-        println!("1, worker index is {}, raw size is {}", worker_index, raw.len());
         let notify = raw.swap_remove(worker_index);
-        println!("1.5");
         let ch_info = ChannelInfo::new(id, scope_level, raw.len(), raw.len(), self.source, target);
-        println!("2");
         let mut pushes = Vec::with_capacity(raw.len());
         let source = dfb.worker_id.index;
         for (idx, p) in raw.into_iter().enumerate() {
             let push = EventEmitPush::new(ch_info, source, idx as u32, p, dfb.event_emitter.clone());
             pushes.push(push);
         }
-        println!("3");
         Ok((ch_info, pushes, pull, notify))
     }
 
     pub(crate) fn connect_to(
         mut self, target: Port, dfb: &DataflowBuilder,
     ) -> Result<MaterializedChannel<T>, BuildJobError> {
-        println!("server size of server {}", dfb.config.servers().len());
         let index = dfb.next_channel_index();
         let id = ChannelId { job_seq: dfb.config.job_id as u64, index };
         let batch_size = self.batch_size;
