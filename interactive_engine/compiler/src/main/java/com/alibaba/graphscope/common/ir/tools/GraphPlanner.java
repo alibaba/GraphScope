@@ -29,7 +29,6 @@ import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
-
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.GraphOptCluster;
@@ -180,6 +179,10 @@ public class GraphPlanner {
             // return HepPlanner with empty rules if optimization is turned off
             return new HepPlanner(HepProgram.builder().build());
         }
+    }
+
+    public AtomicLong getIdGenerator() {
+        return idGenerator;
     }
 
     public static void main(String[] args) throws Exception {
