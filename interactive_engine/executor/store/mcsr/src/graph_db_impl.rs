@@ -30,6 +30,7 @@ use crate::types::*;
 use crate::utils::{Iter, LabeledIterator, LabeledRangeIterator, Range};
 use crate::vertex_map::VertexMap;
 
+#[derive(Copy, Clone)]
 pub struct SubGraph<'a, G: Send + Sync + IndexType = DefaultId, I: Send + Sync + IndexType = InternalId> {
     pub csr: &'a MutableCsr<I>,
     pub vm: &'a VertexMap<G, I>,
@@ -105,7 +106,22 @@ where
         self.edge_data
     }
 }
+//
+// impl<'a, G, I> Clone for SubGraph<'a, G, I> {
+//     fn clone(&self) -> Self {
+//         SubGraph {
+//             csr: self.csr,
+//             vm:self.vm,
+//             src_label: self.src_label,
+//             dst_label: self.dst_label,
+//             e_label: self.e_label,
+//             vertex_data: self.vertex_data,
+//             edge_data: self.edge_data
+//         }
+//     }
+// }
 
+#[derive(Copy, Clone)]
 pub struct SingleSubGraph<
     'a,
     G: Send + Sync + IndexType = DefaultId,
