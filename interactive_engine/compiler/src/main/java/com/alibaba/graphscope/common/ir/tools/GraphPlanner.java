@@ -29,6 +29,7 @@ import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
+
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.GraphOptCluster;
@@ -188,14 +189,16 @@ public class GraphPlanner {
                     "usage: GraphPlanner '<path_to_query_file>' '<path to the physical"
                             + " output file>'");
         }
-        String query = com.alibaba.graphscope.common.utils.FileUtils.readCypherQueryFromFile(args[0]);
+        String query =
+                com.alibaba.graphscope.common.utils.FileUtils.readCypherQueryFromFile(args[0]);
         GraphPlanner planner = new GraphPlanner(configs);
         Antlr4Parser cypherParser = new CypherAntlr4Parser();
         PlannerInstance instance =
                 planner.instance(cypherParser.parse(query), metaFetcher.fetch().get());
         Summary summary = instance.plan();
         try (PhysicalBuilder<byte[]> physicalBuilder = summary.getPhysicalBuilder()) {
-            org.apache.commons.io.FileUtils.writeByteArrayToFile(new File(args[1]), physicalBuilder.build());
+            org.apache.commons.io.FileUtils.writeByteArrayToFile(
+                    new File(args[1]), physicalBuilder.build());
         }
     }
 }
