@@ -188,8 +188,7 @@ public class GraphPlanner {
         ExperimentalMetaFetcher metaFetcher = new ExperimentalMetaFetcher(configs);
         if (args.length < 2 || args[0].isEmpty() || args[1].isEmpty()) {
             throw new IllegalArgumentException(
-                    "usage: GraphPlanner '<path_to_query_file>' '<path to the physical"
-                            + " output file>'");
+                    "usage: GraphPlanner '<path_to_query_file>' '<path_to_physical_output_file>'");
         }
         String query = FileUtils.readFileToString(new File(args[0]), StandardCharsets.UTF_8);
         GraphPlanner planner = new GraphPlanner(configs);
