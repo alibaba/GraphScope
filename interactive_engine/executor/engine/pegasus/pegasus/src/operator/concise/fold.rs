@@ -14,6 +14,7 @@ impl<D: Data> Fold<D> for Stream<D> {
         F: FnMut(B, D) -> FnResult<B> + Send + 'static,
         C: Fn() -> F + Send + 'static,
     {
+        let worker = self.get_worker_id().index;
         let s = self.aggregate().unary("fold", |info| {
             let mut table = TidyTagMap::<(B, F)>::new(info.scope_level);
             move |input, output| {
@@ -44,7 +45,6 @@ impl<D: Data> Fold<D> for Stream<D> {
                         } else {
                             // decide if it need to output a default value when upstream is empty;
                             // but only one default value should be output;
-                            let worker = crate::worker_id::get_current_worker().index;
                             if (end.tag.is_root() && worker == 0)
                                 || (!end.tag.is_root() && end.contains_source(worker))
                             {
@@ -68,6 +68,7 @@ impl<D: Data> Fold<D> for Stream<D> {
         F: FnMut(B, D) -> FnResult<B> + Send + 'static,
         C: Fn() -> F + Send + 'static,
     {
+        let worker = self.get_worker_id().index;
         let s = self.unary("fold_partition", |info| {
             let mut table = TidyTagMap::<(B, F)>::new(info.scope_level);
             move |input, output| {
@@ -88,7 +89,6 @@ impl<D: Data> Fold<D> for Stream<D> {
                             let mut session = output.new_session(&batch.tag)?;
                             session.give_last(Single(accum), end)?;
                         } else {
-                            let worker = crate::worker_id::get_current_worker().index;
                             if end.tag.is_root() || (!end.tag.is_root() && end.contains_source(worker)) {
                                 let mut session = output.new_session(&batch.tag)?;
                                 session.give_last(Single(init.clone()), end)?

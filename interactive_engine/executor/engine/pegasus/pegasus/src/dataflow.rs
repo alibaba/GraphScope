@@ -14,11 +14,16 @@
 //! limitations under the License.
 
 use std::cell::RefCell;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::fmt::Write;
 use std::fs::File;
+use std::net::SocketAddr;
 use std::rc::Rc;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
+
+use crossbeam_channel::Sender;
+use crossbeam_utils::sync::ShardedLock;
+use pegasus_network::{InboxRegister, NetData};
 
 use crate::api::meta::OperatorInfo;
 use crate::channel_id::ChannelInfo;
@@ -41,10 +46,16 @@ pub struct DataflowBuilder {
     operators: Rc<RefCell<Vec<OperatorBuilder>>>,
     edges: Rc<RefCell<Vec<Edge>>>,
     sinks: Rc<RefCell<Vec<usize>>>,
+    pub msg_senders: &'static ShardedLock<HashMap<(u64, u64), (SocketAddr, Weak<Sender<NetData>>)>>,
+    pub recv_register: &'static ShardedLock<HashMap<(u64, u64), InboxRegister>>,
 }
 
 impl DataflowBuilder {
-    pub(crate) fn new(worker_id: WorkerId, event_emitter: EventEmitter, config: &Arc<JobConf>) -> Self {
+    pub(crate) fn new(
+        worker_id: WorkerId, event_emitter: EventEmitter, config: &Arc<JobConf>,
+        msg_senders: &'static ShardedLock<HashMap<(u64, u64), (SocketAddr, Weak<Sender<NetData>>)>>,
+        recv_register: &'static ShardedLock<HashMap<(u64, u64), InboxRegister>>,
+    ) -> Self {
         DataflowBuilder {
             worker_id,
             config: config.clone(),
@@ -53,6 +64,8 @@ impl DataflowBuilder {
             event_emitter,
             ch_index: Rc::new(RefCell::new(1)),
             sinks: Rc::new(RefCell::new(vec![])),
+            msg_senders,
+            recv_register,
         }
     }
 
@@ -123,12 +136,10 @@ impl DataflowBuilder {
             writeln!(plan_desc, "{}", "Operators:\t").ok();
         }
 
-        println!("build 1");
         let mut builds = self.operators.replace(vec![]);
         builds.sort_by_key(|op| op.index());
         let mut operators = Vec::with_capacity(builds.len() + 1);
         // place holder;
-        println!("build 2");
         operators.push(None);
         let mut op_names = vec![];
         op_names.push("root".to_owned());
@@ -139,19 +150,13 @@ impl DataflowBuilder {
         for e in self.edges.borrow().iter() {
             depends.add(e);
         }
-        println!("build 3");
         for (i, mut op_b) in builds.drain(..).enumerate() {
             let op_index = op_b.index();
             assert_eq!(i + 1, op_index, "{:?}", op_b.info);
-            println!("build 3-1");
             let inputs_notify = op_b.take_inputs_notify();
-            println!("build 3-2");
             let outputs_cancel = op_b.build_outputs_cancel();
-            println!("build 3-3");
             sch.add_schedule_op(op_index, op_b.info.scope_level, inputs_notify, outputs_cancel);
-            println!("build 3-4");
             let op = op_b.build();
-            println!("build 3-5");
             op_names.push(op.info.name.clone());
             if report {
                 writeln!(plan_desc, "\t{}\t{}({})", op.info.index, op.info.name, op.info.index).ok();
@@ -161,7 +166,6 @@ impl DataflowBuilder {
             }
             operators.push(Some(op));
         }
-        println!("build 4");
         let edges = self.edges.replace(vec![]);
         if report {
             writeln!(plan_desc, "Channels:\t").ok();
@@ -205,6 +209,8 @@ impl Clone for DataflowBuilder {
             ch_index: self.ch_index.clone(),
             edges: self.edges.clone(),
             sinks: self.sinks.clone(),
+            msg_senders: self.msg_senders,
+            recv_register: self.recv_register,
         }
     }
 }

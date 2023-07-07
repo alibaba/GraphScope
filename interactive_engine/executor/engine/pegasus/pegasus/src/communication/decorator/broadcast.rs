@@ -11,12 +11,13 @@ pub struct BroadcastBatchPush<D: Data> {
     pub ch_info: ChannelInfo,
     pushes: Vec<EventEmitPush<D>>,
     cancel_handle: MultiConsCancelPtr,
+    total_peers: u32,
 }
 
 impl<D: Data> BroadcastBatchPush<D> {
-    pub fn new(ch_info: ChannelInfo, pushes: Vec<EventEmitPush<D>>) -> Self {
+    pub fn new(ch_info: ChannelInfo, pushes: Vec<EventEmitPush<D>>, total_peers: u32) -> Self {
         let cancel_handle = MultiConsCancelPtr::new(ch_info.scope_level, pushes.len());
-        BroadcastBatchPush { ch_info, pushes, cancel_handle }
+        BroadcastBatchPush { ch_info, pushes, cancel_handle, total_peers }
     }
 
     pub(crate) fn get_cancel_handle(&self) -> CancelHandle {
@@ -38,14 +39,14 @@ impl<D: Data> BroadcastBatchPush<D> {
 
         if let Some(mut end) = batch.take_end() {
             if end.peers().value() == 1 && end.peers_contains(self.pushes[target].source_worker) {
-                end.update_peers(DynPeers::all());
+                end.update_peers(DynPeers::all(self.total_peers));
                 batch.set_end(end);
                 self.pushes[target].push(batch)?;
             } else {
                 if !batch.is_empty() {
                     self.pushes[target].push(batch)?;
                 }
-                self.pushes[target].sync_end(end, DynPeers::all())?;
+                self.pushes[target].sync_end(end, DynPeers::all(self.total_peers))?;
             }
         } else {
             self.pushes[target].push(batch)?;

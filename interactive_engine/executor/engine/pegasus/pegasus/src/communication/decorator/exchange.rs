@@ -31,7 +31,7 @@ use crate::errors::{IOError, IOErrorKind};
 use crate::graph::Port;
 use crate::progress::{DynPeers, EndOfScope};
 use crate::tag::tools::map::TidyTagMap;
-use crate::{Data, Tag};
+use crate::{Data, Tag, WorkerId};
 
 struct Exchange<D> {
     magic: Magic,
@@ -61,6 +61,7 @@ pub(crate) struct ExchangeByDataPush<D: Data> {
     pub src: u32,
     pub port: Port,
     index: u32,
+    total_peers: u32,
     scope_level: u32,
     buffers: Vec<ScopeBufferPool<D>>,
     pushes: Vec<EventEmitPush<D>>,
@@ -72,12 +73,13 @@ pub(crate) struct ExchangeByDataPush<D: Data> {
 impl<D: Data> ExchangeByDataPush<D> {
     pub(crate) fn new(
         info: ChannelInfo, router: Box<dyn RouteFunction<D>>, buffers: Vec<ScopeBufferPool<D>>,
-        pushes: Vec<EventEmitPush<D>>, src: u32,
+        pushes: Vec<EventEmitPush<D>>, worker_id: WorkerId,
     ) -> Self {
         let len = pushes.len();
         let cancel_handle = MultiConsCancelPtr::new(info.scope_level, len);
         ExchangeByDataPush {
-            src,
+            src: worker_id.index,
+            total_peers: worker_id.total_peers(),
             port: info.source_port,
             index: info.index(),
             scope_level: info.scope_level,
@@ -179,7 +181,7 @@ impl<D: Data> ExchangeByDataPush<D> {
 
     fn update_end(
         &mut self, target: Option<usize>, end: &EndOfScope,
-    ) -> impl Iterator<Item=(u64, u64, DynPeers)> {
+    ) -> impl Iterator<Item = (u64, u64, DynPeers)> {
         let mut push_stat = Vec::with_capacity(self.pushes.len());
         for (index, p) in self.pushes.iter().enumerate() {
             let mut pushes = p.get_push_count(&end.tag).unwrap_or(0) as u64;
@@ -191,7 +193,7 @@ impl<D: Data> ExchangeByDataPush<D> {
             push_stat.push(pushes);
         }
 
-        let mut weight = DynPeers::all();
+        let mut weight = DynPeers::all(self.total_peers);
         if self.scope_level != 0 {
             weight = DynPeers::empty();
             for (i, p) in push_stat.iter().enumerate() {
@@ -374,7 +376,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                             new_end.total_send = 0;
                             new_end.global_total_send = 0;
                             if end.tag.is_root() {
-                                p.sync_end(new_end, DynPeers::all())?;
+                                p.sync_end(new_end, DynPeers::all(self.total_peers))?;
                             } else {
                                 p.sync_end(new_end, DynPeers::empty())?;
                             }
@@ -407,7 +409,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                         let mut new_end = end.clone();
                         new_end.total_send = 0;
                         new_end.global_total_send = 0;
-                        p.sync_end(new_end, DynPeers::all())?;
+                        p.sync_end(new_end, DynPeers::all(self.total_peers))?;
                     }
                 }
             } else {
@@ -595,6 +597,7 @@ impl<D: Data> BlockPush for ExchangeByDataPush<D> {
 pub struct ExchangeByBatchPush<D: Data> {
     pub ch_info: ChannelInfo,
     src: u32,
+    total_peers: u32,
     scope_level: u32,
     pushes: Vec<EventEmitPush<D>>,
     magic: Magic,
@@ -603,7 +606,9 @@ pub struct ExchangeByBatchPush<D: Data> {
 }
 
 impl<D: Data> ExchangeByBatchPush<D> {
-    pub fn new(ch_info: ChannelInfo, route: BatchRoute<D>, pushes: Vec<EventEmitPush<D>>, src:u32) -> Self {
+    pub fn new(
+        ch_info: ChannelInfo, route: BatchRoute<D>, pushes: Vec<EventEmitPush<D>>, worker_id: WorkerId,
+    ) -> Self {
         let len = pushes.len();
         let magic = Magic::new(len);
         let cancel_handle = match route {
@@ -612,7 +617,16 @@ impl<D: Data> ExchangeByBatchPush<D> {
         };
         let scope_level = ch_info.scope_level;
 
-        ExchangeByBatchPush { ch_info, src, scope_level, pushes, magic, route, cancel_handle }
+        ExchangeByBatchPush {
+            ch_info,
+            src: worker_id.index,
+            total_peers: worker_id.total_peers(),
+            scope_level,
+            pushes,
+            magic,
+            route,
+            cancel_handle,
+        }
     }
 
     pub(crate) fn update_cancel_handle(&mut self, cancel_handle: CancelHandle) {
@@ -625,7 +639,7 @@ impl<D: Data> ExchangeByBatchPush<D> {
 
     fn update_end(
         &mut self, target: Option<usize>, end: &EndOfScope,
-    ) -> impl Iterator<Item=(u64, u64, DynPeers)> {
+    ) -> impl Iterator<Item = (u64, u64, DynPeers)> {
         let mut push_stat = Vec::with_capacity(self.pushes.len());
         for (index, p) in self.pushes.iter().enumerate() {
             let mut pushes = p.get_push_count(&end.tag).unwrap_or(0) as u64;
@@ -637,7 +651,7 @@ impl<D: Data> ExchangeByBatchPush<D> {
             push_stat.push(pushes);
         }
 
-        let mut weight = DynPeers::all();
+        let mut weight = DynPeers::all(self.total_peers);
         if self.scope_level != 0 {
             weight = DynPeers::empty();
             for (i, p) in push_stat.iter().enumerate() {
@@ -850,7 +864,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByBatchPush<D> {
                         let mut new_end = end.clone();
                         new_end.total_send = 0;
                         new_end.global_total_send = 0;
-                        p.sync_end(new_end, DynPeers::all())?;
+                        p.sync_end(new_end, DynPeers::all(self.total_peers))?;
                     }
                 }
             } else {

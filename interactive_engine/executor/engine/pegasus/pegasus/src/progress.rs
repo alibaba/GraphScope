@@ -81,8 +81,8 @@ impl DynPeers {
         DynPeers { mask: PeerSet::Partial(set) }
     }
 
-    pub fn all() -> Self {
-        let peers = crate::worker_id::get_current_worker().total_peers();
+    pub fn all(peers: u32) -> Self {
+        println!("process 2");
         DynPeers { mask: PeerSet::All(peers) }
     }
 
@@ -250,6 +250,7 @@ impl EndOfScope {
             let owner = if self.tag.len() == 0 {
                 0
             } else {
+                println!("process 3");
                 let peers = crate::worker_id::get_current_worker().total_peers();
                 self.tag.current_uncheck() % peers
             };

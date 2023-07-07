@@ -13,10 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::LinkedList;
+use std::collections::{HashMap, LinkedList};
+use std::net::SocketAddr;
+use std::sync::{Arc, Weak};
 
+use crossbeam_channel::Sender;
+use crossbeam_utils::sync::ShardedLock;
 use pegasus_common::channel::MPMCSender;
-use pegasus_network::{IPCReceiver, IPCSender};
+use pegasus_network::{IPCReceiver, IPCSender, InboxRegister, NetData};
 
 use crate::channel_id::ChannelId;
 use crate::data::Data;
@@ -190,17 +194,17 @@ pub fn build_local_channels<T: Data>(id: ChannelId, workers: usize) -> LinkedLis
 
 pub fn build_channels<T: Data>(
     id: ChannelId, local_workers: u32, server_index: u32, server_conf: &ServerConf,
+    msg_senders: Option<&'static ShardedLock<HashMap<(u64, u64), (SocketAddr, Weak<Sender<NetData>>)>>>,
+    recv_register: Option<&'static ShardedLock<HashMap<(u64, u64), InboxRegister>>>,
 ) -> Result<LinkedList<ChannelResource<T>>, BuildJobError> {
     let workers = local_workers as usize;
     let servers = server_conf.get_servers();
     if servers.is_empty() {
-        println!("Server len is empty");
         return Ok(build_local_channels(id, workers));
     }
 
     let server_index = server_index as usize;
 
-    println!("Server len is {}", servers.len());
     if servers.len() == 1 && server_index == 0 {
         return Ok(build_local_channels(id, workers));
     }
@@ -237,15 +241,19 @@ pub fn build_channels<T: Data>(
     }
 
     // prepare remote channels
+    println!("Start build remote channel");
     let mut remote_sends = Vec::<Vec<IPCSender<T>>>::new();
     let mut remote_recv = LinkedList::<IPCReceiver<T>>::new();
     {
         for i in 0..workers {
             let ch_id = encode_channel_id(id, i as u32);
             // use send[j] to send  message to worker[i] at server j
-            let sends = pegasus_network::ipc_channel_send::<T>(ch_id, my_server_id, &servers)?;
+            println!("Start build remote sender");
+            let sends = pegasus_network::ipc_channel_send::<T>(ch_id, my_server_id, &servers, msg_senders)?;
             remote_sends.push(sends);
-            let recv = pegasus_network::ipc_channel_recv::<T>(ch_id, my_server_id, &servers)?;
+            println!("Start build remote receiver");
+            let recv =
+                pegasus_network::ipc_channel_recv::<T>(ch_id, my_server_id, &servers, recv_register)?;
             remote_recv.push_back(recv);
         }
     }
@@ -393,8 +401,9 @@ mod test {
             workers as u32,
             server_index as u32,
             servers,
+            None,
         )
-            .unwrap();
+        .unwrap();
         let servers_len = servers.len();
         if servers_len == 0 {
             run_channel_test(0, workers, &mut ch_resources);
@@ -474,7 +483,7 @@ mod test {
                     server[index as usize].addr,
                     server,
                 )
-                    .unwrap();
+                .unwrap();
                 while !pegasus_network::check_ipc_ready(index + start_index, &vec![2, 3]) {
                     std::thread::sleep(std::time::Duration::from_secs(1));
                 }
@@ -486,15 +495,17 @@ mod test {
                     local_workers,
                     index as u32,
                     &server_conf,
+                    None,
                 )
-                    .unwrap();
+                .unwrap();
                 let mut ch_resources_second = build_channels::<Vec<u64>>(
                     ChannelId::new(1, 1),
                     local_workers,
                     index as u32,
                     &server_conf,
+                    None,
                 )
-                    .unwrap();
+                .unwrap();
                 let mut channels = vec![];
                 channels.push(ch_resources_first.pop_front().unwrap());
                 channels.push(ch_resources_second.pop_front().unwrap());
@@ -580,7 +591,7 @@ mod test {
                     server[index as usize].addr,
                     server,
                 )
-                    .unwrap();
+                .unwrap();
                 while !pegasus_network::check_ipc_ready(index + start_index, &vec![4, 5]) {
                     std::thread::sleep(std::time::Duration::from_secs(1));
                 }
@@ -591,8 +602,9 @@ mod test {
                     local_workers,
                     index as u32,
                     &server_conf,
+                    None,
                 )
-                    .unwrap();
+                .unwrap();
                 let mut channel_threads = vec![];
                 let mut local_index = 0;
                 while let Some(ch) = ch_resources.pop_front() {

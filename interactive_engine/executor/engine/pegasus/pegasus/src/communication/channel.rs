@@ -178,7 +178,14 @@ impl<T: Data> Channel<T> {
         (ChannelInfo, Vec<EventEmitPush<T>>, GeneralPull<MicroBatch<T>>, GeneralPush<MicroBatch<T>>),
         BuildJobError,
     > {
-        let (mut raw, pull) = crate::communication::build_channel::<MicroBatch<T>>(id, &dfb.config, dfb.worker_id)?.take();
+        let (mut raw, pull) = crate::communication::build_channel::<MicroBatch<T>>(
+            id,
+            &dfb.config,
+            dfb.worker_id,
+            Some(dfb.msg_senders),
+            Some(dfb.recv_register),
+        )?
+        .take();
         let worker_index = dfb.worker_id.index as usize;
         println!("1, worker index is {}, raw size is {}", worker_index, raw.len());
         let notify = raw.swap_remove(worker_index);
@@ -215,37 +222,34 @@ impl<T: Data> Channel<T> {
             );
         }
 
-        println!("start build channel");
         if dfb.worker_id.total_peers() == 1 {
             return Ok(self.build_pipeline(target, id, dfb.worker_id.index));
         }
 
-        println!("start build channel2");
         let kind = std::mem::replace(&mut self.kind, ChannelKind::Pipeline);
         match kind {
             ChannelKind::Pipeline => Ok(self.build_pipeline(target, id, dfb.worker_id.index)),
             ChannelKind::Shuffle(r) => {
-                println!("start build 1");
                 let (info, pushes, pull, notify) = self.build_remote(scope_level, target, id, dfb)?;
-                println!("start build 2");
                 let mut buffers = Vec::with_capacity(pushes.len());
                 for _ in 0..pushes.len() {
                     let b = ScopeBufferPool::new(batch_size, batch_capacity, scope_level);
                     buffers.push(b);
                 }
-                println!("start build 3");
-                let push = ExchangeByDataPush::new(info, r, buffers, pushes, dfb.worker_id.index);
-                println!("start build 4");
+                let push = ExchangeByDataPush::new(info, r, buffers, pushes, dfb.worker_id);
                 let ch = push.get_cancel_handle();
-                println!("start build 5");
-                let push = PerChannelPush::new(info, self.scope_delta, MicroBatchPush::Exchange(push), ch, dfb.worker_id.index);
-                println!("start build 6");
+                let push = PerChannelPush::new(
+                    info,
+                    self.scope_delta,
+                    MicroBatchPush::Exchange(push),
+                    ch,
+                    dfb.worker_id.index,
+                );
                 Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
             }
             ChannelKind::BatchShuffle(route) => {
-                println!("start build 2");
                 let (info, pushes, pull, notify) = self.build_remote(scope_level, target, id, dfb)?;
-                let push = ExchangeByBatchPush::new(info, route, pushes, dfb.worker_id.index);
+                let push = ExchangeByBatchPush::new(info, route, pushes, dfb.worker_id);
                 let cancel = push.get_cancel_handle();
                 let push = PerChannelPush::new(
                     info,
@@ -257,25 +261,31 @@ impl<T: Data> Channel<T> {
                 Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
             }
             ChannelKind::Broadcast => {
-                println!("start build 3");
                 let (info, pushes, pull, notify) = self.build_remote(scope_level, target, id, dfb)?;
-                let push = BroadcastBatchPush::new(info, pushes);
+                let push = BroadcastBatchPush::new(info, pushes, dfb.worker_id.total_peers());
                 let ch = push.get_cancel_handle();
-                let push = PerChannelPush::new(info, self.scope_delta, MicroBatchPush::Broadcast(push), ch, dfb.worker_id.index);
+                let push = PerChannelPush::new(
+                    info,
+                    self.scope_delta,
+                    MicroBatchPush::Broadcast(push),
+                    ch,
+                    dfb.worker_id.index,
+                );
                 Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
             }
             ChannelKind::Aggregate => {
-                println!("start build 4");
                 let (mut ch_info, pushes, pull, notify) =
                     self.build_remote(scope_level, target, id, dfb)?;
-                println!("start build 4 1");
                 ch_info.target_peers = 1;
-                let push = AggregateBatchPush::new(ch_info, pushes, dfb.worker_id.index);
+                let push = AggregateBatchPush::new(ch_info, pushes, dfb.worker_id);
                 let cancel = push.get_cancel_handle();
-                println!("start build 4 2");
-                let push =
-                    PerChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::Aggregate(push), cancel, dfb.worker_id.index);
-                println!("start build 4 3");
+                let push = PerChannelPush::new(
+                    ch_info,
+                    self.scope_delta,
+                    MicroBatchPush::Aggregate(push),
+                    cancel,
+                    dfb.worker_id.index,
+                );
                 Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
             }
         }
