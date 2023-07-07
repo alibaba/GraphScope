@@ -117,10 +117,10 @@ seastar::future<query_result> executor::run_hqps_adhoc_query(
   }
   // 1. load and run.
   LOG(INFO) << "Okay, try to run the query of lib path: " << lib_path
-            << ", job id: " << job_id;
+            << ", job id: " << job_id
+            << "local shard id: " << hiactor::local_shard_id();
 
-  seastar::sstring content =
-      server::load_and_run(job_id, lib_path, hiactor::local_shard_id());
+  seastar::sstring content = server::load_and_run(job_id, lib_path);
   return seastar::make_ready_future<query_result>(std::move(content));
 }
 

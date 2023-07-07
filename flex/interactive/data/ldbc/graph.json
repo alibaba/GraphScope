@@ -1,0 +1,758 @@
+{
+    "entities": [
+        {
+            "label": {
+                "id": 0,
+                "name": "PLACE"
+            },
+            "columns": [
+                {
+                    "key": {
+                        "id": 0,
+                        "name": "id"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 8,
+                        "name": "name"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 9,
+                        "name": "url"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                }
+            ]
+        },
+        {
+            "label": {
+                "id": 1,
+                "name": "PERSON"
+            },
+            "columns": [
+                {
+                    "key": {
+                        "id": 0,
+                        "name": "id"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 11,
+                        "name": "firstName"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 12,
+                        "name": "lastName"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 13,
+                        "name": "gender"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 14,
+                        "name": "birthday"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 2,
+                        "name": "creationDate"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 3,
+                        "name": "locationIP"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 4,
+                        "name": "browserUsed"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                }
+            ]
+        },
+        {
+            "label": {
+                "id": 2,
+                "name": "COMMENT"
+            },
+            "columns": [
+                {
+                    "key": {
+                        "id": 2,
+                        "name": "id"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 3,
+                        "name": "creationDate"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 4,
+                        "name": "browserUsed"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 6,
+                        "name": "content"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 3,
+                        "name": "locationIP"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 7,
+                        "name": "length"
+                    },
+                    "data_type": 1,
+                    "is_primary_key": false
+                }
+            ]
+        },
+        {
+            "label": {
+                "id": 3,
+                "name": "POST"
+            },
+            "columns": [
+                {
+                    "key": {
+                        "id": 0,
+                        "name": "id"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 1,
+                        "name": "imageFile"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 2,
+                        "name": "creationDate"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 3,
+                        "name": "locationIP"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 4,
+                        "name": "browserUsed"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 5,
+                        "name": "language"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 6,
+                        "name": "content"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 7,
+                        "name": "length"
+                    },
+                    "data_type": 1,
+                    "is_primary_key": false
+                }
+            ]
+        },
+        {
+            "label": {
+                "id": 4,
+                "name": "FORUM"
+            },
+            "columns": [
+                {
+                    "key": {
+                        "id": 0,
+                        "name": "id"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 10,
+                        "name": "title"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 2,
+                        "name": "creationDate"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                }
+            ]
+        },
+        {
+            "label": {
+                "id": 5,
+                "name": "ORGANISATION"
+            },
+            "columns": [
+                {
+                    "key": {
+                        "id": 0,
+                        "name": "id"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 8,
+                        "name": "name"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 9,
+                        "name": "url"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                }
+            ]
+        },
+        {
+            "label": {
+                "id": 6,
+                "name": "TAGCLASS"
+            },
+            "columns": [
+                {
+                    "key": {
+                        "id": 0,
+                        "name": "id"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 8,
+                        "name": "name"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 9,
+                        "name": "url"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                }
+            ]
+        },
+        {
+            "label": {
+                "id": 7,
+                "name": "TAG"
+            },
+            "columns": [
+                {
+                    "key": {
+                        "id": 0,
+                        "name": "id"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 8,
+                        "name": "name"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                },
+                {
+                    "key": {
+                        "id": 9,
+                        "name": "url"
+                    },
+                    "data_type": 4,
+                    "is_primary_key": false
+                }
+            ]
+        }
+    ],
+    "relations": [
+        {
+            "label": {
+                "id": 0,
+                "name": "HASCREATOR"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 2,
+                        "name": "COMMENT"
+                    },
+                    "dst": {
+                        "id": 1,
+                        "name": "PERSON"
+                    }
+                },
+                {
+                    "src": {
+                        "id": 3,
+                        "name": "POST"
+                    },
+                    "dst": {
+                        "id": 1,
+                        "name": "PERSON"
+                    }
+                }
+            ],
+            "columns": []
+        },
+        {
+            "label": {
+                "id": 1,
+                "name": "HASTAG"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 3,
+                        "name": "POST"
+                    },
+                    "dst": {
+                        "id": 7,
+                        "name": "TAG"
+                    }
+                }
+            ],
+            "columns": []
+        },
+        {
+            "label": {
+                "id": 2,
+                "name": "REPLYOF"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 2,
+                        "name": "COMMENT"
+                    },
+                    "dst": {
+                        "id": 2,
+                        "name": "COMMENT"
+                    }
+                },
+                {
+                    "src": {
+                        "id": 2,
+                        "name": "COMMENT"
+                    },
+                    "dst": {
+                        "id": 3,
+                        "name": "POST"
+                    }
+                }
+            ],
+            "columns": []
+        },
+        {
+            "label": {
+                "id": 3,
+                "name": "CONTAINEROF"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 4,
+                        "name": "FORUM"
+                    },
+                    "dst": {
+                        "id": 3,
+                        "name": "POST"
+                    }
+                }
+            ],
+            "columns": []
+        },
+        {
+            "label": {
+                "id": 4,
+                "name": "HASMEMBER"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 4,
+                        "name": "FORUM"
+                    },
+                    "dst": {
+                        "id": 1,
+                        "name": "PERSON"
+                    }
+                }
+            ],
+            "columns": [
+                {
+                    "key": {
+                        "id": 17,
+                        "name": "joinDate"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                }
+            ]
+        },
+        {
+            "label": {
+                "id": 5,
+                "name": "HASMODERATOR"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 4,
+                        "name": "FORUM"
+                    },
+                    "dst": {
+                        "id": 1,
+                        "name": "PERSON"
+                    }
+                }
+            ],
+            "columns": []
+        },
+        {
+            "label": {
+                "id": 6,
+                "name": "HASINTEREST"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 1,
+                        "name": "PERSON"
+                    },
+                    "dst": {
+                        "id": 7,
+                        "name": "TAG"
+                    }
+                }
+            ],
+            "columns": []
+        },
+        {
+            "label": {
+                "id": 7,
+                "name": "ISLOCATEDIN"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 2,
+                        "name": "COMMENT"
+                    },
+                    "dst": {
+                        "id": 0,
+                        "name": "PLACE"
+                    }
+                },
+                {
+                    "src": {
+                        "id": 1,
+                        "name": "PERSON"
+                    },
+                    "dst": {
+                        "id": 0,
+                        "name": "PLACE"
+                    }
+                },
+                {
+                    "src": {
+                        "id": 3,
+                        "name": "POST"
+                    },
+                    "dst": {
+                        "id": 0,
+                        "name": "PLACE"
+                    }
+                },
+                {
+                    "src": {
+                        "id": 5,
+                        "name": "ORGANISATION"
+                    },
+                    "dst": {
+                        "id": 0,
+                        "name": "PLACE"
+                    }
+                }
+            ],
+            "columns": []
+        },
+        {
+            "label": {
+                "id": 8,
+                "name": "KNOWS"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 1,
+                        "name": "PERSON"
+                    },
+                    "dst": {
+                        "id": 1,
+                        "name": "PERSON"
+                    }
+                }
+            ],
+            "columns": [
+                {
+                    "key": {
+                        "id": 2,
+                        "name": "creationDate"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                }
+            ]
+        },
+        {
+            "label": {
+                "id": 9,
+                "name": "LIKES"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 1,
+                        "name": "PERSON"
+                    },
+                    "dst": {
+                        "id": 2,
+                        "name": "COMMENT"
+                    }
+                },
+                {
+                    "src": {
+                        "id": 1,
+                        "name": "PERSON"
+                    },
+                    "dst": {
+                        "id": 3,
+                        "name": "POST"
+                    }
+                }
+            ],
+            "columns": [
+                {
+                    "key": {
+                        "id": 2,
+                        "name": "creationDate"
+                    },
+                    "data_type": 2,
+                    "is_primary_key": false
+                }
+            ]
+        },
+        {
+            "label": {
+                "id": 10,
+                "name": "WORKAT"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 1,
+                        "name": "PERSON"
+                    },
+                    "dst": {
+                        "id": 5,
+                        "name": "ORGANISATION"
+                    }
+                }
+            ],
+            "columns": [
+                {
+                    "key": {
+                        "id": 16,
+                        "name": "workFrom"
+                    },
+                    "data_type": 1,
+                    "is_primary_key": false
+                }
+            ]
+        },
+        {
+            "label": {
+                "id": 11,
+                "name": "ISPARTOF"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 0,
+                        "name": "PLACE"
+                    },
+                    "dst": {
+                        "id": 0,
+                        "name": "PLACE"
+                    }
+                }
+            ],
+            "columns": []
+        },
+        {
+            "label": {
+                "id": 12,
+                "name": "HASTYPE"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 7,
+                        "name": "TAG"
+                    },
+                    "dst": {
+                        "id": 6,
+                        "name": "TAGCLASS"
+                    }
+                }
+            ],
+            "columns": []
+        },
+        {
+            "label": {
+                "id": 13,
+                "name": "ISSUBCLASSOF"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 6,
+                        "name": "TAGCLASS"
+                    },
+                    "dst": {
+                        "id": 6,
+                        "name": "TAGCLASS"
+                    }
+                }
+            ],
+            "columns": []
+        },
+        {
+            "label": {
+                "id": 14,
+                "name": "STUDYAT"
+            },
+            "entity_pairs": [
+                {
+                    "src": {
+                        "id": 1,
+                        "name": "PERSON"
+                    },
+                    "dst": {
+                        "id": 5,
+                        "name": "ORGANISATION"
+                    }
+                }
+            ],
+            "columns": [
+                {
+                    "key": {
+                        "id": 0,
+                        "name": "classYear"
+                    },
+                    "data_type": 1,
+                    "is_primary_key": false
+                }
+            ]
+        }
+    ],
+    "is_table_id": true,
+    "is_column_id": false
+}

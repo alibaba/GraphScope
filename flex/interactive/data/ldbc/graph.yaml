@@ -1,0 +1,301 @@
+graph:
+  graph_store: mutable_csr
+  vertex:
+    - label_name: PLACE
+      properties:
+        - name: _ID
+          type: int64
+        - name: name
+          type: String
+        - name: url
+          type: String
+        - name: type
+          type: String
+      max_vertex_num: 1460
+    - label_name: PERSON
+      properties:
+        - name: _ID
+          type: int64
+        - name: firstName
+          type: String
+        - name: lastName
+          type: String
+        - name: gender
+          type: String
+        - name: birthday
+          type: int64
+        - name: creationDate
+          type: int64
+        - name: locationIP
+          type: String
+        - name: browserUsed
+          type: String
+        - name: language
+          type: String
+        - name: email
+          type: String
+      max_vertex_num: 1254000
+    - label_name: COMMENT
+      properties:
+        - name: _ID
+          type: int64
+        - name: creationDate
+          type: int64
+        - name: locationIP
+          type: String
+        - name: browserUsed
+          type: String
+        - name: content
+          type: String
+        - name: length
+          type: int32
+      max_vertex_num: 762949871
+    - label_name: POST
+      properties:
+        - name: _ID
+          type: int64
+        - name: imageFile
+          type: String
+        - name: creationDate
+          type: int64
+        - name: locationIP
+          type: String
+        - name: browserUsed
+          type: String
+        - name: language
+          type: String
+        - name: content
+          type: String
+        - name: length
+          type: int32
+      max_vertex_num: 187893047
+    - label_name: FORUM
+      properties:
+        - name: _ID
+          type: int64
+        - name: title
+          type: String
+        - name: creationDate
+          type: int64
+      max_vertex_num: 12549398
+    - label_name: ORGANISATION
+      properties:
+        - name: _ID
+          type: int64
+        - name: type
+          type: String
+        - name: name
+          type: String
+        - name: url
+          type: String
+      max_vertex_num: 7955
+    - label_name: TAGCLASS
+      properties:
+        - name: _ID
+          type: int64
+        - name: name
+          type: String
+        - name: url
+          type: String
+      max_vertex_num: 71
+    - label_name: TAG
+      properties:
+        - name: _ID
+          type: int64
+        - name: name
+          type: String
+        - name: url
+          type: String
+      max_vertex_num: 16080
+  edge:
+    - src_label_name: COMMENT
+      dst_label_name: PERSON
+      edge_label_name: HASCREATOR
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+    - src_label_name: POST
+      dst_label_name: PERSON
+      edge_label_name: HASCREATOR
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+    - src_label_name: POST
+      dst_label_name: TAG
+      edge_label_name: HASTAG
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+    - src_label_name: COMMENT
+      dst_label_name: COMMENT
+      edge_label_name: REPLYOF
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+    - src_label_name: COMMENT
+      dst_label_name: POST
+      edge_label_name: REPLYOF
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+    - src_label_name: FORUM
+      dst_label_name: POST
+      edge_label_name: CONTAINEROF
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      incoming_edge_strategy: Single
+    - src_label_name: FORUM
+      dst_label_name: PERSON
+      edge_label_name: HASMEMBER
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+        - name: joinDate
+          type: int64
+    - src_label_name: FORUM
+      dst_label_name: PERSON
+      edge_label_name: HASMODERATOR
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+    - src_label_name: PERSON
+      dst_label_name: TAG
+      edge_label_name: HASINTEREST
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+    - src_label_name: COMMENT
+      dst_label_name: PLACE
+      edge_label_name: ISLOCATEDIN
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+    - src_label_name: PERSON
+      dst_label_name: PLACE
+      edge_label_name: ISLOCATEDIN
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+    - src_label_name: POST
+      dst_label_name: PLACE
+      edge_label_name: ISLOCATEDIN
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+    - src_label_name: ORGANISATION
+      dst_label_name: PLACE
+      edge_label_name: ISLOCATEDIN
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+    - src_label_name: PERSON
+      dst_label_name: PERSON
+      edge_label_name: KNOWS
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+        - name: creationDate
+          type: int64
+    - src_label_name: PERSON
+      dst_label_name: COMMENT
+      edge_label_name: LIKES
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+        - name: creationDate
+          type: int64
+    - src_label_name: PERSON
+      dst_label_name: POST
+      edge_label_name: LIKES
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+        - name: creationDate
+          type: int64
+    - src_label_name: PERSON
+      dst_label_name: ORGANISATION
+      edge_label_name: WORKAT
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+        - name: workFrom
+          type: int32
+    - src_label_name: PLACE
+      dst_label_name: PLACE
+      edge_label_name: ISPARTOF
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+    - src_label_name: TAG
+      dst_label_name: TAGCLASS
+      edge_label_name: HASTYPE
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+    - src_label_name: TAGCLASS
+      dst_label_name: TAGCLASS
+      edge_label_name: ISSUBCLASSOF
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+      outgoing_edge_strategy: Single
+    - src_label_name: PERSON
+      dst_label_name: ORGANISATION
+      edge_label_name: STUDYAT
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+        - name: classYear
+          type: int32

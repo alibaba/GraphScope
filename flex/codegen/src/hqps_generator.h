@@ -209,10 +209,7 @@ class QueryGenerator {
     if (param_vars.size() > 0) {
       sort(param_vars.begin(), param_vars.end(),
            [](const auto& a, const auto& b) { return a.id < b.id; });
-      // FIXME: ENable this line
-      // the dynamic params can be duplicate.
       CHECK(param_vars[0].id == 0);
-      ss << ",";
       for (auto i = 0; i < param_vars.size(); ++i) {
         if (i > 0 && param_vars[i].id == param_vars[i - 1].id) {
           // found duplicate

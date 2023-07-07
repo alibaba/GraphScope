@@ -63,7 +63,7 @@ void get_tuple_from_column_tuple(size_t index, std::tuple<T...>& t,
  */
 class MutableCSRInterface {
  public:
-  const GraphDBSession& GetDBSession() { return db_session_; }
+  const GraphDBSession& GetDBSession() const { return db_session_; }
 
   using vertex_id_t = vid_t;
   using outer_vertex_id_t = oid_t;
@@ -92,9 +92,18 @@ class MutableCSRInterface {
 
   static constexpr bool is_grape = true;
 
-  static MutableCSRInterface& get();
+  MutableCSRInterface(const MutableCSRInterface&) = delete;
 
-  MutableCSRInterface(const GraphDBSession& session) : db_session_(session) {}
+  MutableCSRInterface(MutableCSRInterface&& other)
+      : db_session_(other.db_session_) {
+    LOG(INFO) << "Move MutableCSRInterface";
+  }
+
+  explicit MutableCSRInterface(const GraphDBSession& session)
+      : db_session_(session) {
+    LOG(INFO) << "Creating MutableCSRInterface";
+    LOG(INFO) << "person label num: " << db_session_.graph().vertex_num(1);
+  }
 
   /**
    * @brief Get the Vertex Label id
@@ -103,6 +112,9 @@ class MutableCSRInterface {
    * @return label_id_t
    */
   label_id_t GetVertexLabelId(const std::string& label) const {
+    LOG(INFO) << "GetVertexLabelId: " << label;
+    LOG(INFO) << "label num: " << db_session_.schema().vertex_label_num();
+    LOG(INFO) << "edge labelnum: " << db_session_.schema().edge_label_num();
     return db_session_.schema().get_vertex_label_id(label);
   }
 
@@ -820,7 +832,9 @@ class MutableCSRInterface {
   template <typename PropT>
   auto get_single_column_from_graph_with_property(
       label_t label, const PropertySelector<PropT>& selector) const {
-    return GetTypedRefColumn<PropT>(label, selector.prop_name_);
+    auto res = GetTypedRefColumn<PropT>(label, selector.prop_name_);
+    CHECK(res) << "Property " << selector.prop_name_ << " not found";
+    return res;
   }
 
   template <typename... SELECTOR, size_t... Is>
@@ -854,7 +868,6 @@ class MutableCSRInterface {
   }
 
   const GraphDBSession& db_session_;
-  bool initialized_ = false;
 };
 
 }  // namespace gs
