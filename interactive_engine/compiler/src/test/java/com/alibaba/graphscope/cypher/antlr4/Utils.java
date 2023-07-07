@@ -17,12 +17,22 @@
 package com.alibaba.graphscope.cypher.antlr4;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.GraphBuilderVisitor;
+import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 
 public abstract class Utils {
     public static final GraphBuilder eval(String query) {
         GraphBuilder graphBuilder = com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder();
         return new GraphBuilderVisitor(graphBuilder).visit(new CypherAntlr4Parser().parse(query));
+    }
+
+    public static LogicalPlan evalLogicalPlan(String query) {
+        GraphBuilder graphBuilder = com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder();
+        LogicalPlanVisitor logicalPlanVisitor =
+                new LogicalPlanVisitor(
+                        graphBuilder, com.alibaba.graphscope.common.ir.Utils.schemaMeta);
+        return logicalPlanVisitor.visit(new CypherAntlr4Parser().parse(query));
     }
 }
