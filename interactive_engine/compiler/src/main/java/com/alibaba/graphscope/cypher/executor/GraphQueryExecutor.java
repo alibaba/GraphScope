@@ -120,8 +120,9 @@ public class GraphQueryExecutor extends FabricExecutor {
                     return StatementResults.initial();
                 }
                 QuerySubject querySubject = new QuerySubject.BasicQuerySubject();
+                QueryTimeoutConfig timeoutConfig = getQueryTimeoutConfig();
                 StatementResults.SubscribableExecution execution =
-                        new GraphPlanExecution(this.client, planSummary, getQueryTimeoutConfig());
+                        new GraphPlanExecution(this.client, planSummary, timeoutConfig);
                 metaQueryCallback.afterExec(irMeta);
                 StatementResult result = StatementResults.connectVia(execution, querySubject);
                 return result;
