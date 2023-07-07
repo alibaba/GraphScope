@@ -15,9 +15,6 @@ package com.alibaba.graphscope.groot.sdk.example;
 
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -28,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 public class IngestFile {
-    private static final Logger logger = LoggerFactory.getLogger(IngestFile.class);
-
     public static void main(String[] args) throws IOException {
         String inputFile = args[0];
         String host = args[1];
@@ -40,7 +35,7 @@ public class IngestFile {
         File file = new File(inputFile);
         String fileName = file.getName();
         String label = fileName.split("_")[0];
-        logger.info(
+        System.out.println(
                 "file ["
                         + inputFile
                         + "] host ["
@@ -77,8 +72,8 @@ public class IngestFile {
         }
         long maybeSnapshotId = client.commit();
         long flushSnapshotId = maybeSnapshotId == 0 ? snapshotId : maybeSnapshotId;
-        logger.info("flush snapshotId [" + flushSnapshotId + "]");
+        System.out.println("flush snapshotId [" + flushSnapshotId + "]");
         client.remoteFlush(flushSnapshotId);
-        logger.info("done");
+        System.out.println("done");
     }
 }

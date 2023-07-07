@@ -13,9 +13,8 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
-import com.alibaba.graphscope.sdkcommon.common.DataLoadTarget;
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
+import com.alibaba.graphscope.proto.DataLoadTargetPb;
+import com.alibaba.graphscope.proto.groot.GraphDefPb;
 
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +41,7 @@ public class ClientTest {
     @Test
     void testCommitData() {
         long tableId = -4611686018427387871L;
-        DataLoadTarget target = DataLoadTarget.newBuilder().setLabel("person").build();
+        DataLoadTargetPb target = DataLoadTargetPb.newBuilder().setLabel("person").build();
         client.commitDataLoad(Collections.singletonMap(tableId, target), "");
     }
 
@@ -60,8 +59,8 @@ public class ClientTest {
 
     @Test
     void testGetSchema() {
-        GraphSchema schema = client.getSchema();
-        System.out.println(((GraphDef) schema).toProto().toString());
+        GraphDefPb schema = client.getSchema();
+        System.out.println(schema.toString());
     }
 
     @Test

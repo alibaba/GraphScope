@@ -21,7 +21,8 @@ import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.alibaba.graphscope.groot.dataload.util.OSSFS;
 import com.alibaba.graphscope.groot.dataload.util.VolumeFS;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
-import com.alibaba.graphscope.sdkcommon.common.DataLoadTarget;
+import com.alibaba.graphscope.proto.DataLoadTargetPb;
+import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
 import com.alibaba.graphscope.sdkcommon.util.UuidUtils;
 import com.aliyun.odps.Odps;
@@ -72,10 +73,10 @@ public class OfflineBuildOdps {
                         columnMappingConfigStr,
                         new TypeReference<Map<String, FileColumnMapping>>() {});
 
-        List<DataLoadTarget> targets = new ArrayList<>();
+        List<DataLoadTargetPb> targets = new ArrayList<>();
         for (FileColumnMapping fileColumnMapping : columnMappingConfig.values()) {
             targets.add(
-                    DataLoadTarget.newBuilder()
+                    DataLoadTargetPb.newBuilder()
                             .setLabel(fileColumnMapping.getLabel())
                             .setSrcLabel(fileColumnMapping.getSrcLabel())
                             .setDstLabel(fileColumnMapping.getDstLabel())
@@ -89,7 +90,7 @@ public class OfflineBuildOdps {
                         .setPassword(password)
                         .build();
 
-        GraphSchema schema = client.prepareDataLoad(targets);
+        GraphSchema schema = GraphDef.parseProto(client.prepareDataLoad(targets));
         String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
         // number of reduce task
         int partitionNum = client.getPartitionNum();
@@ -187,13 +188,13 @@ public class OfflineBuildOdps {
             try {
                 client.ingestData(fullQualifiedDataPath, config);
                 logger.info("start committing bulk load");
-                Map<Long, DataLoadTarget> tableToTarget = new HashMap<>();
+                Map<Long, DataLoadTargetPb> tableToTarget = new HashMap<>();
                 for (ColumnMappingInfo columnMappingInfo : columnMappingInfos.values()) {
                     long tableId = columnMappingInfo.getTableId();
                     int labelId = columnMappingInfo.getLabelId();
                     GraphElement graphElement = schema.getElement(labelId);
                     String label = graphElement.getLabel();
-                    DataLoadTarget.Builder builder = DataLoadTarget.newBuilder();
+                    DataLoadTargetPb.Builder builder = DataLoadTargetPb.newBuilder();
                     builder.setLabel(label);
                     if (graphElement instanceof GraphEdge) {
                         builder.setSrcLabel(
@@ -208,11 +209,9 @@ public class OfflineBuildOdps {
             } catch (Exception ex) {
                 logger.error("Failed to ingest/commit data", ex);
                 client.clearIngest(uniquePath);
-                client.close();
                 throw ex;
             }
         }
-        client.close();
     }
 
     private static String getTableName(String tableFullName) {

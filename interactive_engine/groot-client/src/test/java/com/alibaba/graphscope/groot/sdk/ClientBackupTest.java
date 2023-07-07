@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
-import com.alibaba.graphscope.sdkcommon.common.BackupInfo;
+import com.alibaba.graphscope.proto.groot.BackupInfoPb;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -55,7 +55,7 @@ public class ClientBackupTest {
         client.commit();
         Thread.sleep(3000L);
 
-        List<BackupInfo> backupInfoList;
+        List<BackupInfoPb> backupInfoList;
         int backupId1 = client.createNewGraphBackup();
         Thread.sleep(3000L);
 

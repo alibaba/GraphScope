@@ -15,9 +15,6 @@ package com.alibaba.graphscope.groot.sdk.example;
 
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -30,41 +27,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-public class LdbcLoader {
-    private static final Logger logger = LoggerFactory.getLogger(LdbcLoader.class);
-
-    private ExecutorService executors;
-
-    public LdbcLoader(int thread) {
-        this.executors = Executors.newFixedThreadPool(thread);
-    }
-
-    public void loadFiles(String dataDir, String host, int port, int batchSize) throws IOException {
-        logger.info(
-                "dataDir ["
-                        + dataDir
-                        + "] host ["
-                        + host
-                        + "] port ["
-                        + port
-                        + "] batch ["
-                        + batchSize
-                        + "]");
-        for (Path path : Files.list(Paths.get(dataDir)).collect(Collectors.toList())) {
-            String fileName = path.getFileName().toString();
-        }
-    }
-
+public class LoadLdbc {
     public static void main(String[] args) throws IOException, ParseException {
         String dataDir = args[0];
         String host = args[1];
         int port = Integer.valueOf(args[2]);
         int batchSize = Integer.valueOf(args[3]);
-        logger.info(
+        System.out.println(
                 "dataDir ["
                         + dataDir
                         + "] host ["
@@ -79,32 +50,33 @@ public class LdbcLoader {
         int processed = 0;
         int ignored = 0;
         for (Path path : Files.list(Paths.get(dataDir)).collect(Collectors.toList())) {
-            logger.info("process file [" + path.getFileName() + "]");
+            System.out.println("process file [" + path.getFileName() + "]");
             String fileName = path.getFileName().toString();
             if (!fileName.endsWith("_0_0.csv")
                     || fileName.startsWith(".")
                     || fileName.startsWith("person_speaks_language")
                     || fileName.startsWith("person_email_emailaddress")) {
-                logger.info("ignore [" + fileName + "]");
+                System.out.println("ignore [" + fileName + "]");
                 ignored++;
                 continue;
             }
             String name = fileName.substring(0, fileName.length() - 8);
             String[] items = name.split("_");
             if (items.length == 1) {
-                String label = firstUpperCase(items[0]);
-                logger.info("vertex table: [" + label + "]");
+                String label = capitalize(items[0]);
+                System.out.println("vertex table: [" + label + "]");
                 processVertex(client, label, path, batchSize);
             } else {
-                String srcLabel = firstUpperCase(items[0]);
+                String srcLabel = capitalize(items[0]);
                 String label = items[1];
-                String dstLabel = firstUpperCase(items[2]);
-                logger.info("edge table: [" + srcLabel + "-" + label + "->" + dstLabel + "]");
+                String dstLabel = capitalize(items[2]);
+                System.out.println(
+                        "edge table: [" + srcLabel + "-" + label + "->" + dstLabel + "]");
                 processEdge(client, label, srcLabel, dstLabel, path, batchSize);
             }
             processed++;
         }
-        logger.info(
+        System.out.println(
                 "Total ["
                         + (processed + ignored)
                         + "]. processed ["
@@ -114,15 +86,12 @@ public class LdbcLoader {
                         + "]");
     }
 
-    public static String firstUpperCase(String origin) {
-        return origin.substring(0, 1).toUpperCase() + origin.substring(1);
+    public static String capitalize(String origin) {
+        return origin;
     }
 
     private static void processVertex(GrootClient client, String label, Path path, int batchSize)
             throws IOException, ParseException {
-        if (label.equalsIgnoreCase("tagclass")) {
-            label = "TagClass";
-        }
         List<String> propertyNames = new ArrayList<>();
         int count = 0;
         long snapshotId = 0;
@@ -151,13 +120,13 @@ public class LdbcLoader {
                     try {
                         client.addVertex(label, properties);
                     } catch (Exception e) {
-                        logger.error(
+                        System.err.println(
                                 "add vertex label ["
                                         + label
                                         + "], properties ["
                                         + properties
-                                        + "] failed",
-                                e);
+                                        + "] failed. Reason: "
+                                        + e);
                     }
                     count++;
                     if (count == batchSize) {
@@ -169,9 +138,9 @@ public class LdbcLoader {
         }
         long maybeSnapshotId = client.commit();
         long flushSnapshotId = maybeSnapshotId == 0 ? snapshotId : maybeSnapshotId;
-        logger.info("flush snapshotId [" + flushSnapshotId + "]");
+        System.out.println("flush snapshotId [" + flushSnapshotId + "]");
         client.remoteFlush(flushSnapshotId);
-        logger.info("done");
+        System.out.println("done");
     }
 
     private static void processEdge(
@@ -182,15 +151,6 @@ public class LdbcLoader {
             Path path,
             int batchSize)
             throws IOException, ParseException {
-        if (label.equalsIgnoreCase("tagclass")) {
-            label = "TagClass";
-        }
-        if (srcLabel.equalsIgnoreCase("tagclass")) {
-            srcLabel = "TagClass";
-        }
-        if (dstLabel.equalsIgnoreCase("tagclass")) {
-            dstLabel = "TagClass";
-        }
         List<String> propertyNames = new ArrayList<>();
         int count = 0;
         long snapshotId = 0;
@@ -237,8 +197,8 @@ public class LdbcLoader {
         }
         long maybeSnapshotId = client.commit();
         long flushSnapshotId = maybeSnapshotId == 0 ? snapshotId : maybeSnapshotId;
-        logger.info("flush snapshotId [" + flushSnapshotId + "]");
+        System.out.println("flush snapshotId [" + flushSnapshotId + "]");
         client.remoteFlush(flushSnapshotId);
-        logger.info("done");
+        System.out.println("done");
     }
 }

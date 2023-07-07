@@ -13,65 +13,42 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
+import com.alibaba.graphscope.proto.DataLoadTargetPb;
 import com.alibaba.graphscope.proto.groot.*;
-import com.alibaba.graphscope.proto.groot.ClientBackupGrpc.ClientBackupBlockingStub;
-import com.alibaba.graphscope.proto.groot.ClientGrpc.ClientBlockingStub;
-import com.alibaba.graphscope.proto.write.BatchWriteRequest;
-import com.alibaba.graphscope.proto.write.BatchWriteResponse;
-import com.alibaba.graphscope.proto.write.ClientWriteGrpc;
-import com.alibaba.graphscope.proto.write.ClientWriteGrpc.ClientWriteBlockingStub;
-import com.alibaba.graphscope.proto.write.DataRecordPb;
-import com.alibaba.graphscope.proto.write.GetClientIdRequest;
-import com.alibaba.graphscope.proto.write.WriteRequestPb;
-import com.alibaba.graphscope.proto.write.WriteTypePb;
-import com.alibaba.graphscope.sdkcommon.BasicAuth;
-import com.alibaba.graphscope.sdkcommon.common.BackupInfo;
-import com.alibaba.graphscope.sdkcommon.common.DataLoadTarget;
-import com.alibaba.graphscope.sdkcommon.common.EdgeRecordKey;
-import com.alibaba.graphscope.sdkcommon.common.VertexRecordKey;
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
+import com.alibaba.graphscope.proto.write.*;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
-import org.apache.tinkerpop.gremlin.driver.Client;
-import org.apache.tinkerpop.gremlin.driver.CloseableGremlinClient;
-import org.apache.tinkerpop.gremlin.driver.ResultSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-public class GrootClient implements Closeable {
-    private static final Logger logger = LoggerFactory.getLogger(GrootClient.class);
-
-    private ClientGrpc.ClientBlockingStub stub;
-    private ClientWriteGrpc.ClientWriteBlockingStub writeStub;
-    private ClientBackupGrpc.ClientBackupBlockingStub backupStub;
-    private CloseableGremlinClient gremlinClient;
+public class GrootClient {
+    private final ClientGrpc.ClientBlockingStub stub;
+    private final ClientWriteGrpc.ClientWriteBlockingStub writeStub;
+    private final ClientBackupGrpc.ClientBackupBlockingStub backupStub;
     private String clientId = "DEFAULT";
 
     private BatchWriteRequest.Builder batchWriteBuilder;
 
     private GrootClient(
-            ClientBlockingStub clientBlockingStub,
-            ClientWriteBlockingStub clientWriteBlockingStub,
-            ClientBackupBlockingStub clientBackupBlockingStub,
-            CloseableGremlinClient gremlinClient) {
+            ClientGrpc.ClientBlockingStub clientBlockingStub,
+            ClientWriteGrpc.ClientWriteBlockingStub clientWriteBlockingStub,
+            ClientBackupGrpc.ClientBackupBlockingStub clientBackupBlockingStub) {
         this.stub = clientBlockingStub;
         this.writeStub = clientWriteBlockingStub;
         this.backupStub = clientBackupBlockingStub;
-        this.gremlinClient = gremlinClient;
         this.reset();
     }
+
+    public void close() {}
 
     private void reset() {
         this.batchWriteBuilder = BatchWriteRequest.newBuilder().setClientId(this.clientId);
@@ -83,20 +60,103 @@ public class GrootClient implements Closeable {
         this.reset();
     }
 
-    public void addVertex(String label, Map<String, String> properties) {
-        VertexRecordKey vertexRecordKey = new VertexRecordKey(label);
-        WriteRequestPb writeRequest =
-                WriteRequestPb.newBuilder()
-                        .setWriteType(WriteTypePb.INSERT)
-                        .setDataRecord(
-                                DataRecordPb.newBuilder()
-                                        .setVertexRecordKey(vertexRecordKey.toProto())
-                                        .putAllProperties(properties)
-                                        .build())
-                        .build();
-        this.batchWriteBuilder.addWriteRequests(writeRequest);
+    private VertexRecordKeyPb getVertexRecordKeyPb(String label, Map<String, String> properties) {
+        VertexRecordKeyPb.Builder builder = VertexRecordKeyPb.newBuilder().setLabel(label);
+        if (properties != null) {
+            builder.putAllPkProperties(properties);
+        }
+        return builder.build();
     }
 
+    private EdgeRecordKeyPb getEdgeRecordKeyPb(
+            String label, VertexRecordKeyPb src, VertexRecordKeyPb dst) {
+        return EdgeRecordKeyPb.newBuilder()
+                .setLabel(label)
+                .setSrcVertexKey(src)
+                .setDstVertexKey(dst)
+                .build();
+    }
+
+    private DataRecordPb getDataRecordPb(VertexRecordKeyPb key, Map<String, String> properties) {
+        DataRecordPb.Builder builder = DataRecordPb.newBuilder().setVertexRecordKey(key);
+        if (properties != null) {
+            builder.putAllProperties(properties);
+        }
+        return builder.build();
+    }
+
+    private DataRecordPb getDataRecordPb(EdgeRecordKeyPb key, Map<String, String> properties) {
+        DataRecordPb.Builder builder = DataRecordPb.newBuilder().setEdgeRecordKey(key);
+        if (properties != null) {
+            builder.putAllProperties(properties);
+        }
+        return builder.build();
+    }
+
+    private DataRecordPb getVertexDataRecord(String label, Map<String, String> properties) {
+        VertexRecordKeyPb vertexRecordKey = getVertexRecordKeyPb(label, null);
+        return getDataRecordPb(vertexRecordKey, properties);
+    }
+
+    private DataRecordPb getEdgeDataRecord(
+            String label,
+            String srcLabel,
+            String dstLabel,
+            Map<String, String> srcPk,
+            Map<String, String> dstPk,
+            Map<String, String> properties) {
+        VertexRecordKeyPb src = getVertexRecordKeyPb(srcLabel, srcPk);
+        VertexRecordKeyPb dst = getVertexRecordKeyPb(dstLabel, dstPk);
+        EdgeRecordKeyPb edgeRecordKeyPb = getEdgeRecordKeyPb(label, src, dst);
+        return getDataRecordPb(edgeRecordKeyPb, properties);
+    }
+
+    private WriteRequestPb getWriteRequestPb(DataRecordPb record, WriteTypePb writeType) {
+        return WriteRequestPb.newBuilder().setWriteType(writeType).setDataRecord(record).build();
+    }
+
+    /**
+     * Add vertex by realtime write
+     * @param label vertex label
+     * @param properties properties, including the primary key
+     */
+    public void addVertex(String label, Map<String, String> properties) {
+        DataRecordPb record = getVertexDataRecord(label, properties);
+        WriteRequestPb request = getWriteRequestPb(record, WriteTypePb.INSERT);
+        this.batchWriteBuilder.addWriteRequests(request);
+    }
+
+    /**
+     * Update existed vertex by realtime write
+     * @param label vertex label
+     * @param properties properties, including the primary key
+     */
+    public void updateVertex(String label, Map<String, String> properties) {
+        DataRecordPb record = getVertexDataRecord(label, properties);
+        WriteRequestPb request = getWriteRequestPb(record, WriteTypePb.UPDATE);
+        this.batchWriteBuilder.addWriteRequests(request);
+    }
+
+    /**
+     * Delete vertex by its primary key
+     * @param label vertex label
+     * @param properties properties, contains only the primary key
+     */
+    public void deleteVertex(String label, Map<String, String> properties) {
+        DataRecordPb record = getVertexDataRecord(label, properties);
+        WriteRequestPb request = getWriteRequestPb(record, WriteTypePb.DELETE);
+        this.batchWriteBuilder.addWriteRequests(request);
+    }
+
+    /**
+     * Add edge by realtime write
+     * @param label edge label
+     * @param srcLabel source vertex label
+     * @param dstLabel destination vertex label
+     * @param srcPk source primary keys
+     * @param dstPk destination primary keys
+     * @param properties edge properties
+     */
     public void addEdge(
             String label,
             String srcLabel,
@@ -104,23 +164,58 @@ public class GrootClient implements Closeable {
             Map<String, String> srcPk,
             Map<String, String> dstPk,
             Map<String, String> properties) {
-        VertexRecordKey srcVertexKey =
-                new VertexRecordKey(srcLabel, Collections.unmodifiableMap(srcPk));
-        VertexRecordKey dstVertexKey =
-                new VertexRecordKey(dstLabel, Collections.unmodifiableMap(dstPk));
-        EdgeRecordKey edgeRecordKey = new EdgeRecordKey(label, srcVertexKey, dstVertexKey);
-        WriteRequestPb writeRequest =
-                WriteRequestPb.newBuilder()
-                        .setWriteType(WriteTypePb.INSERT)
-                        .setDataRecord(
-                                DataRecordPb.newBuilder()
-                                        .setEdgeRecordKey(edgeRecordKey.toProto())
-                                        .putAllProperties(properties)
-                                        .build())
-                        .build();
-        this.batchWriteBuilder.addWriteRequests(writeRequest);
+        DataRecordPb record =
+                getEdgeDataRecord(label, srcLabel, dstLabel, srcPk, dstPk, properties);
+        WriteRequestPb request = getWriteRequestPb(record, WriteTypePb.INSERT);
+        this.batchWriteBuilder.addWriteRequests(request);
     }
 
+    /**
+     * Update existed edge by realtime write
+     * @param label edge label
+     * @param srcLabel source vertex label
+     * @param dstLabel destination vertex label
+     * @param srcPk source primary keys
+     * @param dstPk destination primary keys
+     * @param properties edge properties
+     */
+    public void updateEdge(
+            String label,
+            String srcLabel,
+            String dstLabel,
+            Map<String, String> srcPk,
+            Map<String, String> dstPk,
+            Map<String, String> properties) {
+        DataRecordPb record =
+                getEdgeDataRecord(label, srcLabel, dstLabel, srcPk, dstPk, properties);
+        WriteRequestPb request = getWriteRequestPb(record, WriteTypePb.INSERT);
+        this.batchWriteBuilder.addWriteRequests(request);
+    }
+
+    /**
+     * Delete an edge by realtime write
+     * @param label edge label
+     * @param srcLabel source vertex label
+     * @param dstLabel destination vertex label
+     * @param srcPk source primary keys
+     * @param dstPk destination primary keys
+     */
+    public void deleteEdge(
+            String label,
+            String srcLabel,
+            String dstLabel,
+            Map<String, String> srcPk,
+            Map<String, String> dstPk) {
+        DataRecordPb record = getEdgeDataRecord(label, srcLabel, dstLabel, srcPk, dstPk, null);
+        WriteRequestPb request = getWriteRequestPb(record, WriteTypePb.INSERT);
+        this.batchWriteBuilder.addWriteRequests(request);
+    }
+
+    /**
+     * Commit the realtime write transaction.
+     * @return The snapshot_id. The data committed would be available after a while, or you could remoteFlush(snapshot_id)
+     * and wait for its return.
+     */
     public long commit() {
         long snapshotId = 0L;
         if (this.batchWriteBuilder.getWriteRequestsCount() > 0) {
@@ -131,35 +226,37 @@ public class GrootClient implements Closeable {
         return snapshotId;
     }
 
+    /**
+     * Block until this snapshot becomes available.
+     * @param snapshotId the snapshot id to be flushed
+     */
     public void remoteFlush(long snapshotId) {
-        this.stub.remoteFlush(RemoteFlushRequest.newBuilder().setSnapshotId(snapshotId).build());
+        this.writeStub.remoteFlush(
+                RemoteFlushRequest.newBuilder().setSnapshotId(snapshotId).build());
     }
 
-    public GraphSchema getSchema() {
+    public GraphDefPb getSchema() {
         GetSchemaResponse response = this.stub.getSchema(GetSchemaRequest.newBuilder().build());
-        return GraphDef.parseProto(response.getGraphDef());
+        return response.getGraphDef();
     }
 
-    public GraphSchema dropSchema() {
+    public GraphDefPb dropSchema() {
         DropSchemaResponse response = this.stub.dropSchema(DropSchemaRequest.newBuilder().build());
-        return GraphDef.parseProto(response.getGraphDef());
+        return response.getGraphDef();
     }
 
-    public GraphSchema prepareDataLoad(List<DataLoadTarget> targets) {
+    public GraphDefPb prepareDataLoad(List<DataLoadTargetPb> targets) {
         PrepareDataLoadRequest.Builder builder = PrepareDataLoadRequest.newBuilder();
-        for (DataLoadTarget target : targets) {
-            builder.addDataLoadTargets(target.toProto());
+        for (DataLoadTargetPb target : targets) {
+            builder.addDataLoadTargets(target);
         }
         PrepareDataLoadResponse response = this.stub.prepareDataLoad(builder.build());
-        return GraphDef.parseProto(response.getGraphDef());
+        return response.getGraphDef();
     }
 
-    public void commitDataLoad(Map<Long, DataLoadTarget> tableToTarget, String path) {
+    public void commitDataLoad(Map<Long, DataLoadTargetPb> tableToTarget, String path) {
         CommitDataLoadRequest.Builder builder = CommitDataLoadRequest.newBuilder();
-        tableToTarget.forEach(
-                (tableId, target) -> {
-                    builder.putTableToTarget(tableId, target.toProto());
-                });
+        tableToTarget.forEach(builder::putTableToTarget);
         builder.setPath(path);
         CommitDataLoadResponse response = this.stub.commitDataLoad(builder.build());
     }
@@ -237,27 +334,15 @@ public class GrootClient implements Closeable {
                         VerifyGraphBackupRequest.newBuilder().setBackupId(backupId).build());
         boolean suc = response.getIsOk();
         if (!suc) {
-            logger.info("verify backup [" + backupId + "] failed, " + response.getErrMsg());
+            System.err.println("verify backup [" + backupId + "] failed, " + response.getErrMsg());
         }
         return suc;
     }
 
-    public List<BackupInfo> getGraphBackupInfo() {
+    public List<BackupInfoPb> getGraphBackupInfo() {
         GetGraphBackupInfoResponse response =
                 this.backupStub.getGraphBackupInfo(GetGraphBackupInfoRequest.newBuilder().build());
-        return response.getBackupInfoListList().stream()
-                .map(BackupInfo::parseProto)
-                .collect(Collectors.toList());
-    }
-
-    public ResultSet submitQuery(String query) {
-        Client gremlinClient = this.gremlinClient.gremlinClient();
-        return gremlinClient.submit(query);
-    }
-
-    @Override
-    public void close() {
-        this.gremlinClient.close();
+        return new ArrayList<>(response.getBackupInfoListList());
     }
 
     public void clearIngest(String dataPath) {
@@ -272,12 +357,9 @@ public class GrootClient implements Closeable {
         private List<SocketAddress> addrs;
         private String username;
         private String password;
-        private List<String> gremlinHosts;
-        private int gremlinPort;
 
         private GrootClientBuilder() {
             this.addrs = new ArrayList<>();
-            this.gremlinHosts = new ArrayList<>();
         }
 
         public GrootClientBuilder addAddress(SocketAddress address) {
@@ -309,16 +391,6 @@ public class GrootClient implements Closeable {
             return this;
         }
 
-        public GrootClientBuilder setGremlinPort(int gremlinPort) {
-            this.gremlinPort = gremlinPort;
-            return this;
-        }
-
-        public GrootClientBuilder addGremlinHost(String host) {
-            this.gremlinHosts.add(host);
-            return this;
-        }
-
         public GrootClient build() {
             MultiAddrResovlerFactory multiAddrResovlerFactory =
                     new MultiAddrResovlerFactory(this.addrs);
@@ -328,10 +400,10 @@ public class GrootClient implements Closeable {
                             .defaultLoadBalancingPolicy("round_robin")
                             .usePlaintext()
                             .build();
-            ClientBlockingStub clientBlockingStub = ClientGrpc.newBlockingStub(channel);
-            ClientWriteBlockingStub clientWriteBlockingStub =
+            ClientGrpc.ClientBlockingStub clientBlockingStub = ClientGrpc.newBlockingStub(channel);
+            ClientWriteGrpc.ClientWriteBlockingStub clientWriteBlockingStub =
                     ClientWriteGrpc.newBlockingStub(channel);
-            ClientBackupBlockingStub clientBackupBlockingStub =
+            ClientBackupGrpc.ClientBackupBlockingStub clientBackupBlockingStub =
                     ClientBackupGrpc.newBlockingStub(channel);
             if (username != null && password != null) {
                 BasicAuth basicAuth = new BasicAuth(username, password);
@@ -339,14 +411,8 @@ public class GrootClient implements Closeable {
                 clientWriteBlockingStub = clientWriteBlockingStub.withCallCredentials(basicAuth);
                 clientBackupBlockingStub = clientBackupBlockingStub.withCallCredentials(basicAuth);
             }
-            CloseableGremlinClient gremlinClient =
-                    new CloseableGremlinClient(
-                            this.gremlinHosts, this.gremlinPort, this.username, this.password);
             return new GrootClient(
-                    clientBlockingStub,
-                    clientWriteBlockingStub,
-                    clientBackupBlockingStub,
-                    gremlinClient);
+                    clientBlockingStub, clientWriteBlockingStub, clientBackupBlockingStub);
         }
     }
 }
