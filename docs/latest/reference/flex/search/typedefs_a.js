@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['vid_5ft_1295',['vid_t',['../namespacegs.html#a964c2419ecf69b632a1287e8761bba0c',1,'gs']]]
+  ['value_5ftype_1309',['value_type',['../classgs_1_1TypedRefColumn.html#a365403c9b685df2ad13a13394f710d9d',1,'gs::TypedRefColumn']]],
+  ['vid_5ft_1310',['vid_t',['../namespacegs.html#a964c2419ecf69b632a1287e8761bba0c',1,'gs']]]
 ];
