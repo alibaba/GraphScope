@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/app/app_utils.h"
+#include "flex/utils/app_utils.h"
 
 #include <string.h>
 
