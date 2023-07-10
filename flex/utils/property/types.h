@@ -340,6 +340,9 @@ void ParseRecordX(const char *line, int64_t &src, int64_t &dst, Date &prop);
 void ParseRecordX(const char *line, int64_t &src, int64_t &dst,
                   grape::EmptyType &prop);
 
+void ParseRecordX(const char *line, int64_t &src, int64_t &dst,
+                  int64_t &prop);
+
 grape::InArchive &operator<<(grape::InArchive &in_archive, const Any &value);
 grape::OutArchive &operator>>(grape::OutArchive &out_archive, Any &value);
 

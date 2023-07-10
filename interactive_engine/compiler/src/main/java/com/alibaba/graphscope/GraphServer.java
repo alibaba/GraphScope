@@ -134,8 +134,7 @@ public class GraphServer {
 
     public static void main(String[] args) throws Exception {
         if (args.length == 0 || args[0].isEmpty()) {
-            throw new IllegalArgumentException(
-                    "must specify one parameter: <path to the config file>");
+            throw new IllegalArgumentException("usage: GraphServer '<path_to_config_file>'");
         }
         Configs configs = new Configs(args[0], FileLoadType.RELATIVE_PATH);
         IrMetaQueryCallback queryCallback =

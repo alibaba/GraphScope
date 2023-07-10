@@ -26,7 +26,31 @@ oC_Statement
       :  oC_Query ;
 
 oC_Query
-     :  oC_RegularQuery ;
+     :  oC_RegularQuery
+     |  oC_StandaloneCall
+     ;
+
+oC_StandaloneCall
+     :  CALL SP ( oC_ExplicitProcedureInvocation | oC_ImplicitProcedureInvocation ) ( SP? YIELD SP ( '*' ) )? ;
+
+oC_ExplicitProcedureInvocation
+     :  oC_ProcedureName SP? '(' SP? ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? ')' ;
+
+oC_ImplicitProcedureInvocation
+     :  oC_ProcedureName ;
+
+oC_ProcedureName
+     :  oC_Namespace oC_SymbolicName ;
+
+oC_Namespace
+     :  ( oC_SymbolicName '.' )* ;
+
+oC_ProcedureResultField
+     :  oC_SymbolicName ;
+
+CALL : ( 'C' | 'c' ) ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'L' | 'l' ) ;
+
+YIELD : ( 'Y' | 'y' ) ( 'I' | 'i' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'D' | 'd' ) ;
 
 oC_RegularQuery
      :  oC_Match ( SP? oC_With )* ( SP oC_Return ) ;
@@ -314,7 +338,7 @@ oC_NumberLiteral
 oC_IntegerLiteral
               :  HexInteger
                   | OctalInteger
-                  | DecimalInteger
+                  | DecimalInteger ('l' | 'L') ?
                   ;
 
 HexInteger

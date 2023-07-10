@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.config.FileLoadType;
 import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
+import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
@@ -40,10 +41,10 @@ import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -62,7 +63,7 @@ public class GraphPlanner {
         this.plannerConfig = PlannerConfig.create(this.graphConfig);
         this.optPlanner = createRelOptPlanner(this.plannerConfig);
         this.rexBuilder = new GraphRexBuilder(new JavaTypeFactoryImpl());
-        this.idGenerator = new AtomicLong(0l);
+        this.idGenerator = new AtomicLong(0L);
     }
 
     public PlannerInstance instance(ParseTree parsedQuery, IrMeta irMeta) {
@@ -116,7 +117,7 @@ public class GraphPlanner {
             } else if (logicalPlan.getRegularQuery() != null) {
                 physicalBuilder = new FfiPhysicalBuilder(graphConfig, irMeta, logicalPlan);
             } else {
-                throw new NotImplementedException("procedure call is unimplemented yet");
+                physicalBuilder = new ProcedurePhysicalBuilder(logicalPlan);
             }
             return new Summary(this.id, this.name, logicalPlan, physicalBuilder);
         }
@@ -185,15 +186,16 @@ public class GraphPlanner {
     public static void main(String[] args) throws Exception {
         if (args.length < 3 || args[0].isEmpty() || args[1].isEmpty() || args[2].isEmpty()) {
             throw new IllegalArgumentException(
-                    "must specify three parameters: <path to the config file>, <query in string>,"
-                            + " <path to the physical output file>");
+                    "usage: GraphPlanner '<path_to_config_file>' '<path_to_query_file>'"
+                            + " '<path_to_physical_output_file>'");
         }
         Configs configs = new Configs(args[0], FileLoadType.RELATIVE_PATH);
         ExperimentalMetaFetcher metaFetcher = new ExperimentalMetaFetcher(configs);
+        String query = FileUtils.readFileToString(new File(args[1]), StandardCharsets.UTF_8);
         GraphPlanner planner = new GraphPlanner(configs);
         Antlr4Parser cypherParser = new CypherAntlr4Parser();
         PlannerInstance instance =
-                planner.instance(cypherParser.parse(args[1]), metaFetcher.fetch().get());
+                planner.instance(cypherParser.parse(query), metaFetcher.fetch().get());
         Summary summary = instance.plan();
         try (PhysicalBuilder<byte[]> physicalBuilder = summary.getPhysicalBuilder()) {
             FileUtils.writeByteArrayToFile(new File(args[2]), physicalBuilder.build());

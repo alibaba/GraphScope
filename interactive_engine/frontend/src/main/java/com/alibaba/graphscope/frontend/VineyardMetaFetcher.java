@@ -23,6 +23,7 @@ import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.compiler.schema.JsonFileSchemaFetcher;
 import com.alibaba.graphscope.groot.common.util.IrSchemaParser;
 
+import java.io.IOException;
 import java.util.Optional;
 
 public class VineyardMetaFetcher implements IrMetaFetcher {
@@ -32,8 +33,13 @@ public class VineyardMetaFetcher implements IrMetaFetcher {
         IrSchemaParser parser = IrSchemaParser.getInstance();
         JsonFileSchemaFetcher fetcher = new JsonFileSchemaFetcher(schemaPath);
         GraphSchema graphSchema = fetcher.getSchemaSnapshotPair().getLeft();
-        this.irMeta =
-                new IrMeta(new GraphSchemaWrapper(graphSchema, parser.parse(graphSchema), true));
+        try {
+            this.irMeta =
+                    new IrMeta(
+                            new GraphSchemaWrapper(graphSchema, parser.parse(graphSchema), true));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
