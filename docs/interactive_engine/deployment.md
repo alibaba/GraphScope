@@ -74,7 +74,7 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
    kubectl describe svc [YOUR_RELEASE_NAME]-gie-standalone-frontend \
    | grep "Endpoints:" | awk -F' ' '{print $2}'
    ```
-   You should see the GIE Frontend service endpoint as `<ip>:<gremlinPort>`.
+   You should see two exposed endpoints for GIE Frontend service, one is `<ip>:<gremlinPort>` for gremlin queries, another is `<ip>:<cypherPort>` for cypher queries.
 
 - Connect to the GIE frontend service using the Tinkerpop's official SDKs or Gremlin console, which
 can be found [here](./tinkerpop_gremlin.md).

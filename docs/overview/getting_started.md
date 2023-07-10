@@ -238,7 +238,7 @@ print(ret.to_dataframe(selector={'id': 'v.id', 'distance': 'r'})
 
 ## Graph Interactive Query Quick Start
 With the `graphscope` package already installed, you can effortlessly engage with a graph on your local machine.
-You simply need to create the `gremlin` instance to serve as the conduit for submitting all Gremlin queries.
+You simply need to create the `interactive` instance to serve as the conduit for submitting all Gremlin or Cypher queries.
 
 ````{dropdown} Example: Run Interactive Queries in GraphScope
 ```python
@@ -252,14 +252,18 @@ gs.set_option(show_log=True)
 #(modern graph is an example property graph for Gremlin queries given by Apache at https://tinkerpop.apache.org/docs/current/tutorials/getting-started/)
 graph = load_modern_graph()
 
-# Hereafter, you can use the `graph` object to create an `gremlin` query session
-g = gs.gremlin(graph)
+# Hereafter, you can use the `graph` object to create an `interactive` query session, which will start one Gremlin service and one Cypher service simultaneously on the backend.
+g = gs.interactive(graph)
 # then `execute` any supported gremlin query.
 q1 = g.execute('g.V().count()')
 print(q1.all().result())   # should print [6]
 
 q2 = g.execute('g.V().hasLabel(\'person\')')
 print(q2.all().result())  # should print [[v[2], v[3], v[0], v[1]]]
+
+# or `execute` any supported cypher query.
+q3 = g.execute("MATCH (n:person) RETURN count(n)", lang="cypher", routing_=RoutingControl.READ)
+print(q3.records[0][0])  # should print 6
 ```
 ````
 

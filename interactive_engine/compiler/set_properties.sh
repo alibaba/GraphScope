@@ -26,6 +26,10 @@ hosts="pegasus.hosts: $DNS_NAME_PREFIX_STORE:$GAIA_RPC_PORT";
 
 hosts="${hosts/"{}"/0}";
 
+gremlin_server_port="gremlin.server.port: $GREMLIN_SERVER_PORT";
+
+cypher_server_port="neo4j.bolt.server.port: $CYPHER_SERVER_PORT";
+
 count=1;
 while (($count<$SERVERSSIZE))
 do
@@ -37,6 +41,6 @@ done
 
 graph_schema="graph.schema: $GRAPH_SCHEMA"
 
-properties="$worker_num\n$timeout\n$batch_size\n$output_capacity\n$hosts\n$server_num\n$graph_schema"
+properties="$worker_num\n$timeout\n$batch_size\n$output_capacity\n$hosts\n$server_num\n$graph_schema\n$gremlin_server_port\n$cypher_server_port"
 
 echo -e $properties > ./conf/ir.compiler.properties
