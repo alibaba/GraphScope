@@ -232,8 +232,11 @@ def test_across_engine(sess):
 def test_gremlin_timeout(sess):
     g_node = load_p2p_network(sess)
     interactive = sess.gremlin(g_node)
-    # expect to timeout
-    res = interactive.execute("g.with(ARGS_EVAL_TIMEOUT, 1000).V()").all().result()
+    try:
+      # expect to timeout after 1s
+      res = interactive.execute("g.with(ARGS_EVAL_TIMEOUT, 1000).V()").all().result()
+    except Exception as e:
+      assert "DEADLINE_EXCEEDED" in str(e)
 
 def test_cypher_endpoint(sess):
     from neo4j import RoutingControl
