@@ -93,7 +93,6 @@ pub(crate) fn build_channel<T: Data>(
                     ch_id.index
                 ))
             })?;
-        println!("return source from static");
         Ok(*ch)
     } else {
         let local_workers = worker_id.local_peers;
