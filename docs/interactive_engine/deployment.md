@@ -74,10 +74,11 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
    kubectl describe svc [YOUR_RELEASE_NAME]-gie-standalone-frontend \
    | grep "Endpoints:" | awk -F' ' '{print $2}'
    ```
-   You should see two exposed endpoints for GIE Frontend service, one is `<ip>:<gremlinPort>` for gremlin queries, another is `<ip>:<cypherPort>` for cypher queries.
+   You should see two exposed endpoints for GIE Frontend service, one is `<ip>:<gremlinPort>` for gremlin querying, another is `<ip>:<cypherPort>` for cypher querying.
 
-- Connect to the GIE frontend service using the Tinkerpop's official SDKs or Gremlin console, which
-can be found [here](./tinkerpop_gremlin.md).
+- Connect to the GIE frontend service by the following two ways:
+  1. using the Tinkerpop's official SDKs or Gremlin console, which can be found [here](./tinkerpop/tinkerpop_gremlin.md).
+  2. using the Neo4j's official SDKs or Cypher-Shell, which can be found [here](./neo4j/cypher_sdk.md).
 
 ## Remove the GIE Service
 ```bash

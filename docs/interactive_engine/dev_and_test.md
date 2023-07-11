@@ -134,7 +134,7 @@ java -cp ".:$GIE_TEST_HOME/lib/*" -Djna.library.path=$GIE_TEST_HOME/lib com.alib
 ```
 
 With the frontend service, you can open the gremlin console and set the endpoint to
-`localhost:8182`, as given [here](./tinkerpop_gremlin.md#gremlin-console). Similarly, you can open the cypher-shell and set the url to `neo4j://localhost:7687` by using `-a` option.
+`localhost:8182`, as given [here](./tinkerpop/tinkerpop_gremlin.md#connecting-via-gremlin-console). Similarly, you can open the cypher-shell and set the url to `neo4j://localhost:7687` by using `-a` option, as given [here](./neo4j/cypher_sdk.md#connecting-via-cypher-shell).
 
 1. Kill the services of `vineyardd`, `gaia_executor` and `frontend`:
 ```
