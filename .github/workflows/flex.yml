@@ -31,7 +31,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Install latest libgrape-lite
-      if: true
+      if: false
       run: |
         git clone --single-branch https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
         cd /tmp/libgrape-lite
