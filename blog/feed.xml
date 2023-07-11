@@ -5,9 +5,71 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 06 Jul 2023 07:12:00 +0000</pubDate>
-    <lastBuildDate>Thu, 06 Jul 2023 07:12:00 +0000</lastBuildDate>
+    <pubDate>Tue, 11 Jul 2023 06:35:06 +0000</pubDate>
+    <lastBuildDate>Tue, 11 Jul 2023 06:35:06 +0000</lastBuildDate>
     <generator>Jekyll v4.3.2</generator>
+    
+      <item>
+        <title>Release Notes: v0.23.0</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/release_note_t.png&quot; alt=&quot;release-note&quot; /&gt;
+We are thrilled to introduce a range of enhancements to GraphScope, with the GraphScope 0.23.0 release. This release encompasses significant features and improvements in Graph Interactive Engine (GIE), GraphScope Flex, and Deployment.&lt;/p&gt;
+
+&lt;p&gt;We highlight the following improvements included in this release:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;1. GraphScope Flex Technical Preview&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;GraphScope Flex represents the ongoing evolution of GraphScope. In this release, we’re excited to introduce a technical preview of GraphScope Flex. It highlights a modular design that reduces resource and cost requirements while providing a seamless, user-friendly experience for flexible deployment. It’s currently under active development, and we look forward to your feedback.&lt;/p&gt;
+
+&lt;p&gt;Key Features:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Modular Design&lt;/strong&gt;: Assemble your stack much like LEGO blocks to customize your graph computing deployments.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Three-Layer Architecture&lt;/strong&gt;: Components are organized into an application layer, execution layer, and storage layer.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Flexible Builds and Deployments&lt;/strong&gt;: Use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flexbuild&lt;/code&gt; script to build a custom deployment tailored for your specific use case.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You can explore GraphScope Flex in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flex/&lt;/code&gt; directory or through the released artifacts&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;graphscope_flex_db_cppsp_hiactor_mcsr&lt;/code&gt;,&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;graphscope_flex_olap_builtin_grape-cpu&lt;/code&gt;, and&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;graphscope_flex_gnn_gnnmodels_graphlearn_tensorflow_vineyard.so&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;packages for high-QPS interactive queries, graph analytics, and graph learning task use cases, respectively. Dive in and discover what GraphScope Flex has to offer!&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;2. Enhancements for GIE&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Support the recording of both vertices and edges during path expansion. In the past, path expansion had the option to yield either all vertices or the end vertex of the path. However, due to the requirements of both Gremlin and our users, it’s essential to also retrieve the edges of the path, besides the vertices. To activate this feature, use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;with(&apos;RESULT_OPT&apos;, &apos;ALL_V_E&apos;)&lt;/code&gt; in the path expansion syntactic sugar. Here is an example:
+    &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gremlin&amp;gt; g.V().out(&quot;1..3&quot;, &quot;knows&quot;).with(&apos;RESULT_OPT&apos;, &apos;ALL_V_E&apos;)
+     ==&amp;gt;[v[1], e[0][1-knows-&amp;gt;2], v[2]]
+     ==&amp;gt;[v[1], e[2][1-knows-&amp;gt;4], v[4]]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;We are now happy to introduce the capability of querying Cypher in GIE, by integrating Neo4j’s bolt service in our system. Please follow the &lt;a href=&quot;https://graphscope.io/docs/latest/interactive_engine/neo4j/cypher_sdk&quot;&gt;guide&lt;/a&gt; to enable bolt service (only on local) for querying with Cypher. We also attempt to make the syntax of Cypher as close as &lt;a href=&quot;https://opencypher.org/&quot;&gt;openCypher&lt;/a&gt;, and the details of our support for Cypher can be found &lt;a href=&quot;https://graphscope.io/docs/latest/interactive_engine/neo4j/supported_cypher&quot;&gt;here&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;3. Other enhancements and bug fixes&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;GAE Java
+    &lt;ul&gt;
+      &lt;li&gt;Fix VertexSet’s problem of supporting vertex_id in java long.&lt;/li&gt;
+      &lt;li&gt;Add Grape-GraphX performance report
+ 	- Fix the problem of installing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grape-jdk&lt;/code&gt; locally.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;For more detailed improvements that have been made in this release, please refer to the complete &lt;a href=&quot;https://github.com/alibaba/GraphScope/releases/tag/v0.23.0&quot;&gt;changelog&lt;/a&gt;.&lt;/p&gt;
+</description>
+        <pubDate>Fri, 07 Jul 2023 03:33:20 +0000</pubDate>
+        <link>https://graphscope.io/blog/releasenotes/2023/07/07/release-notes-0.23.0.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2023/07/07/release-notes-0.23.0.html</guid>
+        
+        
+        <category>ReleaseNotes</category>
+        
+      </item>
     
       <item>
         <title>Visualizing Insights from Large Graphs: A Comprehensive Guide to Using G6VP and GraphScope</title>
@@ -1745,42 +1807,6 @@ Graph neural networks use neural networks to automatically mine features that ar
         
         
         <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>Release Notes: v0.17.0</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/release_note_t.png&quot; alt=&quot;release-note&quot; /&gt;
-We are glad to announce a number of new features and improvements to GraphScope, alongside the GraphScope 0.17 release. The updates include new releases for Spark-GraphX support, backend engine enhancement, and frontend APIs. Currently, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GraphX Pregel&lt;/code&gt; algorithms can be seamlessly executed on GraphScope. A lot of new features have also been officially brought into the interactive engine (GIE), including the syntactic sugar of path expansion and expression, the Gremlin steps of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;id()&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;label()&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;coin()&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;otherV()&lt;/code&gt;,  and the profiling and benchmarking tools for LDBC BI queries.&lt;/p&gt;
-
-&lt;p&gt;We highlight the following improvements included in this release:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;Spark-GraphX support for GAE:
-    &lt;ul&gt;
-      &lt;li&gt;Support to convert GraphX graph to GraphScope Fragment;&lt;/li&gt;
-      &lt;li&gt;Support to wrap GraphScope Fragment as GraphX Graph;&lt;/li&gt;
-      &lt;li&gt;Support to run GraphX Pregel algorithms on GAE.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;New language features and enhancement for GIE:
-    &lt;ul&gt;
-      &lt;li&gt;The syntactic sugar of path expansion. Now user can write &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;out[in|both](&apos;x..y&apos;, &apos;KNOWS&apos;)&lt;/code&gt; to support path expansion of at least &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x&lt;/code&gt; (included) times and at most &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;y&lt;/code&gt; (excluded) times from a certain node. Meanwhile, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;with()&lt;/code&gt; step can be followed to configure the path expansion.&lt;/li&gt;
-      &lt;li&gt;The syntactic sugar of expression, introduced by &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;expr()&lt;/code&gt;, can be used along with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;where()&lt;/code&gt;-step to enable filtering expression. For example, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.where(expr(&quot;@.name == \&quot;John\&quot;&quot;))&lt;/code&gt; helps filter out the current entry that has the name of “John”. We have updated the &lt;a href=&quot;https://graphscope.io/docs/interactive_engine.html&quot;&gt;README doc&lt;/a&gt; for some instructions.&lt;/li&gt;
-      &lt;li&gt;Provide LDBC benchmarking for BI queries.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Enhancement and dependency refinement of Groot to reduce the size of fat-jar.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;For more detailed improvements that have been made in this release, please refer to the complete &lt;a href=&quot;https://github.com/alibaba/GraphScope/releases/tag/v0.17.0&quot;&gt;changelog&lt;/a&gt;.&lt;/p&gt;
-</description>
-        <pubDate>Mon, 26 Sep 2022 03:33:20 +0000</pubDate>
-        <link>https://graphscope.io/blog/releasenotes/2022/09/26/release-notes-0.17.0.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2022/09/26/release-notes-0.17.0.html</guid>
-        
-        
-        <category>ReleaseNotes</category>
         
       </item>
     
