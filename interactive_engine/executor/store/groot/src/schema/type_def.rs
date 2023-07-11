@@ -220,7 +220,6 @@ impl StorageEngine {
         match *self {
             StorageEngine::Memory => protos::schema::StorageEngine::MEMORY,
             StorageEngine::Rocksdb => protos::schema::StorageEngine::ROCKSDB,
-            StorageEngine::Alibtree => protos::schema::StorageEngine::ALIBTREE,
         }
     }
 }
