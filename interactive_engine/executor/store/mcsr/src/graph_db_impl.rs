@@ -23,6 +23,7 @@ use crate::col_table::ColTable;
 use crate::error::GDBResult;
 use crate::graph::{Direction, IndexType};
 use crate::graph_db::{CsrTrait, GlobalCsrTrait, LocalEdge, LocalVertex, NbrIter, NbrOffsetIter};
+use crate::ldbc_parser::LDBCVertexParser;
 use crate::mcsr::MutableCsr;
 use crate::schema::{CsrGraphSchema, Schema};
 use crate::scsr::SingleCsr;
@@ -223,7 +224,8 @@ pub trait BasicOps<G: IndexType + Sync + Send, I: IndexType + Sync + Send> {
     ) -> usize;
     fn get_adj_list(
         &self, src_index: I, src_label: LabelId, dst_label: LabelId, edge_label: LabelId, dir: Direction,
-    ) -> Option<NbrOffsetIter<I>>;
+    ) -> Option<NbrIter<I>>;
+
     fn index_to_local_vertex(&self, label: LabelId, index: I, with_property: bool) -> LocalVertex<G, I>;
     fn edge_ref_to_local_edge(
         &self, src_label: LabelId, src_lid: I, dst_label: LabelId, dst_lid: I, label: LabelId,
