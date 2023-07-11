@@ -13,7 +13,6 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
-import com.alibaba.graphscope.proto.DataLoadTargetPb;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 
 import org.junit.jupiter.api.Test;
@@ -32,18 +31,18 @@ public class ClientTest {
     int port = 55556;
     GrootClient client = GrootClient.newBuilder().addHost(host, port).build();
 
-    @Test
-    void testIngestData() {
-        String path = "hdfs://100.69.96.93:9000/user/tianli/data/build_1g_p8";
-        client.ingestData(path);
-    }
-
-    @Test
-    void testCommitData() {
-        long tableId = -4611686018427387871L;
-        DataLoadTargetPb target = DataLoadTargetPb.newBuilder().setLabel("person").build();
-        client.commitDataLoad(Collections.singletonMap(tableId, target), "");
-    }
+    //    @Test
+    //    void testIngestData() {
+    //        String path = "hdfs://host:port/path";
+    //        client.ingestData(path);
+    //    }
+    //
+    //    @Test
+    //    void testCommitData() {
+    //        long tableId = -4611686018427387871L;
+    //        DataLoadTargetPb target = DataLoadTargetPb.newBuilder().setLabel("person").build();
+    //        client.commitDataLoad(Collections.singletonMap(tableId, target), "");
+    //    }
 
     @Test
     void testLoadSchema() throws URISyntaxException, IOException {
@@ -58,6 +57,12 @@ public class ClientTest {
     }
 
     @Test
+    void testDropSchema() {
+        GraphDefPb res = client.dropSchema();
+        System.out.println(res);
+    }
+
+    @Test
     void testGetSchema() {
         GraphDefPb schema = client.getSchema();
         System.out.println(schema.toString());
@@ -65,18 +70,19 @@ public class ClientTest {
 
     @Test
     void testAddData() {
+        client.initWriteSession();
         Map<String, String> properties = new HashMap<>();
-        properties.put("firstName", "alice");
+        properties.put("name", "alice");
         properties.put("id", "12345");
         client.addVertex("person", properties);
         properties = new HashMap<>();
-        properties.put("firstName", "bob");
+        properties.put("name", "bob");
         properties.put("id", "88888");
         client.addVertex("person", properties);
 
         for (int i = 0; i < 100; i++) {
             properties = new HashMap<>();
-            properties.put("firstName", "test" + i);
+            properties.put("name", "test" + i);
             properties.put("id", "" + i);
             client.addVertex("person", properties);
         }
@@ -87,7 +93,7 @@ public class ClientTest {
                 "person",
                 Collections.singletonMap("id", "12345"),
                 Collections.singletonMap("id", "88888"),
-                Collections.singletonMap("creationDate", "20201111"));
+                Collections.singletonMap("weight", "20201111"));
         client.commit();
     }
 }

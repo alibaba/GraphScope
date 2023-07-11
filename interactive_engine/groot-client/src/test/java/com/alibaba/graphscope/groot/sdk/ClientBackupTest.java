@@ -39,7 +39,7 @@ public class ClientBackupTest {
                 Paths.get(
                         Thread.currentThread()
                                 .getContextClassLoader()
-                                .getResource("modern.schema")
+                                .getResource("schema.json")
                                 .toURI());
         String jsonSchemaRes = client.loadJsonSchema(path);
         System.out.println(jsonSchemaRes);
