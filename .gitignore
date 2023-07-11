@@ -87,3 +87,6 @@ package.lock
 # Core dump
 core.*
 *.core
+
+# Flex related
+flex/docs/

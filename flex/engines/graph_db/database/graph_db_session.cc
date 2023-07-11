@@ -15,8 +15,8 @@
 
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/graph_db/app/app_base.h"
-#include "flex/engines/graph_db/app/app_utils.h"
 #include "flex/engines/graph_db/database/graph_db.h"
+#include "flex/utils/app_utils.h"
 
 namespace gs {
 
@@ -61,6 +61,12 @@ const Schema& GraphDBSession::schema() const { return db_.schema(); }
 std::shared_ptr<ColumnBase> GraphDBSession::get_vertex_property_column(
     uint8_t label, const std::string& col_name) const {
   return db_.get_vertex_property_column(label, col_name);
+}
+
+std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
+    uint8_t label) const {
+  return std::make_shared<TypedRefColumn<oid_t>>(
+      db_.graph().lf_indexers_[label].get_keys(), StorageStrategy::kMem);
 }
 
 #define likely(x) __builtin_expect(!!(x), 1)
