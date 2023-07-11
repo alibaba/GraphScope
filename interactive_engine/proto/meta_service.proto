@@ -16,7 +16,6 @@
 syntax = "proto3";
 
 option java_package = "com.alibaba.graphscope.proto.store";
-option java_generate_equals_and_hash = true;
 option java_multiple_files = true;
 
 package groot_store;
