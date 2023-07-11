@@ -50,6 +50,7 @@ public abstract class ExternalStorage {
             }
         }
     }
+
     public void downloadData(String srcPath, String dstPath) throws IOException {
         // Check chk
         String chkPath = srcPath.substring(0, srcPath.length() - ".sst".length()) + ".chk";
