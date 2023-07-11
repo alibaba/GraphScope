@@ -73,18 +73,19 @@ public class OfflineBuild {
                         .build();
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, FileColumnMapping> columnMappingConfig =
-                objectMapper.readValue(
-                        columnMappingConfigStr,
-                        new TypeReference<Map<String, FileColumnMapping>>() {});
+                objectMapper.readValue(columnMappingConfigStr, new TypeReference<>() {});
 
         List<DataLoadTargetPb> targets = new ArrayList<>();
         for (FileColumnMapping fileColumnMapping : columnMappingConfig.values()) {
-            targets.add(
-                    DataLoadTargetPb.newBuilder()
-                            .setLabel(fileColumnMapping.getLabel())
-                            .setSrcLabel(fileColumnMapping.getSrcLabel())
-                            .setDstLabel(fileColumnMapping.getDstLabel())
-                            .build());
+            DataLoadTargetPb.Builder builder = DataLoadTargetPb.newBuilder();
+            builder.setLabel(fileColumnMapping.getLabel());
+            if (fileColumnMapping.getSrcLabel() != null) {
+                builder.setSrcLabel(fileColumnMapping.getSrcLabel());
+            }
+            if (fileColumnMapping.getDstLabel() != null) {
+                builder.setDstLabel(fileColumnMapping.getDstLabel());
+            }
+            targets.add(builder.build());
         }
         GraphSchema schema = GraphDef.parseProto(client.prepareDataLoad(targets));
         String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
