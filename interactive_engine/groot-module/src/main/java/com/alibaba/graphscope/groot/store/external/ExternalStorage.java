@@ -35,6 +35,21 @@ public abstract class ExternalStorage {
 
     public abstract void downloadDataSimple(String srcPath, String dstPath) throws IOException;
 
+    public void downloadDataWithRetry(String srcPath, String dstPath) throws IOException {
+        int maxRetry = 5;
+        for (int i = 0; i < maxRetry; ++i) {
+            try {
+                downloadData(srcPath, dstPath);
+                break;
+            } catch (IOException e) {
+                if (i == maxRetry - 1) {
+                    throw e;
+                } else {
+                    logger.error("Failed to download data, retrying...", e);
+                }
+            }
+        }
+    }
     public void downloadData(String srcPath, String dstPath) throws IOException {
         // Check chk
         String chkPath = srcPath.substring(0, srcPath.length() - ".sst".length()) + ".chk";
@@ -52,6 +67,7 @@ public abstract class ExternalStorage {
         }
         String[] chkArray = new String(chkData).split(",");
         if ("0".equals(chkArray[0])) {
+            chkFile.delete();
             return;
         }
         String chkMD5Value = chkArray[1];
