@@ -102,7 +102,7 @@ You could pass additional key-value pairs to customize the startup configuration
 
 ```python
 # Set the timeout value to 10 min
-g = gs.gremlin(graph, params={'pegasus.timeout': 600000})
+g = gs.gremlin(graph, params={'query.execution.timeout.ms': 600000})
 ```
 
 ## What's the Next
