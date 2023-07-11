@@ -202,7 +202,6 @@ impl TypeOption {
 pub enum StorageEngine {
     Memory,
     Rocksdb,
-    Alibtree,
 }
 
 impl<'a> From<&'a protos::schema::StorageEngine> for StorageEngine {
@@ -210,7 +209,6 @@ impl<'a> From<&'a protos::schema::StorageEngine> for StorageEngine {
         match *proto {
             protos::schema::StorageEngine::MEMORY => StorageEngine::Memory,
             protos::schema::StorageEngine::ROCKSDB => StorageEngine::Rocksdb,
-            protos::schema::StorageEngine::ALIBTREE => StorageEngine::Alibtree,
         }
     }
 }
@@ -220,7 +218,6 @@ impl StorageEngine {
         match *self {
             StorageEngine::Memory => protos::schema::StorageEngine::MEMORY,
             StorageEngine::Rocksdb => protos::schema::StorageEngine::ROCKSDB,
-            StorageEngine::Alibtree => protos::schema::StorageEngine::ALIBTREE,
         }
     }
 }

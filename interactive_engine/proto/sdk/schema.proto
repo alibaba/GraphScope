@@ -63,7 +63,6 @@ message TypeOptionProto {
 enum StorageEngine {
     MEMORY                                             = 0;
     ROCKSDB                                            = 1;
-    ALIBTREE                                           = 2;
 }
 
 message RelationShipProto {
@@ -99,7 +98,7 @@ message SchemaProto {
     int32 version                                      = 3;
 }
 
-// schema opertion proto
+// schema operation proto
 message CreateVertexTypeReq {
     string label                                       = 1;
     repeated PropertyDefProto property                 = 2;
