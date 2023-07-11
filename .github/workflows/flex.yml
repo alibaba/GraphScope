@@ -1,0 +1,47 @@
+name: GraphScope Flex CI
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'flex/**'
+      - '.github/workflows/flex.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'flex/**'
+      - '.github/workflows/flex.yml'
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  test-hqps-engine:
+    runs-on: ubuntu-20.04
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install latest libgrape-lite
+      if: false
+      run: |
+        git clone --single-branch https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
+        cd /tmp/libgrape-lite
+        mkdir -p build && cd build
+        cmake ..
+        make -j$(nproc)
+        make install
+
+    - name: Build
+      run: |
+        cd flex
+        mkdir build && cd build
+        cmake .. && make -j$(nproc)
