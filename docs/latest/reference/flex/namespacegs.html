@@ -179,6 +179,9 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ReadTransaction.html">ReadTransaction</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1RefColumnBase.html">RefColumnBase</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create RefColumn for ease of usage for hqps.  <a href="classgs_1_1RefColumnBase.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html">Schema</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ServerApp.html">ServerApp</a></td></tr>
@@ -212,6 +215,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedMutableCsrConstEdgeIter.html">TypedMutableCsrConstEdgeIter</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedMutableCsrEdgeIter.html">TypedMutableCsrEdgeIter</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedRefColumn.html">TypedRefColumn</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1UninitializedUtils.html">UninitializedUtils</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -298,10 +303,6 @@ Functions</h2></td></tr>
 <tr class="separator:a48d6be6909b399144cfff5b7fb4aa080"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25d4ba547fad2fea41d723172ab4a490"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1MutableCsrBase.html">MutableCsrBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a25d4ba547fad2fea41d723172ab4a490">create_csr</a> (<a class="el" href="namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8">EdgeStrategy</a> es, const std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt; &amp;properties)</td></tr>
 <tr class="separator:a25d4ba547fad2fea41d723172ab4a490"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6bf28642fd46db7ae7cf21e65c806fe7"><td class="memItemLeft" align="right" valign="top">static int64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a6bf28642fd46db7ae7cf21e65c806fe7">char_ptr_to_long</a> (const char *data)</td></tr>
-<tr class="separator:a6bf28642fd46db7ae7cf21e65c806fe7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d91b24c4a8e97262de988f92ca7965d"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a5d91b24c4a8e97262de988f92ca7965d">char_ptr_to_int</a> (const char *data)</td></tr>
-<tr class="separator:a5d91b24c4a8e97262de988f92ca7965d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac034c28ca517296db514192145723855"><td class="memItemLeft" align="right" valign="top">static uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ac034c28ca517296db514192145723855">get_vertex_vid</a> (const <a class="el" href="classgs_1_1ReadTransaction.html">gs::ReadTransaction</a> &amp;txn, uint8_t label, int64_t id)</td></tr>
 <tr class="separator:ac034c28ca517296db514192145723855"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab41cd02b87f8d581cec85465767bc037"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ab41cd02b87f8d581cec85465767bc037">generate_label_tuples</a> (const std::string &amp;src_label, const std::string &amp;dst_label, const std::string &amp;edge_label, const <a class="el" href="classgs_1_1Schema.html">gs::Schema</a> &amp;schema, std::vector&lt; std::tuple&lt; uint8_t, uint8_t, uint8_t &gt;&gt; &amp;output)</td></tr>
@@ -312,6 +313,10 @@ Functions</h2></td></tr>
 <tr class="separator:a1ec84b0304e5296676471a8001b2957f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae5b9d7e99ac749858f548fe6390dd1f4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ae5b9d7e99ac749858f548fe6390dd1f4">deserialize_field</a> (grape::OutArchive &amp;arc, <a class="el" href="structgs_1_1Any.html">Any</a> &amp;prop)</td></tr>
 <tr class="separator:ae5b9d7e99ac749858f548fe6390dd1f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6bf28642fd46db7ae7cf21e65c806fe7"><td class="memItemLeft" align="right" valign="top">static int64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a6bf28642fd46db7ae7cf21e65c806fe7">char_ptr_to_long</a> (const char *data)</td></tr>
+<tr class="separator:a6bf28642fd46db7ae7cf21e65c806fe7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d91b24c4a8e97262de988f92ca7965d"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a5d91b24c4a8e97262de988f92ca7965d">char_ptr_to_int</a> (const char *data)</td></tr>
+<tr class="separator:a5d91b24c4a8e97262de988f92ca7965d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abe4634b1057425ea00e2643b7562e87e"><td class="memTemplParams" colspan="2">template&lt;class INDEX_T &gt; </td></tr>
 <tr class="memitem:abe4634b1057425ea00e2643b7562e87e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs.html#abe4634b1057425ea00e2643b7562e87e">build_lf_indexer</a> (const <a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; int64_t, INDEX_T &gt; &amp;input, <a class="el" href="classgs_1_1LFIndexer.html">LFIndexer</a>&lt; INDEX_T &gt; &amp;output, double rate=0.8)</td></tr>
 <tr class="separator:abe4634b1057425ea00e2643b7562e87e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -335,6 +340,8 @@ Functions</h2></td></tr>
 <tr class="separator:aa9ee47a7a56d22f4332fea9f72954564"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a84ec0ecbc20c85d556acc60f73f2f6ba"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a84ec0ecbc20c85d556acc60f73f2f6ba">ParseRecordX</a> (const char *line, int64_t &amp;src, int64_t &amp;dst, grape::EmptyType &amp;prop)</td></tr>
 <tr class="separator:a84ec0ecbc20c85d556acc60f73f2f6ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8bfeba0a224d3194237469bad1614925"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a8bfeba0a224d3194237469bad1614925">ParseRecordX</a> (const char *line, int64_t &amp;src, int64_t &amp;dst, int64_t &amp;prop)</td></tr>
+<tr class="separator:a8bfeba0a224d3194237469bad1614925"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a801c5c31e5322d80bbab8eac7a7b52ab"><td class="memItemLeft" align="right" valign="top">grape::InArchive &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a801c5c31e5322d80bbab8eac7a7b52ab">operator&lt;&lt;</a> (grape::InArchive &amp;in_archive, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;value)</td></tr>
 <tr class="separator:a801c5c31e5322d80bbab8eac7a7b52ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab6d4171a038e1dc32280f58045d4e4ec"><td class="memItemLeft" align="right" valign="top">grape::OutArchive &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ab6d4171a038e1dc32280f58045d4e4ec">operator&gt;&gt;</a> (grape::OutArchive &amp;out_archive, <a class="el" href="structgs_1_1Any.html">Any</a> &amp;value)</td></tr>
@@ -1349,7 +1356,7 @@ template&lt;typename EDATA_T &gt; </div>
 </div>
 </div>
 <a id="aa9ee47a7a56d22f4332fea9f72954564"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa9ee47a7a56d22f4332fea9f72954564">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[1/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aa9ee47a7a56d22f4332fea9f72954564">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1389,7 +1396,7 @@ template&lt;typename EDATA_T &gt; </div>
 </div>
 </div>
 <a id="a84ec0ecbc20c85d556acc60f73f2f6ba"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a84ec0ecbc20c85d556acc60f73f2f6ba">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[2/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a84ec0ecbc20c85d556acc60f73f2f6ba">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[2/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1429,7 +1436,7 @@ template&lt;typename EDATA_T &gt; </div>
 </div>
 </div>
 <a id="ae159f64eb01a723743d6a700d0c6c49e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae159f64eb01a723743d6a700d0c6c49e">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[3/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ae159f64eb01a723743d6a700d0c6c49e">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[3/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1456,6 +1463,46 @@ template&lt;typename EDATA_T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int &amp;&#160;</td>
+          <td class="paramname"><em>prop</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a8bfeba0a224d3194237469bad1614925"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8bfeba0a224d3194237469bad1614925">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::ParseRecordX </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>line</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int64_t &amp;&#160;</td>
+          <td class="paramname"><em>src</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int64_t &amp;&#160;</td>
+          <td class="paramname"><em>dst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int64_t &amp;&#160;</td>
           <td class="paramname"><em>prop</em>&#160;</td>
         </tr>
         <tr>

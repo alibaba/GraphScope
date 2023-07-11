@@ -5,9 +5,139 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 03 Jul 2023 08:50:38 +0000</pubDate>
-    <lastBuildDate>Mon, 03 Jul 2023 08:50:38 +0000</lastBuildDate>
+    <pubDate>Thu, 06 Jul 2023 07:12:00 +0000</pubDate>
+    <lastBuildDate>Thu, 06 Jul 2023 07:12:00 +0000</lastBuildDate>
     <generator>Jekyll v4.3.2</generator>
+    
+      <item>
+        <title>Visualizing Insights from Large Graphs: A Comprehensive Guide to Using G6VP and GraphScope</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp.jpg&quot; alt=&quot;G6VP&quot; /&gt;
+GraphScope now supports serving as the backend engine for &lt;a href=&quot;https://insight.antv.antgroup.com/&quot;&gt;G6VP&lt;/a&gt;, an open-sourced graph visualization and analysis platform. With G6VP and GraphScope, users can import graph data and analyze graph data easily. This article mainly introduces how to deploy G6VP and GraphScope and perform data analysis.&lt;/p&gt;
+
+&lt;h3 id=&quot;what-is-g6vp&quot;&gt;What is G6VP&lt;/h3&gt;
+
+&lt;p&gt;G6VP is a graph visualization and analysis platform developed by AntV Graph Visualization team of Ant Group. Users can connect their own data in G6VP, including local file uploads or various graph databases, and assemble the rich graph visualization and analysis assets provided by G6VP to perform data analysis, or design and develop their own graph visualization and analysis products, embedding them into their own systems.
+&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-01.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;deployment-of-g6vp-and-graphscope&quot;&gt;Deployment of G6VP and GraphScope&lt;/h3&gt;
+
+&lt;p&gt;Currently, G6VP supports GraphScope as a backend service. As G6VP does not have an available online server, the integration and deployment with GraphScope need to be based on Docker images. Currently, G6VP only supports the persistent graph storage (Groot) and graph interactive engine (GIE) in GraphScope. In the future, the docking of other storage and computation engines in GraphScope will be continuously completed, providing an efficient one-stop solution.&lt;/p&gt;
+
+&lt;h4 id=&quot;image-deployment&quot;&gt;Image Deployment&lt;/h4&gt;
+
+&lt;p&gt;In this step, you need to deploy the GraphScope service and G6VP HTTP service through docker images. It should be noted that the machine networks where the two services are located can be connected.&lt;/p&gt;
+
+&lt;p&gt;We first need to pull and start the image:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:httpserver
+&lt;span class=&quot;c&quot;&gt;# Start the Image, the port should be mapped in this procedure to ensure the availability of the service&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 12312 is the Gremlin&apos;s query port &lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# 9527 is the server port&lt;/span&gt;
+docker run &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 12312:12312 &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 9527:9527 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:httpserver
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;After the GraphScope persistent storage (Groot) container is successfully started, the default dataset will be loaded. If you want to import your own dataset, please refer to the &lt;a href=&quot;https://graphscope.io/docs/latest/storage_engine/groot&quot;&gt;Groot documentation&lt;/a&gt;. You can execute the following command to check whether the container is running normally:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Note that when the server is running the container, replace the localhost address with the server IP&lt;/span&gt;
+curl http://localhost:9527/api/v1/graph
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;After successful deployment, the address of the GraphScope engine is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost:9527&lt;/code&gt;, which will be used in the “Access GraphScope Service in G6VP” step later.&lt;/p&gt;
+
+&lt;h4 id=&quot;start-g6vp-http-service&quot;&gt;Start G6VP HTTP Service&lt;/h4&gt;
+
+&lt;p&gt;There are two ways to start G6VP HTTP service:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Start directly using the binary installation package&lt;/strong&gt;&lt;br /&gt;
+You need to download &lt;a href=&quot;https://github.com/antvis/G6VP/blob/master/release/gi-httpservice.tgz&quot;&gt;gi-httpservices.tgz file&lt;/a&gt;, unzip gi-httpservice.tgz and enter the file folder to start the service. Before doing that, make sure the NodeJS environment is available on your computer.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;gi-httpservice
+&lt;span class=&quot;c&quot;&gt;# make sure port 7001 is available&lt;/span&gt;
+lsof &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt;:7001
+npm run start
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Install and start from source code&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;You need to clone the source code of G6VP from GitHub, enter the folder &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;G6VP/packages/gi-httpservice&lt;/code&gt;, install the dependencies, and start the service:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git clone https://github.com/antvis/G6VP.git
+&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;G6VP/packages/gi-httpservice
+npm &lt;span class=&quot;nb&quot;&gt;install
+&lt;/span&gt;npm run dev
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now, G6VP http service is running, visit &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost:7001/&lt;/code&gt; (7001 is the default port), you will see the tips in the console of browser:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-02.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;access-graphscope-service-in-g6vp&quot;&gt;Access GraphScope Service in G6VP&lt;/h3&gt;
+
+&lt;p&gt;To connect GraphScope service, you need to fill the address of services from previous steps：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Platform address: The address of G6VP HTTP service, it was &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost:7001&lt;/code&gt; from the previous step&lt;/li&gt;
+  &lt;li&gt;Engine address: The address of GS service, it was &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost:9527&lt;/code&gt; from the previous step&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-03.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Click “Connect” button and you will see the tip if it is success, and the subgraph select panel will be shown at below:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-04.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Next you can select a subgraph from “Select Subgraph”. This select dropdown has listed all the graphs in the GraphScope service you started. If there is no option, please checkout if the data importing step is failed. When you click “Analyze”, the page will jump to the list of the datasets, and you will find the dataset you just created:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-05.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now you can click the blue computer icon on the right of the dataset record in the list to create a workbook with the dataset. You will see the page below and the dataset field is already filled and please name the workbook and then click “Create Canvas”:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-06.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;After that, a workbook is successfully created and you will see an empty canvas with configuration panel like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-07.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;analyze-the-data&quot;&gt;Analyze the Data&lt;/h3&gt;
+
+&lt;p&gt;After the above steps, you have completed the connection to GraphScope and the creation of data and workbook. Then, you can perform data analysis in the newly created workbook. Now you can configure Gremlin query asset in the workbook, enter the Gremlin query statement, such as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;g.V().limit(10)&lt;/code&gt; in the figure below, to successfully query the data:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-08.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;If you are not satisfy with the nodes and edges’ styles, configuring it on the style panel on the left:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-09.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Select one or brush multiple nodes and right click to expand the neighbors:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-10.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;You can configure the neighbor querying asset on the left if it does not meet the requirement:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-11.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In addition, you can use the filter to analyze the statistical info, and there will be an intelligent recommend:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-12.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The introduction above is only about the basic functions. Plenty of fancy graph analysis assets will be found at the assets center.&lt;/p&gt;
+
+&lt;p&gt;Last but not least, do not forget to save your workbook after the above operations. Next time you visit G6VP, you will found your workbook at the workbook list. Don’t be worry, the datasets info, workbooks are all cached at your computer. G6VP will not record any user information!&lt;/p&gt;
+
+&lt;p&gt;If you want to embed the workbook into your system, export it at the right top “Open”. There will be 3 ways to export:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-13.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;More usage and docs can be referred to &lt;a href=&quot;https://www.yuque.com/antv/gi&quot;&gt;G6VP documentation&lt;/a&gt; and &lt;a href=&quot;http://github.com/antvis/g6vp&quot;&gt;G6VP GitHub repo&lt;/a&gt;.&lt;/p&gt;
+</description>
+        <pubDate>Wed, 05 Jul 2023 10:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2023/07/05/Visualizing-Insights-from-Large-Graphs.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/07/05/Visualizing-Insights-from-Large-Graphs.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>GAIA-IR: Graph Interactive Query Engine in GraphScope</title>
@@ -1648,46 +1778,6 @@ We are glad to announce a number of new features and improvements to GraphScope,
         <pubDate>Mon, 26 Sep 2022 03:33:20 +0000</pubDate>
         <link>https://graphscope.io/blog/releasenotes/2022/09/26/release-notes-0.17.0.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2022/09/26/release-notes-0.17.0.html</guid>
-        
-        
-        <category>ReleaseNotes</category>
-        
-      </item>
-    
-      <item>
-        <title>Release Notes: v0.16.0</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/release_note_t.png&quot; alt=&quot;release-note&quot; /&gt;
-We are bringing a number of improvements to GraphScope, alongside the GraphScope 0.16.0 release. This release introduces many new features on backend engines and system stability. We completely remove a legacy Graph Interactive Engine (GIE), while officially replacing it with the latest version based on an intermediate representation (IR) layer. The Graph Learning Engine (GLE) now supports real-time sampling on dynamic graphs. In addition, the Jave SDK of Graph Analytics Engine (GAE) can work on MacOS. Meanwhile, we start to release a nightly version every day, and you can try it with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pip3 install graphscope --pre&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;We highlight the following improvements included in this release:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;Enhancements of the GIE GAIA-IR engine:
-    &lt;ul&gt;
-      &lt;li&gt;Completely replacing the legacy GIE engine with the latest version based on IR layer;&lt;/li&gt;
-      &lt;li&gt;Optimizing the logic of lazily fetching properties from the graph store, and implementing a new CSR-based storage for experiment purpose;&lt;/li&gt;
-      &lt;li&gt;New language features including more grouping functions, more options for group/dedup/orderby keys, etc.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Dynamic-Graph-Service (DGS) in GLE:
-    &lt;ul&gt;
-      &lt;li&gt;DGS is an online inference service, and it supports real-time graph sampling for GNN algorithms on dynamic graphs with streaming graph updates;&lt;/li&gt;
-      &lt;li&gt;It provides a performance guarantee of sampling P99 latency in 20ms on large-scale dynamic graphs.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Other enhancements:
-    &lt;ul&gt;
-      &lt;li&gt;Enabling Jave SDK of Graph Analytics Engine (GAE) on MacOS;&lt;/li&gt;
-      &lt;li&gt;A series of enhancements on the persistent graph storage &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Groot&lt;/code&gt;.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;For more detailed improvements that have been made in this release, please refer to the complete &lt;a href=&quot;https://github.com/alibaba/GraphScope/releases/tag/v0.16.0&quot;&gt;changelog&lt;/a&gt;.&lt;/p&gt;
-</description>
-        <pubDate>Tue, 09 Aug 2022 03:33:20 +0000</pubDate>
-        <link>https://graphscope.io/blog/releasenotes/2022/08/09/release-notes-0.16.0.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2022/08/09/release-notes-0.16.0.html</guid>
         
         
         <category>ReleaseNotes</category>
