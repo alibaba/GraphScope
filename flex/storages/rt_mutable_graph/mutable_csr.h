@@ -34,7 +34,7 @@ template <typename EDATA_T>
 struct MutableNbr {
   MutableNbr() = default;
   MutableNbr(const MutableNbr& rhs)
-      : neighbor(rhs.neighbor), timestamp(rhs.timestamp.load()), data(data) {}
+      : neighbor(rhs.neighbor), timestamp(rhs.timestamp.load()), data(rhs.data) {}
   ~MutableNbr() = default;
 
   vid_t neighbor;

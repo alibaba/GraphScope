@@ -46,6 +46,7 @@ void MutablePropertyFragment::initVertices(
   auto& table = vertex_data_[v_label_i];
   auto& property_types = schema_.get_vertex_properties(v_label_name);
   size_t col_num = property_types.size();
+
   std::vector<std::string> col_names;
   for (size_t col_i = 0; col_i < col_num; ++col_i) {
     col_names.push_back("col_" + std::to_string(col_i));
@@ -269,6 +270,17 @@ void MutablePropertyFragment::initEdges(
           construct_empty_csr<std::string>(ie_strtagy, oe_strtagy);
     } else {
       LOG(FATAL) << "Unsupported edge property type.";
+    }
+  } else if (property_types[0] == PropertyType::kDouble) {
+    if (filenames.empty()) {
+      std::tie(ie_[index], oe_[index]) =
+          construct_empty_csr<double>(ie_strtagy, oe_strtagy);
+    } else {
+      std::tie(ie_[index], oe_[index]) = construct_csr<double>(
+          filenames, property_types, ie_strtagy, oe_strtagy,
+          lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
+      
+//      LOG(FATAL) << "Unsupported edge property type.";
     }
   } else {
     LOG(FATAL) << "Unsupported edge property type.";

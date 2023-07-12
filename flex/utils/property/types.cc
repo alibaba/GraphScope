@@ -40,6 +40,10 @@ inline void ParseString(const std::string_view& str, std::string_view& val) {
   val = str;
 }
 
+inline void ParseDouble(const std::string_view& str, double& val){
+  sscanf(str.data(), "%lf", &val);
+}
+
 void ParseRecord(const char* line, std::vector<Any>& rec) {
   const char* cur = line;
   for (auto& item : rec) {
@@ -56,6 +60,8 @@ void ParseRecord(const char* line, std::vector<Any>& rec) {
       ParseDate(sv, item.value.d);
     } else if (item.type == PropertyType::kString) {
       ParseString(sv, item.value.s);
+    } else if (item.type == PropertyType::kDouble) {
+      ParseDouble(sv,item.value.db);
     }
     cur = ptr + 1;
   }
@@ -102,6 +108,10 @@ void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
 #endif
 }
 
+void ParseRecordX(const char* line, int64_t& src, int64_t& dst, double& prop) {
+  sscanf(line, "%lld|%lld|%lf", &src, &dst, &prop);
+}
+
 grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
   switch (value.type) {
   case PropertyType::kInt32:
@@ -115,6 +125,9 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
     break;
   case PropertyType::kString:
     in_archive << value.type << value.value.s;
+    break;
+  case PropertyType::kDouble:
+    in_archive << value.type << value.value.db;
     break;
   default:
     in_archive << PropertyType::kEmpty;
@@ -138,6 +151,9 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
     break;
   case PropertyType::kString:
     out_archive >> value.value.s;
+    break;
+  case PropertyType::kDouble:
+    out_archive >> value.value.db;
     break;
   default:
     break;
