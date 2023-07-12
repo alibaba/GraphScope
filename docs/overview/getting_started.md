@@ -88,9 +88,9 @@ papers = interactive.execute("g.V().has('author', 'id', 2).out('writes').where(_
 # Cypher query for counting the number of papers two authors (with id 2 and 4307) have co-authored
 # Note that for Cypher query, the parameter of lang="cypher" is mandatory
 papers = interactive.execute( \
-    "MATCH (n1:author) -[:writes]->(p:paper) <-[:writes]-(n2:author) \
+    "MATCH (n1:author)-[:writes]->(p:paper)<-[:writes]-(n2:author) \
         WHERE n1.id = 2 AND n2.id = 4307 \
-        RETURN count(p)", \
+        RETURN count(DISTINCT p)", \
     lang="cypher", routing_=RoutingControl.READ)
 ```
 ````
