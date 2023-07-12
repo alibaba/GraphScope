@@ -62,15 +62,8 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>queries/bi/apply</directory>
-            <outputDirectory>/queries/bi/apply</outputDirectory>
-            <includes>
-                <include>*</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>queries/bi/group</directory>
-            <outputDirectory>/queries/bi/group</outputDirectory>
+            <directory>queries/lsqb</directory>
+            <outputDirectory>/queries/lsqb</outputDirectory>
             <includes>
                 <include>*</include>
             </includes>
