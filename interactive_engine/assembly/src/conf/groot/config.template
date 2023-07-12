@@ -57,3 +57,5 @@ dns.name.prefix.store=localhost
 # executor.query.port=55557
 # executor.engine.port=55558
 gaia.enable=true
+neo4j.bolt.server.disabled=true
+
