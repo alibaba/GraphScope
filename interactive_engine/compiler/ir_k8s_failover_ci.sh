@@ -48,7 +48,7 @@ wait_role_pods_to_run store ${store_total}
 
 sleep 5
 
-node_port=$(kubectl --namespace=${namespace} get svc ${role_prefix}-frontend -o go-template='{{range.spec.ports}}{{if .nodePort}}{{.nodePort}}{{"\n"}}{{end}}{{end}}')
+node_port=$(kubectl --namespace=${namespace} get svc ${role_prefix}-frontend -o go-template='{{range.spec.ports}}{{if .nodePort}}{{.nodePort}}{{"\n"}}{{end}}{{end}}' | head -1)
 hostname=$(minikube ip)
 python3 ./submit_query.py $hostname:${node_port}
 

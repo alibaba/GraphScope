@@ -36,5 +36,16 @@ spec:
       nodePort: null
       {{- end }}
       {{- end }}
+    - name: cypher
+      port: {{ .Values.frontend.service.cypherPort }}
+      protocol: TCP
+      targetPort: cypher
+      {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) (not (empty .Values.frontend.service.nodePorts.cypher)) }}
+      {{- if (not (empty .Values.frontend.service.nodePorts.cypher)) }}
+      nodePort: {{ .Values.frontend.service.nodePorts.cypher }}
+      {{- else if eq .Values.frontend.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+      {{- end }}
   selector: {{ include "graphscope-store.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
