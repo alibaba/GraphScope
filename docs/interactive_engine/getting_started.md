@@ -65,14 +65,18 @@ gs.set_option(show_log=True)
 # load the modern graph as example.
 graph = load_modern_graph()
 
-# Hereafter, you can use the `graph` object to create an `gremlin` query session
-g = gs.gremlin(graph)
-# then `execute` any supported gremlin query.
+# Hereafter, you can use the `graph` object to create an `interactive` query session
+g = gs.interactive(graph)
+# then `execute` any supported gremlin query (by default)
 q1 = g.execute('g.V().count()')
 print(q1.all().result())   # should print [6]
 
 q2 = g.execute('g.V().hasLabel(\'person\')')
 print(q2.all().result())  # should print [[v[2], v[3], v[0], v[1]]]
+
+# or `execute` any supported Cypher query, by passing `lang="cypher"`
+q3 = g.execute("MATCH (n:person) RETURN count(n)", lang="cypher", routing_=RoutingControl.READ)
+print(q3.records[0][0])  # should print 6
 ```
 
 You may see something like:
@@ -87,31 +91,21 @@ You may see something like:
 
 The number 6 is printed, which is the number of vertices in modern graph.
 
-### Retrieve the gremlin client
-
-The `g` returned by `gs.gremlin()` is a wrapper around `Client` of `gremlinpython`, you could get the `Client` by
-
-```python
-client = g.gremlin_client
-print(client.submit('g.V()').all().result())
-```
-
 ### Customize Configurations for GIE instance
 
 You could pass additional key-value pairs to customize the startup configuration of GIE, for example:
 
 ```python
 # Set the timeout value to 10 min
-g = gs.gremlin(graph, params={'query.execution.timeout.ms': 600000})
+g = gs.interactive(graph, params={'query.execution.timeout.ms': 600000})
 ```
 
 ## What's the Next
-As shown in the above example, it is very easy to use GraphScope to interactively query a graph using the gremlin query language on your local machine. You may find more tutorials [here](https://tinkerpop.apache.org/docs/current/tutorials/getting-started/) for the basic Gremlin usage, in which most read-only queries can be seamlessly executed with the above `g.execute()` function.
+As shown in the above example, it is very easy to use GraphScope to interactively query a graph using both the Gremlin and Cypher query language on your local machine.
 
 In addition to the above local-machine entr\'ee, we have prepared the following topics for your reference.
 
-- GIE can handle much complex cases, for example, the complex LDBC
-  business intelligence workloads. [A walk-through tutorial is here!](./guide_and_examples)
 - GIE can be deployed in a distributed environment to process very large graph. [How to do that?](./deployment)
-- GIE has supported a lot of standard Gremlin steps, together with many useful syntactic sugars. [Please look into the details!](./supported_gremlin_steps)
+- GIE has been designed to integrate with the Tinkerpop ecosystem, with necessary extensions such as some syntactic sugars to facilitate the use of Gremlin. [Please look into the details!](./tinkerpop/tinkerpop_gremlin.md)
+- - GIE has been designed to integrate with the Neo4j ecosystem. [Please look into the details!](./neo4j/cypher_sdk.md)
 - Want to learn more about the technique details of GIE. [This is the design and architecture of GIE!](./design_of_gie)
