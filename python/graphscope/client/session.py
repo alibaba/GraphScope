@@ -26,7 +26,6 @@ import gc
 import json
 import logging
 import os
-import pickle
 import signal
 import threading
 import time
@@ -62,6 +61,7 @@ from graphscope.framework.graph import GraphDAGNode
 from graphscope.framework.operation import Operation
 from graphscope.framework.utils import decode_dataframe
 from graphscope.framework.utils import decode_numpy
+from graphscope.framework.utils import deprecated
 from graphscope.framework.utils import random_string
 from graphscope.interactive.query import InteractiveQuery
 from graphscope.proto import graph_def_pb2
@@ -1293,6 +1293,7 @@ class Session(object):
         self._config_params["port"] = None
         self._config_params["vineyard_socket"] = ""
 
+    @deprecated("Please use `sess.interactive` instead.")
     def gremlin(self, graph, params=None):
         """This method is going to be deprecated.
         Use :meth:`interactive` to get an interactive engine handler supports
@@ -1351,6 +1352,7 @@ class Session(object):
         graph._attach_interactive_instance(interactive_query)
         return interactive_query
 
+    @deprecated("Please use `graphlearn` instead.")
     def learning(self, graph, nodes=None, edges=None, gen_labels=None):
         """Start a graph learning engine.
 
@@ -1730,6 +1732,7 @@ def g(
     )
 
 
+@deprecated("Please use `graphscope.interactive` instead.")
 def gremlin(graph, params=None):
     """This method is going to be deprecated in the future.
     Use :meth:`graphscope.interactive` instead.
