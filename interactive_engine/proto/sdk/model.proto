@@ -150,7 +150,6 @@ message AddEdgeKindPb {
 }
 
 
-
 message EdgeTableIdEntry {
   EdgeKindPb edgeKind = 1;
   int64 tableId = 2;

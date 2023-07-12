@@ -70,20 +70,28 @@ g = load_ogbn_mag()
 ```
 ````
 
-Interactive queries enable users to explore, examine, and present graph data in a flexible and in-depth manner, allowing them to find specific information quickly. GraphScope utilizes Gremlin, a high-level graph traversal language, for interactive queries and offers efficient execution at scale.
+Interactive queries enable users to explore, examine, and present graph data in a flexible and in-depth manner, allowing them to find specific information quickly. GraphScope enhances the presentation of interactive queries and ensures efficient execution of these queries on a large scale by providing support for the popular query languages [Gremlin](https://tinkerpop.apache.org/gremlin.html) and [Cypher](https://opencypher.org/).
 
 
-````{dropdown} Run interactive queries with Gremlin
+````{dropdown} Run interactive queries with Gremlin and Cypher
 
 In this example, we use graph traversal to count the number of papers two given authors have co-authored. To simplify the query, we assume the authors can be uniquely identified by ID 2 and 4307, respectively.
 
 
 ```python
-# get the endpoint for submitting Gremlin queries on graph g.
-interactive = graphscope.gremlin(g)
+# get the endpoint for submitting interactive queries on graph g.
+interactive = graphscope.interactive(g)
 
-# count the number of papers two authors (with id 2 and 4307) have co-authored
+# Gremlin query for counting the number of papers two authors (with id 2 and 4307) have co-authored
 papers = interactive.execute("g.V().has('author', 'id', 2).out('writes').where(__.in('writes').has('id', 4307)).count()").one()
+
+# Cypher query for counting the number of papers two authors (with id 2 and 4307) have co-authored
+# Note that for Cypher query, the parameter of lang="cypher" is mandatory
+papers = interactive.execute( \
+    "MATCH (n1:author)-[:writes]->(p:paper)<-[:writes]-(n2:author) \
+        WHERE n1.id = 2 AND n2.id = 4307 \
+        RETURN count(DISTINCT p)", \
+    lang="cypher", routing_=RoutingControl.READ)
 ```
 ````
 
@@ -218,7 +226,7 @@ from graphscope.dataset.modern_graph import load_modern_graph
 gs.set_option(show_log=True)
 
 # load the modern graph as example.
-#(modern graph is an example property graph for Gremlin queries given by Apache at https://tinkerpop.apache.org/docs/current/tutorials/getting-started/)
+#(modern graph is an example property graph given by Apache at https://tinkerpop.apache.org/docs/current/tutorials/getting-started/)
 graph = load_modern_graph()
 
 # triggers label propagation algorithm(LPA)
@@ -238,7 +246,7 @@ print(ret.to_dataframe(selector={'id': 'v.id', 'distance': 'r'})
 
 ## Graph Interactive Query Quick Start
 With the `graphscope` package already installed, you can effortlessly engage with a graph on your local machine.
-You simply need to create the `gremlin` instance to serve as the conduit for submitting all Gremlin queries.
+You simply need to create the `interactive` instance to serve as the conduit for submitting Gremlin or Cypher queries.
 
 ````{dropdown} Example: Run Interactive Queries in GraphScope
 ```python
@@ -249,17 +257,21 @@ from graphscope.dataset.modern_graph import load_modern_graph
 gs.set_option(show_log=True)
 
 # load the modern graph as example.
-#(modern graph is an example property graph for Gremlin queries given by Apache at https://tinkerpop.apache.org/docs/current/tutorials/getting-started/)
+#(modern graph is an example property graph given by Apache at https://tinkerpop.apache.org/docs/current/tutorials/getting-started/)
 graph = load_modern_graph()
 
-# Hereafter, you can use the `graph` object to create an `gremlin` query session
-g = gs.gremlin(graph)
+# Hereafter, you can use the `graph` object to create an `interactive` query session, which will start one Gremlin service and one Cypher service simultaneously on the backend.
+g = gs.interactive(graph)
 # then `execute` any supported gremlin query.
 q1 = g.execute('g.V().count()')
 print(q1.all().result())   # should print [6]
 
 q2 = g.execute('g.V().hasLabel(\'person\')')
 print(q2.all().result())  # should print [[v[2], v[3], v[0], v[1]]]
+
+# or `execute` any supported Cypher query
+q3 = g.execute("MATCH (n:person) RETURN count(n)", lang="cypher", routing_=RoutingControl.READ)
+print(q3.records[0][0])  # should print 6
 ```
 ````
 

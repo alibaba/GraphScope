@@ -3,8 +3,8 @@ This document will provide you with step-by-step guidance on how to connect your
 FrontEnd service, which offers functionalities similar to the official Tinkerpop service.
 
 Your first step is to obtain the endpoint of GIE Frontend service:
-- Follow the [instruction](./deployment.md#deploy-your-first-gie-service) while deploying GIE in a K8s cluster,
-- Follow the [instruction](./dev_and_test.md#manually-start-the-gie-services) while starting GIE on a local machine.
+- Follow the [instruction](../deployment.md) while deploying GIE in a K8s cluster,
+- Follow the [instruction](../dev_and_test.md) while starting GIE on a local machine.
 
 ## Connecting via Python SDK
 
@@ -35,8 +35,8 @@ Then connect to the service and run queries:
    ```
 
 ````{hint}
-A simpler option is to use the `gremlin` object for submitting Gremlin queries through
-[GraphScope's python SDK](./getting_started.md), which is a wrapper that encompasses Tinkerpop's
+A simpler option is to use the `interactive` object for submitting Gremlin queries through
+[GraphScope's python SDK](../getting_started.md), which is a wrapper that encompasses Tinkerpop's
  Gremlin-Python and will automatically acquire the endpoint.
 ````
 

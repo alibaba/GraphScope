@@ -18,7 +18,8 @@ import com.alibaba.graphscope.compiler.api.schema.GraphElement;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
-import com.alibaba.graphscope.sdkcommon.common.DataLoadTarget;
+import com.alibaba.graphscope.proto.DataLoadTargetPb;
+import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
 import com.alibaba.graphscope.sdkcommon.util.UuidUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -72,20 +73,21 @@ public class OfflineBuild {
                         .build();
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, FileColumnMapping> columnMappingConfig =
-                objectMapper.readValue(
-                        columnMappingConfigStr,
-                        new TypeReference<Map<String, FileColumnMapping>>() {});
+                objectMapper.readValue(columnMappingConfigStr, new TypeReference<>() {});
 
-        List<DataLoadTarget> targets = new ArrayList<>();
+        List<DataLoadTargetPb> targets = new ArrayList<>();
         for (FileColumnMapping fileColumnMapping : columnMappingConfig.values()) {
-            targets.add(
-                    DataLoadTarget.newBuilder()
-                            .setLabel(fileColumnMapping.getLabel())
-                            .setSrcLabel(fileColumnMapping.getSrcLabel())
-                            .setDstLabel(fileColumnMapping.getDstLabel())
-                            .build());
+            DataLoadTargetPb.Builder builder = DataLoadTargetPb.newBuilder();
+            builder.setLabel(fileColumnMapping.getLabel());
+            if (fileColumnMapping.getSrcLabel() != null) {
+                builder.setSrcLabel(fileColumnMapping.getSrcLabel());
+            }
+            if (fileColumnMapping.getDstLabel() != null) {
+                builder.setDstLabel(fileColumnMapping.getDstLabel());
+            }
+            targets.add(builder.build());
         }
-        GraphSchema schema = client.prepareDataLoad(targets);
+        GraphSchema schema = GraphDef.parseProto(client.prepareDataLoad(targets));
         String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
         int partitionNum = client.getPartitionNum();
 
@@ -157,13 +159,13 @@ public class OfflineBuild {
             client.ingestData(dataPath);
 
             logger.info("commit bulk load");
-            Map<Long, DataLoadTarget> tableToTarget = new HashMap<>();
+            Map<Long, DataLoadTargetPb> tableToTarget = new HashMap<>();
             for (ColumnMappingInfo columnMappingInfo : columnMappingInfos.values()) {
                 long tableId = columnMappingInfo.getTableId();
                 int labelId = columnMappingInfo.getLabelId();
                 GraphElement graphElement = schema.getElement(labelId);
                 String label = graphElement.getLabel();
-                DataLoadTarget.Builder builder = DataLoadTarget.newBuilder();
+                DataLoadTargetPb.Builder builder = DataLoadTargetPb.newBuilder();
                 builder.setLabel(label);
                 if (graphElement instanceof GraphEdge) {
                     builder.setSrcLabel(
@@ -175,6 +177,5 @@ public class OfflineBuild {
             }
             client.commitDataLoad(tableToTarget, uniquePath);
         }
-        client.close();
     }
 }

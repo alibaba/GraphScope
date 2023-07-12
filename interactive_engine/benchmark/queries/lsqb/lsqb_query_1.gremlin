@@ -1,0 +1,1 @@
+g.V().match(__.as('forum').out('hasMember').as('person'),__.as('person').out('isLocatedIn').as('city'),__.as('city').out('isPartOf').as('country'),__.as('forum').out('containerOf').as('post'),__.as('post').in('replyOf').as('comment'),__.as('comment').out('hasTag').as('tag'),__.as('tag').out('hasType').as('tagClass')).count()

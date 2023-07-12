@@ -101,9 +101,9 @@ class Connection:
         self._write_service_stub = write_service_pb2_grpc.ClientWriteStub(channel)
         self._client_id = None
         self._metadata = self._encode_metadata(username, password)
-        graph_url = "ws://%s/gremlin" % self._gremlin_endpoint
+        gremlin_url = f"ws://{self._gremlin_endpoint}/gremlin"
         self._conn = DriverRemoteConnection(
-            graph_url, "g", username=username, password=password
+            gremlin_url, "g", username=username, password=password
         )
 
     def _get_channel_options(self):

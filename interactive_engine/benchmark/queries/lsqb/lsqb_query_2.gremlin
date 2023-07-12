@@ -1,0 +1,1 @@
+g.V().match(__.as('p1').both('knows').as('p2'),__.as('p1').in('hasCreator').as('c'),__.as('p2').in('hasCreator').as('p'),__.as('c').out('replyOf').hasLabel('post').as('p')).count()

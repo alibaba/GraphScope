@@ -155,6 +155,22 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
   return out_archive;
 }
 
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const std::string_view& str) {
+  in_archive << str.length();
+  in_archive.AddBytes(str.data(), str.length());
+  return in_archive;
+}
+
+grape::OutArchive& operator>>(grape::OutArchive& out_archive,
+                              std::string_view& str) {
+  size_t size;
+  out_archive >> size;
+  str = std::string_view(reinterpret_cast<char*>(out_archive.GetBytes(size)),
+                         size);
+  return out_archive;
+}
+
 // date format:
 // YYYY-MM-DD'T'hh:mm:ss.SSSZZZZ
 // 2010-04-25T05:45:11.772+0000
