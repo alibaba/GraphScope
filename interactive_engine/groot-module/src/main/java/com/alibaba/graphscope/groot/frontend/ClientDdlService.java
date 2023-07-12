@@ -51,7 +51,7 @@ public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
         try {
             boolean simple = request.getSimpleResponse();
             DdlRequestBatch.Builder builder = DdlRequestBatch.newBuilder();
-            logger.info("Received DDL request: " + request.toString());
+            logger.info("Received DDL request: " + request);
             for (BatchSubmitRequest.DDLRequest ddlRequest : request.getValueList()) {
                 switch (ddlRequest.getValueCase()) {
                     case CREATE_VERTEX_TYPE_REQUEST:

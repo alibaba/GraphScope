@@ -346,6 +346,9 @@ void ParseRecordX(const char *line, int64_t &src, int64_t &dst,
 grape::InArchive &operator<<(grape::InArchive &in_archive, const Any &value);
 grape::OutArchive &operator>>(grape::OutArchive &out_archive, Any &value);
 
+grape::InArchive &operator<<(grape::InArchive &in_archive, const std::string_view &value);
+grape::OutArchive &operator>>(grape::OutArchive &out_archive, std::string_view &value);
+
 } // namespace gs
 
 namespace std {
