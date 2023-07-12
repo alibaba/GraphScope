@@ -19,7 +19,7 @@ cur_dir = $(cd "$(dirname "$0")"; pwd)
 curl -XPOST $url -d 'modern_graph = load_modern_graph(session, "/testingdata/modern_graph")' >/dev/null
 
 curl -XPOST $url -d 'modern_gremlin = session.gremlin(modern_graph)'>/dev/null
-code=$(curl -XPOST $url -d 'modern_gremlin._graph_url' --write-out %{http_code} --silent --output ./gremlin.tmp)
+code=$(curl -XPOST $url -d 'modern_gremlin.gremlin_url' --write-out %{http_code} --silent --output ./gremlin.tmp)
 res=$(cat ./gremlin.tmp)
 if [ -f "gremlin.tmp" ];then
     rm gremlin.tmp 1>/dev/null 2>&1
