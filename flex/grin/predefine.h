@@ -35,32 +35,32 @@ extern "C" {
 /* 1. Predefined enumerate types of GRIN */
 /// Enumerates the directions of edges with respect to a certain vertex
 typedef enum {
-  IN = 0,     ///< incoming
-  OUT = 1,    ///< outgoing
-  BOTH = 2,   ///< incoming & outgoing
+  IN = 0,    ///< incoming
+  OUT = 1,   ///< outgoing
+  BOTH = 2,  ///< incoming & outgoing
 } GRIN_DIRECTION;
 
 /// Enumerates the datatype supported in the storage
 typedef enum {
-  Undefined = 0,      ///< other unknown types
-  Int32 = 1,          ///< int
-  UInt32 = 2,         ///< unsigned int
-  Int64 = 3,          ///< long int
-  UInt64 = 4,         ///< unsigned long int
-  Float = 5,          ///< float
-  Double = 6,         ///< double
-  String = 7,         ///< string
-  Date32 = 8,         ///< date
-  Time32 = 9,         ///< Time32
-  Timestamp64 = 10,   ///< Timestamp
+  Undefined = 0,     ///< other unknown types
+  Int32 = 1,         ///< int
+  UInt32 = 2,        ///< unsigned int
+  Int64 = 3,         ///< long int
+  UInt64 = 4,        ///< unsigned long int
+  Float = 5,         ///< float
+  Double = 6,        ///< double
+  String = 7,        ///< string
+  Date32 = 8,        ///< date
+  Time32 = 9,        ///< Time32
+  Timestamp64 = 10,  ///< Timestamp
 } GRIN_DATATYPE;
 
 /// Enumerates the error codes of grin
 typedef enum {
-  NO_ERROR = 0,              ///< success
-  UNKNOWN_ERROR = 1,         ///< unknown error
-  INVALID_VALUE = 2,         ///< invalid value
-  UNKNOWN_DATATYPE = 3,      ///< unknown datatype
+  NO_ERROR = 0,          ///< success
+  UNKNOWN_ERROR = 1,     ///< unknown error
+  INVALID_VALUE = 2,     ///< invalid value
+  UNKNOWN_DATATYPE = 3,  ///< unknown datatype
 } GRIN_ERROR_CODE;
 
 /* 2. Define supported macros based on storage features */
@@ -68,16 +68,16 @@ typedef enum {
 #define GRIN_ASSUME_HAS_DIRECTED_GRAPH
 #define GRIN_ASSUME_HAS_UNDIRECTED_GRAPH
 #define GRIN_ASSUME_HAS_MULTI_EDGE_GRAPH
-//#define GRIN_WITH_VERTEX_DATA
+// #define GRIN_WITH_VERTEX_DATA
 #define GRIN_WITH_EDGE_DATA
 #define GRIN_ENABLE_VERTEX_LIST
-//#define GRIN_ENABLE_VERTEX_LIST_ARRAY
+// #define GRIN_ENABLE_VERTEX_LIST_ARRAY
 #define GRIN_ENABLE_VERTEX_LIST_ITERATOR
 #define GRIN_ENABLE_EDGE_LIST
-//#define GRIN_ENABLE_EDGE_LIST_ARRAY
+// #define GRIN_ENABLE_EDGE_LIST_ARRAY
 #define GRIN_ENABLE_EDGE_LIST_ITERATOR
 #define GRIN_ENABLE_ADJACENT_LIST
-//#define GRIN_ENABLE_ADJACENT_LIST_ARRAY
+// #define GRIN_ENABLE_ADJACENT_LIST_ARRAY
 #define GRIN_ENABLE_ADJACENT_LIST_ITERATOR
 
 // Partition
@@ -115,42 +115,37 @@ typedef enum {
 #define GRIN_WITH_VERTEX_PROPERTY_NAME
 #define GRIN_WITH_VERTEX_TYPE_NAME
 #define GRIN_TRAIT_NATURAL_ID_FOR_VERTEX_TYPE
-//#define GRIN_ENABLE_VERTEX_PRIMARY_KEYS
+#define GRIN_ENABLE_VERTEX_PRIMARY_KEYS
 #define GRIN_TRAIT_NATURAL_ID_FOR_VERTEX_PROPERTY
 #define GRIN_WITH_EDGE_PROPERTY
-//#define GRIN_WITH_EDGE_PROPERTY_NAME
+// #define GRIN_WITH_EDGE_PROPERTY_NAME
 #define GRIN_WITH_EDGE_TYPE_NAME
 #define GRIN_TRAIT_NATURAL_ID_FOR_EDGE_TYPE
-//#define GRIN_ENABLE_EDGE_PRIMARY_KEYS
-//#define GRIN_TRAIT_NATURAL_ID_FOR_EDGE_PROPERTY
-//#define GRIN_TRAIT_SPECIFIC_VEV_RELATION
-//#define GRIN_ASSUME_MASTER_ONLY_PARTITION_FOR_VERTEX_PROPERTY
-//#define GRIN_ASSUME_REPLICATE_MASTER_MIRROR_PARTITION_FOR_VERTEX_PROPERTY
-//#define GRIN_ASSUME_SPLIT_MASTER_MIRROR_PARTITION_FOR_VERTEX_PROPERTY
-//#define GRIN_ASSUME_MASTER_ONLY_PARTITION_FOR_EDGE_PROPERTY
-//#define GRIN_ASSUME_REPLICATE_MASTER_MIRROR_PARTITION_FOR_EDGE_PROPERTY
-//#define GRIN_ASSUME_SPLIT_MASTER_MIRROR_PARTITION_FOR_EDGE_PROPERTY
-// Index
+// #define GRIN_ENABLE_EDGE_PRIMARY_KEYS
+// #define GRIN_TRAIT_NATURAL_ID_FOR_EDGE_PROPERTY
+// #define GRIN_TRAIT_SPECIFIC_VEV_RELATION
+// #define GRIN_ASSUME_MASTER_ONLY_PARTITION_FOR_VERTEX_PROPERTY
+// #define GRIN_ASSUME_REPLICATE_MASTER_MIRROR_PARTITION_FOR_VERTEX_PROPERTY
+// #define GRIN_ASSUME_SPLIT_MASTER_MIRROR_PARTITION_FOR_VERTEX_PROPERTY
+// #define GRIN_ASSUME_MASTER_ONLY_PARTITION_FOR_EDGE_PROPERTY
+// #define GRIN_ASSUME_REPLICATE_MASTER_MIRROR_PARTITION_FOR_EDGE_PROPERTY
+// #define GRIN_ASSUME_SPLIT_MASTER_MIRROR_PARTITION_FOR_EDGE_PROPERTY
+//  Index
 #define GRIN_WITH_VERTEX_LABEL
 #define GRIN_WITH_EDGE_LABEL
-///#define GRIN_ASSUME_ALL_VERTEX_LIST_SORTED
+/// #define GRIN_ASSUME_ALL_VERTEX_LIST_SORTED
 #define GRIN_ENABLE_VERTEX_INTERNAL_ID_INDEX
-//#define GRIN_ENABLE_VERTEX_PK_INDEX
-//#define GRIN_ENABLE_EDGE_PK_INDEX
+#define GRIN_ENABLE_VERTEX_PK_INDEX
+// #define GRIN_ENABLE_EDGE_PK_INDEX
 
 /* 3. Define the handles using typedef */
 typedef void* GRIN_GRAPH;
-typedef struct GRIN_VERTEX{
-  uint8_t label;
-  uint32_t vid;
-} GRIN_VERTEX; // vid?
-//typedef void* GRIN_EDGE;
+typedef void* GRIN_VERTEX;
 typedef void* GRIN_EDGE;
 
 #ifdef GRIN_WITH_VERTEX_DATA
 typedef void* GRIN_VERTEX_DATA;
 #endif
-
 
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 typedef unsigned GRIN_VERTEX_TYPE;
@@ -160,7 +155,7 @@ typedef void* GRIN_VERTEX_PROPERTY_LIST;
 #endif
 
 #ifdef GRIN_ENABLE_VERTEX_LIST
-typedef struct{
+typedef struct GRIN_VERTEX_LIST {
   size_t vertex_num;
   GRIN_VERTEX_TYPE label;
 } GRIN_VERTEX_LIST;
@@ -210,7 +205,6 @@ typedef void* GRIN_VERTEX_REF;
 typedef void* GRIN_EDGE_REF;
 #endif
 
-
 #ifdef GRIN_TRAIT_NATURAL_ID_FOR_VERTEX_TYPE
 typedef GRIN_VERTEX_TYPE GRIN_VERTEX_TYPE_ID;
 #endif
@@ -218,14 +212,14 @@ typedef GRIN_VERTEX_TYPE GRIN_VERTEX_TYPE_ID;
 #ifdef GRIN_TRAIT_NATURAL_ID_FOR_VERTEX_PROPERTY
 typedef unsigned GRIN_VERTEX_PROPERTY_ID;
 #endif
-typedef unsigned GRIN_EDGE_TYPE;
+
 #ifdef GRIN_WITH_EDGE_PROPERTY
 typedef unsigned GRIN_EDGE_TYPE;
 typedef void* GRIN_EDGE_TYPE_LIST;
 typedef void* GRIN_VEV_TYPE;
 typedef void* GRIN_VEV_TYPE_LIST;
 typedef unsigned GRIN_EDGE_PROPERTY;
-typedef unsigned GRIN_EDGE_PROPERTY_LIST;
+typedef void* GRIN_EDGE_PROPERTY_LIST;
 #endif
 
 #ifdef GRIN_TRAIT_NATURAL_ID_FOR_EDGE_TYPE
@@ -260,27 +254,27 @@ typedef void* GRIN_LABEL_LIST;
 #define GRIN_NULL_PARTITIONED_GRAPH NULL
 #define GRIN_NULL_PARTITION NULL
 #define GRIN_NULL_PARTITION_LIST NULL
-#define GRIN_NULL_PARTITION_ID (unsigned)~0
+#define GRIN_NULL_PARTITION_ID (unsigned) ~0
 #define GRIN_NULL_VERTEX_REF NULL
 #define GRIN_NULL_EDGE_REF NULL
 #define GRIN_NULL_VERTEX_TYPE (unsigned) ~0
 #define GRIN_NULL_VERTEX_TYPE_LIST NULL
 #define GRIN_NULL_VERTEX_PROPERTY NULL
 #define GRIN_NULL_VERTEX_PROPERTY_LIST NULL
-#define GRIN_NULL_VERTEX_TYPE_ID (unsigned)~0
-#define GRIN_NULL_VERTEX_PROPERTY_ID (unsigned)~0
-#define GRIN_NULL_EDGE_TYPE (unsigned)~0
+#define GRIN_NULL_VERTEX_TYPE_ID (unsigned) ~0
+#define GRIN_NULL_VERTEX_PROPERTY_ID (unsigned) ~0
+#define GRIN_NULL_EDGE_TYPE (unsigned) ~0
 #define GRIN_NULL_EDGE_TYPE_LIST NULL
 #define GRIN_NULL_VEV_TYPE NULL
 #define GRIN_NULL_VEV_TYPE_LIST NULL
 #define GRIN_NULL_EDGE_PROPERTY NULL
 #define GRIN_NULL_EDGE_PROPERTY_LIST NULL
-#define GRIN_NULL_EDGE_TYPE_ID (unsigned)~0
-#define GRIN_NULL_EDGE_PROPERTY_ID (unsigned)~0
+#define GRIN_NULL_EDGE_TYPE_ID (unsigned) ~0
+#define GRIN_NULL_EDGE_PROPERTY_ID (unsigned) ~0
 #define GRIN_NULL_ROW NULL
 #define GRIN_NULL_LABEL NULL
 #define GRIN_NULL_LABEL_LIST NULL
-#define GRIN_NULL_SIZE (unsigned)~0
+#define GRIN_NULL_SIZE (unsigned) ~0
 #define GRIN_NULL_NAME NULL
 
 #ifdef __cplusplus

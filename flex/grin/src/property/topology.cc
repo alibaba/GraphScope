@@ -22,19 +22,17 @@ size_t grin_get_vertex_num_by_type(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
 #endif
 
 #ifdef GRIN_WITH_EDGE_PROPERTY
-size_t grin_get_edge_num_by_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et){
-  return 0;
-}
+size_t grin_get_edge_num_by_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) { return 0; }
 #endif
 
 #if defined(GRIN_ENABLE_VERTEX_LIST) && defined(GRIN_WITH_VERTEX_PROPERTY)
 GRIN_VERTEX_LIST grin_get_vertex_list_by_type(GRIN_GRAPH g,
                                               GRIN_VERTEX_TYPE vt) {
-  GRIN_VERTEX_LIST gvl;
-  gvl.label = vt;
+  GRIN_VERTEX_LIST vl;
+  vl.label = vt;
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  gvl.vertex_num = _g->vertex_num(vt);
-  return gvl;
+  vl.vertex_num = _g->vertex_num(vt);
+  return vl;
 }
 #endif
 
@@ -48,37 +46,9 @@ GRIN_ADJACENT_LIST grin_get_adjacent_list_by_edge_type(GRIN_GRAPH g,
                                                        GRIN_VERTEX v,
                                                        GRIN_EDGE_TYPE et) {
   GRIN_ADJACENT_LIST_T* adj_list = new GRIN_ADJACENT_LIST_T();
-  adj_list->v = v;
+  adj_list->v = *static_cast<GRIN_VERTEX_T*>(v);
   adj_list->dir = dir;
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  
-  const auto &schema =  _g->schema();
-  if(dir == GRIN_DIRECTION::OUT){
-    std::string src_label =
-        schema.get_vertex_label_name(v.label);
-    std::string edge_label = schema.get_edge_label_name(et);
-    for(size_t dst_label_i = 0; dst_label_i != schema.vertex_label_num(); ++dst_label_i){
-        std::string dst_label = schema.get_vertex_label_name(static_cast<gs::label_t>(dst_label_i));
-        if (!schema.exist(src_label, dst_label, edge_label)) {
-            continue;
-        }
-        auto label = (static_cast<unsigned>(et) << 16) + dst_label_i; 
-        adj_list->edges_label.emplace_back(label);
-    }
-  } else{
-    std::string dst_label =
-        schema.get_vertex_label_name(v.label);
-    std::string edge_label = schema.get_edge_label_name(et);
-    for(size_t src_label_i = 0; src_label_i != schema.vertex_label_num(); ++src_label_i){
-        std::string src_label = schema.get_vertex_label_name(static_cast<gs::label_t>(src_label_i));
-        if (!schema.exist(src_label, dst_label, edge_label)) {
-            continue;
-        }
-        auto label = (static_cast<unsigned>(et) << 16) + src_label_i; 
-        adj_list->edges_label.emplace_back(label);
-    }
-  }
- 
+  adj_list->edge_label = et;
   return adj_list;
 }
 #endif

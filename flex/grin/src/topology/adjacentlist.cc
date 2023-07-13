@@ -19,36 +19,11 @@ limitations under the License.
 
 #if defined(GRIN_ENABLE_ADJACENT_LIST) && !defined(GRIN_ENABLE_EDGE_PROPERTY)
 GRIN_ADJACENT_LIST grin_get_adjacent_list(GRIN_GRAPH g, GRIN_DIRECTION dir,
-                                          GRIN_VERTEX v){
-    auto _g = static_cast<GRIN_GRAPH_T*>(g);
-    auto& schema = _g->schema();
-    GRIN_ADJACENT_LIST_T* alt = new GRIN_ADJACENT_LIST_T();
-    alt->dir = dir;
-    alt->v = v;
-    if(dir == GRIN_DIRECTION::OUT){
-      std::string src_label = schema.get_vertex_label_name(v.label);
-      for(size_t edge_label_i = 0; edge_label_i < _g->edge_label_num_; ++edge_label_i){
-        std::string edge_label = schema.get_edge_label_name(edge_label_i);
-        for(size_t dst_label_i = 0; dst_label_i < _g->vertex_label_num_; ++dst_label_i){
-          std::string dst_label = schema.get_vertex_label_name(dst_label_i);
-          if(schema.exist(src_label,dst_label,edge_label)){
-            alt->edges_label.emplace_back((edge_label_i << 16) + dst_label_i);
-          }
-        }
-      }
-    }else{
-      std::string dst_label = schema.get_vertex_label_name(v.label);
-      for(size_t edge_label_i = 0; edge_label_i < _g->edge_label_num_; ++edge_label_i){
-        std::string edge_label = schema.get_edge_label_name(edge_label_i);
-        for(size_t src_label_i = 0; src_label_i < _g->vertex_label_num_; ++src_label_i){
-          std::string src_label = schema.get_vertex_label_name(src_label_i);
-          if(schema.exist(src_label,dst_label,edge_label)){
-            alt->edges_label.emplace_back((edge_label_i << 16) + src_label_i);
-          }
-        }
-      }
-    }
-    return alt;
+                                          GRIN_VERTEX v) {
+  GRIN_ADJACENT_LIST_T* alt = new GRIN_ADJACENT_LIST_T();
+  alt->dir = dir;
+  alt->v = *static_cast<GRIN_VERTEX_T*>(v);
+  return alt;
 }
 #endif
 
@@ -64,8 +39,28 @@ GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(
     GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _adj_list = static_cast<GRIN_ADJACENT_LIST_T*>(adj_list);
-  auto iter = new GRIN_ADJACENT_LIST_ITERATOR_T(_adj_list);
-  iter->get_cur_edge_iter(_g);
+  auto iter = new GRIN_ADJACENT_LIST_ITERATOR_T();
+  auto& v = _adj_list->v;
+  iter->adj_list = _adj_list;
+  auto label = _adj_list->edge_label;
+  auto src_label = label >> 16;
+  auto dst_label = (label >> 8) & 0xff;
+  auto edge_label = label & 0xff;
+  if (_adj_list->dir == GRIN_DIRECTION::OUT) {
+    if (src_label == v.label) {
+      iter->edge_iter =
+          _g->get_outgoing_edges(src_label, v.vid, dst_label, edge_label);
+    } else {
+      iter->edge_iter = nullptr;
+    }
+  } else {
+    if (dst_label == v.label) {
+      iter->edge_iter =
+          _g->get_incoming_edges(dst_label, v.vid, src_label, edge_label);
+    } else {
+      iter->edge_iter = nullptr;
+    }
+  }
   return iter;
 }
 
@@ -78,35 +73,45 @@ void grin_destroy_adjacent_list_iter(GRIN_GRAPH g,
 void grin_get_next_adjacent_list_iter(GRIN_GRAPH g,
                                       GRIN_ADJACENT_LIST_ITERATOR iter) {
   auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  _iter->next(_g);
+  _iter->edge_iter->next();
 }
 
 bool grin_is_adjacent_list_end(GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
   auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
-  return !_iter->is_valid();
+  return _iter->edge_iter == nullptr || !_iter->edge_iter->is_valid();
 }
 
 GRIN_VERTEX grin_get_neighbor_from_adjacent_list_iter(
     GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
   auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
-  return _iter->neighbor();
+  auto v = new GRIN_VERTEX_T();
+  v->vid = _iter->edge_iter->get_neighbor();
+  auto label = _iter->adj_list->edge_label;
+  if (_iter->adj_list->dir == GRIN_DIRECTION::OUT) {
+    v->label = (label >> 8) & 0xff;
+  } else {
+    v->label = label >> 16;
+  }
+  return v;
 }
 
 GRIN_EDGE grin_get_edge_from_adjacent_list_iter(
     GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
   auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
   GRIN_EDGE_T* edge = new GRIN_EDGE_T();
-  if (_iter->adj_list.dir == GRIN_DIRECTION::IN) {
-    edge->src = _iter->neighbor();
-    edge->dst = _iter->adj_list.v;
+  auto nbr = *static_cast<GRIN_VERTEX_T*>(
+      grin_get_neighbor_from_adjacent_list_iter(g, iter));
+  if (_iter->adj_list->dir == GRIN_DIRECTION::IN) {
+    edge->src = nbr;
+    edge->dst = _iter->adj_list->v;
   } else {
-    edge->src = _iter->adj_list.v;
-    edge->dst = _iter->neighbor();
+    edge->src = _iter->adj_list->v;
+    edge->dst = nbr;
   }
-  edge->dir = _iter->adj_list.dir;
-  edge->data = _iter->cur_edge_iter->get_data();
-  edge->label = _iter->edge_type();
+  edge->dir = _iter->adj_list->dir;
+  edge->data = _iter->edge_iter->get_data();
+  auto label = _iter->adj_list->edge_label;
+  edge->label = label & 0xff;
   return edge;
 }
 #endif

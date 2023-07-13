@@ -22,7 +22,8 @@ bool grin_equal_vertex_type(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt1,
 }
 
 GRIN_VERTEX_TYPE grin_get_vertex_type(GRIN_GRAPH g, GRIN_VERTEX v) {
-  return v.label;
+  auto _v = static_cast<GRIN_VERTEX_T*>(v);
+  return _v->label;
 }
 
 void grin_destroy_vertex_type(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {}
@@ -81,7 +82,7 @@ const char* grin_get_vertex_type_name(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
 GRIN_VERTEX_TYPE grin_get_vertex_type_by_name(GRIN_GRAPH g, const char* name) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   std::string type_name(name);
-  if((!_g->schema().contains_vertex_label(type_name))){
+  if ((!_g->schema().contains_vertex_label(type_name))) {
     return GRIN_NULL_VERTEX_TYPE;
   }
   auto type = _g->schema().get_vertex_label_id(type_name);
@@ -107,9 +108,9 @@ bool grin_equal_edge_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et1,
   return (et1 == et2);
 }
 
-GRIN_EDGE_TYPE grin_get_edge_type(GRIN_GRAPH g, GRIN_EDGE e) { 
+GRIN_EDGE_TYPE grin_get_edge_type(GRIN_GRAPH g, GRIN_EDGE e) {
   auto _e = static_cast<GRIN_EDGE_T*>(e);
-  return _e->label; 
+  return _e->label + (_e->src.label << 16) + (_e->dst.label << 8);
 }
 
 void grin_destroy_edge_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
@@ -121,8 +122,20 @@ GRIN_EDGE_TYPE_LIST grin_get_edge_type_list(GRIN_GRAPH g) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto etl = new GRIN_EDGE_TYPE_LIST_T();
   auto edge_label_num = _g->edge_label_num_;
-  for (auto idx = 0; idx < edge_label_num; ++idx) {
-    etl->push_back(idx);
+  auto vertex_label_num = _g->vertex_label_num_;
+  for (auto src_label_i = 0; src_label_i < vertex_label_num; ++src_label_i) {
+    const auto& src_label = _g->schema().get_vertex_label_name(src_label_i);
+    for (auto dst_label_i = 0; dst_label_i < vertex_label_num; ++dst_label_i) {
+      const auto& dst_label = _g->schema().get_vertex_label_name(dst_label_i);
+      for (auto edge_label_i = 0; edge_label_i < edge_label_num;
+           ++edge_label_i) {
+        const auto& edge_label = _g->schema().get_edge_label_name(edge_label_i);
+        if (_g->schema().exist(src_label, dst_label, edge_label)) {
+          auto label = (src_label_i << 16) + (dst_label_i << 8) + edge_label_i;
+          etl->push_back(label);
+        }
+      }
+    }
   }
   return etl;
 }
@@ -161,7 +174,13 @@ GRIN_EDGE_TYPE grin_get_edge_type_from_list(GRIN_GRAPH g,
 const char* grin_get_edge_type_name(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   const auto& schema = _g->schema();
-  std::string label = schema.get_edge_label_name(static_cast<gs::label_t>(et));
+  auto edge_label_i = et & 0xff;
+  auto src_label_i = et >> 16;
+  auto dst_label_i = (et >> 8) & 0xff;
+  const auto& edge_label = schema.get_edge_label_name(edge_label_i);
+  const auto& src_label = schema.get_vertex_label_name(src_label_i);
+  const auto& dst_label = schema.get_vertex_label_name(dst_label_i);
+  auto label = src_label + "#" + dst_label + "#" + edge_label;
   auto len = label.length() + 1;
   char* out = new char[len];
   snprintf(out, len, "%s", label.c_str());
@@ -170,12 +189,32 @@ const char* grin_get_edge_type_name(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
 
 GRIN_EDGE_TYPE grin_get_edge_type_by_name(GRIN_GRAPH g, const char* name) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
+
   const auto& schema = _g->schema();
-  if(!schema.contains_edge_label(name)){
+  std::vector<std::string> vec;
+  size_t len = strlen(name);
+  std::string ss{};
+  for (size_t i = 0; i <= len; ++i) {
+    if (name[i] == '#' || name[i] == '\0') {
+      vec.emplace_back(ss);
+      ss = "";
+    } else {
+      ss += name[i];
+    }
+  }
+
+  if (vec.size() != 3) {
     return GRIN_NULL_EDGE_TYPE;
   }
-  GRIN_EDGE_TYPE type = schema.get_edge_label_id(name);
-  return type;
+  if ((!schema.contains_vertex_label(vec[0])) ||
+      (!schema.contains_vertex_label(vec[1])) ||
+      (!schema.contains_edge_label(vec[2]))) {
+    return GRIN_NULL_EDGE_TYPE;
+  }
+  auto src_label = schema.get_vertex_label_id(vec[0]);
+  auto dst_label = schema.get_vertex_label_id(vec[1]);
+  auto edge_label = schema.get_edge_label_id(vec[2]);
+  return (src_label << 16) + (dst_label << 8) + edge_label;
 }
 #endif
 
@@ -193,54 +232,16 @@ GRIN_EDGE_TYPE grin_get_edge_type_by_id(GRIN_GRAPH g, GRIN_EDGE_TYPE_ID etid) {
 /** @brief  the src vertex type list */
 GRIN_VERTEX_TYPE_LIST grin_get_src_types_by_edge_type(GRIN_GRAPH g,
                                                       GRIN_EDGE_TYPE et) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  
   auto vtl = new GRIN_VERTEX_TYPE_LIST_T();
-  const auto& schema = _g->schema();
-  auto vertex_label_num = _g->vertex_label_num_;
-  std::string edge_label =
-            schema.get_edge_label_name(static_cast<gs::label_t>(et));
-  for (size_t src_label_i = 0; src_label_i != vertex_label_num;
-       ++src_label_i) {
-    std::string src_label =
-        schema.get_vertex_label_name(static_cast<gs::label_t>(src_label_i));
-    for (size_t dst_label_i = 0; dst_label_i != vertex_label_num;
-         ++dst_label_i) {
-      std::string dst_label =
-          schema.get_vertex_label_name(static_cast<gs::label_t>(dst_label_i));
-       
-        if (schema.exist(src_label, dst_label, edge_label)) {
-          vtl->push_back(src_label_i);
-        }
-      }
-    }
+  vtl->emplace_back(et >> 16);
   return vtl;
 }
 
 /** @brief get the dst vertex type list */
 GRIN_VERTEX_TYPE_LIST grin_get_dst_types_by_edge_type(GRIN_GRAPH g,
                                                       GRIN_EDGE_TYPE et) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  
   auto vtl = new GRIN_VERTEX_TYPE_LIST_T();
-  const auto& schema = _g->schema();
-  auto vertex_label_num = _g->vertex_label_num_;
-  std::string edge_label =
-            schema.get_edge_label_name(static_cast<gs::label_t>(et));
-  for (size_t src_label_i = 0; src_label_i != vertex_label_num;
-       ++src_label_i) {
-    std::string src_label =
-        schema.get_vertex_label_name(static_cast<gs::label_t>(src_label_i));
-    for (size_t dst_label_i = 0; dst_label_i != vertex_label_num;
-         ++dst_label_i) {
-      std::string dst_label =
-          schema.get_vertex_label_name(static_cast<gs::label_t>(dst_label_i));
-       
-        if (schema.exist(src_label, dst_label, edge_label)) {
-          vtl->push_back(dst_label_i);
-        }
-    }
-  }
+  vtl->emplace_back((et >> 8) & (0xff));
   return vtl;
 }
 
@@ -248,20 +249,21 @@ GRIN_VERTEX_TYPE_LIST grin_get_dst_types_by_edge_type(GRIN_GRAPH g,
 GRIN_EDGE_TYPE_LIST grin_get_edge_types_by_vertex_type_pair(
     GRIN_GRAPH g, GRIN_VERTEX_TYPE vt1, GRIN_VERTEX_TYPE vt2) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  
+
   auto vtl = new GRIN_VERTEX_TYPE_LIST_T();
   const auto& schema = _g->schema();
   auto edge_label_num = _g->edge_label_num_;
   std::string src_label =
-            schema.get_vertex_label_name(static_cast<gs::label_t>(vt1));
+      schema.get_vertex_label_name(static_cast<gs::label_t>(vt1));
   std::string dst_label =
-            schema.get_vertex_label_name(static_cast<gs::label_t>(vt2));
+      schema.get_vertex_label_name(static_cast<gs::label_t>(vt2));
+  auto label = (vt1 << 16) + (vt2 << 8);
   for (size_t edge_label_i = 0; edge_label_i != edge_label_num;
        ++edge_label_i) {
     std::string edge_label =
         schema.get_vertex_label_name(static_cast<gs::label_t>(edge_label_i));
-    if(schema.exist(src_label,dst_label,edge_label)){
-      vtl->push_back(edge_label_i);
+    if (schema.exist(src_label, dst_label, edge_label)) {
+      vtl->push_back(label + edge_label_i);
     }
   }
   return vtl;

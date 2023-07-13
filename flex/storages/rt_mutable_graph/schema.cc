@@ -358,9 +358,9 @@ static PropertyType StringToPropertyType(const std::string& str) {
     return PropertyType::kEmpty;
   } else if (str == "int64") {
     return PropertyType::kInt64;
-  } else if (str == "double"){
+  } else if (str == "double") {
     return PropertyType::kDouble;
-  }else {
+  } else {
     return PropertyType::kEmpty;
   }
 }

@@ -279,8 +279,8 @@ void MutablePropertyFragment::initEdges(
       std::tie(ie_[index], oe_[index]) = construct_csr<double>(
           filenames, property_types, ie_strtagy, oe_strtagy,
           lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
-      
-//      LOG(FATAL) << "Unsupported edge property type.";
+
+      //      LOG(FATAL) << "Unsupported edge property type.";
     }
   } else {
     LOG(FATAL) << "Unsupported edge property type.";

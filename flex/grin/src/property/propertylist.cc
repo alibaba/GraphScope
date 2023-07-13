@@ -18,15 +18,17 @@ limitations under the License.
 GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_property_list_by_type(
     GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto &table = _g->get_vertex_table(vt);
-  
+  auto& table = _g->get_vertex_table(vt);
+
   auto vertex_prop_num = table.col_num();
   GRIN_VERTEX_PROPERTY_LIST_T* vpl = new GRIN_VERTEX_PROPERTY_LIST_T();
   const auto& prop_names = table.column_names();
-  for(size_t i = 0; i < vertex_prop_num; ++i){
+  const auto& prop_types = table.column_types();
+  for (size_t i = 0; i < vertex_prop_num; ++i) {
     GRIN_VERTEX_PROPERTY_T vpt;
     vpt.name = prop_names[i];
     vpt.label = vt;
+    vpt.dt = _get_data_type(prop_types[i]);
     vpl->emplace_back(vpt);
   }
   return vpl;
@@ -53,7 +55,7 @@ GRIN_VERTEX_PROPERTY_LIST grin_create_vertex_property_list(GRIN_GRAPH g) {
 void grin_destroy_vertex_property_list(GRIN_GRAPH g,
                                        GRIN_VERTEX_PROPERTY_LIST vpl) {
   auto _vpl = static_cast<GRIN_VERTEX_PROPERTY_LIST_T*>(vpl);
-  delete _vpl;                                  
+  delete _vpl;
 }
 
 bool grin_insert_vertex_property_to_list(GRIN_GRAPH g,
@@ -74,14 +76,16 @@ GRIN_VERTEX_PROPERTY grin_get_vertex_property_by_id(
 
   auto& table = _g->get_vertex_table(vt);
   auto vertex_prop_num = table.col_num();
-  
+
   if (pid >= vertex_prop_num) {
     return GRIN_NULL_VERTEX_PROPERTY;
   }
   const auto& prop_names = table.column_names();
+  const auto& prop_types = table.column_types();
   GRIN_VERTEX_PROPERTY_T* vpt = new GRIN_VERTEX_PROPERTY_T();
   vpt->name = prop_names[pid];
   vpt->label = vt;
+  vpt->dt = _get_data_type(prop_types[pid]);
   return vpt;
 }
 
@@ -92,8 +96,8 @@ GRIN_VERTEX_PROPERTY_ID grin_get_vertex_property_id(GRIN_GRAPH g,
   auto& table = _g->get_vertex_table(vt);
   const auto& prop_names = table.column_names();
   auto _vp = static_cast<GRIN_VERTEX_PROPERTY_T*>(vp);
-  for(size_t i = 0; i < prop_names.size(); ++i){
-    if(prop_names.at(i) == _vp->name){
+  for (size_t i = 0; i < prop_names.size(); ++i) {
+    if (prop_names.at(i) == _vp->name) {
       return i;
     }
   }
@@ -103,46 +107,67 @@ GRIN_VERTEX_PROPERTY_ID grin_get_vertex_property_id(GRIN_GRAPH g,
 
 #ifdef GRIN_WITH_EDGE_PROPERTY
 GRIN_EDGE_PROPERTY_LIST grin_get_edge_property_list_by_type(GRIN_GRAPH g,
-                                                            GRIN_EDGE_TYPE et){
-  return et;
+                                                            GRIN_EDGE_TYPE et) {
+  GRIN_EDGE_PROPERTY_LIST_T* p = new GRIN_EDGE_PROPERTY_LIST_T();
+
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto src_label_i = et >> 16;
+  auto src_label = _g->schema().get_vertex_label_name(src_label_i);
+  auto dst_label_i = (et >> 8) & (0xff);
+  auto dst_label = _g->schema().get_vertex_label_name(dst_label_i);
+  auto edge_label_i = et & 0xff;
+  auto edge_label = _g->schema().get_edge_label_name(edge_label_i);
+  auto sz =
+      _g->schema().get_edge_properties(src_label, dst_label, edge_label).size();
+  for (auto i = 0; i < sz; ++i) {
+    p->emplace_back(et + (i << 24));
+  }
+  return p;
 }
 
 size_t grin_get_edge_property_list_size(GRIN_GRAPH g,
-                                        GRIN_EDGE_PROPERTY_LIST epl){
-  return 1;                                      
+                                        GRIN_EDGE_PROPERTY_LIST epl) {
+  auto _epl = static_cast<GRIN_EDGE_PROPERTY_LIST_T*>(epl);
+  return _epl->size();
 }
 
 GRIN_EDGE_PROPERTY grin_get_edge_property_from_list(GRIN_GRAPH g,
                                                     GRIN_EDGE_PROPERTY_LIST epl,
-                                                    size_t idx){
-  if(idx > 0){
+                                                    size_t idx) {
+  auto _epl = static_cast<GRIN_EDGE_PROPERTY_LIST_T*>(epl);
+  if (_epl->size() <= idx) {
     return GRIN_NULL_EDGE_PROPERTY;
-  } 
-  return epl;                                     
+  }
+  return (*_epl)[idx];
 }
 
-GRIN_EDGE_PROPERTY_LIST grin_create_edge_property_list(GRIN_GRAPH g){
-  return GRIN_NULL_EDGE_PROPERTY;
+GRIN_EDGE_PROPERTY_LIST grin_create_edge_property_list(GRIN_GRAPH g) {
+  return new GRIN_EDGE_PROPERTY_LIST_T();
 }
 
 void grin_destroy_edge_property_list(GRIN_GRAPH g,
-                                     GRIN_EDGE_PROPERTY_LIST epl){}
+                                     GRIN_EDGE_PROPERTY_LIST epl) {
+  auto _epl = static_cast<GRIN_EDGE_PROPERTY_LIST_T*>(epl);
+  delete _epl;
+}
 
 bool grin_insert_edge_property_to_list(GRIN_GRAPH g,
                                        GRIN_EDGE_PROPERTY_LIST epl,
-                                       GRIN_EDGE_PROPERTY ep){
-    return false;
+                                       GRIN_EDGE_PROPERTY ep) {
+  auto _epl = static_cast<GRIN_EDGE_PROPERTY_LIST_T*>(epl);
+  _epl->emplace_back(ep);
+  return true;
 }
 #endif
 
 #ifdef GRIN_TRAIT_NATURAL_ID_FOR_EDGE_PROPERTY
 GRIN_EDGE_PROPERTY grin_get_edge_property_by_id(GRIN_GRAPH g, GRIN_EDGE_TYPE et,
-                                                GRIN_EDGE_PROPERTY_ID pid){
+                                                GRIN_EDGE_PROPERTY_ID pid) {
   return NULL;
 }
 
 GRIN_EDGE_PROPERTY_ID grin_get_edge_property_id(GRIN_GRAPH g, GRIN_EDGE_TYPE et,
-                                                GRIN_EDGE_PROPERTY ep){
+                                                GRIN_EDGE_PROPERTY ep) {
   return 0;
 }
 #endif
