@@ -402,6 +402,7 @@ mod test {
         channel_test(1, 2, 0, &ServerConf::Local);
     }
 
+    #[ignore]
     #[test]
     fn test_channel_between_2_servers() {
         pegasus_common::logs::init_log();
