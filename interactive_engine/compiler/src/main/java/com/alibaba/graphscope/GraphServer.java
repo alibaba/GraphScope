@@ -133,7 +133,10 @@ public class GraphServer {
     }
 
     public static void main(String[] args) throws Exception {
-        Configs configs = new Configs("conf/ir.compiler.properties", FileLoadType.RELATIVE_PATH);
+        if (args.length == 0 || args[0].isEmpty()) {
+            throw new IllegalArgumentException("usage: GraphServer '<path_to_config_file>'");
+        }
+        Configs configs = new Configs(args[0], FileLoadType.RELATIVE_PATH);
         IrMetaQueryCallback queryCallback =
                 new IrMetaQueryCallback(new ExperimentalMetaFetcher(configs));
         GraphServer server =
