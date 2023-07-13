@@ -61,6 +61,8 @@ class LocalLauncher(AbstractLauncher):
         log_level: str,
         instance_id: str,
         timeout_seconds: int,
+        close_timeout_seconds: int = 60,
+        retry_time_seconds: int = 1,
     ):
         super().__init__()
         self._num_workers = num_workers
@@ -75,7 +77,8 @@ class LocalLauncher(AbstractLauncher):
         self._glog_level = parse_as_glog_level(log_level)
         self._instance_id = instance_id
         self._timeout_seconds = timeout_seconds
-
+        self._close_timeout_seconds = close_timeout_seconds
+        self._retry_time_seconds = retry_time_seconds
         self._vineyard_socket_prefix = os.path.join(get_tempdir(), "vineyard.sock.")
 
         # A graphscope instance may have multiple session by reconnecting to coordinator
@@ -184,10 +187,11 @@ class LocalLauncher(AbstractLauncher):
 
         start_time = time.time()
         while is_free_port(rpc_port):
-            time.sleep(1)
             if self._timeout_seconds + start_time < time.time():
                 self._analytical_engine_process.kill()
                 raise RuntimeError("Launch analytical engine failed due to timeout.")
+            time.sleep(self._retry_time_seconds)
+
         logger.info(
             "Analytical engine is listening on %s", self._analytical_engine_endpoint
         )
@@ -232,12 +236,13 @@ class LocalLauncher(AbstractLauncher):
             str(num_workers),  # server size
             str(self._interactive_port),  # executor port
             str(self._interactive_port + 1),  # executor rpc port
-            str(self._interactive_port + 2 * num_workers),  # frontend port
+            str(self._interactive_port + 2 * num_workers),  # frontend gremlin port
+            str(self._interactive_port + 2 * num_workers + 1),  # frontend cypher port
             self.vineyard_socket,
             params,
         ]
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
-        self._interactive_port += 3
+        self._interactive_port += 2 * num_workers + 2
         process = subprocess.Popen(
             cmd,
             start_new_session=True,
@@ -340,7 +345,7 @@ class LocalLauncher(AbstractLauncher):
             bufsize=1,
         )
         # 60 seconds is enough
-        process.wait(timeout=60)
+        process.wait(timeout=self._close_timeout_seconds)
         return process
 
     def close_learning_instance(self, object_id):
@@ -423,7 +428,6 @@ class LocalLauncher(AbstractLauncher):
 
         start_time = time.time()
         while is_free_port(self._etcd_client_port):
-            time.sleep(1)
             if self._timeout_seconds + start_time < time.time():
                 self._etcd_process.kill()
                 _, errs = self._etcd_process.communicate()
@@ -431,6 +435,8 @@ class LocalLauncher(AbstractLauncher):
                 msg = "Launch etcd service failed due to timeout: "
                 msg += "\n".join([line for line in stdout_watcher.poll_all()])
                 raise RuntimeError(msg)
+            time.sleep(self._retry_time_seconds)
+
         stdout_watcher.drop(True)
         stdout_watcher.suppress(not logger.isEnabledFor(logging.DEBUG))
         logger.info("Etcd is ready, endpoint is %s", self._etcd_endpoint)
@@ -493,10 +499,9 @@ class LocalLauncher(AbstractLauncher):
 
         start_time = time.time()
         if len(hosts) > 1:
-            time.sleep(5)  # should be OK
+            time.sleep(5 * self._retry_time_seconds)  # should be OK
         else:
             while not os.path.exists(self._vineyard_socket):
-                time.sleep(1)
                 if self._vineyardd_process.poll() is not None:
                     msg = "Launch vineyardd failed: "
                     msg += "\n".join([line for line in stdout_watcher.poll_all()])
@@ -508,6 +513,8 @@ class LocalLauncher(AbstractLauncher):
                     # outs, _ = self._vineyardd_process.communicate()
                     # logger.error("Start vineyardd timeout, %s", outs)
                     raise RuntimeError("Launch vineyardd failed due to timeout.")
+                time.sleep(self._retry_time_seconds)
+
         stdout_watcher.drop(True)
         stdout_watcher.suppress(not logger.isEnabledFor(logging.DEBUG))
         logger.info(

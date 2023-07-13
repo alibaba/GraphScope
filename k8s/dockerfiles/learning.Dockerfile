@@ -38,6 +38,9 @@ RUN sudo apt-get update -y && \
 
 RUN sudo chmod a+wrx /tmp
 
+#to make sure neo4j==5.10.0 can be installed
+RUN pip3 install pip==20.3.4 
+
 COPY --from=builder /home/graphscope/install /opt/graphscope/
 RUN python3 -m pip install --no-cache-dir /opt/graphscope/*.whl && sudo rm -rf /opt/graphscope/*.whl
 

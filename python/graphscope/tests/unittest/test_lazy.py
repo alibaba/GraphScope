@@ -228,3 +228,13 @@ def test_across_engine(sess):
     res = interactive.execute("g.V().count()").all().result()
     # res = sess.run(res)
     assert res[0] == 62586
+
+
+def test_cypher_endpoint(sess):
+    from neo4j import RoutingControl
+
+    g_node = load_p2p_network(sess)
+    interactive = sess.interactive(g_node)
+    _ = interactive.execute(
+        "MATCH (n) RETURN n LIMIT 1", lang="cypher", routing_=RoutingControl.READ
+    )

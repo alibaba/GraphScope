@@ -1,0 +1,15 @@
+{
+  "queryName": {
+    "name": "query_ic2"
+  },
+  "arguments": [{
+    "value": {
+      "i64": "10"
+    }
+  }, {
+    "paramInd": 1,
+    "value": {
+      "i64": "20120112"
+    }
+  }]
+}

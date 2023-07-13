@@ -1,8 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
 project(Lgraph)
 
-set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++17" HAS_STDCXX_17)
+if (HAS_STDCXX_17)
+    set(CMAKE_CXX_STANDARD 17)
+else()
+    set(CMAKE_CXX_STANDARD 14)
+endif()
 
 set(Lgraph_VERSION_MAJOR 0)
 set(Lgraph_VERSION_MINOR 1)

@@ -46,7 +46,7 @@ curl -XPOST $url -d 'sink_graph = session.load_from(
 )' >/dev/null
 
 curl -XPOST $url -d 'sink_gremlin = session.gremlin(sink_graph)'>/dev/null
-code=$(curl -XPOST $url -d 'sink_gremlin._graph_url' --write-out %{http_code} --silent --output ./gremlin.tmp)
+code=$(curl -XPOST $url -d 'sink_gremlin.gremlin_url' --write-out %{http_code} --silent --output ./gremlin.tmp)
 res=`cat ./gremlin.tmp`
 if [ -f "gremlin.tmp" ];then
     rm gremlin.tmp 1>/dev/null 2>&1

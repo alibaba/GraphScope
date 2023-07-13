@@ -56,12 +56,14 @@ impl GaiaServer {
     }
 
     pub fn add_partition(&mut self, partition_id: PartitionId, graph_partition: Arc<GraphStore>) {
+        trace!("add_partition");
         Arc::get_mut(&mut self.graph)
             .unwrap()
             .add_partition(partition_id, graph_partition);
     }
 
     pub fn update_partition_routing(&mut self, partition_id: PartitionId, worker_id: u32) {
+        trace!("update_partition_routing");
         Arc::get_mut(&mut self.graph)
             .unwrap()
             .update_partition_routing(partition_id, worker_id);
@@ -113,6 +115,7 @@ impl GaiaServer {
     }
 
     pub fn update_peer_view(&self, peer_view: Vec<(u64, ServerAddr)>) {
+        trace!("update_peer_view");
         self.detector
             .update_peer_view(peer_view.into_iter());
     }
@@ -248,7 +251,7 @@ impl GaiaServiceListener {
 
 impl ServiceStartListener for GaiaServiceListener {
     fn on_rpc_start(&mut self, server_id: u64, addr: SocketAddr) -> std::io::Result<()> {
-        info!("RPC server of server[{}] start on {}", server_id, addr);
+        trace!("RPC server of server[{}] start on {}", server_id, addr);
         let mut rpc_addr = self
             .rpc_addr
             .lock()
@@ -258,7 +261,7 @@ impl ServiceStartListener for GaiaServiceListener {
     }
 
     fn on_server_start(&mut self, server_id: u64, addr: SocketAddr) -> std::io::Result<()> {
-        info!("compute server[{}] start on {}", server_id, addr);
+        trace!("compute server[{}] start on {}", server_id, addr);
         let mut server_addr = self
             .server_addr
             .lock()

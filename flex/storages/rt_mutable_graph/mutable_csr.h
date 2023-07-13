@@ -277,6 +277,7 @@ class MutableCsrConstEdgeIterBase {
   virtual vid_t get_neighbor() const = 0;
   virtual Any get_data() const = 0;
   virtual timestamp_t get_timestamp() const = 0;
+  virtual size_t size() const = 0;
 
   virtual void next() = 0;
   virtual bool is_valid() const = 0;
@@ -336,6 +337,7 @@ class TypedMutableCsrConstEdgeIter : public MutableCsrConstEdgeIterBase {
 
   void next() { ++cur_; }
   bool is_valid() const { return cur_ != end_; }
+  size_t size() const { return end_ - cur_; }
 
  private:
   const nbr_t* cur_;

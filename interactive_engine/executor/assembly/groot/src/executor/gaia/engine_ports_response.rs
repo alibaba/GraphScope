@@ -49,7 +49,7 @@ impl Drop for EnginePortsResponse {
     fn drop(&mut self) {
         unsafe {
             if !self.errMsg.is_null() {
-                CString::from_raw(self.errMsg as *mut c_char);
+                drop(CString::from_raw(self.errMsg as *mut c_char));
             }
         }
     }
