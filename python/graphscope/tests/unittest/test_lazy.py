@@ -234,8 +234,11 @@ def test_across_engine(sess):
 def test_gremlin_timeout(sess):
     g_node = load_p2p_network(sess)
     interactive = sess.gremlin(g_node)
-    with pytest.raises(protocol.GremlinServerError, match=r"Job is canceled"):
-        # expect to timeout after 1s
+    # expect to timeout after 1s (caused by grpc timeout or pegasus timeout)
+    with pytest.raises(
+        protocol.GremlinServerError,
+        match="|".join(["DEADLINE_EXCEEDED", "Job is canceled"]),
+    ):
         res = (
             interactive.execute(
                 'g.with(ARGS_EVAL_TIMEOUT, 1000).V().match(as("a").out().as("b"), as("b").out().as("c"), as("c").out().as("a"))'
