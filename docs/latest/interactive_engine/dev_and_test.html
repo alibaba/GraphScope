@@ -783,8 +783,11 @@ pegasus.hosts<span class="w"> </span><span class="o">=</span><span class="w"> </
 <span class="c1"># graph schema path</span>
 graph.schema<span class="w"> </span><span class="o">=</span><span class="w"> </span>/tmp/&lt;v6d_object_id&gt;.json
 
-<span class="c1">## Frontend Config</span>
-frontend.service.port<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">8182</span>
+<span class="c1">## Gremlin Server Port</span>
+gremlin.server.port<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">8182</span>
+
+<span class="c1">## Bolt Server Port</span>
+neo4j.bolt.server.port<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">7687</span>
 
 <span class="c1"># disable authentication if username or password is not set</span>
 <span class="c1"># auth.username = default</span>
@@ -798,7 +801,7 @@ frontend.service.port<span class="w"> </span><span class="o">=</span><span class
 </pre></div>
 </div>
 <p>With the frontend service, you can open the gremlin console and set the endpoint to
-<code class="docutils literal notranslate"><span class="pre">localhost:8182</span></code>, as given <a class="reference internal" href="#./tinkerpop_gremlin.md#gremlin-console"><span class="xref myst">here</span></a>.</p>
+<code class="docutils literal notranslate"><span class="pre">localhost:8182</span></code>, as given <a class="reference internal" href="tinkerpop/tinkerpop_gremlin.html#connecting-via-gremlin-console"><span class="std std-ref">here</span></a>. Similarly, you can open the cypher-shell and set the url to <code class="docutils literal notranslate"><span class="pre">neo4j://localhost:7687</span></code> by using <code class="docutils literal notranslate"><span class="pre">-a</span></code> option, as given <a class="reference internal" href="neo4j/cypher_sdk.html#connecting-via-cypher-shell"><span class="std std-ref">here</span></a>.</p>
 <ol class="arabic simple" start="7">
 <li><p>Kill the services of <code class="docutils literal notranslate"><span class="pre">vineyardd</span></code>, <code class="docutils literal notranslate"><span class="pre">gaia_executor</span></code> and <code class="docutils literal notranslate"><span class="pre">frontend</span></code>:</p></li>
 </ol>

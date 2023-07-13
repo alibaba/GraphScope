@@ -721,14 +721,18 @@ the modern graph, which has been widely used in <a class="reference external" hr
 <span class="c1"># load the modern graph as example.</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">load_modern_graph</span><span class="p">()</span>
 
-<span class="c1"># Hereafter, you can use the `graph` object to create an `gremlin` query session</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-<span class="c1"># then `execute` any supported gremlin query.</span>
+<span class="c1"># Hereafter, you can use the `graph` object to create an `interactive` query session</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+<span class="c1"># then `execute` any supported gremlin query (by default)</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().count()&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">q1</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>   <span class="c1"># should print [6]</span>
 
 <span class="n">q2</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().hasLabel(</span><span class="se">\&#39;</span><span class="s1">person</span><span class="se">\&#39;</span><span class="s1">)&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">q2</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>  <span class="c1"># should print [[v[2], v[3], v[0], v[1]]]</span>
+
+<span class="c1"># or `execute` any supported Cypher query, by passing `lang=&quot;cypher&quot;`</span>
+<span class="n">q3</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;MATCH (n:person) RETURN count(n)&quot;</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;cypher&quot;</span><span class="p">,</span> <span class="n">routing_</span><span class="o">=</span><span class="n">RoutingControl</span><span class="o">.</span><span class="n">READ</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">q3</span><span class="o">.</span><span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># should print 6</span>
 </pre></div>
 </div>
 <p>You may see something like:</p>
@@ -741,33 +745,24 @@ the modern graph, which has been widely used in <a class="reference external" hr
 </pre></div>
 </div>
 <p>The number 6 is printed, which is the number of vertices in modern graph.</p>
-<div class="section" id="retrieve-the-gremlin-client">
-<h3>Retrieve the gremlin client<a class="headerlink" href="#retrieve-the-gremlin-client" title="Permalink to this heading">#</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">g</span></code> returned by <code class="docutils literal notranslate"><span class="pre">gs.gremlin()</span></code> is a wrapper around <code class="docutils literal notranslate"><span class="pre">Client</span></code> of <code class="docutils literal notranslate"><span class="pre">gremlinpython</span></code>, you could get the <code class="docutils literal notranslate"><span class="pre">Client</span></code> by</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">gremlin_client</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="s1">&#39;g.V()&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
-</pre></div>
-</div>
-</div>
 <div class="section" id="customize-configurations-for-gie-instance">
 <h3>Customize Configurations for GIE instance<a class="headerlink" href="#customize-configurations-for-gie-instance" title="Permalink to this heading">#</a></h3>
 <p>You could pass additional key-value pairs to customize the startup configuration of GIE, for example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the timeout value to 10 min</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;pegasus.timeout&#39;</span><span class="p">:</span> <span class="mi">600000</span><span class="p">})</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;query.execution.timeout.ms&#39;</span><span class="p">:</span> <span class="mi">600000</span><span class="p">})</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="section" id="whats-the-next">
 <h2>What’s the Next<a class="headerlink" href="#whats-the-next" title="Permalink to this heading">#</a></h2>
-<p>As shown in the above example, it is very easy to use GraphScope to interactively query a graph using the gremlin query language on your local machine. You may find more tutorials <a class="reference external" href="https://tinkerpop.apache.org/docs/current/tutorials/getting-started/">here</a> for the basic Gremlin usage, in which most read-only queries can be seamlessly executed with the above <code class="docutils literal notranslate"><span class="pre">g.execute()</span></code> function.</p>
+<p>As shown in the above example, it is very easy to use GraphScope to interactively query a graph using both the Gremlin and Cypher query language on your local machine.</p>
 <p>In addition to the above local-machine entr’ee, we have prepared the following topics for your reference.</p>
 <ul class="simple">
-<li><p>GIE can handle much complex cases, for example, the complex LDBC
-business intelligence workloads. <a class="reference internal" href="#./guide_and_examples"><span class="xref myst">A walk-through tutorial is here!</span></a></p></li>
-<li><p>GIE can be deployed in a distributed environment to process very large graph. <a class="reference internal" href="deployment.html"><span class="doc std std-doc">How to do that?</span></a></p></li>
-<li><p>GIE has supported a lot of standard Gremlin steps, together with many useful syntactic sugars. <a class="reference internal" href="#./supported_gremlin_steps"><span class="xref myst">Please look into the details!</span></a></p></li>
-<li><p>Want to learn more about the technique details of GIE. <a class="reference internal" href="design_of_gie.html"><span class="doc std std-doc">This is the design and architecture of GIE!</span></a></p></li>
+<li><p>GIE can be <a class="reference internal" href="deployment.html"><span class="std std-doc">deployed standalone</span></a> in a distributed environment to process very large graph.</p></li>
+<li><p>GIE has been designed to <a class="reference internal" href="tinkerpop/tinkerpop_gremlin.html"><span class="std std-doc">integrate with the Tinkerpop ecosystem</span></a>, with necessary extensions such as some <a class="reference internal" href="tinkerpop/supported_gremlin_steps.html"><span class="std std-doc">syntactic sugars</span></a> to ease the use of Gremlin.</p></li>
+<li><p>GIE has been designed to <a class="reference internal" href="neo4j/cypher_sdk.html"><span class="std std-doc">integrate with the Neo4j ecosystem</span></a>.</p></li>
+<li><p>Learn more about the <a class="reference internal" href="design_of_gie.html"><span class="doc std std-doc">design of GIE</span></a>.</p></li>
 </ul>
 </div>
 </div>
@@ -833,7 +828,6 @@ business intelligence workloads. <a class="reference internal" href="#./guide_an
 <li><a class="reference internal" href="#">Getting Started</a><ul>
 <li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#running-graphscope-interactive-engine-on-local">Running GraphScope Interactive Engine on Local</a><ul>
-<li><a class="reference internal" href="#retrieve-the-gremlin-client">Retrieve the gremlin client</a></li>
 <li><a class="reference internal" href="#customize-configurations-for-gie-instance">Customize Configurations for GIE instance</a></li>
 </ul>
 </li>

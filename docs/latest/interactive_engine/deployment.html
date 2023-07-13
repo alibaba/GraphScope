@@ -736,14 +736,27 @@ and modify the <code class="docutils literal notranslate"><span class="pre">host
 <p>You should see the <code class="docutils literal notranslate"><span class="pre">[YOUR_RELEASE_NAME]-gie-standalone-frontend-0</span></code> and <code class="docutils literal notranslate"><span class="pre">[YOUR_RELEASE_NAME]-gie-standalone-store-0</span></code> pods running.</p>
 </li>
 <li><p>Get the endpoint of the GIE Frontend service:</p>
+<ol class="arabic">
+<li><p>get <code class="docutils literal notranslate"><span class="pre">&lt;ip&gt;:&lt;gremlinPort&gt;</span></code> for gremlin querying</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>describe<span class="w"> </span>svc<span class="w"> </span><span class="o">[</span>YOUR_RELEASE_NAME<span class="o">]</span>-gie-standalone-frontend<span class="w"> </span><span class="se">\</span>
-<span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;Endpoints:&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span>-F<span class="s1">&#39; &#39;</span><span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span>
+<span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;Endpoints:&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span>-F<span class="s1">&#39; &#39;</span><span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-1
 </pre></div>
 </div>
-<p>You should see the GIE Frontend service endpoint as <code class="docutils literal notranslate"><span class="pre">&lt;ip&gt;:&lt;gremlinPort&gt;</span></code>.</p>
 </li>
-<li><p>Connect to the GIE frontend service using the Tinkerpop’s official SDKs or Gremlin console, which
-can be found <a class="reference internal" href="#./tinkerpop_gremlin.md"><span class="xref myst">here</span></a>.</p></li>
+<li><p>get <code class="docutils literal notranslate"><span class="pre">&lt;ip&gt;:&lt;cypherPort&gt;</span></code> for cypher querying</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>describe<span class="w"> </span>svc<span class="w"> </span><span class="o">[</span>YOUR_RELEASE_NAME<span class="o">]</span>-gie-standalone-frontend<span class="w"> </span><span class="se">\</span>
+<span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;Endpoints:&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span>-F<span class="s1">&#39; &#39;</span><span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-1
+</pre></div>
+</div>
+</li>
+</ol>
+</li>
+<li><p>Connect to the GIE frontend service by the following two ways:</p>
+<ol class="arabic simple">
+<li><p>using the Tinkerpop’s official SDKs or Gremlin console, which can be found <a class="reference internal" href="tinkerpop/tinkerpop_gremlin.html"><span class="std std-doc">here</span></a>.</p></li>
+<li><p>using the Neo4j’s official SDKs or Cypher-Shell, which can be found <a class="reference internal" href="neo4j/cypher_sdk.html"><span class="std std-doc">here</span></a>.</p></li>
+</ol>
+</li>
 </ul>
 </div>
 <div class="section" id="remove-the-gie-service">

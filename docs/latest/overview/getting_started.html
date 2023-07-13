@@ -722,20 +722,28 @@ Import GraphScope and load a graph<div class="summary-down docutils">
 </pre></div>
 </div>
 </div>
-</details><p>Interactive queries enable users to explore, examine, and present graph data in a flexible and in-depth manner, allowing them to find specific information quickly. GraphScope utilizes Gremlin, a high-level graph traversal language, for interactive queries and offers efficient execution at scale.</p>
+</details><p>Interactive queries enable users to explore, examine, and present graph data in a flexible and in-depth manner, allowing them to find specific information quickly. GraphScope enhances the presentation of interactive queries and ensures efficient execution of these queries on a large scale by providing support for the popular query languages <a class="reference external" href="https://tinkerpop.apache.org/gremlin.html">Gremlin</a> and <a class="reference external" href="https://opencypher.org/">Cypher</a>.</p>
 <details class="sphinx-bs dropdown card mb-3">
 <summary class="summary-title card-header">
-Run interactive queries with Gremlin<div class="summary-down docutils">
+Run interactive queries with Gremlin and Cypher<div class="summary-down docutils">
 <svg version="1.1" width="24" height="24" class="octicon octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.72a.75.75 0 000 1.06l6.25 6.25a.75.75 0 001.06 0l6.25-6.25a.75.75 0 00-1.06-1.06L12 14.44 6.28 8.72a.75.75 0 00-1.06 0z"></path></svg></div>
 <div class="summary-up docutils">
 <svg version="1.1" width="24" height="24" class="octicon octicon-chevron-up" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M18.78 15.28a.75.75 0 000-1.06l-6.25-6.25a.75.75 0 00-1.06 0l-6.25 6.25a.75.75 0 101.06 1.06L12 9.56l5.72 5.72a.75.75 0 001.06 0z"></path></svg></div>
 </summary><div class="summary-content card-body docutils">
 <p class="card-text">In this example, we use graph traversal to count the number of papers two given authors have co-authored. To simplify the query, we assume the authors can be uniquely identified by ID 2 and 4307, respectively.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get the endpoint for submitting Gremlin queries on graph g.</span>
-<span class="n">interactive</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get the endpoint for submitting interactive queries on graph g.</span>
+<span class="n">interactive</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
 
-<span class="c1"># count the number of papers two authors (with id 2 and 4307) have co-authored</span>
+<span class="c1"># Gremlin query for counting the number of papers two authors (with id 2 and 4307) have co-authored</span>
 <span class="n">papers</span> <span class="o">=</span> <span class="n">interactive</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;g.V().has(&#39;author&#39;, &#39;id&#39;, 2).out(&#39;writes&#39;).where(__.in(&#39;writes&#39;).has(&#39;id&#39;, 4307)).count()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+
+<span class="c1"># Cypher query for counting the number of papers two authors (with id 2 and 4307) have co-authored</span>
+<span class="c1"># Note that for Cypher query, the parameter of lang=&quot;cypher&quot; is mandatory</span>
+<span class="n">papers</span> <span class="o">=</span> <span class="n">interactive</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span> \
+    <span class="s2">&quot;MATCH (n1:author)-[:writes]-&gt;(p:paper)&lt;-[:writes]-(n2:author) </span><span class="se">\</span>
+<span class="s2">        WHERE n1.id = 2 AND n2.id = 4307 </span><span class="se">\</span>
+<span class="s2">        RETURN count(DISTINCT p)&quot;</span><span class="p">,</span> \
+    <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;cypher&quot;</span><span class="p">,</span> <span class="n">routing_</span><span class="o">=</span><span class="n">RoutingControl</span><span class="o">.</span><span class="n">READ</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -877,7 +885,7 @@ Example: Running iterative algorithm (SSSP) in GraphScope<div class="summary-dow
 <span class="n">gs</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="c1"># load the modern graph as example.</span>
-<span class="c1">#(modern graph is an example property graph for Gremlin queries given by Apache at https://tinkerpop.apache.org/docs/current/tutorials/getting-started/)</span>
+<span class="c1">#(modern graph is an example property graph given by Apache at https://tinkerpop.apache.org/docs/current/tutorials/getting-started/)</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">load_modern_graph</span><span class="p">()</span>
 
 <span class="c1"># triggers label propagation algorithm(LPA)</span>
@@ -899,7 +907,7 @@ Example: Running iterative algorithm (SSSP) in GraphScope<div class="summary-dow
 <div class="section" id="graph-interactive-query-quick-start">
 <h2>Graph Interactive Query Quick Start<a class="headerlink" href="#graph-interactive-query-quick-start" title="Permalink to this heading">#</a></h2>
 <p>With the <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> package already installed, you can effortlessly engage with a graph on your local machine.
-You simply need to create the <code class="docutils literal notranslate"><span class="pre">gremlin</span></code> instance to serve as the conduit for submitting all Gremlin queries.</p>
+You simply need to create the <code class="docutils literal notranslate"><span class="pre">interactive</span></code> instance to serve as the conduit for submitting Gremlin or Cypher queries.</p>
 <details class="sphinx-bs dropdown card mb-3">
 <summary class="summary-title card-header">
 Example: Run Interactive Queries in GraphScope<div class="summary-down docutils">
@@ -914,17 +922,21 @@ Example: Run Interactive Queries in GraphScope<div class="summary-down docutils"
 <span class="n">gs</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="c1"># load the modern graph as example.</span>
-<span class="c1">#(modern graph is an example property graph for Gremlin queries given by Apache at https://tinkerpop.apache.org/docs/current/tutorials/getting-started/)</span>
+<span class="c1">#(modern graph is an example property graph given by Apache at https://tinkerpop.apache.org/docs/current/tutorials/getting-started/)</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">load_modern_graph</span><span class="p">()</span>
 
-<span class="c1"># Hereafter, you can use the `graph` object to create an `gremlin` query session</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+<span class="c1"># Hereafter, you can use the `graph` object to create an `interactive` query session, which will start one Gremlin service and one Cypher service simultaneously on the backend.</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
 <span class="c1"># then `execute` any supported gremlin query.</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().count()&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">q1</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>   <span class="c1"># should print [6]</span>
 
 <span class="n">q2</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V().hasLabel(</span><span class="se">\&#39;</span><span class="s1">person</span><span class="se">\&#39;</span><span class="s1">)&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">q2</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>  <span class="c1"># should print [[v[2], v[3], v[0], v[1]]]</span>
+
+<span class="c1"># or `execute` any supported Cypher query</span>
+<span class="n">q3</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;MATCH (n:person) RETURN count(n)&quot;</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;cypher&quot;</span><span class="p">,</span> <span class="n">routing_</span><span class="o">=</span><span class="n">RoutingControl</span><span class="o">.</span><span class="n">READ</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">q3</span><span class="o">.</span><span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># should print 6</span>
 </pre></div>
 </div>
 </div>

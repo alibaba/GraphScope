@@ -6,12 +6,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="interactive_engine/neo4j/cypher_sdk.html" />
 <meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="This document will provide you with step-by-step guidance on how to connect your Cypher applications to the GIE’s FrontEnd service, which offers functionalities similar to the official Tinkerpop se..." />
+<meta property="og:description" content="We have implemented Neo4j’s Bolt protocol for you to connect your Neo4j applications to the GIE’s Frontend service. Your first step is to obtain the Cypher endpoint for the Bolt connector Follow th..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="/_images/social_previews/summary_interactive_engine_neo4j_cypher_sdk_b1a8eb66.png" />
-<meta property="og:image:alt" content="This document will provide you with step-by-step guidance on how to connect your Cypher applications to the GIE’s FrontEnd service, which offers functionalit..." />
-<meta name="description" content="This document will provide you with step-by-step guidance on how to connect your Cypher applications to the GIE’s FrontEnd service, which offers functionalities similar to the official Tinkerpop se..." />
+<meta property="og:image" content="/_images/social_previews/summary_interactive_engine_neo4j_cypher_sdk_1f76c2ac.png" />
+<meta property="og:image:alt" content="We have implemented Neo4j’s Bolt protocol for you to connect your Neo4j applications to the GIE’s Frontend service. Your first step is to obtain the Cypher e..." />
+<meta name="description" content="We have implemented Neo4j’s Bolt protocol for you to connect your Neo4j applications to the GIE’s Frontend service. Your first step is to obtain the Cypher endpoint for the Bolt connector Follow th..." />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Cypher Support" href="supported_cypher.html" /><link rel="prev" title="Neo4j Ecosystem" href="../neo4j_eco.html" />
 
@@ -666,11 +666,11 @@ MathJax = {
         <article role="main">
           <div class="tex2jax_ignore mathjax_ignore section" id="gie-for-cypher">
 <h1>GIE for Cypher<a class="headerlink" href="#gie-for-cypher" title="Permalink to this heading">#</a></h1>
-<p>This document will provide you with step-by-step guidance on how to connect your Cypher applications to the GIE’s
-FrontEnd service, which offers functionalities similar to the official Tinkerpop service.</p>
-<p>Your first step is to obtain the Bolt Connector of GIE Frontend service:</p>
+<p>We have implemented Neo4j’s <a class="reference external" href="https://neo4j.com/docs/bolt/current/bolt/">Bolt</a> protocol for you to connect your Neo4j applications to the GIE’s Frontend service.</p>
+<p>Your first step is to obtain the Cypher endpoint for the <a class="reference external" href="https://neo4j.com/docs/bolt/current/bolt/">Bolt</a> connector</p>
 <ul class="simple">
-<li><p>Follow the <a class="reference internal" href="#./dev_and_test.md#manually-start-the-gie-services"><span class="xref myst">instruction</span></a> while starting GIE on a local machine.</p></li>
+<li><p>Follow the <a class="reference internal" href="../deployment.html"><span class="std std-doc">instruction</span></a> while deploying GIE in a K8s cluster,</p></li>
+<li><p>Follow the <a class="reference internal" href="../dev_and_test.html"><span class="std std-doc">instruction</span></a> while starting GIE on a local machine.</p></li>
 </ul>
 <div class="section" id="connecting-via-python-driver">
 <h2>Connecting via Python Driver<a class="headerlink" href="#connecting-via-python-driver" title="Permalink to this heading">#</a></h2>
@@ -682,7 +682,7 @@ FrontEnd service, which offers functionalities similar to the official Tinkerpop
 <p>Then connect to the service and run queries:</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">neo4j</span> <span class="kn">import</span> <span class="n">GraphDatabase</span><span class="p">,</span> <span class="n">RoutingControl</span>
 
-<span class="n">URI</span> <span class="o">=</span> <span class="s2">&quot;neo4j://localhost:7687&quot;</span>  <span class="c1"># the bolt connector you&#39;ve obtained</span>
+<span class="n">URI</span> <span class="o">=</span> <span class="s2">&quot;neo4j://localhost:7687&quot;</span>  <span class="c1"># neo4j:// + Cypher endpoint you&#39;ve obtained</span>
 <span class="n">AUTH</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># We have not implemented authentication yet</span>
 
 <span class="k">def</span> <span class="nf">print_top_10</span><span class="p">(</span><span class="n">driver</span><span class="p">):</span>
@@ -698,6 +698,12 @@ FrontEnd service, which offers functionalities similar to the official Tinkerpop
     <span class="n">print_top_10</span><span class="p">(</span><span class="n">driver</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>A simpler option is to use the <code class="docutils literal notranslate"><span class="pre">interactive</span></code> object for submitting Cypher queries through
+<a class="reference internal" href="../getting_started.html"><span class="std std-doc">GraphScope’s python SDK</span></a>, which is a wrapper that encompasses Neo4j’s
+Python Driver and will automatically acquire the endpoint.</p>
+</div>
 </div>
 <div class="section" id="connecting-via-cypher-shell">
 <h2>Connecting via Cypher-Shell<a class="headerlink" href="#connecting-via-cypher-shell" title="Permalink to this heading">#</a></h2>
@@ -708,7 +714,7 @@ unzip<span class="w"> </span>cypher-shell-4.4.19.zip<span class="w"> </span><spa
 </pre></div>
 </div>
 </li>
-<li><p>Connect to the Bolt Connector</p>
+<li><p>Connect to the Bolt connector with the Cypher endpoint you’ve obtained</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./cypher-shell<span class="w"> </span>-a<span class="w"> </span>neo4j://localhost:7687
 </pre></div>
 </div>

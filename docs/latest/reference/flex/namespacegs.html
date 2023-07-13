@@ -346,6 +346,10 @@ Functions</h2></td></tr>
 <tr class="separator:a801c5c31e5322d80bbab8eac7a7b52ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab6d4171a038e1dc32280f58045d4e4ec"><td class="memItemLeft" align="right" valign="top">grape::OutArchive &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ab6d4171a038e1dc32280f58045d4e4ec">operator&gt;&gt;</a> (grape::OutArchive &amp;out_archive, <a class="el" href="structgs_1_1Any.html">Any</a> &amp;value)</td></tr>
 <tr class="separator:ab6d4171a038e1dc32280f58045d4e4ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3615c9ab632d503a64b69548c9642e84"><td class="memItemLeft" align="right" valign="top">grape::InArchive &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a3615c9ab632d503a64b69548c9642e84">operator&lt;&lt;</a> (grape::InArchive &amp;in_archive, const std::string_view &amp;str)</td></tr>
+<tr class="separator:a3615c9ab632d503a64b69548c9642e84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46ef9c4e3ea33ffaa630e2b5767cd8af"><td class="memItemLeft" align="right" valign="top">grape::OutArchive &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a46ef9c4e3ea33ffaa630e2b5767cd8af">operator&gt;&gt;</a> (grape::OutArchive &amp;out_archive, std::string_view &amp;str)</td></tr>
+<tr class="separator:a46ef9c4e3ea33ffaa630e2b5767cd8af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeab5559afbc066399ff3c0b9424e8971"><td class="memItemLeft" align="right" valign="top">static uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#aeab5559afbc066399ff3c0b9424e8971">char_to_digit</a> (char c)</td></tr>
 <tr class="separator:aeab5559afbc066399ff3c0b9424e8971"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad8021412dcc1145c164e2f4422943b0f"><td class="memItemLeft" align="right" valign="top">static uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ad8021412dcc1145c164e2f4422943b0f">str_4_to_number</a> (const char *str)</td></tr>
@@ -1074,7 +1078,7 @@ template&lt;typename EDATA_T &gt; </div>
 </div>
 </div>
 <a id="a801c5c31e5322d80bbab8eac7a7b52ab"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a801c5c31e5322d80bbab8eac7a7b52ab">&#9670;&nbsp;</a></span>operator&lt;&lt;() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a801c5c31e5322d80bbab8eac7a7b52ab">&#9670;&nbsp;</a></span>operator&lt;&lt;() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1102,7 +1106,7 @@ template&lt;typename EDATA_T &gt; </div>
 </div>
 </div>
 <a id="ae644f021b4a5e5bf84685818a51d9afb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae644f021b4a5e5bf84685818a51d9afb">&#9670;&nbsp;</a></span>operator&lt;&lt;() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ae644f021b4a5e5bf84685818a51d9afb">&#9670;&nbsp;</a></span>operator&lt;&lt;() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1129,8 +1133,36 @@ template&lt;typename EDATA_T &gt; </div>
 
 </div>
 </div>
+<a id="a3615c9ab632d503a64b69548c9642e84"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3615c9ab632d503a64b69548c9642e84">&#9670;&nbsp;</a></span>operator&lt;&lt;() <span class="overload">[3/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">grape::InArchive &amp; gs::operator&lt;&lt; </td>
+          <td>(</td>
+          <td class="paramtype">grape::InArchive &amp;&#160;</td>
+          <td class="paramname"><em>in_archive</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string_view &amp;&#160;</td>
+          <td class="paramname"><em>str</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="ab6d4171a038e1dc32280f58045d4e4ec"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab6d4171a038e1dc32280f58045d4e4ec">&#9670;&nbsp;</a></span>operator&gt;&gt;() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ab6d4171a038e1dc32280f58045d4e4ec">&#9670;&nbsp;</a></span>operator&gt;&gt;() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1158,7 +1190,7 @@ template&lt;typename EDATA_T &gt; </div>
 </div>
 </div>
 <a id="a64dd7d7dd72e6ed63df2ce9bc011b504"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a64dd7d7dd72e6ed63df2ce9bc011b504">&#9670;&nbsp;</a></span>operator&gt;&gt;() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a64dd7d7dd72e6ed63df2ce9bc011b504">&#9670;&nbsp;</a></span>operator&gt;&gt;() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1174,6 +1206,34 @@ template&lt;typename EDATA_T &gt; </div>
           <td></td>
           <td class="paramtype"><a class="el" href="structgs_1_1MutableNbr.html">MutableNbr</a>&lt; std::string &gt; &amp;&#160;</td>
           <td class="paramname"><em>value</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a46ef9c4e3ea33ffaa630e2b5767cd8af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a46ef9c4e3ea33ffaa630e2b5767cd8af">&#9670;&nbsp;</a></span>operator&gt;&gt;() <span class="overload">[3/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">grape::OutArchive &amp; gs::operator&gt;&gt; </td>
+          <td>(</td>
+          <td class="paramtype">grape::OutArchive &amp;&#160;</td>
+          <td class="paramname"><em>out_archive</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::string_view &amp;&#160;</td>
+          <td class="paramname"><em>str</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

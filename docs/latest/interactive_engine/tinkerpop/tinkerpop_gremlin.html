@@ -670,8 +670,8 @@ MathJax = {
 FrontEnd service, which offers functionalities similar to the official Tinkerpop service.</p>
 <p>Your first step is to obtain the endpoint of GIE Frontend service:</p>
 <ul class="simple">
-<li><p>Follow the <a class="reference internal" href="#./deployment.md#deploy-your-first-gie-service"><span class="xref myst">instruction</span></a> while deploying GIE in a K8s cluster,</p></li>
-<li><p>Follow the <a class="reference internal" href="#./dev_and_test.md#manually-start-the-gie-services"><span class="xref myst">instruction</span></a> while starting GIE on a local machine.</p></li>
+<li><p>Follow the <a class="reference internal" href="../deployment.html"><span class="std std-doc">instruction</span></a> while deploying GIE in a K8s cluster,</p></li>
+<li><p>Follow the <a class="reference internal" href="../dev_and_test.html"><span class="std std-doc">instruction</span></a> while starting GIE on a local machine.</p></li>
 </ul>
 <div class="section" id="connecting-via-python-sdk">
 <h2>Connecting via Python SDK<a class="headerlink" href="#connecting-via-python-sdk" title="Permalink to this heading">#</a></h2>
@@ -699,8 +699,8 @@ FrontEnd service, which offers functionalities similar to the official Tinkerpop
 </div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p>A simpler option is to use the <code class="docutils literal notranslate"><span class="pre">gremlin</span></code> object for submitting Gremlin queries through
-<a class="reference internal" href="#./getting_started.md"><span class="xref myst">GraphScope’s python SDK</span></a>, which is a wrapper that encompasses Tinkerpop’s
+<p>A simpler option is to use the <code class="docutils literal notranslate"><span class="pre">interactive</span></code> object for submitting Gremlin queries through
+<a class="reference internal" href="../getting_started.html"><span class="std std-doc">GraphScope’s python SDK</span></a>, which is a wrapper that encompasses Tinkerpop’s
 Gremlin-Python and will automatically acquire the endpoint.</p>
 </div>
 <p>In large-scale data processing scenarios, streaming the returned data is often necessary to avoid Out of Memory (OOM) issues caused by handling a large volume of data, which provides benefits such as memory efficiency, continuous processing, incremental analysis, reduced latency, scalability, and resource optimization. It enables you to handle and analyze vast amounts of data effectively while mitigating the risk of memory-related issues. Here is an example to guide you how to collect results in a streaming way by python sdk.</p>

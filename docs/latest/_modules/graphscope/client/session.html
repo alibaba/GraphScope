@@ -673,7 +673,6 @@ MathJax = {
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">signal</span>
 <span class="kn">import</span> <span class="nn">threading</span>
 <span class="kn">import</span> <span class="nn">time</span>
@@ -709,6 +708,7 @@ MathJax = {
 <span class="kn">from</span> <span class="nn">graphscope.framework.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="kn">import</span> <span class="n">decode_dataframe</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="kn">import</span> <span class="n">decode_numpy</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="kn">import</span> <span class="n">deprecated</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="kn">import</span> <span class="n">random_string</span>
 <span class="kn">from</span> <span class="nn">graphscope.interactive.query</span> <span class="kn">import</span> <span class="n">InteractiveQuery</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">graph_def_pb2</span>
@@ -1940,12 +1940,13 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;port&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
-<div class="viewcode-block" id="Session.gremlin"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.gremlin">[docs]</a>    <span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="nd">@deprecated</span><span class="p">(</span><span class="s2">&quot;Please use `sess.interactive` instead.&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;This method is going to be deprecated.</span>
 <span class="sd">        Use :meth:`interactive` to get an interactive engine handler supports</span>
 <span class="sd">        both gremlin and cypher queries</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Session.interactive"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.interactive">[docs]</a>    <span class="k">def</span> <span class="nf">interactive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get an interactive engine handler to execute gremlin and cypher queries.</span>
@@ -1998,7 +1999,8 @@ MathJax = {
         <span class="n">graph</span><span class="o">.</span><span class="n">_attach_interactive_instance</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">interactive_query</span></div>
 
-<div class="viewcode-block" id="Session.learning"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.learning">[docs]</a>    <span class="k">def</span> <span class="nf">learning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="nd">@deprecated</span><span class="p">(</span><span class="s2">&quot;Please use `graphlearn` instead.&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">learning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Start a graph learning engine.</span>
 
 <span class="sd">        Note that this method has been deprecated, using `graphlearn` replace.</span>
@@ -2006,7 +2008,7 @@ MathJax = {
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
             <span class="s2">&quot;The method &#39;learning&#39; has been deprecated, using graphlearn replace.&quot;</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Session.graphlearn"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.graphlearn">[docs]</a>    <span class="k">def</span> <span class="nf">graphlearn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Start a graph learning engine.</span>
@@ -2377,11 +2379,12 @@ MathJax = {
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="gremlin"><a class="viewcode-back" href="../../../reference/generated/graphscope.gremlin.html#graphscope.gremlin">[docs]</a><span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="nd">@deprecated</span><span class="p">(</span><span class="s2">&quot;Please use `graphscope.interactive` instead.&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This method is going to be deprecated in the future.</span>
 <span class="sd">    Use :meth:`graphscope.interactive` instead.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
