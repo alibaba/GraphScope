@@ -22,6 +22,7 @@ QUIET_OPT := --quiet
 
 query:=
 physical:=
+config.path:=conf/ir.compiler.properties
 
 build:
 	cd $(CUR_DIR)/.. && \
@@ -44,13 +45,6 @@ test:
 gremlin_test:
 	mvn test -Dtest=com.alibaba.graphscope.integration.standard.IrGremlinTest
 
-submit:
-	cd $(CUR_DIR) && $(java) \
-	  -cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
-	  -Djna.library.path=../executor/ir/target/release \
-	  com.alibaba.graphscope.common.SubmitPlanServiceMain \
-	  $(OPT)
-
 run:
 	cd $(CUR_DIR) && $(java) \
 	  -cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
@@ -58,15 +52,15 @@ run:
 	  -Dgraph.schema=${graph.schema} \
 	  -Dgraph.store=${graph.store} \
 	  -Dpegasus.hosts=${pegasus.hosts} \
-	  com.alibaba.graphscope.GraphServer
+	  com.alibaba.graphscope.GraphServer ${config.path}
 
-# make physical_plan query='<query in string>' physical='<path to the physical output file>'
+# make physical_plan config.path='<path to the config file>' query='<query in string>' physical='<path to the physical output file>'
 physical_plan:
 	cd $(CUR_DIR) && $(java) \
 		-cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
 		-Djna.library.path=../executor/ir/target/release \
 		-Dgraph.schema=${graph.schema} \
-		com.alibaba.graphscope.common.ir.tools.GraphPlanner "$(query)" "$(physical)"
+		com.alibaba.graphscope.common.ir.tools.GraphPlanner "${config.path}" "$(query)" "$(physical)"
 
 # start rpc server
 # make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json 

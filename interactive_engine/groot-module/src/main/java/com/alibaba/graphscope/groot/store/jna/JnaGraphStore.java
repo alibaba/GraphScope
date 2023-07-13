@@ -107,7 +107,7 @@ public class JnaGraphStore implements GraphPartition {
         String unique_path = items[items.length - 2];
         String sstName = sstPath.substring(sstPath.lastIndexOf('/') + 1);
         String sstLocalPath = downloadPath.toString() + "/" + unique_path + "/" + sstName;
-        storage.downloadData(sstPath, sstLocalPath);
+        storage.downloadDataWithRetry(sstPath, sstLocalPath);
     }
 
     @Override

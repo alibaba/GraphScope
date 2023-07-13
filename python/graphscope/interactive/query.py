@@ -17,15 +17,14 @@
 #
 
 import logging
-from copy import deepcopy
 from enum import Enum
 
 from gremlin_python.driver.client import Client
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.anonymous_traversal import traversal
 
-from graphscope.framework.dag import DAGNode
 from graphscope.framework.dag_utils import gremlin_to_subgraph
+from graphscope.framework.utils import deprecated
 
 logger = logging.getLogger("graphscope")
 
@@ -59,13 +58,12 @@ class InteractiveQuery(object):
         # graph object id stored in vineyard
         self._graph = graph
         self._session = graph._session
-        frontend_gremlin_endpoint = frontend_gremlin_endpoint.split(",")
         self._gremlin_url = [
-            f"ws://{endpoint}/gremlin" for endpoint in frontend_gremlin_endpoint
+            f"ws://{endpoint}/gremlin"
+            for endpoint in frontend_gremlin_endpoint.split(",")
         ]
-        frontend_cypher_endpoint = frontend_cypher_endpoint.split(",")
         self._cypher_url = [
-            f"neo4j://{endpoint}" for endpoint in frontend_cypher_endpoint
+            f"neo4j://{endpoint}" for endpoint in frontend_cypher_endpoint.split(",")
         ]
         self._conn = None
         self._gremlin_client = None
@@ -73,11 +71,7 @@ class InteractiveQuery(object):
         self.closed = False
 
     @property
-    def _graph_url(self):
-        """This will be deprecated in the future, use `_gremlin_url` instead."""
-        return self._gremlin_url
-
-    @property
+    @deprecated("Please use `gremlin_url` instead")
     def graph_url(self):
         """This will be deprecated in the future, use `gremlin_url` instead."""
         return self._gremlin_url

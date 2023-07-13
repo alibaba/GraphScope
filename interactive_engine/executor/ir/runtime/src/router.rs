@@ -60,8 +60,14 @@ impl<P: PartitionInfo, C: ClusterInfo> Router for DefaultRouter<P, C> {
         let server_id = self
             .partition_info
             .get_server_id(partition_id)?;
-        let local_worker_num = self.cluster_info.get_local_worker_num()?;
-        let random_worker_index = data as u32 % local_worker_num;
-        Ok((server_id * local_worker_num + random_worker_index) as WorkerId)
+        let servers_num = self.cluster_info.get_server_num()?;
+        let magic_num = (data as u32) / servers_num;
+        let workers_num = self.cluster_info.get_local_worker_num()?;
+        // The route logics is as follows:
+        // 1. `R = server_id` routes a given id to the machine R that holds its data.
+        // 2. `R * workers_num` shifts the worker's id in the machine R.
+        // 3. `magic_num % workers_num` then picks up one of the workers in the machine R
+        // to do the computation.
+        Ok((server_id * workers_num + magic_num % workers_num) as WorkerId)
     }
 }
