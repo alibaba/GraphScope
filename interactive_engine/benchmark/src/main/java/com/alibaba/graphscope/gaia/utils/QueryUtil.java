@@ -84,6 +84,17 @@ public class QueryUtil {
             }
         }
 
+        // for ldbc lsqb queries
+        for (int index = 1; index <= 100; index++) {
+            String enableQuery = String.format("lsqb_query_%d.enable", index);
+            String queryFileName = String.format("lsqb_query_%d.gremlin", index);
+            if (configuration.getBoolean(enableQuery, false)) {
+                String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
+                String queryName = String.format("LSQB_QUERY_%d", index);
+                queryList.add(new QueryWithoutParameter(queryName, queryFilePath));
+            }
+        }
+
         // for k hop
         for (int index = 1; index < 5; index++) {
             String enableQuery = String.format("%d_hop_query.enable", index);

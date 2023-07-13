@@ -81,7 +81,7 @@ spec:
               done
 
               $GRAPHSCOPE_HOME/bin/giectl start_frontend ${GRAPHSCOPE_RUNTIME} ${object_id} \
-                  $json_file $runtime_hosts $GREMLIN_SERVER_PORT $EXTRA_CONFIG
+                  $json_file $runtime_hosts $GREMLIN_SERVER_PORT $CYPHER_SERVER_PORT $EXTRA_CONFIG
 
               exit_code=$?
               while [ $exit_code -eq 0 ]
@@ -96,13 +96,15 @@ spec:
               cd /opt/graphscope/interactive_engine/compiler && ./set_properties.sh
               java -cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
                 -Djna.library.path=../executor/ir/target/release \
-                -Dgraph.schema=/etc/groot/config/$GRAPH_SCHEMA com.alibaba.graphscope.GraphServer
+                -Dgraph.schema=/etc/groot/config/$GRAPH_SCHEMA com.alibaba.graphscope.GraphServer conf/ir.compiler.properties
           {{- end }}
           env:
             - name: GAIA_RPC_PORT
               value: {{ .Values.executor.service.gaiaRpc | quote }}
             - name: GREMLIN_SERVER_PORT
               value: {{ .Values.frontend.service.gremlinPort | quote }}
+            - name: CYPHER_SERVER_PORT
+              value: {{ .Values.frontend.service.cypherPort | quote }}
             - name: DNS_NAME_PREFIX_STORE
               value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
             - name: SERVERSSIZE
@@ -124,6 +126,8 @@ spec:
           ports:
             - name: gremlin
               containerPort: {{ .Values.frontend.service.gremlinPort }}
+            - name: cypher
+              containerPort: {{ .Values.frontend.service.cypherPort }}
           {{- if .Values.frontend.readinessProbe.enabled }}
           readinessProbe:
             tcpSocket:

@@ -48,9 +48,6 @@
         </plugins>
       </build>
     </profile>
-    <profile>
-      <id>java-release</id>
-    </profile>
   </profiles>
 
   <build>

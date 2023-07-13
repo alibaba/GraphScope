@@ -229,7 +229,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                         responseObserver.onCompleted();
                     });
         } catch (Exception e) {
-            logger.error("commit failed", e);
+            logger.error("load json schema failed", e);
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }

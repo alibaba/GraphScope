@@ -16,7 +16,7 @@
 #ifndef GRAPHSCOPE_APP_BASE_H_
 #define GRAPHSCOPE_APP_BASE_H_
 
-#include "flex/engines/graph_db/app/app_utils.h"
+#include "flex/utils/app_utils.h"
 
 #include <dlfcn.h>
 #include <string.h>

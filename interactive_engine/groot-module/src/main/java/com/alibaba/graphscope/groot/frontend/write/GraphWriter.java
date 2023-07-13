@@ -347,9 +347,9 @@ public class GraphWriter implements MetricsAgent {
         int labelId = vertexDef.getLabelId();
         Map<Integer, PropertyValue> pkVals =
                 parseRawProperties(vertexDef, vertexRecordKey.getProperties());
-        long hashId = getHashId(labelId, pkVals, vertexDef);
         Map<Integer, PropertyValue> propertyVals = parseRawProperties(vertexDef, properties);
         propertyVals.putAll(pkVals);
+        long hashId = getHashId(labelId, pkVals, vertexDef);
         batchBuilder.addOperation(
                 new UpdateVertexOperation(
                         new VertexId(hashId), new LabelId(labelId), propertyVals));

@@ -19,7 +19,7 @@
     </dependency>
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
-      <artifactId>sdk</artifactId>
+      <artifactId>groot-client</artifactId>
     </dependency>
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>

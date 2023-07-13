@@ -278,6 +278,9 @@ class LFIndexer {
     num_elements_.store(num_elements);
   }
 
+  // get keys
+  const mmap_array<int64_t>& get_keys() const { return keys_; }
+
  private:
   mmap_array<int64_t> keys_;
   mmap_array<INDEX_T> indices_;
