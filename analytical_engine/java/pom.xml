@@ -64,7 +64,7 @@
   </modules>
 
   <properties>
-    <revision>0.23.0</revision>
+    <revision>0.24.0</revision>
     <fastffi.version>0.1.2</fastffi.version>
     <compile-testing.version>0.19</compile-testing.version>
     <cupid.sdk.version>3.3.11</cupid.sdk.version>
@@ -95,7 +95,7 @@
     <maven.javadoc.version>3.4.0</maven.javadoc.version>
     <javadoc.output.directory>grape-jdk-javadoc</javadoc.output.directory>
     <javadoc.output.destDir>grape-jdk-javadoc</javadoc.output.destDir>
-    <grpc.version>1.47.0</grpc.version>
+    <grpc.version>1.53.0</grpc.version>
     <protobuf.version>3.19.2</protobuf.version>
     <protoc.version>3.19.2</protoc.version>
     <javax.annotation.version>1.3.2</javax.annotation.version>

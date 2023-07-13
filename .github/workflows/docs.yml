@@ -155,7 +155,7 @@ jobs:
       run: |
         # Install pip dependencies, build builtin gar, and generate proto stuffs.
         sudo apt update
-        sudo apt install -y doxygen
+        sudo apt install -y doxygen graphviz
         pip3 install furo
 
         # generate a taged version

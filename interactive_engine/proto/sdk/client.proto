@@ -22,9 +22,6 @@ option java_package = "com.alibaba.graphscope.proto.groot";
 option java_multiple_files = true;
 
 service Client {
-  rpc addVertices(AddVerticesRequest) returns (AddVerticesResponse);
-  rpc addEdges(AddEdgesRequest) returns (AddEdgesResponse);
-  rpc remoteFlush(RemoteFlushRequest) returns (RemoteFlushResponse);
   rpc getSchema(GetSchemaRequest) returns (GetSchemaResponse);
   rpc ingestData(IngestDataRequest) returns (IngestDataResponse);
   rpc getMetrics(GetMetricsRequest) returns (GetMetricsResponse);
@@ -35,46 +32,6 @@ service Client {
   rpc getPartitionNum(GetPartitionNumRequest) returns(GetPartitionNumResponse);
   rpc getLoggerInfo(GetLoggerInfoRequest) returns(GetLoggerInfoResponse);
   rpc clearIngest(ClearIngestRequest) returns(ClearIngestResponse);
-}
-
-message VertexDataPb {
-  string label = 1;
-  map<string, string> properties = 2;
-}
-
-message AddVerticesRequest {
-  string session = 1;
-  repeated VertexDataPb dataList = 2;
-}
-
-message AddVerticesResponse {
-  int64 snapshotId = 1;
-}
-
-message EdgeDataPb {
-  string label = 1;
-  string srcLabel = 2;
-  string dstLabel = 3;
-  map<string, string> srcPk = 4;
-  map<string, string> dstPk = 5;
-  map<string, string> properties = 6;
-}
-
-message AddEdgesRequest {
-  string session = 1;
-  repeated EdgeDataPb dataList = 2;
-}
-
-message AddEdgesResponse {
-  int64 snapshotId = 1;
-}
-
-message RemoteFlushRequest {
-  int64 snapshotId = 1;
-}
-
-message RemoteFlushResponse {
-
 }
 
 message GetSchemaRequest {

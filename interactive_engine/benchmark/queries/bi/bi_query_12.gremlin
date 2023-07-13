@@ -1,0 +1,1 @@
+g.V().has("POST", "language", P.within($languages)).in("0..7", "REPLYOF").endV().has("length", P.lt($lengthThreshold)).has("creationDate", P.gt($startDate)).as("msg").out("HASCREATOR").hasLabel("PERSON").group().by().by(dedup("msg").count().as("msgCnt")).group().by(select("msgCnt")).by(count().as("pCnt")).order().by(select("pCnt"), desc).by(select(keys), desc)

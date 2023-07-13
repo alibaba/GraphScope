@@ -56,6 +56,13 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/interactive_engine/executor && ./check_format.sh
 
+    - name: Build Pegasus and Test
+      run: |
+        echo $(pwd)
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/engine/pegasus
+        cargo build --verbose
+        cargo test --verbose
+
     - name: Build Ir on Experimental Store and Csr Store
       run: |
         cd ${GITHUB_WORKSPACE}/interactive_engine/compiler

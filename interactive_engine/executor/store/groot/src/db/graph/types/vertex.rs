@@ -129,14 +129,22 @@ pub struct VertexTypeManager {
     map: Atomic<VertexMap>,
 }
 
+impl Drop for VertexTypeManager {
+    fn drop(&mut self) {
+        unsafe {
+            drop(std::mem::replace(&mut self.map, Atomic::null()).into_owned());
+        }
+    }
+}
+
 impl VertexTypeManager {
     pub fn new() -> Self {
         VertexTypeManager { map: Atomic::new(VertexMap::new()) }
     }
 
     pub fn contains_type(&self, _si: SnapshotId, label: LabelId) -> bool {
-        let guard = epoch::pin();
-        let map = self.get_map(&guard);
+        let guard = &epoch::pin();
+        let map = self.get_map(guard);
         map.contains_key(&label)
     }
 
@@ -144,25 +152,23 @@ impl VertexTypeManager {
         &self, si: SnapshotId, label: LabelId, codec: Codec, table0: Table,
     ) -> GraphResult<()> {
         assert_eq!(si, table0.start_si, "type start si must be equal to table0.start_si");
-        unsafe {
-            let guard = epoch::pin();
-            let map = self.get_shared_map(&guard);
-            let map_ref = map.as_ref().unwrap();
-            if map_ref.contains_key(&label) {
-                let msg = format!("vertex#{} already exists", label);
-                let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, create_type);
-                return Err(err);
-            }
-            let info = VertexTypeInfo::new(si, label);
-            res_unwrap!(info.update_codec(si, codec), create_type)?;
-            res_unwrap!(info.online_table(table0), create_type)?;
-            let mut map_clone = map_ref.clone();
-            map_clone.insert(label, Arc::new(info));
-            self.map
-                .store(Owned::new(map_clone), Ordering::Relaxed);
-            guard.defer_destroy(map);
-            Ok(())
+
+        let guard = &epoch::pin();
+        let map = self.get_shared_map(guard);
+        let mut map_clone = unsafe { map.deref() }.clone();
+        if map_clone.contains_key(&label) {
+            let msg = format!("vertex#{} already exists", label);
+            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, create_type);
+            return Err(err);
         }
+        let info = VertexTypeInfo::new(si, label);
+        res_unwrap!(info.update_codec(si, codec), create_type)?;
+        res_unwrap!(info.online_table(table0), create_type)?;
+        map_clone.insert(label, Arc::new(info));
+        self.map
+            .store(Owned::new(map_clone).into_shared(guard), Ordering::Relaxed);
+        unsafe { guard.defer_destroy(map) };
+        Ok(())
     }
 
     pub fn get_type(&self, si: SnapshotId, label: LabelId) -> GraphResult<VertexTypeInfoRef> {
@@ -183,8 +189,8 @@ impl VertexTypeManager {
     }
 
     pub fn get_type_info(&self, si: SnapshotId, label: LabelId) -> GraphResult<Arc<VertexTypeInfo>> {
-        let guard = epoch::pin();
-        let map = self.get_map(&guard);
+        let guard = &epoch::pin();
+        let map = self.get_map(guard);
         if let Some(info) = map.get(&label) {
             if info.is_alive_at(si) {
                 let ret = info.clone();
@@ -206,8 +212,8 @@ impl VertexTypeManager {
     }
 
     pub fn drop_type(&self, si: SnapshotId, label: LabelId) -> GraphResult<()> {
-        let guard = epoch::pin();
-        let map = self.get_map(&guard);
+        let guard = &epoch::pin();
+        let map = self.get_map(guard);
         if let Some(info) = map.get(&label) {
             info.lifetime.set_end(si);
         }
@@ -215,29 +221,27 @@ impl VertexTypeManager {
     }
 
     pub fn gc(&self, si: SnapshotId) -> GraphResult<Vec<TableId>> {
-        unsafe {
-            let guard = epoch::pin();
-            let map = self.get_shared_map(&guard);
-            let map_ref: &VertexMap = map.deref();
-            let mut b = Vec::new();
-            let mut table_ids = Vec::new();
-            for (label, info) in map_ref {
-                table_ids.append(&mut info.gc(si)?);
-                if info.is_obsolete_at(si) {
-                    b.push(*label);
-                }
+        let guard = &epoch::pin();
+        let map = self.get_shared_map(guard);
+        let map_ref: &VertexMap = unsafe { map.deref() };
+        let mut b = Vec::new();
+        let mut table_ids = Vec::new();
+        for (label, info) in map_ref {
+            table_ids.append(&mut info.gc(si)?);
+            if info.is_obsolete_at(si) {
+                b.push(*label);
             }
-            if !b.is_empty() {
-                let mut map_clone = map_ref.clone();
-                for label in b {
-                    map_clone.remove(&label);
-                }
-                self.map
-                    .store(Owned::new(map_clone), Ordering::Relaxed);
-                guard.defer_destroy(map);
-            }
-            Ok(table_ids)
         }
+        if !b.is_empty() {
+            let mut map_clone = map_ref.clone();
+            for label in b {
+                map_clone.remove(&label);
+            }
+            self.map
+                .store(Owned::new(map_clone).into_shared(guard), Ordering::Relaxed);
+            unsafe { guard.defer_destroy(map) };
+        }
+        Ok(table_ids)
     }
 
     fn get_map(&self, guard: &Guard) -> &'static VertexMap {

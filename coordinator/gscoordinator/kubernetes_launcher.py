@@ -99,6 +99,9 @@ class KubernetesClusterLauncher(AbstractLauncher):
         preemptive=None,
         service_type=None,
         timeout_seconds=None,
+        kube_timeout_seconds=1,
+        retry_time_seconds=2,
+        del_retry_time_seconds=1,
         vineyard_cpu=None,
         vineyard_deployment=None,
         vineyard_image=None,
@@ -162,6 +165,12 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
         assert timeout_seconds is not None
         self._timeout_seconds = timeout_seconds
+        # timeout seconds waiting for kube service ready
+        self._kube_timeout_seconds = kube_timeout_seconds
+        # retry time when waiting for kube service ready
+        self._retry_time_seconds = retry_time_seconds
+        # retry time when deleting dangling coordinators
+        self._del_retry_time_seconds = del_retry_time_seconds
 
         self._waiting_for_delete = waiting_for_delete
 
@@ -636,12 +645,13 @@ class KubernetesClusterLauncher(AbstractLauncher):
             container,
             str(self._interactive_port),  # executor port
             str(self._interactive_port + 1),  # executor rpc port
-            str(self._interactive_port + 2),  # frontend port
+            str(self._interactive_port + 2),  # frontend gremlin port
+            str(self._interactive_port + 3),  # frontend cypher port
             self._coordinator_name,
             engine_selector,
             params,
         ]
-        self._interactive_port += 3
+        self._interactive_port += 4
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
         process = subprocess.Popen(
             cmd,
@@ -947,7 +957,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
     def _create_frontend_service(self):
         logger.info("Creating frontend service...")
-        service = self._engine_cluster.get_interactive_frontend_service(8233)
+        service = self._engine_cluster.get_interactive_frontend_service(8233, 7687)
         service.metadata.owner_references = self._owner_references
         response = self._core_api.create_namespaced_service(self._namespace, service)
         self._resource_object.append(response)
@@ -1017,7 +1027,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
                             self._core_api.list_namespaced_event,
                             namespace,
                             field_selector=field_selector,
-                            timeout_seconds=1,
+                            timeout_seconds=self._kube_timeout_seconds,
                         )
                         for event in stream:
                             msg = f"[{pod_name}]: {event['object'].message}"
@@ -1031,7 +1041,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
                 break
             if self._timeout_seconds + start_time < time.time():
                 raise TimeoutError("GraphScope Engines launching timeout.")
-            time.sleep(2)
+            time.sleep(self._retry_time_seconds)
 
         self._pod_name_list = []
         self._pod_ip_list = []
@@ -1243,12 +1253,12 @@ class KubernetesClusterLauncher(AbstractLauncher):
                         )
                     break
                 else:
-                    time.sleep(1)
                     if time.time() - start_time > self._timeout_seconds:
                         logger.error(
                             "Deleting dangling coordinator %s timeout",
                             self._coordinator_name,
                         )
+                    time.sleep(self._del_retry_time_seconds)
 
     def _get_owner_reference_as_json(self):
         owner_reference = [
@@ -1361,18 +1371,19 @@ class KubernetesClusterLauncher(AbstractLauncher):
                                     )
                                 break
                             else:
-                                time.sleep(1)
                                 if time.time() - start_time > self._timeout_seconds:
                                     logger.error(
                                         "Deleting namespace %s timeout", self._namespace
                                     )
+                                time.sleep(self._del_retry_time_seconds)
+
                 else:
                     # delete coordinator deployment and service
                     self._delete_dangling_coordinator()
             self._serving = False
             logger.info("Kubernetes launcher stopped")
 
-    def _allocate_learining_engine(self, object_id):
+    def _allocate_learning_engine(self, object_id):
         # check the learning engine flag
         if not self._with_learning:
             raise NotImplementedError("Learning engine not enabled")
@@ -1441,7 +1452,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         )
 
     def create_learning_instance(self, object_id, handle, config):
-        pod_name_list, _, pod_host_ip_list = self._allocate_learining_engine(object_id)
+        pod_name_list, _, pod_host_ip_list = self._allocate_learning_engine(object_id)
         if not pod_name_list or not pod_host_ip_list:
             raise RuntimeError("Failed to allocate learning engine")
         return self._distribute_learning_process(

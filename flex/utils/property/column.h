@@ -101,6 +101,31 @@ using DoubleColumn = TypedColumn<double>;
 std::shared_ptr<ColumnBase> CreateColumn(
     PropertyType type, StorageStrategy strategy = StorageStrategy::kMem);
 
+/// Create RefColumn for ease of usage for hqps
+class RefColumnBase {
+ public:
+  virtual ~RefColumnBase() {}
+};
+
+// Different from TypedColumn, RefColumn is a wrapper of mmap_array
+template <typename T>
+class TypedRefColumn : public RefColumnBase {
+ public:
+  using value_type = T;
+
+  TypedRefColumn(const mmap_array<T>& buffer, StorageStrategy strategy)
+      : buffer_(buffer), strategy_(strategy) {}
+  TypedRefColumn(const TypedColumn<T>& column)
+      : buffer_(column.buffer()), strategy_(column.storage_strategy()) {}
+  ~TypedRefColumn() {}
+
+  inline T get_view(size_t index) const { return buffer_[index]; }
+
+ private:
+  const mmap_array<T>& buffer_;
+  StorageStrategy strategy_;
+};
+
 }  // namespace gs
 
 #endif  // GRAPHSCOPE_PROPERTY_COLUMN_H_

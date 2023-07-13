@@ -17,15 +17,14 @@
 #
 
 import logging
-from copy import deepcopy
 from enum import Enum
 
 from gremlin_python.driver.client import Client
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.anonymous_traversal import traversal
 
-from graphscope.framework.dag import DAGNode
 from graphscope.framework.dag_utils import gremlin_to_subgraph
+from graphscope.framework.utils import deprecated
 
 logger = logging.getLogger("graphscope")
 
@@ -44,7 +43,7 @@ class InteractiveQuery(object):
     `Gremlin-Python <https://pypi.org/project/gremlinpython/>`_,
     which implements Gremlin within the Python language.
     It also can expose gremlin endpoint which can be used by
-    any other standard gremlin console, with the method `graph_url()`.
+    any other standard gremlin console, with the method `gremlin_url()`.
 
     It also has a method called `subgraph` which can extract some fragments
     from origin graph, produce a new, smaller but concise graph stored in vineyard,
@@ -54,22 +53,40 @@ class InteractiveQuery(object):
     to get a `GraphTraversalSource` for further traversal.
     """
 
-    def __init__(self, graph, frontend_endpoint):
+    def __init__(self, graph, frontend_gremlin_endpoint, frontend_cypher_endpoint):
         """Construct a :class:`InteractiveQuery` object."""
         # graph object id stored in vineyard
         self._graph = graph
         self._session = graph._session
-        frontend_endpoint = frontend_endpoint.split(",")
-        self._graph_url = [f"ws://{endpoint}/gremlin" for endpoint in frontend_endpoint]
+        self._gremlin_url = [
+            f"ws://{endpoint}/gremlin"
+            for endpoint in frontend_gremlin_endpoint.split(",")
+        ]
+        self._cypher_url = [
+            f"neo4j://{endpoint}" for endpoint in frontend_cypher_endpoint.split(",")
+        ]
         self._conn = None
         self._gremlin_client = None
+        self._cypher_driver = None
         self.closed = False
 
     @property
+    @deprecated("Please use `gremlin_url` instead")
     def graph_url(self):
+        """This will be deprecated in the future, use `gremlin_url` instead."""
+        return self._gremlin_url
+
+    @property
+    def gremlin_url(self):
         """The gremlin graph url can be used with any standard gremlin console,
         e.g., tinkerpop."""
-        return self._graph_url
+        return self._gremlin_url
+
+    @property
+    def cypher_url(self):
+        """The cypher graph url can be used with any standard cypher console,
+        e.g., neo4j."""
+        return self._cypher_url
 
     @property
     def object_id(self):
@@ -83,13 +100,14 @@ class InteractiveQuery(object):
     def session_id(self):
         return self._session.session_id
 
-    def execute(self, query, request_options=None):
+    def execute(self, query, lang="gremlin", request_options=None, **kwargs):
         """A simple wrapper around `submit`, for compatibility"""
-        return self.submit(query, request_options=request_options)
+        return self.submit(query, lang, request_options=request_options, **kwargs)
 
-    def submit(self, query, request_options=None):
-        """Execute gremlin querying scripts.
+    def submit(self, query, lang="gremlin", request_options=None, **kwargs):
+        """Execute gremlin or cypher querying scripts.
 
+        <Gremlin>
         Args:
             query (str): Scripts that written in gremlin query language.
             request_options (dict, optional): Gremlin request options. format:
@@ -99,17 +117,45 @@ class InteractiveQuery(object):
 
         Returns:
             :class:`gremlin_python.driver.client.ResultSet`:
+
+        <Cypher>
+        Args:
+            query (str): Scripts that written in cypher query language.
+            kwargs (dict, optional): Cypher request options. e.g.:
+            routing_ = RoutingControl.READ
+
+        Returns:
+            :class:`neo4j.work.result.Result`:
         """
-        return self.gremlin_client.submit(query, request_options=request_options)
+        if lang == "gremlin":
+            return self.gremlin_client.submit(query, request_options=request_options)
+        elif lang == "cypher":
+            return self.cypher_driver.execute_query(query, **kwargs)
+        else:
+            raise ValueError(
+                f"Unsupported query language: {lang} other than gremlin and cypher"
+            )
 
     @property
     def gremlin_client(self):
         if self._gremlin_client is None:
-            self._gremlin_client = Client(self._graph_url[0], "g")
+            self._gremlin_client = Client(self._gremlin_url[0], "g")
         return self._gremlin_client
 
-    def subgraph(self, gremlin_script, request_options=None):
-        """Create a subgraph, which input is the executor result of `gremlin_script`.
+    @property
+    def cypher_driver(self):
+        from neo4j import GraphDatabase
+
+        if self._cypher_driver is None:
+            self._cypher_driver = GraphDatabase.driver(
+                self._cypher_url[0], auth=("", "")
+            )
+        return self._cypher_driver
+
+    def subgraph(self, gremlin_script, lang="gremlin", request_options=None):
+        """We currently only support subgraph using gremlin script.
+
+        Create a subgraph, which input is the executor result of `gremlin_script`.
 
         Any gremlin script that output a set of edges can be used to construct a subgraph.
 
@@ -124,6 +170,7 @@ class InteractiveQuery(object):
             :class:`graphscope.framework.graph.GraphDAGNode`:
                 A new graph constructed by the gremlin output, that also stored in vineyard.
         """
+        assert lang == "gremlin", "Only support gremlin script"
         # avoid circular import
         from graphscope.framework.graph import GraphDAGNode
 
@@ -136,7 +183,9 @@ class InteractiveQuery(object):
         return self._session._wrapper(GraphDAGNode(self._session, op))
 
     def traversal_source(self):
-        """Create a GraphTraversalSource and return.
+        """We currently only support traversal_source using gremlin.
+
+        Create a GraphTraversalSource and return.
         Once `g` has been created using a connection, we can start to write
         Gremlin traversals to query the remote graph.
 
@@ -158,7 +207,7 @@ class InteractiveQuery(object):
             `GraphTraversalSource`
         """
         if self._conn is None:
-            self._conn = DriverRemoteConnection(self._graph_url[0], "g")
+            self._conn = DriverRemoteConnection(self._gremlin_url[0], "g")
         return traversal().withRemote(self._conn)
 
     def close(self):
@@ -173,6 +222,11 @@ class InteractiveQuery(object):
         if self._gremlin_client is not None:
             try:
                 self._gremlin_client.close()
+            except:  # noqa: E722
+                pass
+        if self._cypher_driver is not None:
+            try:
+                self._cypher_driver.close()
             except:  # noqa: E722
                 pass
         self._session._close_interactive_instance(self)

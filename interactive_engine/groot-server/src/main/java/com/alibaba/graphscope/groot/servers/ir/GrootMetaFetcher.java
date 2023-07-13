@@ -25,6 +25,7 @@ import com.alibaba.graphscope.groot.common.util.IrSchemaParser;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.io.IOException;
 import java.util.*;
 
 public class GrootMetaFetcher implements IrMetaFetcher {
@@ -44,10 +45,14 @@ public class GrootMetaFetcher implements IrMetaFetcher {
         if (pair != null
                 && (schema = pair.getLeft()) != null
                 && (snapshotId = pair.getRight()) != null) {
-            return Optional.of(
-                    new IrMeta(
-                            new SnapshotId(true, snapshotId),
-                            new GraphSchemaWrapper(schema, parser.parse(schema), true)));
+            try {
+                return Optional.of(
+                        new IrMeta(
+                                new SnapshotId(true, snapshotId),
+                                new GraphSchemaWrapper(schema, parser.parse(schema), true)));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         } else {
             return Optional.empty();
         }

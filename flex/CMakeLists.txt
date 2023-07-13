@@ -9,6 +9,8 @@ project (
   VERSION ${FLEX_VERSION}
   LANGUAGES CXX)
 
+option(BUILD_DOC "Whether to build doc" ON)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 
 set(DEFAULT_BUILD_TYPE "Release")
@@ -51,18 +53,20 @@ else ()
 endif ()
 
 # Find Doxygen
-find_package(Doxygen)
-# Add a target to generate the documentation
-if(DOXYGEN_FOUND)
-    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in)
-    set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
-    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-    add_custom_target(doc ALL
-            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-            WORKING_DIRECTORY ..
-            COMMENT "Generating API documentation with Doxygen"
-            VERBATIM)
-endif(DOXYGEN_FOUND)
+if (BUILD_DOC)
+    find_package(Doxygen)
+    # Add a target to generate the documentation
+    if(DOXYGEN_FOUND)
+        set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in)
+        set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+        configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+        add_custom_target(doc ALL
+                COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+                WORKING_DIRECTORY ..
+                COMMENT "Generating API documentation with Doxygen"
+                VERBATIM)
+    endif(DOXYGEN_FOUND)
+endif()
 
 add_subdirectory(utils)
 add_subdirectory(storages)
@@ -70,7 +74,9 @@ add_subdirectory(engines)
 add_subdirectory(bin)
 
 
-set(CPACK_PACKAGE_NAME "graphscope_flex")
+if (NOT DEFINED CPACK_PACKAGE_NAME)
+  set(CPACK_PACKAGE_NAME "graphscope_flex")
+endif ()
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Flex module of GraphScope")
 set(CPACK_PACKAGE_VENDOR "GraphScope")
 set(CPACK_PACKAGE_VERSION ${FLEX_VERSION})

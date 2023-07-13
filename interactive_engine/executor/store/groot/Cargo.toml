@@ -14,7 +14,7 @@ serde_derive = "1.0"
 serde_json = "1.0"
 structopt = "0.3"
 tempfile = "3"
-crossbeam-epoch = "0.7"
+crossbeam-epoch = "0.9"
 rust-ini = "0.13"
 libc = "0.2"
 log4rs = "1.2"
@@ -22,7 +22,7 @@ grpcio = "0.10"
 grpcio-sys = { version = "0.10", features = ["openssl-vendored"] }
 # deactivation of bzip2 due to https://github.com/rust-rocksdb/rust-rocksdb/issues/609
 # deactivation of zstd due to the 'hidden symbol "ZSTD_maxCLevel" is referenced by DSO' error
-rocksdb = { version = "0.19.0", features = ["snappy", "lz4", "zlib"], default-features = false }
+rocksdb = { version = "0.21.0", features = ["snappy", "lz4", "zlib"], default-features = false }
 dyn_type = { path = "../../common/dyn_type" }
 
 [build-dependencies]

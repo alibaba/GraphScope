@@ -25,7 +25,7 @@ import com.google.common.collect.Lists;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalValues;
-import org.apache.commons.lang3.NotImplementedException;
+import org.apache.calcite.rex.RexNode;
 
 import java.util.List;
 
@@ -52,7 +52,10 @@ public class LogicalPlanVisitor extends CypherGSBaseVisitor<LogicalPlan> {
                             .build();
             return new LogicalPlan(regularQuery, returnEmpty(regularQuery));
         } else {
-            throw new NotImplementedException("procedure call is unimplemented yet");
+            RexNode procedureCall =
+                    new ProcedureCallVisitor(this.builder, this.irMeta)
+                            .visitOC_StandaloneCall(ctx.oC_StandaloneCall());
+            return new LogicalPlan(procedureCall);
         }
     }
 

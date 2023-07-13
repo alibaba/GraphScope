@@ -28,6 +28,7 @@ import subprocess
 import tempfile
 import threading
 import time
+import warnings
 from queue import Empty
 from queue import Queue
 
@@ -680,3 +681,14 @@ def _to_numpy_dtype(dtype):
     if npdtype is None:
         raise NotImplementedError("Do not support type {}".format(dtype))
     return npdtype
+
+
+def deprecated(msg):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            warnings.warn(f"Deprecated usage: {msg}", DeprecationWarning, stacklevel=2)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

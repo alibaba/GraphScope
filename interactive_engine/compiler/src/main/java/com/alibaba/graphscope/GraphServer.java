@@ -88,7 +88,9 @@ public class GraphServer {
                             "dbms.connector.bolt.listen_address",
                             ":" + FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(this.configs),
                             "dbms.connector.bolt.advertised_address",
-                            ":" + FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(this.configs)),
+                            ":" + FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(this.configs),
+                            "dbms.transaction.timeout",
+                            FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(this.configs) + "ms"),
                     false);
         }
     }
@@ -131,7 +133,10 @@ public class GraphServer {
     }
 
     public static void main(String[] args) throws Exception {
-        Configs configs = new Configs("conf/ir.compiler.properties", FileLoadType.RELATIVE_PATH);
+        if (args.length == 0 || args[0].isEmpty()) {
+            throw new IllegalArgumentException("usage: GraphServer '<path_to_config_file>'");
+        }
+        Configs configs = new Configs(args[0], FileLoadType.RELATIVE_PATH);
         IrMetaQueryCallback queryCallback =
                 new IrMetaQueryCallback(new ExperimentalMetaFetcher(configs));
         GraphServer server =

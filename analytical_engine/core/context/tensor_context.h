@@ -278,9 +278,9 @@ class TensorContext<FRAG_T, std::string> : public grape::ContextBase {
     CHECK_EQ(data.size(), size);
 
     set_shape(shape);
-    arrow::StringBuilder builder;
-    builder.AppendValues(data);
-    builder.Finish(&(tensor_.data()));
+    arrow::LargeStringBuilder builder;
+    CHECK_ARROW_ERROR(builder.AppendValues(data));
+    CHECK_ARROW_ERROR(builder.Finish(&(tensor_.data())));
   }
 
   void assign(const data_t& data) { tensor_.fill(data); }

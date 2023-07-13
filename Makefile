@@ -141,6 +141,7 @@ interactive: $(INTERACTIVE_DIR)/assembly/target/graphscope.tar.gz
 
 $(INTERACTIVE_DIR)/assembly/target/graphscope.tar.gz:
 	cd $(INTERACTIVE_DIR) && \
+	mvn --version && \
 	mvn package -DskipTests -Drust.compile.mode=$(BUILD_TYPE) -P graphscope -Drevision=$(VERSION) --quiet
 
 learning-install: learning

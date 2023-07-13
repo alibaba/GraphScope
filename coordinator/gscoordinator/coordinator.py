@@ -64,7 +64,7 @@ from gscoordinator.object_manager import LearningInstanceManager
 from gscoordinator.object_manager import ObjectManager
 from gscoordinator.op_executor import OperationExecutor
 from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
-from gscoordinator.utils import check_gremlin_server_ready
+from gscoordinator.utils import check_server_ready
 from gscoordinator.utils import create_single_op_dag
 from gscoordinator.utils import str2bool
 from gscoordinator.version import __version__
@@ -172,6 +172,8 @@ class CoordinatorServiceServicer(
 
         # dangling check
         self._dangling_timeout_seconds = dangling_timeout_seconds
+        self._comm_timeout_seconds = 120
+        self._poll_timeout_seconds = 2
         self._dangling_detecting_timer = None
         self._cleanup_instance = False
 
@@ -237,6 +239,9 @@ class CoordinatorServiceServicer(
         self._connected = True
         # Cleanup after timeout seconds
         self._dangling_timeout_seconds = request.dangling_timeout_seconds
+        # other timeout seconds
+        self._comm_timeout_seconds = getattr(request, "comm_timeout_seconds", 120)
+        self._poll_timeout_seconds = getattr(request, "poll_timeout_seconds", 2)
         # If true, also delete graphscope instance (such as pods) in closing process
         self._cleanup_instance = request.cleanup_instance
 
@@ -382,7 +387,9 @@ class CoordinatorServiceServicer(
     def FetchLogs(self, request, context):
         while self._streaming_logs:
             try:
-                info_message, error_message = self._pipe_merged.poll(timeout=2)
+                info_message, error_message = self._pipe_merged.poll(
+                    timeout=self._poll_timeout_seconds
+                )
             except queue.Empty:
                 info_message, error_message = "", ""
             except Exception as e:
@@ -441,10 +448,16 @@ class CoordinatorServiceServicer(
             return ""
 
         # frontend endpoint pattern
-        FRONTEND_PATTERN = re.compile("(?<=FRONTEND_ENDPOINT:).*$")
+        FRONTEND_GREMLIN_PATTERN = re.compile("(?<=FRONTEND_GREMLIN_ENDPOINT:).*$")
+        FRONTEND_CYPHER_PATTERN = re.compile("(?<=FRONTEND_CYPHER_ENDPOINT:).*$")
         # frontend external endpoint, for clients that are outside of cluster to connect
         # only available in kubernetes mode, exposed by NodePort or LoadBalancer
-        FRONTEND_EXTERNAL_PATTERN = re.compile("(?<=FRONTEND_EXTERNAL_ENDPOINT:).*$")
+        FRONTEND_EXTERNAL_GREMLIN_PATTERN = re.compile(
+            "(?<=FRONTEND_EXTERNAL_GREMLIN_ENDPOINT:).*$"
+        )
+        FRONTEND_EXTERNAL_CYPHER_PATTERN = re.compile(
+            "(?<=FRONTEND_EXTERNAL_CYPHER_ENDPOINT:).*$"
+        )
 
         # create instance
         object_id = request.object_id
@@ -460,17 +473,28 @@ class CoordinatorServiceServicer(
             self._object_manager.put(object_id, gie_manager)
             # 60 seconds is enough, see also GH#1024; try 120
             # already add errs to outs
-            outs, _ = proc.communicate(timeout=120)  # throws TimeoutError
+            outs, _ = proc.communicate(
+                timeout=self._comm_timeout_seconds
+            )  # throws TimeoutError
             return_code = proc.poll()
             if return_code != 0:
                 raise RuntimeError(f"Error code: {return_code}, message {outs}")
-            # match frontend endpoint and check for ready
-            endpoint = _match_frontend_endpoint(FRONTEND_PATTERN, outs)
+            # match frontend endpoints and check for ready
+            gremlin_endpoint = _match_frontend_endpoint(FRONTEND_GREMLIN_PATTERN, outs)
+            cypher_endpoint = _match_frontend_endpoint(FRONTEND_CYPHER_PATTERN, outs)
+            logger.debug("Got endpoints: %s %s", gremlin_endpoint, cypher_endpoint)
             # coordinator use internal endpoint
-            gie_manager.set_endpoint(endpoint)
-            if check_gremlin_server_ready(endpoint):  # throws TimeoutError
+            gie_manager.set_endpoint(gremlin_endpoint)
+            if check_server_ready(
+                gremlin_endpoint, server="gremlin"
+            ) and check_server_ready(
+                cypher_endpoint, server="cypher"
+            ):  # throws TimeoutError
                 logger.info(
-                    "Built interactive frontend %s for graph %ld", endpoint, object_id
+                    "Built interactive frontend gremlin: %s & cypher: %s for graph %ld",
+                    gremlin_endpoint,
+                    cypher_endpoint,
+                    object_id,
                 )
         except Exception as e:
             context.set_code(grpc.StatusCode.ABORTED)
@@ -480,11 +504,25 @@ class CoordinatorServiceServicer(
             self._launcher.close_interactive_instance(object_id)
             self._object_manager.pop(object_id)
             return message_pb2.CreateInteractiveInstanceResponse()
-        external_endpoint = _match_frontend_endpoint(FRONTEND_EXTERNAL_PATTERN, outs)
+        external_gremlin_endpoint = _match_frontend_endpoint(
+            FRONTEND_EXTERNAL_GREMLIN_PATTERN, outs
+        )
+        external_cypher_endpoint = _match_frontend_endpoint(
+            FRONTEND_EXTERNAL_CYPHER_PATTERN, outs
+        )
+        logger.debug(
+            "Got external endpoints: %s %s",
+            external_gremlin_endpoint,
+            external_cypher_endpoint,
+        )
+
         # client use external endpoint (k8s mode), or internal endpoint (standalone mode)
-        endpoint = external_endpoint or endpoint
+        gremlin_endpoint = external_gremlin_endpoint or gremlin_endpoint
+        cypher_endpoint = external_cypher_endpoint or cypher_endpoint
         return message_pb2.CreateInteractiveInstanceResponse(
-            gremlin_endpoint=endpoint, object_id=object_id
+            gremlin_endpoint=gremlin_endpoint,
+            cypher_endpoint=cypher_endpoint,
+            object_id=object_id,
         )
 
     def CreateLearningInstance(self, request, context):
