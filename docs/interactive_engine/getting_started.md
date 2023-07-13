@@ -105,7 +105,7 @@ As shown in the above example, it is very easy to use GraphScope to interactivel
 
 In addition to the above local-machine entr\'ee, we have prepared the following topics for your reference.
 
-- GIE can be deployed in a distributed environment to process very large graph. [How to do that?](./deployment)
-- GIE has been designed to integrate with the Tinkerpop ecosystem, with necessary extensions such as some syntactic sugars to facilitate the use of Gremlin. [Please look into the details!](./tinkerpop/tinkerpop_gremlin.md)
-- - GIE has been designed to integrate with the Neo4j ecosystem. [Please look into the details!](./neo4j/cypher_sdk.md)
-- Want to learn more about the technique details of GIE. [This is the design and architecture of GIE!](./design_of_gie)
+- GIE can be [deployed standalone](./deployment.md) in a distributed environment to process very large graph.
+- GIE has been designed to [integrate with the Tinkerpop ecosystem](./tinkerpop/tinkerpop_gremlin.md), with necessary extensions such as some [syntactic sugars](./tinkerpop/supported_gremlin_steps.md) to ease the use of Gremlin.
+- GIE has been designed to [integrate with the Neo4j ecosystem](./neo4j/cypher_sdk.md).
+- Learn more about the [design of GIE](./design_of_gie).
