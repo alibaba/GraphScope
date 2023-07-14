@@ -22,7 +22,6 @@ limitations under the License.
 #include <ostream>
 #include <vector>
 
-#define nssv_CONFIG_SELECT_STRING_VIEW nssv_STRING_VIEW_NONSTD
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
 
