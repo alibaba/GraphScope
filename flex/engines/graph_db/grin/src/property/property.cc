@@ -73,24 +73,6 @@ GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_properties_by_name(GRIN_GRAPH g,
 }
 #endif
 
-#ifdef GRIN_WITH_EDGE_PROPERTY_NAME
-const char* grin_get_edge_property_name(GRIN_GRAPH g, GRIN_EDGE_TYPE etype,
-                                        GRIN_EDGE_PROPERTY ep) {
-  return static_cast<const char*>(NULL);
-}
-
-GRIN_EDGE_PROPERTY grin_get_edge_property_by_name(GRIN_GRAPH g,
-                                                  GRIN_EDGE_TYPE et,
-                                                  const char* name) {
-  return NULL;
-}
-
-GRIN_EDGE_PROPERTY_LIST grin_get_edge_properties_by_name(GRIN_GRAPH g,
-                                                         const char* name) {
-  return NULL;
-}
-#endif
-
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 bool grin_equal_vertex_property(GRIN_GRAPH g, GRIN_VERTEX_PROPERTY vp1,
                                 GRIN_VERTEX_PROPERTY vp2) {

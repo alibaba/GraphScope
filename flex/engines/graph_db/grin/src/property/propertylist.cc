@@ -159,15 +159,3 @@ bool grin_insert_edge_property_to_list(GRIN_GRAPH g,
   return true;
 }
 #endif
-
-#ifdef GRIN_TRAIT_NATURAL_ID_FOR_EDGE_PROPERTY
-GRIN_EDGE_PROPERTY grin_get_edge_property_by_id(GRIN_GRAPH g, GRIN_EDGE_TYPE et,
-                                                GRIN_EDGE_PROPERTY_ID pid) {
-  return NULL;
-}
-
-GRIN_EDGE_PROPERTY_ID grin_get_edge_property_id(GRIN_GRAPH g, GRIN_EDGE_TYPE et,
-                                                GRIN_EDGE_PROPERTY ep) {
-  return 0;
-}
-#endif
