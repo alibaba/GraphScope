@@ -1,6 +1,6 @@
 #include "grin/predefine.h"
 
-#include "../../storages/rt_mutable_graph/mutable_property_fragment.h"
+#include "storages/rt_mutable_graph/mutable_property_fragment.h"
 
 typedef gs::oid_t GRIN_OID_T;
 typedef gs::vid_t GRIN_VID_T;
