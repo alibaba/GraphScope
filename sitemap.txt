@@ -12,6 +12,7 @@ https://graphscope.io/docs/latest/zh/
 https://slack.graphscope.io
 
 https://graphscope.io/blog/
+https://graphscope.io/blog/tech/2023/07/11/Simplifying-Complex-Graph-Loading-with-Jupyter-Notebook
 https://graphscope.io/blog/releasenotes/2023/07/27/release-notes-0.23.0
 https://graphscope.io/blog/tech/2023/07/05/Visualizing-Insights-from-Large-Graphs.html
 https://graphscope.io/blog/tech/2023/06/28/GAIA-IR-Graph-Interactive-Query-Engine-in-GraphScope
@@ -43,6 +44,3 @@ https://graphscope.io/blog/tech/2021/03/25/a-review-of-programming-models-for-pa
 https://graphscope.io/blog/newsroom/2021/02/01/introducing-graphscope-playground
 https://graphscope.io/blog/releasenotes/2021/02/01/release-notes-0.2.0
 https://graphscope.io/blog/newsroom/2020/12/07/say-hello-to-graphscope
-
-
-

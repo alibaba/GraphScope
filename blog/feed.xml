@@ -5,9 +5,222 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 11 Jul 2023 06:35:06 +0000</pubDate>
-    <lastBuildDate>Tue, 11 Jul 2023 06:35:06 +0000</lastBuildDate>
+    <pubDate>Fri, 14 Jul 2023 04:58:59 +0000</pubDate>
+    <lastBuildDate>Fri, 14 Jul 2023 04:58:59 +0000</lastBuildDate>
     <generator>Jekyll v4.3.2</generator>
+    
+      <item>
+        <title>Simplifying Complex Graph Loading with Jupyter Notebook</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-11-title-picture.jpg&quot; alt=&quot;jupyter-notebook&quot; /&gt;
+Schema construction and graph data loading are usually the complicated steps in graph computing processes. Currently, GraphScope has released a &lt;a href=&quot;https://pypi.org/project/graphscope-notebook/&quot;&gt;graphscope-notebook plugin&lt;/a&gt; which through an interactive way help users complete the graph loading in the Jupyterlab environment. This article will provide a detailed introduction to the use of this plugin, and users can try it in the &lt;a href=&quot;https://try.graphscope.app/&quot;&gt;Playground&lt;/a&gt; environment.&lt;/p&gt;
+
+&lt;h3 id=&quot;background&quot;&gt;Background&lt;/h3&gt;
+&lt;p&gt;For any graph computing product, the loading of graph data is often the first and most important step, as well as a very complicated step, mainly due to the complexity of the graph data itself. Therefore, in order to improve the loading experience, GraphScope has built-in various datasets. For example, for the &lt;a href=&quot;https://tinkerpop.apache.org/docs/current/tutorials/getting-started&quot;&gt;TinkerPop Modern Graph&lt;/a&gt;, users just need one statement to complete the loading operation:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graphscope.dataset&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;load_modern_graph&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;modern_graph&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;load_modern_graph&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;However, for the user’s dataset, the loading process needs to define a very long code, we use &lt;a href=&quot;https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag&quot;&gt;ogbn-mag&lt;/a&gt; this property graph as an example:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-11-modern-graph-schema.jpg&quot; alt=&quot;modern-graph-schema&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;This graph has four kinds of vertices, labeled as paper, author, institution and field_of_study. There are four kinds of edges connecting them, each kind of edges has a label and specifies the vertex labels for its two ends. For example, cites edges connect two vertices labeled paper. Another example is writes, it requires the source vertex is labeled author and the destination is a paper vertex. All the vertices and edges may have properties. e.g., paper vertices have properties like features, publish year, subject label, etc.&lt;/p&gt;
+
+&lt;p&gt;Usually, each type of vertex(edge) corresponds to a csv file, which can be downloaded from &lt;a href=&quot;https://graphscope.oss-cn-beijing.aliyuncs.com/dataset/ogbn_mag_small.tar.gz&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;tree
+├── author_affiliated_with_institution.csv
+├── author.csv
+├── author_writes_paper.csv
+├── field_of_study.csv
+├── institution.csv
+├── paper_cites_paper.csv
+├── paper.csv
+└── paper_has_topic_field_of_study.csv
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Finally, for the user, the actual loading code is as follows:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-11-modern-graph-python-loading-code.jpg&quot; alt=&quot;modern-graph-python-loading-code&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We can see that even for such a flexible language as Python, the schema definition is very complicated for the above-mentioned property graph containing 4 labels, not to mention hundreds of labels of vertices and edges. Even each vertex(edge) may have thousands of properties.&lt;/p&gt;
+
+&lt;p&gt;Therefore, in order to reduce the complexity and error rate of the loading process, GraphScope has developed a &lt;a href=&quot;https://pypi.org/project/graphscope-notebook/&quot;&gt;graphscope-notebook plugin&lt;/a&gt;, which can help GraphScope to complete the loading process of complex graph data interactively in the Jupyterlab environment. Currently, the plugin has been deployed in the &lt;a href=&quot;https://try.graphscope.app/&quot;&gt;GraphScope Playground&lt;/a&gt; environment, and everyone is welcome to try it out. Next, this article will use this above-mentioned property graph as an example to introduce in detail how to load graph interactively in the Jupyterlab environment.&lt;/p&gt;
+
+&lt;h3 id=&quot;plugin-installation&quot;&gt;Plugin Installation&lt;/h3&gt;
+&lt;p&gt;The plugin requires the following conditions:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;JupyterLab &amp;gt;= 3.0&lt;/li&gt;
+  &lt;li&gt;GraphScope &amp;gt;= 0.12.0&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You can install the plugin with the following command:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pip3 &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;graphscope-notebook
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;It is worth noting that after the plugin installation is complete, you need to restart Jupyterlab. Finally, if the left sidebar displays as following, it means that the installation is successful; Or you can find it in &lt;a href=&quot;https://github.com/alibaba/GraphScope/issues&quot;&gt;GraphScope Community&lt;/a&gt; to report problems encountered.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-11-plugin-installaion-successful.jpg&quot; alt=&quot;plugin-installation-successful&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;using-the-plugin&quot;&gt;Using the Plugin&lt;/h3&gt;
+
+&lt;p&gt;First, we run the following code in the Jupyterlab to create a &lt;a href=&quot;https://graphscope.io/docs/reference/session.html#session-object&quot;&gt;GraphScope Session&lt;/a&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graphscope&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graphscope&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;set_option&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;show_log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sess&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graphscope&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;session&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cluster_type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;hosts&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;After the Session is created, we can monitor the resource in the &lt;strong&gt;left resource panel&lt;/strong&gt;. Click the “+” button to open the interactive page on the right side of the notebook:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-11-open-interactive-page.jpg&quot; alt=&quot;open-interactive-page&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;1-create-vertex&quot;&gt;1. Create Vertex&lt;/h4&gt;
+
+&lt;p&gt;Next, we can complete the graph data construction according to the prompts on the interactive page. Take the “paper” type of vertex as an example. The page for creating points is as follows. After the information is filled in, click “Create Vertex” to complete the construction of the point.&lt;/p&gt;
+
+&lt;p&gt;Next, we can complete the construction of the graph data according to the prompts on the interactive page. Taking the “paper” type of vertex  as an example. After filling in the information, click “Create Vertex” to complete the vertex construction.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-11-create-vertex.jpg&quot; alt=&quot;create-vertex&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The explanations for each field are as follows:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;field&lt;/th&gt;
+      &lt;th&gt;comment&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Label&lt;/td&gt;
+      &lt;td&gt;the label of the vertex&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Data Source&lt;/td&gt;
+      &lt;td&gt;local file represents local data files; online file represents network files, such as OSS, etc.&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Location&lt;/td&gt;
+      &lt;td&gt;the path of the data source&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Header Row&lt;/td&gt;
+      &lt;td&gt;If true, the column name will be read from the first row of the source file&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Delimiter&lt;/td&gt;
+      &lt;td&gt;optional values are “,” “;”, “ “, “\t”&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Extra Params&lt;/td&gt;
+      &lt;td&gt;additional parameters required by data loading, such as OSS key/secret and endpoint&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;ID Field&lt;/td&gt;
+      &lt;td&gt;which column in the source file is selected as the ID, it can be a number like 0, 1, 2, or a string represents the property name&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Select all Properties&lt;/td&gt;
+      &lt;td&gt;If true, all properties are loaded, otherwise the properties to be loaded need to be specified&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h4 id=&quot;2-create-edge&quot;&gt;2. Create Edge&lt;/h4&gt;
+
+&lt;p&gt;Similar to “Create Vertex”, take the “cites” type of edge as an example (paper -&amp;gt; cites -&amp;gt; paper). After the information is filled in, click “Create Edge” to complete the construction of the edge.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-11-create-edge.jpg&quot; alt=&quot;create-edge&quot; /&gt;&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;field&lt;/th&gt;
+      &lt;th&gt;comment&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Edge Only&lt;/td&gt;
+      &lt;td&gt;True for cases where only one edge file and no vertex file&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Src Vertex Label&lt;/td&gt;
+      &lt;td&gt;the label of source vertex&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Dst Vertex Label&lt;/td&gt;
+      &lt;td&gt;the label of destination vertex&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Src Vertex Field&lt;/td&gt;
+      &lt;td&gt;which column used as the ID of the source vertex, it can be a number like 0, 1, 2, or a string represents the property name&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Dst Vertex Field&lt;/td&gt;
+      &lt;td&gt;which column used as the ID of the destination vertex, it can be a number like 0, 1, 2, or a string represents the property name&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h4 id=&quot;3-define-graph-related-information&quot;&gt;3. Define Graph-Related Information&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-11-define-graph-info.jpg&quot; alt=&quot;define-graph-info&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;After building all types of vertices/edges, we set the graph-related information:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;field&lt;/th&gt;
+      &lt;th&gt;comment&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Name&lt;/td&gt;
+      &lt;td&gt;the name of the graph&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;OID Type&lt;/td&gt;
+      &lt;td&gt;the original vertex type of the graph, optional values are “string” and “int64”&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Directed&lt;/td&gt;
+      &lt;td&gt;whether the graph is directed or not&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Generate EID&lt;/td&gt;
+      &lt;td&gt;whether to generate a unique id for each edge. Set True if you need to use the GIE service&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h4 id=&quot;4-generate-code-and-load-graph&quot;&gt;4. Generate Code and Load Graph&lt;/h4&gt;
+
+&lt;p&gt;After all the information above is filled in, select one “Notebook Cell” with the mouse, and click the “Generate Code” button to generate the corresponding graph loading code. Run this cell to finish the data loading process, and monitor the graph resource in the left resource panel:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-11-data-loading-in-cell.jpg&quot; alt=&quot;dataloading-in-cell&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;So far, we have successfully used the graphscope-notebook plugin to complete the graph data loading process. Next, we can refer to the &lt;a href=&quot;https://graphscope.io/docs/&quot;&gt;documentation&lt;/a&gt; to play with GraphScope.&lt;/p&gt;
+
+&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;The graphscope-notebook jupterlab plugin currently has the functions of 1) monitoring GraphScope runtime resources; 2) loading graph through an interactive way to reduce the complexity during graph loading process. In addition, we also plan to add visualization analysis of graph data in subsequent versions. Stay tuned!&lt;/p&gt;
+
+</description>
+        <pubDate>Tue, 11 Jul 2023 11:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2023/07/11/Simplifying-Complex-Graph-Loading-with-Jupyter-Notebook.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/07/11/Simplifying-Complex-Graph-Loading-with-Jupyter-Notebook.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>Release Notes: v0.23.0</title>
@@ -1713,97 +1926,6 @@ In this post, we will introduce the categories, languages, and systems of graph 
         <pubDate>Thu, 25 May 2023 03:10:42 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2023/05/25/Categories-Languages-and-Systems-of-Graph-Computing.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/05/25/Categories-Languages-and-Systems-of-Graph-Computing.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>Graphs and Graph Applications</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/graph-concept.jpg&quot; alt=&quot;graph-concept&quot; /&gt;
-In this post, we will introduce basic concepts of graphs, and some typical applications of graph algorithms.&lt;/p&gt;
-
-&lt;h3 id=&quot;what-is-graph&quot;&gt;What is Graph&lt;/h3&gt;
-
-&lt;p&gt;All things in the universe, from stars and planets as large as they are, to atoms and molecules as small as they are, exist in connections with each other. Graph is the most natural and suitable data structure for describing the relationships between these individual entities. A graph consists of a series of vertices (i.e., individuals) and edges (i.e., relationships between individuals), and both vertices and edges can be accompanied by some description of their own features.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/what-is-graph.jpg&quot; alt=&quot;what-is-graph.jpg&quot; /&gt;&lt;/p&gt;
-&lt;center&gt; Figure 1: Graph definition&lt;/center&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;The graph data commonly seen in our daily life includes social networks, transportation networks, and biological structure. For example, in social networks, each user can be regarded as a vertex in the graph, and the interactive relationship between users can be regarded as an edge. For instance, WeChat’s social network can be seen as a graph composed of vertices (individuals, official accounts) and edges (follow, like). For a city’s transportation network, we can regard each subway station as a vertex and the lines connecting various subway stations as edges. In the biological structure, each protein can be regarded as a vertex, and the interaction between proteins can be regarded as edges.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/social-networks.png&quot; alt=&quot;social-networks.png&quot; /&gt;&lt;/p&gt;
-&lt;center&gt; Figure 2: Social networks (https://medium.com/analytics-vidhya/social-network-analytics-f082f4e21b16)&lt;/center&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/transportation-networks.jpeg&quot; alt=&quot;transportation-networks.jpeg&quot; /&gt;&lt;/p&gt;
-&lt;center&gt; Figure 3: Transportation networks（https://studentwork.prattsi.org&lt;/center&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/biological-structure.png&quot; alt=&quot;biological-structure.png&quot; /&gt;&lt;/p&gt;
-&lt;center&gt; Figure 4: Biological structure (https://www.biorxiv.org/content/10.1101/2020.08.11.246041v1.full&lt;/center&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;algorithms-and-applications-of-graph-computation&quot;&gt;Algorithms and Applications of Graph Computation&lt;/h3&gt;
-
-&lt;p&gt;Broadly speaking, all analytical calculations based on graph data belong to graph computation, making its application areas very extensive. Considering that graph data can describe the relationships between individual entities, graph computation is particularly suitable for analyzing and computing big data related to correlation relationships. The core of graph computation lies in graph algorithms. In the following, we will classify and introduce some commonly used graph algorithms through a few simple examples.&lt;/p&gt;
-
-&lt;h4 id=&quot;graph-analysis-algorithms&quot;&gt;Graph Analysis Algorithms&lt;/h4&gt;
-&lt;p&gt;Graph analysis algorithms analyze and mine the overall characteristics of the whole graph or the local characteristics of partial graph structures by iteratively traversing vertices or edges in graph data. Let’s take path planning as an example to illustrate graph analysis algorithms. Suppose you ordered takeout from a restaurant located at address B while you are at home at address A. How does the delivery man find the optimal delivery route from B to A and deliver the takeout to you as quickly as possible? If we regard every address in the city as a vertex, the road connecting two addresses as an edge, and the length of the road as the feature of the edge, we can transform this problem into finding the shortest path from B to A. To solve this problem, we can use the classic Dijkstra algorithm.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/sssp.jpg&quot; alt=&quot;sssp.jpg&quot; /&gt;&lt;/p&gt;
-&lt;center&gt; Figure 5: The shortest path algorithm&lt;/center&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;In addition to the shortest path algorithm, commonly used graph analysis algorithms also include PageRank (analyzing the importance of vertices in the graph), Breadth-First Search (BFS) (traversing vertices in the graph according to certain rules), and Connected Components (calculating sets of vertices connected to each other in the graph). As shown in the above examples, graph analysis algorithms are based on graph theory and use relationships between vertices to infer the overall or local structural characteristics of complex graph data. We can use these algorithms to discover hidden information and solve practical business problems. For example, search engines can use the PageRank algorithm to rank the weight of web pages and show the most important web pages to users first.&lt;/p&gt;
-
-&lt;h4 id=&quot;community-detection-algorithms&quot;&gt;Community Detection Algorithms&lt;/h4&gt;
-&lt;p&gt;“Community” phenomena often exist in graph data, with each community consisting of a group of vertices. For a community, the relationships (edges) between internal vertices are far more than those between external vertices of the community. Community detection algorithms help to discover group behaviors or preferences within communities, find nested relationships, and are often applied to the visualization of graph data.&lt;/p&gt;
-
-&lt;p&gt;Let’s take the analysis of protein function as an example to introduce community detection algorithms. We can regard each protein as a vertex in the graph, and the interaction between proteins as edges, thus forming a protein interaction graph as shown in the figure below. In biology, proteins need to work closely together to complete a specific physiological function. Through community analysis algorithms, we can obtain several communities (proteins in different communities have different colors), and each community of proteins can be considered to cooperate with each other to complete a specific function.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/protein-function.png&quot; alt=&quot;protein-function.png&quot; /&gt;&lt;/p&gt;
-&lt;center&gt; Figure 6: Community detection algorithm for protein function analysis (https://www.visual-computing.org/2016/01/18/group-structures-graphs/diss_cv01/)&lt;/center&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;h4 id=&quot;pattern-matching-algorithms&quot;&gt;Pattern Matching Algorithms&lt;/h4&gt;
-&lt;p&gt;Another field in which graph computing can demonstrate its capabilities is pattern matching algorithms. Graph pattern matching aims to find a series of subgraph structures that meet the given pattern, which has been widely used in various business scenarios.
-Taking financial transactions as an example, the flow of funds between accounts makes graph data a suitable data structure for representing financial transaction data. In the financial industry, one important type of anomalous transaction that needs to be detected is credit card cash-out, where the funds from a credit card flow through one or more intermediate transactions before returning to the account holder’s account. As shown in the figure below, if we represent the transaction relationship between accounts as a graph structure, this problem can be transformed into finding the “cycle” (starting from a vertex and following the edges can return to this vertex) in the graph.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/fraud-detection.jpg&quot; alt=&quot;fraud-detection.jpg&quot; /&gt;&lt;/p&gt;
-&lt;center&gt; Figure 7: Fraud detection using pattern matching algorithms&lt;/center&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;According to the different structural patterns of the queries, pattern matching algorithms can be divided into the following categories: vertex queries (such as reachability queries, neighbor node queries, etc.), path queries (such as a path satisfying specific conditions), and subgraph structure queries (such as subgraph isomorphism). Pattern matching algorithms are widely used, apart from the financial transaction field, they also play an important role in anomaly event detection in social media and hacker activity detection in computer networks.&lt;/p&gt;
-
-&lt;h4 id=&quot;recommendation-algorithms&quot;&gt;Recommendation Algorithms&lt;/h4&gt;
-&lt;p&gt;There is significant commercial value in using social networks to recommend products that users are most interested in. Currently, collaborative filtering algorithms are the most widely used algorithm in recommendation systems, and graph computing can also enhance collaborative filtering algorithms.
-For example, if two users are friends and live in the same location, and one user visits a restaurant and likes it, the recommendation algorithm will assume that the other user is also likely to be interested in this restaurant and push the information of the restaurant to her. By constructing a graph structure as shown in the figure below, we can naturally solve these problems on the graph.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/rec-alog.jpg&quot; alt=&quot;rec-algo.jpg&quot; /&gt;&lt;/p&gt;
-&lt;center&gt; Figure 8: Recommendation algorithms based on graphs&lt;/center&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;h4 id=&quot;structure-prediction-algorithms&quot;&gt;Structure Prediction Algorithms&lt;/h4&gt;
-&lt;p&gt;Due to the existence of noise in graph data, there are often partial errors in the vertices and edges of the graph, which requires the use of graph structure prediction algorithms to correct the graph data.
-As shown in the figure below, in a social network, users A and B have many mutual friends, but there is no edge between A and B. Graph structure prediction algorithms often assume that two people with many mutual friends are likely to be friends, so they believe that there should be an edge between A and B.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/link-prediction.jpg&quot; alt=&quot;link-prediction.jpg&quot; /&gt;&lt;/p&gt;
-&lt;center&gt; Figure 9: Link prediction based on graphs&lt;/center&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;Traditional graph structure prediction algorithms usually use static indicators such as the number of mutual friends, Katz centrality, and Adamic-Adar to correct the graph structure. In recent years, with the rapid development of deep learning technology, graph neural networks have become another popular class of graph structure prediction algorithms.
-Graph neural networks use neural networks to automatically mine features that are closely related to graph structure prediction, which greatly reduces the degree of human involvement and achieves better results compared to traditional methods.&lt;/p&gt;
-
-&lt;h3 id=&quot;summary&quot;&gt;Summary&lt;/h3&gt;
-
-&lt;p&gt;The core of graph computing is how to model data as a graph structure and how to transform the solution of a problem into a computational problem on the graph structure. When the problem involves relational analysis, graph computing can often naturally represent the solution process as a series of operations and computations on the graph structure. However, the problems that graph computing needs to solve are diverse, and it is difficult to use one set of computation models to solve all problems. We will introduce in detail the classification of graph computing, as well as the characteristics and key technologies of each type of graph computing in later articles.&lt;/p&gt;
-</description>
-        <pubDate>Mon, 22 May 2023 03:10:42 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2023/05/22/Graphs-and-Graph-Applications.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/05/22/Graphs-and-Graph-Applications.html</guid>
         
         
         <category>Tech</category>

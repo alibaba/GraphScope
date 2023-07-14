@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Simplifying Complex Graph Loading with Jupyter Notebook</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2023-07-11">11 Jul 2023</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2023-07-11">11 Jul 2023</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Simplifying Complex Graph Loading with Jupyter Notebook</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2023-07-11-title-picture.jpg" alt="jupyter-notebook" />
+Schema construction and graph data loading are usually the complicated steps in graph computing processes. Currently, GraphScope has released a <a href="https://pypi.org/project/graphscope-notebook/">graphscope-notebook plugin</a> which through an interactive way help users complete the graph loading in the Jupyterlab environment. This article will provide a detailed introduction to the use of this plugin, and users can try it in the <a href="https://try.graphscope.app/">Playground</a> environment.</p>
+
+<h3 id="background">Background</h3>
+<p>For any graph computing product, the loading of graph data is often the first and most important step, as well as a very complicated step, mainly due to the complexity of the graph data itself. Therefore, in order to improve the loading experience, GraphScope has built-in various datasets. For example, for the <a href="https://tinkerpop.apache.org/docs/current/tutorials/getting-started">TinkerPop Modern Graph</a>, users just need one statement to complete the loading operation:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="n">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_modern_graph</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">modern_graph</span> <span class="o">=</span> <span class="nf">load_modern_graph</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>However, for the user’s dataset, the loading process needs to define a very long code, we use <a href="https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag">ogbn-mag</a> this property graph as an example:</p>
+
+<p><img src="/blog/assets/images/2023-07-11-modern-graph-schema.jpg" alt="modern-graph-schema" /></p>
+
+<p>This graph has four kinds of vertices, labeled as paper, author, institution and field_of_study. There are four kinds of edges connecting them, each kind of edges has a label and specifies the vertex labels for its two ends. For example, cites edges connect two vertices labeled paper. Another example is writes, it requires the source vertex is labeled author and the destination is a paper vertex. All the vertices and edges may have properties. e.g., paper vertices have properties like features, publish year, subject label, etc.</p>
+
+<p>Usually, each type of vertex(edge) corresponds to a csv file, which can be downloaded from <a href="https://graphscope.oss-cn-beijing.aliyuncs.com/dataset/ogbn_mag_small.tar.gz">here</a>.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>tree
+├── author_affiliated_with_institution.csv
+├── author.csv
+├── author_writes_paper.csv
+├── field_of_study.csv
+├── institution.csv
+├── paper_cites_paper.csv
+├── paper.csv
+└── paper_has_topic_field_of_study.csv
+</code></pre></div></div>
+
+<p>Finally, for the user, the actual loading code is as follows:</p>
+
+<p><img src="/blog/assets/images/2023-07-11-modern-graph-python-loading-code.jpg" alt="modern-graph-python-loading-code" /></p>
+
+<p>We can see that even for such a flexible language as Python, the schema definition is very complicated for the above-mentioned property graph containing 4 labels, not to mention hundreds of labels of vertices and edges. Even each vertex(edge) may have thousands of properties.</p>
+
+<p>Therefore, in order to reduce the complexity and error rate of the loading process, GraphScope has developed a <a href="https://pypi.org/project/graphscope-notebook/">graphscope-notebook plugin</a>, which can help GraphScope to complete the loading process of complex graph data interactively in the Jupyterlab environment. Currently, the plugin has been deployed in the <a href="https://try.graphscope.app/">GraphScope Playground</a> environment, and everyone is welcome to try it out. Next, this article will use this above-mentioned property graph as an example to introduce in detail how to load graph interactively in the Jupyterlab environment.</p>
+
+<h3 id="plugin-installation">Plugin Installation</h3>
+<p>The plugin requires the following conditions:</p>
+
+<ul>
+  <li>JupyterLab &gt;= 3.0</li>
+  <li>GraphScope &gt;= 0.12.0</li>
+</ul>
+
+<p>You can install the plugin with the following command:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip3 <span class="nb">install </span>graphscope-notebook
+</code></pre></div></div>
+
+<p>It is worth noting that after the plugin installation is complete, you need to restart Jupyterlab. Finally, if the left sidebar displays as following, it means that the installation is successful; Or you can find it in <a href="https://github.com/alibaba/GraphScope/issues">GraphScope Community</a> to report problems encountered.</p>
+
+<p><img src="/blog/assets/images/2023-07-11-plugin-installaion-successful.jpg" alt="plugin-installation-successful" /></p>
+
+<h3 id="using-the-plugin">Using the Plugin</h3>
+
+<p>First, we run the following code in the Jupyterlab to create a <a href="https://graphscope.io/docs/reference/session.html#session-object">GraphScope Session</a>.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="n">graphscope</span>
+<span class="o">&gt;&gt;</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="sh">"</span><span class="s">hosts</span><span class="sh">"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>After the Session is created, we can monitor the resource in the <strong>left resource panel</strong>. Click the “+” button to open the interactive page on the right side of the notebook:</p>
+
+<p><img src="/blog/assets/images/2023-07-11-open-interactive-page.jpg" alt="open-interactive-page" /></p>
+
+<h4 id="1-create-vertex">1. Create Vertex</h4>
+
+<p>Next, we can complete the graph data construction according to the prompts on the interactive page. Take the “paper” type of vertex as an example. The page for creating points is as follows. After the information is filled in, click “Create Vertex” to complete the construction of the point.</p>
+
+<p>Next, we can complete the construction of the graph data according to the prompts on the interactive page. Taking the “paper” type of vertex  as an example. After filling in the information, click “Create Vertex” to complete the vertex construction.</p>
+
+<p><img src="/blog/assets/images/2023-07-11-create-vertex.jpg" alt="create-vertex" /></p>
+
+<p>The explanations for each field are as follows:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>field</th>
+      <th>comment</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Label</td>
+      <td>the label of the vertex</td>
+    </tr>
+    <tr>
+      <td>Data Source</td>
+      <td>local file represents local data files; online file represents network files, such as OSS, etc.</td>
+    </tr>
+    <tr>
+      <td>Location</td>
+      <td>the path of the data source</td>
+    </tr>
+    <tr>
+      <td>Header Row</td>
+      <td>If true, the column name will be read from the first row of the source file</td>
+    </tr>
+    <tr>
+      <td>Delimiter</td>
+      <td>optional values are “,” “;”, “ “, “\t”</td>
+    </tr>
+    <tr>
+      <td>Extra Params</td>
+      <td>additional parameters required by data loading, such as OSS key/secret and endpoint</td>
+    </tr>
+    <tr>
+      <td>ID Field</td>
+      <td>which column in the source file is selected as the ID, it can be a number like 0, 1, 2, or a string represents the property name</td>
+    </tr>
+    <tr>
+      <td>Select all Properties</td>
+      <td>If true, all properties are loaded, otherwise the properties to be loaded need to be specified</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4 id="2-create-edge">2. Create Edge</h4>
+
+<p>Similar to “Create Vertex”, take the “cites” type of edge as an example (paper -&gt; cites -&gt; paper). After the information is filled in, click “Create Edge” to complete the construction of the edge.</p>
+
+<p><img src="/blog/assets/images/2023-07-11-create-edge.jpg" alt="create-edge" /></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>field</th>
+      <th>comment</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Edge Only</td>
+      <td>True for cases where only one edge file and no vertex file</td>
+    </tr>
+    <tr>
+      <td>Src Vertex Label</td>
+      <td>the label of source vertex</td>
+    </tr>
+    <tr>
+      <td>Dst Vertex Label</td>
+      <td>the label of destination vertex</td>
+    </tr>
+    <tr>
+      <td>Src Vertex Field</td>
+      <td>which column used as the ID of the source vertex, it can be a number like 0, 1, 2, or a string represents the property name</td>
+    </tr>
+    <tr>
+      <td>Dst Vertex Field</td>
+      <td>which column used as the ID of the destination vertex, it can be a number like 0, 1, 2, or a string represents the property name</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4 id="3-define-graph-related-information">3. Define Graph-Related Information</h4>
+
+<p><img src="/blog/assets/images/2023-07-11-define-graph-info.jpg" alt="define-graph-info" /></p>
+
+<p>After building all types of vertices/edges, we set the graph-related information:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>field</th>
+      <th>comment</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Name</td>
+      <td>the name of the graph</td>
+    </tr>
+    <tr>
+      <td>OID Type</td>
+      <td>the original vertex type of the graph, optional values are “string” and “int64”</td>
+    </tr>
+    <tr>
+      <td>Directed</td>
+      <td>whether the graph is directed or not</td>
+    </tr>
+    <tr>
+      <td>Generate EID</td>
+      <td>whether to generate a unique id for each edge. Set True if you need to use the GIE service</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4 id="4-generate-code-and-load-graph">4. Generate Code and Load Graph</h4>
+
+<p>After all the information above is filled in, select one “Notebook Cell” with the mouse, and click the “Generate Code” button to generate the corresponding graph loading code. Run this cell to finish the data loading process, and monitor the graph resource in the left resource panel:</p>
+
+<p><img src="/blog/assets/images/2023-07-11-data-loading-in-cell.jpg" alt="dataloading-in-cell" /></p>
+
+<p>So far, we have successfully used the graphscope-notebook plugin to complete the graph data loading process. Next, we can refer to the <a href="https://graphscope.io/docs/">documentation</a> to play with GraphScope.</p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>The graphscope-notebook jupterlab plugin currently has the functions of 1) monitoring GraphScope runtime resources; 2) loading graph through an interactive way to reduce the complexity during graph loading process. In addition, we also plan to add visualization analysis of graph data in subsequent versions. Stay tuned!</p>
+
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Simplifying Complex Graph Loading with Jupyter Notebook&amp;url=https://graphscope.io/tech/2023/07/11/Simplifying-Complex-Graph-Loading-with-Jupyter-Notebook.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2023/07/11/Simplifying-Complex-Graph-Loading-with-Jupyter-Notebook.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2023/07/11/Simplifying-Complex-Graph-Loading-with-Jupyter-Notebook.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2023 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+    
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+</body>
+</html>
