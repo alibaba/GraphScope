@@ -51,6 +51,7 @@ set(YAML_CPP_LIBRARIES "/usr/local/Cellar/yaml-cpp/0.7.0/lib/libyaml-cpp.0.7.0.d
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../..)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../..)
 message(STATUS "${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../storages/rt_mutable_graph)

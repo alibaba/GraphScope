@@ -1,3 +1,6 @@
 [submodule "learning_engine/graph-learn"]
 	path = learning_engine/graph-learn
 	url = https://github.com/alibaba/graph-learn.git
+[submodule "flex/engines/graph_db/grin/include"]
+	path = flex/engines/graph_db/grin/include
+	url = https://github.com/GraphScope/GRIN.git
