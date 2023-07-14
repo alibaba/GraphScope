@@ -73,15 +73,10 @@ size_t grin_get_edge_num(GRIN_GRAPH);
 #endif
 
 // Vertex
-void grin_destroy_vertex(GRIN_GRAPH, GRIN_VERTEX v) {
-  auto _v = static_cast<GRIN_VERTEX_T*>(v);
-  delete _v;
-}
+void grin_destroy_vertex(GRIN_GRAPH, GRIN_VERTEX v) {}
 
 bool grin_equal_vertex(GRIN_GRAPH g, GRIN_VERTEX v1, GRIN_VERTEX v2) {
-  auto _v1 = static_cast<GRIN_VERTEX_T*>(v1);
-  auto _v2 = static_cast<GRIN_VERTEX_T*>(v2);
-  return _v1->label == _v2->label && _v1->vid == _v2->vid;
+  return v1 == v2;
 }
 
 // Data
@@ -99,15 +94,13 @@ void grin_destroy_edge(GRIN_GRAPH, GRIN_EDGE e) {
 
 GRIN_VERTEX grin_get_src_vertex_from_edge(GRIN_GRAPH, GRIN_EDGE e) {
   auto _e = static_cast<GRIN_EDGE_T*>(e);
-  auto v = new GRIN_VERTEX_T();
-  memcpy(v, &(_e->src), sizeof(GRIN_VERTEX_T));
+  auto v = _e->src;
   return v;
 }
 
 GRIN_VERTEX grin_get_dst_vertex_from_edge(GRIN_GRAPH, GRIN_EDGE e) {
   auto _e = static_cast<GRIN_EDGE_T*>(e);
-  auto v = new GRIN_VERTEX_T();
-  memcpy(v, &(_e->dst), sizeof(GRIN_VERTEX_T));
+  auto v = _e->dst;
   return v;
 }
 

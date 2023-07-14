@@ -7,31 +7,18 @@ typedef gs::vid_t GRIN_VID_T;
 
 typedef gs::MutablePropertyFragment GRIN_GRAPH_T;
 
-typedef struct GRIN_VERTEX_T {
-  uint8_t label;
-  uint32_t vid;
-} GRIN_VERTEX_T;
-
 typedef struct GRIN_EDGE_T {
-  GRIN_VERTEX_T dst;
-  GRIN_VERTEX_T src;
+  GRIN_VERTEX dst;
+  GRIN_VERTEX src;
   GRIN_DIRECTION dir;
   gs::label_t label;
   gs::Any data;
 } GRIN_EDGE_T;
 
-#ifdef GRIN_ENABLE_ADJACENT_LIST
-typedef struct GRIN_ADJACENT_LIST_T {
-  GRIN_VERTEX_T v;
-  GRIN_DIRECTION dir;
-  GRIN_EDGE_TYPE edge_label;
-} GRIN_ADJACENT_LIST_T;
-#endif
-
 #ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
 typedef struct GRIN_ADJACENT_LIST_ITERATOR_T {
   std::shared_ptr<gs::MutableCsrConstEdgeIterBase> edge_iter;
-  GRIN_ADJACENT_LIST_T* adj_list;
+  GRIN_ADJACENT_LIST adj_list;
 } GRIN_ADJACENT_LIST_ITERATOR_T;
 #endif
 
@@ -54,13 +41,6 @@ typedef std::vector<const void*> GRIN_ROW_T;
 #ifdef GRIN_WITH_EDGE_PROPERTY
 typedef std::vector<unsigned> GRIN_EDGE_TYPE_LIST_T;
 typedef std::vector<unsigned> GRIN_EDGE_PROPERTY_LIST_T;
-#endif
-
-#ifdef GRIN_ENABLE_VERTEX_LIST_ITERATOR
-typedef struct GRIN_VERTEX_LIST_ITERATOR_T {
-  size_t cur_vid;
-  GRIN_VERTEX_LIST vertex_list;
-} GRIN_VERTEX_LIST_ITERATOR_T;
 #endif
 
 GRIN_DATATYPE _get_data_type(const gs::PropertyType& type);

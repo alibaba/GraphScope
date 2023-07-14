@@ -178,48 +178,48 @@ const void* grin_get_value_from_row(GRIN_GRAPH g, GRIN_ROW r, GRIN_DATATYPE dt,
 #if defined(GRIN_WITH_VERTEX_PROPERTY) && defined(GRIN_ENABLE_ROW)
 GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _v = static_cast<GRIN_VERTEX_T*>(v);
-  auto& table = _g->get_vertex_table(_v->label);
+  auto vid = v & (0xffffffff);
+  auto label = v >> 32;
+  auto& table = _g->get_vertex_table(label);
   auto prop_size = table.col_num();
   const auto& types = table.column_types();
   auto r = new GRIN_ROW_T();
   for (size_t prop_id = 0; prop_id < prop_size; prop_id++) {
     auto col = table.get_column_by_id(prop_id);
     auto type = _get_data_type(types[prop_id]);
-    switch(type){
-      case GRIN_DATATYPE::Int32:{
-          auto _col = std::dynamic_pointer_cast<gs::IntColumn>(col);
-          r->emplace_back(_col->buffer().data()+ _v->vid);
-          break;
-          }
-      case GRIN_DATATYPE::Int64:{
-          auto _col = std::dynamic_pointer_cast<gs::LongColumn>(col);
-          r->emplace_back(_col->buffer().data()+ _v->vid);
-          break;
-      }
-      case GRIN_DATATYPE::String:{
-          auto _col = std::dynamic_pointer_cast<gs::StringColumn>(col);
-          auto s = _col->get_view(_v->vid);
-          auto len = s.size() + 1;
-          char* out = new char[len];
-          snprintf(out, len, "%s", s.data());
+    switch (type) {
+    case GRIN_DATATYPE::Int32: {
+      auto _col = std::dynamic_pointer_cast<gs::IntColumn>(col);
+      r->emplace_back(_col->buffer().data() + vid);
+      break;
+    }
+    case GRIN_DATATYPE::Int64: {
+      auto _col = std::dynamic_pointer_cast<gs::LongColumn>(col);
+      r->emplace_back(_col->buffer().data() + vid);
+      break;
+    }
+    case GRIN_DATATYPE::String: {
+      auto _col = std::dynamic_pointer_cast<gs::StringColumn>(col);
+      auto s = _col->get_view(vid);
+      auto len = s.size() + 1;
+      char* out = new char[len];
+      snprintf(out, len, "%s", s.data());
 
-          r->emplace_back(out);
-          break;
-      }
-      case GRIN_DATATYPE::Timestamp64:{
-          auto _col = std::dynamic_pointer_cast<gs::DateColumn>(col);
-          r->emplace_back(_col->buffer().data()+ _v->vid);
-          break;
-      }
-      case GRIN_DATATYPE::Double:{
-           auto _col = std::dynamic_pointer_cast<gs::DoubleColumn>(col);
-           r->emplace_back(_col->buffer().data() + _v->vid);
-           break;
-      }
-      default:
-          r->emplace_back(static_cast<const void*>(NULL));
-        
+      r->emplace_back(out);
+      break;
+    }
+    case GRIN_DATATYPE::Timestamp64: {
+      auto _col = std::dynamic_pointer_cast<gs::DateColumn>(col);
+      r->emplace_back(_col->buffer().data() + vid);
+      break;
+    }
+    case GRIN_DATATYPE::Double: {
+      auto _col = std::dynamic_pointer_cast<gs::DoubleColumn>(col);
+      r->emplace_back(_col->buffer().data() + vid);
+      break;
+    }
+    default:
+      r->emplace_back(static_cast<const void*>(NULL));
     }
   }
   return r;
@@ -227,40 +227,39 @@ GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
 #endif
 
 #if defined(GRIN_WITH_EDGE_PROPERTY) && defined(GRIN_ENABLE_ROW)
-GRIN_ROW grin_get_edge_row(GRIN_GRAPH g, GRIN_EDGE e){
+GRIN_ROW grin_get_edge_row(GRIN_GRAPH g, GRIN_EDGE e) {
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   auto type = _get_data_type(_e->data.type);
   GRIN_ROW_T* r = new GRIN_ROW_T();
-  switch(type){
-      case GRIN_DATATYPE::Int32:{
-          r->emplace_back(new int(_e->data.value.i));
-          break;
-          }
-      case GRIN_DATATYPE::Int64:{
-          r->emplace_back(new int64_t(_e->data.value.l));
-          break;
-      }
-      case GRIN_DATATYPE::String:{
-          auto s = _e->data.value.s;
-          auto len = s.size() + 1;
-          char* out = new char[len];
-          snprintf(out, len, "%s", s.data());
+  switch (type) {
+  case GRIN_DATATYPE::Int32: {
+    r->emplace_back(new int(_e->data.value.i));
+    break;
+  }
+  case GRIN_DATATYPE::Int64: {
+    r->emplace_back(new int64_t(_e->data.value.l));
+    break;
+  }
+  case GRIN_DATATYPE::String: {
+    auto s = _e->data.value.s;
+    auto len = s.size() + 1;
+    char* out = new char[len];
+    snprintf(out, len, "%s", s.data());
 
-          r->emplace_back(out);
-          break;
-      }
-      case GRIN_DATATYPE::Timestamp64:{
-          r->emplace_back(new int64_t(_e->data.value.d.milli_second));
-          break;
-      }
-      case GRIN_DATATYPE::Double:{
-           r->emplace_back(new double(_e->data.value.db));
-           break;
-      }
-      default:
-          r->emplace_back(static_cast<const void*>(NULL));
-        
-    }
+    r->emplace_back(out);
+    break;
+  }
+  case GRIN_DATATYPE::Timestamp64: {
+    r->emplace_back(new int64_t(_e->data.value.d.milli_second));
+    break;
+  }
+  case GRIN_DATATYPE::Double: {
+    r->emplace_back(new double(_e->data.value.db));
+    break;
+  }
+  default:
+    r->emplace_back(static_cast<const void*>(NULL));
+  }
   return r;
 }
 #endif

@@ -66,10 +66,10 @@ GRIN_ADJACENT_LIST grin_get_adjacent_list_by_edge_type(GRIN_GRAPH g,
                                                        GRIN_DIRECTION dir,
                                                        GRIN_VERTEX v,
                                                        GRIN_EDGE_TYPE et) {
-  GRIN_ADJACENT_LIST_T* adj_list = new GRIN_ADJACENT_LIST_T();
-  adj_list->v = *static_cast<GRIN_VERTEX_T*>(v);
-  adj_list->dir = dir;
-  adj_list->edge_label = et;
+  GRIN_ADJACENT_LIST adj_list;
+  adj_list.v = v;
+  adj_list.dir = dir;
+  adj_list.edge_label = et;
   return adj_list;
 }
 #endif

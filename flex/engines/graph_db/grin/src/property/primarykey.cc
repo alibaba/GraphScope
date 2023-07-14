@@ -47,9 +47,9 @@ GRIN_VERTEX_PROPERTY_LIST grin_get_primary_keys_by_vertex_type(
 GRIN_ROW grin_get_vertex_primary_keys_row(GRIN_GRAPH g, GRIN_VERTEX v) {
   GRIN_ROW_T* row = new GRIN_ROW_T();
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto _v = static_cast<GRIN_VERTEX_T*>(v);
-  auto vid = _v->vid;
-  auto oid = _g->get_oid(_v->label, vid);
+  auto vid = v & (0xffffffff);
+  auto label = v >> 32;
+  auto oid = _g->get_oid(label, vid);
   auto p = new gs::oid_t(oid);
   row->emplace_back(p);
   return row;

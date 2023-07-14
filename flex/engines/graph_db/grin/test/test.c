@@ -712,12 +712,13 @@ void test_property(const char* uri_str) {
   test_error_code(uri_str);
 #endif
 }
-
 /**
 void test_partition_reference(const char* uri_str) {
   printf("+++++++++++++++++++++ Test partition/reference
-+++++++++++++++++++++\n"); GRIN_PARTITIONED_GRAPH pg =
-grin_get_partitioned_graph_from_storage(argv[1]); GRIN_PARTITION_LIST
++++++++++++++++++++++\n"); 
+GRIN_PARTITIONED_GRAPH pg =
+grin_get_partitioned_graph_from_storage(argv[1]); 
+GRIN_PARTITION_LIST
 local_partitions = grin_get_local_partition_list(pg);
   assert(grin_get_partition_list_size(pg, local_partitions) >= 2);
 
@@ -824,8 +825,8 @@ void test_partition(const char* uri_str) {
   test_partition_reference(uri_str);
   test_partition_topology(uri_str);
 #endif
-}*/
-
+}
+*/
 void test_topology_structure(const char* uri_str) {
   printf(
       "+++++++++++++++++++++ Test topology/structure +++++++++++++++++++++\n");

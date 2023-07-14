@@ -59,8 +59,7 @@ long long int grin_get_vertex_internal_id_lower_bound(GRIN_GRAPH);
 long long int grin_get_vertex_internal_id_by_type(GRIN_GRAPH g,
                                                   GRIN_VERTEX_TYPE vt,
                                                   GRIN_VERTEX v) {
-  auto _v = static_cast<GRIN_VERTEX_T*>(v);
-  return _v->vid;
+  return v & (0xffffffff);
 }
 
 /**
@@ -73,10 +72,8 @@ long long int grin_get_vertex_internal_id_by_type(GRIN_GRAPH g,
 GRIN_VERTEX grin_get_vertex_by_internal_id_by_type(GRIN_GRAPH g,
                                                    GRIN_VERTEX_TYPE vt,
                                                    long long int id) {
-  GRIN_VERTEX_T* v = new GRIN_VERTEX_T();
-  v->label = vt;
-  v->vid = id;
-  return v;
+  auto v = static_cast<uint64_t>(vt);
+  return (v << 32) + id;
 }
 
 /**

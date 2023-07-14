@@ -22,8 +22,7 @@ bool grin_equal_vertex_type(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt1,
 }
 
 GRIN_VERTEX_TYPE grin_get_vertex_type(GRIN_GRAPH g, GRIN_VERTEX v) {
-  auto _v = static_cast<GRIN_VERTEX_T*>(v);
-  return _v->label;
+  return v >> 32;
 }
 
 void grin_destroy_vertex_type(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {}
@@ -110,7 +109,9 @@ bool grin_equal_edge_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et1,
 
 GRIN_EDGE_TYPE grin_get_edge_type(GRIN_GRAPH g, GRIN_EDGE e) {
   auto _e = static_cast<GRIN_EDGE_T*>(e);
-  return _e->label + (_e->src.label << 16) + (_e->dst.label << 8);
+  auto src_label = _e->src >> 32;
+  auto dst_label = _e->dst >> 32;
+  return _e->label + (src_label << 16) + (dst_label << 8);
 }
 
 void grin_destroy_edge_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {

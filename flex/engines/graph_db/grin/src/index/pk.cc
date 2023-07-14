@@ -37,9 +37,7 @@ GRIN_VERTEX grin_get_vertex_by_primary_keys_row(GRIN_GRAPH g,
   if (!_g->get_lid(label, oid, vid)) {
     return GRIN_NULL_VERTEX;
   }
-  GRIN_VERTEX_T* v = new GRIN_VERTEX_T();
-  v->label = label;
-  v->vid = vid;
+  uint64_t v = ((label * 1ull) << 32) + vid;
   return v;
 }
 #endif

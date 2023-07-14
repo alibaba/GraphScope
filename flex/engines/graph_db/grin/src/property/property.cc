@@ -118,8 +118,9 @@ int grin_get_vertex_property_value_of_int32(GRIN_GRAPH g, GRIN_VERTEX v,
                                             GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _vp = static_cast<GRIN_VERTEX_PROPERTY_T*>(vp);
-  auto _v = static_cast<GRIN_VERTEX_T*>(v);
-  if (_v->label != _vp->label || _vp->dt != GRIN_DATATYPE::Int32) {
+  auto label = v >> 32;
+  auto vid = v & (0xffffffff);
+  if (label != _vp->label || _vp->dt != GRIN_DATATYPE::Int32) {
     grin_error_code = INVALID_VALUE;
     return 0;
   }
@@ -130,7 +131,7 @@ int grin_get_vertex_property_value_of_int32(GRIN_GRAPH g, GRIN_VERTEX v,
     grin_error_code = INVALID_VALUE;
     return 0;
   }
-  return col->get_view(_v->vid);
+  return col->get_view(vid);
 }
 
 unsigned int grin_get_vertex_property_value_of_uint32(GRIN_GRAPH g,
@@ -145,8 +146,11 @@ long long int grin_get_vertex_property_value_of_int64(GRIN_GRAPH g,
                                                       GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _vp = static_cast<GRIN_VERTEX_PROPERTY_T*>(vp);
-  auto _v = static_cast<GRIN_VERTEX_T*>(v);
-  if (_v->label != _vp->label || _vp->dt != GRIN_DATATYPE::Int64) {
+  // auto _v = static_cast<GRIN_VERTEX_T*>(v);
+  auto label = v >> 32;
+  auto vid = v & (0xffffffff);
+
+  if (label != _vp->label || _vp->dt != GRIN_DATATYPE::Int64) {
     grin_error_code = INVALID_VALUE;
     return 0;
   }
@@ -157,7 +161,7 @@ long long int grin_get_vertex_property_value_of_int64(GRIN_GRAPH g,
     grin_error_code = INVALID_VALUE;
     return 0;
   }
-  return col->get_view(_v->vid);
+  return col->get_view(vid);
 }
 
 unsigned long long int grin_get_vertex_property_value_of_uint64(
@@ -176,8 +180,10 @@ double grin_get_vertex_property_value_of_double(GRIN_GRAPH g, GRIN_VERTEX v,
                                                 GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _vp = static_cast<GRIN_VERTEX_PROPERTY_T*>(vp);
-  auto _v = static_cast<GRIN_VERTEX_T*>(v);
-  if (_v->label != _vp->label || _vp->dt != GRIN_DATATYPE::Double) {
+  auto label = v >> 32;
+  auto vid = v & (0xffffffff);
+
+  if (label != _vp->label || _vp->dt != GRIN_DATATYPE::Double) {
     grin_error_code = INVALID_VALUE;
     return 0.0;
   }
@@ -189,7 +195,7 @@ double grin_get_vertex_property_value_of_double(GRIN_GRAPH g, GRIN_VERTEX v,
     grin_error_code = INVALID_VALUE;
     return 0.0;
   }
-  return col->get_view(_v->vid);
+  return col->get_view(vid);
 }
 
 const char* grin_get_vertex_property_value_of_string(GRIN_GRAPH g,
@@ -197,8 +203,10 @@ const char* grin_get_vertex_property_value_of_string(GRIN_GRAPH g,
                                                      GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _vp = static_cast<GRIN_VERTEX_PROPERTY_T*>(vp);
-  auto _v = static_cast<GRIN_VERTEX_T*>(v);
-  if (_v->label != _vp->label || _vp->dt != GRIN_DATATYPE::String) {
+  auto label = v >> 32;
+  auto vid = v & (0xffffffff);
+
+  if (label != _vp->label || _vp->dt != GRIN_DATATYPE::String) {
     grin_error_code = INVALID_VALUE;
     return NULL;
   }
@@ -209,7 +217,7 @@ const char* grin_get_vertex_property_value_of_string(GRIN_GRAPH g,
     grin_error_code = INVALID_VALUE;
     return NULL;
   }
-  auto s = col->get_view(_v->vid);
+  auto s = col->get_view(vid);
   auto len = s.size() + 1;
   char* out = new char[len];
   snprintf(out, len, "%s", s.data());
@@ -232,8 +240,10 @@ long long int grin_get_vertex_property_value_of_timestamp64(
     GRIN_GRAPH g, GRIN_VERTEX v, GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto _vp = static_cast<GRIN_VERTEX_PROPERTY_T*>(vp);
-  auto _v = static_cast<GRIN_VERTEX_T*>(v);
-  if (_v->label != _vp->label || _vp->dt != GRIN_DATATYPE::Timestamp64) {
+  auto label = v >> 32;
+  auto vid = v & (0xffffffff);
+
+  if (label != _vp->label || _vp->dt != GRIN_DATATYPE::Timestamp64) {
     grin_error_code = INVALID_VALUE;
     return 0;
   }
@@ -245,7 +255,7 @@ long long int grin_get_vertex_property_value_of_timestamp64(
     grin_error_code = INVALID_VALUE;
     return 0;
   }
-  return col->get_view(_v->vid).milli_second;
+  return col->get_view(vid).milli_second;
 }
 
 GRIN_VERTEX_TYPE grin_get_vertex_type_from_property(GRIN_GRAPH g,
@@ -263,27 +273,28 @@ const void* grin_get_vertex_property_value(GRIN_GRAPH g, GRIN_VERTEX v,
   auto& table = _g->get_vertex_table(_vp->label);
   const auto& col = table.get_column(_vp->name);
   auto type = grin_get_vertex_property_datatype(g, vp);
-  auto _v = static_cast<GRIN_VERTEX_T*>(v);
+  auto vid = v & (0xffffffff);
+
   switch (type) {
   case GRIN_DATATYPE::Int32: {
     auto _col = std::dynamic_pointer_cast<gs::IntColumn>(col);
-    return _col->buffer().data() + _v->vid;
+    return _col->buffer().data() + vid;
   }
   case GRIN_DATATYPE::Int64: {
     auto _col = std::dynamic_pointer_cast<gs::LongColumn>(col);
-    return _col->buffer().data() + _v->vid;
+    return _col->buffer().data() + vid;
   }
   case GRIN_DATATYPE::String: {
     auto _col = std::dynamic_pointer_cast<gs::StringColumn>(col);
-    return _col->buffer()[_v->vid].data();
+    return _col->buffer()[vid].data();
   }
   case GRIN_DATATYPE::Timestamp64: {
     auto _col = std::dynamic_pointer_cast<gs::DateColumn>(col);
-    return _col->buffer().data() + _v->vid;
+    return _col->buffer().data() + vid;
   }
   case GRIN_DATATYPE::Double: {
     auto _col = std::dynamic_pointer_cast<gs::DoubleColumn>(col);
-    return _col->buffer().data() + _v->vid;
+    return _col->buffer().data() + vid;
   }
   default:
     grin_error_code = UNKNOWN_DATATYPE;

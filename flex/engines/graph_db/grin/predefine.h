@@ -140,7 +140,7 @@ typedef enum {
 
 /* 3. Define the handles using typedef */
 typedef void* GRIN_GRAPH;
-typedef void* GRIN_VERTEX;
+typedef uint64_t GRIN_VERTEX;
 typedef void* GRIN_EDGE;
 
 #ifdef GRIN_WITH_VERTEX_DATA
@@ -162,11 +162,10 @@ typedef struct GRIN_VERTEX_LIST {
 #endif
 
 #ifdef GRIN_ENABLE_VERTEX_LIST_ITERATOR
-typedef void* GRIN_VERTEX_LIST_ITERATOR;
-#endif
-
-#ifdef GRIN_ENABLE_ADJACENT_LIST
-typedef void* GRIN_ADJACENT_LIST;
+typedef struct GRIN_VERTEX_LIST_ITERATOR {
+  uint32_t* cur_vid;
+  GRIN_VERTEX_LIST vertex_list;
+} GRIN_VERTEX_LIST_ITERATOR;
 #endif
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
@@ -206,7 +205,7 @@ typedef void* GRIN_EDGE_REF;
 #endif
 
 #ifdef GRIN_TRAIT_NATURAL_ID_FOR_VERTEX_TYPE
-typedef GRIN_VERTEX_TYPE GRIN_VERTEX_TYPE_ID;
+typedef unsigned GRIN_VERTEX_TYPE_ID;
 #endif
 
 #ifdef GRIN_TRAIT_NATURAL_ID_FOR_VERTEX_PROPERTY
@@ -226,6 +225,14 @@ typedef void* GRIN_EDGE_PROPERTY_LIST;
 typedef unsigned GRIN_EDGE_TYPE_ID;
 #endif
 
+#ifdef GRIN_ENABLE_ADJACENT_LIST
+typedef struct GRIN_ADJACENT_LIST {
+  GRIN_VERTEX v;
+  GRIN_DIRECTION dir;
+  GRIN_EDGE_TYPE edge_label;
+} GRIN_ADJACENT_LIST;
+#endif
+
 #ifdef GRIN_TRAIT_NATURAL_ID_FOR_EDGE_PROPERTY
 typedef unsigned GRIN_EDGE_PROPERTY_ID;
 #endif
@@ -241,7 +248,7 @@ typedef void* GRIN_LABEL_LIST;
 
 /* 4. Define invalid values for returns of handles */
 #define GRIN_NULL_GRAPH NULL
-#define GRIN_NULL_VERTEX NULL
+#define GRIN_NULL_VERTEX (1ull << 40)
 #define GRIN_NULL_EDGE NULL
 #define GRIN_NULL_VERTEX_DATA NULL
 #define GRIN_NULL_VERTEX_LIST NULL
