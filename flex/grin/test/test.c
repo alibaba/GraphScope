@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
-#include <iostream>
+#include <math.h>
 
-#include "grin/src/predefine.h"
+#include "grin/predefine.h"
 
 #include "../include/include/common/error.h"
 #include "../include/include/index/internal_id.h"
@@ -519,7 +519,7 @@ void test_property_edge_property_value(const char* uri_str,
         assert(grin_get_last_error_code() == NO_ERROR);
 #ifdef GRIN_ENABLE_ROW
         double rv = grin_get_double_from_row(g, row, j);
-        assert(abs(pv - rv) < eps);
+        assert(fabs(pv - rv) < eps);
 #endif
 #ifdef GRIN_WITH_EDGE_PROPERTY_NAME
         printf("%s %s %s: %lf\n", v_names[__vt][vid], v_names[ut][uid],
@@ -635,7 +635,7 @@ void test_property_primary_key(const char* uri_str) {
   size_t vtl_size = grin_get_vertex_type_list_size(g, vtl);
   printf("vertex type num with primary key: %zu\n", vtl_size);
 
-  unsigned id_type[7] = {static_cast<unsigned>(~0), 0, 0, 1, 0, 1, 0};
+  unsigned id_type[7] = {(~0), 0, 0, 1, 0, 1, 0};
 
   for (size_t i = 0; i < vtl_size; ++i) {
     GRIN_VERTEX_TYPE vt = grin_get_vertex_type_from_list(g, vtl, i);

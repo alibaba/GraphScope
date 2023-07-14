@@ -69,7 +69,7 @@ add_library(flex_grin SHARED ${SOURCES})
 target_link_libraries(flex_grin ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${MPI_CXX_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
 
-add_executable(run_grin_test test/test.cc)
+add_executable(run_grin_test test/test.c)
 
 target_include_directories(run_grin_test PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps fragment)
 target_link_libraries(run_grin_test flex_grin ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${MPI_CXX_LIBRARIES})

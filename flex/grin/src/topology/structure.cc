@@ -15,8 +15,15 @@ limitations under the License.
 
 #include "grin/src/predefine.h"
 
-#include <iostream>
 #include "grin/include/include/topology/structure.h"
+
+/**
+ * @brief Get a (non-partitioned) graph from storage
+ * @param uri The URI of the graph.
+ * Current URI format:
+ * flex://{path_to_yaml}
+ * @return A graph handle.
+ */
 GRIN_GRAPH grin_get_graph_from_storage(const char* uri) {
   std::string _uri(uri);
   std::string::size_type pos = _uri.find("://");
