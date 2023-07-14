@@ -22,7 +22,28 @@ size_t grin_get_vertex_num_by_type(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
 #endif
 
 #ifdef GRIN_WITH_EDGE_PROPERTY
-size_t grin_get_edge_num_by_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) { return 0; }
+size_t grin_get_edge_num_by_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
+  auto src_label = et >> 16;
+  auto dst_label = (et >> 8) & (0xff);
+  auto edge_label = et & (0xff);
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+
+  auto oe = _g->get_oe_csr(src_label, dst_label, edge_label);
+  auto vertex_num = _g->vertex_num(src_label);
+  size_t edge_num = 0;
+  for (auto i = 0; i < vertex_num; ++i) {
+    edge_num += oe->edge_iter(i)->size();
+  }
+  if (edge_num != 0) {
+    return edge_num;
+  }
+  auto ie = _g->get_ie_csr(dst_label, src_label, edge_label);
+  vertex_num = _g->vertex_num(dst_label);
+  for (auto i = 0; i < vertex_num; ++i) {
+    edge_num += ie->edge_iter(i)->size();
+  }
+  return edge_num;
+}
 #endif
 
 #if defined(GRIN_ENABLE_VERTEX_LIST) && defined(GRIN_WITH_VERTEX_PROPERTY)

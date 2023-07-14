@@ -3,6 +3,9 @@
 #include <string.h>
 #include <sys/time.h>
 #include <iostream>
+
+#include "grin/src/predefine.h"
+
 #include "../include/include/common/error.h"
 #include "../include/include/index/internal_id.h"
 #include "../include/include/index/label.h"
@@ -22,7 +25,7 @@
 #include "../include/include/topology/edgelist.h"
 #include "../include/include/topology/structure.h"
 #include "../include/include/topology/vertexlist.h"
-#include "grin/src/predefine.h"
+
 #define eps (1e-8)
 #define FOR_VERTEX_BEGIN(g, vl, v)                                     \
   GRIN_VERTEX_LIST_ITERATOR __vli = grin_get_vertex_list_begin(g, vl); \
