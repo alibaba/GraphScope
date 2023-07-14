@@ -1,0 +1,42 @@
+Topology APIs
+-------------
+
+Topology lists
+^^^^^^^^^^^^^^^
+
+GRIN considers vertex list, edge list, and adjacent list as ``Topology Lists`` 
+and designs related APIs using the same principle. 
+GRIN provides low-level abstractions for topology lists. 
+Thus, in property graphs with various vertex types and edge types, 
+GRIN only provides APIs to get the vertex list and edge list of a single type 
+because a vertex list containing vertices of different types can be easily 
+constructed by merging vertex lists of different types. 
+GRIN will support such high-level abstractions in the future under ``GRIN extension``.
+
+Vertex List
+^^^^^^^^^^^
+
+In a simple graph, GRIN provides the ``grin_get_vertex_list`` API to get the 
+vertex list of the graph. In a property graph, GRIN provides the 
+``grin_get_vertex_list_by_type`` API to get the vertex list. Also, in a 
+partitioned graph, when ``GRIN_TRAIT_SELECT_MASTER_FOR_VERTEX_LIST`` features 
+are enabled, GRIN provides two groups of additional APIs: 
+``grin_get_vertex_list_select_master, grin_get_vertex_list_select_mirror`` and 
+``grin_get_vertex_list_by_type_select_master, grin_get_vertex_list_by_type_select_mirror`` 
+for simple graph and property graph, respectively.
+
+Edge List
+^^^^^^^^^^
+
+Similar to the vertex list, GRIN provides the ``grin_get_edge_list`` API to get 
+the edge list for a simple graph and ``grin_get_edge_list_by_type`` for a property graph.
+
+Adjacent List
+^^^^^^^^^^^^^^
+
+GRIN considers the adjacent list as a special case of the edge list and thus 
+also provides the ``grin_get_adjacent_list_by_edge_type`` API for a property graph, 
+as well as ``grin_get_adjacent_list`` for a simple graph. 
+Additional selections can also be attached to adjacent lists of both simple graph 
+and property graph, such as ``grin_get_adjacent_list_select_neighbor_partition``, 
+``grin_get_adjacent_list_by_edge_type_select_master_neighbor``, etc.

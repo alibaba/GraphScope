@@ -24,14 +24,14 @@ find_package(OpenMP REQUIRED)
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-include("../../flex/cmake/FindGFlags.cmake")
+include("../../../../flex/cmake/FindGFlags.cmake")
 if (GFLAGS_FOUND)
     include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})
 else ()
     message(FATAL_ERROR "gflags not found")
 endif ()
 
-include("../../flex/cmake/FindGlog.cmake")
+include("../../../../flex/cmake/FindGlog.cmake")
 include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
 if (GLOG_FOUND)
     set(CMAKE_REQUIRED_INCLUDES "${GLOG_INCLUDE_DIRS}")
@@ -49,12 +49,12 @@ set(yaml-cpp_INCLUDE_DIRS "/usr/local/Cellar/yaml-cpp/0.7.0/include")
 include_directories(SYSTEM ${yaml-cpp_INCLUDE_DIRS})
 set(YAML_CPP_LIBRARIES "/usr/local/Cellar/yaml-cpp/0.7.0/lib/libyaml-cpp.0.7.0.dylib")
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../..)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../..)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../..)
 message(STATUS "${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../storages/rt_mutable_graph)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../utils/property)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../storages/rt_mutable_graph)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../utils/property)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 file(GLOB_RECURSE FILES_NEED_FORMAT "src/*.cc")
@@ -64,7 +64,7 @@ add_custom_target(grin_clformat
         COMMENT "Running clang-format."
         VERBATIM)
 
-file(GLOB SOURCES "src/*.cc" "src/topology/*.cc" "src/property/*.cc" "src/index/*.cc" "src/common/*.cc" "../utils/property/*.cc" "../storages/rt_mutable_graph/*.cc")
+file(GLOB SOURCES "src/*.cc" "src/topology/*.cc" "src/property/*.cc" "src/index/*.cc" "src/common/*.cc" "../../../utils/property/*.cc" "../../../storages/rt_mutable_graph/*.cc")
 add_library(flex_grin SHARED ${SOURCES})
 target_link_libraries(flex_grin ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${MPI_CXX_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
