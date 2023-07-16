@@ -135,19 +135,21 @@ impl SourceOperator {
                         }
                     }
                 } else if let Some(ref indexed_values) = self.primary_key_values {
-                    if self.query_params.labels.len() != 1 {
-                        Err(FnGenError::unsupported_error(&format!(
-                            "Empty/Multiple labels in `IndexScan`, labels are {:?}",
-                            self.query_params.labels
-                        )))?
+                    if self.query_params.labels.len() < 1 {
+                        Err(FnGenError::unsupported_error(
+                            "Empty label in `IndexScan`
+                            self.query_params.labels",
+                        ))?
                     }
-                    if let Some(v) = graph.index_scan_vertex(
-                        self.query_params.labels[0],
-                        indexed_values,
-                        &self.query_params,
-                    )? {
-                        v_source = Box::new(vec![v].into_iter())
+                    let mut source_vertices = vec![];
+                    for label in &self.query_params.labels {
+                        if let Some(v) =
+                            graph.index_scan_vertex(*label, indexed_values, &self.query_params)?
+                        {
+                            source_vertices.push(v);
+                        }
                     }
+                    v_source = Box::new(source_vertices.into_iter());
                 } else {
                     // parallel scan, and each worker should scan the partitions assigned to it in self.v_params.partitions
                     v_source = graph.scan_vertex(&self.query_params)?;
