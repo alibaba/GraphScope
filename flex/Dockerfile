@@ -35,5 +35,22 @@ RUN git clone https://github.com/alibaba/hiactor.git -b v0.1.1 --single-branch &
     cmake -DHiactor_DEMOS=OFF -DHiactor_TESTING=OFF -DHiactor_DPDK=OFF -DHiactor_CXX_DIALECT=gnu++17 -DSeastar_CXX_FLAGS="-DSEASTAR_DEFAULT_ALLOCATOR -mno-avx512" .. && \
     make -j && make install
 
-# for hqps-engine
+#install protobuf
 RUN apt-get install -y protobuf-compiler libprotobuf-dev
+
+RUN apt install -y sudo
+
+# Add graphscope user with user id 1001
+RUN useradd -m graphscope -u 1001 && \
+    echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# Change to graphscope user
+USER graphscope
+WORKDIR /home/graphscope
+
+RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
+  sh -s -- -y --profile minimal && \
+  chmod +x "$HOME/.cargo/env" && \
+  echo "$source $HOME/.cargo/env" >> ~/.bashrc && \
+  source "$HOME/.cargo/env" && \
+  bash -c "rustup component add rustfmt"
