@@ -185,8 +185,8 @@ def create_vineyard_deployment_on_single_node():
     # create vineyard deployment on single node
     # set the replicas of vineyard and etcd to 1 as there is only one node in the cluster
     vineyard.deploy.vineyardctl.deploy.vineyard_deployment(
-        vineyard_replicas=1,
-        vineyard_etcd_replicas=1,
+        replicas=1,
+        etcd_replicas=1,
         namespace="graphscope-system",
         create_namespace=True,
     )
@@ -220,8 +220,8 @@ def create_vineyard_deployment_on_multiple_nodes():
     # create vineyard deployment on multiple nodes
     # set the replicas of vineyard and etcd to 2 as there are 2 nodes in the kubernetes cluster
     vineyard.deploy.vineyardctl.deploy.vineyard_deployment(
-        vineyard_replicas=2,
-        vineyard_etcd_replicas=2,
+        replicas=2,
+        etcd_replicas=2,
         namespace="graphscope-system",
         create_namespace=True,
     )

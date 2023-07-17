@@ -173,6 +173,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._del_retry_time_seconds = del_retry_time_seconds
 
         self._waiting_for_delete = waiting_for_delete
+        self._serving = False
 
         self._with_analytical = False
         self._with_analytical_java = False
@@ -272,8 +273,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
         self._analytical_engine_endpoint = None
         self._mars_service_endpoint = None
-
-        self._serving = False
 
         self._analytical_engine_process = None
         self._random_analytical_engine_rpc_port = random.randint(56001, 57000)
@@ -1305,8 +1304,8 @@ class KubernetesClusterLauncher(AbstractLauncher):
             kubeconfig=self._k8s_config_file,
             name=self._vineyard_deployment,
             namespace=self._namespace,
-            vineyard_replicas=self._num_workers,
-            vineyard_etcd_replicas=self._num_workers,
+            replicas=self._num_workers,
+            etcd_replicas=self._num_workers,
             vineyardd_image=self._vineyard_image,
             vineyardd_memory=self._vineyard_mem,
             vineyardd_cpu=self._vineyard_cpu,
