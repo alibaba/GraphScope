@@ -135,10 +135,9 @@ impl SourceOperator {
                         }
                     }
                 } else if let Some(ref indexed_values) = self.primary_key_values {
-                    if self.query_params.labels.len() < 1 {
+                    if self.query_params.labels.is_empty() {
                         Err(FnGenError::unsupported_error(
-                            "Empty label in `IndexScan`
-                            self.query_params.labels",
+                            "Empty label in `IndexScan` self.query_params.labels",
                         ))?
                     }
                     let mut source_vertices = vec![];

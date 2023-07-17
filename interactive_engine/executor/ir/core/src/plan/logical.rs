@@ -703,6 +703,9 @@ fn triplet_to_index_predicate(
     if meta.schema.is_none() {
         return Ok(None);
     }
+    if tables.is_empty() {
+        return Ok(None);
+    }
     let schema = meta.schema.as_ref().unwrap();
     let mut key = None;
     let mut is_eq = false;
@@ -1087,16 +1090,13 @@ impl AsLogical for pb::Scan {
         }
         if let Some(params) = self.params.as_mut() {
             if self.idx_predicate.is_none() {
-                if !params.tables.is_empty() {
-                    let mut idx_pred = None;
-                    if let Some(expr) = &params.predicate {
-                        idx_pred = triplet_to_index_predicate(
-                            expr.operators.as_slice(),
-                            &params.tables,
-                            self.scan_opt != 1,
-                            meta,
-                        )?;
-                    }
+                if let Some(expr) = &params.predicate {
+                    let idx_pred = triplet_to_index_predicate(
+                        expr.operators.as_slice(),
+                        &params.tables,
+                        self.scan_opt != 1,
+                        meta,
+                    )?;
 
                     if idx_pred.is_some() {
                         params.predicate = None;
