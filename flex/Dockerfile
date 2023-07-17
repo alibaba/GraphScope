@@ -38,7 +38,7 @@ RUN git clone https://github.com/alibaba/hiactor.git -b v0.1.1 --single-branch &
 #install protobuf
 RUN apt-get install -y protobuf-compiler libprotobuf-dev
 
-RUN apt install -y sudo
+RUN apt-get install -y sudo
 
 # Add graphscope user with user id 1001
 RUN useradd -m graphscope -u 1001 && \
