@@ -41,7 +41,9 @@ jobs:
         make install
 
     - name: Build
+      env:
+        HOME: /home/graphscope/
       run: |
-        cd flex
+        cd ${GITHUB_WORKSPACE}/flex
         mkdir build && cd build
-        cmake .. && make -j$(nproc)
+        cmake .. && sudo make -j$(nproc)
