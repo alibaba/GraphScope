@@ -310,6 +310,27 @@ def test_modern_graph(parallel_executors, num_workers, threads_per_worker):
         assert make_edges_set(edges) == make_edges_set(subgraph_edges)
         session.close()
 
+    def pkscan_roundtrip(num_workers, threads_per_worker):
+        logger.info(
+            "testing pkscan with %d workers and %d threads per worker",
+            num_workers,
+            threads_per_worker,
+        )
+
+        query1 = "g.V().hasLabel('person').has('id', 1)"
+        query2 = "g.V().hasLabel('person','software').has('id', 1)"
+        session = graphscope.session(cluster_type="hosts", num_workers=num_workers)
+
+        g0 = load_modern_graph(session)
+        interactive0 = session.gremlin(g0)
+        query1_res = interactive0.execute(query1).all().result()
+        query2_res = interactive0.execute(query2).all().result()
+        logger.info("query1_res = %s", query1_res)
+        logger.info("query2_res = %s", query2_res)
+        assert len(query1_res) == 1
+        assert len(query2_res) == 1
+        session.close()
+
     with vineyard.envvars(
         {
             "RUST_LOG": "debug",
@@ -318,3 +339,4 @@ def test_modern_graph(parallel_executors, num_workers, threads_per_worker):
         }
     ):
         subgraph_roundtrip(num_workers, threads_per_worker)
+        pkscan_roundtrip(num_workers, threads_per_worker)
