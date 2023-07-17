@@ -7,7 +7,7 @@ ifeq ($(REGISTRY),)
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.15.0
+VINEYARD_VERSION ?= v0.16.1
 # This is the version of builder base image in most cases, except for graphscope-dev
 BUILDER_VERSION ?= $(VINEYARD_VERSION)
 # This is the version of runtime base image
@@ -15,7 +15,7 @@ RUNTIME_VERSION ?= $(VINEYARD_VERSION)
 PROFILE ?= release
 CI ?= false
 
-BUILD_PROGRESS  	= auto
+BUILD_PROGRESS  	?= auto
 
 .PHONY: all graphscope
 
@@ -39,7 +39,8 @@ graphscope: all
 dev-wheel:
 	cd $(WORKING_DIR) && \
 	cp ../gs ./ && \
-	docker build  \
+	docker build \
+		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
 		-t graphscope/graphscope-dev:wheel \
@@ -50,6 +51,7 @@ manylinux2014-ext:
 	cd $(WORKING_DIR) && \
 	cp ../gs ./ && \
 	docker build \
+		--progress=$(BUILD_PROGRESS) \
 		-t graphscope/manylinux2014:20230407-ext \
 		-f $(DOCKERFILES_DIR)/manylinux2014-ext.Dockerfile .
 
@@ -57,6 +59,7 @@ graphscope-dev:
 	cd $(WORKING_DIR) && \
 	cp ../gs ./ && \
 	docker build \
+		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
 		-t graphscope/graphscope-dev:${VINEYARD_VERSION} \
@@ -66,6 +69,7 @@ vineyard-dev:
 	cd $(WORKING_DIR) && \
 	cp ../gs ./ && \
 	docker build \
+		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
 		-t graphscope/vineyard-dev:${VINEYARD_VERSION} \
@@ -74,6 +78,7 @@ vineyard-dev:
 vineyard-runtime:
 	cd $(WORKING_DIR) && \
 	docker build \
+		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		-t graphscope/vineyard-runtime:${VINEYARD_VERSION} \
@@ -83,6 +88,7 @@ coordinator:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
 	    --target coordinator \
+		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg CI=${CI} \
@@ -93,6 +99,7 @@ analytical:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
 	    --target analytical \
+		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
@@ -104,6 +111,7 @@ analytical-java:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
 	    --target analytical-java \
+		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
@@ -115,6 +123,7 @@ interactive-frontend:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
 	    --target frontend \
+		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
@@ -127,6 +136,7 @@ interactive-executor:
 	cd $(WORKING_DIR)/.. \
 	&& docker build \
 	    --target executor \
+		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
@@ -140,6 +150,7 @@ interactive-experimental:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
 	    --target experimental \
+		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		-t graphscope/interactive-experimental:${VERSION} \
@@ -149,6 +160,7 @@ learning:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
 	    --target learning \
+		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg RUNTIME_VERSION=$(RUNTIME_VERSION) \
@@ -159,6 +171,7 @@ learning:
 graphscope-store:
 	cd $(WORKING_DIR)/.. && \
 	docker build \
+		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg profile=${PROFILE} \
