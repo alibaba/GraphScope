@@ -16,10 +16,10 @@ typedef struct GRIN_EDGE_T {
 } GRIN_EDGE_T;
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
-typedef struct GRIN_ADJACENT_LIST_ITERATOR_T {
-  std::shared_ptr<gs::MutableCsrConstEdgeIterBase> edge_iter;
+struct GRIN_ADJACENT_LIST_ITERATOR_T {
+  gs::MutableCsrConstEdgeIterBase* edge_iter;
   GRIN_ADJACENT_LIST adj_list;
-} GRIN_ADJACENT_LIST_ITERATOR_T;
+};
 #endif
 
 #ifdef GRIN_WITH_VERTEX_PROPERTY
