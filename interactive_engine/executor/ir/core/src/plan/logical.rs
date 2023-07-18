@@ -693,13 +693,17 @@ fn check_primary_key_from_pb(
 }
 
 /// To optimize a triplet predicate of <pk, cmp, val> into an `IndexPredicate`.
+/// Notice that multiple tables allowed. If the tables have the same pk, it can be optimized into one `IndexPredicate`.
 fn triplet_to_index_predicate(
-    operators: &[common_pb::ExprOpr], table: &common_pb::NameOrId, is_vertex: bool, meta: &StoreMeta,
+    operators: &[common_pb::ExprOpr], tables: &Vec<common_pb::NameOrId>, is_vertex: bool, meta: &StoreMeta,
 ) -> IrResult<Option<pb::IndexPredicate>> {
     if operators.len() != 3 {
         return Ok(None);
     }
     if meta.schema.is_none() {
+        return Ok(None);
+    }
+    if tables.is_empty() {
         return Ok(None);
     }
     let schema = meta.schema.as_ref().unwrap();
@@ -713,9 +717,16 @@ fn triplet_to_index_predicate(
                     if let Some(item) = &property.item {
                         match item {
                             common_pb::property::Item::Key(col) => {
-                                let (is_pk, num_pks) =
-                                    check_primary_key_from_pb(schema, table, col, is_vertex);
-                                if is_pk && num_pks == 1 {
+                                let mut is_pk = true;
+                                for table in tables {
+                                    let (is_pk_, num_pks) =
+                                        check_primary_key_from_pb(schema, table, col, is_vertex);
+                                    if !is_pk_ || num_pks != 1 {
+                                        is_pk = false;
+                                        break;
+                                    }
+                                }
+                                if is_pk {
                                     key = Some(property.clone());
                                 }
                             }
@@ -1079,16 +1090,13 @@ impl AsLogical for pb::Scan {
         }
         if let Some(params) = self.params.as_mut() {
             if self.idx_predicate.is_none() {
-                if let Some(table) = params.tables.get(0) {
-                    let mut idx_pred = None;
-                    if let Some(expr) = &params.predicate {
-                        idx_pred = triplet_to_index_predicate(
-                            expr.operators.as_slice(),
-                            table,
-                            self.scan_opt != 1,
-                            meta,
-                        )?;
-                    }
+                if let Some(expr) = &params.predicate {
+                    let idx_pred = triplet_to_index_predicate(
+                        expr.operators.as_slice(),
+                        &params.tables,
+                        self.scan_opt != 1,
+                        meta,
+                    )?;
 
                     if idx_pred.is_some() {
                         params.predicate = None;
@@ -1891,6 +1899,52 @@ mod test {
             alias: None,
             params: Some(pb::QueryParams {
                 tables: vec!["person".into()],
+                columns: vec![],
+                is_all_columns: false,
+                limit: None,
+                predicate: Some(str_to_expr_pb("@.name == \"John\"".to_string()).unwrap()),
+                sample_ratio: 1.0,
+                extra: HashMap::new(),
+            }),
+            idx_predicate: None,
+            meta_data: None,
+        };
+
+        scan.preprocess(&meta, &mut plan_meta).unwrap();
+        assert!(scan.params.unwrap().predicate.is_none());
+        assert_eq!(
+            scan.idx_predicate.unwrap(),
+            pb::IndexPredicate {
+                or_predicates: vec![pb::index_predicate::AndPredicate {
+                    predicates: vec![pb::index_predicate::Triplet {
+                        key: Some(common_pb::Property {
+                            item: Some(common_pb::property::Item::Key("name".into())),
+                        }),
+                        value: Some("John".to_string().into()),
+                        cmp: None,
+                    }]
+                }]
+            }
+        );
+    }
+
+    // e.g., g.V().hasLabel("person", "software").has("name", "John")
+    #[test]
+    fn scan_multi_labels_pred_to_idx_pred() {
+        let mut plan_meta = PlanMeta::default();
+        plan_meta.set_curr_node(0);
+        plan_meta.curr_node_meta_mut();
+        plan_meta.refer_to_nodes(0, vec![0]);
+        let meta = StoreMeta {
+            schema: Some(
+                Schema::from_json(std::fs::File::open("resource/modern_schema_pk.json").unwrap()).unwrap(),
+            ),
+        };
+        let mut scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                tables: vec!["person".into(), "software".into()],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,

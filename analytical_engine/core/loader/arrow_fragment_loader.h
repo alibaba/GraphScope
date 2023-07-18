@@ -107,10 +107,11 @@ class ArrowFragmentLoader : public vineyard::ArrowFragmentLoader<OID_T, VID_T> {
                       const std::vector<std::string>& efiles,
                       const std::vector<std::string>& vfiles,
                       bool directed = true, bool generate_eid = false,
-                      bool retain_oid = false, bool compact_edges = false)
+                      bool retain_oid = false, bool compact_edges = false,
+                      bool use_perfect_hash = false)
       : Base(client, comm_spec, efiles, vfiles, directed, generate_eid,
              retain_oid, vineyard::is_local_vertex_map<vertex_map_t>::value,
-             compact_edges),
+             compact_edges, use_perfect_hash),
         graph_info_(nullptr),
         giraph_enabled_(false) {}
 
@@ -121,7 +122,7 @@ class ArrowFragmentLoader : public vineyard::ArrowFragmentLoader<OID_T, VID_T> {
              std::vector<std::string>{}, graph_info->directed,
              graph_info->generate_eid, graph_info->retain_oid,
              vineyard::is_local_vertex_map<vertex_map_t>::value,
-             graph_info->compact_edges),
+             graph_info->compact_edges, graph_info->use_perfect_hash),
         graph_info_(graph_info) {
 #ifdef ENABLE_JAVA_SDK
     // check when vformat or eformat start with giraph. if not, we

@@ -58,6 +58,7 @@ def load_from(
     eformat=None,
     vertex_map="global",
     compact_edges=False,
+    use_perfect_hash=False,
 ) -> Graph:
     """Load a Arrow property graph using a list of vertex/edge specifications.
 
@@ -162,6 +163,8 @@ def load_from(
         compact_edges (bool, optional): Compact edges (CSR) using varint and delta encoding. Defaults to False.
             Note that compact edges helps to half the memory usage of edges in graph data structure, but may cause
             at most 10%~20% performance degeneration in some algorithms.
+        use_perfect_hash (bool, optional): Use perfect hashmap in vertex map to optimize the memory usage.
+             Defaults to False.
     """
 
     # Don't import the :code:`nx` in top-level statments to improve the
@@ -191,6 +194,7 @@ def load_from(
         types_pb2.IS_FROM_GAR: utils.b_to_attr(False),
         types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(vertex_map),
         types_pb2.COMPACT_EDGES: utils.b_to_attr(compact_edges),
+        types_pb2.USE_PERFECT_HASH: utils.b_to_attr(use_perfect_hash),
     }
     op = dag_utils.create_graph(
         sess.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=[loader_op], attrs=config
@@ -203,6 +207,7 @@ def load_from(
         retain_oid=retain_oid,
         vertex_map=vertex_map,
         compact_edges=compact_edges,
+        use_perfect_hash=use_perfect_hash,
     )
     return graph
 
@@ -213,6 +218,7 @@ def load_from_gar(
     oid_type="int64_t",
     vertex_map="global",
     compact_edges=False,
+    use_perfect_hash=False,
 ) -> Graph:
     sess = get_default_session()
     oid_type = utils.normalize_data_type_str(oid_type)
@@ -221,6 +227,10 @@ def load_from_gar(
     if compact_edges:
         raise ValueError(
             "Loading from gar with 'compact_edges' hasn't been supported yet."
+        )
+    if use_perfect_hash:
+        raise ValueError(
+            "Loading from gar with 'use_perfect_hash' hasn't been supported yet."
         )
     # generate and add a loader op to dag
     vertex_map = utils.vertex_map_type_to_enum(vertex_map)
@@ -235,6 +245,7 @@ def load_from_gar(
         types_pb2.IS_FROM_GAR: utils.b_to_attr(True),
         types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(vertex_map),
         types_pb2.COMPACT_EDGES: utils.b_to_attr(compact_edges),
+        types_pb2.USE_PERFECT_HASH: utils.b_to_attr(use_perfect_hash),
         types_pb2.GRAPH_INFO_PATH: utils.s_to_attr(graph_info_path),
     }
     op = dag_utils.create_graph(
@@ -246,5 +257,6 @@ def load_from_gar(
         directed=directed,
         vertex_map=vertex_map,
         compact_edges=compact_edges,
+        use_perfect_hash=use_perfect_hash,
     )
     return graph

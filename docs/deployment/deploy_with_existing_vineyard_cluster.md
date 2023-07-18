@@ -62,7 +62,7 @@ python3 -m pip install vineyard
 ```
 
 By default, the Vineyard cluster consists of three Vineyard instances and three etcd instances. 
-However, since we only have one node in the Kubernetes cluster, we need to specify the number of Vineyard instances and etcd instances using the `vineyard_replicas` and `vineyard_etcd_replicas` parameters. DON'T set the number of Vineyard instances and etcd instances to be greater than the number of nodes in the Kubernetes cluster. Instead, the number of vineyard replicas and the number of engine pods can be set independently.
+However, since we only have one node in the Kubernetes cluster, we need to specify the number of Vineyard instances and etcd instances using the `replicas` and `etcd_replicas` parameters. DON'T set the number of Vineyard instances and etcd instances to be greater than the number of nodes in the Kubernetes cluster. Instead, the number of vineyard replicas and the number of engine pods can be set independently.
 
 Create and check the namespace `vineyard-system` as follows.
 
@@ -83,7 +83,7 @@ import vineyard
 # https://github.com/v6d-io/v6d/blob/main/k8s/cmd/README.md
 # Notice, all character `-` in the parameter of vineyardctl should be replaced with `_` in the python API
 vineyard.deploy.vineyardctl.deploy.vineyard_deployment(
-    vineyard_replicas=1, 
+    replicas=1,
 )
 ```
 

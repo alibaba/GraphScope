@@ -1542,6 +1542,8 @@ class ArrowProjectedFragment
 
   bool compact_edges() const { return fragment_->compact_edges(); }
 
+  bool use_perfect_hash() const { return vm_ptr_->use_perfect_hash(); }
+
  private:
   /**
    * @brief For edges (indicated by nbr_list[begin:end)) of a given vertex,

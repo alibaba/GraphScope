@@ -95,6 +95,9 @@ message GraphDefPb {
 
     // compact edges
     bool compact_edges = 10;
+
+    // use perfect hash
+    bool use_perfect_hash = 11;
 }
 
 message TypeDefPb {

@@ -25,7 +25,7 @@
 #include "vineyard/common/util/arrow.h"
 
 namespace arrow {
-class StringArray;
+class LargeStringArray;
 }
 
 namespace gs {
@@ -88,12 +88,12 @@ struct trivial_tensor_t<std::string> {
 
   ~trivial_tensor_t() = default;
 
-  std::shared_ptr<arrow::StringArray>& data() { return data_; }
+  std::shared_ptr<arrow::LargeStringArray>& data() { return data_; }
 
-  const std::shared_ptr<arrow::StringArray>& data() const { return data_; }
+  const std::shared_ptr<arrow::LargeStringArray>& data() const { return data_; }
 
   void fill(const std::string& value) {
-    arrow::StringBuilder builder;
+    arrow::LargeStringBuilder builder;
     CHECK_ARROW_ERROR(builder.Reserve(size_));
     for (size_t i = 0; i < size_; ++i) {
       CHECK_ARROW_ERROR(builder.Append(value));
@@ -117,7 +117,7 @@ struct trivial_tensor_t<std::string> {
  private:
   size_t size_;
   std::vector<size_t> shape_;
-  std::shared_ptr<arrow::StringArray> data_;
+  std::shared_ptr<arrow::LargeStringArray> data_;
 };
 }  // namespace gs
 #endif  // ANALYTICAL_ENGINE_CORE_UTILS_TRIVIAL_TENSOR_H_

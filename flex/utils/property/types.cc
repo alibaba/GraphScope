@@ -102,6 +102,15 @@ void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
 #endif
 }
 
+// parseRecordX for edge with int64 property
+void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int64_t& prop) {
+#ifdef __APPLE__
+  sscanf(line, "%lld|%lld|%lld", &src, &dst, &prop);
+#else
+  sscanf(line, "%" SCNd64 "|%" SCNd64 "|%" SCNd64 "", &src, &dst, &prop);
+#endif
+}
+
 grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
   switch (value.type) {
   case PropertyType::kInt32:
@@ -143,6 +152,22 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
     break;
   }
 
+  return out_archive;
+}
+
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const std::string_view& str) {
+  in_archive << str.length();
+  in_archive.AddBytes(str.data(), str.length());
+  return in_archive;
+}
+
+grape::OutArchive& operator>>(grape::OutArchive& out_archive,
+                              std::string_view& str) {
+  size_t size;
+  out_archive >> size;
+  str = std::string_view(reinterpret_cast<char*>(out_archive.GetBytes(size)),
+                         size);
   return out_archive;
 }
 
