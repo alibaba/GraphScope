@@ -16,9 +16,9 @@ package com.alibaba.graphscope.groot.tests.coordinator;
 import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.coordinator.LocalSnapshotListener;
 import com.alibaba.graphscope.groot.coordinator.SchemaManager;
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 
 import org.junit.jupiter.api.Test;
 

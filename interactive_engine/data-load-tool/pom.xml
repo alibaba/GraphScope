@@ -21,10 +21,6 @@
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>groot-client</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.alibaba.graphscope</groupId>
-      <artifactId>sdk-common</artifactId>
-    </dependency>
 
     <dependency>
         <groupId>com.aliyun.odps</groupId>

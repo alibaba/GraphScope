@@ -13,13 +13,13 @@
  */
 package com.alibaba.graphscope.groot.servers;
 
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.CuratorUtils;
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.FrontendConfig;
+import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.common.util.RpcUtils;
 import com.alibaba.graphscope.groot.discovery.FileDiscovery;
 import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
@@ -28,10 +28,10 @@ import com.alibaba.graphscope.groot.discovery.ZkDiscovery;
 import com.alibaba.graphscope.groot.frontend.BackupClient;
 import com.alibaba.graphscope.groot.frontend.BatchDdlClient;
 import com.alibaba.graphscope.groot.frontend.ClientBackupService;
-import com.alibaba.graphscope.groot.frontend.ClientDdlService;
 import com.alibaba.graphscope.groot.frontend.ClientService;
 import com.alibaba.graphscope.groot.frontend.ClientWriteService;
 import com.alibaba.graphscope.groot.frontend.FrontendSnapshotService;
+import com.alibaba.graphscope.groot.frontend.GrootDdlService;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.frontend.SchemaClient;
 import com.alibaba.graphscope.groot.frontend.SchemaWriter;
@@ -125,7 +125,7 @@ public class Frontend extends NodeBase {
                         storeIngestClients,
                         this.metaService,
                         batchDdlClient);
-        ClientDdlService clientDdlService = new ClientDdlService(snapshotCache, batchDdlClient);
+        GrootDdlService clientDdlService = new GrootDdlService(snapshotCache, batchDdlClient);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
         WriteSessionGenerator writeSessionGenerator = new WriteSessionGenerator(configs);
         EdgeIdGenerator edgeIdGenerator = new DefaultEdgeIdGenerator(configs, this.channelManager);

@@ -15,7 +15,7 @@ package com.alibaba.graphscope.groot.operation.ddl;
 
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;
-import com.alibaba.graphscope.proto.CommitDataLoadPb;
+import com.alibaba.graphscope.proto.groot.CommitDataLoadPb;
 import com.alibaba.graphscope.proto.groot.DdlOperationPb;
 import com.google.protobuf.ByteString;
 

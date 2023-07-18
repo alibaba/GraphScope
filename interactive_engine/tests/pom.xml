@@ -16,7 +16,7 @@
   <dependencies>
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
-      <artifactId>sdk-common</artifactId>
+      <artifactId>interactive-common</artifactId>
     </dependency>
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>

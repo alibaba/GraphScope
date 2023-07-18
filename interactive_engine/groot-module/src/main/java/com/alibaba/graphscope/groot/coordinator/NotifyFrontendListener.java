@@ -14,7 +14,7 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
+import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

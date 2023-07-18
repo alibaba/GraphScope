@@ -15,7 +15,14 @@ package com.alibaba.graphscope.groot.tests.common.schema.ddl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.alibaba.graphscope.compiler.api.schema.DataType;
+import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
+import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
+import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
+import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
+import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyDef;
+import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
+import com.alibaba.graphscope.groot.common.schema.wrapper.TypeDef;
+import com.alibaba.graphscope.groot.common.schema.wrapper.TypeEnum;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.ddl.AddEdgeKindOperation;
 import com.alibaba.graphscope.groot.operation.ddl.CreateEdgeTypeOperation;
@@ -34,13 +41,6 @@ import com.alibaba.graphscope.groot.schema.request.DropVertexTypeRequest;
 import com.alibaba.graphscope.groot.schema.request.RemoveEdgeKindRequest;
 import com.alibaba.graphscope.proto.groot.DdlRequestBatchPb;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
-import com.alibaba.graphscope.sdkcommon.schema.EdgeKind;
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
-import com.alibaba.graphscope.sdkcommon.schema.LabelId;
-import com.alibaba.graphscope.sdkcommon.schema.PropertyDef;
-import com.alibaba.graphscope.sdkcommon.schema.PropertyValue;
-import com.alibaba.graphscope.sdkcommon.schema.TypeDef;
-import com.alibaba.graphscope.sdkcommon.schema.TypeEnum;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 

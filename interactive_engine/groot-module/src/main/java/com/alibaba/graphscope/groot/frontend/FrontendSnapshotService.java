@@ -14,10 +14,10 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.proto.groot.AdvanceQuerySnapshotRequest;
 import com.alibaba.graphscope.proto.groot.AdvanceQuerySnapshotResponse;
 import com.alibaba.graphscope.proto.groot.FrontendSnapshotGrpc;
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 
 import io.grpc.stub.StreamObserver;
 

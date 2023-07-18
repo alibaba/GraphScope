@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 syntax = "proto3";
+package gs.rpc.groot;
 
-import "sdk/common.proto";
-import "sdk/model.proto";
+import "groot/sdk/model.proto";
 
 option java_package = "com.alibaba.graphscope.proto.groot";
 option java_multiple_files = true;
@@ -25,13 +25,13 @@ service Client {
   rpc getSchema(GetSchemaRequest) returns (GetSchemaResponse);
   rpc ingestData(IngestDataRequest) returns (IngestDataResponse);
   rpc getMetrics(GetMetricsRequest) returns (GetMetricsResponse);
-  rpc loadJsonSchema(LoadJsonSchemaRequest) returns(LoadJsonSchemaResponse);
-  rpc dropSchema(DropSchemaRequest) returns(DropSchemaResponse);
-  rpc prepareDataLoad(PrepareDataLoadRequest) returns(PrepareDataLoadResponse);
-  rpc commitDataLoad(CommitDataLoadRequest) returns(CommitDataLoadResponse);
-  rpc getPartitionNum(GetPartitionNumRequest) returns(GetPartitionNumResponse);
-  rpc getLoggerInfo(GetLoggerInfoRequest) returns(GetLoggerInfoResponse);
-  rpc clearIngest(ClearIngestRequest) returns(ClearIngestResponse);
+  rpc loadJsonSchema(LoadJsonSchemaRequest) returns (LoadJsonSchemaResponse);
+  rpc dropSchema(DropSchemaRequest) returns (DropSchemaResponse);
+  rpc prepareDataLoad(PrepareDataLoadRequest) returns (PrepareDataLoadResponse);
+  rpc commitDataLoad(CommitDataLoadRequest) returns (CommitDataLoadResponse);
+  rpc getPartitionNum(GetPartitionNumRequest) returns (GetPartitionNumResponse);
+  rpc getLoggerInfo(GetLoggerInfoRequest) returns (GetLoggerInfoResponse);
+  rpc clearIngest(ClearIngestRequest) returns (ClearIngestResponse);
 }
 
 message GetSchemaRequest {
@@ -89,6 +89,27 @@ message CommitDataLoadRequest {
 
 message CommitDataLoadResponse {
 
+}
+
+message PrepareDataLoadPb {
+  DataLoadTargetPb target = 1;
+  int64 tableIdx = 2;
+}
+
+message CommitDataLoadPb {
+  DataLoadTargetPb target = 1;
+  int64 tableIdx = 2;
+  string path = 3;
+  int32 partitionId = 4;
+}
+
+message DataLoadTargetPb {
+  string label = 1;
+  string srcLabel = 2;
+  string dstLabel = 3;
+  int32 labelId = 4;
+  int32 srcLabelId = 5;
+  int32 dstLabelId = 6;
 }
 
 message GetPartitionNumRequest {

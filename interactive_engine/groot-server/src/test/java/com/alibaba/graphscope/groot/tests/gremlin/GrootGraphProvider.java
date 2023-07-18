@@ -13,8 +13,8 @@
  */
 package com.alibaba.graphscope.groot.tests.gremlin;
 
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
+import com.alibaba.graphscope.groot.common.exception.GrootException;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.AbstractGraphProvider;

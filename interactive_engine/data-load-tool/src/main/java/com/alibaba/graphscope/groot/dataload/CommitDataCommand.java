@@ -1,10 +1,10 @@
 package com.alibaba.graphscope.groot.dataload;
 
-import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
-import com.alibaba.graphscope.compiler.api.schema.GraphElement;
+import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
+import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
 import com.alibaba.graphscope.groot.dataload.databuild.ColumnMappingInfo;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
-import com.alibaba.graphscope.proto.DataLoadTargetPb;
+import com.alibaba.graphscope.proto.groot.DataLoadTargetPb;
 
 import java.io.IOException;
 import java.util.HashMap;

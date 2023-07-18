@@ -44,7 +44,7 @@
     <profile>
       <id>experimental</id>
       <modules>
-        <module>sdk-common</module>
+        <module>common</module>
         <module>executor/engine/pegasus/clients/java/client</module>
         <module>compiler</module>
       </modules>
@@ -64,7 +64,6 @@
         <module>frontend</module>
         <module>executor/engine/pegasus/clients/java/client</module>
         <module>compiler</module>
-        <module>sdk-common</module>
       </modules>
     </profile>
     <profile>
@@ -82,7 +81,6 @@
         <module>groot-server</module>
         <module>lgraph</module>
         <module>groot-client</module>
-        <module>sdk-common</module>
         <module>executor/engine/pegasus/clients/java/client</module>
         <module>compiler</module>
       </modules>
@@ -96,7 +94,6 @@
         <module>common</module>
         <module>data-load-tool</module>
         <module>groot-client</module>
-        <module>sdk-common</module>
       </modules>
       <build>
         <plugins>
@@ -227,11 +224,6 @@
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
         <artifactId>interactive-common</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.alibaba.graphscope</groupId>
-        <artifactId>sdk-common</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

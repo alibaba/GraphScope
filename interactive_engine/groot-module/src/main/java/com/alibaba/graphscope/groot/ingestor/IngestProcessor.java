@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.ingestor;
 
-import com.alibaba.graphscope.compiler.api.exception.IngestRejectException;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.IngestorConfig;
+import com.alibaba.graphscope.groot.common.exception.IngestRejectException;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.OperationBatch;

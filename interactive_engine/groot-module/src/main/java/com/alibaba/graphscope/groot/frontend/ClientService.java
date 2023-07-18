@@ -13,24 +13,22 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
-import com.alibaba.graphscope.compiler.api.schema.*;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.common.schema.api.*;
+import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
+import com.alibaba.graphscope.groot.common.schema.wrapper.*;
+import com.alibaba.graphscope.groot.common.util.DataLoadTarget;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsAggregator;
-import com.alibaba.graphscope.groot.schema.request.*;
-import com.alibaba.graphscope.proto.DataLoadTargetPb;
+import com.alibaba.graphscope.groot.schema.request.AddEdgeKindRequest;
+import com.alibaba.graphscope.groot.schema.request.CreateEdgeTypeRequest;
+import com.alibaba.graphscope.groot.schema.request.CreateVertexTypeRequest;
+import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
+import com.alibaba.graphscope.groot.schema.request.DropEdgeTypeRequest;
+import com.alibaba.graphscope.groot.schema.request.DropVertexTypeRequest;
+import com.alibaba.graphscope.groot.schema.request.RemoveEdgeKindRequest;
 import com.alibaba.graphscope.proto.groot.*;
-import com.alibaba.graphscope.proto.groot.CommitDataLoadRequest;
-import com.alibaba.graphscope.proto.groot.PrepareDataLoadRequest;
-import com.alibaba.graphscope.sdkcommon.common.DataLoadTarget;
-import com.alibaba.graphscope.sdkcommon.schema.EdgeKind;
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
-import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
-import com.alibaba.graphscope.sdkcommon.schema.PropertyDef;
-import com.alibaba.graphscope.sdkcommon.schema.PropertyValue;
-import com.alibaba.graphscope.sdkcommon.schema.TypeDef;
-import com.alibaba.graphscope.sdkcommon.schema.TypeEnum;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -41,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class ClientService extends ClientGrpc.ClientImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ClientService.class);
@@ -150,7 +149,9 @@ public class ClientService extends ClientGrpc.ClientImplBase {
             for (GraphVertex graphVertex : graphSchema.getVertexList()) {
                 String label = graphVertex.getLabel();
                 List<String> primaryKeyList =
-                        graphVertex.getPrimaryKeyConstraint().getPrimaryKeyList();
+                        graphVertex.getPrimaryKeyList().stream()
+                                .map(GraphProperty::getName)
+                                .collect(Collectors.toList());
                 List<GraphProperty> propertyList = graphVertex.getPropertyList();
                 TypeDef.Builder typeDefBuilder = TypeDef.newBuilder();
                 typeDefBuilder.setLabel(label);

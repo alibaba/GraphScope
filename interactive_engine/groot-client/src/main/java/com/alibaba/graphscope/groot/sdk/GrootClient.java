@@ -13,9 +13,8 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
-import com.alibaba.graphscope.proto.DataLoadTargetPb;
+import com.alibaba.graphscope.groot.sdk.schema.Schema;
 import com.alibaba.graphscope.proto.groot.*;
-import com.alibaba.graphscope.proto.write.*;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -31,9 +30,11 @@ import java.util.List;
 import java.util.Map;
 
 public class GrootClient {
-    private final ClientGrpc.ClientBlockingStub stub;
+    private final ClientGrpc.ClientBlockingStub clientStub;
     private final ClientWriteGrpc.ClientWriteBlockingStub writeStub;
     private final ClientBackupGrpc.ClientBackupBlockingStub backupStub;
+
+    private final GrootDdlServiceGrpc.GrootDdlServiceBlockingStub ddlStub;
     private String clientId = "DEFAULT";
 
     private BatchWriteRequest.Builder batchWriteBuilder;
@@ -41,10 +42,12 @@ public class GrootClient {
     private GrootClient(
             ClientGrpc.ClientBlockingStub clientBlockingStub,
             ClientWriteGrpc.ClientWriteBlockingStub clientWriteBlockingStub,
-            ClientBackupGrpc.ClientBackupBlockingStub clientBackupBlockingStub) {
-        this.stub = clientBlockingStub;
+            ClientBackupGrpc.ClientBackupBlockingStub clientBackupBlockingStub,
+            GrootDdlServiceGrpc.GrootDdlServiceBlockingStub ddlServiceBlockingStub) {
+        this.clientStub = clientBlockingStub;
         this.writeStub = clientWriteBlockingStub;
         this.backupStub = clientBackupBlockingStub;
+        this.ddlStub = ddlServiceBlockingStub;
         this.reset();
     }
 
@@ -54,65 +57,44 @@ public class GrootClient {
         this.batchWriteBuilder = BatchWriteRequest.newBuilder().setClientId(this.clientId);
     }
 
+    public com.alibaba.graphscope.proto.GraphDefPb submitSchema(Schema schema) {
+        BatchSubmitRequest request = schema.toProto();
+        BatchSubmitResponse response = ddlStub.batchSubmit(request);
+        return response.getGraphDef();
+    }
+
+    public com.alibaba.graphscope.proto.GraphDefPb submitSchema(Schema.Builder schema) {
+        return submitSchema(schema.build());
+    }
+
     public void initWriteSession() {
         this.clientId =
                 this.writeStub.getClientId(GetClientIdRequest.newBuilder().build()).getClientId();
         this.reset();
     }
 
-    private VertexRecordKeyPb getVertexRecordKeyPb(String label, Map<String, String> properties) {
-        VertexRecordKeyPb.Builder builder = VertexRecordKeyPb.newBuilder().setLabel(label);
-        if (properties != null) {
-            builder.putAllPkProperties(properties);
+    /**
+     * Commit the realtime write transaction.
+     * @return The snapshot_id. The data committed would be available after a while, or you could remoteFlush(snapshot_id)
+     * and wait for its return.
+     */
+    public long commit() {
+        long snapshotId = 0L;
+        if (this.batchWriteBuilder.getWriteRequestsCount() > 0) {
+            BatchWriteResponse response = this.writeStub.batchWrite(this.batchWriteBuilder.build());
+            snapshotId = response.getSnapshotId();
         }
-        return builder.build();
+        this.reset();
+        return snapshotId;
     }
 
-    private EdgeRecordKeyPb getEdgeRecordKeyPb(
-            String label, VertexRecordKeyPb src, VertexRecordKeyPb dst) {
-        return EdgeRecordKeyPb.newBuilder()
-                .setLabel(label)
-                .setSrcVertexKey(src)
-                .setDstVertexKey(dst)
-                .build();
-    }
-
-    private DataRecordPb getDataRecordPb(VertexRecordKeyPb key, Map<String, String> properties) {
-        DataRecordPb.Builder builder = DataRecordPb.newBuilder().setVertexRecordKey(key);
-        if (properties != null) {
-            builder.putAllProperties(properties);
-        }
-        return builder.build();
-    }
-
-    private DataRecordPb getDataRecordPb(EdgeRecordKeyPb key, Map<String, String> properties) {
-        DataRecordPb.Builder builder = DataRecordPb.newBuilder().setEdgeRecordKey(key);
-        if (properties != null) {
-            builder.putAllProperties(properties);
-        }
-        return builder.build();
-    }
-
-    private DataRecordPb getVertexDataRecord(String label, Map<String, String> properties) {
-        VertexRecordKeyPb vertexRecordKey = getVertexRecordKeyPb(label, null);
-        return getDataRecordPb(vertexRecordKey, properties);
-    }
-
-    private DataRecordPb getEdgeDataRecord(
-            String label,
-            String srcLabel,
-            String dstLabel,
-            Map<String, String> srcPk,
-            Map<String, String> dstPk,
-            Map<String, String> properties) {
-        VertexRecordKeyPb src = getVertexRecordKeyPb(srcLabel, srcPk);
-        VertexRecordKeyPb dst = getVertexRecordKeyPb(dstLabel, dstPk);
-        EdgeRecordKeyPb edgeRecordKeyPb = getEdgeRecordKeyPb(label, src, dst);
-        return getDataRecordPb(edgeRecordKeyPb, properties);
-    }
-
-    private WriteRequestPb getWriteRequestPb(DataRecordPb record, WriteTypePb writeType) {
-        return WriteRequestPb.newBuilder().setWriteType(writeType).setDataRecord(record).build();
+    /**
+     * Block until this snapshot becomes available.
+     * @param snapshotId the snapshot id to be flushed
+     */
+    public void remoteFlush(long snapshotId) {
+        this.writeStub.remoteFlush(
+                RemoteFlushRequest.newBuilder().setSnapshotId(snapshotId).build());
     }
 
     /**
@@ -211,46 +193,25 @@ public class GrootClient {
         this.batchWriteBuilder.addWriteRequests(request);
     }
 
-    /**
-     * Commit the realtime write transaction.
-     * @return The snapshot_id. The data committed would be available after a while, or you could remoteFlush(snapshot_id)
-     * and wait for its return.
-     */
-    public long commit() {
-        long snapshotId = 0L;
-        if (this.batchWriteBuilder.getWriteRequestsCount() > 0) {
-            BatchWriteResponse response = this.writeStub.batchWrite(this.batchWriteBuilder.build());
-            snapshotId = response.getSnapshotId();
-        }
-        this.reset();
-        return snapshotId;
-    }
-
-    /**
-     * Block until this snapshot becomes available.
-     * @param snapshotId the snapshot id to be flushed
-     */
-    public void remoteFlush(long snapshotId) {
-        this.writeStub.remoteFlush(
-                RemoteFlushRequest.newBuilder().setSnapshotId(snapshotId).build());
-    }
-
     public GraphDefPb getSchema() {
-        GetSchemaResponse response = this.stub.getSchema(GetSchemaRequest.newBuilder().build());
+        GetSchemaResponse response =
+                this.clientStub.getSchema(GetSchemaRequest.newBuilder().build());
         return response.getGraphDef();
     }
 
     public GraphDefPb dropSchema() {
-        DropSchemaResponse response = this.stub.dropSchema(DropSchemaRequest.newBuilder().build());
+        DropSchemaResponse response =
+                this.clientStub.dropSchema(DropSchemaRequest.newBuilder().build());
         return response.getGraphDef();
     }
 
     public GraphDefPb prepareDataLoad(List<DataLoadTargetPb> targets) {
         PrepareDataLoadRequest.Builder builder = PrepareDataLoadRequest.newBuilder();
+
         for (DataLoadTargetPb target : targets) {
             builder.addDataLoadTargets(target);
         }
-        PrepareDataLoadResponse response = this.stub.prepareDataLoad(builder.build());
+        PrepareDataLoadResponse response = this.clientStub.prepareDataLoad(builder.build());
         return response.getGraphDef();
     }
 
@@ -258,18 +219,18 @@ public class GrootClient {
         CommitDataLoadRequest.Builder builder = CommitDataLoadRequest.newBuilder();
         tableToTarget.forEach(builder::putTableToTarget);
         builder.setPath(path);
-        CommitDataLoadResponse response = this.stub.commitDataLoad(builder.build());
+        CommitDataLoadResponse response = this.clientStub.commitDataLoad(builder.build());
     }
 
     public String getMetrics(String roleNames) {
         GetMetricsResponse response =
-                this.stub.getMetrics(
+                this.clientStub.getMetrics(
                         GetMetricsRequest.newBuilder().setRoleNames(roleNames).build());
         return response.getMetricsJson();
     }
 
     public void ingestData(String path) {
-        this.stub.ingestData(IngestDataRequest.newBuilder().setDataPath(path).build());
+        this.clientStub.ingestData(IngestDataRequest.newBuilder().setDataPath(path).build());
     }
 
     public void ingestData(String path, Map<String, String> config) {
@@ -278,7 +239,7 @@ public class GrootClient {
         if (config != null) {
             builder.putAllConfig(config);
         }
-        this.stub.ingestData(builder.build());
+        this.clientStub.ingestData(builder.build());
     }
 
     public String loadJsonSchema(Path jsonFile) throws IOException {
@@ -288,14 +249,14 @@ public class GrootClient {
 
     public String loadJsonSchema(String json) {
         LoadJsonSchemaResponse response =
-                this.stub.loadJsonSchema(
+                this.clientStub.loadJsonSchema(
                         LoadJsonSchemaRequest.newBuilder().setSchemaJson(json).build());
         return response.getGraphDef().toString();
     }
 
     public int getPartitionNum() {
         GetPartitionNumResponse response =
-                this.stub.getPartitionNum(GetPartitionNumRequest.newBuilder().build());
+                this.clientStub.getPartitionNum(GetPartitionNumRequest.newBuilder().build());
         return response.getPartitionNum();
     }
 
@@ -346,7 +307,7 @@ public class GrootClient {
     }
 
     public void clearIngest(String dataPath) {
-        this.stub.clearIngest(ClearIngestRequest.newBuilder().setDataPath(dataPath).build());
+        this.clientStub.clearIngest(ClearIngestRequest.newBuilder().setDataPath(dataPath).build());
     }
 
     public static GrootClientBuilder newBuilder() {
@@ -405,14 +366,75 @@ public class GrootClient {
                     ClientWriteGrpc.newBlockingStub(channel);
             ClientBackupGrpc.ClientBackupBlockingStub clientBackupBlockingStub =
                     ClientBackupGrpc.newBlockingStub(channel);
+            GrootDdlServiceGrpc.GrootDdlServiceBlockingStub ddlServiceBlockingStub =
+                    GrootDdlServiceGrpc.newBlockingStub(channel);
             if (username != null && password != null) {
                 BasicAuth basicAuth = new BasicAuth(username, password);
                 clientBlockingStub = clientBlockingStub.withCallCredentials(basicAuth);
                 clientWriteBlockingStub = clientWriteBlockingStub.withCallCredentials(basicAuth);
                 clientBackupBlockingStub = clientBackupBlockingStub.withCallCredentials(basicAuth);
+                ddlServiceBlockingStub = ddlServiceBlockingStub.withCallCredentials(basicAuth);
             }
             return new GrootClient(
-                    clientBlockingStub, clientWriteBlockingStub, clientBackupBlockingStub);
+                    clientBlockingStub,
+                    clientWriteBlockingStub,
+                    clientBackupBlockingStub,
+                    ddlServiceBlockingStub);
         }
+    }
+
+    private VertexRecordKeyPb getVertexRecordKeyPb(String label, Map<String, String> properties) {
+        VertexRecordKeyPb.Builder builder = VertexRecordKeyPb.newBuilder().setLabel(label);
+        if (properties != null) {
+            builder.putAllPkProperties(properties);
+        }
+        return builder.build();
+    }
+
+    private EdgeRecordKeyPb getEdgeRecordKeyPb(
+            String label, VertexRecordKeyPb src, VertexRecordKeyPb dst) {
+        return EdgeRecordKeyPb.newBuilder()
+                .setLabel(label)
+                .setSrcVertexKey(src)
+                .setDstVertexKey(dst)
+                .build();
+    }
+
+    private DataRecordPb getDataRecordPb(VertexRecordKeyPb key, Map<String, String> properties) {
+        DataRecordPb.Builder builder = DataRecordPb.newBuilder().setVertexRecordKey(key);
+        if (properties != null) {
+            builder.putAllProperties(properties);
+        }
+        return builder.build();
+    }
+
+    private DataRecordPb getDataRecordPb(EdgeRecordKeyPb key, Map<String, String> properties) {
+        DataRecordPb.Builder builder = DataRecordPb.newBuilder().setEdgeRecordKey(key);
+        if (properties != null) {
+            builder.putAllProperties(properties);
+        }
+        return builder.build();
+    }
+
+    private DataRecordPb getVertexDataRecord(String label, Map<String, String> properties) {
+        VertexRecordKeyPb vertexRecordKey = getVertexRecordKeyPb(label, null);
+        return getDataRecordPb(vertexRecordKey, properties);
+    }
+
+    private DataRecordPb getEdgeDataRecord(
+            String label,
+            String srcLabel,
+            String dstLabel,
+            Map<String, String> srcPk,
+            Map<String, String> dstPk,
+            Map<String, String> properties) {
+        VertexRecordKeyPb src = getVertexRecordKeyPb(srcLabel, srcPk);
+        VertexRecordKeyPb dst = getVertexRecordKeyPb(dstLabel, dstPk);
+        EdgeRecordKeyPb edgeRecordKeyPb = getEdgeRecordKeyPb(label, src, dst);
+        return getDataRecordPb(edgeRecordKeyPb, properties);
+    }
+
+    private WriteRequestPb getWriteRequestPb(DataRecordPb record, WriteTypePb writeType) {
+        return WriteRequestPb.newBuilder().setWriteType(writeType).setDataRecord(record).build();
     }
 }

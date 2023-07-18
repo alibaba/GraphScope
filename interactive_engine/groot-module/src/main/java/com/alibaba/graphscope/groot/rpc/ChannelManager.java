@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.rpc;
 
-import com.alibaba.graphscope.compiler.api.exception.NodeConnectException;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.*;
+import com.alibaba.graphscope.groot.common.exception.NodeConnectException;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;

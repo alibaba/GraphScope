@@ -19,7 +19,7 @@
     </dependency>
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
-      <artifactId>sdk-common</artifactId>
+      <artifactId>groot-client</artifactId>
     </dependency>
     <dependency>
         <groupId>io.grpc</groupId>
@@ -117,6 +117,10 @@
       <groupId>com.aliyun.odps</groupId>
       <artifactId>odps-sdk-core</artifactId>
       <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>groot-client</artifactId>
     </dependency>
   </dependencies>
 
