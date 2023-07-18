@@ -38,11 +38,11 @@ def cpp_out(relative_dir, output_dir):
     files = gather_all_proto(relative_dir)
     for proto_file in files:
         cmd = [
-                shutil.which("protoc"),
-                "-I.",
-                f"--cpp_out={output_dir}",
-                proto_file,
-            ]
+            shutil.which("protoc"),
+            "-I.",
+            f"--cpp_out={output_dir}",
+            proto_file,
+        ]
         subprocess.check_call(
             cmd,
             stderr=subprocess.STDOUT,
@@ -52,15 +52,15 @@ def cpp_out(relative_dir, output_dir):
 def python_out(relative_dir, output_dir):
     files = gather_all_proto(relative_dir)
     for proto_file in files:
-        cmd=[
-                sys.executable,
-                "-m",
-                "grpc_tools.protoc",
-                "-I.",
-                f"--python_out={output_dir}",
-                f"--mypy_out={output_dir}",
-                proto_file,
-            ]
+        cmd = [
+            sys.executable,
+            "-m",
+            "grpc_tools.protoc",
+            "-I.",
+            f"--python_out={output_dir}",
+            f"--mypy_out={output_dir}",
+            proto_file,
+        ]
         subprocess.check_call(
             cmd,
             stderr=subprocess.STDOUT,
@@ -75,12 +75,12 @@ def cpp_service_out(relative_dir, output_dir):
     files = gather_all_proto(relative_dir, suffix)
     for proto_file in files:
         cmd = [
-                shutil.which("protoc"),
-                "-I.",
-                f"--grpc_out={output_dir}",
-                f"--plugin=protoc-gen-grpc={plugin_path}",
-                proto_file,
-            ]
+            shutil.which("protoc"),
+            "-I.",
+            f"--grpc_out={output_dir}",
+            f"--plugin=protoc-gen-grpc={plugin_path}",
+            proto_file,
+        ]
         subprocess.check_call(
             cmd,
             stderr=subprocess.STDOUT,
@@ -92,16 +92,16 @@ def python_service_out(relative_dir, output_dir):
     files = gather_all_proto(relative_dir, suffix)
     for proto_file in files:
         cmd = [
-                sys.executable,
-                "-m",
-                "grpc_tools.protoc",
-                "-I.",
-                f"--python_out={output_dir}",
-                f"--mypy_out={output_dir}",
-                f"--grpc_python_out={output_dir}",
-                f"--mypy_grpc_out={output_dir}",
-                proto_file,
-            ]
+            sys.executable,
+            "-m",
+            "grpc_tools.protoc",
+            "-I.",
+            f"--python_out={output_dir}",
+            f"--mypy_out={output_dir}",
+            f"--grpc_python_out={output_dir}",
+            f"--mypy_grpc_out={output_dir}",
+            proto_file,
+        ]
         subprocess.check_call(
             cmd,
             stderr=subprocess.STDOUT,

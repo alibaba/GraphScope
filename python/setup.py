@@ -58,16 +58,16 @@ class BuildProto(Command):
 
     def run(self):
         cmd = [
-                sys.executable,
-                os.path.join(
-                    pkg_root,
-                    "..",
-                    "proto",
-                    "proto_generator.py",
-                ),
-                os.path.join(pkg_root, "graphscope", "proto"),
-                "--python",
-            ]
+            sys.executable,
+            os.path.join(
+                pkg_root,
+                "..",
+                "proto",
+                "proto_generator.py",
+            ),
+            os.path.join(pkg_root, "graphscope", "proto"),
+            "--python",
+        ]
         print(" ".join(cmd))
         subprocess.check_call(
             cmd,
