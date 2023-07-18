@@ -1,0 +1,1 @@
+MATCH( msg : POST | COMMENT { id: $messageId}) <- [:REPLYOF] - (com : COMMENT) - [:HASCREATOR] -> (replyAuthor : PERSON), (msg) - [:HASCREATOR] -> (otherP: PERSON) - [:KNOWS] - (replyAuthor) return replyAuthor

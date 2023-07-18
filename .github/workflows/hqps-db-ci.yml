@@ -1,0 +1,114 @@
+name: GraphScope GIE HighQPS DB CI
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'flex/**'
+      - 'interactive_engine/**'
+      - '.github/workflows/hqps-db-ci.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'flex/**'
+      - 'interactive_engine/**'
+      - '.github/workflows/hqps-db-ci.yml'
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  test-hqps-engine:
+    runs-on: ubuntu-20.04
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.4
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/cache@v3
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+            ${{ runner.os }}-maven-
+
+    - uses: actions/cache@v3
+      with:
+        path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.cache/sccache
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Install latest libgrape-lite
+      if: false
+      run: |
+        git clone --single-branch https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
+        cd /tmp/libgrape-lite
+        mkdir -p build && cd build
+        cmake ..
+        make -j$(nproc)
+        make install
+
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v3
+
+    - name: Build
+      env:
+        GIE_HOME: ${{ github.workspace }}/interactive_engine/
+        HOME: /home/graphscope/
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        mkdir build && cd build
+        cmake .. && sudo make -j$(nproc)
+        sudo make install
+
+        # cargo
+        . /home/graphscope/.cargo/env
+        which cargo
+
+        # build compiler
+        cd ${GIE_HOME}/compiler
+        make build
+
+    - name: Run codegen test.
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        GIE_HOME: ${{ github.workspace }}/interactive_engine/
+        HOME : /home/graphscope/
+      run: |
+        # download dataset
+        git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
+
+        #flex_test_dir=${GS_TEST_DIR}/flex
+        ## preprocess bulk_load.yaml to use gstest_dir
+        #sed -i "s|workspaces/gstest|$GS_TEST_DIR|" ${flex_test_dir}/ldbc-sf01-long-date/audit_bulk_load.yaml
+
+        # create tmp ir.compiler.properties
+        touch /tmp/ir.compiler.properties
+        echo "engine.type: hiactor" >> /tmp/ir.compiler.properties
+        echo "graph.schema: ${GIE_HOME}/executor/ir/core/resource/modern_schema.json" >> /tmp/ir.compiler.properties
+        echo "graph.store: exp" >> /tmp/ir.compiler.properties
+        echo "graph.planner: {\"isOn\":true,\"opt\":\"RBO\",\"rules\":[\"FilterMatchRule\"]}" >> /tmp/ir.compiler.properties
+
+        cd ${GITHUB_WORKSPACE}/flex/bin
+
+        for i in 2 3 5 6 8 9 11 12;
+        do
+          cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/ic${i}_adhoc.cypher -w=/tmp/codgen/"
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=/tmp/ir.compiler.properties "
+          cmd=${cmd}" --graph_schema_path=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/ldbc_schema_csr_ic.json"
+          echo $cmd
+          eval ${cmd}
+        done
+

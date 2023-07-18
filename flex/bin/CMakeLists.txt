@@ -1,13 +1,14 @@
-find_package (Hiactor)
-if (Hiactor_FOUND)
-  add_executable(rt_server rt_server.cc)
-  target_link_libraries(rt_server flex_utils flex_rt_mutable_graph flex_graph_db flex_graph_db_server)
-  
-  install(TARGETS rt_server
-          RUNTIME DESTINATION bin
-          ARCHIVE DESTINATION lib
-          LIBRARY DESTINATION lib)
-endif ()
+find_package(Hiactor)
+
+if(Hiactor_FOUND)
+        add_executable(rt_server rt_server.cc)
+        target_link_libraries(rt_server flex_utils flex_rt_mutable_graph flex_graph_db flex_server)
+
+        install(TARGETS rt_server
+                RUNTIME DESTINATION bin
+                ARCHIVE DESTINATION lib
+                LIBRARY DESTINATION lib)
+endif()
 
 add_executable(rt_admin rt_admin.cc)
 target_link_libraries(rt_admin flex_utils flex_rt_mutable_graph flex_graph_db)
@@ -24,3 +25,17 @@ install(TARGETS flex_analytical_engine
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib)
+
+if(BUILD_HQPS)
+        if(Hiactor_FOUND)
+                add_executable(sync_server sync_server.cc)
+                target_link_libraries(sync_server flex_utils flex_graph_db flex_server hqps_plan_proto ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
+
+                install(TARGETS sync_server
+                        RUNTIME DESTINATION bin
+                        ARCHIVE DESTINATION lib
+                        LIBRARY DESTINATION lib)
+        endif()
+        # install the script
+        install(PROGRAMS load_plan_and_gen.sh DESTINATION bin)
+endif()
