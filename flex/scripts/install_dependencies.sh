@@ -10,7 +10,7 @@ apt install -y xfslibs-dev libgnutls28-dev liblz4-dev maven openssl pkg-config \
 
 git clone https://github.com/alibaba/libgrape-lite.git
 cd libgrape-lite
-git checkout 8add4b330c31f8a47d83c5804072a8d42d10d32d
+git checkout v0.3.2
 mkdir build && cd build && cmake ..
 make -j && make install
 cp /usr/local/lib/libgrape-lite.so /usr/lib/libgrape-lite.so

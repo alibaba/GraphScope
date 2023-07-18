@@ -12,7 +12,7 @@ limitations under the License.
 
 #include "grin/src/predefine.h"
 
-#include "grin/include/include/index/internal_id.h"
+#include "grin/include/index/internal_id.h"
 
 #if defined(GRIN_ENABLE_VERTEX_INTERNAL_ID_INDEX) && \
     !defined(GRIN_WITH_VERTEX_PROPERTY)

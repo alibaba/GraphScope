@@ -12,8 +12,8 @@ limitations under the License.
 
 #include "grin/src/predefine.h"
 
-#include "grin/include/include/common/error.h"
-#include "grin/include/include/property/property.h"
+#include "grin/include/common/error.h"
+#include "grin/include/property/property.h"
 
 void grin_destroy_string_value(GRIN_GRAPH g, const char* value) {
   delete value;

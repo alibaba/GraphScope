@@ -12,7 +12,7 @@ limitations under the License.
 
 #include "grin/src/predefine.h"
 
-#include "grin/include/include/property/row.h"
+#include "grin/include/property/row.h"
 
 #ifdef GRIN_ENABLE_ROW
 void grin_destroy_row(GRIN_GRAPH g, GRIN_ROW r) {

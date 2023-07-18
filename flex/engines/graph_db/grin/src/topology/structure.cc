@@ -15,7 +15,7 @@ limitations under the License.
 
 #include "grin/src/predefine.h"
 
-#include "grin/include/include/topology/structure.h"
+#include "grin/include/topology/structure.h"
 
 /**
  * @brief Get a (non-partitioned) graph from storage

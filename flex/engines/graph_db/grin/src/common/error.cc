@@ -17,7 +17,7 @@ limitations under the License.
 
 #include "grin/src/predefine.h"
 
-#include "grin/include/include/common/error.h"
+#include "grin/include/common/error.h"
 
 __thread GRIN_ERROR_CODE grin_error_code = GRIN_ERROR_CODE::NO_ERROR;
 

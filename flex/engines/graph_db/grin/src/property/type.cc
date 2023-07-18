@@ -12,7 +12,7 @@ limitations under the License.
 
 #include "grin/src/predefine.h"
 
-#include "grin/include/include/property/type.h"
+#include "grin/include/property/type.h"
 
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 // Vertex type

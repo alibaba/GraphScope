@@ -1,7 +1,7 @@
 #include "grin/src/predefine.h"
 
-#include "grin/include/include/common/error.h"
-#include "grin/include/include/property/primarykey.h"
+#include "grin/include/common/error.h"
+#include "grin/include/property/primarykey.h"
 #ifdef GRIN_ENABLE_VERTEX_PRIMARY_KEYS
 /**
  * @brief Get the vertex types that have primary keys

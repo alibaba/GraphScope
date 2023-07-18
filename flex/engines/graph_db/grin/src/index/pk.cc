@@ -12,7 +12,7 @@ limitations under the License.
 
 #include "grin/src/predefine.h"
 
-#include "grin/include/include/index/pk.h"
+#include "grin/include/index/pk.h"
 
 #if defined(GRIN_ENABLE_VERTEX_PK_INDEX) && \
     defined(GRIN_ENABLE_VERTEX_PRIMARY_KEYS)
