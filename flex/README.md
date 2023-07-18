@@ -11,7 +11,7 @@ GraphScope Flex is an ongoing evolution of GraphScope. It champions a modular de
 ### Architecture
 
 <div align="center">
-    <img src="https://graphscope.io/docs/_images/gsflex-overview.png" width="600" alt="GraphScope Flex architecture" />
+    <img src="/docs/images/gsflex-overview.png" width="600" alt="GraphScope Flex architecture" />
 </div>
 
 The GraphScope Flex stack (as shown in the figure), consists of multiple components that users can combine like LEGO bricks to customize their graph computing deployments. The components are classified into three layers: 
@@ -44,7 +44,7 @@ Please use `flexbuild --help` to learn more.
 ### Case 1: For online BI analysis
 
 <div align="center">
-    <img src="https://graphscope.io/docs/_images/gsflex-case1.png" width="500" alt="GraphScope Flex usecase-1" />
+    <img src="/docs/images/gsflex-case1.png" width="500" alt="GraphScope Flex usecase-1" />
 </div>
 
 BI analysis is for analysts who interactively analyze data in a WebUI. While high concurrency is unlikely, low latency for complex queries is crucial.
@@ -60,7 +60,7 @@ To build the artifacts for this use case, run the following command:
 ### Case 2: For high QPS queries
 
 <div align="center">
-    <img src="https://graphscope.io/docs/_images/gsflex-case2.png" width="500" alt="GraphScope Flex usecase-2" />
+    <img src="/docs/images/gsflex-case2.png" width="500" alt="GraphScope Flex usecase-2" />
 </div>
 
 In some service scenarios, e.g., recommendation or searching, the graph queries are coming at an extremely high rate and demands high throughput. In these scenarios, GraphScope Flex can be deployed with a different component set. The **compiler** generates an optimized query plan and **Hiactor Codegen** produces a physical plan tailored for **Hiactor**, a high-performance and concurrent actor framework for OLTP-like queries.
@@ -76,7 +76,7 @@ Please note that we use the artifacts built by this command for LDBC SNB benchma
 ### Case 3: For offline graph analytics
 
 <div align="center">
-    <img src="https://graphscope.io/docs/_images/gsflex-case3.png" width="500" alt="GraphScope Flex usecase-3" />
+    <img src="/docs/images/gsflex-case3.png" width="500" alt="GraphScope Flex usecase-3" />
 </div>
 
 GraphScope Flex is an efficient and user-friendly platform for performing graph analytics. It offers **built-in algorithms**, as well as **interfaces** for developing customized algorithms. The runtime, based on **GRAPE**, is fragment-centric and extensible, supporting multiple programming models like **FLASH**, **PIE**, and **Pregel**. Sequential algorithms can be easily parallelized or incrementalized using the **Ingress** component. To achieve high performance, an **in-memory graph store** is deployed in this stack.
@@ -91,7 +91,7 @@ To build the artifacts for this use case, run the following command:
 ### Case 4: For graph learning tasks
 
 <div align="center">
-    <img src="https://graphscope.io/docs/_images/gsflex-case4.png" width="500" alt="GraphScope Flex usecase-4" />
+    <img src="/docs/images/gsflex-case4.png" width="500" alt="GraphScope Flex usecase-4" />
 </div>
 
 GraphScope Flex's GNN framework supports billion-scale graphs in industrial scenarios. It provides GNN model development paradigms, **example models**,  and the flexibility to choose between **TensorFlow** or **PyTorch** as the training backend. Furthermore, the framework employs decoupled sampling and training processes, which can be independently scaled for optimal end-to-end throughput, providing superior performance.
