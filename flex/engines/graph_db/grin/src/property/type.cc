@@ -124,11 +124,12 @@ GRIN_EDGE_TYPE_LIST grin_get_edge_type_list(GRIN_GRAPH g) {
   auto etl = new GRIN_EDGE_TYPE_LIST_T();
   auto edge_label_num = _g->edge_label_num_;
   auto vertex_label_num = _g->vertex_label_num_;
-  for (auto src_label_i = 0; src_label_i < vertex_label_num; ++src_label_i) {
+  for (size_t src_label_i = 0; src_label_i < vertex_label_num; ++src_label_i) {
     const auto& src_label = _g->schema().get_vertex_label_name(src_label_i);
-    for (auto dst_label_i = 0; dst_label_i < vertex_label_num; ++dst_label_i) {
+    for (size_t dst_label_i = 0; dst_label_i < vertex_label_num;
+         ++dst_label_i) {
       const auto& dst_label = _g->schema().get_vertex_label_name(dst_label_i);
-      for (auto edge_label_i = 0; edge_label_i < edge_label_num;
+      for (size_t edge_label_i = 0; edge_label_i < edge_label_num;
            ++edge_label_i) {
         const auto& edge_label = _g->schema().get_edge_label_name(edge_label_i);
         if (_g->schema().exist(src_label, dst_label, edge_label)) {

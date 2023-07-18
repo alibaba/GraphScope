@@ -1054,8 +1054,7 @@ void test_perf(const char* uri_str) { test_vertex_property_value(uri_str); }
 int main(int argc, char** argv) {
   const char* uri_str =
       "flex://"
-      "/Users/liulx/Downloads/code/GraphScope/flex/storages/rt_mutable_graph/"
-      "modern_graph";
+      "../../../../storages/rt_mutable_graph/modern_graph/";
 
   test_index(uri_str);
   test_property(uri_str);

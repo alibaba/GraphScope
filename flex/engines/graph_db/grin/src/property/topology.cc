@@ -31,7 +31,7 @@ size_t grin_get_edge_num_by_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
   auto oe = _g->get_oe_csr(src_label, dst_label, edge_label);
   auto vertex_num = _g->vertex_num(src_label);
   size_t edge_num = 0;
-  for (auto i = 0; i < vertex_num; ++i) {
+  for (size_t i = 0; i < vertex_num; ++i) {
     edge_num += oe->edge_iter(i)->size();
   }
   if (edge_num != 0) {
@@ -39,7 +39,7 @@ size_t grin_get_edge_num_by_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
   }
   auto ie = _g->get_ie_csr(dst_label, src_label, edge_label);
   vertex_num = _g->vertex_num(dst_label);
-  for (auto i = 0; i < vertex_num; ++i) {
+  for (size_t i = 0; i < vertex_num; ++i) {
     edge_num += ie->edge_iter(i)->size();
   }
   return edge_num;

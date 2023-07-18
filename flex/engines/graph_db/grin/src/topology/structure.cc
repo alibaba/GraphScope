@@ -38,6 +38,10 @@ GRIN_GRAPH grin_get_graph_from_storage(const char* uri) {
   std::string graph_schema_path = _uri + "/modern_graph.yaml";
   std::string data_path = uri;
   std::string bulk_load_config_path = _uri + "/bulk_load.yaml";
+  if (!std::filesystem::exists(graph_schema_path) ||
+      !(std::filesystem::exists(bulk_load_config_path))) {
+    return GRIN_NULL_GRAPH;
+  }
   auto ret = gs::Schema::LoadFromYaml(graph_schema_path, bulk_load_config_path);
   const auto& schema = std::get<0>(ret);
   auto& vertex_files = std::get<1>(ret);
