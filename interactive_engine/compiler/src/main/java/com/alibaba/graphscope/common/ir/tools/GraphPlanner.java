@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.ir.tools;
 import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FileLoadType;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
@@ -63,14 +64,19 @@ public class GraphPlanner {
         this.plannerConfig = PlannerConfig.create(this.graphConfig);
         this.optPlanner = createRelOptPlanner(this.plannerConfig);
         this.rexBuilder = new GraphRexBuilder(new JavaTypeFactoryImpl());
-        this.idGenerator = new AtomicLong(0L);
+        this.idGenerator = new AtomicLong(FrontendConfig.FRONTEND_SERVER_ID.get(graphConfig));
     }
 
     public PlannerInstance instance(ParseTree parsedQuery, IrMeta irMeta) {
-        long id = idGenerator.getAndIncrement();
+        long id = generateInstanceId();
         String name = "ir_plan_" + id;
         GraphOptCluster optCluster = GraphOptCluster.create(this.optPlanner, this.rexBuilder);
         return new PlannerInstance(id, name, parsedQuery, optCluster, irMeta);
+    }
+
+    public long generateInstanceId() {
+        long delta = FrontendConfig.FRONTEND_SERVER_NUM.get(graphConfig);
+        return idGenerator.getAndAdd(delta);
     }
 
     public class PlannerInstance {

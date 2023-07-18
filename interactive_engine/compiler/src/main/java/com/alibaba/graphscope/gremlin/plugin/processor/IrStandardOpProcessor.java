@@ -76,13 +76,11 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 import javax.script.SimpleBindings;
 
 public class IrStandardOpProcessor extends StandardOpProcessor {
-    protected static final AtomicLong JOB_ID_COUNTER = new AtomicLong(0L);
     protected Graph graph;
     protected GraphTraversalSource g;
     protected Configs configs;
@@ -121,7 +119,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
 
         String language = AntlrGremlinScriptEngineFactory.LANGUAGE_NAME;
 
-        long jobId = JOB_ID_COUNTER.incrementAndGet();
+        long jobId = graphPlanner.generateInstanceId();
         IrMeta irMeta = metaQueryCallback.beforeExec();
         QueryStatusCallback statusCallback = createQueryStatusCallback(script, jobId);
         GremlinExecutor.LifeCycle lifeCycle =
