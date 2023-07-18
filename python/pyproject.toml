@@ -1,5 +1,6 @@
 [build-system]
-requires = ["setuptools_scm", "grpcio>=1.49", "grpcio-tools>=1.49", "mypy-protobuf", "numpy", "wheel"]
+requires = ["setuptools", "setuptools_scm", "wheel", "grpcio>=1.49", "grpcio-tools>=1.49", "mypy-protobuf", "numpy"]
+build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 88

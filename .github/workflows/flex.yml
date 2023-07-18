@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:latest
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.3
     steps:
     - uses: actions/checkout@v3
 
@@ -41,10 +41,13 @@ jobs:
         make install
 
     - name: Build
+      env:
+        HOME: /home/graphscope/
       run: |
-        cd flex
+        cd ${GITHUB_WORKSPACE}/flex
         mkdir build && cd build
-        cmake .. && make -j$(nproc)
+        cmake .. && sudo make -j$(nproc)
+        
     - name: GRIN on Mutable Csr Test
       run: |
         cd flex/engines/graph_db/grin

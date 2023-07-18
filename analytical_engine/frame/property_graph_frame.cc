@@ -85,6 +85,7 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
 
     graph_def.set_key(graph_name);
     graph_def.set_compact_edges(frag->compact_edges());
+    graph_def.set_use_perfect_hash(frag->use_perfect_hash());
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
       graph_def.extension().UnpackTo(&vy_info);
@@ -160,6 +161,7 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
 
     graph_def.set_key(graph_name);
     graph_def.set_compact_edges(frag->compact_edges());
+    graph_def.set_use_perfect_hash(frag->use_perfect_hash());
 
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
@@ -264,6 +266,7 @@ ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
   gs::rpc::graph::GraphDefPb graph_def;
   graph_def.set_key(dst_graph_name);
   graph_def.set_compact_edges(arrow_frag->compact_edges());
+  graph_def.set_use_perfect_hash(arrow_frag->use_perfect_hash());
   gs::rpc::graph::VineyardInfoPb vy_info;
   if (graph_def.has_extension()) {
     graph_def.extension().UnpackTo(&vy_info);
@@ -310,6 +313,7 @@ ToDynamicFragment(const grape::CommSpec& comm_spec,
   graph_def.set_directed(dynamic_frag->directed());
   graph_def.set_graph_type(gs::rpc::graph::DYNAMIC_PROPERTY);
   graph_def.set_compact_edges(false);
+  graph_def.set_use_perfect_hash(false);
   gs::rpc::graph::MutableGraphInfoPb graph_info;
   if (graph_def.has_extension()) {
     graph_def.extension().UnpackTo(&graph_info);
@@ -354,6 +358,7 @@ AddLabelsToGraph(vineyard::ObjectID origin_frag_id,
 
   graph_def.set_key(graph_name);
   graph_def.set_compact_edges(frag->compact_edges());
+  graph_def.set_use_perfect_hash(frag->use_perfect_hash());
 
   gs::rpc::graph::VineyardInfoPb vy_info;
   if (graph_def.has_extension()) {

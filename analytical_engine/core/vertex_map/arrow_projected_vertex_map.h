@@ -154,6 +154,8 @@ class ArrowProjectedVertexMap
 
   fid_t GetFidFromGid(vid_t gid) const { return id_parser_.GetFid(gid); }
 
+  bool use_perfect_hash() const { return vertex_map_->use_perfect_hash(); }
+
  private:
   fid_t fnum_;
   label_id_t label_num_;
