@@ -1598,7 +1598,8 @@ class DynamicFragmentMutator {
         bool src_new_add = vm_ptr_->AddVertex(std::move(src), src_gid);
         bool dst_new_add = vm_ptr_->AddVertex(std::move(dst), dst_gid);
         if (src_fid == fid) {
-          if (src_new_add || (fragment_->InnerVertexGid2Lid(src_gid, lid) &&
+          fragment_->InnerVertexGid2Lid(src_gid, lid);
+          if (src_new_add || (fragment_->iv_alive_.cardinality() > lid &&
                               !fragment_->iv_alive_.get_bit(lid))) {
             vdata_t empty_data(rapidjson::kObjectType);
             mutation.vertices_to_add.emplace_back(src_gid,
@@ -1606,7 +1607,8 @@ class DynamicFragmentMutator {
           }
         }
         if (dst_fid == fid) {
-          if (dst_new_add || (fragment_->InnerVertexGid2Lid(src_gid, lid) &&
+          fragment_->InnerVertexGid2Lid(dst_gid, lid);
+          if (dst_new_add || (fragment_->iv_alive_.cardinality() > lid &&
                               !fragment_->iv_alive_.get_bit(lid))) {
             vdata_t empty_data(rapidjson::kObjectType);
             mutation.vertices_to_add.emplace_back(dst_gid,
