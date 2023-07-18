@@ -140,6 +140,7 @@ typedef enum {
 
 /* 3. Define the handles using typedef */
 typedef void* GRIN_GRAPH;
+// label: 8, vid: 32
 typedef uint64_t GRIN_VERTEX;
 typedef void* GRIN_EDGE;
 
@@ -150,7 +151,7 @@ typedef void* GRIN_VERTEX_DATA;
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 typedef unsigned GRIN_VERTEX_TYPE;
 typedef void* GRIN_VERTEX_TYPE_LIST;
-//  dt: 8, label: 8, idx:8
+//  datatype: 8, vertex label: 8, property index:8
 typedef uint32_t GRIN_VERTEX_PROPERTY;
 /**
 typedef struct GRIN_VERTEX_PROPERTY {
@@ -221,10 +222,10 @@ typedef unsigned GRIN_VERTEX_PROPERTY_ID;
 #endif
 
 #ifdef GRIN_WITH_EDGE_PROPERTY
+// src_label: 8, dst_label: 8, edge_label: 8
 typedef unsigned GRIN_EDGE_TYPE;
 typedef void* GRIN_EDGE_TYPE_LIST;
-typedef void* GRIN_VEV_TYPE;
-typedef void* GRIN_VEV_TYPE_LIST;
+// index: 8, src_label: 8, dst_label: 8, edge_label: 8
 typedef unsigned GRIN_EDGE_PROPERTY;
 typedef void* GRIN_EDGE_PROPERTY_LIST;
 #endif
