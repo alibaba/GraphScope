@@ -121,8 +121,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._apps_api = kube_client.AppsV1Api(self._api_client)
         self._resource_object = ResourceManager(self._api_client)
 
-        self._serving = False
-
         self._instance_id = instance_id
         self._namespace = namespace
         self._delete_namespace = delete_namespace
