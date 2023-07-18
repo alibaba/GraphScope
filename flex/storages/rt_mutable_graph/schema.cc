@@ -555,7 +555,7 @@ static bool access_file(std::string& file_path) {
   }
   char* flex_data_dir = std::getenv("FLEX_DATA_DIR");
   if (flex_data_dir != NULL) {
-    auto temp = std::string(flex_data_dir) + file_path;
+    auto temp = std::string(flex_data_dir) + "/" + file_path;
     std::filesystem::path path(temp);
     if (std::filesystem::exists(path)) {
       file_path = temp;
