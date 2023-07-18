@@ -53,5 +53,5 @@ jobs:
       run: |
         cd flex/engines/graph_db/grin
         mkdir build && cd build
-        cmake .. && make -j$(nproc)
+        cmake .. && sudo make -j$(nproc)
         ./run_grin_test
