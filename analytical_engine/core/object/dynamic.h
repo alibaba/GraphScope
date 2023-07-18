@@ -32,7 +32,7 @@
 // IWYU pragma: end_exports
 
 #include "grape/serialization/in_archive.h"
-#include "graphscope/proto/graph_def.pb.h"
+#include "proto/graph_def.pb.h"
 
 namespace gs {
 

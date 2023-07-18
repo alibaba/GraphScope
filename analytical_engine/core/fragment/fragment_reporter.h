@@ -39,7 +39,7 @@
 #include "core/server/rpc_utils.h"
 #include "core/utils/convert_utils.h"
 #include "core/utils/msgpack_utils.h"
-#include "graphscope/proto/types.pb.h"
+#include "proto/types.pb.h"
 
 namespace bl = boost::leaf;
 

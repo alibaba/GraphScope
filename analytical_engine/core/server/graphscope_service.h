@@ -29,9 +29,9 @@
 #include "grpcpp/support/sync_stream.h"
 
 #include "core/server/dispatcher.h"
-#include "graphscope/proto/engine_service.grpc.pb.h"
-#include "graphscope/proto/message.pb.h"
-#include "graphscope/proto/op_def.pb.h"
+#include "proto/engine_service.grpc.pb.h"
+#include "proto/message.pb.h"
+#include "proto/op_def.pb.h"
 
 namespace gs {
 namespace rpc {

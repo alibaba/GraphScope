@@ -263,7 +263,7 @@ endif()
 if(GRAPHSCOPE_ANALYTICAL_HOME)
     include_directories("${GRAPHSCOPE_ANALYTICAL_INCLUDE_DIRS}")
     include_directories("${GRAPHSCOPE_ANALYTICAL_HOME}/include/graphscope/apps")
-    include_directories("${GRAPHSCOPE_ANALYTICAL_HOME}/include/graphscope/proto")
+    include_directories("${GRAPHSCOPE_ANALYTICAL_HOME}/include/proto")
     # include vineyard----------------------------------------------------------
     include_directories("${GRAPHSCOPE_ANALYTICAL_HOME}/include/vineyard")
 else()

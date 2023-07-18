@@ -33,8 +33,8 @@
 #include "core/server/rpc_utils.h"
 #include "core/utils/fragment_traits.h"
 #include "core/vertex_map/arrow_projected_vertex_map.h"
-#include "graphscope/proto/attr_value.pb.h"
-#include "graphscope/proto/graph_def.pb.h"
+#include "proto/attr_value.pb.h"
+#include "proto/graph_def.pb.h"
 
 #if !defined(_GRAPH_TYPE)
 #error Missing _GRAPH_TYPE

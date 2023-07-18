@@ -19,8 +19,8 @@
 #include <map>
 #include <utility>
 
-#include "graphscope/proto/attr_value.pb.h"
-#include "graphscope/proto/types.pb.h"
+#include "proto/attr_value.pb.h"
+#include "proto/types.pb.h"
 
 namespace grape {
 class InArchive;

@@ -65,9 +65,9 @@
 #include "core/server/command_detail.h"
 #include "core/server/rpc_utils.h"
 #include "core/utils/mpi_utils.h"
-#include "graphscope/proto/attr_value.pb.h"
-#include "graphscope/proto/graph_def.pb.h"
-#include "graphscope/proto/types.pb.h"
+#include "proto/attr_value.pb.h"
+#include "proto/graph_def.pb.h"
+#include "proto/types.pb.h"
 
 namespace bl = boost::leaf;
 

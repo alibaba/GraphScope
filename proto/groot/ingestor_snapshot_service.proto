@@ -29,3 +29,30 @@ message AdvanceIngestSnapshotIdRequest {
 message AdvanceIngestSnapshotIdResponse {
   int64 previousSnapshotId = 1;
 }
+
+
+service IngestProgress {
+  rpc getTailOffsets(GetTailOffsetsRequest) returns(GetTailOffsetsResponse);
+}
+
+message GetTailOffsetsRequest {
+  repeated int32 queueId = 1;
+}
+
+message GetTailOffsetsResponse {
+  repeated int64 offsets = 1;
+}
+
+service IngestorWrite {
+  rpc writeIngestor(WriteIngestorRequest) returns (WriteIngestorResponse);
+}
+
+message WriteIngestorRequest {
+  string requestId = 1;
+  int32 queueId = 2;
+  OperationBatchPb operationBatch = 3;
+}
+
+message WriteIngestorResponse {
+  int64 snapshotId = 1;
+}

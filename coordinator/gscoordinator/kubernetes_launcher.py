@@ -121,6 +121,8 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._apps_api = kube_client.AppsV1Api(self._api_client)
         self._resource_object = ResourceManager(self._api_client)
 
+        self._serving = False
+
         self._instance_id = instance_id
         self._namespace = namespace
         self._delete_namespace = delete_namespace
@@ -1148,7 +1150,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
     def _distribute_analytical_process(self, pod_name_list, pod_ip_list):
         # generate and distribute hostfile
-        hosts = os.path.join(get_tempdir(), "kube_hosts")
+        hosts = os.path.join(get_tempdir(), "hosts_of_nodes")
         with open(hosts, "w") as f:
             for i, pod_ip in enumerate(pod_ip_list):
                 f.write(f"{pod_ip} {pod_name_list[i]}\n")

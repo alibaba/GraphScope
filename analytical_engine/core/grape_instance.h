@@ -38,7 +38,7 @@
 #include "core/object/object_manager.h"
 #include "core/server/dispatcher.h"
 #include "core/server/rpc_utils.h"
-#include "graphscope/proto/types.pb.h"
+#include "proto/types.pb.h"
 
 namespace bl = boost::leaf;
 

@@ -37,8 +37,8 @@
 #include "core/error.h"
 #include "core/io/property_parser.h"
 #include "core/server/command_detail.h"
-#include "graphscope/proto/attr_value.pb.h"
-#include "graphscope/proto/graph_def.pb.h"
+#include "proto/attr_value.pb.h"
+#include "proto/graph_def.pb.h"
 
 namespace bl = boost::leaf;
 
