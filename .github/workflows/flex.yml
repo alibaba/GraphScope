@@ -45,3 +45,9 @@ jobs:
         cd flex
         mkdir build && cd build
         cmake .. && make -j$(nproc)
+    - name: GRIN on Mutable Csr Test
+      run: |
+        cd flex/engines/graph_db/grin
+        mkdir build && cd build
+        cmake .. && make -j$(nproc)
+        ./run_grin_test
