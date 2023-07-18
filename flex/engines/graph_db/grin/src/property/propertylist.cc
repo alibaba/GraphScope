@@ -104,7 +104,7 @@ GRIN_EDGE_PROPERTY_LIST grin_get_edge_property_list_by_type(GRIN_GRAPH g,
   auto edge_label = _g->schema().get_edge_label_name(edge_label_i);
   auto sz =
       _g->schema().get_edge_properties(src_label, dst_label, edge_label).size();
-  for (auto i = 0; i < sz; ++i) {
+  for (size_t i = 0; i < sz; ++i) {
     p->emplace_back(et + (i << 24));
   }
   return p;
