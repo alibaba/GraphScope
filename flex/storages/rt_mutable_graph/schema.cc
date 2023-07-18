@@ -659,7 +659,6 @@ static bool parse_edge_files(
         LOG(ERROR) << "edge file - " << file_path << " file not found...";
       }
       std::filesystem::path path(file_path);
-      printf("file_path === %s\n", file_path.c_str());
       files.emplace_back(src_label, dst_label, edge_label,
                          std::filesystem::canonical(path));
     }
