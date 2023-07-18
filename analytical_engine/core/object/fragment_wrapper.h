@@ -202,6 +202,7 @@ inline void set_graph_def(
   graph_def.set_directed(fragment->directed());
   graph_def.set_is_multigraph(fragment->is_multigraph());
   graph_def.set_compact_edges(fragment->compact_edges());
+  graph_def.set_use_perfect_hash(fragment->use_perfect_hash());
 
   auto v_entries = schema.vertex_entries();
   auto e_entries = schema.edge_entries();
@@ -336,6 +337,7 @@ class FragmentWrapper<
 
     new_graph_def.set_key(dst_graph_name);
     new_graph_def.set_compact_edges(new_frag->compact_edges());
+    new_graph_def.set_use_perfect_hash(new_frag->use_perfect_hash());
 
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def_.has_extension()) {
@@ -541,6 +543,7 @@ class FragmentWrapper<
     rpc::graph::GraphDefPb new_graph_def;
     new_graph_def.set_key(dst_graph_name);
     new_graph_def.set_compact_edges(new_frag->compact_edges());
+    new_graph_def.set_use_perfect_hash(new_frag->use_perfect_hash());
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def_.has_extension()) {
       graph_def_.extension().UnpackTo(&vy_info);
@@ -706,6 +709,7 @@ class FragmentWrapper<
 
     new_graph_def.set_key(dst_graph_name);
     new_graph_def.set_compact_edges(new_frag->compact_edges());
+    new_graph_def.set_use_perfect_hash(new_frag->use_perfect_hash());
 
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def_.has_extension()) {
