@@ -545,6 +545,29 @@ static bool parse_edges_schema(YAML::Node node, Schema& schema) {
   return true;
 }
 
+static bool access_file(std::string& file_path) {
+  if (file_path.size() == 0) {
+    return false;
+  }
+  if (file_path[0] == '/') {
+    std::filesystem::path path(file_path);
+    return std::filesystem::exists(path);
+  }
+  char* flex_data_dir = std::getenv("FLEX_DATA_DIR");
+  if (flex_data_dir != NULL) {
+    auto temp = std::string(flex_data_dir) + file_path;
+    std::filesystem::path path(temp);
+    if (std::filesystem::exists(path)) {
+      file_path = temp;
+      return true;
+    }
+  }
+  file_path =
+      std::filesystem::current_path().generic_string() + "/" + file_path;
+  std::filesystem::path path(file_path);
+  return std::filesystem::exists(path);
+}
+
 static bool parse_vertex_files(
     YAML::Node node, std::vector<std::pair<std::string, std::string>>& files) {
   std::string label_name;
@@ -571,10 +594,10 @@ static bool parse_vertex_files(
       if (!get_scalar(files_node[i], "path", file_path)) {
         return false;
       }
-      std::filesystem::path path(file_path);
-      if (!std::filesystem::exists(path)) {
+      if (!access_file(file_path)) {
         LOG(ERROR) << "vertex file - " << file_path << " file not found...";
       }
+      std::filesystem::path path(file_path);
       files.emplace_back(label_name, std::filesystem::canonical(path));
     }
     return true;
@@ -632,10 +655,11 @@ static bool parse_edge_files(
       if (!get_scalar(files_node[i], "path", file_path)) {
         return false;
       }
-      std::filesystem::path path(file_path);
-      if (!std::filesystem::exists(path)) {
+      if (!access_file(file_path)) {
         LOG(ERROR) << "edge file - " << file_path << " file not found...";
       }
+      std::filesystem::path path(file_path);
+      printf("file_path === %s\n", file_path.c_str());
       files.emplace_back(src_label, dst_label, edge_label,
                          std::filesystem::canonical(path));
     }
