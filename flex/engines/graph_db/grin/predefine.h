@@ -177,9 +177,7 @@ typedef struct GRIN_VERTEX_LIST_ITERATOR {
 } GRIN_VERTEX_LIST_ITERATOR;
 #endif
 
-#ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
-typedef void* GRIN_ADJACENT_LIST_ITERATOR;
-#endif
+
 
 #ifdef GRIN_WITH_EDGE_DATA
 typedef void* GRIN_EDGE_DATA;
@@ -240,6 +238,14 @@ typedef struct GRIN_ADJACENT_LIST {
   GRIN_DIRECTION dir;
   GRIN_EDGE_TYPE edge_label;
 } GRIN_ADJACENT_LIST;
+#endif
+
+#ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
+typedef struct GRIN_ADJACENT_LIST_ITERATOR {
+  //gs::MutableCsrConstEdgeIterBase*
+  void* edge_iter;
+  GRIN_ADJACENT_LIST adj_list;
+} GRIN_ADJACENT_LIST_ITERATOR;
 #endif
 
 #ifdef GRIN_TRAIT_NATURAL_ID_FOR_EDGE_PROPERTY

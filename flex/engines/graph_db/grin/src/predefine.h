@@ -15,13 +15,6 @@ typedef struct GRIN_EDGE_T {
   gs::Any data;
 } GRIN_EDGE_T;
 
-#ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
-struct GRIN_ADJACENT_LIST_ITERATOR_T {
-  gs::MutableCsrConstEdgeIterBase* edge_iter;
-  GRIN_ADJACENT_LIST adj_list;
-};
-#endif
-
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 typedef std::vector<gs::label_t> GRIN_VERTEX_TYPE_LIST_T;
 typedef std::vector<GRIN_VERTEX_PROPERTY> GRIN_VERTEX_PROPERTY_LIST_T;

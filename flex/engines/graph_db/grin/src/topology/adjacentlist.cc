@@ -35,9 +35,9 @@ void grin_destroy_adjacent_list(GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) {}
 GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(
     GRIN_GRAPH g, GRIN_ADJACENT_LIST adj_list) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto iter = new GRIN_ADJACENT_LIST_ITERATOR_T();
+  GRIN_ADJACENT_LIST_ITERATOR iter;
   auto& v = adj_list.v;
-  iter->adj_list = adj_list;
+  iter.adj_list = adj_list;
   auto label = adj_list.edge_label;
   auto src_label = label >> 16;
   auto dst_label = (label >> 8) & 0xff;
@@ -46,18 +46,18 @@ GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(
   auto vid = v & (0xffffffff);
   if (adj_list.dir == GRIN_DIRECTION::OUT) {
     if (src_label == v_label) {
-      iter->edge_iter =
+      iter.edge_iter =
           _g->get_outgoing_edges_raw(src_label, vid, dst_label, edge_label);
 
     } else {
-      iter->edge_iter = nullptr;
+      iter.edge_iter = nullptr;
     }
   } else {
     if (dst_label == v_label) {
-      iter->edge_iter =
+      iter.edge_iter =
           _g->get_incoming_edges_raw(dst_label, vid, src_label, edge_label);
     } else {
-      iter->edge_iter = nullptr;
+      iter.edge_iter = nullptr;
     }
   }
   return iter;
@@ -65,31 +65,37 @@ GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(
 
 void grin_destroy_adjacent_list_iter(GRIN_GRAPH g,
                                      GRIN_ADJACENT_LIST_ITERATOR iter) {
-  auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
-  if (_iter->edge_iter != nullptr) {
-    delete _iter->edge_iter;
+  if (iter.edge_iter != nullptr) {
+    auto edge_iter =
+        static_cast<gs::MutableCsrConstEdgeIterBase*>(iter.edge_iter);
+    delete edge_iter;
   }
-  delete _iter;
 }
 
 void grin_get_next_adjacent_list_iter(GRIN_GRAPH g,
                                       GRIN_ADJACENT_LIST_ITERATOR iter) {
-  auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
-  _iter->edge_iter->next();
+  auto edge_iter =
+      static_cast<gs::MutableCsrConstEdgeIterBase*>(iter.edge_iter);
+  edge_iter->next();
 }
 
 bool grin_is_adjacent_list_end(GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
-  auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
-  return _iter->edge_iter == nullptr || !_iter->edge_iter->is_valid();
+  if (iter.edge_iter == nullptr) {
+    return true;
+  }
+  auto edge_iter =
+      static_cast<gs::MutableCsrConstEdgeIterBase*>(iter.edge_iter);
+  return !edge_iter->is_valid();
 }
 
 GRIN_VERTEX grin_get_neighbor_from_adjacent_list_iter(
     GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
-  auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
-  auto vid = _iter->edge_iter->get_neighbor();
-  auto label = _iter->adj_list.edge_label;
+  auto edge_iter =
+      static_cast<gs::MutableCsrConstEdgeIterBase*>(iter.edge_iter);
+  auto vid = edge_iter->get_neighbor();
+  auto label = iter.adj_list.edge_label;
 
-  if (_iter->adj_list.dir == GRIN_DIRECTION::OUT) {
+  if (iter.adj_list.dir == GRIN_DIRECTION::OUT) {
     label = (label >> 8) & 0xff;
   } else {
     label = label >> 16;
@@ -99,19 +105,20 @@ GRIN_VERTEX grin_get_neighbor_from_adjacent_list_iter(
 
 GRIN_EDGE grin_get_edge_from_adjacent_list_iter(
     GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
-  auto _iter = static_cast<GRIN_ADJACENT_LIST_ITERATOR_T*>(iter);
+  auto edge_iter =
+      static_cast<gs::MutableCsrConstEdgeIterBase*>(iter.edge_iter);
   GRIN_EDGE_T* edge = new GRIN_EDGE_T();
   auto nbr = grin_get_neighbor_from_adjacent_list_iter(g, iter);
-  if (_iter->adj_list.dir == GRIN_DIRECTION::IN) {
+  if (iter.adj_list.dir == GRIN_DIRECTION::IN) {
     edge->src = nbr;
-    edge->dst = _iter->adj_list.v;
+    edge->dst = iter.adj_list.v;
   } else {
-    edge->src = _iter->adj_list.v;
+    edge->src = iter.adj_list.v;
     edge->dst = nbr;
   }
-  edge->dir = _iter->adj_list.dir;
-  edge->data = _iter->edge_iter->get_data();
-  auto label = _iter->adj_list.edge_label;
+  edge->dir = iter.adj_list.dir;
+  edge->data = edge_iter->get_data();
+  auto label = iter.adj_list.edge_label;
   edge->label = label & 0xff;
   return edge;
 }
