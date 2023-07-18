@@ -153,13 +153,7 @@ typedef unsigned GRIN_VERTEX_TYPE;
 typedef void* GRIN_VERTEX_TYPE_LIST;
 //  datatype: 8, vertex label: 8, property index:8
 typedef uint32_t GRIN_VERTEX_PROPERTY;
-/**
-typedef struct GRIN_VERTEX_PROPERTY {
-  unsigned idx;
-  GRIN_DATATYPE dt;
-  GRIN_VERTEX_TYPE label;
-} GRIN_VERTEX_PROPERTY;
-*/
+
 typedef void* GRIN_VERTEX_PROPERTY_LIST;
 #endif
 
@@ -176,8 +170,6 @@ typedef struct GRIN_VERTEX_LIST_ITERATOR {
   GRIN_VERTEX_LIST vertex_list;
 } GRIN_VERTEX_LIST_ITERATOR;
 #endif
-
-
 
 #ifdef GRIN_WITH_EDGE_DATA
 typedef void* GRIN_EDGE_DATA;
@@ -242,7 +234,7 @@ typedef struct GRIN_ADJACENT_LIST {
 
 #ifdef GRIN_ENABLE_ADJACENT_LIST_ITERATOR
 typedef struct GRIN_ADJACENT_LIST_ITERATOR {
-  //gs::MutableCsrConstEdgeIterBase*
+  // gs::MutableCsrConstEdgeIterBase*
   void* edge_iter;
   GRIN_ADJACENT_LIST adj_list;
 } GRIN_ADJACENT_LIST_ITERATOR;

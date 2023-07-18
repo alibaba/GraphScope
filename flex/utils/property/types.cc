@@ -109,7 +109,11 @@ void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
 }
 
 void ParseRecordX(const char* line, int64_t& src, int64_t& dst, double& prop) {
+#ifdef __APPLE__
   sscanf(line, "%lld|%lld|%lf", &src, &dst, &prop);
+#else
+  sscanf(line, "%" SCNd64 "|%" SCNd64 "|%lf", &src, &dst, &prop);
+#endif
 }
 
 void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int64_t& prop) {
