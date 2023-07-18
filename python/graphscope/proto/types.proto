@@ -181,6 +181,7 @@ enum ParamKey {
   VINEYARD_NAME = 44;
   VERTEX_MAP_TYPE = 45;
   COMPACT_EDGES = 46;
+  USE_PERFECT_HASH = 47;
 
   // project
   VERTEX_COLLECTIONS = 51;

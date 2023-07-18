@@ -20,6 +20,7 @@ import os
 
 import numpy as np
 import pytest
+from gremlin_python.driver import protocol
 
 import graphscope
 
@@ -228,6 +229,23 @@ def test_across_engine(sess):
     res = interactive.execute("g.V().count()").all().result()
     # res = sess.run(res)
     assert res[0] == 62586
+
+
+def test_gremlin_timeout(sess):
+    g_node = load_p2p_network(sess)
+    interactive = sess.gremlin(g_node)
+    # expect to timeout after 1s (caused by grpc timeout or pegasus timeout)
+    with pytest.raises(
+        protocol.GremlinServerError,
+        match="|".join(["DEADLINE_EXCEEDED", "Job is canceled"]),
+    ):
+        res = (
+            interactive.execute(
+                'g.with(ARGS_EVAL_TIMEOUT, 1000).V().match(as("a").out().as("b"), as("b").out().as("c"), as("c").out().as("a"))'
+            )
+            .all()
+            .result()
+        )
 
 
 def test_cypher_endpoint(sess):

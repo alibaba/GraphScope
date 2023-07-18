@@ -60,6 +60,8 @@ def bind_app(graph, app_assets):
         config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(graph._vertex_map)
     if hasattr(graph, "_compact_edges"):
         config[types_pb2.COMPACT_EDGES] = utils.b_to_attr(graph._compact_edges)
+    if hasattr(graph, "_use_perfect_hash"):
+        config[types_pb2.USE_PERFECT_HASH] = utils.b_to_attr(graph._use_perfect_hash)
     if app_assets.cmake_extra_options is not None:
         config[types_pb2.CMAKE_EXTRA_OPTIONS] = utils.s_to_attr(
             app_assets.cmake_extra_options
@@ -201,6 +203,7 @@ def add_labels_to_graph(graph, loader_op):
         types_pb2.RETAIN_OID: utils.b_to_attr(graph._retain_oid),
         types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(graph._vertex_map),
         types_pb2.COMPACT_EDGES: utils.b_to_attr(graph._compact_edges),
+        types_pb2.USE_PERFECT_HASH: utils.b_to_attr(graph._use_perfect_hash),
         types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
         types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
         types_pb2.IS_FROM_GAR: utils.b_to_attr(False),
@@ -436,6 +439,7 @@ def project_arrow_property_graph(graph, vertex_collections, edge_collections):
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
         types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(graph._vertex_map),
         types_pb2.COMPACT_EDGES: utils.b_to_attr(graph._compact_edges),
+        types_pb2.USE_PERFECT_HASH: utils.b_to_attr(graph._use_perfect_hash),
     }
     config.update(
         {
@@ -480,6 +484,8 @@ def project_to_simple(
         config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(graph._vertex_map)
     if hasattr(graph, "_compact_edges"):
         config[types_pb2.COMPACT_EDGES] = utils.b_to_attr(graph._compact_edges)
+    if hasattr(graph, "_use_perfect_hash"):
+        config[types_pb2.USE_PERFECT_HASH] = utils.b_to_attr(graph._use_perfect_hash)
     op = Operation(
         graph.session_id,
         types_pb2.PROJECT_TO_SIMPLE,
@@ -1038,6 +1044,7 @@ def archive_graph(graph, path):
         types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
         types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(graph._vertex_map),
         types_pb2.COMPACT_EDGES: utils.b_to_attr(graph._compact_edges),
+        types_pb2.USE_PERFECT_HASH: utils.b_to_attr(graph._use_perfect_hash),
     }
     config[types_pb2.GRAPH_INFO_PATH] = utils.s_to_attr(path)
     op = Operation(

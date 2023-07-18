@@ -42,7 +42,7 @@ GRAPHSCOPE_HOME ?= /usr/local
 INSTALL_PREFIX ?= /opt/graphscope
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.15.0
+VINEYARD_VERSION ?= v0.16.1
 PROFILE ?= release
 CI ?= false
 
@@ -230,7 +230,7 @@ graphscope-client-darwin-py3:
 			pip3 install mypy-protobuf "numpy==1.23.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 		elif [[ "$$py" == "310" ]]; then \
 			pip3 install mypy-protobuf "numpy==1.21.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
-		elif [[ "$$py" == "cp39-cp39" ]]; then \
+		elif [[ "$$py" == "39" ]]; then \
 			if [[ "${ARCH}" == "arm64" ]]; then \
 				pip3 install mypy-protobuf "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 			else \

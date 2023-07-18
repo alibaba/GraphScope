@@ -128,10 +128,11 @@ class Edge {
 struct Graph {
   std::vector<std::shared_ptr<Vertex>> vertices;
   std::vector<std::shared_ptr<Edge>> edges;
-  bool directed;
-  bool generate_eid;
-  bool retain_oid;
-  bool compact_edges;
+  bool directed = true;
+  bool generate_eid = true;
+  bool retain_oid = true;
+  bool compact_edges = false;
+  bool use_perfect_hash = false;
 
   std::string SerializeToString() const {
     std::stringstream ss;
@@ -139,6 +140,7 @@ struct Graph {
     ss << "generate_eid: " << generate_eid << "\n";
     ss << "retain_oid: " << retain_oid << "\n";
     ss << "compact_edges: " << compact_edges << "\n";
+    ss << "use_perfect_hash: " << use_perfect_hash << "\n";
     for (auto& v : vertices) {
       ss << v->SerializeToString();
     }
@@ -285,12 +287,15 @@ inline bl::result<std::shared_ptr<detail::Graph>> ParseCreatePropertyGraph(
   BOOST_LEAF_AUTO(generate_eid, params.Get<bool>(rpc::GENERATE_EID));
   BOOST_LEAF_AUTO(retain_oid, params.Get<bool>(rpc::RETAIN_OID));
   BOOST_LEAF_AUTO(compact_edges, params.Get<bool>(rpc::COMPACT_EDGES, false));
+  BOOST_LEAF_AUTO(use_perfect_hash,
+                  params.Get<bool>(rpc::USE_PERFECT_HASH, false));
 
   auto graph = std::make_shared<detail::Graph>();
   graph->directed = directed;
   graph->generate_eid = generate_eid;
   graph->retain_oid = retain_oid;
   graph->compact_edges = compact_edges;
+  graph->use_perfect_hash = use_perfect_hash;
 
   const auto& large_attr = params.GetLargeAttr();
   for (const auto& item : large_attr.chunk_list().items()) {

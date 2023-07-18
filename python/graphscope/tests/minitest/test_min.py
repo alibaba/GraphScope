@@ -276,19 +276,31 @@ def test_modern_graph(parallel_executors, num_workers, threads_per_worker):
     def make_edges_set(edges):
         return {item.get("eid", [None])[0]: item for item in edges}
 
-    def subgraph_roundtrip(num_workers, threads_per_worker):
+    def subgraph_roundtrip_and_pk_scan(num_workers, threads_per_worker):
         logger.info(
             "testing subgraph with %d workers and %d threads per worker",
             num_workers,
             threads_per_worker,
         )
-
-        vquery = "g.V().valueMap()"
-        equery = "g.E().valueMap()"
         session = graphscope.session(cluster_type="hosts", num_workers=num_workers)
-
         g0 = load_modern_graph(session)
         interactive0 = session.gremlin(g0)
+
+        # test pk scan
+        query1 = "g.V().hasLabel('person').has('id', 1)"
+        query2 = "g.V().hasLabel('person','software').has('id', 1)"
+
+        query1_res = interactive0.execute(query1).all().result()
+        query2_res = interactive0.execute(query2).all().result()
+        logger.info("query1_res = %s", query1_res)
+        logger.info("query2_res = %s", query2_res)
+        assert len(query1_res) == 1
+        assert len(query2_res) == 1
+
+        # test subgraph
+        vquery = "g.V().valueMap()"
+        equery = "g.E().valueMap()"
+
         nodes = interactive0.execute(vquery).all().result()
         edges = interactive0.execute(equery).all().result()
 
@@ -317,4 +329,4 @@ def test_modern_graph(parallel_executors, num_workers, threads_per_worker):
             "PARALLEL_INTERACTIVE_EXECUTOR_ON_VINEYARD": parallel_executors,
         }
     ):
-        subgraph_roundtrip(num_workers, threads_per_worker)
+        subgraph_roundtrip_and_pk_scan(num_workers, threads_per_worker)
