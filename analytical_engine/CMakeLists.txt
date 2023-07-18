@@ -569,7 +569,7 @@ endif()
 install_gsa_headers("${PROJECT_SOURCE_DIR}/apps")
 install_gsa_headers("${PROJECT_SOURCE_DIR}/benchmarks")
 install_gsa_headers("${PROJECT_SOURCE_DIR}/core")
-install_gsa_headers("${PROJECT_SOURCE_DIR}/graphscope")
+install_gsa_headers("${PROJECT_SOURCE_DIR}/proto")
 install_gsa_app_frames("${PROJECT_SOURCE_DIR}/frame")
 
 install_gsa_dependency_modules("${PROJECT_SOURCE_DIR}/cmake")
