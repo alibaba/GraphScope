@@ -29,10 +29,10 @@ GRIN_VERTEX_TYPE_LIST grin_get_vertex_types_with_primary_keys(GRIN_GRAPH g) {
 GRIN_VERTEX_PROPERTY_LIST grin_get_primary_keys_by_vertex_type(
     GRIN_GRAPH, GRIN_VERTEX_TYPE label) {
   GRIN_VERTEX_PROPERTY_LIST_T* vpl = new GRIN_VERTEX_PROPERTY_LIST_T();
-  GRIN_VERTEX_PROPERTY_T vp;
-  vp.name = "oid";
-  vp.label = label;
-  vp.dt = GRIN_DATATYPE::Int64;
+  GRIN_VERTEX_PROPERTY vp;
+  vp = 0;
+  vp += (label * 1u) << 8;
+  vp += (GRIN_DATATYPE::Int64 * 1u) << 16;
   vpl->emplace_back(vp);
   return vpl;
 }

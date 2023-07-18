@@ -24,14 +24,7 @@ struct GRIN_ADJACENT_LIST_ITERATOR_T {
 
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 typedef std::vector<gs::label_t> GRIN_VERTEX_TYPE_LIST_T;
-
-typedef struct GRIN_VERTEX_PROPERTY_T {
-  std::string name;
-  GRIN_DATATYPE dt;
-  GRIN_VERTEX_TYPE label;
-} GRIN_VERTEX_PROPERTY_T;
-
-typedef std::vector<GRIN_VERTEX_PROPERTY_T> GRIN_VERTEX_PROPERTY_LIST_T;
+typedef std::vector<GRIN_VERTEX_PROPERTY> GRIN_VERTEX_PROPERTY_LIST_T;
 #endif
 
 #if defined(GRIN_WITH_VERTEX_PROPERTY) || defined(GRIN_WITH_EDGE_PROPERTY)

@@ -22,14 +22,13 @@ GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_property_list_by_type(
 
   auto vertex_prop_num = table.col_num();
   GRIN_VERTEX_PROPERTY_LIST_T* vpl = new GRIN_VERTEX_PROPERTY_LIST_T();
-  const auto& prop_names = table.column_names();
   const auto& prop_types = table.column_types();
   for (size_t i = 0; i < vertex_prop_num; ++i) {
-    GRIN_VERTEX_PROPERTY_T vpt;
-    vpt.name = prop_names[i];
-    vpt.label = vt;
-    vpt.dt = _get_data_type(prop_types[i]);
-    vpl->emplace_back(vpt);
+    GRIN_VERTEX_PROPERTY vp;
+    vp = i;
+    vp += (vt * 1u) << 8;
+    vp += (_get_data_type(prop_types[i]) * 1u) << 16;
+    vpl->emplace_back(vp);
   }
   return vpl;
 }
@@ -43,9 +42,7 @@ size_t grin_get_vertex_property_list_size(GRIN_GRAPH g,
 GRIN_VERTEX_PROPERTY grin_get_vertex_property_from_list(
     GRIN_GRAPH g, GRIN_VERTEX_PROPERTY_LIST vpl, size_t idx) {
   auto _vpl = static_cast<GRIN_VERTEX_PROPERTY_LIST_T*>(vpl);
-  GRIN_VERTEX_PROPERTY_T* vp = new GRIN_VERTEX_PROPERTY_T();
-  *vp = (*_vpl)[idx];
-  return vp;
+  return (*_vpl)[idx];
 }
 
 GRIN_VERTEX_PROPERTY_LIST grin_create_vertex_property_list(GRIN_GRAPH g) {
@@ -61,10 +58,8 @@ void grin_destroy_vertex_property_list(GRIN_GRAPH g,
 bool grin_insert_vertex_property_to_list(GRIN_GRAPH g,
                                          GRIN_VERTEX_PROPERTY_LIST vpl,
                                          GRIN_VERTEX_PROPERTY vp) {
-  auto _vp = static_cast<GRIN_VERTEX_PROPERTY_T*>(vp);
-  auto p = *_vp;
   auto _vpl = static_cast<GRIN_VERTEX_PROPERTY_LIST_T*>(vpl);
-  _vpl->push_back(p);
+  _vpl->push_back(vp);
   return true;
 }
 #endif
@@ -80,28 +75,18 @@ GRIN_VERTEX_PROPERTY grin_get_vertex_property_by_id(
   if (pid >= vertex_prop_num) {
     return GRIN_NULL_VERTEX_PROPERTY;
   }
-  const auto& prop_names = table.column_names();
   const auto& prop_types = table.column_types();
-  GRIN_VERTEX_PROPERTY_T* vpt = new GRIN_VERTEX_PROPERTY_T();
-  vpt->name = prop_names[pid];
-  vpt->label = vt;
-  vpt->dt = _get_data_type(prop_types[pid]);
-  return vpt;
+  GRIN_VERTEX_PROPERTY vp;
+  vp = pid;
+  vp += (vt * 1u) << 8;
+  vp += (_get_data_type(prop_types[pid]) * 1u) << 16;
+  return vp;
 }
 
 GRIN_VERTEX_PROPERTY_ID grin_get_vertex_property_id(GRIN_GRAPH g,
                                                     GRIN_VERTEX_TYPE vt,
                                                     GRIN_VERTEX_PROPERTY vp) {
-  auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto& table = _g->get_vertex_table(vt);
-  const auto& prop_names = table.column_names();
-  auto _vp = static_cast<GRIN_VERTEX_PROPERTY_T*>(vp);
-  for (size_t i = 0; i < prop_names.size(); ++i) {
-    if (prop_names.at(i) == _vp->name) {
-      return i;
-    }
-  }
-  return GRIN_NULL_VERTEX_PROPERTY_ID;
+  return vp & (0xff);
 }
 #endif
 

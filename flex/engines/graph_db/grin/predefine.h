@@ -150,7 +150,15 @@ typedef void* GRIN_VERTEX_DATA;
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 typedef unsigned GRIN_VERTEX_TYPE;
 typedef void* GRIN_VERTEX_TYPE_LIST;
-typedef void* GRIN_VERTEX_PROPERTY;
+//  dt: 8, label: 8, idx:8
+typedef uint32_t GRIN_VERTEX_PROPERTY;
+/**
+typedef struct GRIN_VERTEX_PROPERTY {
+  unsigned idx;
+  GRIN_DATATYPE dt;
+  GRIN_VERTEX_TYPE label;
+} GRIN_VERTEX_PROPERTY;
+*/
 typedef void* GRIN_VERTEX_PROPERTY_LIST;
 #endif
 
@@ -248,7 +256,7 @@ typedef void* GRIN_LABEL_LIST;
 
 /* 4. Define invalid values for returns of handles */
 #define GRIN_NULL_GRAPH NULL
-#define GRIN_NULL_VERTEX (1ull << 40)
+#define GRIN_NULL_VERTEX (unsigned long long) ~0
 #define GRIN_NULL_EDGE NULL
 #define GRIN_NULL_VERTEX_DATA NULL
 #define GRIN_NULL_VERTEX_LIST NULL
@@ -266,7 +274,7 @@ typedef void* GRIN_LABEL_LIST;
 #define GRIN_NULL_EDGE_REF NULL
 #define GRIN_NULL_VERTEX_TYPE (unsigned) ~0
 #define GRIN_NULL_VERTEX_TYPE_LIST NULL
-#define GRIN_NULL_VERTEX_PROPERTY NULL
+#define GRIN_NULL_VERTEX_PROPERTY (unsigned) ~0
 #define GRIN_NULL_VERTEX_PROPERTY_LIST NULL
 #define GRIN_NULL_VERTEX_TYPE_ID (unsigned) ~0
 #define GRIN_NULL_VERTEX_PROPERTY_ID (unsigned) ~0

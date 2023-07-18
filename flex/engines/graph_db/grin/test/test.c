@@ -411,7 +411,9 @@ void test_property_vertex_property_value(const char* uri_str) {
 
 #ifdef GRIN_TRAIT_NATURAL_ID_FOR_VERTEX_PROPERTY
       unsigned int id = grin_get_vertex_property_id(g, vt, vp);
+      printf("%d %d\n",id,vp);
       GRIN_VERTEX_PROPERTY vp1 = grin_get_vertex_property_by_id(g, vt, id);
+      printf("%u vs. %u %u %u\n",vp,vp1,vp>>16,vp1>>16);
       assert(grin_equal_vertex_property(g, vp, vp1));
       grin_destroy_vertex_property(g, vp1);
 #else

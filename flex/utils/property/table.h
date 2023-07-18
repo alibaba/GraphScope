@@ -41,6 +41,10 @@ class Table {
 
   std::vector<std::string> column_names() const;
 
+  std::string column_name(size_t index) const;
+
+  int get_column_id_by_name(const std::string& name) const;
+
   std::vector<PropertyType> column_types() const;
 
   std::shared_ptr<ColumnBase> get_column(const std::string& name);
