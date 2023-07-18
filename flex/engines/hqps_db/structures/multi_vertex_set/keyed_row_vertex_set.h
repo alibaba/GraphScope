@@ -22,8 +22,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "flex/engines/hqps_db/core/hqps_utils.h"
 #include "flex/engines/hqps_db/core/params.h"
+#include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/row_vertex_set.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "grape/util.h"

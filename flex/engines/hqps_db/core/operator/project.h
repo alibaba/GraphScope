@@ -21,8 +21,8 @@ limitations under the License.
 #include <vector>
 
 #include "flex/engines/hqps_db/core/context.h"
-#include "flex/engines/hqps_db/core/keyed_utils.h"
 #include "flex/engines/hqps_db/core/params.h"
+#include "flex/engines/hqps_db/core/utils/keyed.h"
 
 #include "flex/engines/hqps_db/structures/collection.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/general_vertex_set.h"

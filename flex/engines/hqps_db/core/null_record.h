@@ -17,7 +17,7 @@
 
 #include <limits>
 #include <tuple>
-#include "flex/engines/hqps_db/core/hqps_utils.h"
+#include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 
 namespace gs {
 

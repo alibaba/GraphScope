@@ -17,7 +17,7 @@
 
 #include <array>
 #include <unordered_set>
-#include "flex/engines/hqps_db/core/hqps_utils.h"
+#include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 #include "grape/util.h"
 #include "grape/utils/bitset.h"
 

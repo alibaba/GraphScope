@@ -18,8 +18,8 @@
 #include <climits>
 
 #include "flex/engines/hqps_db/core/context.h"
-#include "flex/engines/hqps_db/core/hqps_utils.h"
 #include "flex/engines/hqps_db/core/params.h"
+#include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/general_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/multi_label_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/row_vertex_set.h"

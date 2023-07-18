@@ -23,8 +23,8 @@
 #include "grape/util.h"
 #include "grape/utils/bitset.h"
 
-#include "flex/engines/hqps_db/core/hqps_utils.h"
 #include "flex/engines/hqps_db/core/utils/hqps_type.h"
+#include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 
 namespace gs {
 

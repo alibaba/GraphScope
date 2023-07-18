@@ -915,60 +915,6 @@ std::string to_string(const T& t) {
   return to_string_impl<T>::to_string(t);
 }
 
-/*
-template <typename EDATA_T>
-std::string to_string<gs::Edge<EDATA_T>>(const gs::Edge<EDATA_T>& edge) {
-  return gs::to_string(edge.src) + "->" + gs::to_string(edge.dst) + "(" +
-gs::to_string(edge.edata) +")";
-}
-*/
-
-// template <>
-// inline std::string to_string<gs::EdgeStrategy>(const gs::EdgeStrategy& t) {
-//   if (t == gs::EdgeStrategy::kNone) {
-//     return "kNone";
-//   } else if (t == gs::EdgeStrategy::kSingle) {
-//     return "kSingle";
-//   } else
-//     return "kMultiple";
-// }
-
-// template <>
-// inline std::string to_string<std::vector<std::string_view>>(
-//     const std::vector<std::string_view>& t) {
-//   std::string result;
-//   result += "vec{";
-//   for (auto v : t) {
-//     result += v;
-//     result += ",";
-//   }
-//   result += "}";
-//   return result;
-// }
-
-// template <>
-// inline std::string to_string<std::string_view>(const std::string_view& t) {
-//   return std::string(t);
-// }  // namespace gs
-
-/*
-template <typename T1, typename... T>
-std::string to_string(const T1& t1, const T&... ts) {
-  return gs::to_string(t1) + "," + gs::to_string(ts...);
-}
-*/
-
-// template <typename... Args>
-// inline std::string to_string(const std::vector<std::tuple<Args...>>& t) {
-//   std::string result;
-//   result += "vector<";
-//   for (auto tuple : t) {
-//     result += gs::to_string(tuple) + ",";
-//   }
-//   result += ">";
-//   return result;
-// }
-
 template <typename VID_T, typename... EDATA_T>
 struct Edge {
   VID_T src, dst;

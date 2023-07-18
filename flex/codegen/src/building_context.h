@@ -19,7 +19,7 @@ limitations under the License.
 #include <vector>
 
 #include "flex/codegen/src/graph_types.h"
-#include "flex/engines/hqps_db/core/hqps_utils.h"
+#include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 #include "glog/logging.h"
 
 namespace gs {

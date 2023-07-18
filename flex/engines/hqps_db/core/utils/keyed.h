@@ -44,35 +44,6 @@ struct AggFirst<TwoLabelVertexSetImpl<VID_T, LabelT, T...>> {
   using result_t = TwoLabelVertexSetImpl<VID_T, LabelT, T...>;
 };
 
-/*
-template <typename UNKEYED_SET_T>
-struct ToKeyedUtils{
-using keyed_vertex_set_t = UNKEYED_SET_T;
-};
-
-template <>
-struct ToKeyedUtils<DefaultVertexSet> {
-using keyed_vertex_set_t = DefaultKeyedVertexSet;
-static keyed_vertex_set_t toKeyed(const DefaultVertexSet& unkeyed) {
-auto vec_copied = unkeyed.vids_;
-return keyed_vertex_set_t(std::move(unkeyed.GenerateKeys()),
-                      std::move(vec_copied), unkeyed.v_label_);
-}
-};
-
-template <typename... COL_T>
-struct ToKeyedUtils<UnkeyedVertexSet<COL_T...>> {
-using keyed_vertex_set_t = KeyedVertexSet<COL_T...>;
-static keyed_vertex_set_t toKeyed(const UnkeyedVertexSet<COL_T...>& unkeyed) {
-auto vec_copied = unkeyed.vids_;
-auto cols_copied = unkeyed.cols_;
-return keyed_vertex_set_t(std::move(unkeyed.GenerateKeys()),
-                      std::move(vec_copied), unkeyed.v_label_,
-                      std::move(cols_copied));
-}
-};
-
-*/
 /// @brief Helper to get keyed set type
 /// @tparam T
 /// @tparam ValueT Keyed prop type

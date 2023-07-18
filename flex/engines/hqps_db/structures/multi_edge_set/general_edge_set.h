@@ -17,7 +17,7 @@
 
 #include <array>
 #include <vector>
-#include "flex/engines/hqps_db/core/hqps_utils.h"
+#include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/flat_edge_set.h"
 namespace gs {
 

@@ -21,8 +21,8 @@ limitations under the License.
 
 #include "flex/engines/hqps_db/core/context.h"
 
-#include "flex/engines/hqps_db/core/hqps_utils.h"
 #include "flex/engines/hqps_db/core/params.h"
+#include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/flat_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/general_edge_set.h"
 

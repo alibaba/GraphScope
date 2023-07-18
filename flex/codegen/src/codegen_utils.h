@@ -22,7 +22,7 @@ limitations under the License.
 #include "flex/codegen/src/building_context.h"
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/string_utils.h"
-#include "flex/engines/hqps_db/core/hqps_utils.h"
+#include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 #include "glog/logging.h"
 
 #include "proto_generated_gie/physical.pb.h"
