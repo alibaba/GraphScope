@@ -1,0 +1,1 @@
+MATCH (n:PERSON {id: $personId })-[r:KNOWS]-(friend:PERSON) RETURN friend.id AS personId, friend.firstName AS firstName, friend.lastName AS lastName, r.creationDate AS friendshipCreationDate ORDER BY friendshipCreationDate DESC, personId ASC
