@@ -65,7 +65,6 @@ class MutablePropertyFragment {
   oid_t get_oid(label_t label, vid_t lid) const;
 
   vid_t add_vertex(label_t label, oid_t id);
-
   std::shared_ptr<MutableCsrConstEdgeIterBase> get_outgoing_edges(
       label_t label, vid_t u, label_t neighbor_label, label_t edge_label) const;
 
@@ -77,6 +76,14 @@ class MutablePropertyFragment {
 
   std::shared_ptr<MutableCsrEdgeIterBase> get_incoming_edges_mut(
       label_t label, vid_t u, label_t neighbor_label, label_t edge_label);
+
+  MutableCsrConstEdgeIterBase* get_outgoing_edges_raw(label_t label, vid_t u,
+                                                      label_t neighbor_label,
+                                                      label_t edge_label) const;
+
+  MutableCsrConstEdgeIterBase* get_incoming_edges_raw(label_t label, vid_t u,
+                                                      label_t neighbor_label,
+                                                      label_t edge_label) const;
 
   MutableCsrBase* get_oe_csr(label_t label, label_t neighbor_label,
                              label_t edge_label);
