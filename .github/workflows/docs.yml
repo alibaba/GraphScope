@@ -52,7 +52,7 @@ jobs:
           # Types allowed (newline-delimited).
           # Default: https://github.com/commitizen/conventional-commit-types
           types: |
-            build 
+            build
             ci
             docs
             feat
@@ -82,7 +82,7 @@ jobs:
             release
             [A-Z]+
           # If the PR contains one of these newline-delimited labels, the
-          # validation is skipped. 
+          # validation is skipped.
           ignoreLabels: |
             bot
             ignore-semantic-pull-request
@@ -93,17 +93,17 @@ jobs:
         header: pr-title-lint-error
         message: |
           Thank you for opening this pull request! 👋🏼
-          
-          We require PR titles to follow the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/),    
-          which in the format of `<type>(<scope>): <description>`. Don't know how to choose a type? Refer to [here](https://gist.github.com/brianclements/841ea7bffdb01346392c#type).    
-          e.g., 
+
+          We require PR titles to follow the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/),
+          which in the format of `<type>(<scope>): <description>`. Don't know how to choose a type? Refer to [here](https://gist.github.com/brianclements/841ea7bffdb01346392c#type).
+          e.g.,
             - fix: Correct typo
             - feat(interactive): Add support for `g.V().outE().inV()`
             - refactor!: Drop support for Python 3.8
             - feat(analytical): Add delta-version for PageRank
           > Note that since pull request titles only have a single line, you have to use ! to indicate breaking changes.
 
-          Details:  
+          Details:
           ```
           ${{ steps.pr-convention.outputs.error_message }}
           ```
@@ -111,7 +111,7 @@ jobs:
     # Delete a previous comment when the issue has been resolved
     - if: ${{ steps.pr-convention.outputs.error_message == null }}
       uses: marocchino/sticky-pull-request-comment@v2
-      with:   
+      with:
         header: pr-title-lint-error
         delete: true
 
