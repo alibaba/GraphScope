@@ -23,7 +23,7 @@ void grin_destroy_string_value(GRIN_GRAPH g, const char* value) {
 const char* grin_get_vertex_property_name(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt,
                                           GRIN_VERTEX_PROPERTY vp) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto& table = _g->get_vertex_table(vt);
+  auto& table = _g->g.get_vertex_table(vt);
 
   const auto& name = table.column_name(vp & (0xff));
   auto len = name.length() + 1;
@@ -36,7 +36,7 @@ GRIN_VERTEX_PROPERTY grin_get_vertex_property_by_name(GRIN_GRAPH g,
                                                       GRIN_VERTEX_TYPE vt,
                                                       const char* name) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto& table = _g->get_vertex_table(vt);
+  auto& table = _g->g.get_vertex_table(vt);
   auto col = table.get_column(name);
   if (col == nullptr) {
     return GRIN_NULL_VERTEX_PROPERTY;
@@ -54,8 +54,8 @@ GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_properties_by_name(GRIN_GRAPH g,
   std::string prop_name(name);
   auto vps = new GRIN_VERTEX_PROPERTY_LIST_T();
   std::string _name = std::string(name);
-  for (auto idx = 0; idx < _g->schema().vertex_label_num(); idx++) {
-    auto& table = _g->get_vertex_table(static_cast<GRIN_VERTEX_TYPE>(idx));
+  for (auto idx = 0; idx < _g->g.vertex_label_num_; idx++) {
+    auto& table = _g->g.get_vertex_table(static_cast<GRIN_VERTEX_TYPE>(idx));
 
     auto col = table.get_column(name);
 
@@ -103,13 +103,12 @@ int grin_get_vertex_property_value_of_int32(GRIN_GRAPH g, GRIN_VERTEX v,
     grin_error_code = INVALID_VALUE;
     return 0;
   }
-  auto& table = _g->get_vertex_table(plabel);
-  auto col =
-      std::dynamic_pointer_cast<gs::IntColumn>(table.get_column_by_id(pid));
-  if (col == nullptr) {
+  auto pcol = _g->vproperties[label][pid];
+  if (pcol == NULL) {
     grin_error_code = INVALID_VALUE;
     return 0;
   }
+  auto col = static_cast<const gs::IntColumn*>(pcol);
   return col->get_view(vid);
 }
 
@@ -134,13 +133,12 @@ long long int grin_get_vertex_property_value_of_int64(GRIN_GRAPH g,
     grin_error_code = INVALID_VALUE;
     return 0;
   }
-  auto& table = _g->get_vertex_table(plabel);
-  auto col =
-      std::dynamic_pointer_cast<gs::LongColumn>(table.get_column_by_id(pid));
-  if (col == nullptr) {
+  auto pcol = _g->vproperties[label][pid];
+  if (pcol == NULL) {
     grin_error_code = INVALID_VALUE;
     return 0;
   }
+  auto col = static_cast<const gs::LongColumn*>(pcol);
   return col->get_view(vid);
 }
 
@@ -169,14 +167,12 @@ double grin_get_vertex_property_value_of_double(GRIN_GRAPH g, GRIN_VERTEX v,
     grin_error_code = INVALID_VALUE;
     return 0.0;
   }
-  auto& table = _g->get_vertex_table(plabel);
-
-  auto col =
-      std::dynamic_pointer_cast<gs::DoubleColumn>(table.get_column_by_id(pid));
-  if (col == nullptr) {
+  auto pcol = _g->vproperties[label][pid];
+  if (pcol == NULL) {
     grin_error_code = INVALID_VALUE;
-    return 0.0;
+    return 0;
   }
+  auto col = static_cast<const gs::DoubleColumn*>(pcol);
   return col->get_view(vid);
 }
 
@@ -194,13 +190,13 @@ const char* grin_get_vertex_property_value_of_string(GRIN_GRAPH g,
     grin_error_code = INVALID_VALUE;
     return NULL;
   }
-  auto& table = _g->get_vertex_table(plabel);
-  auto col =
-      std::dynamic_pointer_cast<gs::StringColumn>(table.get_column_by_id(pid));
-  if (col == nullptr) {
+  auto pcol = _g->vproperties[label][pid];
+  if (pcol == NULL) {
     grin_error_code = INVALID_VALUE;
-    return NULL;
+    return 0;
   }
+  auto col = static_cast<const gs::StringColumn*>(pcol);
+
   auto s = col->get_view(vid);
   auto len = s.size() + 1;
   char* out = new char[len];
@@ -234,13 +230,12 @@ long long int grin_get_vertex_property_value_of_timestamp64(
     return 0;
   }
 
-  auto& table = _g->get_vertex_table(plabel);
-  auto col =
-      std::dynamic_pointer_cast<gs::DateColumn>(table.get_column_by_id(pid));
-  if (col == nullptr) {
+  auto pcol = _g->vproperties[label][pid];
+  if (pcol == NULL) {
     grin_error_code = INVALID_VALUE;
     return 0;
   }
+  auto col = static_cast<const gs::DateColumn*>(pcol);
   return col->get_view(vid).milli_second;
 }
 
@@ -258,29 +253,34 @@ const void* grin_get_vertex_property_value(GRIN_GRAPH g, GRIN_VERTEX v,
   auto pid = vp & (0xff);
 
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto& table = _g->get_vertex_table(plabel);
-  const auto& col = table.get_column_by_id(pid);
+
+  auto col = _g->vproperties[plabel][pid];
+  if (col == NULL) {
+    grin_error_code = UNKNOWN_DATATYPE;
+    return 0;
+  }
+
   auto vid = v & (0xffffffff);
 
   switch (type) {
   case GRIN_DATATYPE::Int32: {
-    auto _col = std::dynamic_pointer_cast<gs::IntColumn>(col);
+    auto _col = static_cast<const gs::IntColumn*>(col);
     return _col->buffer().data() + vid;
   }
   case GRIN_DATATYPE::Int64: {
-    auto _col = std::dynamic_pointer_cast<gs::LongColumn>(col);
+    auto _col = static_cast<const gs::LongColumn*>(col);
     return _col->buffer().data() + vid;
   }
   case GRIN_DATATYPE::String: {
-    auto _col = std::dynamic_pointer_cast<gs::StringColumn>(col);
+    auto _col = static_cast<const gs::StringColumn*>(col);
     return _col->buffer()[vid].data();
   }
   case GRIN_DATATYPE::Timestamp64: {
-    auto _col = std::dynamic_pointer_cast<gs::DateColumn>(col);
+    auto _col = static_cast<const gs::DateColumn*>(col);
     return _col->buffer().data() + vid;
   }
   case GRIN_DATATYPE::Double: {
-    auto _col = std::dynamic_pointer_cast<gs::DoubleColumn>(col);
+    auto _col = static_cast<const gs::DoubleColumn*>(col);
     return _col->buffer().data() + vid;
   }
   default:
@@ -302,13 +302,13 @@ GRIN_DATATYPE grin_get_edge_property_datatype(GRIN_GRAPH g,
                                               GRIN_EDGE_PROPERTY ep) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto src_label_i = (ep >> 16) & 0xff;
-  const auto& src_label = _g->schema().get_vertex_label_name(src_label_i);
+  const auto& src_label = _g->g.schema().get_vertex_label_name(src_label_i);
   auto dst_label_i = (ep >> 8) & 0xff;
-  const auto& dst_label = _g->schema().get_vertex_label_name(dst_label_i);
+  const auto& dst_label = _g->g.schema().get_vertex_label_name(dst_label_i);
   auto edge_label_i = ep & 0xff;
-  const auto& edge_label = _g->schema().get_edge_label_name(edge_label_i);
+  const auto& edge_label = _g->g.schema().get_edge_label_name(edge_label_i);
   const auto& type =
-      _g->schema().get_edge_properties(src_label, dst_label, edge_label);
+      _g->g.schema().get_edge_properties(src_label, dst_label, edge_label);
   auto idx = ep >> 24;
   return _get_data_type(type[idx]);
 }

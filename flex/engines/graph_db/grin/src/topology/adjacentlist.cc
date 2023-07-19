@@ -47,7 +47,7 @@ GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(
   if (adj_list.dir == GRIN_DIRECTION::OUT) {
     if (src_label == v_label) {
       iter.edge_iter =
-          _g->get_outgoing_edges_raw(src_label, vid, dst_label, edge_label);
+          _g->g.get_outgoing_edges_raw(src_label, vid, dst_label, edge_label);
 
     } else {
       iter.edge_iter = nullptr;
@@ -55,7 +55,7 @@ GRIN_ADJACENT_LIST_ITERATOR grin_get_adjacent_list_begin(
   } else {
     if (dst_label == v_label) {
       iter.edge_iter =
-          _g->get_incoming_edges_raw(dst_label, vid, src_label, edge_label);
+          _g->g.get_incoming_edges_raw(dst_label, vid, src_label, edge_label);
     } else {
       iter.edge_iter = nullptr;
     }

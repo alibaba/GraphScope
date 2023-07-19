@@ -17,7 +17,7 @@ limitations under the License.
 #ifdef GRIN_WITH_VERTEX_PROPERTY
 size_t grin_get_vertex_num_by_type(GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g->vertex_num(vt);
+  return _g->g.vertex_num(vt);
 }
 #endif
 
@@ -28,8 +28,8 @@ size_t grin_get_edge_num_by_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
   auto edge_label = et & (0xff);
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
 
-  auto oe = _g->get_oe_csr(src_label, dst_label, edge_label);
-  auto vertex_num = _g->vertex_num(src_label);
+  auto oe = _g->g.get_oe_csr(src_label, dst_label, edge_label);
+  auto vertex_num = _g->g.vertex_num(src_label);
   size_t edge_num = 0;
   for (size_t i = 0; i < vertex_num; ++i) {
     edge_num += oe->edge_iter(i)->size();
@@ -37,8 +37,8 @@ size_t grin_get_edge_num_by_type(GRIN_GRAPH g, GRIN_EDGE_TYPE et) {
   if (edge_num != 0) {
     return edge_num;
   }
-  auto ie = _g->get_ie_csr(dst_label, src_label, edge_label);
-  vertex_num = _g->vertex_num(dst_label);
+  auto ie = _g->g.get_ie_csr(dst_label, src_label, edge_label);
+  vertex_num = _g->g.vertex_num(dst_label);
   for (size_t i = 0; i < vertex_num; ++i) {
     edge_num += ie->edge_iter(i)->size();
   }
@@ -52,7 +52,7 @@ GRIN_VERTEX_LIST grin_get_vertex_list_by_type(GRIN_GRAPH g,
   GRIN_VERTEX_LIST vl;
   vl.label = vt;
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  vl.vertex_num = _g->vertex_num(vt);
+  vl.vertex_num = _g->g.vertex_num(vt);
   return vl;
 }
 #endif

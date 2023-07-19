@@ -18,7 +18,7 @@ limitations under the License.
 GRIN_VERTEX_PROPERTY_LIST grin_get_vertex_property_list_by_type(
     GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto& table = _g->get_vertex_table(vt);
+  auto& table = _g->g.get_vertex_table(vt);
 
   auto vertex_prop_num = table.col_num();
   GRIN_VERTEX_PROPERTY_LIST_T* vpl = new GRIN_VERTEX_PROPERTY_LIST_T();
@@ -69,7 +69,7 @@ GRIN_VERTEX_PROPERTY grin_get_vertex_property_by_id(
     GRIN_GRAPH g, GRIN_VERTEX_TYPE vt, GRIN_VERTEX_PROPERTY_ID pid) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
 
-  auto& table = _g->get_vertex_table(vt);
+  auto& table = _g->g.get_vertex_table(vt);
   auto vertex_prop_num = table.col_num();
 
   if (pid >= vertex_prop_num) {
@@ -97,13 +97,14 @@ GRIN_EDGE_PROPERTY_LIST grin_get_edge_property_list_by_type(GRIN_GRAPH g,
 
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto src_label_i = et >> 16;
-  auto src_label = _g->schema().get_vertex_label_name(src_label_i);
+  auto src_label = _g->g.schema().get_vertex_label_name(src_label_i);
   auto dst_label_i = (et >> 8) & (0xff);
-  auto dst_label = _g->schema().get_vertex_label_name(dst_label_i);
+  auto dst_label = _g->g.schema().get_vertex_label_name(dst_label_i);
   auto edge_label_i = et & 0xff;
-  auto edge_label = _g->schema().get_edge_label_name(edge_label_i);
-  auto sz =
-      _g->schema().get_edge_properties(src_label, dst_label, edge_label).size();
+  auto edge_label = _g->g.schema().get_edge_label_name(edge_label_i);
+  auto sz = _g->g.schema()
+                .get_edge_properties(src_label, dst_label, edge_label)
+                .size();
   for (size_t i = 0; i < sz; ++i) {
     p->emplace_back(et + (i << 24));
   }

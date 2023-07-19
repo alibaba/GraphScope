@@ -85,7 +85,7 @@ GRIN_VERTEX grin_get_vertex_by_internal_id_by_type(GRIN_GRAPH g,
 long long int grin_get_vertex_internal_id_upper_bound_by_type(
     GRIN_GRAPH g, GRIN_VERTEX_TYPE vt) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  return _g->vertex_num(vt);
+  return _g->g.vertex_num(vt);
 }
 
 /**

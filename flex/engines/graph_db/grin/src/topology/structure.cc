@@ -49,7 +49,8 @@ GRIN_GRAPH grin_get_graph_from_storage(const char* uri) {
   auto& edge_files = std::get<2>(ret);
 
   GRIN_GRAPH_T* g = new GRIN_GRAPH_T();
-  g->Init(schema, vertex_files, edge_files);
+  g->g.Init(schema, vertex_files, edge_files);
+  init_cache(g);
   return g;
 }
 
@@ -117,7 +118,6 @@ GRIN_DATATYPE grin_get_edge_data_datatype(GRIN_GRAPH, GRIN_EDGE e) {
 
 const void* grin_get_edge_data_value(GRIN_GRAPH, GRIN_EDGE e) {
   auto _e = static_cast<GRIN_EDGE_T*>(e);
-  // new 返回？
   auto type = _e->data.type;
   switch (_get_data_type(type)) {
   case GRIN_DATATYPE::Int32: {

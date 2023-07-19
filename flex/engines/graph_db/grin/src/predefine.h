@@ -1,11 +1,16 @@
-#include "grin/predefine.h"
+#include <vector>
 
+#include "grin/predefine.h"
 #include "storages/rt_mutable_graph/mutable_property_fragment.h"
 
 typedef gs::oid_t GRIN_OID_T;
 typedef gs::vid_t GRIN_VID_T;
 
-typedef gs::MutablePropertyFragment GRIN_GRAPH_T;
+typedef struct GRIN_GRAPH_T {
+  gs::MutablePropertyFragment g;
+  std::vector<std::vector<const void*>> vproperties;
+  // std::vector<std::vector<const void*>> eproperties;
+} GRIN_GRAPH_T;
 
 typedef struct GRIN_EDGE_T {
   GRIN_VERTEX dst;
@@ -30,3 +35,4 @@ typedef std::vector<unsigned> GRIN_EDGE_PROPERTY_LIST_T;
 #endif
 
 GRIN_DATATYPE _get_data_type(const gs::PropertyType& type);
+void init_cache(GRIN_GRAPH_T* g);

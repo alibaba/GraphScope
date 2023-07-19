@@ -12,7 +12,7 @@
 GRIN_VERTEX_TYPE_LIST grin_get_vertex_types_with_primary_keys(GRIN_GRAPH g) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   GRIN_VERTEX_TYPE_LIST_T* vtl = new GRIN_VERTEX_TYPE_LIST_T();
-  for (size_t idx = 0; idx < _g->vertex_label_num_; ++idx) {
+  for (size_t idx = 0; idx < _g->g.vertex_label_num_; ++idx) {
     vtl->push_back(idx);
   }
   return vtl;
@@ -49,7 +49,7 @@ GRIN_ROW grin_get_vertex_primary_keys_row(GRIN_GRAPH g, GRIN_VERTEX v) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto vid = v & (0xffffffff);
   auto label = v >> 32;
-  auto oid = _g->get_oid(label, vid);
+  auto oid = _g->g.get_oid(label, vid);
   auto p = new gs::oid_t(oid);
   row->emplace_back(p);
   return row;
