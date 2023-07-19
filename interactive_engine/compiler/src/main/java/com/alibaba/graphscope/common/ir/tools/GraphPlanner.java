@@ -183,6 +183,10 @@ public class GraphPlanner {
         }
     }
 
+    public AtomicLong getIdGenerator() {
+        return idGenerator;
+    }
+
     public static void main(String[] args) throws Exception {
         if (args.length < 3 || args[0].isEmpty() || args[1].isEmpty() || args[2].isEmpty()) {
             throw new IllegalArgumentException(

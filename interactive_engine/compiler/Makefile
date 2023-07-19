@@ -43,7 +43,7 @@ test:
 # start rpc server
 # make run
 gremlin_test:
-	mvn test -Dtest=com.alibaba.graphscope.integration.standard.IrGremlinTest
+	mvn test -Dtest=com.alibaba.graphscope.gremlin.integration.standard.IrGremlinTest
 
 run:
 	cd $(CUR_DIR) && $(java) \
@@ -65,11 +65,13 @@ physical_plan:
 # start rpc server
 # make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json 
 ldbc_test:
-	mvn test -Dtest=com.alibaba.graphscope.integration.ldbc.IrLdbcTest
+	# todo: need to rewrite gremlin ldbc queries
+	# mvn test -Dtest=com.alibaba.graphscope.gremlin.integration.ldbc.IrLdbcTest
+	mvn test -Dtest=com.alibaba.graphscope.cypher.integration.ldbc.IrLdbcTest
 
 # start rpc server
 # make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json
 pattern_test:
-	mvn test -Dtest=com.alibaba.graphscope.integration.pattern.IrPatternTest
+	mvn test -Dtest=com.alibaba.graphscope.gremlin.integration.pattern.IrPatternTest
 
 .PHONY: build run

@@ -639,6 +639,12 @@
         </exclusions>
       </dependency>
       <dependency>
+        <groupId>org.neo4j.driver</groupId>
+        <artifactId>neo4j-java-driver</artifactId>
+        <version>${noe4j.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
         <groupId>org.immutables</groupId>
         <artifactId>value</artifactId>
         <version>${immutables.version}</version>

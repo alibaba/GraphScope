@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.integration.pattern;
+package com.alibaba.graphscope.gremlin.integration.pattern;
 
 import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraph;
 import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraphProvider;
