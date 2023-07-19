@@ -61,8 +61,8 @@
 #include "core/object/i_fragment_wrapper.h"
 #include "core/server/rpc_utils.h"
 #include "core/utils/transform_utils.h"
-#include "graphscope/proto/graph_def.pb.h"
-#include "graphscope/proto/types.pb.h"
+#include "proto/graph_def.pb.h"
+#include "proto/types.pb.h"
 
 namespace bl = boost::leaf;
 

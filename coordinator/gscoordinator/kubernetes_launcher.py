@@ -1148,7 +1148,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
     def _distribute_analytical_process(self, pod_name_list, pod_ip_list):
         # generate and distribute hostfile
-        hosts = os.path.join(get_tempdir(), "kube_hosts")
+        hosts = os.path.join(get_tempdir(), "hosts_of_nodes")
         with open(hosts, "w") as f:
             for i, pod_ip in enumerate(pod_ip_list):
                 f.write(f"{pod_ip} {pod_name_list[i]}\n")

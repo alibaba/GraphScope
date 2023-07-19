@@ -41,7 +41,7 @@
 #include "core/config.h"
 #include "core/fragment/arrow_projected_fragment_base.h"  // IWYU pragma: export
 #include "core/vertex_map/arrow_projected_vertex_map.h"
-#include "graphscope/proto/types.pb.h"
+#include "proto/types.pb.h"
 
 namespace arrow {
 class Array;
