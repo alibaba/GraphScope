@@ -40,6 +40,10 @@ inline void ParseString(const std::string_view& str, std::string_view& val) {
   val = str;
 }
 
+inline void ParseDouble(const std::string_view& str, double& val) {
+  sscanf(str.data(), "%lf", &val);
+}
+
 void ParseRecord(const char* line, std::vector<Any>& rec) {
   const char* cur = line;
   for (auto& item : rec) {
@@ -56,6 +60,8 @@ void ParseRecord(const char* line, std::vector<Any>& rec) {
       ParseDate(sv, item.value.d);
     } else if (item.type == PropertyType::kString) {
       ParseString(sv, item.value.s);
+    } else if (item.type == PropertyType::kDouble) {
+      ParseDouble(sv, item.value.db);
     }
     cur = ptr + 1;
   }
@@ -102,9 +108,17 @@ void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
 #endif
 }
 
-// parseRecordX for edge with int64 property
+void ParseRecordX(const char* line, int64_t& src, int64_t& dst, double& prop) {
+#ifdef __APPLE__
+  sscanf(line, "%lld|%lld|%lf", &src, &dst, &prop);
+#else
+  sscanf(line, "%" SCNd64 "|%" SCNd64 "|%lf", &src, &dst, &prop);
+#endif
+}
+
 void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int64_t& prop) {
 #ifdef __APPLE__
+  // parseRecordX for edge with int64 property
   sscanf(line, "%lld|%lld|%lld", &src, &dst, &prop);
 #else
   sscanf(line, "%" SCNd64 "|%" SCNd64 "|%" SCNd64 "", &src, &dst, &prop);
@@ -124,6 +138,9 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
     break;
   case PropertyType::kString:
     in_archive << value.type << value.value.s;
+    break;
+  case PropertyType::kDouble:
+    in_archive << value.type << value.value.db;
     break;
   default:
     in_archive << PropertyType::kEmpty;
@@ -147,6 +164,9 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
     break;
   case PropertyType::kString:
     out_archive >> value.value.s;
+    break;
+  case PropertyType::kDouble:
+    out_archive >> value.value.db;
     break;
   default:
     break;

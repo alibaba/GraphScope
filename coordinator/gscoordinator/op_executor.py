@@ -355,7 +355,7 @@ class OperationExecutor:
                 time.sleep(delay)
                 delay *= 2  # back off
         raise RuntimeError(
-            "Failed to connect to engine in 60s, deployment may failed. Please check coordinator log for details"
+            "Failed to connect to engine in a reasonable time, deployment may failed. Please check coordinator log for details"
         )
 
     @property

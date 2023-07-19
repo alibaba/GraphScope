@@ -63,256 +63,112 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
     public void run_pattern_1_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_1_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "343476";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(155633L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_2_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_2_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "87328";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(55488L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_3_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_3_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "1547850";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(568408L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_4_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_4_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "33380";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(23286L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_5_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_5_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "31580";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(16291L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_6_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_6_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "71733";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(43169L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_7_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_7_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "6568";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(2944L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_8_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_8_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "1594426";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(782347L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_9_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_9_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "33380";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(23286L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_10_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_10_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "7327";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(3019L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_11_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_11_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "908981";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(506513L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_12_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_12_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "89621";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(232854L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_13_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_13_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "2430116";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(1602774L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_14_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_14_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "87328";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(55488L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_15_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_15_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "33380";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(23286L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_16_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_16_test();
         this.printTraversalForm(traversal);
-        int counter = 0;
-
-        String expected = "33380";
-        while (traversal.hasNext()) {
-            Long bindings = traversal.next();
-            Assert.assertTrue(bindings.toString().equals(expected));
-            ++counter;
-        }
-
-        Assert.assertEquals(1, counter);
+        Assert.assertEquals(23286L, traversal.next().longValue());
     }
 
     public static class Traversals extends PatternQueryTest {

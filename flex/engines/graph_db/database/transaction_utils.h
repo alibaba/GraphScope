@@ -39,6 +39,9 @@ inline void serialize_field(grape::InArchive& arc, const Any& prop) {
   case PropertyType::kInt64:
     arc << prop.value.l;
     break;
+  case PropertyType::kDouble:
+    arc << prop.value.db;
+    break;
   default:
     LOG(FATAL) << "Unexpected property type";
   }
@@ -59,6 +62,9 @@ inline void deserialize_field(grape::OutArchive& arc, Any& prop) {
     break;
   case PropertyType::kInt64:
     arc >> prop.value.l;
+    break;
+  case PropertyType::kDouble:
+    arc >> prop.value.db;
     break;
   default:
     LOG(FATAL) << "Unexpected property type";

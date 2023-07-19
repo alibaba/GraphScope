@@ -278,10 +278,10 @@ if(Arrow_FOUND AND Arrow_VERSION VERSION_GREATER 9.0.1)
 endif()
 
 # Generate proto
-execute_process(COMMAND python3 python/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}" --cpp
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..)
+execute_process(COMMAND python3 ../proto/proto_generator.py "${PROJECT_SOURCE_DIR}/proto" --cpp
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
-file(GLOB PROTO_CPP_FILES "graphscope/proto/*.cc")
+file(GLOB PROTO_CPP_FILES "proto/*.cc")
 file(GLOB CORE_RPC_SRC_FILES "core/server/*.cc")
 
 # Add targets
@@ -569,7 +569,7 @@ endif()
 install_gsa_headers("${PROJECT_SOURCE_DIR}/apps")
 install_gsa_headers("${PROJECT_SOURCE_DIR}/benchmarks")
 install_gsa_headers("${PROJECT_SOURCE_DIR}/core")
-install_gsa_headers("${PROJECT_SOURCE_DIR}/graphscope")
+install_gsa_headers("${PROJECT_SOURCE_DIR}/proto")
 install_gsa_app_frames("${PROJECT_SOURCE_DIR}/frame")
 
 install_gsa_dependency_modules("${PROJECT_SOURCE_DIR}/cmake")
