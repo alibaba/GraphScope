@@ -180,6 +180,10 @@ GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto vid = v & (0xffffffff);
   auto label = v >> 32;
+
+  if (label >= _g->g.vertex_label_num_) {
+    return NULL;
+  }
   auto& table = _g->g.get_vertex_table(label);
   auto prop_size = table.col_num();
   const auto& types = table.column_types();

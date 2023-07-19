@@ -103,6 +103,11 @@ int grin_get_vertex_property_value_of_int32(GRIN_GRAPH g, GRIN_VERTEX v,
     grin_error_code = INVALID_VALUE;
     return 0;
   }
+  if (label >= _g->g.vertex_label_num_ ||
+      pid >= _g->vproperties[label].size()) {
+    grin_error_code = INVALID_VALUE;
+    return 0;
+  }
   auto pcol = _g->vproperties[label][pid];
   if (pcol == NULL) {
     grin_error_code = INVALID_VALUE;
@@ -133,10 +138,16 @@ long long int grin_get_vertex_property_value_of_int64(GRIN_GRAPH g,
     grin_error_code = INVALID_VALUE;
     return 0;
   }
+
+  if (label >= _g->g.vertex_label_num_ ||
+      pid >= _g->vproperties[label].size()) {
+    grin_error_code = INVALID_VALUE;
+    return 0;
+  }
   auto pcol = _g->vproperties[label][pid];
   if (pcol == NULL) {
     grin_error_code = INVALID_VALUE;
-    return 0;
+    return 0.0f;
   }
   auto col = static_cast<const gs::LongColumn*>(pcol);
   return col->get_view(vid);
@@ -167,6 +178,12 @@ double grin_get_vertex_property_value_of_double(GRIN_GRAPH g, GRIN_VERTEX v,
     grin_error_code = INVALID_VALUE;
     return 0.0;
   }
+
+  if (label >= _g->g.vertex_label_num_ ||
+      pid >= _g->vproperties[label].size()) {
+    grin_error_code = INVALID_VALUE;
+    return 0.0;
+  }
   auto pcol = _g->vproperties[label][pid];
   if (pcol == NULL) {
     grin_error_code = INVALID_VALUE;
@@ -190,10 +207,16 @@ const char* grin_get_vertex_property_value_of_string(GRIN_GRAPH g,
     grin_error_code = INVALID_VALUE;
     return NULL;
   }
+
+  if (label >= _g->g.vertex_label_num_ ||
+      pid >= _g->vproperties[label].size()) {
+    grin_error_code = INVALID_VALUE;
+    return "";
+  }
   auto pcol = _g->vproperties[label][pid];
   if (pcol == NULL) {
     grin_error_code = INVALID_VALUE;
-    return 0;
+    return "";
   }
   auto col = static_cast<const gs::StringColumn*>(pcol);
 
@@ -230,6 +253,11 @@ long long int grin_get_vertex_property_value_of_timestamp64(
     return 0;
   }
 
+  if (label >= _g->g.vertex_label_num_ ||
+      pid >= _g->vproperties[label].size()) {
+    grin_error_code = INVALID_VALUE;
+    return 0;
+  }
   auto pcol = _g->vproperties[label][pid];
   if (pcol == NULL) {
     grin_error_code = INVALID_VALUE;
@@ -254,6 +282,11 @@ const void* grin_get_vertex_property_value(GRIN_GRAPH g, GRIN_VERTEX v,
 
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
 
+  if (plabel >= _g->g.vertex_label_num_ ||
+      pid >= _g->vproperties[plabel].size()) {
+    grin_error_code = INVALID_VALUE;
+    return 0;
+  }
   auto col = _g->vproperties[plabel][pid];
   if (col == NULL) {
     grin_error_code = UNKNOWN_DATATYPE;
