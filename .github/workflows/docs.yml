@@ -30,14 +30,14 @@ jobs:
         ref: ${{ github.event.pull_request.head.ref }}
         submodules: true
         fetch-depth: 0
-    
+
     - uses: dorny/paths-filter@v2
       id: doc-changes
       with:
         filters: |
           src:
             - 'docs/**'
-    
+
     - uses: actions-ecosystem/action-regex-match@v2
       id: pr-regex-match
       with:
