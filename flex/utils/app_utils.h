@@ -48,6 +48,8 @@ class Encoder {
 
   void put_string_view(const std::string_view& v);
 
+  void put_double(double v);
+
   void clear();
 
  private:
@@ -66,6 +68,8 @@ class Decoder {
   std::string_view get_string();
 
   uint8_t get_byte();
+
+  double get_double();
 
   const char* data() const;
 

@@ -22,11 +22,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-hqps-engine:
+  build-flex:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.3
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.4
     steps:
     - uses: actions/checkout@v3
 
@@ -47,3 +47,12 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex
         mkdir build && cd build
         cmake .. && sudo make -j$(nproc)
+
+    - name: GRIN on mutable csr test
+      run: |
+        git submodule update --init
+        cd flex/engines/graph_db/grin
+        mkdir build && cd build
+        cmake .. && sudo make -j$(nproc)
+        export FLEX_DATA_DIR=../../../../storages/rt_mutable_graph/modern_graph/
+        ./run_grin_test

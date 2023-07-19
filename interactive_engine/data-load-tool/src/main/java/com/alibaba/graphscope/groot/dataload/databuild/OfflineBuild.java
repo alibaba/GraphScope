@@ -73,7 +73,9 @@ public class OfflineBuild {
                         .build();
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, FileColumnMapping> columnMappingConfig =
-                objectMapper.readValue(columnMappingConfigStr, new TypeReference<>() {});
+                objectMapper.readValue(
+                        columnMappingConfigStr,
+                        new TypeReference<Map<String, FileColumnMapping>>() {});
 
         List<DataLoadTargetPb> targets = new ArrayList<>();
         for (FileColumnMapping fileColumnMapping : columnMappingConfig.values()) {

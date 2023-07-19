@@ -46,6 +46,7 @@ void MutablePropertyFragment::initVertices(
   auto& table = vertex_data_[v_label_i];
   auto& property_types = schema_.get_vertex_properties(v_label_name);
   size_t col_num = property_types.size();
+
   std::vector<std::string> col_names;
   for (size_t col_i = 0; col_i < col_num; ++col_i) {
     col_names.push_back("col_" + std::to_string(col_i));
@@ -96,7 +97,10 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
     return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(
         MutableNbrSlice<EDATA_T>::empty());
   }
-
+  MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
+    return new TypedMutableCsrConstEdgeIter<EDATA_T>(
+        MutableNbrSlice<EDATA_T>::empty());
+  }
   std::shared_ptr<MutableCsrEdgeIterBase> edge_iter_mut(vid_t v) override {
     return std::make_shared<TypedMutableCsrEdgeIter<EDATA_T>>(
         MutableNbrSliceMut<EDATA_T>::empty());
@@ -271,6 +275,17 @@ void MutablePropertyFragment::initEdges(
           construct_empty_csr<std::string>(ie_strtagy, oe_strtagy);
     } else {
       LOG(FATAL) << "Unsupported edge property type.";
+    }
+  } else if (property_types[0] == PropertyType::kDouble) {
+    if (filenames.empty()) {
+      std::tie(ie_[index], oe_[index]) =
+          construct_empty_csr<double>(ie_strtagy, oe_strtagy);
+    } else {
+      std::tie(ie_[index], oe_[index]) = construct_csr<double>(
+          filenames, property_types, ie_strtagy, oe_strtagy,
+          lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
+
+      //      LOG(FATAL) << "Unsupported edge property type.";
     }
   } else {
     LOG(FATAL) << "Unsupported edge property type.";
@@ -573,6 +588,20 @@ MutablePropertyFragment::get_incoming_edges(label_t label, vid_t u,
   size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
                  label * edge_label_num_ + edge_label;
   return ie_[index]->edge_iter(u);
+}
+
+MutableCsrConstEdgeIterBase* MutablePropertyFragment::get_outgoing_edges_raw(
+    label_t label, vid_t u, label_t neighbor_label, label_t edge_label) const {
+  size_t index = label * vertex_label_num_ * edge_label_num_ +
+                 neighbor_label * edge_label_num_ + edge_label;
+  return oe_[index]->edge_iter_raw(u);
+}
+
+MutableCsrConstEdgeIterBase* MutablePropertyFragment::get_incoming_edges_raw(
+    label_t label, vid_t u, label_t neighbor_label, label_t edge_label) const {
+  size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
+                 label * edge_label_num_ + edge_label;
+  return ie_[index]->edge_iter_raw(u);
 }
 
 std::shared_ptr<MutableCsrEdgeIterBase>

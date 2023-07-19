@@ -60,6 +60,22 @@ std::vector<std::string> Table::column_names() const {
   return names;
 }
 
+std::string Table::column_name(size_t index) const {
+  size_t col_num = col_id_indexer_.size();
+  CHECK(index < col_num);
+  std::string name{};
+  CHECK(col_id_indexer_.get_key(index, name));
+  return name;
+}
+
+int Table::get_column_id_by_name(const std::string& name) const {
+  int col_id;
+  if (col_id_indexer_.get_index(name, col_id)) {
+    return col_id;
+  }
+  return -1;
+}
+
 std::vector<PropertyType> Table::column_types() const {
   size_t col_num = col_id_indexer_.size();
   std::vector<PropertyType> types(col_num);

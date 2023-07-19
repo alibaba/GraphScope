@@ -84,7 +84,7 @@
           <execution>
             <id>interactive</id>
             <configuration>
-              <protoSourceRoot>../proto</protoSourceRoot>
+              <protoSourceRoot>../../proto/groot/</protoSourceRoot>
               <excludes>
                 <exclude>sdk/*</exclude>
               </excludes>

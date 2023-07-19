@@ -45,8 +45,8 @@
 #include "core/app/app_invoker.h"
 #include "core/error.h"
 #include "frame/ctx_wrapper_builder.h"
-#include "graphscope/proto/data_types.pb.h"
-#include "graphscope/proto/types.pb.h"
+#include "proto/data_types.pb.h"
+#include "proto/types.pb.h"
 
 #ifdef _APP_HEADER
 #include QUOTE(_APP_HEADER)
