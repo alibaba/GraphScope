@@ -24,28 +24,27 @@ import sys
 
 
 def gather_all_proto(proto_dir, suffix="*.proto"):
-    directory = os.path.join(proto_dir, suffix)
-    files = glob.glob(directory)
-    return files
+    pattern = os.path.join(proto_dir, suffix)
+    return glob.glob(pattern)
 
 
 def create_path(path):
     """Utility function to create a path."""
-    if os.path.isdir(path):
-        return
-    os.makedirs(path, exist_ok=True)
+    if not os.path.isdir(path):
+        os.makedirs(path, exist_ok=True)
 
 
 def cpp_out(relative_dir, output_dir):
     files = gather_all_proto(relative_dir)
     for proto_file in files:
+        cmd = [
+            shutil.which("protoc"),
+            "-I.",
+            f"--cpp_out={output_dir}",
+            proto_file,
+        ]
         subprocess.check_call(
-            [
-                shutil.which("protoc"),
-                "-I%s" % ".",
-                "--cpp_out=%s" % output_dir,
-                proto_file,
-            ],
+            cmd,
             stderr=subprocess.STDOUT,
         )
 
@@ -53,16 +52,17 @@ def cpp_out(relative_dir, output_dir):
 def python_out(relative_dir, output_dir):
     files = gather_all_proto(relative_dir)
     for proto_file in files:
+        cmd = [
+            sys.executable,
+            "-m",
+            "grpc_tools.protoc",
+            "-I.",
+            f"--python_out={output_dir}",
+            f"--mypy_out={output_dir}",
+            proto_file,
+        ]
         subprocess.check_call(
-            [
-                sys.executable,
-                "-m",
-                "grpc_tools.protoc",
-                "-I%s" % ".",
-                "--python_out=%s" % os.path.join(output_dir),
-                "--mypy_out=%s" % os.path.join(output_dir),
-                proto_file,
-            ],
+            cmd,
             stderr=subprocess.STDOUT,
         )
 
@@ -74,14 +74,15 @@ def cpp_service_out(relative_dir, output_dir):
     suffix = "*_service.proto"
     files = gather_all_proto(relative_dir, suffix)
     for proto_file in files:
+        cmd = [
+            shutil.which("protoc"),
+            "-I.",
+            f"--grpc_out={output_dir}",
+            f"--plugin=protoc-gen-grpc={plugin_path}",
+            proto_file,
+        ]
         subprocess.check_call(
-            [
-                shutil.which("protoc"),
-                "-I%s" % ".",
-                "--grpc_out=%s" % output_dir,
-                "--plugin=protoc-gen-grpc=%s" % plugin_path,
-                proto_file,
-            ],
+            cmd,
             stderr=subprocess.STDOUT,
         )
 
@@ -90,18 +91,19 @@ def python_service_out(relative_dir, output_dir):
     suffix = "*_service.proto"
     files = gather_all_proto(relative_dir, suffix)
     for proto_file in files:
+        cmd = [
+            sys.executable,
+            "-m",
+            "grpc_tools.protoc",
+            "-I.",
+            f"--python_out={output_dir}",
+            f"--mypy_out={output_dir}",
+            f"--grpc_python_out={output_dir}",
+            f"--mypy_grpc_out={output_dir}",
+            proto_file,
+        ]
         subprocess.check_call(
-            [
-                sys.executable,
-                "-m",
-                "grpc_tools.protoc",
-                "-I%s" % ".",
-                "--python_out=%s" % output_dir,
-                "--mypy_out=%s" % os.path.join(output_dir),
-                "--grpc_python_out=%s" % output_dir,
-                "--mypy_grpc_out=%s" % os.path.join(output_dir),
-                proto_file,
-            ],
+            cmd,
             stderr=subprocess.STDOUT,
         )
 
@@ -111,19 +113,16 @@ if __name__ == "__main__":
         print("Usage: python proto_generator.py <OUTPUT_PATH> [--cpp] [--python]")
         sys.exit(1)
 
-    # path to 'GraphScope/python/graphscope/proto'
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-
-    # path to 'GraphScope/python'
-    base_dir = os.path.join(current_dir, "../", "../")
-    os.chdir(base_dir)
-
     output_dir = sys.argv[1]
     output_dir = os.path.realpath(os.path.realpath(output_dir))
     create_path(output_dir)
 
+    # path to 'GraphScope/proto'
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(current_dir)
+
     # must use relative path
-    relative_dir = os.path.join(".", "graphscope", "proto")
+    relative_dir = "."
     if len(sys.argv) <= 2 or len(sys.argv) > 2 and sys.argv[2] == "--cpp":
         print("Generating cpp proto to: " + output_dir)
         cpp_out(relative_dir, output_dir)

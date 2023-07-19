@@ -36,7 +36,7 @@ from wheel.bdist_wheel import bdist_wheel
 # https://github.com/pypa/pip/issues/7953
 site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
 
-repo_root = os.path.dirname(os.path.abspath(__file__))
+pkg_root = os.path.dirname(os.path.abspath(__file__))
 
 if platform.system() == "Darwin":
     # see also: https://github.com/python/cpython/issues/100420
@@ -57,20 +57,20 @@ class BuildProto(Command):
         pass
 
     def run(self):
+        cmd = [
+            sys.executable,
+            os.path.join(
+                pkg_root,
+                "..",
+                "proto",
+                "proto_generator.py",
+            ),
+            os.path.join(pkg_root, "graphscope", "proto"),
+            "--python",
+        ]
+        print(" ".join(cmd))
         subprocess.check_call(
-            [
-                sys.executable,
-                os.path.join(
-                    repo_root,
-                    "..",
-                    "python",
-                    "graphscope",
-                    "proto",
-                    "proto_generator.py",
-                ),
-                repo_root,
-                "--python",
-            ],
+            cmd,
             env=os.environ.copy(),
         )
 
@@ -92,17 +92,17 @@ class FormatAndLint(Command):
 
     def run(self):
         if self.inplace:
-            subprocess.check_call([sys.executable, "-m", "isort", "."], cwd=repo_root)
-            subprocess.check_call([sys.executable, "-m", "black", "."], cwd=repo_root)
-            subprocess.check_call([sys.executable, "-m", "flake8", "."], cwd=repo_root)
+            subprocess.check_call([sys.executable, "-m", "isort", "."], cwd=pkg_root)
+            subprocess.check_call([sys.executable, "-m", "black", "."], cwd=pkg_root)
+            subprocess.check_call([sys.executable, "-m", "flake8", "."], cwd=pkg_root)
         else:
             subprocess.check_call(
-                [sys.executable, "-m", "isort", "--check", "--diff", "."], cwd=repo_root
+                [sys.executable, "-m", "isort", "--check", "--diff", "."], cwd=pkg_root
             )
             subprocess.check_call(
-                [sys.executable, "-m", "black", "--check", "--diff", "."], cwd=repo_root
+                [sys.executable, "-m", "black", "--check", "--diff", "."], cwd=pkg_root
             )
-            subprocess.check_call([sys.executable, "-m", "flake8", "."], cwd=repo_root)
+            subprocess.check_call([sys.executable, "-m", "flake8", "."], cwd=pkg_root)
 
 
 class CustomBuildPy(build_py):
@@ -141,7 +141,7 @@ class CustomBDistWheel(bdist_wheel):
             graphlearn_shared_lib = "libgraphlearn_shared.so"
         if not os.path.isfile(
             os.path.join(
-                repo_root,
+                pkg_root,
                 "..",
                 "learning_engine",
                 "graph-learn",
@@ -156,18 +156,18 @@ class CustomBDistWheel(bdist_wheel):
         bdist_wheel.run(self)
 
 
-with open(os.path.join(repo_root, "..", "README.md"), "r", encoding="utf-8") as fp:
+with open(os.path.join(pkg_root, "..", "README.md"), "r", encoding="utf-8") as fp:
     long_description = fp.read()
 
 
 def parsed_reqs():
-    with open(os.path.join(repo_root, "requirements.txt"), "r", encoding="utf-8") as fp:
+    with open(os.path.join(pkg_root, "requirements.txt"), "r", encoding="utf-8") as fp:
         return fp.read().splitlines()
 
 
 def parsed_dev_reqs():
     with open(
-        os.path.join(repo_root, "requirements-dev.txt"), "r", encoding="utf-8"
+        os.path.join(pkg_root, "requirements-dev.txt"), "r", encoding="utf-8"
     ) as fp:
         return fp.read().splitlines()
 
@@ -202,7 +202,7 @@ def build_learning_engine():
     import numpy
 
     ROOT_PATH = os.path.abspath(
-        os.path.join(repo_root, "..", "learning_engine", "graph-learn")
+        os.path.join(pkg_root, "..", "learning_engine", "graph-learn")
     )
 
     include_dirs = []
@@ -270,7 +270,7 @@ def parse_version(root, **kwargs):
     from setuptools_scm.git import parse
     from setuptools_scm.version import meta
 
-    version_file = os.path.join(repo_root, "..", "VERSION")
+    version_file = os.path.join(pkg_root, "..", "VERSION")
     if os.path.isfile(version_file):
         with open(version_file, "r", encoding="utf-8") as fp:
             return meta(fp.read().strip())
@@ -305,7 +305,7 @@ setup(
     ],
     keywords="Graph, Large-Scale, Distributed Computing",
     use_scm_version={
-        "root": repo_root,
+        "root": pkg_root,
         "parse": parse_version,
     },
     setup_requires=[

@@ -50,7 +50,7 @@
 #include "core/server/rpc_utils.h"
 #include "core/utils/mpi_utils.h"
 #include "core/utils/transform_utils.h"
-#include "graphscope/proto/types.pb.h"
+#include "proto/types.pb.h"
 
 #define CONTEXT_TYPE_VERTEX_DATA "vertex_data"
 #define CONTEXT_TYPE_LABELED_VERTEX_DATA "labeled_vertex_data"

@@ -24,7 +24,7 @@
 
 #include "vineyard/graph/utils/error.h"  // IWYU pragma: export
 
-#include "graphscope/proto/error_codes.pb.h"  // IWYU pragma: export
+#include "proto/error_codes.pb.h"  // IWYU pragma: export
 
 namespace gs {
 
