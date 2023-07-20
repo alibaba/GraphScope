@@ -22,7 +22,7 @@ from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
 from graphscope.framework.app import project_to_simple
 
-__all__ = ["wcc", "wcc_auto"]
+__all__ = ["wcc", "wcc_auto", "wcc_projected"]
 
 logger = logging.getLogger("graphscope")
 
@@ -92,3 +92,12 @@ def wcc_auto(graph):
         >>> sess.close()
     """
     return AppAssets(algo="wcc_auto", context="vertex_data")(graph)
+
+
+@project_to_simple
+@not_compatible_for("arrow_property", "dynamic_property", "directed")
+def wcc_projected(graph):
+    """Evaluate weakly connected components on the `graph`.
+    This is a naive version of WCC that could work on dynamic, projected, flatten graph
+    """
+    return AppAssets(algo="wcc_projected", context="vertex_data")(graph)

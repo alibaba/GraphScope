@@ -613,7 +613,7 @@ def weakly_connected_components(G):
         1 if the vertex satisfies k-core, otherwise 0.
 
     """
-    return AppAssets(algo="wcc", context="vertex_data")(G)
+    return AppAssets(algo="wcc_projected", context="vertex_data")(G)
 
 
 @project_to_simple
