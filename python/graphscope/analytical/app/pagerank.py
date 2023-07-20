@@ -22,7 +22,7 @@ from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
 from graphscope.framework.app import project_to_simple
 
-__all__ = ["pagerank", "pagerank_opt", "pagerank_nx"]
+__all__ = ["pagerank", "pagerank_push", "pagerank_push_opt", "pagerank_nx"]
 
 logger = logging.getLogger("graphscope")
 
@@ -54,39 +54,34 @@ def pagerank(graph, delta=0.85, max_round=10):
         >>> c = graphscope.pagerank(pg, delta=0.85, max_round=10)
         >>> sess.close()
     """
-    if graph.is_directed():
-        logger.warning(
-            "PageRank is not designed for directed graph, please use `pagerank_directed`"
-        )
+    algo = "pagerank_directed" if graph.is_directed() else "pagerank"
     delta = float(delta)
     max_round = int(max_round)
-    return AppAssets(algo="pagerank", context="vertex_data")(graph, delta, max_round)
+    return AppAssets(algo=algo, context="vertex_data")(graph, delta, max_round)
 
 
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
-def pagerank_directed(graph, delta=0.85, max_round=10):
+def pagerank_push(graph, delta=0.85, max_round=10):
     """Evaluate PageRank on a graph."""
-    if not graph.is_directed():
-        logger.warning(
-            "PageRank-directed is not designed for undirected graph, please use `pagerank`"
-        )
+    if graph.is_directed():
+        logger.warning("PageRankPush is not designed for directed graph.")
     delta = float(delta)
     max_round = int(max_round)
-    return AppAssets(algo="pagerank_directed", context="vertex_data")(
+    return AppAssets(algo="pagerank_push", context="vertex_data")(
         graph, delta, max_round
     )
 
 
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
-def pagerank_opt(graph, delta=0.85, max_round=10):
+def pagerank_push_opt(graph, delta=0.85, max_round=10):
     """Evaluate PageRank on a graph."""
     if graph.is_directed():
-        logger.warning("PageRankOpt is not designed for directed graph.")
+        logger.warning("PageRankPushOpt is not designed for directed graph.")
     delta = float(delta)
     max_round = int(max_round)
-    return AppAssets(algo="pagerank_opt", context="vertex_data")(
+    return AppAssets(algo="pagerank_push_opt", context="vertex_data")(
         graph, delta, max_round
     )
 

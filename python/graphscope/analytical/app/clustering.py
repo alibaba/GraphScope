@@ -21,7 +21,7 @@ from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
 from graphscope.framework.app import project_to_simple
 
-__all__ = ["avg_clustering", "clustering"]
+__all__ = ["avg_clustering", "clustering", "lcc"]
 
 
 @project_to_simple
@@ -52,12 +52,37 @@ def clustering(graph, degree_threshold=1000000000):
         >>> sess.close()
     """
     degree_threshold = int(degree_threshold)
-    if graph.is_directed():
-        return AppAssets(algo="clustering", context="vertex_data")(
-            graph, degree_threshold
-        )
-    else:
-        return AppAssets(algo="lcc", context="vertex_data")(graph, degree_threshold)
+    return AppAssets(algo="clustering", context="vertex_data")(graph, degree_threshold)
+
+
+@project_to_simple
+@not_compatible_for("arrow_property", "dynamic_property")
+def lcc(graph):
+    """Local clustering coefficient of a node in a Graph is the fraction
+    of pairs of the node’s neighbors that are adjacent to each other.
+
+    Args:
+        graph (:class:`graphscope.Graph`): A simple graph.
+
+    Returns:
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned the computed clustering value, will be evaluated in eager mode.
+
+    Examples:
+
+    .. code:: python
+
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> # project to a simple graph (if needed)
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.lcc(pg)
+        >>> sess.close()
+    """
+    algo = "lcc_directed" if graph.is_directed() else "lcc"
+    return AppAssets(algo=algo, context="vertex_data")(graph)
 
 
 @project_to_simple

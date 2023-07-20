@@ -322,6 +322,9 @@ bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
     context_type = ctx_wrapper->context_type();
     context_schema = ctx_wrapper->schema();
     BOOST_LEAF_CHECK(object_manager_.PutObject(ctx_wrapper));
+  } else {
+    LOG(ERROR) << "Error occur when querying";
+    return ctx_wrapper;
   }
   return toJson({{"context_type", context_type},
                  {"context_key", context_key},

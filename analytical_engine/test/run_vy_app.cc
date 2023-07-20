@@ -30,14 +30,15 @@
 #include "apps/property/sssp_property.h"
 #include "apps/property/wcc_property.h"
 #include "apps/sampling_path/sampling_path.h"
-#include "bfs/bfs.h"
+#include "bfs/bfs_opt.h"
 #include "cdlp/cdlp.h"
-#include "lcc/lcc.h"
-#include "pagerank/pagerank.h"
+#include "cdlp/cdlp_opt.h"
+#include "lcc/lcc_opt.h"
 #include "pagerank/pagerank_auto.h"
 #include "pagerank/pagerank_local_parallel.h"
-#include "sssp/sssp.h"
-#include "wcc/wcc.h"
+#include "pagerank/pagerank_opt.h"
+#include "sssp/sssp_opt.h"
+#include "wcc/wcc_opt.h"
 
 #include "core/fragment/arrow_projected_fragment.h"
 #include "core/loader/arrow_fragment_loader.h"
@@ -55,8 +56,9 @@ using ProjectedFragmentType =
 using ProjectedFragmentType2 =
     gs::ArrowProjectedFragment<oid_t, vid_t, grape::EmptyType, int64_t>;
 
-void RunWCC(std::shared_ptr<FragmentType> fragment,
-            const grape::CommSpec& comm_spec, const std::string& out_prefix) {
+void RunWCCProperty(std::shared_ptr<FragmentType> fragment,
+                    const grape::CommSpec& comm_spec,
+                    const std::string& out_prefix) {
   using AppType = gs::WCCProperty<FragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -76,8 +78,9 @@ void RunWCC(std::shared_ptr<FragmentType> fragment,
   worker->Finalize();
 }
 
-void RunSSSP(std::shared_ptr<FragmentType> fragment,
-             const grape::CommSpec& comm_spec, const std::string& out_prefix) {
+void RunSSSPProperty(std::shared_ptr<FragmentType> fragment,
+                     const grape::CommSpec& comm_spec,
+                     const std::string& out_prefix) {
   using AppType = gs::SSSPProperty<FragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -155,9 +158,9 @@ void RunSamplingPath(std::shared_ptr<FragmentType> fragment,
   worker->Finalize();
 }
 
-void RunAutoWCC(std::shared_ptr<FragmentType> fragment,
-                const grape::CommSpec& comm_spec,
-                const std::string& out_prefix) {
+void RunAutoWCCProperty(std::shared_ptr<FragmentType> fragment,
+                        const grape::CommSpec& comm_spec,
+                        const std::string& out_prefix) {
   using AppType = gs::AutoWCCProperty<FragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -177,9 +180,9 @@ void RunAutoWCC(std::shared_ptr<FragmentType> fragment,
   worker->Finalize();
 }
 
-void RunAutoSSSP(std::shared_ptr<FragmentType> fragment,
-                 const grape::CommSpec& comm_spec,
-                 const std::string& out_prefix) {
+void RunAutoSSSPProperty(std::shared_ptr<FragmentType> fragment,
+                         const grape::CommSpec& comm_spec,
+                         const std::string& out_prefix) {
   using AppType = gs::AutoSSSPProperty<FragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -202,9 +205,7 @@ void RunAutoSSSP(std::shared_ptr<FragmentType> fragment,
 void RunProjectedWCC(std::shared_ptr<ProjectedFragmentType> fragment,
                      const grape::CommSpec& comm_spec,
                      const std::string& out_prefix) {
-  // using AppType = grape::WCCProjected<ProjectedFragmentType>;
-  // using AppType = grape::WCCAuto<ProjectedFragmentType>;
-  using AppType = grape::WCC<ProjectedFragmentType>;
+  using AppType = grape::WCCOpt<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
@@ -228,7 +229,7 @@ void RunProjectedSSSP(std::shared_ptr<ProjectedFragmentType2> fragment,
                       const std::string& out_prefix) {
   // using AppType = grape::SSSPProjected<ProjectedFragmentType2>;
   // using AppType = grape::SSSPAuto<ProjectedFragmentType2>;
-  using AppType = grape::SSSP<ProjectedFragmentType2>;
+  using AppType = grape::SSSPOpt<ProjectedFragmentType2>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
@@ -250,7 +251,8 @@ void RunProjectedSSSP(std::shared_ptr<ProjectedFragmentType2> fragment,
 void RunProjectedCDLP(std::shared_ptr<ProjectedFragmentType> fragment,
                       const grape::CommSpec& comm_spec,
                       const std::string& out_prefix) {
-  // using AppType = grape::CDLPAuto<ProjectedFragmentType>;
+  // TODO: uncomment once latest libgrape-lite is released.
+  // using AppType = grape::CDLPOpt<GraphType, int64_t>;
   using AppType = grape::CDLP<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -274,7 +276,7 @@ void RunProjectedBFS(std::shared_ptr<ProjectedFragmentType> fragment,
                      const grape::CommSpec& comm_spec,
                      const std::string& out_prefix) {
   // using AppType = grape::BFSAuto<ProjectedFragmentType>;
-  using AppType = grape::BFS<ProjectedFragmentType>;
+  using AppType = grape::BFSOpt<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
@@ -297,7 +299,7 @@ void RunProjectedLCC(std::shared_ptr<ProjectedFragmentType> fragment,
                      const grape::CommSpec& comm_spec,
                      const std::string& out_prefix) {
   // using AppType = grape::LCCAuto<ProjectedFragmentType>;
-  using AppType = grape::LCC<ProjectedFragmentType>;
+  using AppType = grape::LCCOpt<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
@@ -320,7 +322,7 @@ void RunProjectedPR(std::shared_ptr<ProjectedFragmentType> fragment,
                     const grape::CommSpec& comm_spec,
                     const std::string& out_prefix) {
   // using AppType = grape::PageRankAuto<ProjectedFragmentType>;
-  using AppType = grape::PageRank<ProjectedFragmentType>;
+  using AppType = grape::PageRankOpt<ProjectedFragmentType>;
   // using AppType = grape::PageRankLocalParallel<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -353,11 +355,11 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
                     path_pattern);
   } else {
     if (!run_projected) {
-      RunWCC(fragment, comm_spec, "./outputs_wcc/");
-      RunSSSP(fragment, comm_spec, "./outputs_sssp/");
+      RunWCCProperty(fragment, comm_spec, "./outputs_wcc/");
+      RunSSSPProperty(fragment, comm_spec, "./outputs_sssp/");
 
-      RunAutoWCC(fragment, comm_spec, "./outputs_auto_wcc/");
-      RunAutoSSSP(fragment, comm_spec, "./outputs_auto_sssp/");
+      RunAutoWCCProperty(fragment, comm_spec, "./outputs_auto_wcc/");
+      RunAutoSSSPProperty(fragment, comm_spec, "./outputs_auto_sssp/");
     } else {
       {
         // v_prop is grape::EmptyType, e_prop is grape::EmptyType

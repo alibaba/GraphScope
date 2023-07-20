@@ -89,20 +89,17 @@ function get_test_data() {
 # Arguments:
 #   None
 # !!!WARNING!!!:
-#   Kill all started vineyardd and etcd
+#   Kill all started vineyardd
 ########################################################
 function start_vineyard() {
   pushd "${ENGINE_HOME}/build"
   pkill vineyardd || true
-  pkill etcd || true
   echo "[INFO] vineyardd will using the socket_file on ${socket_file}"
 
   timestamp=$(date +%Y-%m-%d_%H-%M-%S)
   vineyardd \
-    --socket ${socket_file} \
-    --size 2000000000 \
-    --etcd_prefix "${timestamp}" \
-    --etcd_endpoint=http://127.0.0.1:3457 &
+    -socket ${socket_file} \
+    -meta local &
   set +m
   sleep 5
   info "vineyardd started."
@@ -359,8 +356,15 @@ function run_local_vertex_map() {
 #
 # sssp_average_length is a time-consuming app, so we skip it for graph p2p.
 
-declare -a apps=(
+declare -a ldbc_apps=(
+  "wcc"
   "sssp"
+  "lcc"
+  "bfs"
+  "cdlp"
+  "pr"
+)
+declare -a other_apps=(
   "sssp_has_path"
   # "sssp_path"
   "cdlp_auto"
@@ -371,7 +375,6 @@ declare -a apps=(
   # "pagerank_auto"
   "kcore"
   "hits"
-  # "bfs"
   "avg_clustering"
   "transitivity"
   "triangles"
@@ -396,7 +399,12 @@ pushd "${ENGINE_HOME}"/build
 
 get_test_data
 
-for app in "${apps[@]}"; do
+for app in "${ldbc_apps[@]}"; do
+  run ${np} ./run_app --vfile "${test_dir}"/p2p-31.v --efile "${test_dir}"/p2p-31.e --application "${app}" --out_prefix ./test_output --sssp_source=6 --sssp_target=10 --bfs_source=6
+  exact_verify "${test_dir}"/property/ldbc/p2p-31-"${app^^}"
+done
+
+for app in "${other_apps[@]}"; do
   run ${np} ./run_app --vfile "${test_dir}"/p2p-31.v --efile "${test_dir}"/p2p-31.e --application "${app}" --out_prefix ./test_output --sssp_source=6 --sssp_target=10 --bfs_source=6
   exact_verify "${test_dir}"/p2p-31-"${app}"
 done

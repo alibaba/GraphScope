@@ -32,6 +32,7 @@ from graphscope.analytical.app.average_shortest_path_length import \
 from graphscope.analytical.app.bfs import bfs
 from graphscope.analytical.app.clustering import avg_clustering
 from graphscope.analytical.app.clustering import clustering
+from graphscope.analytical.app.clustering import lcc
 
 # fmt: off
 from graphscope.analytical.app.degree_assortativity_coefficient import \
@@ -52,10 +53,10 @@ from graphscope.analytical.app.lpa import lpa
 from graphscope.analytical.app.lpa import lpa_u2i
 from graphscope.analytical.app.pagerank import pagerank
 from graphscope.analytical.app.pagerank import pagerank_nx
-from graphscope.analytical.app.pagerank import pagerank_opt
+from graphscope.analytical.app.pagerank import pagerank_push
+from graphscope.analytical.app.pagerank import pagerank_push_opt
 from graphscope.analytical.app.sssp import sssp
 from graphscope.analytical.app.triangles import triangles
 from graphscope.analytical.app.voterank import voterank
 from graphscope.analytical.app.wcc import wcc
 from graphscope.analytical.app.wcc import wcc_auto
-from graphscope.analytical.app.wcc import wcc_projected

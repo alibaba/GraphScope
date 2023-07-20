@@ -36,19 +36,22 @@ limitations under the License.
 #include "grape/fragment/loader.h"
 #include "grape/grape.h"
 
-#include "bfs/bfs.h"
 #include "bfs/bfs_auto.h"
+#include "bfs/bfs_opt.h"
 #include "cdlp/cdlp.h"
 #include "cdlp/cdlp_auto.h"
-#include "lcc/lcc.h"
+#include "cdlp/cdlp_opt.h"
 #include "lcc/lcc_auto.h"
-#include "pagerank/pagerank.h"
+#include "lcc/lcc_opt.h"
 #include "pagerank/pagerank_auto.h"
-#include "sssp/sssp.h"
+#include "pagerank/pagerank_directed.h"
+#include "pagerank/pagerank_opt.h"
 #include "sssp/sssp_auto.h"
+#include "sssp/sssp_opt.h"
 #include "voterank/voterank.h"
 #include "wcc/wcc.h"
 #include "wcc/wcc_auto.h"
+#include "wcc/wcc_opt.h"
 
 #include "apps/bfs/bfs_generic.h"
 #include "apps/centrality/degree/degree_centrality.h"
@@ -203,13 +206,14 @@ void Run() {
   }
   int fnum = comm_spec.fnum();
   std::string name = FLAGS_application;
+
   using VertexMapType = grape::GlobalVertexMap<OID_T, VID_T, PARTITIONER_T>;
   if (name == "sssp") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, double,
                                         grape::LoadStrategy::kOnlyOut,
                                         VertexMapType>;
-    using AppType = grape::SSSP<GraphType>;
+    using AppType = grape::SSSPOpt<GraphType>;
     CreateAndQuery<GraphType, AppType, OID_T>(comm_spec, efile, vfile,
                                               out_prefix, FLAGS_datasource,
                                               fnum, spec, FLAGS_sssp_source);
@@ -252,6 +256,8 @@ void Run() {
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
                                         grape::LoadStrategy::kBothOutIn,
                                         VertexMapType>;
+    // TODO: uncomment once latest libgrape-lite is released.
+    // using AppType = grape::CDLPOpt<GraphType, int64_t>;
     using AppType = grape::CDLP<GraphType>;
     CreateAndQuery<GraphType, AppType, int>(comm_spec, efile, vfile, out_prefix,
                                             FLAGS_datasource, fnum, spec, 10);
@@ -277,6 +283,7 @@ void Run() {
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
                                         grape::LoadStrategy::kBothOutIn,
                                         VertexMapType>;
+    // using AppType = grape::WCCOpt<GraphType>;
     using AppType = grape::WCC<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec);
@@ -293,7 +300,7 @@ void Run() {
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
                                         grape::LoadStrategy::kBothOutIn,
                                         VertexMapType>;
-    using AppType = grape::LCC<GraphType>;
+    using AppType = grape::LCCOpt<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec);
   } else if (name == "bfs_auto") {
@@ -310,7 +317,7 @@ void Run() {
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
                                         grape::LoadStrategy::kBothOutIn,
                                         VertexMapType>;
-    using AppType = grape::BFS<GraphType>;
+    using AppType = grape::BFSOpt<GraphType>;
     CreateAndQuery<GraphType, AppType, OID_T>(comm_spec, efile, vfile,
                                               out_prefix, FLAGS_datasource,
                                               fnum, spec, FLAGS_bfs_source);
@@ -323,15 +330,23 @@ void Run() {
     CreateAndQuery<GraphType, AppType, double, int>(
         comm_spec, efile, vfile, out_prefix, FLAGS_datasource, fnum, spec, 0.85,
         10);
-  } else if (name == "pagerank") {
+  } else if (name == "pr" || name == "pagerank") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
                                         grape::LoadStrategy::kBothOutIn,
                                         VertexMapType>;
-    using AppType = grape::PageRank<GraphType>;
-    CreateAndQuery<GraphType, AppType, double, int>(
-        comm_spec, efile, vfile, out_prefix, FLAGS_datasource, fnum, spec, 0.85,
-        10);
+    if (FLAGS_directed) {
+      using AppType = grape::PageRankDirected<GraphType>;
+
+      CreateAndQuery<GraphType, AppType, double, int>(
+          comm_spec, efile, vfile, out_prefix, FLAGS_datasource, fnum, spec,
+          0.85, 10);
+    } else {
+      using AppType = grape::PageRankOpt<GraphType>;
+      CreateAndQuery<GraphType, AppType, double, int>(
+          comm_spec, efile, vfile, out_prefix, FLAGS_datasource, fnum, spec,
+          0.85, 10);
+    }
   } else if (name == "kcore") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
@@ -382,7 +397,7 @@ void Run() {
                                          FLAGS_eigenvector_centrality_tolerance,
                                          FLAGS_eigenvector_centrality_max_round);
     */
-  } else if (name == "bfs") {
+  } else if (name == "bfs_generic") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
                                         grape::LoadStrategy::kBothOutIn,
@@ -441,12 +456,12 @@ void Run() {
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
                                        FLAGS_dfs_source, FLAGS_dfs_format);
-  } else if (name == "bfs_original") {
+  } else if (name == "bfs") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
                                         grape::LoadStrategy::kBothOutIn,
                                         VertexMapType>;
-    using AppType = grape::BFS<GraphType>;
+    using AppType = grape::BFSOpt<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
                                        FLAGS_bfs_source);
