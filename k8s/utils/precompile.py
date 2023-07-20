@@ -355,8 +355,6 @@ def compile_cpp_pie_app():
             ("kcore", fluee),
             ("triangles", fsuee),
             ("triangles", fluee),
-            ("wcc_projected", fsuee),
-            ("wcc_projected", fluee),
             ("sssp_projected", fsuee),
             ("sssp_projected", fsued),
             ("sssp_projected", fluee),
@@ -400,7 +398,6 @@ def compile_cpp_pie_app():
     dde = dynamic_template.format("double", "grape::EmptyType")
     targets.extend(
         [
-            ("wcc_projected", dee),
             ("sssp_projected", dee),
             ("sssp_projected", ded),
             ("sssp_path", dee),
