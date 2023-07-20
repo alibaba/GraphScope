@@ -357,12 +357,12 @@ function run_local_vertex_map() {
 # sssp_average_length is a time-consuming app, so we skip it for graph p2p.
 
 declare -a ldbc_apps=(
-  "wcc"
+  # "wcc"
   "sssp"
   "lcc"
   "bfs"
   "cdlp"
-  "pr"
+  # "pr"  # need eps match
 )
 declare -a other_apps=(
   "sssp_has_path"

@@ -256,7 +256,7 @@ void Run() {
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
                                         grape::LoadStrategy::kBothOutIn,
                                         VertexMapType>;
-    // TODO: uncomment once latest libgrape-lite is released.
+    // TODO(siyuan): uncomment once latest libgrape-lite is released.
     // using AppType = grape::CDLPOpt<GraphType, int64_t>;
     using AppType = grape::CDLP<GraphType>;
     CreateAndQuery<GraphType, AppType, int>(comm_spec, efile, vfile, out_prefix,

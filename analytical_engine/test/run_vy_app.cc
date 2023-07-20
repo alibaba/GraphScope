@@ -251,7 +251,7 @@ void RunProjectedSSSP(std::shared_ptr<ProjectedFragmentType2> fragment,
 void RunProjectedCDLP(std::shared_ptr<ProjectedFragmentType> fragment,
                       const grape::CommSpec& comm_spec,
                       const std::string& out_prefix) {
-  // TODO: uncomment once latest libgrape-lite is released.
+  // TODO(siyuan): uncomment once latest libgrape-lite is released.
   // using AppType = grape::CDLPOpt<GraphType, int64_t>;
   using AppType = grape::CDLP<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
