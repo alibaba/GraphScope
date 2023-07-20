@@ -22,6 +22,9 @@ GraphScope is a unified distributed graph computing platform that provides a one
 
 Visit our website at [graphscope.io](https://graphscope.io) to learn more.
 
+## Latest News
+- [20/07/2023] GraphScope achieved record-breaking results on the [LDBC Social Network Benchmark Interactive workload](https://ldbcouncil.org/benchmarks/snb-interactive/), with a 2.45× higher throughput on SF300 than the previous record holder! 🏆
+- [04/07/2023] GraphScope Flex tech preview released with [v0.23.0](https://github.com/alibaba/GraphScope/releases/tag/v0.23.0)
 ## Table of Contents
 
 - [Getting Started](#getting-started)
