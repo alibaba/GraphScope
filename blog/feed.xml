@@ -5,9 +5,43 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Fri, 14 Jul 2023 04:58:59 +0000</pubDate>
-    <lastBuildDate>Fri, 14 Jul 2023 04:58:59 +0000</lastBuildDate>
+    <pubDate>Thu, 20 Jul 2023 08:21:39 +0000</pubDate>
+    <lastBuildDate>Thu, 20 Jul 2023 08:21:39 +0000</lastBuildDate>
     <generator>Jekyll v4.3.2</generator>
+    
+      <item>
+        <title>GraphScope Achieved Record-breaking (2.45X) Results on LDBC SNB Interactive Workload</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-20-title.jpg&quot; alt=&quot;release-note&quot; /&gt;
+Recently, &lt;a href=&quot;https://ldbcouncil.org&quot;&gt;LDBC&lt;/a&gt; (Linked Data Benchmark Council) announced the &lt;a href=&quot;https://ldbcouncil.org/benchmarks/snb-interactive/&quot;&gt;latest results of the LDBC Social Network Benchmark Interactive workload&lt;/a&gt;. GraphScope ranked first with a throughput of over 33,000 QPS, which is over two times higher than the second-place (previous record holder).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-20-benchmark.jpg&quot; alt=&quot;Benchmark screenshot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;LDBC also announced this result on their &lt;a href=&quot;https://twitter.com/LDBCouncil/status/1681551160753242112&quot;&gt;Twitter offical account&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-20-twitter.jpg&quot; alt=&quot;Twitter screenshot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;LDBC is an international non-profit organization dedicated to the development of the graph data management industry. Its members include major graph database vendors such as Intel, AWS, Neo4j, TigerGraph, and Oracle, among others. One of LDBC’s core activities is the design and review of graph related benchmarks. They have developed a series of graph related benchmarks, including the &lt;a href=&quot;https://ldbcouncil.org/benchmarks/snb/&quot;&gt;Social Network Benchmark (SNB)&lt;/a&gt;, &lt;a href=&quot;https://ldbcouncil.org/benchmarks/graphalytics/&quot;&gt;Graphalytics Benchmark&lt;/a&gt;, and &lt;a href=&quot;https://ldbcouncil.org/benchmarks/finbench/&quot;&gt;Financial Benchmark (FinBench)&lt;/a&gt;, to systematically measure the functionality and performance of different types of graph systems.&lt;/p&gt;
+
+&lt;p&gt;The LDBC SNB Interactive benchmark that GraphScope participated in is suitable for transactional online query scenarios. It includes basic CRUD operations as well as complex operations like shortest path and multi-hop neighbor queries. This benchmark covers common scenarios and operations of graph databases and is recognized as the industry’s only benchmark for evaluating graph databases. During the test, three types of queries are sent to the system rapidly and continuously through a driver. The performance of the system is primarily measured by queries per second (QPS). The dataset used for the test simulates a social network graph similar to Facebook, and the scale of data is measured by a scal factor (SF). In this round of evaluation, the maximum scale factor for data is SF-300 (occupying approximately 300GB of raw data on the disk).&lt;/p&gt;
+
+&lt;p&gt;In recent years, several graph database vendors have participated in the LDBC SNB Interactive benchmark test:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.galaxybase.com/&quot;&gt;Galaxybase&lt;/a&gt;: The graph database product of Create Link. They participated in this benchmark test in May 2022 and published a test report.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.tugraph.org/&quot;&gt;TuGraph&lt;/a&gt;: An open-source graph database product by Ant Group. Their most recent participation in the benchmark test was in January 2023, and they were the previous record holder.&lt;/p&gt;
+
+&lt;p&gt;In the LDBC SNB Interactive benchmark test, GraphScope achieved a throughput of over 30,000 QPS on a single node, which is twice the previous record holder. Additionally, GraphScope’s results were not dependent on any “pre-computation”. In contrast, according to publicly available test reports, previous participants in the evaluation had varying degrees of “pre-computation”.&lt;/p&gt;
+
+&lt;p&gt;We will later publish an article that thoroughly analyzes the challenges GraphScope faced and the key technologies and optimizations employed in this benchmark test. Please stay tuned!&lt;/p&gt;
+</description>
+        <pubDate>Thu, 20 Jul 2023 06:03:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2023/07/20/graphscope-achieved-record-breaking-on-ldbc-snb-interactive-workload.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/07/20/graphscope-achieved-record-breaking-on-ldbc-snb-interactive-workload.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>Simplifying Complex Graph Loading with Jupyter Notebook</title>
@@ -1800,132 +1834,6 @@ git clone https://github.com/alibaba/GraphScope.git
         <pubDate>Wed, 31 May 2023 11:00:00 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2023/05/31/How-to-Play-GraphScope-Locally.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/05/31/How-to-Play-GraphScope-Locally.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>Categories, Languages, and Systems of Graph Computing</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-05-25-graph-computing.jpg&quot; alt=&quot;graph-computing&quot; /&gt;
-In this post, we will introduce the categories, languages, and systems of graph computing.&lt;/p&gt;
-
-&lt;h3 id=&quot;what-is-graph-computing&quot;&gt;What is Graph Computing&lt;/h3&gt;
-
-&lt;p&gt;In real life, many types of data can be modeled as a graph, which is an abstract structure. This efficient and compact data format can represent rich information such as topology, attributes, and timing. The goal of graph computing is to mine valuable knowledge or patterns from the graph structure, such as frequent patterns and causal relationships. With the advent of the information age, there is an explosive growth in data volume, which has created a demand for efficient processing of large-scale graph data. Graph computing has become a hot topic in both industry and academia, leading to the development of various graph computing systems and optimization research.&lt;/p&gt;
-
-&lt;p&gt;Due to complex business scenarios, there are various types of graph computing. Currently, there are three main categories of graph computing: graph interactive queries, graph analysis, and graph learning.&lt;/p&gt;
-
-&lt;h3 id=&quot;graph-interactive-queries&quot;&gt;Graph Interactive Queries&lt;/h3&gt;
-
-&lt;p&gt;The graph data is typically vast, and graph interactive queries often focus on a relatively limited number of vertices and edges that satisfy specific criteria. These vertices and edges create specific paths or subgraph patterns, as illustrated in the image below. For example, finding the optimal route from one location to another or logistics path information are typical path query scenarios. Subgraph patterns are another form of graph query where a particular pattern is represented with a subgraph, and matching queries are performed on this subgraph within the entire graph.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-05-25-graph-interactive-queries.jpg&quot; alt=&quot;graph-interactive-queries&quot; /&gt;&lt;/p&gt;
-&lt;center&gt; Figure 1: Subgraph query (left) and path query (right) &lt;/center&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;The essence of a path query is graph traversal, which generally involves the following steps: first, set specific vertices in the graph to be queried; then, each vertex to be queried finds the target vertex set via its connected edges that meet the criteria, checks whether the target vertices meet the query result, and if so, adds the target to the result set; otherwise, sets the target vertex as a new vertex to be queried. This process is repeated until there are no more vertices to be queried. In summary, during the entire graph query process, the graph is traversed step by step according to the user-specified criteria, and the desired results are obtained in the end.&lt;/p&gt;
-
-&lt;p&gt;Another type of graph query is the subgraph query, which is based on the theoretical foundation of subgraph isomorphism. Users provide the subgraph to be queried (vertices, edges, and the criteria they need to satisfy), and then search for all results that meet the criteria on the data graph. Each result is a subgraph in the data graph that is isomorphic to the query graph, and the vertices and edges mapped by the subgraph satisfy the corresponding criteria on the query graph. In summary, the aim is to search for a specific structure that the user cares about in the large graph.&lt;/p&gt;
-
-&lt;p&gt;The two most common languages for graph queries are &lt;a href=&quot;https://tinkerpop.apache.org/docs/current/reference/&quot;&gt;Gremlin&lt;/a&gt; and &lt;a href=&quot;https://dl.acm.org/doi/abs/10.1145/3183713.3190657&quot;&gt;Cypher&lt;/a&gt;. Gremlin is based on Groovy, but there are many language variations available for developers to write queries using native programming languages such as Java and Python. It incorporates both imperative and declarative semantics, making it easy to express graph traversal logic. As a result, it has been adopted by numerous graph database systems, including JanusGraph, InfiniteGraph, Cosmos DB, DataStax Enterprise (5.0+), and Amazon Neptune. On the other hand, Cypher is a graph query language that employs pattern matching based on description. Due to its similarity to SQL, it has the advantage of simple syntax and high flexibility. This feature has led to its adoption by systems such as neo4j, RedisGraph, and AgensGraph.&lt;/p&gt;
-
-&lt;p&gt;For instance, if we consider a graph with nodes representing people and locations, the query statements for finding people who live with Mike in both Gremlin and Cypher are shown below.&lt;/p&gt;
-
-&lt;p&gt;Gremlin:&lt;/p&gt;
-
-&lt;div class=&quot;language-groovy highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;has&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;name&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;mike&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;a&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;lives&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;in&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;lives&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;neq&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;a&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;values&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;name&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Cypher:&lt;/p&gt;
-
-&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;src:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;person&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;name:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;mike&quot;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;})&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:lives&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:lives&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;dst:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;person&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dst.name&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;When it comes to processing data, graph querying has distinct computational features. Its characteristics of massive data and poor locality require the system to optimize various aspects such as distributed task partitioning, load balancing, and communication scheduling. The high computational complexity and low latency requirements of users make the system’s concurrency particularly crucial. The presence of super nodes, causing memory inflation, and limited memory in interactive environments pose significant challenges to memory management in the system.&lt;/p&gt;
-
-&lt;h3 id=&quot;graph-analysis&quot;&gt;Graph Analysis&lt;/h3&gt;
-&lt;p&gt;Graph querying involves accessing a limited number of vertices or edges that satisfy specific conditions and returning results in real-time. For example, walking two steps from a particular vertex based on specific conditions and returning the paths that meet the criteria. In contrast, graph analysis involves more complex calculations, focusing on analyzing and mining the overall characteristics of the entire graph or the associated information between entities. This includes clustering all vertices in the graph according to certain rules.&lt;/p&gt;
-
-&lt;p&gt;Graph theory is a traditional branch of mathematics that has been studied for hundreds of years, resulting in numerous algorithms related to graph analysis. These range from classical algorithms like shortest path and connected component to practical problems in artificial intelligence such as community discovery, collaborative filtering, and pattern mining. As a result, graph analysis has been applied in an increasing number of scenarios, and large-scale graph analysis has become a research hotspot. According to GraphX, common categories of graph analysis algorithms include:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Simple graph analysis algorithms
-    &lt;ul&gt;
-      &lt;li&gt;PageRank&lt;/li&gt;
-      &lt;li&gt;Shortest path&lt;/li&gt;
-      &lt;li&gt;Graph coloring&lt;/li&gt;
-      &lt;li&gt;Connected component&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Community discovery algorithms
-    &lt;ul&gt;
-      &lt;li&gt;Triangle counting&lt;/li&gt;
-      &lt;li&gt;K-core decomposition&lt;/li&gt;
-      &lt;li&gt;K-Truss&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Pattern matching algorithms
-    &lt;ul&gt;
-      &lt;li&gt;Graph simulation&lt;/li&gt;
-      &lt;li&gt;(Sub)graph isomorphism&lt;/li&gt;
-      &lt;li&gt;Keyword search&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Collaborative filtering algorithms
-    &lt;ul&gt;
-      &lt;li&gt;Alternating least squares (ALS)&lt;/li&gt;
-      &lt;li&gt;Stochastic gradient descent (SGD)&lt;/li&gt;
-      &lt;li&gt;Tensor Factorization&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Structural prediction algorithms
-    &lt;ul&gt;
-      &lt;li&gt;Loopy belief propagation&lt;/li&gt;
-      &lt;li&gt;Max-product linear programs&lt;/li&gt;
-      &lt;li&gt;Gibbs sampling&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;In 2010, Google publicly released the &lt;a href=&quot;https://dl.acm.org/doi/abs/10.1145/1807167.1807184&quot;&gt;Pregel&lt;/a&gt; system, marking the first distributed system specifically designed for analyzing large-scale graph data. The system was based on a vertex-centric programming model and sparked a series of subsequent academic research and open-source systems. The programming model used a local, vertex-oriented computing approach, encouraging users to “think like a vertex”. This model has natural scalability and parallelism, making it widely used. Systems that follow this model optimize it from various aspects such as programming interfaces, task partitioning, and execution mechanisms, such as the classic programming model GAS of &lt;a href=&quot;https://www.usenix.org/conference/osdi12/technical-sessions/presentation/gonzalez&quot;&gt;PowerGraph&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Another type of system adopts more advanced programming models, such as &lt;a href=&quot;https://dl.acm.org/doi/abs/10.14778/2732232.2732238&quot;&gt;Giraph++&lt;/a&gt;, which first proposed using subgraphs as the basic unit of computation, achieving higher execution efficiency. The PIE model proposed by &lt;a href=&quot;https://dl.acm.org/doi/abs/10.14778/3137765.3137801&quot;&gt;GRAPE&lt;/a&gt; can automatically parallelize single-machine graph algorithms, greatly reducing the programming difficulty for users while achieving high performance.&lt;/p&gt;
-
-&lt;p&gt;Designing graph analysis systems is a challenging process due to the complexity of graph data. Considerations such as how to effectively utilize underlying hardware resources, how to partition and maintain distributed consistency, how to implement more efficient execution modes and task scheduling strategies, how to develop advanced computing and programming models, and how to create better system fault tolerance mechanisms must all be taken into account.&lt;/p&gt;
-
-&lt;h3 id=&quot;graph-learning&quot;&gt;Graph Learning&lt;/h3&gt;
-
-&lt;p&gt;Graph learning, also known as graph-based machine learning, aims to integrate the structural information of graphs into machine learning models. With the widespread application of artificial intelligence technologies, represented by deep learning, and the stronger expressive power of graph structures, graph learning has become a hot topic and has led to breakthrough progress in causality and interpretability. Graph learning has been applied in various fields, such as search and recommendation, advertising, financial risk control, intelligent transportation, medical care, and cities. However, graph learning also faces new technical challenges, such as large-scale data, heterogeneity of vertices and edges, multimodal attribute features, and dynamic changes in structure or attributes over time.&lt;/p&gt;
-
-&lt;p&gt;The traditional approach to graph learning is graph embedding. Graph embedding represents each vertex in the graph as a low-dimensional vector, retaining as much structural and content information of the graph as possible. This representation vector can be used as a feature for subsequent learning tasks such as link prediction and vertex classification. The figure below shows a classic example, where the left side is the original graph structure, and the right side is a mapping scheme obtained by representation learning. The mapping scheme transforms each vertex in graph A into a point in a two-dimensional coordinate system, that is, a two-dimensional vector. In the coordinate space obtained by the mapping, the closely connected vertices in the original graph (i.e., vertices of the same color) remain close to each other.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-05-25-graph-embedding.png&quot; alt=&quot;graph-embedding&quot; /&gt;&lt;/p&gt;
-&lt;center&gt; Figure 2: Graph embedding (https://dl.acm.org/doi/abs/10.1145/2623330.2623732) &lt;/center&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;Significant amount of research has been devoted to graph embedding, leading to various solutions for different types of data, such as isomorphic graphs, heterogeneous graphs, attribute graphs, and dynamic graphs. Classic algorithms such as &lt;a href=&quot;https://dl.acm.org/doi/abs/10.1145/2623330.2623732&quot;&gt;DeepWalk&lt;/a&gt;, &lt;a href=&quot;https://dl.acm.org/doi/abs/10.1145/2736277.2741093&quot;&gt;LINE&lt;/a&gt;, and &lt;a href=&quot;https://dl.acm.org/doi/abs/10.1145/2939672.2939754&quot;&gt;Node2Vec&lt;/a&gt; propose different approaches to generate data based on random walks, followed by parameter optimization through training to generate a probabilistic model.&lt;/p&gt;
-
-&lt;p&gt;Another crucial type of graph learning is graph neural networks (GNNs). Traditional neural networks are limited to solving problems in Euclidean space, where data is complete, neat, and regular. For example, in a photo, each pixel is fixedly adjacent to eight vertices, enabling each vertex to correspond to a vector of the same length containing its own information and neighbor information. However, GNN extends classic neural network models like Recurrent Neural Networks (RNNs) and Convolutional Neural Networks (CNNs) to graphs, allowing it to solve problems in non-Euclidean space. This is because the graph structure is irregular, where the number of neighbors of each vertex is different, leading to local dimensions of variable length. Unlike graph embedding, where the focus is on learning the embedding of each vertex, the primary purpose of GNN is to learn the aggregation function, allowing all vertices to calculate their embedding using the same function based on local information. Even if the graph structure changes or a new graph is encountered, meaningful results can still be calculated using the original function. Several classic algorithms for GNN exist, and readers can refer to &lt;a href=&quot;https://www.sciencedirect.com/science/article/pii/S2666651021000012&quot;&gt;relevant literature&lt;/a&gt; to learn more.&lt;/p&gt;
-
-&lt;p&gt;In summary, both graph embedding and GNNs are essential types of graph learning that play different roles in integrating the structural information of graphs into machine learning models. They have made significant contributions to causality, interpretability, and have been applied in various fields. However, as graph datasets become more complex and diverse, it is crucial to continue developing new techniques and algorithms to address these challenges.&lt;/p&gt;
-
-&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
-
-&lt;p&gt;Due to the strong dependency, poor locality, irregular distribution, and diverse structures of graph data, traditional parallel systems for big data are difficult to apply. In addition, different types of computational features and paradigms also bring diversified requirements for the design of graph computing systems.&lt;/p&gt;
-
-&lt;p&gt;An ideal graph computing system should be versatile, high-performance, and easy to use. In terms of versatility, we hope that it supports multiple types of computations such as graph interactive queries, graph analysis, and graph learning, and compatible with language standards and the industry ecology. In terms of performance, it should support low-latency interactive queries, have high-performance graph analysis capabilities, provide large-scale graph storage, and achieve high scalability. In terms of ease of use, it should provide a unified programming model, highly abstracted, simple and flexible language, and implement simple system deployment, easy cluster management, and provide a visual interface.&lt;/p&gt;
-
-&lt;p&gt;To meet the various challenges faced by graph computing systems, meet the needs of real-world application scenarios, and provide one-stop efficient solutions, is the original intention of the GraphScope design. The GraphScope system proposes multiple innovative technologies and is continuously iterating rapidly. It has proved to achieve significant new business value in multiple key internet fields such as risk control, e-commerce recommendation, advertising, network security, knowledge graph, and is committed to empowering more important application scenarios.&lt;/p&gt;
-</description>
-        <pubDate>Thu, 25 May 2023 03:10:42 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2023/05/25/Categories-Languages-and-Systems-of-Graph-Computing.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/05/25/Categories-Languages-and-Systems-of-Graph-Computing.html</guid>
         
         
         <category>Tech</category>
