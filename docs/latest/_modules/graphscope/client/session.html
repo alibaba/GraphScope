@@ -678,6 +678,8 @@ MathJax = {
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">uuid</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">vineyard</span>
@@ -699,7 +701,10 @@ MathJax = {
 <span class="kn">from</span> <span class="nn">graphscope.deploy.hosts.cluster</span> <span class="kn">import</span> <span class="n">HostsClusterLauncher</span>
 <span class="kn">from</span> <span class="nn">graphscope.deploy.kubernetes.cluster</span> <span class="kn">import</span> <span class="n">KubernetesClusterLauncher</span>
 <span class="kn">from</span> <span class="nn">graphscope.deploy.kubernetes.utils</span> <span class="kn">import</span> <span class="n">resolve_api_client</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">App</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="kn">import</span> <span class="n">Context</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag</span> <span class="kn">import</span> <span class="n">Dag</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag</span> <span class="kn">import</span> <span class="n">DAGNode</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">FatalError</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">InvalidArgumentError</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">K8sError</span>
@@ -1592,7 +1597,7 @@ MathJax = {
             <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span><span class="o">.</span><span class="fm">__exit__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag_node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag_node</span><span class="p">:</span> <span class="n">DAGNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DAGNode</span><span class="p">,</span> <span class="n">App</span><span class="p">,</span> <span class="n">Context</span><span class="p">,</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">dag_node</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">dag_node</span>
@@ -1898,15 +1903,13 @@ MathJax = {
         <span class="n">retain_oid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">vertex_map</span><span class="o">=</span><span class="s2">&quot;global&quot;</span><span class="p">,</span>
         <span class="n">compact_edges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">use_perfect_hash</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Graph</span><span class="p">,</span> <span class="n">GraphDAGNode</span><span class="p">]:</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">,</span> <span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="nb">repr</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">))</span>
-            <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_object_mapping_table</span>
+            <span class="ow">and</span> <span class="nb">repr</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_object_mapping_table</span>
         <span class="p">):</span>
-            <span class="n">graph_vineyard_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_object_mapping_table</span><span class="p">[</span>
-                <span class="nb">repr</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">))</span>
-            <span class="p">]</span>
+            <span class="n">graph_vineyard_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_object_mapping_table</span><span class="p">[</span><span class="nb">repr</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">)]</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Restore graph from original graph: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">graph_vineyard_id</span><span class="p">)</span>
             <span class="n">incoming_data</span> <span class="o">=</span> <span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">(</span><span class="n">graph_vineyard_id</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
@@ -1919,6 +1922,7 @@ MathJax = {
                 <span class="n">retain_oid</span><span class="p">,</span>
                 <span class="n">vertex_map</span><span class="p">,</span>
                 <span class="n">compact_edges</span><span class="p">,</span>
+                <span class="n">use_perfect_hash</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
 
@@ -2276,12 +2280,12 @@ MathJax = {
     <span class="k">return</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">get_controller</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="has_default_session"><a class="viewcode-back" href="../../../reference/generated/graphscope.has_default_session.html#graphscope.has_default_session">[docs]</a><span class="k">def</span> <span class="nf">has_default_session</span><span class="p">():</span>
+<div class="viewcode-block" id="has_default_session"><a class="viewcode-back" href="../../../reference/generated/graphscope.has_default_session.html#graphscope.has_default_session">[docs]</a><span class="k">def</span> <span class="nf">has_default_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;True if default session exists in current context.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="ow">not</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="get_default_session"><a class="viewcode-back" href="../../../reference/generated/graphscope.get_default_session.html#graphscope.get_default_session">[docs]</a><span class="k">def</span> <span class="nf">get_default_session</span><span class="p">():</span>
+<div class="viewcode-block" id="get_default_session"><a class="viewcode-back" href="../../../reference/generated/graphscope.get_default_session.html#graphscope.get_default_session">[docs]</a><span class="k">def</span> <span class="nf">get_default_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the default session for the current context.</span>
 
 <span class="sd">    Note that a new session will be created if there is no</span>
@@ -2307,14 +2311,14 @@ MathJax = {
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stack</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">def</span> <span class="nf">get_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_default</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating default session ...&quot;</span><span class="p">)</span>
             <span class="n">sess</span> <span class="o">=</span> <span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">sess</span><span class="o">.</span><span class="n">as_default</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
 
     <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -2346,6 +2350,7 @@ MathJax = {
     <span class="n">retain_oid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">vertex_map</span><span class="o">=</span><span class="s2">&quot;global&quot;</span><span class="p">,</span>
     <span class="n">compact_edges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">use_perfect_hash</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct a GraphScope graph object on the default session.</span>
 
@@ -2376,6 +2381,7 @@ MathJax = {
         <span class="n">retain_oid</span><span class="p">,</span>
         <span class="n">vertex_map</span><span class="p">,</span>
         <span class="n">compact_edges</span><span class="p">,</span>
+        <span class="n">use_perfect_hash</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 

@@ -20,7 +20,7 @@ For this tutorial, we will use the [LDBC social network](https://ldbcouncil.org/
 
 :::{figure-md}
 
-<img src="../images/LDBC_Schema.png"
+<img src="../../images/LDBC_Schema.png"
      alt="The schema of the LDBC graph"
      width="65%">
 
@@ -263,7 +263,7 @@ plt.show()
 
 :::{figure-md}
 
-<img src="../images/comments_length_histogram.png"
+<img src="../../images/comments_length_histogram.png"
      alt="The_histogram"
      width="65%">
 
@@ -303,7 +303,7 @@ plt.show()
 
 :::{figure-md}
 
-<img src="../images/gender_ratio.png"
+<img src="../../images/gender_ratio.png"
      alt="The_pie_chart"
      width="60%">
 
@@ -335,9 +335,8 @@ The most basic unit in Graph Traversal is Expansion, which means starting from a
 
 Here is a local subgraph extracted from the LDBC Graph, which is formed by a center person vertex (id=216172782113784483) and all of its adjacent edges and vertices. Then we will use this subgraph to explain all of the expansion steps.
 
-
 :::{figure-md}
-<img src="../images/loacal_graph_example.png"
+<img src="../../images/loacal_graph_example.png"
      alt="loacal_graph_example"
      width="33%">
 
@@ -370,7 +369,7 @@ This figure illustrates the execution process of `q1`, `q2` and `q3`:
 
 :::{figure-md}
 
-<img src="../images/out_in_both.png"
+<img src="../../images/out_in_both.png"
      alt="out_in_both"
      width="95%">
 
@@ -405,7 +404,7 @@ print(q3.all().result())
 This figure illustrates the execution process of `q1`, `q2` and `q3`:
 
 :::{figure-md}
-<img src="../images/out_in_both_labels.png"
+<img src="../../images/out_in_both_labels.png"
      alt="out_in_both_labels"
      width="95%">
 
@@ -450,7 +449,7 @@ This figure illustrates the execution process of `q1`, `q2` and `q3`:
 
 :::{figure-md}
 
-<img src="../images/outE_inE_bothE.png"
+<img src="../../images/outE_inE_bothE.png"
      alt="The current states of graph queries"
      width="95%">
 
@@ -485,7 +484,7 @@ print(q3.all().result())
 This figure illustrates the execution process of `q1`, `q2` and `q3`:
 
 :::{figure-md}
-<img src="../images/outE_inE_bothE_labels.png"
+<img src="../../images/outE_inE_bothE_labels.png"
      alt="outE_inE_bothE_labels"
      width="95%">
 
@@ -508,7 +507,7 @@ Therefore, the output of the above codes should like:
 When reaching an edge during the traversal, you may be interested in its incident vertices. Therefore, GIE supports Gremlin steps that traverse from source edges to their incident vertices.
 
 :::{figure-md}
-<img src="../images/out_in_vertices.png"
+<img src="../../images/out_in_vertices.png"
      alt="out_in_vertices"
      width="50%">
 
@@ -541,7 +540,7 @@ This figure illustrates the execution process of `q1`, `q2` and `q3`:
 
 :::{figure-md}
 
-<img src="../images/outV_inV_bothV.png"
+<img src="../../images/outV_inV_bothV.png"
      alt="outV_inV_bothV"
      width="95%">
 
@@ -582,7 +581,7 @@ The figure illustrates the execution process of this Gremlin sentence:
 
 :::{figure-md}
 
-<img src="../images/outE_then_inV.png"
+<img src="../../images/outE_then_inV.png"
      alt="outE_then_inV"
      width="70%">
 
@@ -608,7 +607,7 @@ print(q1.all().result())
 This figure illustrates the execution process:
 
 :::{figure-md}
-<img src="../images/out_out_predicate.png"
+<img src="../../images/out_out_predicate.png"
      alt="out_out_predicate"
      width="40%">
 
@@ -652,7 +651,7 @@ The explain it more clear, let's firstly look at a much simpler situation: start
 
 :::{figure-md}
 
-<img src="../images/two_local_graphs.png"
+<img src="../../images/two_local_graphs.png"
      alt="two_local_graphs"
      width="80%">
 
@@ -671,7 +670,7 @@ The figure illustrates the execution process of `q1`:
 
 :::{figure-md}
 
-<img src="../images/out_two_starting_points.png"
+<img src="../../images/out_two_starting_points.png"
      alt="two_local_graphs"
      width="80%">
 
@@ -717,7 +716,7 @@ Generally, it is better to understand the expansion and traversal step from trav
 This figure illustrates the overview of the traverser transformation during the traversal of `g.V().out().in()`.
 
 :::{figure-md}
-<img src="../images/traversers_transformation_overview.png"
+<img src="../../images/traversers_transformation_overview.png"
      alt="traversers_transformation_overview"
      width="50%">
 
@@ -727,7 +726,7 @@ Figure 16. The overview of traversers' transformation.
 In addition, this figure shows the details of the traverser's change after every expansion step and `as(TAG)` step during the execution of Gremlin sentence `g.V().as('a').out().as('b').in().as('c')`.
 
 :::{figure-md}
-<img src="../images/traversers_transformation_details.png"
+<img src="../../images/traversers_transformation_details.png"
      alt="traversers_transformation_details"
      width="70%">
 
@@ -825,7 +824,7 @@ Path expansion is very flexible. Therefore, we design the `with()` step followed
 At last, we would like to introduce `endV()` step in path expansion. Since a path may contain many vertices, all kept vertices are stored in a path collection by default. Therefore, `endV()` is used to unfold the path collection. For example, if the traversers after path expansion is `[[v[1], v[2], v[3]]`, where the inner `[v[1], v[2], v[3]]` is the path collection.   With the `endV()`, `v[1]`, `v[2]` and `v[3]` are picked out from the path collection, and the traversers becomes `[v[1], v[2], v[3]]`
 
 :::{figure-md}
-<img src="../images/path_expansion_explanation.png"
+<img src="../../images/path_expansion_explanation.png"
      alt="path_expansion_explanation"
      width="70%">
 
@@ -862,7 +861,7 @@ plt.show()
 ```
 
 :::{figure-md}
-<img src="../images/comments_length_histogram_china.png"
+<img src="../../images/comments_length_histogram_china.png"
      alt="comments_length_histogram_china"
      width="50%">
 
@@ -897,7 +896,7 @@ plt.show()
 ```
 
 :::{figure-md}
-<img src="../images/estimated_japan_brower_market_share.png"
+<img src="../../images/estimated_japan_brower_market_share.png"
      alt="estimated_japan_brower_market_share"
      width="50%">
 
@@ -971,7 +970,7 @@ Actually, such kind of problem is called graph pattern matching. It means, you d
 or can be illustrated as a graph pattern as shown in the following.
 
 :::{figure-md}
-<img src="../images/pattern_person_person_university.png"
+<img src="../../images/pattern_person_person_university.png"
      alt="pattern_person_person_university"
      width="35%">
 
@@ -983,7 +982,7 @@ Then you aim to find all the matched subgraphs that are [isomorphic](https://en.
 For example, this is a local graph of university vertex(id = 144115188075858884) in the LDBC Graph:
 
 :::{figure-md}
-<img src="../images/local_person_person_university.png"
+<img src="../../images/local_person_person_university.png"
      alt="local_person_person_university"
      width="50%">
 
@@ -993,7 +992,7 @@ Figure 22. Local graph of a university vertex.
 and here are the matched subgraphs in this local graph:
 
 :::{figure-md}
-<img src="../images/matched_person_person_university.png"
+<img src="../../images/matched_person_person_university.png"
      alt="matched_person_person_university"
      width="50%">
 
@@ -1080,7 +1079,7 @@ Let's present a more complex pattern matching example: we want to find two `pers
 This figure illustrates the pattern:
 
 :::{figure-md}
-<img src="../images/bi19_right_lower_corner.png"
+<img src="../../images/bi19_right_lower_corner.png"
      alt="bi19_right_lower_corner"
      width="50%">
 
@@ -1746,7 +1745,7 @@ In this tutorial, we will mainly discuss how to use GIE with Gremlin sentences t
 ### LDBC BI2
 
 :::{figure-md}
-<img src="../images/bi2.png"
+<img src="../../images/bi2.png"
      alt="bi2"
      width="80%">
 
@@ -1805,7 +1804,7 @@ The output should be like:
 ### LDBC BI3
 
 :::{figure-md}
-<img src="../images/bi3.png"
+<img src="../../images/bi3.png"
      alt="bi3"
      width="65%">
 
@@ -1874,7 +1873,7 @@ The output should be like:
 ### LDBC BI4(Left Part)
 
 :::{figure-md}
-<img src="../images/bi4(left_part).png"
+<img src="../../images/bi4(left_part).png"
      alt="bi4(left_part)"
      width="30%">
 
@@ -1962,7 +1961,7 @@ The result of LDBC BI Query 4(Left Part) should be like:
 ### LDBC BI11
 
 :::{figure-md}
-<img src="../images/bi11.png"
+<img src="../../images/bi11.png"
      alt="bi11"
      width="80%">
 
@@ -2006,7 +2005,7 @@ The output should be like:
 ### LDBC BI14
 
 :::{figure-md}
-<img src="../images/bi14.png"
+<img src="../../images/bi14.png"
      alt="bi14"
      width="80%">
 

@@ -708,7 +708,7 @@ any node within the Kubernetes cluster. However, this creates a closed Vineyard 
 </pre></div>
 </div>
 <p>By default, the Vineyard cluster consists of three Vineyard instances and three etcd instances.
-However, since we only have one node in the Kubernetes cluster, we need to specify the number of Vineyard instances and etcd instances using the <code class="docutils literal notranslate"><span class="pre">vineyard_replicas</span></code> and <code class="docutils literal notranslate"><span class="pre">vineyard_etcd_replicas</span></code> parameters. DON’T set the number of Vineyard instances and etcd instances to be greater than the number of nodes in the Kubernetes cluster. Instead, the number of vineyard replicas and the number of engine pods can be set independently.</p>
+However, since we only have one node in the Kubernetes cluster, we need to specify the number of Vineyard instances and etcd instances using the <code class="docutils literal notranslate"><span class="pre">replicas</span></code> and <code class="docutils literal notranslate"><span class="pre">etcd_replicas</span></code> parameters. DON’T set the number of Vineyard instances and etcd instances to be greater than the number of nodes in the Kubernetes cluster. Instead, the number of vineyard replicas and the number of engine pods can be set independently.</p>
 <p>Create and check the namespace <code class="docutils literal notranslate"><span class="pre">vineyard-system</span></code> as follows.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>kubectl<span class="w"> </span>create<span class="w"> </span>namespace<span class="w"> </span>vineyard-system
 namespace/vineyard-system<span class="w"> </span>created
@@ -724,7 +724,7 @@ vineyard-system<span class="w">   </span>Active<span class="w">   </span>33s
 <span class="c1"># https://github.com/v6d-io/v6d/blob/main/k8s/cmd/README.md</span>
 <span class="c1"># Notice, all character `-` in the parameter of vineyardctl should be replaced with `_` in the python API</span>
 <span class="n">vineyard</span><span class="o">.</span><span class="n">deploy</span><span class="o">.</span><span class="n">vineyardctl</span><span class="o">.</span><span class="n">deploy</span><span class="o">.</span><span class="n">vineyard_deployment</span><span class="p">(</span>
-    <span class="n">vineyard_replicas</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+    <span class="n">replicas</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>

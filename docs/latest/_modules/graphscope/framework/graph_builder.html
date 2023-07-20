@@ -705,6 +705,7 @@ MathJax = {
     <span class="n">eformat</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">vertex_map</span><span class="o">=</span><span class="s2">&quot;global&quot;</span><span class="p">,</span>
     <span class="n">compact_edges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">use_perfect_hash</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a Arrow property graph using a list of vertex/edge specifications.</span>
 
@@ -809,6 +810,8 @@ MathJax = {
 <span class="sd">        compact_edges (bool, optional): Compact edges (CSR) using varint and delta encoding. Defaults to False.</span>
 <span class="sd">            Note that compact edges helps to half the memory usage of edges in graph data structure, but may cause</span>
 <span class="sd">            at most 10%~20% performance degeneration in some algorithms.</span>
+<span class="sd">        use_perfect_hash (bool, optional): Use perfect hashmap in vertex map to optimize the memory usage.</span>
+<span class="sd">             Defaults to False.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Don&#39;t import the :code:`nx` in top-level statments to improve the</span>
@@ -838,6 +841,7 @@ MathJax = {
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">IS_FROM_GAR</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="kc">False</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">VERTEX_MAP_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">i_to_attr</span><span class="p">(</span><span class="n">vertex_map</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">COMPACT_EDGES</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="n">compact_edges</span><span class="p">),</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">USE_PERFECT_HASH</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="n">use_perfect_hash</span><span class="p">),</span>
     <span class="p">}</span>
     <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_graph</span><span class="p">(</span>
         <span class="n">sess</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">loader_op</span><span class="p">],</span> <span class="n">attrs</span><span class="o">=</span><span class="n">config</span>
@@ -850,6 +854,7 @@ MathJax = {
         <span class="n">retain_oid</span><span class="o">=</span><span class="n">retain_oid</span><span class="p">,</span>
         <span class="n">vertex_map</span><span class="o">=</span><span class="n">vertex_map</span><span class="p">,</span>
         <span class="n">compact_edges</span><span class="o">=</span><span class="n">compact_edges</span><span class="p">,</span>
+        <span class="n">use_perfect_hash</span><span class="o">=</span><span class="n">use_perfect_hash</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">graph</span></div>
 
@@ -860,6 +865,7 @@ MathJax = {
     <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64_t&quot;</span><span class="p">,</span>
     <span class="n">vertex_map</span><span class="o">=</span><span class="s2">&quot;global&quot;</span><span class="p">,</span>
     <span class="n">compact_edges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">use_perfect_hash</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span><span class="p">:</span>
     <span class="n">sess</span> <span class="o">=</span> <span class="n">get_default_session</span><span class="p">()</span>
     <span class="n">oid_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">normalize_data_type_str</span><span class="p">(</span><span class="n">oid_type</span><span class="p">)</span>
@@ -868,6 +874,10 @@ MathJax = {
     <span class="k">if</span> <span class="n">compact_edges</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s2">&quot;Loading from gar with &#39;compact_edges&#39; hasn&#39;t been supported yet.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">use_perfect_hash</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Loading from gar with &#39;use_perfect_hash&#39; hasn&#39;t been supported yet.&quot;</span>
         <span class="p">)</span>
     <span class="c1"># generate and add a loader op to dag</span>
     <span class="n">vertex_map</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">vertex_map_type_to_enum</span><span class="p">(</span><span class="n">vertex_map</span><span class="p">)</span>
@@ -882,6 +892,7 @@ MathJax = {
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">IS_FROM_GAR</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="kc">True</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">VERTEX_MAP_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">i_to_attr</span><span class="p">(</span><span class="n">vertex_map</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">COMPACT_EDGES</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="n">compact_edges</span><span class="p">),</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">USE_PERFECT_HASH</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="n">use_perfect_hash</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_INFO_PATH</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph_info_path</span><span class="p">),</span>
     <span class="p">}</span>
     <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_graph</span><span class="p">(</span>
@@ -893,6 +904,7 @@ MathJax = {
         <span class="n">directed</span><span class="o">=</span><span class="n">directed</span><span class="p">,</span>
         <span class="n">vertex_map</span><span class="o">=</span><span class="n">vertex_map</span><span class="p">,</span>
         <span class="n">compact_edges</span><span class="o">=</span><span class="n">compact_edges</span><span class="p">,</span>
+        <span class="n">use_perfect_hash</span><span class="o">=</span><span class="n">use_perfect_hash</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">graph</span>
 </pre></div>

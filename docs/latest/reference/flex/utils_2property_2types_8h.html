@@ -155,6 +155,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1ConvertAny_3_01std_1_1string_01_4.html">gs::ConvertAny&lt; std::string &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1ConvertAny_3_01double_01_4.html">gs::ConvertAny&lt; double &gt;</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1AnyConverter.html">gs::AnyConverter&lt; T &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1AnyConverter_3_01int_01_4.html">gs::AnyConverter&lt; int &gt;</a></td></tr>
@@ -168,6 +170,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1AnyConverter_3_01std_1_1string_01_4.html">gs::AnyConverter&lt; std::string &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1AnyConverter_3_01grape_1_1EmptyType_01_4.html">gs::AnyConverter&lt; grape::EmptyType &gt;</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1AnyConverter_3_01double_01_4.html">gs::AnyConverter&lt; double &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
@@ -189,7 +193,8 @@ Enumerations</h2></td></tr>
 <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08fa302e56d566a2561033b27c13680ea4b2">gs::PropertyType::kString</a>, 
 <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08fa65d0c57fb98927f91459ad92c864def8">gs::PropertyType::kEmpty</a>, 
 <br />
-&#160;&#160;<a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08fa22c776007533004e22da8e6bdd888b33">gs::PropertyType::kInt64</a>
+&#160;&#160;<a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08fa22c776007533004e22da8e6bdd888b33">gs::PropertyType::kInt64</a>, 
+<a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08fa7fb3efa35444cd88d5a31dc125ca9c28">gs::PropertyType::kDouble</a>
 <br />
  }</td></tr>
 <tr class="separator:ab0c6617542660e43c1b61e46d8fcf08f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -206,6 +211,8 @@ Functions</h2></td></tr>
 <tr class="separator:aa9ee47a7a56d22f4332fea9f72954564"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a84ec0ecbc20c85d556acc60f73f2f6ba"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a84ec0ecbc20c85d556acc60f73f2f6ba">gs::ParseRecordX</a> (const char *line, int64_t &amp;src, int64_t &amp;dst, grape::EmptyType &amp;prop)</td></tr>
 <tr class="separator:a84ec0ecbc20c85d556acc60f73f2f6ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab24d3602cb516edb274ccbbdf53fd9bf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ab24d3602cb516edb274ccbbdf53fd9bf">gs::ParseRecordX</a> (const char *line, int64_t &amp;src, int64_t &amp;dst, double &amp;prop)</td></tr>
+<tr class="separator:ab24d3602cb516edb274ccbbdf53fd9bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8bfeba0a224d3194237469bad1614925"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a8bfeba0a224d3194237469bad1614925">gs::ParseRecordX</a> (const char *line, int64_t &amp;src, int64_t &amp;dst, int64_t &amp;prop)</td></tr>
 <tr class="separator:a8bfeba0a224d3194237469bad1614925"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a801c5c31e5322d80bbab8eac7a7b52ab"><td class="memItemLeft" align="right" valign="top">grape::InArchive &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a801c5c31e5322d80bbab8eac7a7b52ab">gs::operator&lt;&lt;</a> (grape::InArchive &amp;in_archive, const Any &amp;value)</td></tr>

@@ -101,6 +101,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a436714df0b244ec79cdcc8a72d03752e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7b7ace5d0b2a88d0df780da705449d2"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#aa7b7ace5d0b2a88d0df780da705449d2">column_names</a> () const</td></tr>
 <tr class="separator:aa7b7ace5d0b2a88d0df780da705449d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85112e607b38fcb1c472c4eae69dfa22"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a85112e607b38fcb1c472c4eae69dfa22">column_name</a> (size_t index) const</td></tr>
+<tr class="separator:a85112e607b38fcb1c472c4eae69dfa22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a282e8b1bfb492a1906d906ae857a9b27"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a282e8b1bfb492a1906d906ae857a9b27">get_column_id_by_name</a> (const std::string &amp;name) const</td></tr>
+<tr class="separator:a282e8b1bfb492a1906d906ae857a9b27"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a401cddb4c562de8fef52c5a5f4ec8b56"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a401cddb4c562de8fef52c5a5f4ec8b56">column_types</a> () const</td></tr>
 <tr class="separator:a401cddb4c562de8fef52c5a5f4ec8b56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab026ec65598d1c02758bb8ef4b0cfcdc"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#ab026ec65598d1c02758bb8ef4b0cfcdc">get_column</a> (const std::string &amp;name)</td></tr>
@@ -278,6 +282,24 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a85112e607b38fcb1c472c4eae69dfa22"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a85112e607b38fcb1c472c4eae69dfa22">&#9670;&nbsp;</a></span>column_name()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string gs::Table::column_name </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>index</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="aa7b7ace5d0b2a88d0df780da705449d2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa7b7ace5d0b2a88d0df780da705449d2">&#9670;&nbsp;</a></span>column_names()</h2>
 
@@ -422,6 +444,24 @@ Private Attributes</h2></td></tr>
           <td>(</td>
           <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>index</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a282e8b1bfb492a1906d906ae857a9b27"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a282e8b1bfb492a1906d906ae857a9b27">&#9670;&nbsp;</a></span>get_column_id_by_name()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int gs::Table::get_column_id_by_name </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em></td><td>)</td>
           <td> const</td>
         </tr>
       </table>

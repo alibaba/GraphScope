@@ -91,6 +91,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1AnyConverter_3_01Date_01_4.html">AnyConverter&lt; Date &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1AnyConverter_3_01double_01_4.html">AnyConverter&lt; double &gt;</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1AnyConverter_3_01grape_1_1EmptyType_01_4.html">AnyConverter&lt; grape::EmptyType &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1AnyConverter_3_01int_01_4.html">AnyConverter&lt; int &gt;</a></td></tr>
@@ -116,6 +118,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1ConvertAny.html">ConvertAny</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1ConvertAny_3_01Date_01_4.html">ConvertAny&lt; Date &gt;</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1ConvertAny_3_01double_01_4.html">ConvertAny&lt; double &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1ConvertAny_3_01grape_1_1EmptyType_01_4.html">ConvertAny&lt; grape::EmptyType &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -261,6 +265,8 @@ Typedefs</h2></td></tr>
 <tr class="separator:a8eaddb4ae622f70ac72485aa1b70e989"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9684fa4c30f163f7a9bb43f6bf7bc33"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#aa9684fa4c30f163f7a9bb43f6bf7bc33">StringColumn</a> = <a class="el" href="classgs_1_1TypedColumn.html">TypedColumn</a>&lt; std::string_view &gt;</td></tr>
 <tr class="separator:aa9684fa4c30f163f7a9bb43f6bf7bc33"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30613c1d0f0f221cd2f5ca070f6ed476"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a30613c1d0f0f221cd2f5ca070f6ed476">DoubleColumn</a> = <a class="el" href="classgs_1_1TypedColumn.html">TypedColumn</a>&lt; double &gt;</td></tr>
+<tr class="separator:a30613c1d0f0f221cd2f5ca070f6ed476"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -279,7 +285,8 @@ Enumerations</h2></td></tr>
 <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08fa302e56d566a2561033b27c13680ea4b2">PropertyType::kString</a>, 
 <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08fa65d0c57fb98927f91459ad92c864def8">PropertyType::kEmpty</a>, 
 <br />
-&#160;&#160;<a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08fa22c776007533004e22da8e6bdd888b33">PropertyType::kInt64</a>
+&#160;&#160;<a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08fa22c776007533004e22da8e6bdd888b33">PropertyType::kInt64</a>, 
+<a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08fa7fb3efa35444cd88d5a31dc125ca9c28">PropertyType::kDouble</a>
 <br />
  }</td></tr>
 <tr class="separator:ab0c6617542660e43c1b61e46d8fcf08f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -317,6 +324,8 @@ Functions</h2></td></tr>
 <tr class="separator:a6bf28642fd46db7ae7cf21e65c806fe7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d91b24c4a8e97262de988f92ca7965d"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a5d91b24c4a8e97262de988f92ca7965d">char_ptr_to_int</a> (const char *data)</td></tr>
 <tr class="separator:a5d91b24c4a8e97262de988f92ca7965d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a621e0b47cac44e76bc4aa6a93573fc78"><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a621e0b47cac44e76bc4aa6a93573fc78">char_ptr_to_double</a> (const char *data)</td></tr>
+<tr class="separator:a621e0b47cac44e76bc4aa6a93573fc78"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abe4634b1057425ea00e2643b7562e87e"><td class="memTemplParams" colspan="2">template&lt;class INDEX_T &gt; </td></tr>
 <tr class="memitem:abe4634b1057425ea00e2643b7562e87e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs.html#abe4634b1057425ea00e2643b7562e87e">build_lf_indexer</a> (const <a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; int64_t, INDEX_T &gt; &amp;input, <a class="el" href="classgs_1_1LFIndexer.html">LFIndexer</a>&lt; INDEX_T &gt; &amp;output, double rate=0.8)</td></tr>
 <tr class="separator:abe4634b1057425ea00e2643b7562e87e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -330,6 +339,8 @@ Functions</h2></td></tr>
 <tr class="separator:a16e6ffdbb19cebf78ea7af637086867b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9111873489bc8f9de8eddbe081ab0321"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a9111873489bc8f9de8eddbe081ab0321">ParseString</a> (const std::string_view &amp;str, std::string_view &amp;val)</td></tr>
 <tr class="separator:a9111873489bc8f9de8eddbe081ab0321"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8777488b6ae32e78610852b58663ca5f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a8777488b6ae32e78610852b58663ca5f">ParseDouble</a> (const std::string_view &amp;str, double &amp;val)</td></tr>
+<tr class="separator:a8777488b6ae32e78610852b58663ca5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb294849b8cbc68c72311deea806cc33"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#afb294849b8cbc68c72311deea806cc33">ParseRecord</a> (const char *line, std::vector&lt; <a class="el" href="structgs_1_1Any.html">Any</a> &gt; &amp;rec)</td></tr>
 <tr class="separator:afb294849b8cbc68c72311deea806cc33"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1efccb043fedb8d23c5e44bf106d69ca"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a1efccb043fedb8d23c5e44bf106d69ca">ParseRecord</a> (const char *line, int64_t &amp;id, std::vector&lt; <a class="el" href="structgs_1_1Any.html">Any</a> &gt; &amp;rec)</td></tr>
@@ -340,6 +351,8 @@ Functions</h2></td></tr>
 <tr class="separator:aa9ee47a7a56d22f4332fea9f72954564"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a84ec0ecbc20c85d556acc60f73f2f6ba"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a84ec0ecbc20c85d556acc60f73f2f6ba">ParseRecordX</a> (const char *line, int64_t &amp;src, int64_t &amp;dst, grape::EmptyType &amp;prop)</td></tr>
 <tr class="separator:a84ec0ecbc20c85d556acc60f73f2f6ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab24d3602cb516edb274ccbbdf53fd9bf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#ab24d3602cb516edb274ccbbdf53fd9bf">ParseRecordX</a> (const char *line, int64_t &amp;src, int64_t &amp;dst, double &amp;prop)</td></tr>
+<tr class="separator:ab24d3602cb516edb274ccbbdf53fd9bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8bfeba0a224d3194237469bad1614925"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a8bfeba0a224d3194237469bad1614925">ParseRecordX</a> (const char *line, int64_t &amp;src, int64_t &amp;dst, int64_t &amp;prop)</td></tr>
 <tr class="separator:a8bfeba0a224d3194237469bad1614925"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a801c5c31e5322d80bbab8eac7a7b52ab"><td class="memItemLeft" align="right" valign="top">grape::InArchive &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a801c5c31e5322d80bbab8eac7a7b52ab">operator&lt;&lt;</a> (grape::InArchive &amp;in_archive, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;value)</td></tr>
@@ -395,6 +408,20 @@ Variables</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">using <a class="el" href="namespacegs.html#aa624b590e145ef00b489127f6f66b07f">gs::DateEmptyColumn</a> = typedef <a class="el" href="classgs_1_1TypedEmptyColumn.html">TypedEmptyColumn</a>&lt;<a class="el" href="structgs_1_1Date.html">Date</a>&gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a30613c1d0f0f221cd2f5ca070f6ed476"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a30613c1d0f0f221cd2f5ca070f6ed476">&#9670;&nbsp;</a></span>DoubleColumn</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="namespacegs.html#a30613c1d0f0f221cd2f5ca070f6ed476">gs::DoubleColumn</a> = typedef <a class="el" href="classgs_1_1TypedColumn.html">TypedColumn</a>&lt;double&gt;</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -580,6 +607,7 @@ Variables</h2></td></tr>
 <tr><td class="fieldname"><a id="ab0c6617542660e43c1b61e46d8fcf08fa302e56d566a2561033b27c13680ea4b2"></a>kString&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="ab0c6617542660e43c1b61e46d8fcf08fa65d0c57fb98927f91459ad92c864def8"></a>kEmpty&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="ab0c6617542660e43c1b61e46d8fcf08fa22c776007533004e22da8e6bdd888b33"></a>kInt64&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="ab0c6617542660e43c1b61e46d8fcf08fa7fb3efa35444cd88d5a31dc125ca9c28"></a>kDouble&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
 </div>
@@ -643,6 +671,32 @@ template&lt;class INDEX_T &gt; </div>
           <td></td><td></td>
         </tr>
       </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a621e0b47cac44e76bc4aa6a93573fc78"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a621e0b47cac44e76bc4aa6a93573fc78">&#9670;&nbsp;</a></span>char_ptr_to_double()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static double gs::char_ptr_to_double </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>data</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>
@@ -1281,6 +1335,42 @@ template&lt;typename EDATA_T &gt; </div>
 
 </div>
 </div>
+<a id="a8777488b6ae32e78610852b58663ca5f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8777488b6ae32e78610852b58663ca5f">&#9670;&nbsp;</a></span>ParseDouble()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::ParseDouble </td>
+          <td>(</td>
+          <td class="paramtype">const std::string_view &amp;&#160;</td>
+          <td class="paramname"><em>str</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double &amp;&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a574faf4b770d2ba570e3883de5507a23"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a574faf4b770d2ba570e3883de5507a23">&#9670;&nbsp;</a></span>ParseInt32()</h2>
 
@@ -1416,7 +1506,7 @@ template&lt;typename EDATA_T &gt; </div>
 </div>
 </div>
 <a id="aa9ee47a7a56d22f4332fea9f72954564"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa9ee47a7a56d22f4332fea9f72954564">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[1/4]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aa9ee47a7a56d22f4332fea9f72954564">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[1/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1455,8 +1545,48 @@ template&lt;typename EDATA_T &gt; </div>
 
 </div>
 </div>
+<a id="ab24d3602cb516edb274ccbbdf53fd9bf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab24d3602cb516edb274ccbbdf53fd9bf">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[2/5]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::ParseRecordX </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>line</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int64_t &amp;&#160;</td>
+          <td class="paramname"><em>src</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int64_t &amp;&#160;</td>
+          <td class="paramname"><em>dst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double &amp;&#160;</td>
+          <td class="paramname"><em>prop</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a84ec0ecbc20c85d556acc60f73f2f6ba"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a84ec0ecbc20c85d556acc60f73f2f6ba">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[2/4]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a84ec0ecbc20c85d556acc60f73f2f6ba">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[3/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1496,7 +1626,7 @@ template&lt;typename EDATA_T &gt; </div>
 </div>
 </div>
 <a id="ae159f64eb01a723743d6a700d0c6c49e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae159f64eb01a723743d6a700d0c6c49e">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[3/4]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ae159f64eb01a723743d6a700d0c6c49e">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[4/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1536,7 +1666,7 @@ template&lt;typename EDATA_T &gt; </div>
 </div>
 </div>
 <a id="a8bfeba0a224d3194237469bad1614925"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8bfeba0a224d3194237469bad1614925">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[4/4]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a8bfeba0a224d3194237469bad1614925">&#9670;&nbsp;</a></span>ParseRecordX() <span class="overload">[5/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
