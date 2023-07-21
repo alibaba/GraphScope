@@ -39,7 +39,7 @@ find_package(gRPC 1.26.0 REQUIRED)
 find_package(CppKafka 0.3.1 REQUIRED)
 
 # Proto file generating
-set(PROTO_FILE_DIR ${Lgraph_SOURCE_DIR}/../proto)
+set(PROTO_FILE_DIR ${Lgraph_SOURCE_DIR}/../../proto/groot)
 set(GRPC_FILES
   ${PROTO_FILE_DIR}/sdk/client.proto
   ${PROTO_FILE_DIR}/sdk/client_backup_service.proto)
@@ -47,7 +47,7 @@ set(PROTO_FILES
   ${GRPC_FILES}
   ${PROTO_FILE_DIR}/sdk/model.proto
   ${PROTO_FILE_DIR}/sdk/common.proto)
-set(PROTOBUF_IMPORT_DIRS ${Lgraph_SOURCE_DIR}/../proto)
+set(PROTOBUF_IMPORT_DIRS ${Lgraph_SOURCE_DIR}/../../proto/groot)
 set(PROTO_BUILD_DIR ${Lgraph_BINARY_DIR}/generated)
 set(PROTO_SRCS_DEST_DIR ${Lgraph_SOURCE_DIR}/src/proto)
 set(PROTO_HDRS_DEST_DIR ${Lgraph_SOURCE_DIR}/include/lgraph/proto)

@@ -14,15 +14,25 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.integration.standard;
+package com.alibaba.graphscope.cypher.integration.suite.ldbc;
 
-import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraph;
-import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraphProvider;
-import com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinTestSuite;
+import java.util.Collections;
+import java.util.List;
 
-import org.apache.tinkerpop.gremlin.GraphProviderClass;
-import org.junit.runner.RunWith;
+public class QueryContext {
+    private final String query;
+    private final List<String> expectedResult;
 
-@RunWith(IrGremlinTestSuite.class)
-@GraphProviderClass(provider = RemoteTestGraphProvider.class, graph = RemoteTestGraph.class)
-public class IrGremlinTest {}
+    public QueryContext(String query, List<String> expectedResult) {
+        this.query = query;
+        this.expectedResult = expectedResult;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public List<String> getExpectedResult() {
+        return Collections.unmodifiableList(expectedResult);
+    }
+}

@@ -51,7 +51,7 @@ property_dir = os.path.join(test_repo_dir, "property")
 @pytest.fixture(scope="module")
 def arrow_modern_graph(graphscope_session):
     graph = load_modern_graph(
-        graphscope_session, prefix="{}/modern_graph".format(test_repo_dir)
+        graphscope_session, prefix=f"{test_repo_dir}/modern_graph"
     )
     yield graph
     del graph
@@ -61,7 +61,7 @@ def arrow_modern_graph(graphscope_session):
 def arrow_modern_graph_undirected(graphscope_session):
     graph = load_modern_graph(
         graphscope_session,
-        prefix="{}/modern_graph".format(test_repo_dir),
+        prefix=f"{test_repo_dir}/modern_graph",
         directed=False,
     )
     yield graph
@@ -70,82 +70,82 @@ def arrow_modern_graph_undirected(graphscope_session):
 
 @pytest.fixture(scope="module")
 def modern_person():
-    return "{}/modern_graph/person.csv".format(test_repo_dir)
+    return f"{test_repo_dir}/modern_graph/person.csv"
 
 
 @pytest.fixture(scope="module")
 def modern_software():
-    return "{}/modern_graph/software.csv".format(test_repo_dir)
+    return f"{test_repo_dir}/modern_graph/software.csv"
 
 
 @pytest.fixture(scope="module")
 def twitter_v_0():
-    return "{}/twitter_v_0".format(new_property_dir)
+    return f"{new_property_dir}/twitter_v_0"
 
 
 @pytest.fixture(scope="module")
 def modern_graph():
-    return "{}/modern_graph".format(test_repo_dir)
+    return f"{test_repo_dir}/modern_graph"
 
 
 @pytest.fixture(scope="module")
 def ldbc_sample():
-    return "{}/ldbc_sample".format(test_repo_dir)
+    return f"{test_repo_dir}/ldbc_sample"
 
 
 @pytest.fixture(scope="module")
 def p2p_property():
-    return "{}/property".format(test_repo_dir)
+    return f"{test_repo_dir}/property"
 
 
 @pytest.fixture(scope="module")
 def ogbn_mag_small():
-    return "{}/ogbn_mag_small".format(test_repo_dir)
+    return f"{test_repo_dir}/ogbn_mag_small"
 
 
 @pytest.fixture(scope="module")
 def twitter_v_1():
-    return "{}/twitter_v_1".format(new_property_dir)
+    return f"{new_property_dir}/twitter_v_1"
 
 
 @pytest.fixture(scope="module")
 def twitter_e_0_0_0():
-    return "{}/twitter_e_0_0_0".format(new_property_dir)
+    return f"{new_property_dir}/twitter_e_0_0_0"
 
 
 @pytest.fixture(scope="module")
 def twitter_e_0_1_0():
-    return "{}/twitter_e_0_1_0".format(new_property_dir)
+    return f"{new_property_dir}/twitter_e_0_1_0"
 
 
 @pytest.fixture(scope="module")
 def twitter_e_1_0_0():
-    return "{}/twitter_e_1_0_0".format(new_property_dir)
+    return f"{new_property_dir}/twitter_e_1_0_0"
 
 
 @pytest.fixture(scope="module")
 def twitter_e_1_1_0():
-    return "{}/twitter_e_1_1_0".format(new_property_dir)
+    return f"{new_property_dir}/twitter_e_1_1_0"
 
 
 @pytest.fixture(scope="module")
 def twitter_e_0_0_1():
-    return "{}/twitter_e_0_0_1".format(new_property_dir)
+    return f"{new_property_dir}/twitter_e_0_0_1"
 
 
 @pytest.fixture(scope="module")
 def twitter_e_0_1_1():
-    return "{}/twitter_e_0_1_1".format(new_property_dir)
+    return f"{new_property_dir}/twitter_e_0_1_1"
 
 
 @pytest.fixture(scope="module")
 def twitter_e_1_0_1():
-    return "{}/twitter_e_1_0_1".format(new_property_dir)
+    return f"{new_property_dir}/twitter_e_1_0_1"
 
 
 @pytest.fixture(scope="module")
 def twitter_e_1_1_1():
-    return "{}/twitter_e_1_1_1".format(new_property_dir)
+    return f"{new_property_dir}/twitter_e_1_1_1"
 
 
 def load_arrow_property_graph(session, directed=True):
@@ -154,7 +154,7 @@ def load_arrow_property_graph(session, directed=True):
             "e0": [
                 (
                     Loader(
-                        "{}/twitter_e_0_0_0".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_0_0_0",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -164,7 +164,7 @@ def load_arrow_property_graph(session, directed=True):
                 ),
                 (
                     Loader(
-                        "{}/twitter_e_0_1_0".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_0_1_0",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -174,7 +174,7 @@ def load_arrow_property_graph(session, directed=True):
                 ),
                 (
                     Loader(
-                        "{}/twitter_e_1_0_0".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_1_0_0",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -184,7 +184,7 @@ def load_arrow_property_graph(session, directed=True):
                 ),
                 (
                     Loader(
-                        "{}/twitter_e_1_1_0".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_1_1_0",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -196,7 +196,7 @@ def load_arrow_property_graph(session, directed=True):
             "e1": [
                 (
                     Loader(
-                        "{}/twitter_e_0_0_1".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_0_0_1",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -206,7 +206,7 @@ def load_arrow_property_graph(session, directed=True):
                 ),
                 (
                     Loader(
-                        "{}/twitter_e_0_1_1".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_0_1_1",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -216,7 +216,7 @@ def load_arrow_property_graph(session, directed=True):
                 ),
                 (
                     Loader(
-                        "{}/twitter_e_1_0_1".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_1_0_1",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -226,7 +226,7 @@ def load_arrow_property_graph(session, directed=True):
                 ),
                 (
                     Loader(
-                        "{}/twitter_e_1_1_1".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_1_1_1",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -237,8 +237,8 @@ def load_arrow_property_graph(session, directed=True):
             ],
         },
         vertices={
-            "v0": Loader("{}/twitter_v_0".format(new_property_dir), header_row=True),
-            "v1": Loader("{}/twitter_v_1".format(new_property_dir), header_row=True),
+            "v0": Loader(f"{new_property_dir}/twitter_v_0", header_row=True),
+            "v1": Loader(f"{new_property_dir}/twitter_v_1", header_row=True),
         },
         generate_eid=False,
         retain_oid=True,
@@ -274,7 +274,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
             "e0": [
                 (
                     Loader(
-                        "{}/twitter_e_0_0_0".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_0_0_0",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -284,7 +284,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
                 ),
                 (
                     Loader(
-                        "{}/twitter_e_0_1_0".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_0_1_0",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -294,7 +294,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
                 ),
                 (
                     Loader(
-                        "{}/twitter_e_1_0_0".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_1_0_0",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -304,7 +304,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
                 ),
                 (
                     Loader(
-                        "{}/twitter_e_1_1_0".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_1_1_0",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -316,7 +316,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
             "e1": [
                 (
                     Loader(
-                        "{}/twitter_e_0_0_1".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_0_0_1",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -326,7 +326,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
                 ),
                 (
                     Loader(
-                        "{}/twitter_e_0_1_1".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_0_1_1",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -336,7 +336,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
                 ),
                 (
                     Loader(
-                        "{}/twitter_e_1_0_1".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_1_0_1",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -346,7 +346,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
                 ),
                 (
                     Loader(
-                        "{}/twitter_e_1_1_1".format(new_property_dir),
+                        f"{new_property_dir}/twitter_e_1_1_1",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -538,7 +538,7 @@ def p2p_property_graph_undirected_compact(graphscope_session):
             "knows": [
                 (
                     Loader(
-                        "{}/p2p-31_property_e_0".format(property_dir),
+                        f"{property_dir}/p2p-31_property_e_0",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -550,7 +550,7 @@ def p2p_property_graph_undirected_compact(graphscope_session):
         },
         vertices={
             "person": Loader(
-                "{}/p2p-31_property_v_0".format(property_dir),
+                f"{property_dir}/p2p-31_property_v_0",
                 header_row=True,
                 delimiter=",",
             ),
@@ -571,7 +571,7 @@ def p2p_property_graph_undirected_perfect_hash(graphscope_session):
             "knows": [
                 (
                     Loader(
-                        "{}/p2p-31_property_e_0".format(property_dir),
+                        f"{property_dir}/p2p-31_property_e_0",
                         header_row=True,
                         delimiter=",",
                     ),
@@ -583,7 +583,7 @@ def p2p_property_graph_undirected_perfect_hash(graphscope_session):
         },
         vertices={
             "person": Loader(
-                "{}/p2p-31_property_v_0".format(property_dir),
+                f"{property_dir}/p2p-31_property_v_0",
                 header_row=True,
                 delimiter=",",
             ),
@@ -675,67 +675,71 @@ def append_only_graph():
 def sssp_result():
     ret = {}
     ret["directed"] = np.loadtxt(
-        "{}/ldbc/p2p-31-SSSP-directed".format(property_dir), dtype=float
+        f"{property_dir}/ldbc/p2p-31-SSSP-directed", dtype=float
     )
-    ret["undirected"] = np.loadtxt(
-        "{}/ldbc/p2p-31-SSSP".format(property_dir), dtype=float
-    )
+    ret["undirected"] = np.loadtxt(f"{property_dir}/ldbc/p2p-31-SSSP", dtype=float)
     yield ret
 
 
 @pytest.fixture(scope="module")
 def twitter_sssp_result():
-    rlt = np.loadtxt(
-        "{}/results/twitter_property_sssp_4".format(property_dir), dtype=float
-    )
+    rlt = np.loadtxt(f"{property_dir}/results/twitter_property_sssp_4", dtype=float)
     yield rlt
 
 
 @pytest.fixture(scope="module")
 def wcc_result():
-    ret = np.loadtxt("{}/../p2p-31-wcc_auto".format(property_dir), dtype=int)
+    ret = np.loadtxt(f"{property_dir}/ldbc/p2p-31-WCC", dtype=int)
+    yield ret
+
+
+@pytest.fixture(scope="module")
+def wcc_auto_result():
+    ret = np.loadtxt(f"{property_dir}/../p2p-31-wcc_auto", dtype=int)
+    yield ret
+
+
+@pytest.fixture(scope="module")
+def pagerank_result():
+    ret = {}
+    ret["directed"] = np.loadtxt(f"{property_dir}/ldbc/p2p-31-PR-directed", dtype=float)
+    ret["undirected"] = np.loadtxt(f"{property_dir}/ldbc/p2p-31-PR", dtype=float)
+    yield ret
+
+
+@pytest.fixture(scope="module")
+def bfs_result():
+    ret = {}
+    ret["directed"] = np.loadtxt(
+        "{}/ldbc/p2p-31-BFS-directed".format(property_dir), dtype=int
+    )
+    ret["undirected"] = np.loadtxt(f"{property_dir}/ldbc/p2p-31-BFS", dtype=int)
+    yield ret
+
+
+@pytest.fixture(scope="module")
+def lpa_result():
+    ret = np.loadtxt(f"{property_dir}/ldbc/p2p-31-CDLP", dtype=int)
+    yield ret
+
+
+@pytest.fixture(scope="module")
+def clustering_result():
+    ret = {}
+    ret["directed"] = np.loadtxt(f"{property_dir}/../p2p-31-clustering", dtype=float)
+    yield ret
+
+
+@pytest.fixture(scope="module")
+def lcc_result():
+    ret = {}
+    ret["undirected"] = np.loadtxt(f"{property_dir}/ldbc/p2p-31-LCC", dtype=float)
     yield ret
 
 
 @pytest.fixture(scope="module")
 def kshell_result():
-    ret = np.loadtxt("{}/../p2p-31-kshell-3".format(property_dir), dtype=int)
-    yield ret
-
-
-@pytest.fixture(scope="module")
-def pagerank_auto_result():
-    ret = {}
-    ret["directed"] = np.loadtxt(
-        "{}/ldbc/p2p-31-PR-directed".format(property_dir), dtype=float
-    )
-    ret["undirected"] = np.loadtxt(
-        "{}/ldbc/p2p-31-PR".format(property_dir), dtype=float
-    )
-    yield ret
-
-
-@pytest.fixture(scope="module")
-def pagerank_local_result():
-    ret = {}
-    ret["directed"] = np.loadtxt(
-        "{}/ldbc/p2p-31-PR-LOCAL-directed".format(property_dir), dtype=float
-    )
-    ret["undirected"] = np.loadtxt(
-        "{}/ldbc/p2p-31-PR-LOCAL".format(property_dir), dtype=float
-    )
-    yield ret
-
-
-@pytest.fixture(scope="module")
-def pagerank_local_parallel_result():
-    ret = {}
-    ret["directed"] = np.loadtxt(
-        "{}/ldbc/p2p-31-PR-LOCAL-PARALLEL-directed".format(property_dir), dtype=float
-    )
-    ret["undirected"] = np.loadtxt(
-        "{}/ldbc/p2p-31-PR-LOCAL-PARALLEL".format(property_dir), dtype=float
-    )
+    ret = np.loadtxt(f"{property_dir}/../p2p-31-kshell-3", dtype=int)
     yield ret
 
 
@@ -749,31 +753,6 @@ def hits_result():
     )
     ret["hub"] = df.iloc[:, [0, 1]].to_numpy(dtype=float)
     ret["auth"] = df.iloc[:, [0, 2]].to_numpy(dtype=float)
-    yield ret
-
-
-@pytest.fixture(scope="module")
-def bfs_result():
-    ret = {}
-    ret["directed"] = np.loadtxt(
-        "{}/ldbc/p2p-31-BFS-directed".format(property_dir), dtype=int
-    )
-    ret["undirected"] = np.loadtxt("{}/ldbc/p2p-31-BFS".format(property_dir), dtype=int)
-    yield ret
-
-
-@pytest.fixture(scope="module")
-def lpa_result():
-    ret = np.loadtxt("{}/ldbc/p2p-31-CDLP".format(property_dir), dtype=int)
-    yield ret
-
-
-@pytest.fixture(scope="module")
-def clustering_result():
-    ret = {}
-    ret["directed"] = np.loadtxt(
-        "{}/../p2p-31-clustering".format(property_dir), dtype=float
-    )
     yield ret
 
 

@@ -47,3 +47,12 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex
         mkdir build && cd build
         cmake .. && sudo make -j$(nproc)
+
+    - name: GRIN on mutable csr test
+      run: |
+        git submodule update --init
+        cd flex/engines/graph_db/grin
+        mkdir build && cd build
+        cmake .. && sudo make -j$(nproc)
+        export FLEX_DATA_DIR=../../../../storages/rt_mutable_graph/modern_graph/
+        ./run_grin_test

@@ -65,9 +65,9 @@
 #include "core/server/command_detail.h"
 #include "core/server/rpc_utils.h"
 #include "core/utils/mpi_utils.h"
-#include "graphscope/proto/attr_value.pb.h"
-#include "graphscope/proto/graph_def.pb.h"
-#include "graphscope/proto/types.pb.h"
+#include "proto/attr_value.pb.h"
+#include "proto/graph_def.pb.h"
+#include "proto/types.pb.h"
 
 namespace bl = boost::leaf;
 
@@ -322,6 +322,8 @@ bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
     context_type = ctx_wrapper->context_type();
     context_schema = ctx_wrapper->schema();
     BOOST_LEAF_CHECK(object_manager_.PutObject(ctx_wrapper));
+  } else {
+    LOG(ERROR) << "Error occur when querying";
   }
   return toJson({{"context_type", context_type},
                  {"context_key", context_key},

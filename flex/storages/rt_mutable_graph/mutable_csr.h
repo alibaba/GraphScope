@@ -34,7 +34,9 @@ template <typename EDATA_T>
 struct MutableNbr {
   MutableNbr() = default;
   MutableNbr(const MutableNbr& rhs)
-      : neighbor(rhs.neighbor), timestamp(rhs.timestamp.load()), data(data) {}
+      : neighbor(rhs.neighbor),
+        timestamp(rhs.timestamp.load()),
+        data(rhs.data) {}
   ~MutableNbr() = default;
 
   vid_t neighbor;
@@ -317,6 +319,8 @@ class MutableCsrBase {
   virtual std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
       vid_t v) const = 0;
 
+  virtual MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const = 0;
+
   virtual std::shared_ptr<MutableCsrEdgeIterBase> edge_iter_mut(vid_t v) = 0;
 };
 
@@ -472,6 +476,9 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
         get_edges(v));
   }
 
+  MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
+    return new TypedMutableCsrConstEdgeIter<EDATA_T>(get_edges(v));
+  }
   std::shared_ptr<MutableCsrEdgeIterBase> edge_iter_mut(vid_t v) override {
     return std::make_shared<TypedMutableCsrEdgeIter<EDATA_T>>(get_edges_mut(v));
   }
@@ -576,6 +583,10 @@ class MutableCsr<std::string> : public TypedMutableCsrBase<std::string> {
         get_edges(v));
   }
 
+  MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
+    return new TypedMutableCsrConstEdgeIter<std::string>(get_edges(v));
+  }
+
   std::shared_ptr<MutableCsrEdgeIterBase> edge_iter_mut(vid_t v) override {
     return std::make_shared<TypedMutableCsrEdgeIter<std::string>>(
         get_edges_mut(v));
@@ -678,6 +689,10 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
       vid_t v) const override {
     return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(
         get_edges(v));
+  }
+
+  MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
+    return new TypedMutableCsrConstEdgeIter<EDATA_T>(get_edges(v));
   }
 
   std::shared_ptr<MutableCsrEdgeIterBase> edge_iter_mut(vid_t v) override {

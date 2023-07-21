@@ -17,9 +17,9 @@ syntax = "proto3";
 
 package gs.rpc;
 
-import "graphscope/proto/error_codes.proto";
-import "graphscope/proto/op_def.proto";
-import "graphscope/proto/types.proto";
+import "error_codes.proto";
+import "op_def.proto";
+import "types.proto";
 
 
 ////////////////////////////////////////////////////////////////////////////////

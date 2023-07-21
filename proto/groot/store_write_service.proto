@@ -18,14 +18,28 @@ syntax = "proto3";
 option java_package = "com.alibaba.graphscope.proto.groot";
 option java_multiple_files = true;
 
-service IngestProgress {
-  rpc getTailOffsets(GetTailOffsetsRequest) returns(GetTailOffsetsResponse);
+import "sdk/model.proto";
+
+service StoreWrite {
+  rpc writeStore(WriteStoreRequest) returns (WriteStoreResponse);
 }
 
-message GetTailOffsetsRequest {
-  repeated int32 queueId = 1;
+message PartitionToBatchPb {
+  map<int32, OperationBatchPb> partitionToBatch = 1;
 }
 
-message GetTailOffsetsResponse {
-  repeated int64 offsets = 1;
+message StoreDataBatchPb {
+  string requestId = 1;
+  int32 queueId = 2;
+  int64 snapshotId = 3;
+  int64 offset = 4;
+  repeated PartitionToBatchPb dataBatch = 5;
+}
+
+message WriteStoreRequest {
+  repeated StoreDataBatchPb data_batches = 1;
+}
+
+message WriteStoreResponse {
+  bool success = 1;
 }

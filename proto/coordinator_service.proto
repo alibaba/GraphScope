@@ -16,7 +16,7 @@
 syntax = "proto3";
 package gs.rpc;
 
-import "graphscope/proto/message.proto";
+import "message.proto";
 
 service CoordinatorService {
   // Connect a session.

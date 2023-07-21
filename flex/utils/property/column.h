@@ -96,6 +96,7 @@ using IntColumn = TypedColumn<int>;
 using LongColumn = TypedColumn<int64_t>;
 using DateColumn = TypedColumn<Date>;
 using StringColumn = TypedColumn<std::string_view>;
+using DoubleColumn = TypedColumn<double>;
 
 std::shared_ptr<ColumnBase> CreateColumn(
     PropertyType type, StorageStrategy strategy = StorageStrategy::kMem);

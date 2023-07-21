@@ -107,7 +107,7 @@
           <execution>
             <id>sdk</id>
             <configuration>
-              <protoSourceRoot>../proto</protoSourceRoot>
+              <protoSourceRoot>../../proto/groot</protoSourceRoot>
               <includes>
                 <include>sdk/*</include>
               </includes>
@@ -120,11 +120,11 @@
           <execution>
             <id>graphscope</id>
             <configuration>
-              <protoSourceRoot>../../python</protoSourceRoot>
+              <protoSourceRoot>../../proto</protoSourceRoot>
               <includes>
-                <include>graphscope/proto/graph_def.proto</include>
-                <include>graphscope/proto/ddl_service.proto</include>
-                <include>graphscope/proto/write_service.proto</include>
+                <include>graph_def.proto</include>
+                <include>ddl_service.proto</include>
+                <include>write_service.proto</include>
               </includes>
             </configuration>
             <goals>

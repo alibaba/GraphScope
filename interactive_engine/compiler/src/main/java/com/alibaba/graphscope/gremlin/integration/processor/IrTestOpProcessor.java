@@ -94,7 +94,8 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                             Traversal traversal =
                                     (Traversal) scriptEngine.eval(script, this.context);
                             applyStrategies(traversal);
-                            long jobId = JOB_ID_COUNTER.incrementAndGet();
+
+                            long jobId = graphPlanner.getIdGenerator().getAndIncrement();
                             IrMeta irMeta = metaQueryCallback.beforeExec();
                             QueryStatusCallback statusCallback =
                                     createQueryStatusCallback(script, jobId);

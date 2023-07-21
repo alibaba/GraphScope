@@ -67,35 +67,6 @@ def wcc(graph):
 
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property", "directed")
-def wcc_projected(graph):
-    """Evaluate weakly connected components on the `graph`.
-    This is a naive version of WCC.
-
-    Args:
-        graph (:class:`graphscope.Graph`): A simple graph.
-
-    Returns:
-        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
-            A context with each vertex assigned with the component ID, evaluated in eager mode.
-
-    Examples:
-
-    .. code:: python
-
-        >>> import graphscope
-        >>> from graphscope.dataset import load_p2p_network
-        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
-        >>> g = load_p2p_network(sess)
-        >>> # project to a simple graph (if needed)
-        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
-        >>> c = graphscope.wcc_projected(pg)
-        >>> sess.close()
-    """
-    return AppAssets(algo="wcc_projected", context="vertex_data")(graph)
-
-
-@project_to_simple
-@not_compatible_for("arrow_property", "dynamic_property", "directed")
 def wcc_auto(graph):
     """Evaluate weakly connected components on the `graph`.
     This is an auto parallel version of WCC.
@@ -121,3 +92,12 @@ def wcc_auto(graph):
         >>> sess.close()
     """
     return AppAssets(algo="wcc_auto", context="vertex_data")(graph)
+
+
+@project_to_simple
+@not_compatible_for("arrow_property", "dynamic_property", "directed")
+def wcc_projected(graph):
+    """Evaluate weakly connected components on the `graph`.
+    This is a naive version of WCC that could work on dynamic, projected, flatten graph
+    """
+    return AppAssets(algo="wcc_projected", context="vertex_data")(graph)
