@@ -27,6 +27,7 @@ import graphscope
 from graphscope import avg_clustering
 from graphscope import bfs
 from graphscope import clustering  # directed / undirected would call different app
+from graphscope import custom_analytical_algorithm
 from graphscope import degree_centrality
 from graphscope import eigenvector_centrality
 from graphscope import hits
@@ -248,11 +249,16 @@ def test_run_app_on_string_oid_graph(p2p_project_undirected_graph_string):
     r1 = ctx.to_dataframe({"node": "v.id", "r": "r"})
 
 
-@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_error_on_run_app(projected_pg_no_edge_data):
     # compile error: wrong type of edge data with sssp
-    with pytest.raises(graphscope.CompilationError):
+    with pytest.raises(ValueError):
         sssp(projected_pg_no_edge_data, src=4)
+
+    with pytest.raises(
+        graphscope.AnalyticalEngineInternalError,
+        match="args_num >= query_args.args_size()",
+    ):
+        custom_analytical_algorithm(projected_pg_no_edge_data, "wcc", 1, 2, 3)
 
 
 def test_app_on_local_vm_graph(
