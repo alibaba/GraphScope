@@ -193,8 +193,6 @@ def test_wcc(
 ):
     ctx = wcc(p2p_project_undirected_graph)
     r: np.ndarray = context_to_np(ctx, dtype=int)
-    print(r)
-    r.tofile("/tmp/wcc_result.txt", sep=",", format="%s")
     assert np.all(r == wcc_auto_result)
     r = context_to_np(ctx, vertex_range={"begin": 1, "end": 4}, dtype=int)
     expected = [[1, 1], [2, 1], [3, 1]]
