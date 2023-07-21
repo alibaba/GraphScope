@@ -286,14 +286,16 @@ void Run() {
     using AppType = grape::WCC<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec);
-  } else if (name == "wcc_opt") {
-    using GraphType =
-        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn,
-                                        VertexMapType>;
-    using AppType = grape::WCCOpt<GraphType>;
-    CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
-                                       FLAGS_datasource, fnum, spec);
+    // skip to help CI runners to pass the compilation without OOM.
+    //
+    // } else if (name == "wcc_opt") {
+    //   using GraphType =
+    //       grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
+    //                                       grape::LoadStrategy::kBothOutIn,
+    //                                       VertexMapType>;
+    //   using AppType = grape::WCCOpt<GraphType>;
+    //   CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
+    //                                      FLAGS_datasource, fnum, spec);
   } else if (name == "lcc_auto") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
