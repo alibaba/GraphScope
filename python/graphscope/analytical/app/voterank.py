@@ -27,16 +27,15 @@ __all__ = ["voterank"]
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def voterank(graph, num_of_nodes=0):
-    """Evalute VoteRank on a graph.
+    """Evaluate VoteRank on a graph.
 
     Args:
         graph (:class:`graphscope.Graph`): A simple graph.
         num_of_nodes (unsigned long int, optional): Number of ranked nodes to extract. Default all nodes.
 
     Returns:
-        :voterank : list
-         Ordered list of computed seeds. Only nodes with positive number of votes are returned.
-
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with the voterank value, evaluated in eager mode.
 
     Examples:
 
@@ -52,7 +51,4 @@ def voterank(graph, num_of_nodes=0):
         >>> sess.close()
     """
     num_of_nodes = int(num_of_nodes)
-    c = AppAssets(algo="voterank", context="vertex_data")(graph, num_of_nodes)
-    r = c.to_dataframe({"id": "v.id", "result": "r"})
-    r = r[r["result"] != 0].sort_values(by=["result"])
-    return r["id"].tolist()
+    return AppAssets(algo="voterank", context="vertex_data")(graph, num_of_nodes)

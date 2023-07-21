@@ -305,6 +305,24 @@ def test_wcc_on_flatten_graph(arrow_modern_graph_undirected):
     assert sum(df.r.values) == 6
 
 
+def test_wcc_on_flatten_ldbc_graph(ldbc_graph):
+    graph = ldbc_graph.project(
+        vertices={"person": [], "place": []}, edges={"knows": [], "isLocatedIn": []}
+    )
+    ctx = graphscope.wcc_projected(graph)
+    df = ctx.to_dataframe({"id": "v.id", "result": "r"}).sort_values(by=["id"])
+    assert len(df) == 2363
+
+
+def test_voterank_on_flatten_ldbc_graph(ldbc_graph):
+    graph = ldbc_graph.project(
+        vertices={"person": [], "place": []}, edges={"knows": [], "isLocatedIn": []}
+    )
+    ctx = graphscope.voterank(graph, 10)
+    df = ctx.to_dataframe({"id": "v.id", "result": "r"}).sort_values(by=["id"])
+    assert len(df) == 2363
+
+
 def test_louvain_on_projected_graph(arrow_property_graph_undirected):
     for v, e in itertools.product(["v0", "v1"], ["e0", "e1"]):
         g = arrow_property_graph_undirected.project(
