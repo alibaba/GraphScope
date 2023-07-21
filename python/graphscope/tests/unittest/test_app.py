@@ -193,8 +193,6 @@ def test_wcc(
 ):
     ctx = wcc(p2p_project_undirected_graph)
     r: np.ndarray = context_to_np(ctx, dtype=int)
-    print(r)
-    r.tofile("/tmp/wcc_result.txt", sep=",", format="%s")
     assert np.all(r == wcc_auto_result)
     r = context_to_np(ctx, vertex_range={"begin": 1, "end": 4}, dtype=int)
     expected = [[1, 1], [2, 1], [3, 1]]
@@ -303,6 +301,24 @@ def test_wcc_on_flatten_graph(arrow_modern_graph_undirected):
     df = ctx.to_dataframe({"node": "v.id", "r": "r"})
     # The component id is all 1
     assert sum(df.r.values) == 6
+
+
+def test_wcc_on_flatten_ldbc_graph(ldbc_graph):
+    graph = ldbc_graph.project(
+        vertices={"person": [], "place": []}, edges={"knows": [], "isLocatedIn": []}
+    )
+    ctx = graphscope.wcc_projected(graph)
+    df = ctx.to_dataframe({"id": "v.id", "result": "r"}).sort_values(by=["id"])
+    assert len(df) == 2363
+
+
+def test_voterank_on_flatten_ldbc_graph(ldbc_graph):
+    graph = ldbc_graph.project(
+        vertices={"person": [], "place": []}, edges={"knows": [], "isLocatedIn": []}
+    )
+    ctx = graphscope.voterank(graph, 10)
+    df = ctx.to_dataframe({"id": "v.id", "result": "r"}).sort_values(by=["id"])
+    assert len(df) == 2363
 
 
 def test_louvain_on_projected_graph(arrow_property_graph_undirected):

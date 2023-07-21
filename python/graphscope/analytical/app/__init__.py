@@ -60,4 +60,5 @@ from graphscope.analytical.app.triangles import triangles
 from graphscope.analytical.app.voterank import voterank
 from graphscope.analytical.app.wcc import wcc
 from graphscope.analytical.app.wcc import wcc_auto
+from graphscope.analytical.app.wcc import wcc_opt
 from graphscope.analytical.app.wcc import wcc_projected

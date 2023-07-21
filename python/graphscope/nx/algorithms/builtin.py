@@ -1129,4 +1129,7 @@ def voterank(G, num_of_nodes=0):
 
     """
 
-    return graphscope.voterank(G, num_of_nodes)
+    ctx = graphscope.voterank(G, num_of_nodes)
+    r = ctx.to_dataframe({"id": "v.id", "result": "r"})
+    r = r[r["result"] != 0].sort_values(by=["result"])
+    return r["id"].tolist()

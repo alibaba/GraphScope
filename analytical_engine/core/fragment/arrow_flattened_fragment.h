@@ -183,6 +183,10 @@ struct NbrDefault {
         union_id_parser_.GenerateContinuousLid(nbr_.get_neighbor().GetValue()));
   }
 
+  grape::Vertex<VID_T> raw_neighbor() const { return nbr_.neighbor(); }
+
+  grape::Vertex<VID_T> get_raw_neighbor() const { return nbr_.neighbor(); }
+
   EID_T edge_id() const { return nbr_.edge_id(); }
 
   EDATA_T get_data() const {
@@ -247,7 +251,7 @@ struct NbrDefault {
  * @tparam EID_T
  * @tparam EDATA_T
  */
-template <typename VID_T, typename EID_T, typename EDATA_T>
+template <typename VID_T, typename EID_T, typename EDATA_T, typename FRAGMENT_T>
 class UnionAdjList {
  public:
   using nbr_t = NbrDefault<VID_T, EID_T, EDATA_T>;
@@ -258,12 +262,28 @@ class UnionAdjList {
   UnionAdjList() : size_(0) {}
   explicit UnionAdjList(const std::vector<adj_list_t>& adj_lists,
                         const prop_id_t& default_prop_id,
-                        const UnionIdParser<VID_T>& union_id_parser)
+                        const UnionIdParser<VID_T>& union_id_parser,
+                        const FRAGMENT_T* fragment)
       : adj_lists_(adj_lists),
         default_prop_id_(default_prop_id),
-        union_id_parser_(union_id_parser) {
+        union_id_parser_(union_id_parser),
+        fragment_(fragment) {
     size_ = 0;
-    for (auto& adj_list : adj_lists) {
+    for (auto& adj_list : adj_lists_) {
+      size_ += adj_list.Size();
+    }
+  }
+
+  explicit UnionAdjList(std::vector<adj_list_t>&& adj_lists,
+                        const prop_id_t& default_prop_id,
+                        const UnionIdParser<VID_T>& union_id_parser,
+                        const FRAGMENT_T* fragment)
+      : adj_lists_(std::move(adj_lists)),
+        default_prop_id_(default_prop_id),
+        union_id_parser_(union_id_parser),
+        fragment_(fragment) {
+    size_ = 0;
+    for (auto& adj_list : adj_lists_) {
       size_ += adj_list.Size();
     }
   }
@@ -276,11 +296,14 @@ class UnionAdjList {
     iterator() = default;
     explicit iterator(const std::vector<adj_list_t>& adj_lists,
                       const nbr_unit_t& nbr, const prop_id_t& default_prop_id,
-                      size_t index, const UnionIdParser<VID_T>& union_id_parser)
+                      size_t index, const UnionIdParser<VID_T>& union_id_parser,
+                      const FRAGMENT_T* fragment)
         : adj_lists_(adj_lists),
+          fragment_(fragment),
           curr_nbr_(default_prop_id, union_id_parser),
           curr_list_index_(index) {
       curr_nbr_ = nbr;
+      move_to_next_valid_nbr();
     }
     explicit iterator(const std::vector<adj_list_t>& adj_lists,
                       const nbr_t& nbr, size_t list_index)
@@ -290,13 +313,29 @@ class UnionAdjList {
 
     pointer_type operator->() noexcept { return &curr_nbr_; }
 
-    iterator& operator++() {
-      if (++curr_nbr_ == adj_lists_.get()[curr_list_index_].end()) {
-        ++curr_list_index_;
-        if (curr_list_index_ < adj_lists_.get().size()) {
-          curr_nbr_ = adj_lists_.get()[curr_list_index_].begin();
+    // The only the interator's `operator++()` is exposed to the external
+    // programs so we only need to check the validity here, and nothing
+    // to do with the `operator++()` of NbrDefault.
+    inline void move_to_next_valid_nbr() {
+      // move to the next valid nbr
+      while (curr_list_index_ < adj_lists_.get().size()) {
+        if (curr_nbr_ == adj_lists_.get()[curr_list_index_].end()) {
+          ++curr_list_index_;
+          if (curr_list_index_ < adj_lists_.get().size()) {
+            curr_nbr_ = adj_lists_.get()[curr_list_index_].begin();
+          }
+        } else {
+          if (fragment_->is_valid_vertex(curr_nbr_.raw_neighbor())) {
+            break;
+          }
+          ++curr_nbr_;
         }
       }
+    }
+
+    iterator& operator++() {
+      ++curr_nbr_;
+      move_to_next_valid_nbr();
       return *this;
     }
 
@@ -316,6 +355,7 @@ class UnionAdjList {
 
    private:
     std::reference_wrapper<const std::vector<adj_list_t>> adj_lists_;
+    const FRAGMENT_T* fragment_;
     nbr_t curr_nbr_;
     size_t curr_list_index_;
   };
@@ -329,12 +369,16 @@ class UnionAdjList {
     explicit const_iterator(const std::vector<adj_list_t>& adj_lists,
                             const nbr_unit_t& nbr,
                             const prop_id_t& default_prop_id, size_t index,
-                            const UnionIdParser<VID_T>& union_id_parser)
+                            const UnionIdParser<VID_T>& union_id_parser,
+                            const FRAGMENT_T* fragment)
         : adj_lists_(adj_lists),
+          fragment_(fragment),
           curr_nbr_(default_prop_id, union_id_parser),
           curr_list_index_(index) {
       curr_nbr_ = nbr;
+      move_to_next_valid_nbr();
     }
+
     explicit const_iterator(const std::vector<adj_list_t>& adj_lists,
                             const nbr_t& nbr, size_t list_index)
         : adj_lists_(adj_lists), curr_nbr_(nbr), curr_list_index_(list_index) {}
@@ -343,13 +387,29 @@ class UnionAdjList {
 
     pointer_type operator->() noexcept { return curr_nbr_; }
 
-    const_iterator& operator++() {
-      if (++curr_nbr_ == adj_lists_.get()[curr_list_index_].end()) {
-        ++curr_list_index_;
-        if (curr_list_index_ < adj_lists_.get().size()) {
-          curr_nbr_ = adj_lists_.get()[curr_list_index_].begin();
+    // The only the interator's `operator++()` is exposed to the external
+    // programs so we only need to check the validity here, and nothing
+    // to do with the `operator++()` of NbrDefault.
+    inline void move_to_next_valid_nbr() {
+      // move to the next valid nbr
+      while (curr_list_index_ < adj_lists_.get().size()) {
+        if (curr_nbr_ == adj_lists_.get()[curr_list_index_].end()) {
+          ++curr_list_index_;
+          if (curr_list_index_ < adj_lists_.get().size()) {
+            curr_nbr_ = adj_lists_.get()[curr_list_index_].begin();
+          }
+        } else {
+          if (fragment_->is_valid_vertex(curr_nbr_.raw_neighbor())) {
+            break;
+          }
+          ++curr_nbr_;
         }
       }
+    }
+
+    const_iterator& operator++() {
+      ++curr_nbr_;
+      move_to_next_valid_nbr();
       return *this;
     }
 
@@ -369,6 +429,7 @@ class UnionAdjList {
 
    private:
     std::reference_wrapper<const std::vector<adj_list_t>> adj_lists_;
+    const FRAGMENT_T* fragment_;
     nbr_t curr_nbr_;
     size_t curr_list_index_;
   };
@@ -376,20 +437,22 @@ class UnionAdjList {
   iterator begin() {
     if (size_ == 0) {
       nbr_unit_t nbr;
-      return iterator(adj_lists_, nbr, default_prop_id_, 0, union_id_parser_);
+      return iterator(adj_lists_, nbr, default_prop_id_, 0, union_id_parser_,
+                      fragment_);
     } else {
       return iterator(adj_lists_, adj_lists_.front().begin(), default_prop_id_,
-                      0, union_id_parser_);
+                      0, union_id_parser_, fragment_);
     }
   }
 
   iterator end() {
     if (size_ == 0) {
       nbr_unit_t nbr;
-      return iterator(adj_lists_, nbr, default_prop_id_, 0, union_id_parser_);
+      return iterator(adj_lists_, nbr, default_prop_id_, 0, union_id_parser_,
+                      fragment_);
     } else {
       return iterator(adj_lists_, adj_lists_.back().end(), default_prop_id_,
-                      adj_lists_.size(), union_id_parser_);
+                      adj_lists_.size(), union_id_parser_, fragment_);
     }
   }
 
@@ -397,10 +460,10 @@ class UnionAdjList {
     if (size_ == 0) {
       nbr_unit_t nbr;
       return const_iterator(adj_lists_, nbr, default_prop_id_, 0,
-                            union_id_parser_);
+                            union_id_parser_, fragment_);
     } else {
       return const_iterator(adj_lists_, adj_lists_.front().begin(),
-                            default_prop_id_, 0, union_id_parser_);
+                            default_prop_id_, 0, union_id_parser_, fragment_);
     }
   }
 
@@ -408,11 +471,11 @@ class UnionAdjList {
     if (size_ == 0) {
       nbr_unit_t nbr;
       return const_iterator(adj_lists_, nbr, default_prop_id_, 0,
-                            union_id_parser_);
+                            union_id_parser_, fragment_);
     } else {
       return const_iterator(adj_lists_, adj_lists_.back().end(),
                             default_prop_id_, adj_lists_.size(),
-                            union_id_parser_);
+                            union_id_parser_, fragment_);
     }
   }
 
@@ -426,6 +489,7 @@ class UnionAdjList {
   std::vector<adj_list_t> adj_lists_;
   prop_id_t default_prop_id_;
   UnionIdParser<VID_T> union_id_parser_;
+  const FRAGMENT_T* fragment_;
   size_t size_;
 };
 
@@ -479,6 +543,8 @@ class ArrowFlattenedFragment {
  public:
   // TODO(tao): ArrowFragment with compact edges cannot be flattened.
   using fragment_t = vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T, false>;
+  using flatten_fragment_t =
+      ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>;
   using oid_t = OID_T;
   using vid_t = VID_T;
   using internal_oid_t = typename vineyard::InternalType<oid_t>::type;
@@ -504,7 +570,8 @@ class ArrowFlattenedFragment {
   using outer_vertex_array_t = grape::VertexArray<outer_vertices_t, DATA_T>;
 
   using adj_list_t =
-      arrow_flattened_fragment_impl::UnionAdjList<vid_t, eid_t, edata_t>;
+      arrow_flattened_fragment_impl::UnionAdjList<vid_t, eid_t, edata_t,
+                                                  flatten_fragment_t>;
   using dest_list_t = arrow_flattened_fragment_impl::UnionDestList;
 
   // This member is used by grape::check_load_strategy_compatible()
@@ -515,14 +582,16 @@ class ArrowFlattenedFragment {
 
   explicit ArrowFlattenedFragment(fragment_t* frag, prop_id_t v_prop_id,
                                   prop_id_t e_prop_id)
-      : fragment_(frag), v_prop_id_(v_prop_id), e_prop_id_(e_prop_id) {
+      : fragment_(frag),
+        schema_(fragment_->schema()),
+        v_prop_id_(v_prop_id),
+        e_prop_id_(e_prop_id) {
     ivnum_ = ovnum_ = tvnum_ = 0;
-    auto& schema = fragment_->schema();
     label_id_t vertex_label_num =
-        static_cast<label_id_t>(schema.AllVertexEntries().size());
+        static_cast<label_id_t>(schema_.AllVertexEntries().size());
     for (label_id_t v_label = 0; v_label < vertex_label_num; v_label++) {
       vid_t ivnum = 0, ovnum = 0, tvnum = 0;
-      if (schema.IsVertexValid(v_label)) {
+      if (schema_.IsVertexValid(v_label)) {
         ivnum = fragment_->GetInnerVerticesNum(v_label);
         ovnum = fragment_->GetOuterVerticesNum(v_label);
         tvnum = fragment_->GetVerticesNum(v_label);
@@ -536,13 +605,17 @@ class ArrowFlattenedFragment {
     }
     // init union_vertex_range_offset_
     // e.g. vertex_label_num is 2
-    // [0, l0_ivnum, l0_ivnum + l1_ivnum, l0_ivnum + l1_ivnum + l0_ovnum,
-    //  l0_ivnum + l1_ivnum + l0_ovnum + l1_ovnum]
+    // [0,
+    //  l0_ivnum,
+    //  l0_ivnum + l1_ivnum,
+    //  l0_ivnum + l1_ivnum + l0_ovnum,
+    //  l0_ivnum + l1_ivnum + l0_ovnum + l1_ovnum
+    // ]
     union_vertex_range_offset_.resize(2 * vertex_label_num + 1, 0);
     for (label_id_t v_label = 0; v_label < vertex_label_num; v_label++) {
       union_vertex_range_offset_[v_label + 1] =
           union_vertex_range_offset_[v_label];
-      if (schema.IsVertexValid(v_label)) {
+      if (schema_.IsVertexValid(v_label)) {
         union_vertex_range_offset_[v_label + 1] +=
             fragment_->GetInnerVerticesNum(v_label);
       }
@@ -550,7 +623,7 @@ class ArrowFlattenedFragment {
     for (label_id_t v_label = 0; v_label < vertex_label_num; v_label++) {
       union_vertex_range_offset_[v_label + vertex_label_num + 1] =
           union_vertex_range_offset_[v_label + vertex_label_num];
-      if (schema.IsVertexValid(v_label)) {
+      if (schema_.IsVertexValid(v_label)) {
         union_vertex_range_offset_[v_label + vertex_label_num + 1] +=
             fragment_->GetOuterVerticesNum(v_label);
       }
@@ -595,6 +668,13 @@ class ArrowFlattenedFragment {
 
   inline label_id_t vertex_label(const vertex_t& v) const {
     return union_id_parser_.GetLabelId(v.GetValue());
+  }
+
+  // Check if a given vertex is valid in the underlying arrow fragment
+  //
+  // The argument is the vid in the original arrow fragment.
+  inline bool is_valid_vertex(const vertex_t& v) const {
+    return schema_.IsVertexValid(fragment_->vertex_label(v));
   }
 
   inline bool GetVertex(const oid_t& oid, vertex_t& v) const {
@@ -754,7 +834,7 @@ class ArrowFlattenedFragment {
         adj_lists.push_back(adj_list);
       }
     }
-    return adj_list_t(adj_lists, e_prop_id_, union_id_parser_);
+    return adj_list_t(std::move(adj_lists), e_prop_id_, union_id_parser_, this);
   }
 
   inline adj_list_t GetIncomingAdjList(const vertex_t& v) const {
@@ -774,7 +854,7 @@ class ArrowFlattenedFragment {
         adj_lists.push_back(adj_list);
       }
     }
-    return adj_list_t(adj_lists, e_prop_id_, union_id_parser_);
+    return adj_list_t(std::move(adj_lists), e_prop_id_, union_id_parser_, this);
   }
 
   inline int GetLocalOutDegree(const vertex_t& v) const {
@@ -857,6 +937,7 @@ class ArrowFlattenedFragment {
 
  private:
   fragment_t* fragment_;
+  const vineyard::PropertyGraphSchema& schema_;
   prop_id_t v_prop_id_;
   prop_id_t e_prop_id_;
 
