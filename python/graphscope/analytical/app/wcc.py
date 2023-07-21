@@ -55,13 +55,17 @@ def wcc(graph):
         >>> sess.close()
     """
     cmake_extra_options = None
+    # WCCOpt currently not support using gid as component id,
+    # need to be fixed by upstream
+    algo = "wcc_opt"
     if graph.oid_type == "std::string":
         logger.warning(
             "WCC algorithm will output int value as component ID on graphs that has 'string' type as ID"
         )
         cmake_extra_options = "-DWCC_USE_GID=ON"
+        algo = "wcc"
     return AppAssets(
-        algo="wcc", context="vertex_data", cmake_extra_options=cmake_extra_options
+        algo=algo, context="vertex_data", cmake_extra_options=cmake_extra_options
     )(graph)
 
 
