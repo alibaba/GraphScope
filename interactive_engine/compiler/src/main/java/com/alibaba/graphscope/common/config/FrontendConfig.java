@@ -33,4 +33,10 @@ public class FrontendConfig {
             Config.intConfig("query.execution.timeout.ms", 3000000);
 
     public static final Config<String> ENGINE_TYPE = Config.stringConfig("engine.type", "pegasus");
+
+    public static final Config<Integer> FRONTEND_SERVER_ID =
+            Config.intConfig("frontend.server.id", 0);
+
+    public static final Config<Integer> FRONTEND_SERVER_NUM =
+            Config.intConfig("frontend.server.num", 1);
 }
