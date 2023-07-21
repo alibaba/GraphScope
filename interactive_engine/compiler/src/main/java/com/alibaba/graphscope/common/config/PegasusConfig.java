@@ -20,9 +20,6 @@ public class PegasusConfig {
     public static final Config<Integer> PEGASUS_WORKER_NUM =
             Config.intConfig("pegasus.worker.num", 1);
 
-    public static final Config<Integer> PEGASUS_TIMEOUT =
-            Config.intConfig("pegasus.timeout", 240000);
-
     public static final Config<Integer> PEGASUS_BATCH_SIZE =
             Config.intConfig("pegasus.batch.size", 1024);
 

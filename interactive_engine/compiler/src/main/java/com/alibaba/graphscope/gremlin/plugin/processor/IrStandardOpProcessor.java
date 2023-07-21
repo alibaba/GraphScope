@@ -119,7 +119,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
 
         String language = AntlrGremlinScriptEngineFactory.LANGUAGE_NAME;
 
-        long jobId = graphPlanner.getIdGenerator().getAndIncrement();
+        long jobId = graphPlanner.generateInstanceId();
         IrMeta irMeta = metaQueryCallback.beforeExec();
         QueryStatusCallback statusCallback = createQueryStatusCallback(script, jobId);
         GremlinExecutor.LifeCycle lifeCycle =

@@ -103,7 +103,6 @@ public class IrServiceProducer implements ComputeServiceProducer {
         // add pegasus config
         addToConfigMapIfExist(PegasusConfig.PEGASUS_HOSTS.getKey(), configMap);
         addToConfigMapIfExist(PegasusConfig.PEGASUS_WORKER_NUM.getKey(), configMap);
-        addToConfigMapIfExist(PegasusConfig.PEGASUS_TIMEOUT.getKey(), configMap);
         addToConfigMapIfExist(PegasusConfig.PEGASUS_BATCH_SIZE.getKey(), configMap);
         addToConfigMapIfExist(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.getKey(), configMap);
         addToConfigMapIfExist(PegasusConfig.PEGASUS_MEMORY_LIMIT.getKey(), configMap);
@@ -116,6 +115,12 @@ public class IrServiceProducer implements ComputeServiceProducer {
         // add neo4j config
         addToConfigMapIfExist(FrontendConfig.NEO4J_BOLT_SERVER_DISABLED.getKey(), configMap);
         addToConfigMapIfExist(FrontendConfig.NEO4J_BOLT_SERVER_PORT.getKey(), configMap);
+        // add timeout config
+        addToConfigMapIfExist(FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.getKey(), configMap);
+        // add frontend server id
+        addToConfigMapIfExist(FrontendConfig.FRONTEND_SERVER_ID.getKey(), configMap);
+        // add frontend server num
+        addToConfigMapIfExist(FrontendConfig.FRONTEND_SERVER_NUM.getKey(), configMap);
         return new com.alibaba.graphscope.common.config.Configs(configMap);
     }
 
