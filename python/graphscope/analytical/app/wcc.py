@@ -94,10 +94,10 @@ def wcc_opt(graph):
     """
     cmake_extra_options = None
     if graph.oid_type == "std::string":
-        logger.warning(
-            "WCC algorithm will output int value as component ID on graphs that has 'string' type as ID"
+        raise ValueError(
+            "The `wcc_opt()` algorithm cannot work on graphs that has 'string' type as ID, "
+            "use `wcc()` instead"
         )
-        cmake_extra_options = "-DWCC_USE_GID=ON"
     return AppAssets(
         algo="wcc_opt", context="vertex_data", cmake_extra_options=cmake_extra_options
     )(graph)
