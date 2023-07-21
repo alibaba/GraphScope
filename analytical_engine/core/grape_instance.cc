@@ -318,12 +318,14 @@ bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
                   app->Query(worker.get(), query_args, context_key, wrapper));
   std::string context_type;
   std::string context_schema;
-  if (ctx_wrapper != nullptr) {
+  if (ctx_wrapper == nullptr) {
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kIllegalStateError,
+        "Query returns a null context wrapper without useful error message");
+  } else {
     context_type = ctx_wrapper->context_type();
     context_schema = ctx_wrapper->schema();
     BOOST_LEAF_CHECK(object_manager_.PutObject(ctx_wrapper));
-  } else {
-    LOG(ERROR) << "Error occur when querying";
   }
   return toJson({{"context_type", context_type},
                  {"context_key", context_key},

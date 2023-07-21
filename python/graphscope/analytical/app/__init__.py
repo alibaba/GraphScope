@@ -33,6 +33,7 @@ from graphscope.analytical.app.bfs import bfs
 from graphscope.analytical.app.clustering import avg_clustering
 from graphscope.analytical.app.clustering import clustering
 from graphscope.analytical.app.clustering import lcc
+from graphscope.analytical.app.custom import custom_analytical_algorithm
 
 # fmt: off
 from graphscope.analytical.app.degree_assortativity_coefficient import \
