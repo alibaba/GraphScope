@@ -117,10 +117,7 @@ public class GraphSchemaMapper {
     }
 
     public static void main(String[] args) throws IOException {
-        String path =
-                "/Users/siyuan/CLionProjects/graphscope/interactive_engine/groot-server/src/test/resources/schema.json";
-        path =
-                "/Users/siyuan/CLionProjects/graphscope/interactive_engine/groot-client/src/main/resources/schema.json";
+        String path = "groot-server/src/test/resources/schema.json";
         String schemaJson = Files.readString(Path.of(path));
         GraphSchema graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
         GraphSchemaMapper mapper = GraphSchemaMapper.parseFromSchema(graphSchema);

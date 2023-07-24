@@ -18,10 +18,6 @@
       <artifactId>interactive-common</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.alibaba.graphscope</groupId>
-      <artifactId>groot-client</artifactId>
-    </dependency>
-    <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-netty</artifactId>
     </dependency>

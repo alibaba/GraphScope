@@ -379,8 +379,8 @@ public class GraphDef implements GraphSchema {
                 && Objects.equals(propertyNameToId, graphDef.propertyNameToId)
                 && Objects.equals(vertexTableIds, graphDef.vertexTableIds)
                 && Objects.equals(edgeTableIds, graphDef.edgeTableIds)
-                && Objects.equals(vertexTypes, graphDef.vertexTypes);
-        //                && Objects.equals(edgeTypes, graphDef.edgeTypes);
+                && Objects.equals(vertexTypes, graphDef.vertexTypes)
+                && Objects.equals(edgeTypes, graphDef.edgeTypes);
     }
 
     public static Builder newBuilder() {
