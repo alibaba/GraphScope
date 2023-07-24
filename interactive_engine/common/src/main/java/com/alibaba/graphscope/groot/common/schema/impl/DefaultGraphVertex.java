@@ -20,8 +20,6 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.alibaba.graphscope.groot.common.schema.wrapper.TypeDef;
 import com.google.common.base.MoreObjects;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -112,7 +110,7 @@ public class DefaultGraphVertex implements GraphVertex {
     @Override
     public GraphProperty getProperty(String propName) {
         for (GraphProperty graphProperty : propertyList) {
-            if (StringUtils.equals(propName, graphProperty.getName())) {
+            if (propName == graphProperty.getName()) {
                 return graphProperty;
             }
         }

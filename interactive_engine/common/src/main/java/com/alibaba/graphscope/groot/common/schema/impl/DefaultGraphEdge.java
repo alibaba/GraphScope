@@ -21,8 +21,6 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphProperty;
 import com.alibaba.graphscope.groot.common.schema.wrapper.TypeDef;
 import com.google.common.base.MoreObjects;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -98,7 +96,7 @@ public class DefaultGraphEdge implements GraphEdge {
     @Override
     public GraphProperty getProperty(String propName) {
         for (GraphProperty property : propertyList) {
-            if (StringUtils.equals(propName, property.getName())) {
+            if (propName == property.getName()) {
                 return property;
             }
         }
