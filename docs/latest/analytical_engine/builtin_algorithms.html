@@ -674,6 +674,7 @@ MathJax = {
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#average-degree-connectivity">Average Degree Connectivity</a></p></li>
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#betweenness-centrality">Betweenness Centrality</a></p></li>
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#breadth-first-search">Breadth-First Search (BFS)</a></p></li>
+<li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#cdlp">CDLP</a></p></li>
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#closeness-centrality">Closeness Centrality</a></p></li>
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#clustering">Clustering</a></p></li>
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#degree-assortativity-coefficient">Degree Assortativity Coefficient</a></p></li>
@@ -685,10 +686,12 @@ MathJax = {
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#k-core">K-Core</a></p></li>
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#k-shell">K-Shell</a></p></li>
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#label-propagation-algorithm">Label Propagation Algorithm (LPA)</a></p></li>
+<li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#lcc">LCC</a></p></li>
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#pagerank">PageRank</a></p></li>
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#sampling-path">Sampling Path</a></p></li>
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#single-source-shortest-paths">Single-Source Shortest Paths (SSSP)</a></p></li>
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#voterank">VoteRank</a></p></li>
+<li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#wcc">WCC</a></p></li>
 </ul>
 <div class="section" id="all-pairs-shortest-path-length">
 <h2>All Pairs Shortest Path Length<a class="headerlink" href="#all-pairs-shortest-path-length" title="Permalink to this heading">#</a></h2>
@@ -761,6 +764,22 @@ MathJax = {
 </dd></dl>
 
 </div>
+<div class="section" id="cdlp">
+<h2>CDLP<a class="headerlink" href="#cdlp" title="Permalink to this heading">#</a></h2>
+<p>Evaluate Community Detection with Label Propagation, Also known as LPA.
+See <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#label-propagation-algorithm">LPA</a></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">cdlp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">#</a></dt>
+<dd><p>Evaluate Community Detection with Label Propagation</p>
+<dl class="myst field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_round</strong> (<em>int</em>) – Maximum rounds, default to 10</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
 <div class="section" id="closeness-centrality">
 <h2>Closeness Centrality<a class="headerlink" href="#closeness-centrality" title="Permalink to this heading">#</a></h2>
 <p>The original closeness centrality of a vertex <em>v</em> is the reciprocal of the average shortest path distance to <em>v</em> over all n-1 reachable nodes. Wasserman and Faust proposed an improved formula for graphs with more than one connected component. The result is “a ratio of the fraction of actors in the group who are reachable, to the average distance” from the reachable actors.</p>
@@ -780,8 +799,8 @@ MathJax = {
 <h2>Clustering<a class="headerlink" href="#clustering" title="Permalink to this heading">#</a></h2>
 <p>The clustering algorithm is to compute the clustering coefficient for each vertex of a graph. The clustering coefficient of a vertex in a graph quantifies how close its neighbors are to being a clique (complete graph).</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the clustering coefficient for each vertex in the graph.</p>
 </dd></dl>
 
@@ -938,12 +957,22 @@ MathJax = {
 </dd></dl>
 
 </div>
+<div class="section" id="lcc">
+<h2>LCC<a class="headerlink" href="#lcc" title="Permalink to this heading">#</a></h2>
+<p>The LCC is aims to compute the local clustering coefficient, follow the specification of LDBC</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">lcc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">#</a></dt>
+<dd><p>Compute the local clustering coefficient for each vertex in the graph.</p>
+</dd></dl>
+
+</div>
 <div class="section" id="pagerank">
 <h2>PageRank<a class="headerlink" href="#pagerank" title="Permalink to this heading">#</a></h2>
 <p>PageRank is a way of measuring the importance of each vertices in a graph. The PageRank algorithm exists in many variants, the PageRank in GAE follows <a class="reference external" href="https://networkx.org/documentation/networkx-1.7/reference/generated/networkx.algorithms.link_analysis.pagerank_alg.pagerank.html">the PageRank implementation of NetworkX</a>.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-name descname"><span class="pre">pagerank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">pagerank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the PageRank value for each vertex in the graph.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -994,14 +1023,24 @@ MathJax = {
 <h2>VoteRank<a class="headerlink" href="#voterank" title="Permalink to this heading">#</a></h2>
 <p>VoteRank is to measure a ranking of the vertices in a graph based on a voting scheme. With VoteRank, all vertices vote for each of its in-neighbors and the vertices with the top highest votes is elected iteratively.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="id2">
-<span class="sig-name descname"><span class="pre">voterank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_of_nodes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">voterank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_of_nodes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id4" title="Permalink to this definition">#</a></dt>
 <dd><p>Select a list of influential vertices in a graph using VoteRank algorithm.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>num_of_nodes</strong> (<em>int</em>) – the number of ranked vertices to extract</p>
 </dd>
 </dl>
+</dd></dl>
+
+</div>
+<div class="section" id="wcc">
+<h2>WCC<a class="headerlink" href="#wcc" title="Permalink to this heading">#</a></h2>
+<p>Compute the weakly connected component</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">wcc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id5" title="Permalink to this definition">#</a></dt>
+<dd><p>Compute the weakly connected component in the graph.</p>
 </dd></dl>
 
 </div>
@@ -1086,12 +1125,16 @@ MathJax = {
 <li><a class="reference internal" href="#bfs"><code class="docutils literal notranslate"><span class="pre">bfs()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#cdlp">CDLP</a><ul>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">cdlp()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#closeness-centrality">Closeness Centrality</a><ul>
 <li><a class="reference internal" href="#closeness_centrality"><code class="docutils literal notranslate"><span class="pre">closeness_centrality()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#clustering">Clustering</a><ul>
-<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">clustering()</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">clustering()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#degree-assortativity-coefficient">Degree Assortativity Coefficient</a><ul>
@@ -1130,8 +1173,12 @@ MathJax = {
 <li><a class="reference internal" href="#lpa"><code class="docutils literal notranslate"><span class="pre">lpa()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#lcc">LCC</a><ul>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">lcc()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#pagerank">PageRank</a><ul>
-<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">pagerank()</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">pagerank()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#sampling-path">Sampling Path</a><ul>
@@ -1143,7 +1190,11 @@ MathJax = {
 </ul>
 </li>
 <li><a class="reference internal" href="#voterank">VoteRank</a><ul>
-<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">voterank()</span></code></a></li>
+<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">voterank()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#wcc">WCC</a><ul>
+<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">wcc()</span></code></a></li>
 </ul>
 </li>
 </ul>

@@ -710,12 +710,12 @@ MathJax = {
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">GraphDAGNode</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">edata_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">NULLVALUE</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;The edge data is empty, and the edge data type should be integers or &quot;</span>
-                <span class="s2">&quot;floating point numbers to run SSSP. Suggest to use bfs() algorithm.&quot;</span>
+                <span class="s2">&quot;floating point numbers to run SSSP. Use the `bfs()` algorithm instead.&quot;</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">edata_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">STRING</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;The edge data type is string, and the edge data type should be &quot;</span>
                 <span class="s2">&quot;integers or floating point numbers to run SSSP.&quot;</span>
             <span class="p">)</span>
