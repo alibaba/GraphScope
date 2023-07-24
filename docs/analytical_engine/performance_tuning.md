@@ -1,6 +1,6 @@
 # Performance Tuning
 
-Memory footprint and performance on large-scale graph data is the key
+Memory footprint and performance on large-scale graph data are the keys
 to the success of graph analysis in real-world scenarios. In this section,
 We'll go through the internal design of the property graph data structure
 in GraphScope, analyze the impact factor of memory footprint and performance,
