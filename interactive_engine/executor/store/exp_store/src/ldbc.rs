@@ -873,9 +873,10 @@ mod test {
         let country_id: LabelId = 8;
         let org_in_place_id: LabelId = 11;
 
-        let ldbc_parser: LDBCParser = LDBCParserJsonSer::from_json_file("data/ldbc_metadata_hierarchy.json")
-            .unwrap()
-            .into();
+        let ldbc_parser: LDBCParser =
+            LDBCParserJsonSer::from_json_file("data/ldbc_metadata_hierarchy.json")
+                .unwrap()
+                .into();
 
         // Test parsing an organisation record from LDBC
         let parser = ldbc_parser
@@ -1004,7 +1005,12 @@ mod test {
         assert!(properties.is_ok());
         assert_eq!(
             properties.unwrap(),
-            Row::from(vec![object!(0), object!("Company"), object!("Kam_Air"), object!("http://dbpedia.org/resource/Kam_Air")])
+            Row::from(vec![
+                object!(0),
+                object!("Company"),
+                object!("Kam_Air"),
+                object!("http://dbpedia.org/resource/Kam_Air")
+            ])
         );
 
         // Test parsing a place record from LDBC
@@ -1030,7 +1036,12 @@ mod test {
         // Not label field will be skipped in the properties
         assert_eq!(
             properties.unwrap(),
-            Row::from(vec![object!(0), object!("India"), object!("http://dbpedia.org/resource/India"), object!("Country")])
+            Row::from(vec![
+                object!(0),
+                object!("India"),
+                object!("http://dbpedia.org/resource/India"),
+                object!("Country")
+            ])
         );
 
         // Test edge parser
