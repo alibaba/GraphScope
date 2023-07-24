@@ -33,6 +33,7 @@ from graphscope.analytical.app.bfs import bfs
 from graphscope.analytical.app.clustering import avg_clustering
 from graphscope.analytical.app.clustering import clustering
 from graphscope.analytical.app.clustering import lcc
+from graphscope.analytical.app.custom import custom_analytical_algorithm
 
 # fmt: off
 from graphscope.analytical.app.degree_assortativity_coefficient import \
@@ -60,4 +61,5 @@ from graphscope.analytical.app.triangles import triangles
 from graphscope.analytical.app.voterank import voterank
 from graphscope.analytical.app.wcc import wcc
 from graphscope.analytical.app.wcc import wcc_auto
+from graphscope.analytical.app.wcc import wcc_opt
 from graphscope.analytical.app.wcc import wcc_projected

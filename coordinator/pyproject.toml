@@ -1,0 +1,7 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+exclude = '.*\/(forward|node_modules|\.eggs|build|_pb2\.py)\/.*'

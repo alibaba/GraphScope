@@ -54,6 +54,13 @@ app:
     compatible_graph:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
+  - algo: wcc_opt
+    type: cpp_pie
+    class_name: grape::WCCOpt
+    src: wcc/wcc_opt.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
   - algo: wcc_auto
     type: cpp_pie
     class_name: grape::WCCAuto

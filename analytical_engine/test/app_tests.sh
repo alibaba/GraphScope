@@ -93,7 +93,7 @@ function get_test_data() {
 ########################################################
 function start_vineyard() {
   pushd "${ENGINE_HOME}/build"
-  pkill vineyardd || true
+  pkill vineyardd 2>/dev/null || true
   echo "[INFO] vineyardd will using the socket_file on ${socket_file}"
 
   timestamp=$(date +%Y-%m-%d_%H-%M-%S)
