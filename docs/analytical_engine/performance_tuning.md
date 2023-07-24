@@ -55,7 +55,8 @@ its property graphs. Basically, the `ArrowFragment` has the following members:
         The size of the `indptr` array is `num_edges`.
 
       - `ie_offsets_lists_-<vertex_label>-<edge_label>`: the `indices` array, each
-        element in the `indices` array is an `offset`, and the slice `ie_lists[ie_offsets[i]:ie_offsets[i+1]]` is the edges for vertex `i`.
+        element in the `indices` array is an `offset`, and the slice
+        `ie_lists[ie_offsets[i]:ie_offsets[i+1]]` is the edges for vertex `i`.
 
         By default, the type of `offset` is `size_t`.
 
@@ -75,7 +76,8 @@ its property graphs. Basically, the `ArrowFragment` has the following members:
         The size of the `indptr` array is `num_edges`.
 
       - `oe_offsets_lists_-<vertex_label>-<edge_label>`: the `indices` array, each
-        element in the `indices` array is an `offset`, and the slice `oe_lists[oe_offsets[i]:oe_offsets[i+1]]` is the edges for vertex `i`.
+        element in the `indices` array is an `offset`, and the slice
+        `oe_lists[oe_offsets[i]:oe_offsets[i+1]]` is the edges for vertex `i`.
 
         By default, the type of `offset` is `size_t`.
 
