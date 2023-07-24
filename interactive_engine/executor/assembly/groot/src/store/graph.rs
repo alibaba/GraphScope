@@ -12,11 +12,11 @@ use groot_store::db::api::{
 };
 use groot_store::db::common::bytes::util::parse_pb;
 use groot_store::db::graph::store::GraphStore;
-use groot_store::db::proto::model::{CommitDataLoadPb, PrepareDataLoadPb};
 use groot_store::db::proto::model::{
-    AddEdgeKindPb, ConfigPb, CreateVertexTypePb, DataOperationPb, DdlOperationPb, EdgeIdPb,
-    EdgeLocationPb, OpTypePb, OperationBatchPb, OperationPb, VertexIdPb,
+    AddEdgeKindPb, ConfigPb, CreateVertexTypePb, DataOperationPb, DdlOperationPb, EdgeIdPb, EdgeLocationPb,
+    OpTypePb, OperationBatchPb, OperationPb, VertexIdPb,
 };
+use groot_store::db::proto::model::{CommitDataLoadPb, PrepareDataLoadPb};
 use groot_store::db::proto::schema_common::{EdgeKindPb, LabelIdPb, TypeDefPb};
 use groot_store::db::wrapper::wrapper_partition_graph::WrapperPartitionGraph;
 

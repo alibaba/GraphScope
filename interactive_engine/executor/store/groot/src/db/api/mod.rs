@@ -4,7 +4,7 @@ pub use self::config::*;
 pub use self::error::*;
 pub use self::property::*;
 pub use self::schema::*;
-use crate::db::proto::model::{EdgeIdPb, DataLoadTargetPb};
+use crate::db::proto::model::{DataLoadTargetPb, EdgeIdPb};
 use crate::db::proto::schema_common::EdgeKindPb;
 
 #[macro_use]
@@ -93,7 +93,8 @@ impl EdgeKind {
 
     pub fn to_proto(&self) -> EdgeKindPb {
         let mut pb = EdgeKindPb::new();
-        pb.mut_edge_label_id().set_id(self.edge_label_id);
+        pb.mut_edge_label_id()
+            .set_id(self.edge_label_id);
         pb.mut_src_vertex_label_id()
             .set_id(self.src_vertex_label_id);
         pb.mut_dst_vertex_label_id()

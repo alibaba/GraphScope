@@ -9,9 +9,7 @@ use super::{GraphResult, PropertyId};
 use crate::db::api::property::Value;
 use crate::db::api::{EdgeKind, LabelId};
 use crate::db::common::bytes::util::parse_pb;
-use crate::db::proto::model::{
-    EdgeTableIdEntry, GraphDefPb, VertexTableIdEntry,
-};
+use crate::db::proto::model::{EdgeTableIdEntry, GraphDefPb, VertexTableIdEntry};
 use crate::db::proto::schema_common::{PropertyDefPb, TypeDefPb, TypeEnumPb};
 
 #[derive(Default, Clone)]
