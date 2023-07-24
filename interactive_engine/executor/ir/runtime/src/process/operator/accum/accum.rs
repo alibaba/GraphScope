@@ -193,7 +193,7 @@ impl AccumFactoryGen for pb::GroupBy {
                 Aggregate::First => {
                     //not implemented
                     Err(FnGenError::unsupported_error("aggregate `First` is not implemented"))?
-                },
+                }
                 Aggregate::Count => EntryAccumulator::ToCount(Count { value: 0, _ph: Default::default() }),
                 Aggregate::ToList => EntryAccumulator::ToList(ToList { inner: vec![] }),
                 Aggregate::Min => EntryAccumulator::ToMin(Minimum { min: None }),
