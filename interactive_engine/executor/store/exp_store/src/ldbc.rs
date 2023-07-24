@@ -866,14 +866,14 @@ mod test {
     }
 
     #[test]
-    fn test_ldbc_parse() {
+    fn test_ldbc_hierarchy_parse() {
         let org_id: LabelId = 5;
         let company_id: LabelId = 11;
         let place_id: LabelId = 0;
         let country_id: LabelId = 8;
         let org_in_place_id: LabelId = 11;
 
-        let ldbc_parser: LDBCParser = LDBCParserJsonSer::from_json_file("data/ldbc_metadata.json")
+        let ldbc_parser: LDBCParser = LDBCParserJsonSer::from_json_file("data/ldbc_metadata_hierarchy.json")
             .unwrap()
             .into();
 
@@ -969,11 +969,112 @@ mod test {
     }
 
     #[test]
+    fn test_ldbc_parse() {
+        let org_id: LabelId = 5;
+        let place_id: LabelId = 0;
+        let org_in_place_id: LabelId = 11;
+
+        let ldbc_parser: LDBCParser = LDBCParserJsonSer::from_json_file("data/ldbc_metadata.json")
+            .unwrap()
+            .into();
+
+        // Test parsing an organisation record from LDBC
+        let parser = ldbc_parser
+            .get_vertex_parser("ORGANISATION")
+            .expect("Get vertex parser error");
+        let record = "0|Company|Kam_Air|http://dbpedia.org/resource/Kam_Air";
+        let mut record_iter = record.split('|');
+        let vertex_meta = parser.parse_vertex_meta(&mut record_iter);
+        assert!(vertex_meta.is_ok());
+        assert_eq!(
+            vertex_meta.unwrap(),
+            VertexMeta {
+                global_id: (org_id as usize) << LABEL_SHIFT_BITS | 0,
+                label: [org_id, INVALID_LABEL_ID],
+            }
+        );
+
+        let record_iter = record.split('|');
+        let properties = parse_properties(
+            record_iter,
+            ldbc_parser
+                .meta_data
+                .get_vertex_header("ORGANISATION"),
+        );
+        assert!(properties.is_ok());
+        assert_eq!(
+            properties.unwrap(),
+            Row::from(vec![object!(0), object!("Company"), object!("Kam_Air"), object!("http://dbpedia.org/resource/Kam_Air")])
+        );
+
+        // Test parsing a place record from LDBC
+        let parser = ldbc_parser
+            .get_vertex_parser("PLACE")
+            .expect("Get vertex parser error");
+
+        let record = "0|India|http://dbpedia.org/resource/India|Country";
+        let record_iter = record.split('|');
+        let vertex_meta = parser.parse_vertex_meta(record_iter);
+        assert!(vertex_meta.is_ok());
+        assert_eq!(
+            vertex_meta.unwrap(),
+            VertexMeta {
+                global_id: (place_id as usize) << LABEL_SHIFT_BITS | 0,
+                label: [place_id, INVALID_LABEL_ID],
+            }
+        );
+
+        let record_iter = record.split('|');
+        let properties = parse_properties(record_iter, ldbc_parser.meta_data.get_vertex_header("PLACE"));
+        assert!(properties.is_ok());
+        // Not label field will be skipped in the properties
+        assert_eq!(
+            properties.unwrap(),
+            Row::from(vec![object!(0), object!("India"), object!("http://dbpedia.org/resource/India"), object!("Country")])
+        );
+
+        // Test edge parser
+        let parser = ldbc_parser
+            .get_edge_parser(&EdgeTypeTuple {
+                etype: "ISLOCATEDIN".to_string(),
+                src_vertex_type: "ORGANISATION".to_string(),
+                dst_vertex_type: "PLACE".to_string(),
+            })
+            .expect("Get edge parser error");
+
+        let record = "0|59";
+        let record_iter = record.split('|');
+        let edge_meta = parser.parse_edge_meta(record_iter);
+        assert!(edge_meta.is_ok());
+        assert_eq!(
+            edge_meta.unwrap(),
+            EdgeMeta {
+                src_global_id: (org_id as usize) << LABEL_SHIFT_BITS | 0,
+                src_label_id: org_id,
+                dst_global_id: (place_id as usize) << LABEL_SHIFT_BITS | 59,
+                dst_label_id: place_id,
+                label_id: org_in_place_id,
+            }
+        );
+
+        let record_iter = record.split('|');
+        let properties = parse_properties(
+            record_iter,
+            ldbc_parser
+                .meta_data
+                .get_edge_header("ISLOCATEDIN"),
+        );
+
+        assert!(properties.is_ok());
+        assert!(properties.unwrap().is_empty());
+    }
+
+    #[test]
     fn test_load_graph() {
         // with hierarchical vertex labels
         let data_dir = "data/small_data";
         let root_dir = "data/small_data";
-        let schema_file = "data/ldbc_metadata.json";
+        let schema_file = "data/ldbc_metadata_hierarchy.json";
         let mut loader = GraphLoader::<DefaultId, InternalId>::new(data_dir, root_dir, schema_file, 0, 1);
         // load whole graph
         loader.load().expect("Load ldbc data error!");
