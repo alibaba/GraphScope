@@ -17,10 +17,10 @@
 #pragma once
 
 #include "lgraph/common/schema.h"
-#include "lgraph/proto/sdk/model.pb.h"
+#include "lgraph/proto/groot/sdk/model.pb.h"
 
 namespace LGRAPH_NAMESPACE {
-
+using gs::rpc::groot::BackupInfoPb;
 class BackupInfo {
 public:
   BackupInfo(BackupId backup_id, SnapshotId snapshot_id, Schema &&graph_schema,

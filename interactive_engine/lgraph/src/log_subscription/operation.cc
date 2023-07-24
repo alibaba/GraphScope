@@ -17,6 +17,8 @@
 #include "lgraph/log_subscription/operation.h"
 #include "lgraph/util/endian.h"
 
+using namespace gs::rpc::graph;
+
 namespace LGRAPH_NAMESPACE {
 namespace log_subscription {
 
@@ -50,7 +52,7 @@ std::unordered_map<PropertyId, PropertyInfo> ExtractPropMap(DataOperationPb* dat
   for (auto &prop_pb : *data_op_proto->mutable_props()) {
     prop_map.emplace(
         static_cast<PropertyId>(prop_pb.first),
-        PropertyInfo{static_cast<DataType>(prop_pb.second.datatype()), std::move(*prop_pb.second.release_val())});
+        PropertyInfo{static_cast<DataType>(prop_pb.second.data_type()), std::move(*prop_pb.second.release_val())});
   }
   return prop_map;
 }
@@ -92,9 +94,9 @@ EdgeInsertInfo Operation::GetInfoAsEdgeInsertOp() const {
     static_cast<EdgeInnerId>(edge_id_proto.id()),
     static_cast<VertexId>(edge_id_proto.srcid().id()),
     static_cast<VertexId>(edge_id_proto.dstid().id()),
-    static_cast<LabelId>(edge_kind_proto.edgelabelid().id()),
-    static_cast<LabelId>(edge_kind_proto.srcvertexlabelid().id()),
-    static_cast<LabelId>(edge_kind_proto.dstvertexlabelid().id()),
+    static_cast<LabelId>(edge_kind_proto.edge_label_id().id()),
+    static_cast<LabelId>(edge_kind_proto.src_vertex_label_id().id()),
+    static_cast<LabelId>(edge_kind_proto.dst_vertex_label_id().id()),
     forward, std::move(prop_map)
   };
 }

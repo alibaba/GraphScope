@@ -19,9 +19,13 @@
 #include <fstream>
 #include "lgraph/common/check.h"
 #include "lgraph/common/types.h"
-#include "lgraph/proto/sdk/model.pb.h"
+#include "lgraph/proto/groot/sdk/model.pb.h"
+#include "lgraph/proto/schema_common.pb.h"
 
 namespace LGRAPH_NAMESPACE {
+using gs::rpc::graph::PropertyDefPb;
+using gs::rpc::graph::TypeDefPb;
+using gs::rpc::groot::GraphDefPb;
 
 class PropertyDef {
 public:
@@ -157,8 +161,8 @@ inline TypeDef TypeDef::FromProto(const TypeDefPb &proto) {
   for (auto &prop_def : pb_prop_defs) {
     property_ids.push_back(static_cast<PropertyId>(prop_def.id()));
   }
-  return {static_cast<LabelId>(proto.labelid().id()), proto.label(),
-          static_cast<EntityType>(proto.typeenum()), std::move(property_ids)};
+  return {static_cast<LabelId>(proto.label_id().id()), proto.label(),
+          static_cast<EntityType>(proto.type_enum()), std::move(property_ids)};
 }
 
 inline Schema::Schema(std::unordered_map<LabelId, TypeDef> &&label_to_typedefs,
@@ -194,15 +198,15 @@ inline Schema Schema::FromProto(const GraphDefPb &proto) {
   label_to_typedefs.reserve(pb_typedefs.size());
   for (auto &def : pb_typedefs) {
     AddPropertyDefs(def, &property_defs);
-    label_to_typedefs.emplace(static_cast<LabelId>(def.labelid().id()), std::move(TypeDef::FromProto(def)));
+    label_to_typedefs.emplace(static_cast<LabelId>(def.label_id().id()), std::move(TypeDef::FromProto(def)));
   }
   Check(proto.propertynametoid_size() == property_defs.size(), "schema error in property defs!");
   auto &pb_edge_kinds = proto.edgekinds();
   edge_relations.reserve(pb_edge_kinds.size());
   for (auto &kind : pb_edge_kinds) {
-    edge_relations.emplace_back(static_cast<LabelId>(kind.edgelabelid().id()),
-                                static_cast<LabelId>(kind.srcvertexlabelid().id()),
-                                static_cast<LabelId>(kind.dstvertexlabelid().id()));
+    edge_relations.emplace_back(static_cast<LabelId>(kind.edge_label_id().id()),
+                                static_cast<LabelId>(kind.src_vertex_label_id().id()),
+                                static_cast<LabelId>(kind.dst_vertex_label_id().id()));
   }
   return {std::move(label_to_typedefs), std::move(edge_relations), std::move(property_defs)};
 }
@@ -212,8 +216,8 @@ inline void Schema::AddPropertyDefs(const TypeDefPb &proto, std::unordered_map<P
     auto prop_id = static_cast<PropertyId>(prop_def.id());
     if (property_defs->count(prop_id) == 0) {
       property_defs->emplace(prop_id, std::move(
-          PropertyDef{prop_id, prop_def.name(), static_cast<DataType>(prop_def.datatype()),
-                      prop_def.defaultvalue().val(), prop_def.comment()}));
+          PropertyDef{prop_id, prop_def.name(), static_cast<DataType>(prop_def.data_type()),
+                      prop_def.default_value().val(), prop_def.comment()}));
     }
   }
 }

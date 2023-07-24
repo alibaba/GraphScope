@@ -1,5 +1,5 @@
 #[rustfmt::skip]
-pub mod common;
+pub mod schema_common;
 #[rustfmt::skip]
 pub mod model;
 #[rustfmt::skip]

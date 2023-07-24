@@ -155,3 +155,24 @@ message BackupInfoPb {
   repeated int64 walOffsets = 4;
   map<int32, int32> partitionToBackupId = 5;
 }
+
+message DataLoadTargetPb {
+  string label = 1;
+  string srcLabel = 2;
+  string dstLabel = 3;
+  int32 labelId = 4;
+  int32 srcLabelId = 5;
+  int32 dstLabelId = 6;
+}
+
+message PrepareDataLoadPb {
+  DataLoadTargetPb target = 1;
+  int64 tableIdx = 2;
+}
+
+message CommitDataLoadPb {
+  DataLoadTargetPb target = 1;
+  int64 tableIdx = 2;
+  string path = 3;
+  int32 partitionId = 4;
+}
