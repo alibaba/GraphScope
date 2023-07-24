@@ -6,7 +6,7 @@ Graph Analytical Engine (GAE) of GraphScope is used to handle various graph anal
 ```{toctree} arguments
 ---
 caption: Design of Analytical Engine
-maxdepth: 1 
+maxdepth: 1
 ---
 overview_and_architecture
 key_concepts
