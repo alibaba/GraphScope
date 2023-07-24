@@ -1,0 +1,437 @@
+{
+  "vertex_table_to_type": {
+    "City.csv": "city",
+    "Comment.csv": "comment",
+    "Company.csv": "company",
+    "Continent.csv": "continent",
+    "Country.csv": "country",
+    "Forum.csv": "forum",
+    "Person.csv": "person",
+    "Post.csv": "post",
+    "TagClass.csv": "tagClass",
+    "Tag.csv": "tag",
+    "University.csv": "university"
+  },
+  "edge_table_to_type": {
+    "City_isPartOf_Country.csv": {
+      "etype": "isPartOf",
+      "src_vertex_type": "city",
+      "dst_vertex_type": "country"
+    },
+    "Comment_hasCreator_Person.csv": {
+      "etype": "hasCreator",
+      "src_vertex_type": "comment",
+      "dst_vertex_type": "person"
+    },
+    "Comment_hasTag_Tag.csv": {
+      "etype": "hasTag",
+      "src_vertex_type": "comment",
+      "dst_vertex_type": "tag"
+    },
+    "Comment_isLocatedIn_Country.csv": {
+      "etype": "isLocatedIn",
+      "src_vertex_type": "comment",
+      "dst_vertex_type": "country"
+    },
+    "Comment_replyOf_Comment.csv": {
+      "etype": "replyOf",
+      "src_vertex_type": "comment",
+      "dst_vertex_type": "comment"
+    },
+    "Comment_replyOf_Post.csv":{
+      "etype": "replyOf",
+      "src_vertex_type": "comment",
+      "dst_vertex_type": "post"
+    },
+    "Company_isLocatedIn_Country.csv": {
+      "etype": "isLocatedIn",
+      "src_vertex_type": "company",
+      "dst_vertex_type": "country"
+    },
+    "Country_isPartOf_Continent.csv": {
+      "etype": "isPartOf",
+      "src_vertex_type": "country",
+      "dst_vertex_type": "continent"
+    },
+    "Forum_containerOf_Post.csv": {
+      "etype": "containerOf",
+      "src_vertex_type": "forum",
+      "dst_vertex_type": "post"
+    },
+    "Forum_hasMember_Person.csv": {
+      "etype": "hasMember",
+      "src_vertex_type": "forum",
+      "dst_vertex_type": "person"
+    },
+    "Forum_hasModerator_Person.csv": {
+      "etype": "hasModerator",
+      "src_vertex_type": "forum",
+      "dst_vertex_type": "person"
+    },
+    "Forum_hasTag_Tag.csv": {
+      "etype": "hasTag",
+      "src_vertex_type":"forum",
+      "dst_vertex_type": "tag"
+    },
+    "Person_hasInterest_Tag.csv": {
+      "etype": "hasInterest",
+      "src_vertex_type":"person",
+      "dst_vertex_type": "tag"
+    },
+    "Person_isLocatedIn_City.csv": {
+      "etype": "isLocatedIn",
+      "src_vertex_type": "person",
+      "dst_vertex_type": "city"
+    },
+    "Person_knows_Person.csv": {
+      "etype": "knows",
+      "src_vertex_type": "person",
+      "dst_vertex_type": "person"
+    },
+    "Person_likes_Comment.csv": {
+      "etype": "likes",
+      "src_vertex_type": "person",
+      "dst_vertex_type": "comment"
+    },
+    "Person_likes_Post.csv": {
+      "etype": "likes",
+      "src_vertex_type": "person",
+      "dst_vertex_type": "post"
+    },
+    "Person_studyAt_University.csv": {
+      "etype": "studyAt",
+      "src_vertex_type": "person",
+      "dst_vertex_type": "university"
+    },
+    "Person_workAt_Company.csv": {
+      "etype": "workAt",
+      "src_vertex_type": "person",
+      "dst_vertex_type": "company"
+    },
+    "Post_hasCreator_Person.csv": {
+      "etype": "hasCreator",
+      "src_vertex_type": "post",
+      "dst_vertex_type": "person"
+    },
+    "Post_hasTag_Tag.csv": {
+      "etype": "hasTag",
+      "src_vertex_type": "post",
+      "dst_vertex_type": "tag"
+    },
+    "Post_isLocatedIn_Country.csv": {
+      "etype": "isLocatedIn",
+      "src_vertex_type": "post",
+      "dst_vertex_type": "country"
+    },
+    "TagClass_isSubclassOf_TagClass.csv": {
+      "etype": "isSubclassOf",
+      "src_vertex_type": "tagClass",
+      "dst_vertex_type": "tagClass"
+		},
+    "Tag_hasType_TagClass.csv": {
+      "etype": "hasType",
+      "src_vertex_type": "tag",
+      "dst_vertex_type": "tagClass"
+    },
+    "University_isLocatedIn_City.csv": {
+      "etype": "isLocatedIn",
+      "src_vertex_type": "university",
+      "dst_vertex_type": "city" 
+   	}
+  },
+  "vertex_type_to_id": {
+    "university": 12,
+    "continent": 10,
+    "post": 3,
+    "forum": 4,
+    "tag": 7,
+    "comment": 2,
+    "person": 1,
+    "place": 0,
+    "organisation": 5,
+    "tagClass": 6,
+    "city": 9,
+    "country": 8,
+    "company": 11
+  },
+  "edge_type_to_id": {
+    "hasInterest": 10,
+    "hasMember": 6,
+    "containerOf": 5,
+    "isSubclassOf": 22,
+    "studyAt": 15,
+    "likes": 13,
+    "isPartOf": 17,
+    "hasType": 21,
+    "replyOf": 3,
+    "isLocatedIn": 11,
+    "workAt": 16,
+    "hasModerator": 7,
+    "hasTag": 1,
+    "knows": 12,
+    "hasCreator": 0
+  },
+  "vertex_type_hierarchy": {},
+  "column_name_to_id": {},
+  "vertex_columns": {
+    "comment": [
+      [
+        "id",
+        "ID",
+        true
+      ]
+    ],
+    "forum": [
+      [
+        "id",
+        "ID",
+        true
+      ]
+    ],
+    "person": [
+      [
+        "id",
+        "ID",
+        true
+      ]
+    ],
+    "continent": [
+      [
+        "id",
+        "ID",
+        true
+      ]
+    ],
+    "country": [
+      [
+        "id",
+        "ID",
+        true
+      ]
+    ],
+    "city": [
+      [
+        "id",
+        "ID",
+        true
+      ]
+    ],
+    "post": [
+      [
+        "id",
+        "ID",
+        true
+      ]
+    ],
+    "tag": [
+      [
+        "id",
+        "ID",
+        true
+      ]
+    ],
+    "tagClass": [
+      [
+        "id",
+        "ID",
+        true
+      ]
+    ],
+    "company": [
+      [
+        "id",
+        "ID",
+        true
+      ]
+    ],
+    "university": [
+      [
+        "id",
+        "ID",
+        true
+      ]
+    ]
+  },
+  "edge_columns": {
+    "containerOf": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "hasCreator": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "hasInterest": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "hasMember": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "hasModerator": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "hasTag": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "hasType": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "isLocatedIn": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "isPartOf": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "isSubclassOf": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "knows": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "likes": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "replyOf": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "studyAt": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "workAt": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ]
+  }
+}
