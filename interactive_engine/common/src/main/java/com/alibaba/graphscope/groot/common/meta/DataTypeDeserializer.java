@@ -47,7 +47,7 @@ public class DataTypeDeserializer extends StdDeserializer<DataType> {
                 ret.setExpression(data.substring(2, data.length() - 1));
                 return ret;
             } else if (data.startsWith("M<")) {
-                throw new GrootException("Not implement for Map");
+                
             } else {
                 DataType ret = new DataType(InternalDataType.valueOf(data.toUpperCase()));
                 return ret;
