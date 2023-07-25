@@ -1,4 +1,4 @@
-/**
+ /**
  * Copyright 2020 Alibaba Group Holding Limited.
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
@@ -127,6 +127,11 @@ public class PropertyDef implements GraphProperty {
                 && dataType == that.dataType
                 && Objects.equals(defaultValue, that.defaultValue)
                 && Objects.equals(comment, that.comment);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, innerId, name, dataType, defaultValue, pk, comment);
     }
 
     public static Builder newBuilder() {

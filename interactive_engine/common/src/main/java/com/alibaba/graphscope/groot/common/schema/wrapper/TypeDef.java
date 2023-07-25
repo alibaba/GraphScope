@@ -188,6 +188,20 @@ public class TypeDef implements GraphElement {
                 && Objects.equals(properties, typeDef.properties);
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                versionId,
+                label,
+                labelId,
+                comment,
+                properties,
+                pkIdxs,
+                nameToIdx,
+                idToIdx,
+                typeEnum);
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }

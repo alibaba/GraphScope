@@ -383,6 +383,23 @@ public class GraphDef implements GraphSchema {
                 && Objects.equals(edgeTypes, graphDef.edgeTypes);
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                version,
+                labelToId,
+                idToType,
+                idToKinds,
+                propertyNameToId,
+                labelIdx,
+                propertyIdx,
+                vertexTableIds,
+                edgeTableIds,
+                tableIdx,
+                vertexTypes,
+                edgeTypes);
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }
