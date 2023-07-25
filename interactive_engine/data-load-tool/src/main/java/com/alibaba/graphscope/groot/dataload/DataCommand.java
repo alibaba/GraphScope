@@ -1,10 +1,10 @@
 package com.alibaba.graphscope.groot.dataload;
 
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
+import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
+import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.dataload.databuild.ColumnMappingInfo;
 import com.alibaba.graphscope.groot.dataload.util.OSSFS;
-import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

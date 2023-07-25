@@ -14,8 +14,6 @@
 //! limitations under the License.
 
 use core::any::TypeId;
-use pegasus_common::downcast::*;
-use pegasus_common::impl_as_any;
 use std::any::Any;
 use std::borrow::Cow;
 use std::cmp::Ordering;
@@ -26,6 +24,8 @@ use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 
 use itertools::Itertools;
+use pegasus_common::downcast::*;
+use pegasus_common::impl_as_any;
 
 use crate::{try_downcast, try_downcast_ref, CastError, DynType};
 

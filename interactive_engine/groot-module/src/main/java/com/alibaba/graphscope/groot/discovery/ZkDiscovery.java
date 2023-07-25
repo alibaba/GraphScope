@@ -13,10 +13,10 @@
  */
 package com.alibaba.graphscope.groot.discovery;
 
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.ZkConfig;
+import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 
 import org.apache.curator.framework.CuratorFramework;

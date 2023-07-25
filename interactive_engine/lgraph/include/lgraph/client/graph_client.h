@@ -19,11 +19,13 @@
 #include <grpc++/grpc++.h>
 #include "lgraph/common/backup_info.h"
 #include "lgraph/common/logger_info.h"
-#include "lgraph/proto/sdk/client.grpc.pb.h"
-#include "lgraph/proto/sdk/client_backup_service.grpc.pb.h"
+#include "lgraph/proto/groot/sdk/client.grpc.pb.h"
+#include "lgraph/proto/groot/sdk/client_backup_service.grpc.pb.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace client {
+using gs::rpc::groot::Client;
+using gs::rpc::groot::ClientBackup;
 
 class GraphClient {
 public:

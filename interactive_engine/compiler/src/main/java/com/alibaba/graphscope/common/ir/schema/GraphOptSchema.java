@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.schema;
 
-import com.alibaba.graphscope.compiler.api.exception.GraphElementNotFoundException;
-import com.alibaba.graphscope.compiler.api.schema.GraphElement;
+import com.alibaba.graphscope.groot.common.exception.GraphElementNotFoundException;
+import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
 
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;

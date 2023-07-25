@@ -13,10 +13,10 @@
  */
 package com.alibaba.graphscope.groot.schema.ddl;
 
+import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
+import com.alibaba.graphscope.groot.common.schema.wrapper.TypeDef;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.ddl.CreateEdgeTypeOperation;
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
-import com.alibaba.graphscope.sdkcommon.schema.TypeDef;
 
 public class CreateEdgeTypeExecutor extends AbstractCreateTypeExecutor {
 

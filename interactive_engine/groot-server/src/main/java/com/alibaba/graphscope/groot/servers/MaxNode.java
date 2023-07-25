@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.servers;
 
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.*;
+import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.google.common.annotations.VisibleForTesting;
 import com.salesforce.kafka.test.KafkaTestCluster;
 

@@ -22,7 +22,7 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
-import com.alibaba.graphscope.compiler.api.schema.*;
+import com.alibaba.graphscope.groot.common.schema.api.*;
 
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.plan.RelOptSchema;

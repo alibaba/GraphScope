@@ -2,9 +2,9 @@ package com.alibaba.graphscope.groot.tests.frontend;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.alibaba.graphscope.compiler.api.schema.DataType;
-import com.alibaba.graphscope.sdkcommon.schema.PropertyValue;
-import com.alibaba.graphscope.sdkcommon.util.PkHashUtils;
+import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
+import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
+import com.alibaba.graphscope.groot.common.util.PkHashUtils;
 
 import org.junit.Test;
 

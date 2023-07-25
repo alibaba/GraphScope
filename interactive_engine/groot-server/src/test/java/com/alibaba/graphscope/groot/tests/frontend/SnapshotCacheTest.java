@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.SnapshotListener;
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
+import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 
 import org.junit.jupiter.api.Test;
 

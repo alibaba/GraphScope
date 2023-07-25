@@ -13,10 +13,10 @@
  */
 package com.alibaba.graphscope.groot.tests.common.rpc;
 
-import com.alibaba.graphscope.compiler.api.exception.NodeConnectException;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.exception.NodeConnectException;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 
 import org.junit.jupiter.api.Assertions;

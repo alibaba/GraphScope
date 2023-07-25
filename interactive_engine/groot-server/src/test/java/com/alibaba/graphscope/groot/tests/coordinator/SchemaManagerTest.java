@@ -19,9 +19,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
-import com.alibaba.graphscope.compiler.api.schema.DataType;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotListener;
+import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
+import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
+import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyDef;
+import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
+import com.alibaba.graphscope.groot.common.schema.wrapper.TypeDef;
+import com.alibaba.graphscope.groot.common.schema.wrapper.TypeEnum;
 import com.alibaba.graphscope.groot.coordinator.DdlWriter;
 import com.alibaba.graphscope.groot.coordinator.GraphDefFetcher;
 import com.alibaba.graphscope.groot.coordinator.SchemaManager;
@@ -31,11 +36,6 @@ import com.alibaba.graphscope.groot.operation.BatchId;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.schema.request.CreateVertexTypeRequest;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
-import com.alibaba.graphscope.sdkcommon.schema.PropertyDef;
-import com.alibaba.graphscope.sdkcommon.schema.PropertyValue;
-import com.alibaba.graphscope.sdkcommon.schema.TypeDef;
-import com.alibaba.graphscope.sdkcommon.schema.TypeEnum;
 
 import org.junit.jupiter.api.Test;
 

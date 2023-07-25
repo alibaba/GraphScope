@@ -12,11 +12,12 @@ use groot_store::db::api::{
 };
 use groot_store::db::common::bytes::util::parse_pb;
 use groot_store::db::graph::store::GraphStore;
-use groot_store::db::proto::common::{CommitDataLoadPb, PrepareDataLoadPb};
 use groot_store::db::proto::model::{
-    AddEdgeKindPb, ConfigPb, CreateVertexTypePb, DataOperationPb, DdlOperationPb, EdgeIdPb, EdgeKindPb,
-    EdgeLocationPb, LabelIdPb, OpTypePb, OperationBatchPb, OperationPb, TypeDefPb, VertexIdPb,
+    AddEdgeKindPb, ConfigPb, CreateVertexTypePb, DataOperationPb, DdlOperationPb, EdgeIdPb, EdgeLocationPb,
+    OpTypePb, OperationBatchPb, OperationPb, VertexIdPb,
 };
+use groot_store::db::proto::model::{CommitDataLoadPb, PrepareDataLoadPb};
+use groot_store::db::proto::schema_common::{EdgeKindPb, LabelIdPb, TypeDefPb};
 use groot_store::db::wrapper::wrapper_partition_graph::WrapperPartitionGraph;
 
 use crate::store::jna_response::JnaResponse;
@@ -245,7 +246,7 @@ fn create_vertex_type<G: MultiVersionGraph>(
     let create_vertex_type_pb = parse_pb::<CreateVertexTypePb>(ddl_operation_pb.get_ddlBlob())?;
     let table_id = create_vertex_type_pb.get_tableIdx();
     let typedef_pb = create_vertex_type_pb.get_typeDef();
-    let label_id = typedef_pb.get_labelId().get_id();
+    let label_id = typedef_pb.get_label_id().get_id();
     let typedef = TypeDef::from_proto(&typedef_pb)?;
     graph.create_vertex_type(snapshot_id, schema_version, label_id, &typedef, table_id)
 }
@@ -268,7 +269,7 @@ fn create_edge_type<G: MultiVersionGraph>(
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let typedef_pb = parse_pb::<TypeDefPb>(ddl_operation_pb.get_ddlBlob())?;
-    let label_id = typedef_pb.get_labelId().get_id();
+    let label_id = typedef_pb.get_label_id().get_id();
     let typedef = TypeDef::from_proto(&typedef_pb)?;
     graph.create_edge_type(snapshot_id, schema_version, label_id, &typedef)
 }

@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.dataload.databuild;
 
-import com.alibaba.graphscope.sdkcommon.util.PartitionUtils;
+import com.alibaba.graphscope.groot.common.util.PartitionUtils;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapreduce.Partitioner;
