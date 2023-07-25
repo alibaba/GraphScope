@@ -16,8 +16,9 @@
 
 package com.alibaba.graphscope.common.ir.schema;
 
-import com.alibaba.graphscope.compiler.api.schema.*;
-import com.alibaba.graphscope.compiler.schema.*;
+import com.alibaba.graphscope.groot.common.schema.api.*;
+import com.alibaba.graphscope.groot.common.schema.impl.*;
+import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
@@ -65,7 +66,7 @@ public abstract class Utils {
             int labelId = typeObject.get("label").get("id").asInt();
             String label = typeObject.get("label").get("name").asText();
             List<GraphProperty> propertyList = Lists.newArrayList();
-            List<GraphProperty> primaryPropertyList = Lists.newArrayList();
+            List<String> primaryKeyList = Lists.newArrayList();
             JsonNode columnArray = typeObject.get("columns");
             Objects.requireNonNull(columnArray, "There's no property def list in " + label);
             Iterator var2 = columnArray.iterator();
@@ -81,7 +82,7 @@ public abstract class Utils {
                 propertyList.add(property);
                 boolean isPrimaryKey = column.get("is_primary_key").asBoolean();
                 if (isPrimaryKey) {
-                    primaryPropertyList.add(property);
+                    primaryKeyList.add(propName);
                 }
             }
             if (type.equals("EDGE")) {
@@ -100,7 +101,7 @@ public abstract class Utils {
             } else {
                 vertexMap.put(
                         label,
-                        new DefaultGraphVertex(labelId, label, propertyList, primaryPropertyList));
+                        new DefaultGraphVertex(labelId, label, propertyList, primaryKeyList));
             }
         }
     }

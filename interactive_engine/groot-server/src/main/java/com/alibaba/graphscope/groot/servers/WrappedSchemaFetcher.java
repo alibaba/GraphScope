@@ -13,14 +13,16 @@
  */
 package com.alibaba.graphscope.groot.servers;
 
-import com.alibaba.graphscope.compiler.api.schema.*;
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
+import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
+import com.alibaba.graphscope.groot.common.schema.api.SchemaFetcher;
 import com.alibaba.graphscope.groot.meta.MetaService;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 public class WrappedSchemaFetcher implements SchemaFetcher {
     private static final Logger logger = LoggerFactory.getLogger(WrappedSchemaFetcher.class);
@@ -34,12 +36,12 @@ public class WrappedSchemaFetcher implements SchemaFetcher {
     }
 
     @Override
-    public Pair<GraphSchema, Long> getSchemaSnapshotPair() {
+    public Map<Long, GraphSchema> getSchemaSnapshotPair() {
         SnapshotWithSchema snapshotSchema = this.snapshotCache.getSnapshotWithSchema();
         long snapshotId = snapshotSchema.getSnapshotId();
         GraphSchema schema = snapshotSchema.getGraphDef();
         logger.debug("fetch schema of snapshot id [" + snapshotId + "]");
-        return Pair.of(schema, snapshotId);
+        return Map.of(snapshotId, schema);
     }
 
     @Override

@@ -14,9 +14,9 @@
 //
 
 syntax = "proto3";
-package gs.rpc.write_service.v1;
+package gs.rpc.groot;
 
-option java_package = "com.alibaba.graphscope.proto.write";
+option java_package = "com.alibaba.graphscope.proto.groot";
 option java_multiple_files = true;
 
 service ClientWrite {

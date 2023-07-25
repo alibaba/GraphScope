@@ -97,7 +97,7 @@ class Connection:
         self._gremlin_endpoint = gremlin_endpoint
         options = self._get_channel_options()
         channel = grpc.insecure_channel(addr, options=options)
-        self._ddl_service_stub = ddl_service_pb2_grpc.ClientDdlStub(channel)
+        self._ddl_service_stub = ddl_service_pb2_grpc.GrootDdlServiceStub(channel)
         self._write_service_stub = write_service_pb2_grpc.ClientWriteStub(channel)
         self._client_id = None
         self._metadata = self._encode_metadata(username, password)
@@ -111,7 +111,7 @@ class Connection:
             {
                 "methodConfig": [
                     {
-                        "name": [{"service": "gs.rpc.ddl_service.v1.ClientDdl"}],
+                        "name": [{"service": "gs.rpc.groot.GrootDdlService"}],
                         "retryPolicy": {
                             "maxAttempts": 5,
                             "initialBackoff": "0.1s",

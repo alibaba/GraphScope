@@ -1,13 +1,19 @@
 package com.alibaba.graphscope.groot.frontend.write;
 
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
-import com.alibaba.graphscope.compiler.api.exception.PropertyDefNotFoundException;
-import com.alibaba.graphscope.compiler.api.schema.DataType;
-import com.alibaba.graphscope.compiler.api.schema.GraphElement;
-import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.PropertyDefNotFoundException;
+import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
+import com.alibaba.graphscope.groot.common.schema.api.GraphProperty;
+import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
+import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
+import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
+import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
+import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
+import com.alibaba.graphscope.groot.common.util.EdgeRecordKey;
+import com.alibaba.graphscope.groot.common.util.PkHashUtils;
+import com.alibaba.graphscope.groot.common.util.VertexRecordKey;
 import com.alibaba.graphscope.groot.common.util.WriteSessionUtil;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.meta.MetaService;
@@ -19,12 +25,6 @@ import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.*;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.graphscope.sdkcommon.common.EdgeRecordKey;
-import com.alibaba.graphscope.sdkcommon.common.VertexRecordKey;
-import com.alibaba.graphscope.sdkcommon.schema.EdgeKind;
-import com.alibaba.graphscope.sdkcommon.schema.LabelId;
-import com.alibaba.graphscope.sdkcommon.schema.PropertyValue;
-import com.alibaba.graphscope.sdkcommon.util.PkHashUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -398,12 +398,10 @@ public class GraphWriter implements MetricsAgent {
 
     public static long getHashId(
             int labelId, Map<Integer, PropertyValue> pkVals, GraphElement graphElement) {
-        List<Integer> pkIdxs = graphElement.getPkPropertyIndices();
-        List<GraphProperty> propertyDefs = graphElement.getPropertyList();
-        List<byte[]> pks = new ArrayList<>(pkIdxs.size());
-        for (int pkIdx : pkIdxs) {
-            int propertyId = propertyDefs.get(pkIdx).getId();
-            byte[] valBytes = pkVals.get(propertyId).getValBytes();
+        List<GraphProperty> pklist = graphElement.getPrimaryKeyList();
+        List<byte[]> pks = new ArrayList<>(pklist.size());
+        for (GraphProperty pk : pklist) {
+            byte[] valBytes = pkVals.get(pk.getId()).getValBytes();
             pks.add(valBytes);
         }
         return PkHashUtils.hash(labelId, pks);

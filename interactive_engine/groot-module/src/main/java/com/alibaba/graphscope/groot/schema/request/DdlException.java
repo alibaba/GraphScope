@@ -15,7 +15,7 @@
  */
 package com.alibaba.graphscope.groot.schema.request;
 
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.GrootException;
 
 public class DdlException extends GrootException {
 

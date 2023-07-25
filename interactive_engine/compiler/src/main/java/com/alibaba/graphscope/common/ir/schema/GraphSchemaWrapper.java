@@ -16,9 +16,9 @@
 
 package com.alibaba.graphscope.common.ir.schema;
 
-import com.alibaba.graphscope.compiler.api.exception.GraphElementNotFoundException;
-import com.alibaba.graphscope.compiler.api.exception.GraphPropertyNotFoundException;
-import com.alibaba.graphscope.compiler.api.schema.*;
+import com.alibaba.graphscope.groot.common.exception.GraphElementNotFoundException;
+import com.alibaba.graphscope.groot.common.exception.GraphPropertyNotFoundException;
+import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.schema.Statistic;

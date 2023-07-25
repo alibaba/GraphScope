@@ -1,0 +1,70 @@
+syntax = "proto3";
+package gs.rpc.graph;
+
+option java_package = "com.alibaba.graphscope.proto.groot";
+option java_multiple_files = true;
+
+message LabelIdPb {
+    int32 id = 1;
+}
+
+enum TypeEnumPb {
+    UNSPECIFIED = 0;
+    VERTEX = 1;
+    EDGE = 2;
+}
+
+enum DataTypePb {
+    UNKNOWN = 0;
+    BOOL = 1;
+    CHAR = 2;
+    SHORT = 3;
+    INT = 4;
+    LONG = 5;
+    FLOAT = 6;
+    DOUBLE = 7;
+    STRING = 8;
+    BYTES = 9;
+    INT_LIST = 10;
+    LONG_LIST = 11;
+    FLOAT_LIST = 12;
+    DOUBLE_LIST = 13;
+    STRING_LIST = 14;
+    NULLVALUE = 15;
+    UINT = 16;
+    ULONG = 17;
+    DYNAMIC = 18;
+}
+
+message PropertyValuePb {
+    DataTypePb data_type = 1;
+    bytes val = 2;
+}
+
+message EdgeKindPb {
+    string edge_label = 1;
+    LabelIdPb edge_label_id = 2;
+    string src_vertex_label = 3;
+    LabelIdPb src_vertex_label_id = 4;
+    string dst_vertex_label = 5;
+    LabelIdPb dst_vertex_label_id = 6;
+}
+
+message PropertyDefPb {
+    int32 id = 1;
+    int32 inner_id = 2;
+    string name = 3;
+    DataTypePb data_type = 4;
+    PropertyValuePb default_value = 5;
+    bool pk = 6;
+    string comment = 7;
+}
+
+message TypeDefPb {
+    int32 version_id = 1;
+    string label = 2;
+    LabelIdPb label_id = 3;
+    TypeEnumPb type_enum = 4;
+    repeated PropertyDefPb props = 5;
+    string comment = 6;
+}

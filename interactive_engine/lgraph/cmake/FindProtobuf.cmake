@@ -51,7 +51,7 @@ function(PROTOBUF_GENERATE_CPP SRCS HDRS PROTO_ROOT BUILD_DIR SRCS_DEST HDRS_DES
                 COMMAND cp ${BUILD_DIR}/${REL}/${FIL_WE}.pb.h ${HDRS_DEST}/${REL}/
                 COMMENT "Running C++ protocol buffer compiler on ${FIL}"
                 VERBATIM)
-
+        message(STATUS "${SRCS_DEST}/${REL}/${FIL_WE}.pb.cc")
         list(APPEND ${SRCS} "${SRCS_DEST}/${REL}/${FIL_WE}.pb.cc")
         list(APPEND ${HDRS} "${HDRS_DEST}/${REL}/${FIL_WE}.pb.h")
     endforeach()

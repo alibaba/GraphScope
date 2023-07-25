@@ -10,8 +10,8 @@ use crate::db::api::*;
 use crate::db::common::bytes::transform;
 use crate::db::common::bytes::util::parse_pb;
 use crate::db::common::str::parse_str;
-use crate::db::proto::common::DataLoadTargetPb;
-use crate::db::proto::model::EdgeKindPb;
+use crate::db::proto::model::DataLoadTargetPb;
+use crate::db::proto::schema_common::EdgeKindPb;
 use crate::db::storage::ExternalStorage;
 use crate::db::util::lock::GraphMutexLock;
 

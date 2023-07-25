@@ -17,6 +17,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
+import com.alibaba.graphscope.groot.common.util.BackupInfo;
 import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.coordinator.BackupService;
 import com.alibaba.graphscope.groot.coordinator.SchemaService;
@@ -26,8 +28,6 @@ import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.alibaba.graphscope.groot.store.StoreBackupId;
 import com.alibaba.graphscope.proto.groot.*;
-import com.alibaba.graphscope.sdkcommon.common.BackupInfo;
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 
 import io.grpc.stub.StreamObserver;
 

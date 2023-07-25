@@ -13,16 +13,16 @@
  */
 package com.alibaba.graphscope.groot.tests.gremlin;
 
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraph;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.GremlinConfig;
+import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.groot.servers.MaxNode;
 import com.alibaba.graphscope.groot.servers.NodeBase;
-import com.alibaba.graphscope.sdkcommon.io.GrootIORegistry;
+import com.alibaba.graphscope.groot.tests.common.GrootIORegistry;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;

@@ -14,11 +14,11 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.proto.groot.AdvanceQuerySnapshotRequest;
 import com.alibaba.graphscope.proto.groot.AdvanceQuerySnapshotResponse;
 import com.alibaba.graphscope.proto.groot.FrontendSnapshotGrpc;
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;

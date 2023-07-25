@@ -90,29 +90,18 @@
           <execution>
             <id>sdk</id>
             <configuration>
-              <protoSourceRoot>../../proto/groot</protoSourceRoot>
-              <includes>
-                <include>sdk/*</include>
-              </includes>
-            </configuration>
-            <goals>
-              <goal>compile-custom</goal>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>graphscope</id>
-            <configuration>
               <protoSourceRoot>../../proto</protoSourceRoot>
               <includes>
+                <include>groot/sdk/*</include>
                 <include>graph_def.proto</include>
+                <include>schema_common.proto</include>
                 <include>ddl_service.proto</include>
-                <include>write_service.proto</include>
+                <include>write_service.proto</include>                
               </includes>
             </configuration>
             <goals>
-              <goal>compile</goal>
               <goal>compile-custom</goal>
+              <goal>compile</goal>
             </goals>
           </execution>
         </executions>

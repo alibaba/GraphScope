@@ -13,10 +13,10 @@
  */
 package com.alibaba.graphscope.groot.operation.ddl;
 
+import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.proto.groot.DdlOperationPb;
-import com.alibaba.graphscope.sdkcommon.schema.EdgeKind;
 import com.google.protobuf.ByteString;
 
 public class RemoveEdgeKindOperation extends Operation {

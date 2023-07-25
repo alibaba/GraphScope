@@ -4,8 +4,8 @@ pub use self::config::*;
 pub use self::error::*;
 pub use self::property::*;
 pub use self::schema::*;
-use crate::db::proto::common::DataLoadTargetPb;
-use crate::db::proto::model::{EdgeIdPb, EdgeKindPb};
+use crate::db::proto::model::{DataLoadTargetPb, EdgeIdPb};
+use crate::db::proto::schema_common::EdgeKindPb;
 
 #[macro_use]
 pub mod error;
@@ -85,18 +85,19 @@ impl EdgeKind {
 
     pub fn from_proto(proto: &EdgeKindPb) -> Self {
         Self::new(
-            proto.get_edgeLabelId().get_id(),
-            proto.get_srcVertexLabelId().get_id(),
-            proto.get_dstVertexLabelId().get_id(),
+            proto.get_edge_label_id().get_id(),
+            proto.get_src_vertex_label_id().get_id(),
+            proto.get_dst_vertex_label_id().get_id(),
         )
     }
 
     pub fn to_proto(&self) -> EdgeKindPb {
         let mut pb = EdgeKindPb::new();
-        pb.mut_edgeLabelId().set_id(self.edge_label_id);
-        pb.mut_srcVertexLabelId()
+        pb.mut_edge_label_id()
+            .set_id(self.edge_label_id);
+        pb.mut_src_vertex_label_id()
             .set_id(self.src_vertex_label_id);
-        pb.mut_dstVertexLabelId()
+        pb.mut_dst_vertex_label_id()
             .set_id(self.dst_vertex_label_id);
         pb
     }

@@ -17,24 +17,44 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.alibaba.graphscope</groupId>
-      <artifactId>sdk-common</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
     </dependency>
     <dependency>
       <groupId>io.grpc</groupId>
-      <artifactId>grpc-api</artifactId>
+      <artifactId>grpc-protobuf</artifactId>
     </dependency>
+    <!-- <dependency> -->
+    <!--   <groupId>io.grpc</groupId> -->
+    <!--   <artifactId>grpc-api</artifactId> -->
+    <!-- </dependency> -->
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-stub</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.annotation</groupId>
+      <artifactId>javax.annotation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.module</groupId>
+      <artifactId>jackson-module-paranamer</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
   </dependencies>
 
@@ -84,10 +104,15 @@
           <execution>
             <id>interactive</id>
             <configuration>
-              <protoSourceRoot>../../proto/groot/</protoSourceRoot>
-              <excludes>
-                <exclude>sdk/*</exclude>
-              </excludes>
+              <protoSourceRoot>../../proto</protoSourceRoot>
+              <includes>
+                <include>groot/*.proto</include>
+                <include>groot/sdk/*</include>
+                <include>graph_def.proto</include>
+                <include>schema_common.proto</include>
+                <include>ddl_service.proto</include>
+                <include>write_service.proto</include>
+              </includes>
             </configuration>
             <goals>
               <goal>compile</goal>

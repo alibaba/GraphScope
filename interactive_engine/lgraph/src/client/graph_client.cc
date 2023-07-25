@@ -17,9 +17,10 @@
 #include <fstream>
 #include "lgraph/client/graph_client.h"
 #include "lgraph/common/check.h"
-
+using namespace gs::rpc::groot;
 namespace LGRAPH_NAMESPACE {
 namespace client {
+
 
 Schema GraphClient::GetGraphSchema() {
   grpc::ClientContext ctx;

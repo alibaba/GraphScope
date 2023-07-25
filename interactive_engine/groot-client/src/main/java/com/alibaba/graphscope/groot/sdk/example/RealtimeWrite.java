@@ -77,7 +77,9 @@ public class RealtimeWrite {
     }
 
     public static void main(String[] args) {
-        GrootClient client = GrootClient.newBuilder().addHost("47.57.139.88", 55556).build();
+        String hosts = "localhost";
+        int port = 55556;
+        GrootClient client = GrootClient.newBuilder().addHost(hosts, port).build();
         testAddVerticesEdges(client);
         testUpdateDeleteEdge(client);
         testUpdateDeleteVertex(client);
