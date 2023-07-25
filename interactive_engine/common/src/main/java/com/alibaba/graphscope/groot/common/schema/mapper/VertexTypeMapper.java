@@ -37,7 +37,7 @@ public class VertexTypeMapper extends SchemaElementMapper {
         VertexIndexMapper vertexIndexMapper = new VertexIndexMapper();
         vertexIndexMapper.setName("primary_key");
         vertexIndexMapper.setIndexType("PRIMARY_KEY");
-        vertexIndexMapper.setProperties(graphVertex.getPrimaryKeyList());
+        vertexIndexMapper.setPropertyNames(graphVertex.getPrimaryKeyNameList());
         ArrayList<VertexIndexMapper> vertexIndexMapperList = new ArrayList<>();
         vertexIndexMapperList.add(vertexIndexMapper);
         vertexTypeMapper.setIndexes(vertexIndexMapperList);
