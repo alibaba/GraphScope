@@ -96,7 +96,7 @@ public class DefaultGraphEdge implements GraphEdge {
     @Override
     public GraphProperty getProperty(String propName) {
         for (GraphProperty property : propertyList) {
-            if (propName == property.getName()) {
+            if (Objects.equals(propName, property.getName())) {
                 return property;
             }
         }

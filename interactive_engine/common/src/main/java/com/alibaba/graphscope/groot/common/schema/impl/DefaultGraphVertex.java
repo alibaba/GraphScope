@@ -104,17 +104,17 @@ public class DefaultGraphVertex implements GraphVertex {
                 return graphProperty;
             }
         }
-        throw new IllegalArgumentException("Cant get graph property for id " + propId);
+        throw new IllegalArgumentException("Can't get graph property for id " + propId);
     }
 
     @Override
     public GraphProperty getProperty(String propName) {
         for (GraphProperty graphProperty : propertyList) {
-            if (propName == graphProperty.getName()) {
+            if (Objects.equals(propName, graphProperty.getName())) {
                 return graphProperty;
             }
         }
-        throw new IllegalArgumentException("Cant get graph property for name " + propName);
+        throw new IllegalArgumentException("Can't get graph property for name " + propName);
     }
 
     @Override
