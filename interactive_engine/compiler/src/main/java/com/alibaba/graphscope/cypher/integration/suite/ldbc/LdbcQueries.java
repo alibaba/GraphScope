@@ -85,9 +85,9 @@ public class LdbcQueries {
 
     public static QueryContext get_ldbc_3_test() {
         String query =
-                "MATCH (countryX:COUNTRY {name:"
+                "MATCH (countryX:PLACE {name:"
                     + " 'Puerto_Rico'})<-[:ISLOCATEDIN]-(messageX)-[:HASCREATOR]->(otherP:PERSON),\n"
-                    + "    \t(countryY:COUNTRY {name:"
+                    + "    \t(countryY:PLACE {name:"
                     + " 'Republic_of_Macedonia'})<-[:ISLOCATEDIN]-(messageY)-[:HASCREATOR]->(otherP:PERSON),\n"
                     + "    \t(otherP)-[:ISLOCATEDIN]->(city)-[:ISPARTOF]->(countryCity),\n"
                     + "    \t(person:PERSON {id:15393162790207})-[:KNOWS*1..2]-(otherP)\n"
