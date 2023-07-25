@@ -47,7 +47,7 @@ public class DataTypeDeserializer extends StdDeserializer<DataType> {
                 ret.setExpression(data.substring(2, data.length() - 1));
                 return ret;
             } else if (data.startsWith("M<")) {
-                
+
             } else {
                 DataType ret = new DataType(InternalDataType.valueOf(data.toUpperCase()));
                 return ret;
