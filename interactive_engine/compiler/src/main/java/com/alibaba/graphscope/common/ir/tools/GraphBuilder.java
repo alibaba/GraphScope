@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import static java.util.Objects.requireNonNull;
-
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
@@ -29,8 +27,8 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphRelCollations;
-import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
+import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
@@ -41,11 +39,11 @@ import com.alibaba.graphscope.gremlin.Utils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.type.*;
@@ -64,6 +62,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Integrate interfaces to build algebra structures,
@@ -270,15 +270,14 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder match(RelNode single, GraphOpt.Match opt) {
         RelNode input = size() > 0 ? peek() : null;
-        // there is only one source operator in the sentence -> skip match
-        if (input == null && single.getInputs().isEmpty()) {
-            push(single);
-        } else {
-            RelNode match =
-                    GraphLogicalSingleMatch.create(
-                            (GraphOptCluster) cluster, null, input, single, opt);
-            if (size() > 0) pop();
+        // unwrap match if there is only one source operator in the sentence
+        RelNode match = (single.getInputs().isEmpty() && single instanceof GraphLogicalSource) ? single :
+                GraphLogicalSingleMatch.create(
+                        (GraphOptCluster) cluster, null, null, single, opt);
+        if (input == null) {
             push(match);
+        } else {
+            push(match).join(getJoinRelType(opt), getJoinCondition(input, match));
         }
         return this;
     }
@@ -305,6 +304,37 @@ public class GraphBuilder extends RelBuilder {
         if (size() > 0) pop();
         push(match);
         return this;
+    }
+
+    private RexNode getJoinCondition(RelNode first, RelNode second) {
+        List<RexNode> conditions = Lists.newArrayList();
+        List<RelDataTypeField> firstFields = first.getRowType().getFieldList();
+        List<RelDataTypeField> secondFields = second.getRowType().getFieldList();
+        for (RelDataTypeField firstField : firstFields) {
+            for (RelDataTypeField secondField : secondFields) {
+                if (isGraphElementTypeWithSameOpt(firstField.getType(), secondField.getType())
+                        && firstField.getIndex() == secondField.getIndex()) {
+                   conditions.add(RexGraphVariable.of(firstField.getIndex(), AliasInference.SIMPLE_NAME(firstField.getName()), firstField.getType()));
+                }
+            }
+        }
+        return and(conditions);
+    }
+
+    private boolean isGraphElementTypeWithSameOpt(RelDataType first, RelDataType second) {
+        return first instanceof GraphSchemaType && second instanceof GraphSchemaType
+                && ((GraphSchemaType) first).getScanOpt() == ((GraphSchemaType) second).getScanOpt();
+    }
+
+    private JoinRelType getJoinRelType(GraphOpt.Match opt) {
+        switch (opt) {
+            case OPTIONAL:
+                return JoinRelType.LEFT;
+            case ANTI:
+                return JoinRelType.ANTI;
+            default:
+                return JoinRelType.INNER;
+        }
     }
 
     /**

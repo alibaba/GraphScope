@@ -122,4 +122,17 @@ public class MatchTest {
         Assert.assertEquals(
                 SqlTypeName.BIGINT, condition.getOperands().get(1).getType().getSqlTypeName());
     }
+
+    // Match (a:person {id: 2l})
+    // Optional Match (a:person {id: 3l})
+    // Return a
+    @Test
+    public void match_7_test() {
+        RelNode multiMatch = Utils.eval("Match (a:person)-[]->(b:person) Optional Match (a:person)-[]->(c:person) Return a").build();
+        System.out.println(multiMatch.explain());
+//        GraphLogicalSource source = (GraphLogicalSource) project.getInput(0);
+//        RexCall condition = (RexCall) source.getFilters().get(0);
+//        Assert.assertEquals(
+//                SqlTypeName.BIGINT, condition.getOperands().get(1).getType().getSqlTypeName());
+    }
 }
