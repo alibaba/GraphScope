@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Developing and Running Customized Analytical Algorithms for GraphScope</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2023-07-23">23 Jul 2023</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2023-07-23">23 Jul 2023</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Developing and Running Customized Analytical Algorithms for GraphScope</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2023-07-23-title-picture.jpg" alt="jupyter-notebook" />
+We provide a template repository for graph analysis applications, where users can customize graph analysis algorithms by replacing several C++ functions with their own logic, and run them on GraphScope.</p>
+
+<p>As a sophisticated model, graphs can naturally express a large number of real-life datasets, and tons of graph analytics algorithms have been proposed for different purposes. Typical graph analytics algorithms include <a href="https://en.wikipedia.org/wiki/PageRank">Pagerank</a>、<a href="https://arxiv.org/abs/cs/0310049">K-core</a> which have demonstrated strong capabilities in node importance analysis scenarios. The GraphScope graph analysis engine inherits the open source version of the <a href="https://github.com/alibaba/libgrape-lite">GRAPE</a> system and includes various graph analysis algorithms, providing a one-stop graph analysis solution. However, users often need to customize algorithms based on their own bussiness. Therefore, to facilitate the development of custom graph analysis algorithms, we provide a C++ template library, and this article will introduce the usage of this template library.</p>
+
+<h3 id="step1-install-graphscope">Step1. Install GraphScope</h3>
+
+<p>First, we need to install GraphScope in the local environment with the following command:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip3 <span class="nb">install </span>graphscope 
+</code></pre></div></div>
+
+<h3 id="step2-develop-algorithms-using-template-library">Step2. Develop Algorithms Using Template Library</h3>
+
+<p>Open the <a href="https://github.com/GraphScope/cpp-template">address of the template library</a> in your browser, click on the “Use this template” button on the right side of the repository to create your own code repository, and clone the repository to your local machine using the following command:</p>
+
+<p><img src="/blog/assets/images/2023-07-23-template-repository.jpg" alt="Template-Repository" /></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Make sure to replace the &lt;username&gt; and &lt;repo-name&gt; to the right values.</span>
+git clone https://github.com/&lt;username&gt;/&lt;repo-name&gt;.git 
+<span class="nb">cd</span> &lt;repo-name&gt;
+</code></pre></div></div>
+
+<p>Next, we will implement custom algorithm logic by modifying the files in the src directory, including:</p>
+
+<ul>
+  <li>my_app.h: This file is used to implement the main algorithm logic, namely the PEval and IncEval functions</li>
+  <li>my_app_context.h: This file is used to store and define the runtime results and data structures used by the algorithm</li>
+</ul>
+
+<h4 id="define-the-data-structures">Define the Data Structures</h4>
+
+<p>To simplify the algorithm logic and highlight the algorithm development process, in this case, our algorithm will be responsible for counting the degrees of neighboring nodes for each node in the graph. In this step, we need to: 1) Define the data structure for algorithm runtime in <code class="language-plaintext highlighter-rouge">my_app_context.h</code> file; 2) Initialize these data structures in the <code class="language-plaintext highlighter-rouge">Init</code> function.</p>
+
+<p>The data structures are as follows:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Variable</th>
+      <th style="text-align: center">Type</th>
+      <th style="text-align: center">Comment</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">result</td>
+      <td style="text-align: center">vertex_array_t<size_t></size_t></td>
+      <td style="text-align: center">result for each node</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Finally, the implementation of <code class="language-plaintext highlighter-rouge">my_app_context.h</code> as follows:</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#ifndef MY_APP_CONTEXT_H_
+#define MY_APP_CONTEXT_H_
+</span>
+<span class="cp">#include</span> <span class="cpf">"grape/grape.h"</span><span class="cp">
+</span>
+<span class="k">namespace</span> <span class="n">gs</span> <span class="p">{</span>
+
+<span class="cm">/**
+ * @brief Context for "MyApp" Application.
+ *
+ * 'Context' class used to record the intermediate data of each iteration.
+ *
+ * @tparam FRAG_T
+ */</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">FRAG_T</span><span class="p">&gt;</span>
+<span class="k">class</span> <span class="nc">MyAppContext</span> <span class="o">:</span> <span class="k">public</span> <span class="n">grape</span><span class="o">::</span><span class="n">VertexDataContext</span><span class="o">&lt;</span><span class="n">FRAG_T</span><span class="p">,</span> <span class="kt">uint64_t</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="k">using</span> <span class="n">oid_t</span> <span class="o">=</span> <span class="k">typename</span> <span class="n">FRAG_T</span><span class="o">::</span><span class="n">oid_t</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">vid_t</span> <span class="o">=</span> <span class="k">typename</span> <span class="n">FRAG_T</span><span class="o">::</span><span class="n">vid_t</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">vertex_t</span> <span class="o">=</span> <span class="k">typename</span> <span class="n">FRAG_T</span><span class="o">::</span><span class="n">vertex_t</span><span class="p">;</span>
+
+ <span class="nl">public:</span>
+  <span class="k">explicit</span> <span class="n">MyAppContext</span><span class="p">(</span><span class="k">const</span> <span class="n">FRAG_T</span><span class="o">&amp;</span> <span class="n">fragment</span><span class="p">)</span>
+      <span class="o">:</span> <span class="n">grape</span><span class="o">::</span><span class="n">VertexDataContext</span><span class="o">&lt;</span><span class="n">FRAG_T</span><span class="p">,</span> <span class="kt">uint64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="nb">true</span><span class="p">),</span>
+        <span class="n">result</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">())</span> <span class="p">{}</span>
+
+  <span class="cm">/**
+   * @param param1: algorithm specific parameter, such as
+   *                "source vertex" for SSSP (single source shortest path)
+   *                "delta, max_round" for Pagerank
+   */</span>
+  <span class="kt">void</span> <span class="nf">Init</span><span class="p">(</span><span class="n">grape</span><span class="o">::</span><span class="n">ParallelMessageManager</span><span class="o">&amp;</span> <span class="n">messages</span><span class="p">,</span> <span class="kt">int</span> <span class="n">param1</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// record current superstep</span>
+    <span class="k">this</span><span class="o">-&gt;</span><span class="n">step</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">this</span><span class="o">-&gt;</span><span class="n">param1</span> <span class="o">=</span> <span class="n">param1</span><span class="p">;</span>
+    <span class="c1">// init results</span>
+    <span class="n">result</span><span class="p">.</span><span class="n">SetValue</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="c1">// current superstep</span>
+  <span class="kt">int</span> <span class="n">step</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="c1">// algorithm specific parameter</span>
+  <span class="kt">int</span> <span class="n">param1</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+  <span class="c1">// result for each vertex, with 'uint64_t' type</span>
+  <span class="k">typename</span> <span class="n">FRAG_T</span><span class="o">::</span><span class="k">template</span> <span class="n">vertex_array_t</span><span class="o">&lt;</span><span class="kt">uint64_t</span><span class="p">&gt;</span><span class="o">&amp;</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="p">}</span>  <span class="c1">// namespace gs</span>
+
+<span class="cp">#endif  // MY_APP_CONTEXT_H_
+</span></code></pre></div></div>
+
+<h4 id="implement-algorithm">Implement Algorithm</h4>
+
+<p>After defining the data structure, we can implement the corresponding algorithm logic in <code class="language-plaintext highlighter-rouge">my_app.h</code>, specifically the PEval and IncEval functions. The definitions of the these functions can be found in the introduction to the <a href="https://graphscope.io/docs/analytical_engine/programming_model_pie">PIE programming model</a>. In this example, We calculate the sum of the degrees of the neighboring nodes for each node in IncEval phase and do nothing but force continue in PEval.</p>
+
+<p>Finally, the implementation of <code class="language-plaintext highlighter-rouge">my_app.h</code> as follows:</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#ifndef MY_APP_H
+#define MY_APP_H
+</span>
+<span class="cp">#include</span> <span class="cpf">"my_app_context.h"</span><span class="cp">
+</span>
+<span class="k">namespace</span> <span class="n">gs</span> <span class="p">{</span>
+
+<span class="cm">/**
+ * @brief Compute the degree for each vertex.
+ *
+ * @tparam FRAG_T
+ */</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">FRAG_T</span><span class="p">&gt;</span>
+<span class="k">class</span> <span class="nc">MyApp</span> <span class="o">:</span> <span class="k">public</span> <span class="n">grape</span><span class="o">::</span><span class="n">ParallelAppBase</span><span class="o">&lt;</span><span class="n">FRAG_T</span><span class="p">,</span> <span class="n">MyAppContext</span><span class="o">&lt;</span><span class="n">FRAG_T</span><span class="o">&gt;&gt;</span><span class="p">,</span>
+              <span class="k">public</span> <span class="n">grape</span><span class="o">::</span><span class="n">ParallelEngine</span><span class="p">,</span>
+              <span class="k">public</span> <span class="n">grape</span><span class="o">::</span><span class="n">Communicator</span> <span class="p">{</span>
+ <span class="nl">public:</span>
+  <span class="n">INSTALL_PARALLEL_WORKER</span><span class="p">(</span><span class="n">MyApp</span><span class="o">&lt;</span><span class="n">FRAG_T</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">MyAppContext</span><span class="o">&lt;</span><span class="n">FRAG_T</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">FRAG_T</span><span class="p">)</span>
+  <span class="k">static</span> <span class="k">constexpr</span> <span class="n">grape</span><span class="o">::</span><span class="n">MessageStrategy</span> <span class="n">message_strategy</span> <span class="o">=</span>
+      <span class="n">grape</span><span class="o">::</span><span class="n">MessageStrategy</span><span class="o">::</span><span class="n">kSyncOnOuterVertex</span><span class="p">;</span>
+  <span class="k">static</span> <span class="k">constexpr</span> <span class="n">grape</span><span class="o">::</span><span class="n">LoadStrategy</span> <span class="n">load_strategy</span> <span class="o">=</span>
+      <span class="n">grape</span><span class="o">::</span><span class="n">LoadStrategy</span><span class="o">::</span><span class="n">kBothOutIn</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">vertex_t</span> <span class="o">=</span> <span class="k">typename</span> <span class="n">fragment_t</span><span class="o">::</span><span class="n">vertex_t</span><span class="p">;</span>
+
+  <span class="cm">/**
+   * @brief Implement your partial evaluation here.
+   *
+   * @param fragment
+   * @param context
+   * @param messages
+   */</span>
+  <span class="kt">void</span> <span class="n">PEval</span><span class="p">(</span><span class="k">const</span> <span class="n">fragment_t</span><span class="o">&amp;</span> <span class="n">fragment</span><span class="p">,</span> <span class="n">context_t</span><span class="o">&amp;</span> <span class="n">context</span><span class="p">,</span>
+             <span class="n">message_manager_t</span><span class="o">&amp;</span> <span class="n">messages</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">messages</span><span class="p">.</span><span class="n">InitChannels</span><span class="p">(</span><span class="n">thread_num</span><span class="p">());</span>
+    <span class="c1">// Implement your partial evaluation here.</span>
+    <span class="c1">// We put all compute logic in IncEval phase, thus do nothing but force continue.</span>
+    <span class="n">messages</span><span class="p">.</span><span class="n">ForceContinue</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="kt">void</span> <span class="nf">IncEval</span><span class="p">(</span><span class="k">const</span> <span class="n">fragment_t</span><span class="o">&amp;</span> <span class="n">fragment</span><span class="p">,</span> <span class="n">context_t</span><span class="o">&amp;</span> <span class="n">context</span><span class="p">,</span>
+               <span class="n">message_manager_t</span><span class="o">&amp;</span> <span class="n">messages</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// superstep</span>
+    <span class="o">++</span><span class="n">context</span><span class="p">.</span><span class="n">step</span><span class="p">;</span>
+
+    <span class="c1">// Process received messages sent by other fragment here.</span>
+    <span class="p">{</span>
+      <span class="n">messages</span><span class="p">.</span><span class="n">ParallelProcess</span><span class="o">&lt;</span><span class="n">fragment_t</span><span class="p">,</span> <span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span>
+          <span class="n">thread_num</span><span class="p">(),</span> <span class="n">fragment</span><span class="p">,</span>
+          <span class="p">[</span><span class="o">&amp;</span><span class="n">context</span><span class="p">](</span><span class="kt">int</span> <span class="n">tid</span><span class="p">,</span> <span class="n">vertex_t</span> <span class="n">u</span><span class="p">,</span> <span class="k">const</span> <span class="kt">double</span><span class="o">&amp;</span> <span class="n">msg</span><span class="p">)</span> <span class="p">{</span>
+            <span class="c1">// Implement your logic here.</span>
+          <span class="p">});</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Compute the degree for each vertex, set the result in context</span>
+    <span class="k">auto</span> <span class="n">inner_vertices</span> <span class="o">=</span> <span class="n">fragment</span><span class="p">.</span><span class="n">InnerVertices</span><span class="p">();</span>
+    <span class="n">ForEach</span><span class="p">(</span><span class="n">inner_vertices</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">inner_vertices</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span>
+            <span class="p">[</span><span class="o">&amp;</span><span class="n">context</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">fragment</span><span class="p">](</span><span class="kt">int</span> <span class="n">tid</span><span class="p">,</span> <span class="n">vertex_t</span> <span class="n">u</span><span class="p">)</span> <span class="p">{</span>
+              <span class="n">context</span><span class="p">.</span><span class="n">result</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span>
+                <span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">uint64_t</span><span class="o">&gt;</span><span class="p">(</span>
+                  <span class="n">fragment</span><span class="p">.</span><span class="n">GetOutgoingAdjList</span><span class="p">(</span><span class="n">u</span><span class="p">).</span><span class="n">Size</span><span class="p">()</span> <span class="o">+</span>
+                  <span class="n">fragment</span><span class="p">.</span><span class="n">GetIncomingAdjList</span><span class="p">(</span><span class="n">u</span><span class="p">).</span><span class="n">Size</span><span class="p">()</span>
+                <span class="p">);</span>
+            <span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+<span class="p">};</span>  <span class="c1">// namespace gs</span>
+
+<span class="cp">#endif  // MY_APP_H
+</span></code></pre></div></div>
+
+<h3 id="step3-build-and-test-your-algorithm-locally">Step3. Build and Test Your Algorithm Locally</h3>
+
+<p>Use the following command to compile and build the algorithm:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>make build &amp; <span class="nb">cd </span>build
+cmake .. <span class="o">&amp;&amp;</span> make    <span class="c"># compile</span>
+make package        <span class="c"># Package the algorithm as a resource (.gar file) that can be run on GraphScope</span>
+make <span class="nb">test</span>           <span class="c"># unit test</span>
+</code></pre></div></div>
+
+<h3 id="step4-run-on-graphscope-cluster-with-python-interface">Step4. Run on GraphScope Cluster with Python Interface</h3>
+
+<p>After development is completed, we can run the algorithm’s resource (gar file) on the GraphScope cluster. The steps are as follows:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="n">graphscope</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>  <span class="c1"># enable logging
+</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="n">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">load_app</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="n">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># create session locally
+</span><span class="o">&gt;&gt;&gt;</span> <span class="c1"># you can create session on kubernetes by replacing "hosts" with "k8s"
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="p">.</span><span class="nf">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="sh">"</span><span class="s">hosts</span><span class="sh">"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># load property graph and project to simple graph to run the algorithm
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">simple_graph</span> <span class="o">=</span> <span class="nf">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">).</span><span class="nf">_project_to_simple</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># load your algorithm's resource
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">my_app</span> <span class="o">=</span> <span class="nf">load_app</span><span class="p">(</span><span class="sh">'</span><span class="s">&lt;path_to_your_gar_resource&gt;</span><span class="sh">'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># run your algorithm
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="nf">my_app</span><span class="p">(</span><span class="n">simple_graph</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># output numpy result
+</span><span class="o">&gt;&gt;&gt;</span> <span class="nf">print</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="nf">to_numpy</span><span class="p">(</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span><span class="p">))</span>
+</code></pre></div></div>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>This article provides a detailed guide on how to develop a graph analysis algorithm that can be run on the GraphScope cluster based on the C++ template library. We will also share more algorithm examples based on this template library in real-world scenarios in the future, stay tuned!</p>
+
+<h3 id="useful-links">Useful links</h3>
+
+<ul>
+  <li><a href="https://github.com/GraphScope/cpp-template">C++ Template Library Repository</a></li>
+  <li><a href="https://graphscope.io/docs/reference/analytical_engine_index.html">Analytical Engine API</a></li>
+</ul>
+
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Developing and Running Customized Analytical Algorithms for GraphScope&amp;url=https://graphscope.io/tech/2023/07/23/Developing-and-Running-Customized-Analytical-Algorithms-for-GraphScope.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2023/07/23/Developing-and-Running-Customized-Analytical-Algorithms-for-GraphScope.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2023/07/23/Developing-and-Running-Customized-Analytical-Algorithms-for-GraphScope.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2023 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+    
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+</body>
+</html>

@@ -763,7 +763,44 @@ Follow <a class="reference internal" href="code_style_guide.html"><span class="s
 </div>
 <div class="section" id="submitting-your-changes">
 <h3>Submitting Your Changes<a class="headerlink" href="#submitting-your-changes" title="Permalink to this heading">#</a></h3>
-<p>See <a class="reference internal" href="how_to_submit_pr.html"><span class="std std-doc">our guide on how to submit a pull request</span></a>.</p>
+<p>To submit your changes, you will need to open a pull request (PR) against the main repository. If you’re new to GitHub, you can find instructions on how to do that in <a class="reference external" href="https://help.github.com/articles/creating-a-pull-request">GitHub’s documentation</a>. GraphScope requires PR titles to follow a specific format (a.k.a., <a class="reference external" href="https://www.conventionalcommits.org/en/v1.0.0/">Conventional Commits specification</a>), depending on the type of change you’re making. The format is as follows:</p>
+<p><strong>type(scope): brief desciption about the pr</strong></p>
+<p>Below are some examples of the valid PR titles:</p>
+<ul class="simple">
+<li><p>fix: Correct typo</p></li>
+<li><p>feat(interactive): Add support for g.V().outE().inV()</p></li>
+<li><p>refactor!: Drop support for Python 3.8</p></li>
+<li><p>feat(analytical): Add delta-version for PageRank</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note that since pull request titles only have a single line, you have to use ! to indicate breaking changes.</p>
+</div>
+<p>The <strong>type</strong> must be one of the following:</p>
+<ul class="simple">
+<li><p>build: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)</p></li>
+<li><p>ci: Changes to our CI configuration files and scripts</p></li>
+<li><p>docs: Documentation only changes</p></li>
+<li><p>feat: A new feature</p></li>
+<li><p>fix: A bug fix</p></li>
+<li><p>perf: A code change that improves performance</p></li>
+<li><p>refactor: A code change that neither fixes a bug nor adds a feature</p></li>
+<li><p>test: Adding missing tests or correcting existing tests</p></li>
+<li><p>chore: A routine task of development</p></li>
+</ul>
+<p>The <strong>scope</strong> is optional. However, if it assigned, it must be one of the following:</p>
+<ul class="simple">
+<li><p>core</p></li>
+<li><p>python</p></li>
+<li><p>k8s</p></li>
+<li><p>coordinator</p></li>
+<li><p>one</p></li>
+<li><p>interactive</p></li>
+<li><p>insight</p></li>
+<li><p>analytical</p></li>
+<li><p>learning</p></li>
+</ul>
+<p>In addtion to the conventional commit specification, we also require the PRs with feature update, (i.e., titled with feat:) should update the corresponding documentations. The repo depolyed a CI check to ensure this.</p>
 </div>
 <div class="section" id="discussing-and-keeping-your-pull-request-updated">
 <h3>Discussing and Keeping Your Pull Request Updated<a class="headerlink" href="#discussing-and-keeping-your-pull-request-updated" title="Permalink to this heading">#</a></h3>
