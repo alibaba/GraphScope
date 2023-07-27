@@ -23,6 +23,7 @@ import "common.proto";
 import "expr.proto";
 import "schema.proto";
 import "type.proto";
+import "google/protobuf/wrappers.proto";
 
 message MetaData {
   common.IrDataType type = 1;
@@ -409,6 +410,31 @@ message Pattern {
   }
   repeated Sentence sentences = 1;
   repeated MetaData meta_data = 2;
+}
+
+message Sample {
+  message SampleByRatio {
+    // The sample ratio
+    double ratio = 1;
+  }
+  message SampleByNum {
+    // The sample number
+    int32 num = 1;
+  }
+  message SampleType {
+    oneof inner {
+      SampleByRatio sample_by_ratio = 1;
+      SampleByNum sample_by_num = 2;
+    }
+  }
+  // The type of sampling
+  SampleType sample_type = 1;
+  // The seed for random number generator, which is optional
+  google.protobuf.Int32Value seed = 2;
+  // The variable refer to the sample weight (if any)
+  common.Variable sample_weight = 3;
+  // The alias of the sampled graph relation
+  common.NameOrId alias = 4;
 }
 
 message Sink {
