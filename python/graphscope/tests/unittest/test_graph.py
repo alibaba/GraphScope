@@ -510,6 +510,44 @@ def test_project_project(ldbc_graph):
     assert pg2.schema.edge_labels == ["isSubclassOf"]
 
 
+def test_consolidate_columns(p2p_multi_property_graph):
+    def assert_graph_has_props(g, vps, eps):
+        vprops = [p.name for p in g.schema.get_vertex_properties("person")]
+        eprops = [p.name for p in g.schema.get_edge_properties("knows")]
+        for p in vps:
+            assert p in vprops
+        for p in eps:
+            assert p in eprops
+
+    def assert_graph_not_has_props(g, vps, eps):
+        vprops = [p.name for p in g.schema.get_vertex_properties("person")]
+        eprops = [p.name for p in g.schema.get_edge_properties("knows")]
+        for p in vps:
+            assert p not in vprops
+        for p in eps:
+            assert p not in eprops
+
+    g = p2p_multi_property_graph
+    assert_graph_has_props(
+        g,
+        ["prop_0", "prop_1", "prop_2", "prop_3", "prop_4"],
+        ["prop_0", "prop_1", "prop_2", "prop_3", "prop_4"],
+    )
+
+    g = g.consolidate_columns("person", ["prop_0", "prop_1", "prop_2"], "vprops_column")
+    g = g.consolidate_columns("knows", ["prop_2", "prop_3", "prop_4"], "eprops_column")
+    assert_graph_has_props(
+        g,
+        ["vprops_column", "prop_3", "prop_4"],
+        ["prop_0", "prop_1", "eprops_column"],
+    )
+    assert_graph_not_has_props(
+        g,
+        ["prop_0", "prop_1", "prop_2"],
+        ["prop_2", "prop_3", "prop_4"],
+    )
+
+
 def test_error_on_project(arrow_property_graph, ldbc_graph):
     graph = arrow_property_graph
     g2 = graph.project(vertices={"v0": []}, edges={"e0": []})

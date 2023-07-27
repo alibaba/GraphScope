@@ -378,6 +378,7 @@ AddLabelsToGraph(vineyard::ObjectID origin_frag_id,
       graph_name, graph_def, frag);
   return std::dynamic_pointer_cast<gs::IFragmentWrapper>(wrapper);
 }
+
 }  // namespace detail
 
 /**
