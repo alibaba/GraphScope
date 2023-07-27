@@ -674,6 +674,8 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
         _pre_process_for_bind_app_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.PROJECT_GRAPH:
         _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.CONSOLIDATE_COLUMNS:
+        _pre_process_for_consolidate_columns_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.PROJECT_TO_SIMPLE:
         _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.ADD_COLUMN:
@@ -1259,6 +1261,17 @@ def _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs):
     op.attr[types_pb2.ARROW_PROPERTY_DEFINITION].CopyFrom(attr)
     del op.attr[types_pb2.VERTEX_COLLECTIONS]
     del op.attr[types_pb2.EDGE_COLLECTIONS]
+
+
+def _pre_process_for_consolidate_columns_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    # get parent graph schema
+    key_of_parent_op = op.parents[0]
+    r = op_result_pool[key_of_parent_op]
+    graph_name = r.graph_def.key
+    op.attr[types_pb2.GRAPH_NAME].CopyFrom(
+        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8", errors="ignore"))
+    )
 
 
 def _pre_process_for_archive_graph_op(op, op_result_pool, key_to_op, **kwargs):
