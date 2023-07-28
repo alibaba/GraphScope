@@ -463,6 +463,22 @@ def p2p_property_graph_int32(graphscope_session):
 
 
 @pytest.fixture(scope="module")
+def p2p_property_graph_uint32_vid(graphscope_session):
+    g = graphscope_session.g(
+        vid_type="uint32", generate_eid=False, retain_oid=True, directed=True
+    )
+    g = g.add_vertices(f"{property_dir}/p2p-31_property_v_0", "person")
+    g = g.add_edges(
+        f"{property_dir}/p2p-31_property_e_0",
+        label="knows",
+        src_label="person",
+        dst_label="person",
+    )
+    yield g
+    del g
+
+
+@pytest.fixture(scope="module")
 def p2p_property_graph_undirected(graphscope_session):
     g = graphscope_session.g(directed=False, generate_eid=False, retain_oid=False)
     g = g.add_vertices(f"{property_dir}/p2p-31_property_v_0", "person")

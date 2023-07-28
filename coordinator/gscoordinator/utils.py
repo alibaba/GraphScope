@@ -205,7 +205,7 @@ def get_app_sha256(attr, java_class_path: str):
         java_jar_path,
         java_app_class,
     ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE, java_class_path)
-    graph_header, graph_type, _ = _codegen_graph_info(attr)
+    graph_header, graph_type, _, _ = _codegen_graph_info(attr)
     logger.info(
         "app type: %s (%s), graph type: %s (%s)",
         app_class,
@@ -241,7 +241,7 @@ def get_app_sha256(attr, java_class_path: str):
 
 
 def get_graph_sha256(attr):
-    _, graph_class, _ = _codegen_graph_info(attr)
+    _, graph_class, _, _ = _codegen_graph_info(attr)
     return hashlib.sha256(graph_class.encode("utf-8", errors="ignore")).hexdigest()
 
 
@@ -445,7 +445,7 @@ def compile_app(
         str(java_app_class),
     )
 
-    graph_header, graph_type, graph_oid_type = _codegen_graph_info(attr)
+    graph_header, graph_type, graph_oid_type, graph_vid_type = _codegen_graph_info(attr)
     if app_type == "java_pie":
         logger.info(
             "Check consistent between java app %s and graph %s",
@@ -556,6 +556,7 @@ def compile_app(
             _analytical_engine_home=ANALYTICAL_ENGINE_HOME,
             _frame_name=library_name,
             _oid_type=graph_oid_type,
+            _vid_type=graph_vid_type,
             _vd_type=vd_type,
             _md_type=md_type,
             _graph_type=graph_type,
@@ -599,7 +600,7 @@ def compile_graph_frame(
         None: for consistency with compile_app.
     """
     logger.info("Building graph library ...")
-    _, graph_class, _ = _codegen_graph_info(attr)
+    _, graph_class, _, _ = _codegen_graph_info(attr)
 
     library_dir = os.path.join(workspace, library_name)
     os.makedirs(library_dir, exist_ok=True)
@@ -782,7 +783,11 @@ def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op, **kwargs):
                     )
                 )
                 op.attr[types_pb2.VID_TYPE].CopyFrom(
-                    utils.s_to_attr(utils.data_type_to_cpp(vy_info.vid_type))
+                    utils.s_to_attr(
+                        utils.normalize_data_type_str(
+                            utils.data_type_to_cpp(vy_info.vid_type)
+                        )
+                    )
                 )
                 op.attr[types_pb2.V_DATA_TYPE].CopyFrom(
                     utils.s_to_attr(utils.data_type_to_cpp(vy_info.vdata_type))
@@ -1735,7 +1740,7 @@ def _codegen_graph_info(attr):
         raise ValueError(
             f"Unknown graph type: {graph_def_pb2.GraphTypePb.Name(graph_type)}"
         )
-    return graph_header, graph_fqn, oid_type()
+    return graph_header, graph_fqn, oid_type(), vid_type()
 
 
 def create_single_op_dag(op_type, config=None):

@@ -659,6 +659,18 @@ def test_add_column_int32_oid(
     assert "pagerank" in property_names
 
 
+def test_uint32_vid_graph(p2p_property_graph_uint32_vid):
+    g = p2p_property_graph_uint32_vid
+    assert g.oid_type == "int64_t"
+    assert g.vid_type == "uint32_t"
+
+
+def test_uint64_vid_graph(p2p_property_graph):
+    g = p2p_property_graph
+    assert g.oid_type == "int64_t"
+    assert g.vid_type == "uint64_t"
+
+
 def test_graph_lifecycle(graphscope_session):
     graph = load_p2p_network(graphscope_session)
     c = graphscope.wcc(graph)
