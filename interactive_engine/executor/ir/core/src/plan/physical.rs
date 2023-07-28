@@ -552,6 +552,10 @@ impl AsPhysical for pb::logical_plan::Operator {
                 Union(_) => Ok(()),
                 Intersect(_) => Ok(()),
                 Unfold(unfold) => unfold.add_job_builder(builder, plan_meta),
+                Root(_) => {
+                    builder.add_dummy_source();
+                    Ok(())
+                }
                 _ => Err(IrError::Unsupported(format!("the operator {:?}", self))),
             }
         } else {

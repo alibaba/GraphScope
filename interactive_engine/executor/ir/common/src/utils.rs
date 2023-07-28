@@ -602,6 +602,7 @@ impl pb::logical_plan::Operator {
                             .map(|params| !params.is_queryable())
                             .unwrap_or(true)
                 }
+                pb::logical_plan::operator::Opr::Root(_) => true,
                 _ => false,
             }
         } else {

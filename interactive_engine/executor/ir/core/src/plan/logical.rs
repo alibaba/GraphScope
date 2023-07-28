@@ -267,6 +267,18 @@ impl LogicalPlan {
         Self { nodes, max_node_id: node_id + 1, meta }
     }
 
+    pub fn reset_root_as_dummy(&mut self) {
+        if let Some(root) = self.get_first_node() {
+            let mut root = root.borrow_mut();
+            match root.opr.opr.as_mut() {
+                Some(pb::logical_plan::operator::Opr::Scan(_)) => {
+                    root.opr.opr = Some(pb::logical_plan::operator::Opr::Root(pb::RootScan {}));
+                }
+                _ => {}
+            }
+        }
+    }
+
     /// Get a node reference from the logical plan
     pub fn get_node(&self, id: NodeId) -> Option<NodeType> {
         self.nodes.get(id as usize).cloned()
@@ -440,9 +452,7 @@ impl LogicalPlan {
                             debug!("pattern matching by ExtendStrategy");
                             let plan = extend_strategy.build_logical_plan()?;
                             let new_node_id = self.append_plan(plan, parent_ids.clone())?;
-                            // As we have added a new source op to scan with label efficiently in extend_strategy,
-                            // we remove the old source op.
-                            self.nodes.remove(0);
+                            self.reset_root_as_dummy();
                             Ok(new_node_id)
                         }
                         Err(err) => match err {
@@ -451,6 +461,10 @@ impl LogicalPlan {
                                 debug!("pattern matching by NaiveStrategy");
                                 let naive_strategy = NaiveStrategy::try_from(pattern.clone())?;
                                 let plan = naive_strategy.build_logical_plan()?;
+                                // TODO: If the root node of logical plan is a `Scan`, make it as the source of the `Pattern` plan,
+                                //          and add a Dummy Root to the original logical plan,
+                                //          which makes the plan looks like: Dummy -> Scan -> Pattern
+                                //       Otherwise, if the root is already a Dummy, then add a `ScanAll` for the `Pattern` plan.
                                 self.append_plan(plan, parent_ids.clone())
                             }
                             _ => Err(err.into()),
