@@ -19,7 +19,6 @@ package com.alibaba.graphscope.runtime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Vector;
 
 /**
