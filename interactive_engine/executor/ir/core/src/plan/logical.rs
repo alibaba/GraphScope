@@ -324,6 +324,10 @@ impl LogicalPlan {
         self.max_node_id
     }
 
+    pub fn get_plan_meta(&self) -> PlanMeta {
+        self.meta.clone()
+    }
+
     /// Append a new node into the logical plan, with specified `parent_ids`
     /// as its parent nodes. In order to do so, all specified parents must present in the
     /// logical plan.
