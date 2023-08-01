@@ -681,9 +681,8 @@ class ArrowFlattenedFragment {
     auto& schema = fragment_->schema();
     label_id_t vertex_label_num =
         static_cast<label_id_t>(schema.AllVertexEntries().size());
-    for (label_id_t v_label = 0; v_label < vertex_label_num;
-         v_label++) {
-      if (schema_.IsVertexValid(v_label)){
+    for (label_id_t v_label = 0; v_label < vertex_label_num; v_label++) {
+      if (schema_.IsVertexValid(v_label)) {
         if (fragment_->GetVertex(v_label, oid, v)) {
           // generate continuous lid
           v.SetValue(union_id_parser_.GenerateContinuousLid(v.GetValue()));
@@ -753,9 +752,8 @@ class ArrowFlattenedFragment {
     auto& schema = fragment_->schema();
     label_id_t vertex_label_num =
         static_cast<label_id_t>(schema.AllVertexEntries().size());
-    for (label_id_t v_label = 0; v_label < vertex_label_num;
-         v_label++) {
-      if (schema_.IsVertexValid(v_label)){
+    for (label_id_t v_label = 0; v_label < vertex_label_num; v_label++) {
+      if (schema_.IsVertexValid(v_label)) {
         if (fragment_->GetInnerVertex(v_label, oid, v)) {
           // generate continuous lid
           v.SetValue(union_id_parser_.GenerateContinuousLid(v.GetValue()));
@@ -770,9 +768,8 @@ class ArrowFlattenedFragment {
     auto& schema = fragment_->schema();
     label_id_t vertex_label_num =
         static_cast<label_id_t>(schema.AllVertexEntries().size());
-    for (label_id_t v_label = 0; v_label < vertex_label_num;
-         v_label++) {
-      if (schema_.IsVertexValid(v_label)){
+    for (label_id_t v_label = 0; v_label < vertex_label_num; v_label++) {
+      if (schema_.IsVertexValid(v_label)) {
         if (fragment_->GetOuterVertex(v_label, oid, v)) {
           // generate continuous lid
           v.SetValue(union_id_parser_.GenerateContinuousLid(v.GetValue()));
@@ -801,9 +798,8 @@ class ArrowFlattenedFragment {
     auto& schema = fragment_->schema();
     label_id_t vertex_label_num =
         static_cast<label_id_t>(schema.AllVertexEntries().size());
-    for (label_id_t v_label = 0; v_label < vertex_label_num;
-         v_label++) {
-      if (schema_.IsVertexValid(v_label)){
+    for (label_id_t v_label = 0; v_label < vertex_label_num; v_label++) {
+      if (schema_.IsVertexValid(v_label)) {
         if (fragment_->Oid2Gid(v_label, oid, gid)) {
           return true;
         }
