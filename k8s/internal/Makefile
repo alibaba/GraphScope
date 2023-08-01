@@ -56,7 +56,7 @@ graphscope:
 
 graphscope-jupyter-manylinux2014-py3:
 	docker run --rm -it -v $(WORKING_DIR)/../..:/work \
-		   ${REGISTRY}/graphscope/graphscope-dev:wheel \
+		   ${REGISTRY}/graphscope/graphscope-dev:wheel-${VINEYARD_VERSION} \
 		   bash -c 'pip3 install graphscope-client -U && \
 					cd /work/python/jupyter/graphscope && \
 					python3 setup.py bdist_wheel'
@@ -104,9 +104,6 @@ graphscope-darwin-py3:
 		done
 
 graphscope-manylinux2014-py3-nodocker:
-	# TODO(siyuan) Remove after newer wheel image are released
-	sudo yum install java-11-openjdk-devel -y && \
-	sudo yum remove java-1.8.0-openjdk-devel java-1.8.0-openjdk java-1.8.0-openjdk-headless -y && \
 	cd $(WORKING_DIR)/../.. && \
 		if [[ "${ARCH}" == "aarch64" ]]; then \
 			export AUDITWHEEL_PLAT=manylinux2014_${ARCH}; \
@@ -146,9 +143,9 @@ graphscope-manylinux2014-py3-nodocker:
 		done
 
 graphscope-manylinux2014-py3:
-	docker pull ${REGISTRY}/graphscope/graphscope-dev:wheel
+	docker pull ${REGISTRY}/graphscope/graphscope-dev:wheel-${VINEYARD_VERSION}
 	docker run --rm -v $(WORKING_DIR)/../..:/work \
-		${REGISTRY}/graphscope/graphscope-dev:wheel \
+		${REGISTRY}/graphscope/graphscope-dev:wheel-${VINEYARD_VERSION} \
 		bash -c '. ~/.graphscope_env && \
 			sudo chown -R graphscope /work && \
 			cd /work/k8s/internal && \
@@ -250,9 +247,9 @@ graphscope-client-darwin-py3:
 		done
 
 graphscope-client-manylinux2014-py3:
-	docker pull ${REGISTRY}/graphscope/graphscope-dev:wheel
+	docker pull ${REGISTRY}/graphscope/graphscope-dev:wheel-${VINEYARD_VERSION}
 	docker run --rm -v $(WORKING_DIR)/../..:/work \
-		${REGISTRY}/graphscope/graphscope-dev:wheel \
+		${REGISTRY}/graphscope/graphscope-dev:wheel-${VINEYARD_VERSION} \
 		bash -c '. ~/.graphscope_env && \
 		    sudo chown -R graphscope /work && \
 		    cd /work/k8s/internal && \
