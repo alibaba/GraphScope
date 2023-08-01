@@ -58,9 +58,8 @@ jobs:
         sudo make install
 
         # make delocate-wheel happy
-        cmake . -DCMAKE_INSTALL_PREFIX=/usr/local/opt/glog
-        make -j
-        sudo make install
+        sudo mkdir -p /usr/local/opt/glog/lib
+        sudo ln -s /usr/local/lib/libglog*.dylib /usr/local/opt/glog/lib/
 
     - name: Install latest libgrape-lite
       if: false
