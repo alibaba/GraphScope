@@ -52,7 +52,13 @@ jobs:
         . ~/.graphscope_env
         git clone https://github.com/google/glog.git
         cd glog
+
         cmake . -DWITH_TLS=OFF -DWITH_SYMBOLIZE=OFF -DWITH_UNWIND=OFF
+        make -j
+        sudo make install
+
+        # make delocate-wheel happy
+        cmake . -DCMAKE_INSTALL_PREFIX=/usr/local/opt/glog
         make -j
         sudo make install
 
