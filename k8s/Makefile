@@ -6,6 +6,9 @@ ifeq ($(REGISTRY),)
     REGISTRY := registry.cn-hongkong.aliyuncs.com
 endif
 
+# x86_64 or aarch64
+ARCH := $(shell uname -m)
+
 VERSION ?= latest
 VINEYARD_VERSION ?= v0.16.1
 # This is the version of builder base image in most cases, except for graphscope-dev
@@ -43,7 +46,7 @@ dev-wheel:
 		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
-		-t graphscope/graphscope-dev:wheel \
+		-t graphscope/graphscope-dev:wheel-${VINEYARD_VERSION}-${ARCH} \
 		-f $(DOCKERFILES_DIR)/manylinux2014.Dockerfile .
 
 
