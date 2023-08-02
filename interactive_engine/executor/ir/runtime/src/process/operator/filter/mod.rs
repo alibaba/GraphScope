@@ -13,12 +13,17 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 mod select;
+mod sample;
 
-use pegasus::api::function::FilterFunction;
+use pegasus::api::function::{FilterFunction, MutFilterFunction};
 
 use crate::error::FnGenResult;
 use crate::process::record::Record;
 
 pub trait FilterFuncGen {
     fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>>;
+}
+
+pub trait MutFilterFunctionGen {
+    fn gen_mut_filter(self) -> FnGenResult<Box<dyn MutFilterFunction<Record>>>;
 }

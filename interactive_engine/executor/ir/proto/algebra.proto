@@ -431,10 +431,8 @@ message Sample {
   SampleType sample_type = 1;
   // The seed for random number generator, which is optional
   google.protobuf.Int32Value seed = 2;
-  // The variable refer to the sample weight (if any)
+  // The variable refer to the sample weight, which is optional
   common.Variable sample_weight = 3;
-  // The alias of the sampled graph relation
-  common.NameOrId alias = 4;
 }
 
 message Sink {

@@ -158,6 +158,10 @@ impl<P: PartitionInfo, C: ClusterInfo> FnGenerator<P, C> {
         Ok(opr.gen_map()?)
     }
 
+    fn gen_sample(&self, opr: algebra_pb::Sample) -> FnGenResult<RecordFilter> {
+        Ok(opr.gen_filter()?)
+    }
+
     fn gen_sink(&self, opr: pb::PhysicalOpr) -> FnGenResult<Sinker> {
         Ok(opr.gen_sink()?)
     }
@@ -625,6 +629,10 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                         let scan_iter = udf_gen.gen_source(scan.clone().into()).unwrap();
                         Ok(scan_iter)
                     })?;
+                }
+                OpKind::Sample(sample) => {
+                    let func = self.udf_gen.gen_sample(sample)?;
+                    stream = stream.filter(move |input| func.test(input))?;
                 }
                 OpKind::Root(_) => {
                     // this would be processed in assemble, and can not be reached when install.
