@@ -21,25 +21,23 @@ use pegasus::api::function::FnResult;
 use crate::error::FnGenError;
 use crate::error::FnGenResult;
 use crate::process::operator::filter::FilterFuncGen;
-use crate::process::operator::TagKey;
 use crate::process::record::Record;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 
 #[derive(Debug)]
-struct SampleOperator {
-    number: u32,
-    weight: TagKey,
-}
-
-#[derive(Debug)]
 struct CoinOperator {
+    seed: Option<i32>,
     ratio: f64,
 }
 
 impl FilterFunction<Record> for CoinOperator {
     fn test(&self, _input: &Record) -> FnResult<bool> {
-        let mut rng = StdRng::from_entropy();
+        let mut rng = if let Some(seed) = self.seed {
+            StdRng::seed_from_u64(seed as u64)
+        } else {
+            StdRng::from_entropy()
+        };
         if rng.gen_bool(self.ratio) {
             Ok(true)
         } else {
@@ -59,7 +57,7 @@ impl FilterFuncGen for algebra_pb::Sample {
                     )))?;
             match sample_type {
                 algebra_pb::sample::sample_type::Inner::SampleByRatio(ratio) => {
-                    let coin = CoinOperator { ratio: ratio.ratio };
+                    let coin = CoinOperator { seed: self.seed, ratio: ratio.ratio };
                     if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
                         debug!("Runtime path end operator: {:?}", coin);
                     }
