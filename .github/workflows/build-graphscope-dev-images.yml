@@ -36,6 +36,7 @@ jobs:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
         # x86_64
         arch=$(uname -m)
         # image tag
@@ -64,6 +65,7 @@ jobs:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
         # aarch64
         arch=$(uname -m)
         # image tag
@@ -83,6 +85,7 @@ jobs:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
         # create
         sudo docker manifest create \
           ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }} \
