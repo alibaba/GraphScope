@@ -1249,9 +1249,9 @@ def test_app_on_local_vm_graph(
     p2p_property_graph_undirected_local_vm_string,
     p2p_property_graph_undirected_local_vm_int32,
 ):
-    a1 = Pregel_API_Test()
+    a1 = Pregel_GetSchema()
     a1(p2p_property_graph_undirected_local_vm_string)
-    a2 = PIE_API_Test()
+    a2 = PIE_GetSchema()
     a2(p2p_property_graph_undirected_local_vm_int32)
     # Comment out some base case to reduce the compile time.
     # a1(p2p_property_graph_undirected_local_vm_string)
