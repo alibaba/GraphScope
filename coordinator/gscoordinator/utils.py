@@ -84,6 +84,10 @@ except ModuleNotFoundError:
 #   1) get from environment variable `GRAPHSCOPE_HOME`, if not exist,
 #   2) infer from COORDINATOR_HOME
 GRAPHSCOPE_HOME = os.environ.get("GRAPHSCOPE_HOME", None)
+ANALYTICAL_ENGINE_HOME = GRAPHSCOPE_HOME
+ANALYTICAL_ENGINE_PATH = os.path.join(GRAPHSCOPE_HOME, "bin", "grape_engine")
+INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
+
 if GRAPHSCOPE_HOME is None:
     # Note: The order of locations matters
     possible_locations = [
