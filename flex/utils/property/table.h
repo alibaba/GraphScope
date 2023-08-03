@@ -62,6 +62,10 @@ class Table {
 
   void insert(size_t index, const std::vector<Any>& values);
 
+  // insert properties except for the primary key
+  void insert(size_t index, const std::vector<Any>& values,
+              int32_t primary_index);
+
   void Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer,
                  const std::string& prefix, size_t row_num);
 

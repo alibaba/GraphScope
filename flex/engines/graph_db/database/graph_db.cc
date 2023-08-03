@@ -51,10 +51,10 @@ GraphDB& GraphDB::get() {
 void GraphDB::Init(
     const Schema& schema,
     const std::vector<std::pair<std::string, std::string>>& vertex_files,
-    const std::vector<std::tuple<std::string, std::string, std::string,
-                                 std::string>>& edge_files,
-    const std::vector<std::string>& plugins, const std::string& data_dir,
-    int thread_num) {
+    const std::vector<std::tuple<std::string, std::string, std::string, int32_t,
+                                 int32_t, std::string>>& edge_files,
+    const std::vector<std::string>& plugins, const LoadConfig& load_config,
+    const std::string& data_dir, int thread_num) {
   std::filesystem::path data_dir_path(data_dir);
   if (!std::filesystem::exists(data_dir_path)) {
     std::filesystem::create_directory(data_dir_path);

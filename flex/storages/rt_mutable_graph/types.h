@@ -30,6 +30,7 @@ using timestamp_t = uint32_t;
 using vid_t = uint32_t;
 using oid_t = int64_t;
 using label_t = uint8_t;
+using label_id_t = int32_t;
 
 }  // namespace gs
 

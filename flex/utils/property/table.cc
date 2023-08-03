@@ -144,6 +144,18 @@ void Table::insert(size_t index, const std::vector<Any>& values) {
   }
 }
 
+void Table::insert(size_t index, const std::vector<Any>& values,
+                   int32_t primary_index) {
+  assert(values.size() == columns_.size() + 1);
+  CHECK_EQ(values.size(), columns_.size() + 1);
+  for (size_t i = 0; i < primary_index; ++i) {
+    columns_[i]->set_any(index, values[i]);
+  }
+  for (size_t i = primary_index + 1; i < values.size(); ++i) {
+    columns_[i - 1]->set_any(index, values[i]);
+  }
+}
+
 void Table::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer,
                       const std::string& prefix, size_t row_num) {
   col_id_indexer_.Serialize(writer);

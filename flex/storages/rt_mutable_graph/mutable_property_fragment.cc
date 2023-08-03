@@ -43,14 +43,21 @@ void MutablePropertyFragment::initVertices(
       filenames.push_back(pair.second);
     }
   }
+  VLOG(10) << "Start init vertices for label " << v_label_i << " with "
+           << filenames.size() << " files.";
   auto& table = vertex_data_[v_label_i];
   auto& property_types = schema_.get_vertex_properties(v_label_name);
+
+  // col num should be property num - 1, because one column will be used as
+  // primary key
+  CHECK(property_types.size() > 0);
   size_t col_num = property_types.size();
 
   std::vector<std::string> col_names;
   for (size_t col_i = 0; col_i < col_num; ++col_i) {
     col_names.push_back("col_" + std::to_string(col_i));
   }
+  // create real property_types_vec for table
   table.init(col_names, property_types,
              schema_.get_vertex_storage_strategies(v_label_name),
              schema_.get_max_vnum(v_label_name));
@@ -142,9 +149,13 @@ void preprocess_line(char* line) {
   line[len + 1] = '\0';
 }
 
+// each file name is tuple <src_column_ind, dst_column_id, edata(currently only
+// one edata)> src_column_id indicate which column is src id, dst_column_id
+// indicate which column is dst id
+// default is 0, 1
 template <typename EDATA_T>
 std::pair<MutableCsrBase*, MutableCsrBase*> construct_csr(
-    const std::vector<std::string>& filenames,
+    const std::vector<std::tuple<int32_t, int32_t, std::string>>& filenames,
     const std::vector<PropertyType>& property_types, EdgeStrategy ie_strategy,
     EdgeStrategy oe_strategy, const LFIndexer<vid_t>& src_indexer,
     const LFIndexer<vid_t>& dst_indexer) {
@@ -166,7 +177,12 @@ std::pair<MutableCsrBase*, MutableCsrBase*> construct_csr(
   for (auto& item : header) {
     item.type = PropertyType::kString;
   }
-  for (auto filename : filenames) {
+  for (auto filename_meta : filenames) {
+    auto src_col_id = std::get<0>(filename_meta);
+    auto dst_col_id = std::get<1>(filename_meta);
+    auto filename = std::get<2>(filename_meta);
+    LOG(INFO) << "processing " << filename << " with src_col_id " << src_col_id
+              << " and dst_col_id " << dst_col_id;
     FILE* fin = fopen(filename.c_str(), "r");
     if (fgets(line_buf, 4096, fin) == NULL) {
       continue;
@@ -174,22 +190,49 @@ std::pair<MutableCsrBase*, MutableCsrBase*> construct_csr(
     preprocess_line(line_buf);
     if (first_file) {
       ParseRecord(line_buf, header);
-      std::vector<std::string> col_names(col_num);
-      for (size_t i = 0; i < col_num; ++i) {
-        col_names[i] = std::string(header[i + 2].value.s.data(),
-                                   header[i + 2].value.s.size());
-      }
       first_file = false;
     }
 
-    while (fgets(line_buf, 4096, fin) != NULL) {
-      ParseRecordX(line_buf, src, dst, data);
-      src_index = src_indexer.get_index(src);
-      dst_index = dst_indexer.get_index(dst);
-      ++idegree[dst_index];
-      ++odegree[src_index];
-      parsed_edges.emplace_back(src_index, dst_index, data);
+    // if match the default configuration, use ParseRecordX to fasten the
+    // parsing
+    if (src_col_id == 0 && dst_col_id == 1) {
+      while (fgets(line_buf, 4096, fin) != NULL) {
+        // ParseRecord src_id, dst_id, data from row.
+        ParseRecordX(line_buf, src, dst, data);
+        src_index = src_indexer.get_index(src);
+        dst_index = dst_indexer.get_index(dst);
+        ++idegree[dst_index];
+        ++odegree[src_index];
+        parsed_edges.emplace_back(src_index, dst_index, data);
+      }
+    } else {
+      std::vector<Any> row(col_num + 2);
+      CHECK(src_col_id < row.size() && dst_col_id < row.size());
+      row[src_col_id].type = PropertyType::kInt64;
+      row[dst_col_id].type = PropertyType::kInt64;
+      int32_t data_col_id = -1;
+      // the left column is must the edata.
+      for (auto i = 0; i < row.size(); ++i) {
+        if (row[i].type == PropertyType::kEmpty) {
+          // The index 0's type must exists
+          row[i].type = property_types[0];
+          data_col_id = i;
+          break;
+        }
+      }
+      CHECK(data_col_id != -1);
+      while (fgets(line_buf, 4096, fin) != NULL) {
+        // ParseRecord src_id, dst_id, data from row.
+        ParseRecord(line_buf, row);
+        src_index = src_indexer.get_index(row[src_col_id].AsInt64());
+        dst_index = dst_indexer.get_index(row[dst_col_id].AsInt64());
+        ConvertAny<EDATA_T>::to(row[data_col_id], data);
+        ++idegree[dst_index];
+        ++odegree[src_index];
+        parsed_edges.emplace_back(src_index, dst_index, data);
+      }
     }
+
     fclose(fin);
   }
 
@@ -208,19 +251,24 @@ std::pair<MutableCsrBase*, MutableCsrBase*> construct_csr(
 
 void MutablePropertyFragment::initEdges(
     label_t src_label_i, label_t dst_label_i, label_t edge_label_i,
-    const std::vector<std::tuple<std::string, std::string, std::string,
-                                 std::string>>& edge_files) {
+    const std::vector<std::tuple<std::string, std::string, std::string, int32_t,
+                                 int32_t, std::string>>& edge_files) {
   std::string src_label_name = schema_.get_vertex_label_name(src_label_i);
   std::string dst_label_name = schema_.get_vertex_label_name(dst_label_i);
   std::string edge_label_name = schema_.get_edge_label_name(edge_label_i);
-  std::vector<std::string> filenames;
+  std::vector<std::tuple<int32_t, int32_t, std::string>> filenames;
   for (auto& tuple : edge_files) {
     if (std::get<0>(tuple) == src_label_name &&
         std::get<1>(tuple) == dst_label_name &&
         std::get<2>(tuple) == edge_label_name) {
-      filenames.push_back(std::get<3>(tuple));
+      filenames.emplace_back(std::get<3>(tuple), std::get<4>(tuple),
+                             std::get<5>(tuple));
     }
   }
+  VLOG(10) << "Init edges src label: " << src_label_name
+           << " dst label: " << dst_label_name
+           << " edge label: " << edge_label_name
+           << " filenames: " << filenames.size();
   auto& property_types = schema_.get_edge_properties(
       src_label_name, dst_label_name, edge_label_name);
   size_t col_num = property_types.size();
@@ -284,8 +332,6 @@ void MutablePropertyFragment::initEdges(
       std::tie(ie_[index], oe_[index]) = construct_csr<double>(
           filenames, property_types, ie_strtagy, oe_strtagy,
           lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
-
-      //      LOG(FATAL) << "Unsupported edge property type.";
     }
   } else {
     LOG(FATAL) << "Unsupported edge property type.";
@@ -295,8 +341,8 @@ void MutablePropertyFragment::initEdges(
 void MutablePropertyFragment::Init(
     const Schema& schema,
     const std::vector<std::pair<std::string, std::string>>& vertex_files,
-    const std::vector<std::tuple<std::string, std::string, std::string,
-                                 std::string>>& edge_files,
+    const std::vector<std::tuple<std::string, std::string, std::string, int32_t,
+                                 int32_t, std::string>>& edge_files,
     int thread_num) {
   schema_ = schema;
   vertex_label_num_ = schema_.vertex_label_num();
@@ -485,6 +531,14 @@ inline MutableCsrBase* create_csr(EdgeStrategy es,
     } else if (es == EdgeStrategy::kNone) {
       return new EmptyCsr<int64_t>();
     }
+  } else if (properties[0] == PropertyType::kDouble) {
+    if (es == EdgeStrategy::kSingle) {
+      return new SingleMutableCsr<double>();
+    } else if (es == EdgeStrategy::kMultiple) {
+      return new MutableCsr<double>();
+    } else if (es == EdgeStrategy::kNone) {
+      return new EmptyCsr<double>();
+    }
   }
   LOG(FATAL) << "not support edge strategy or edge data type";
   return nullptr;
@@ -658,25 +712,34 @@ void MutablePropertyFragment::parseVertexFiles(
   if (filenames.empty()) {
     return;
   }
+  LOG(INFO) << "Parsing vertex files for label " << vertex_label;
 
   size_t label_index = schema_.get_vertex_label_id(vertex_label);
   auto& table = vertex_data_[label_index];
   auto& property_types = schema_.get_vertex_properties(vertex_label);
   size_t col_num = property_types.size();
-  std::vector<Any> properties(col_num);
-  for (size_t col_i = 0; col_i != col_num; ++col_i) {
-    properties[col_i].type = property_types[col_i];
+  int32_t primary_key_ind = schema_.get_vertex_primary_key_ind(label_index);
+  std::vector<Any> properties(col_num + 1);
+  std::vector<Any> header(col_num + 1);
+  for (size_t col_i = 0; col_i != col_num + 1; ++col_i) {
+    if (col_i < primary_key_ind) {
+      properties[col_i].type = property_types[col_i];
+    } else if (col_i > primary_key_ind) {
+      properties[col_i].type = property_types[col_i - 1];
+    } else {
+      properties[col_i].type = schema_.get_vertex_primary_key_type(label_index);
+    }
+    header[col_i].type = PropertyType::kString;
   }
 
   char line_buf[4096];
+  // we can't assume oid will be the first column.
   oid_t oid;
   vid_t v_index;
   bool first_file = true;
-  std::vector<Any> header(col_num + 1);
-  for (auto& item : header) {
-    item.type = PropertyType::kString;
-  }
+
   for (auto filename : filenames) {
+    VLOG(10) << "Processing file: " << filename;
     FILE* fin = fopen(filename.c_str(), "r");
     if (fgets(line_buf, 4096, fin) == NULL) {
       continue;
@@ -685,19 +748,24 @@ void MutablePropertyFragment::parseVertexFiles(
     if (first_file) {
       ParseRecord(line_buf, header);
       std::vector<std::string> col_names(col_num);
-      for (size_t i = 0; i < col_num; ++i) {
-        col_names[i] = std::string(header[i + 1].value.s.data(),
-                                   header[i + 1].value.s.size());
+      for (size_t i = 0; i < primary_key_ind; ++i) {
+        col_names[i] =
+            std::string(header[i].value.s.data(), header[i].value.s.size());
+      }
+      for (size_t i = primary_key_ind + 1; i < header.size(); ++i) {
+        col_names[i - 1] =
+            std::string(header[i].value.s.data(), header[i].value.s.size());
       }
       table.reset_header(col_names);
       first_file = false;
     }
-
     while (fgets(line_buf, 4096, fin) != NULL) {
       preprocess_line(line_buf);
-      ParseRecord(line_buf, oid, properties);
+      ParseRecord(line_buf, properties);
+      oid = properties[primary_key_ind].AsInt64();
       if (indexer.add(oid, v_index)) {
-        table.insert(v_index, properties);
+        // insert properties except for primary_key_ind
+        table.insert(v_index, properties, primary_key_ind);
       }
     }
 

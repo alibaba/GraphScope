@@ -22,15 +22,18 @@ namespace gs {
 Schema::Schema() = default;
 Schema::~Schema() = default;
 
-void Schema::add_vertex_label(const std::string& label,
-                              const std::vector<PropertyType>& properties,
-                              const std::vector<StorageStrategy>& strategies,
-                              size_t max_vnum) {
+void Schema::add_vertex_label(
+    const std::string& label, const std::vector<PropertyType>& property_types,
+    const std::vector<std::string>& property_names,
+    const std::tuple<PropertyType, std::string, int32_t>& primary_key,
+    const std::vector<StorageStrategy>& strategies, size_t max_vnum) {
   label_t v_label_id = vertex_label_to_index(label);
-  vproperties_[v_label_id] = properties;
+  vproperties_[v_label_id] = property_types;
+  vprop_names_[v_label_id] = property_names;
   vprop_storage_[v_label_id] = strategies;
   vprop_storage_[v_label_id].resize(vproperties_[v_label_id].size(),
                                     StorageStrategy::kMem);
+  v_primary_keys_[v_label_id] = primary_key;
   max_vnum_[v_label_id] = max_vnum;
 }
 
@@ -38,6 +41,7 @@ void Schema::add_edge_label(const std::string& src_label,
                             const std::string& dst_label,
                             const std::string& edge_label,
                             const std::vector<PropertyType>& properties,
+                            const std::vector<std::string>& prop_names,
                             EdgeStrategy oe, EdgeStrategy ie) {
   label_t src_label_id = vertex_label_to_index(src_label);
   label_t dst_label_id = vertex_label_to_index(dst_label);
@@ -48,6 +52,7 @@ void Schema::add_edge_label(const std::string& src_label,
   eproperties_[label_id] = properties;
   oe_strategy_[label_id] = oe;
   ie_strategy_[label_id] = ie;
+  eprop_names_[label_id] = prop_names;
 }
 
 label_t Schema::vertex_label_num() const {
@@ -187,6 +192,16 @@ std::string Schema::get_edge_label_name(label_t index) const {
   return ret;
 }
 
+int32_t Schema::get_vertex_primary_key_ind(label_t index) const {
+  CHECK(v_primary_keys_.size() > index);
+  return std::get<2>(v_primary_keys_.at(index));
+}
+
+PropertyType Schema::get_vertex_primary_key_type(label_t index) const {
+  CHECK(v_primary_keys_.size() > index);
+  return std::get<0>(v_primary_keys_.at(index));
+}
+
 void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) {
   vlabel_indexer_.Serialize(writer);
   elabel_indexer_.Serialize(writer);
@@ -212,6 +227,8 @@ label_t Schema::vertex_label_to_index(const std::string& label) {
     vproperties_.resize(ret + 1);
     vprop_storage_.resize(ret + 1);
     max_vnum_.resize(ret + 1);
+    vprop_names_.resize(ret + 1);
+    v_primary_keys_.resize(ret + 1);
   }
   return ret;
 }
@@ -349,17 +366,17 @@ static bool expect_config(YAML::Node root, const std::string& key,
 }
 
 static PropertyType StringToPropertyType(const std::string& str) {
-  if (str == "int32") {
+  if (str == "int32" || str == DT_SIGNED_INT32) {
     return PropertyType::kInt32;
   } else if (str == "Date") {
     return PropertyType::kDate;
-  } else if (str == "String") {
+  } else if (str == "String" || str == DT_STRING) {
     return PropertyType::kString;
   } else if (str == "Empty") {
     return PropertyType::kEmpty;
-  } else if (str == "int64") {
+  } else if (str == "int64" || str == DT_SIGNED_INT64) {
     return PropertyType::kInt64;
-  } else if (str == "double") {
+  } else if (str == "double" || str == DT_DOUBLE) {
     return PropertyType::kDouble;
   } else {
     return PropertyType::kEmpty;
@@ -388,9 +405,35 @@ StorageStrategy StringToStorageStrategy(const std::string& str) {
   }
 }
 
+static bool fetch_src_dst_column_mapping(YAML::Node node,
+                                         const std::string& key,
+                                         int32_t& column_id) {
+  if (node[key]) {
+    auto column_mappings = node[key];
+    if (!column_mappings.IsSequence()) {
+      LOG(ERROR) << "column_mappings is not set properly";
+      return false;
+    }
+    if (column_mappings.size() > 1) {
+      LOG(ERROR) << "Only only source vertex mapping is needed";
+      return false;
+    }
+    auto column_mapping = column_mappings[0]["column"];
+    if (!get_scalar(column_mapping, "index", column_id)) {
+      LOG(ERROR) << "No index is set for source vertex mapping";
+      return false;
+    }
+  } else {
+    LOG(WARNING)
+        << "source_vertex_mappings is not set, use default src_column = 0";
+  }
+  return true;
+}
+
 static bool parse_vertex_properties(YAML::Node node,
                                     const std::string& label_name,
                                     std::vector<PropertyType>& types,
+                                    std::vector<std::string>& names,
                                     std::vector<StorageStrategy>& strategies) {
   if (!node || !node.IsSequence()) {
     LOG(ERROR) << "properties of vertex-" << label_name
@@ -405,23 +448,46 @@ static bool parse_vertex_properties(YAML::Node node,
     return false;
   }
 
-  if (!expect_config(node[0], "name", "_ID") ||
-      !expect_config(node[0], "type", "int64")) {
-    LOG(ERROR) << "the first property of vertex-" << label_name
-               << " should be _ID with type int64";
-    return false;
-  }
+  // if (!expect_config(node[0], "name", "_ID") ||
+  //     !expect_config(node[0], "type", "int64")) {
+  //   LOG(ERROR) << "the first property of vertex-" << label_name
+  //              << " should be _ID with type int64";
+  //   return false;
+  // }
 
-  for (int i = 1; i < prop_num; ++i) {
-    std::string prop_type_str, strategy_str;
-    if (!get_scalar(node[i], "type", prop_type_str)) {
+  for (int i = 0; i < prop_num; ++i) {
+    std::string prop_type_str, strategy_str, prop_name_str;
+    if (!get_scalar(node[i], "property_name", prop_name_str)) {
+      LOG(ERROR) << "name of vertex-" << label_name << " prop-" << i - 1
+                 << " is not specified...";
+      return false;
+    }
+    if (!node[i]["property_type"]) {
       LOG(ERROR) << "type of vertex-" << label_name << " prop-" << i - 1
                  << " is not specified...";
       return false;
     }
-    get_scalar(node[i], "storage_strategy", strategy_str);
+    auto prop_type_node = node[i]["property_type"];
+    if (!prop_type_node["primitive_type"]) {
+      LOG(ERROR) << "type of vertex-" << label_name << " prop-" << i - 1
+                 << " is not primitive...";
+      return false;
+    }
+    if (!get_scalar(prop_type_node, "primitive_type", prop_type_str)) {
+      LOG(ERROR) << "type of vertex-" << label_name << " prop-" << i - 1
+                 << " is not specified...";
+      return false;
+    }
+    {
+      if (node[i]["x_csr_params"]) {
+        get_scalar(node[i]["x_csr_params"], "storage_strategy", strategy_str);
+      }
+    }
     types.push_back(StringToPropertyType(prop_type_str));
     strategies.push_back(StringToStorageStrategy(strategy_str));
+    VLOG(10) << "prop-" << i - 1 << " name: " << prop_name_str
+             << " type: " << prop_type_str << " strategy: " << strategy_str;
+    names.push_back(prop_name_str);
   }
 
   return true;
@@ -429,7 +495,8 @@ static bool parse_vertex_properties(YAML::Node node,
 
 static bool parse_edge_properties(YAML::Node node,
                                   const std::string& label_name,
-                                  std::vector<PropertyType>& types) {
+                                  std::vector<PropertyType>& types,
+                                  std::vector<std::string>& names) {
   if (!node || !node.IsSequence()) {
     LOG(ERROR) << "properties of vertex-" << label_name
                << " not set properly... ";
@@ -437,33 +504,28 @@ static bool parse_edge_properties(YAML::Node node,
   }
 
   int prop_num = node.size();
-  if (prop_num <= 1) {
-    LOG(ERROR) << "properties of edge-" << label_name
-               << " not set properly... ";
-    return false;
-  }
 
-  if (!expect_config(node[0], "name", "_SRC") ||
-      !expect_config(node[0], "type", "int64")) {
-    LOG(ERROR) << "the first property of edge-" << label_name
-               << " should be _SRC with type int64";
-    return false;
-  }
-  if (!expect_config(node[1], "name", "_DST") ||
-      !expect_config(node[0], "type", "int64")) {
-    LOG(ERROR) << "the second property of edge-" << label_name
-               << " should be _DST with type int64";
-    return false;
-  }
-
-  for (int i = 2; i < prop_num; ++i) {
-    std::string prop_type_str, strategy_str;
-    if (!get_scalar(node[i], "type", prop_type_str)) {
+  for (int i = 0; i < prop_num; ++i) {
+    std::string prop_type_str, strategy_str, prop_name_str;
+    if (node[i]["property_type"]) {
+      if (!get_scalar(node[i]["property_type"], "primitive_type",
+                      prop_type_str)) {
+        LOG(ERROR) << "Only support primitive type for edge property";
+        return false;
+      }
+    } else {
       LOG(ERROR) << "type of edge-" << label_name << " prop-" << i - 1
                  << " is not specified...";
       return false;
     }
+    if (!get_scalar(node[i], "property_name", prop_name_str)) {
+      LOG(ERROR) << "name of edge-" << label_name << " prop-" << i - 1
+                 << " is not specified...";
+      return false;
+    }
+
     types.push_back(StringToPropertyType(prop_type_str));
+    names.push_back(prop_name_str);
   }
 
   return true;
@@ -471,18 +533,69 @@ static bool parse_edge_properties(YAML::Node node,
 
 static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
   std::string label_name;
-  if (!get_scalar(node, "label_name", label_name)) {
+  if (!get_scalar(node, "type_name", label_name)) {
     return false;
   }
   size_t max_num = ((size_t) 1) << 32;
-  get_scalar(node, "max_vertex_num", max_num);
+  if (node["x_csr_params"]) {
+    auto csr_node = node["x_csr_params"];
+    get_scalar(csr_node, "max_vertex_num", max_num);
+  }
   std::vector<PropertyType> property_types;
+  std::vector<std::string> property_names;
   std::vector<StorageStrategy> strategies;
   if (!parse_vertex_properties(node["properties"], label_name, property_types,
-                               strategies)) {
+                               property_names, strategies)) {
     return false;
   }
-  schema.add_vertex_label(label_name, property_types, strategies, max_num);
+  if (!node["primary_keys"]) {
+    LOG(ERROR) << "primary key of vertex-" << label_name << "is not set ";
+    return false;
+  }
+  auto primary_key_node = node["primary_keys"];
+  if (!primary_key_node.IsSequence() || primary_key_node.size() != 1) {
+    LOG(ERROR) << "Primary key should be sequence, and only one primary key is "
+                  "supported";
+    return false;
+  }
+  // remove primary key from properties.
+  std::string primary_key_name = primary_key_node[0].as<std::string>();
+  int primary_key_ind = -1;
+  for (int i = 0; i < property_names.size(); ++i) {
+    if (property_names[i] == primary_key_name) {
+      primary_key_ind = i;
+      break;
+    }
+  }
+  if (primary_key_ind == -1) {
+    LOG(ERROR) << "Primary key " << primary_key_name
+               << " is not found in properties";
+    return false;
+  }
+
+  if (property_types[primary_key_ind] != PropertyType::kInt64) {
+    LOG(ERROR) << "Primary key " << primary_key_name << " should be int64";
+    return false;
+  }
+  auto tuple =
+      std::make_tuple(property_types[primary_key_ind],
+                      property_names[primary_key_ind], primary_key_ind);
+  // remove primary key from properties.
+  property_names.erase(property_names.begin() + primary_key_ind);
+  property_types.erase(property_types.begin() + primary_key_ind);
+  std::string debug_str;
+  {
+    std::stringstream ss;
+    for (auto i = 0; i < property_names.size(); ++i) {
+      ss << property_names[i] << "(";
+      ss << property_types[i] << "),";
+    }
+    debug_str = ss.str();
+  }
+  LOG(INFO) << "After erase, got properties " << debug_str;
+
+  schema.add_vertex_label(label_name, property_types, property_names, tuple,
+                          strategies, max_num);
   return true;
 }
 
@@ -502,31 +615,50 @@ static bool parse_vertices_schema(YAML::Node node, Schema& schema) {
 
 static bool parse_edge_schema(YAML::Node node, Schema& schema) {
   std::string src_label_name, dst_label_name, edge_label_name;
-  if (!get_scalar(node, "src_label_name", src_label_name)) {
+  if (!node["type_name"]) {
+    LOG(ERROR) << "edge type_name is not set properly";
     return false;
   }
-  if (!get_scalar(node, "dst_label_name", dst_label_name)) {
+  edge_label_name = node["type_name"].as<std::string>();
+  // get vertex type pair relation
+  auto vertex_type_pair_node = node["vertex_type_pair_relations"];
+  if (!vertex_type_pair_node || !vertex_type_pair_node.IsMap()) {
+    LOG(ERROR) << "edge [vertex_type_pair_relations] is not set properly";
     return false;
   }
-  if (!get_scalar(node, "edge_label_name", edge_label_name)) {
+
+  if (!get_scalar(vertex_type_pair_node, "source_vertex", src_label_name)) {
+    LOG(ERROR) << "source_vertex is not set properly";
+    return false;
+  }
+  if (!get_scalar(vertex_type_pair_node, "destination_vertex",
+                  dst_label_name)) {
+    LOG(ERROR) << "destination_vertex is not set properly";
     return false;
   }
   std::vector<PropertyType> property_types;
+  std::vector<std::string> prop_names;
   if (!parse_edge_properties(node["properties"], edge_label_name,
-                             property_types)) {
+                             property_types, prop_names)) {
     return false;
   }
   EdgeStrategy ie = EdgeStrategy::kMultiple;
   EdgeStrategy oe = EdgeStrategy::kMultiple;
-  std::string ie_str, oe_str;
-  if (get_scalar(node, "outgoing_edge_strategy", oe_str)) {
-    oe = StringToEdgeStrategy(oe_str);
+  {
+    auto csr_node = node["x_csr_params"];
+    std::string ie_str, oe_str;
+    if (get_scalar(node, "outgoing_edge_strategy", oe_str)) {
+      oe = StringToEdgeStrategy(oe_str);
+    }
+    if (get_scalar(node, "incoming_edge_strategy", ie_str)) {
+      ie = StringToEdgeStrategy(ie_str);
+    }
   }
-  if (get_scalar(node, "incoming_edge_strategy", ie_str)) {
-    ie = StringToEdgeStrategy(ie_str);
-  }
+  VLOG(10) << "edge " << edge_label_name << " from " << src_label_name << " to "
+           << dst_label_name << " with " << property_types.size()
+           << " properties";
   schema.add_edge_label(src_label_name, dst_label_name, edge_label_name,
-                        property_types, oe, ie);
+                        property_types, prop_names, oe, ie);
   return true;
 }
 
@@ -569,12 +701,18 @@ static bool access_file(std::string& file_path) {
 }
 
 static bool parse_vertex_files(
-    YAML::Node node, std::vector<std::pair<std::string, std::string>>& files) {
+    YAML::Node node, const std::string& data_location,
+    std::vector<std::pair<std::string, std::string>>& files) {
   std::string label_name;
-  if (!get_scalar(node, "label_name", label_name)) {
+  if (!get_scalar(node, "type_name", label_name)) {
     return false;
   }
-  YAML::Node files_node = node["files"];
+  YAML::Node files_node = node["inputs"];
+
+  if (node["column_mappings"]) {
+    LOG(ERROR) << "column_mappings is not supported currently";
+    return false;
+  }
   if (files_node) {
     if (!files_node.IsSequence()) {
       LOG(ERROR) << "files is not set properly";
@@ -588,11 +726,15 @@ static bool parse_vertex_files(
         return false;
       }
       if (file_format != "standard_csv") {
-        LOG(INFO) << "file_format is not set properly";
+        LOG(ERROR) << "file_format is not set properly";
         return false;
       }
       if (!get_scalar(files_node[i], "path", file_path)) {
+        LOG(ERROR) << "file_path is not set properly";
         return false;
+      }
+      if (!data_location.empty()) {
+        file_path = data_location + "/" + file_path;
       }
       if (!access_file(file_path)) {
         LOG(ERROR) << "vertex file - " << file_path << " file not found...";
@@ -607,14 +749,15 @@ static bool parse_vertex_files(
 }
 
 static bool parse_vertices_files_schema(
-    YAML::Node node, std::vector<std::pair<std::string, std::string>>& files) {
+    YAML::Node node, const std::string& data_location,
+    std::vector<std::pair<std::string, std::string>>& files) {
   if (!node.IsSequence()) {
     LOG(ERROR) << "vertex is not set properly";
     return false;
   }
   int num = node.size();
   for (int i = 0; i < num; ++i) {
-    if (!parse_vertex_files(node[i], files)) {
+    if (!parse_vertex_files(node[i], data_location, files)) {
       return false;
     }
   }
@@ -622,20 +765,45 @@ static bool parse_vertices_files_schema(
 }
 
 static bool parse_edge_files(
-    YAML::Node node,
-    std::vector<std::tuple<std::string, std::string, std::string, std::string>>&
-        files) {
+    YAML::Node node, const std::string& data_location,
+    std::vector<std::tuple<std::string, std::string, std::string, int32_t,
+                           int32_t, std::string>>& files) {
+  if (!node["type_triplet"]) {
+    LOG(ERROR) << "edge [type_triplet] is not set properly";
+    return false;
+  }
+  auto triplet_node = node["type_triplet"];
   std::string src_label, dst_label, edge_label;
-  if (!get_scalar(node, "src_label_name", src_label)) {
+  if (!get_scalar(triplet_node, "source_vertex", src_label)) {
+    LOG(ERROR) << "source_vertex is not set properly";
     return false;
   }
-  if (!get_scalar(node, "dst_label_name", dst_label)) {
+  if (!get_scalar(triplet_node, "destination_vertex", dst_label)) {
+    LOG(ERROR) << "destination_vertex is not set properly";
     return false;
   }
-  if (!get_scalar(node, "edge_label_name", edge_label)) {
+  if (!get_scalar(triplet_node, "edge", edge_label)) {
+    LOG(ERROR) << "edge is not set properly";
     return false;
   }
-  YAML::Node files_node = node["files"];
+
+  // parse the vertex mapping. currently we only need one column to identify the
+  // vertex.
+  int32_t src_column = 0;
+  int32_t dst_column = 1;
+
+  if (!fetch_src_dst_column_mapping(node, "source_vertex_mappings",
+                                    src_column)) {
+    LOG(ERROR) << "source_vertex_mappings is not set properly";
+    return false;
+  }
+  if (!fetch_src_dst_column_mapping(node, "destination_vertex_mappings",
+                                    dst_column)) {
+    LOG(ERROR) << "destination_vertex_mappings is not set properly";
+    return false;
+  }
+
+  YAML::Node files_node = node["inputs"];
   if (files_node) {
     if (!files_node.IsSequence()) {
       LOG(ERROR) << "files is not set properly";
@@ -646,39 +814,48 @@ static bool parse_edge_files(
       std::string file_format;
       std::string file_path;
       if (!get_scalar(files_node[i], "format", file_format)) {
+        LOG(ERROR) << "format is not set properly";
         return false;
       }
       if (file_format != "standard_csv") {
-        LOG(INFO) << "file_format is not set properly";
+        LOG(ERROR) << "file_format is not set properly";
         return false;
       }
       if (!get_scalar(files_node[i], "path", file_path)) {
+        LOG(ERROR) << "file_path is not set properly";
         return false;
+      }
+      if (!data_location.empty()) {
+        file_path = data_location + "/" + file_path;
       }
       if (!access_file(file_path)) {
         LOG(ERROR) << "edge file - " << file_path << " file not found...";
       }
       std::filesystem::path path(file_path);
-      files.emplace_back(src_label, dst_label, edge_label,
-                         std::filesystem::canonical(path));
+      VLOG(10) << "src " << src_label << " dst " << dst_label << " edge "
+               << edge_label << " src_column " << src_column << " dst_column "
+               << dst_column << " path " << std::filesystem::canonical(path);
+      files.emplace_back(src_label, dst_label, edge_label, src_column,
+                         dst_column, std::filesystem::canonical(path));
     }
-    return true;
   } else {
-    return true;
+    LOG(WARNING) << "No edge files found for edge " << edge_label << "...";
   }
+  return true;
 }
 
 static bool parse_edges_files_schema(
-    YAML::Node node,
-    std::vector<std::tuple<std::string, std::string, std::string, std::string>>&
-        files) {
+    YAML::Node node, const std::string& data_location,
+    std::vector<std::tuple<std::string, std::string, std::string, int32_t,
+                           int32_t, std::string>>& files) {
   if (!node.IsSequence()) {
     LOG(ERROR) << "edge is not set properly";
     return false;
   }
   int num = node.size();
+  LOG(INFO) << " Try to parse " << num << "edge configuration";
   for (int i = 0; i < num; ++i) {
-    if (!parse_edge_files(node[i], files)) {
+    if (!parse_edge_files(node[i], data_location, files)) {
       return false;
     }
   }
@@ -686,23 +863,45 @@ static bool parse_edges_files_schema(
 }
 
 static bool parse_bulk_load_config_file(
-    const std::string& load_config,
+    const std::string& load_config, std::string& data_source,
+    std::string delimiter, std::string& method,
     std::vector<std::pair<std::string, std::string>>& vertex_files,
-    std::vector<std::tuple<std::string, std::string, std::string, std::string>>&
-        edge_files) {
+    std::vector<std::tuple<std::string, std::string, std::string, int32_t,
+                           int32_t, std::string>>& edge_files) {
   YAML::Node root = YAML::LoadFile(load_config);
-  YAML::Node graph_node = root["graph"];
-  if (!graph_node || !graph_node.IsMap()) {
-    LOG(ERROR) << "graph is not set properly";
+  data_source = "file";
+  std::string data_location;
+  delimiter = "|";
+  if (root["loading_config"]) {
+    get_scalar(root["loading_config"], "data_source", data_source);
+    get_scalar(root["loading_config"], "data_location", data_location);
+    get_scalar(root["loading_config"], "method", method);
+    if (root["loading_config"]["meta_data"]) {
+      get_scalar(root["loading_config"]["meta_data"], "delimiter", delimiter);
+    }
+  }
+  if (data_location.empty()) {
+    LOG(WARNING) << "data_location is not set";
+  }
+  if (data_source != "file") {
+    LOG(ERROR) << "Only support file data source now";
     return false;
   }
-  if (graph_node["vertex"]) {
-    if (!parse_vertices_files_schema(graph_node["vertex"], vertex_files)) {
+  LOG(INFO) << "data_source: " << data_source
+            << ", data_location: " << data_location << ", method: " << method
+            << ", delimiter: " << delimiter;
+
+  if (root["vertex_mappings"]) {
+    VLOG(10) << "vertex_mappings is set";
+    if (!parse_vertices_files_schema(root["vertex_mappings"], data_location,
+                                     vertex_files)) {
       return false;
     }
   }
-  if (graph_node["edge"]) {
-    if (!parse_edges_files_schema(graph_node["edge"], edge_files)) {
+  if (root["edge_mappings"]) {
+    VLOG(10) << "edge_mappings is set";
+    if (!parse_edges_files_schema(root["edge_mappings"], data_location,
+                                  edge_files)) {
       return false;
     }
   }
@@ -712,35 +911,42 @@ static bool parse_bulk_load_config_file(
 static bool parse_schema_config_file(
     const std::string& path, Schema& schema,
     std::vector<std::string>& stored_procedures) {
-  YAML::Node root = YAML::LoadFile(path);
-  YAML::Node graph_node = root["graph"];
+  YAML::Node graph_node = YAML::LoadFile(path);
   if (!graph_node || !graph_node.IsMap()) {
     LOG(ERROR) << "graph is not set properly";
     return false;
   }
-  if (!expect_config(graph_node, "graph_store", "mutable_csr")) {
+  if (!expect_config(graph_node, "store_type", "mutable_csr")) {
     LOG(ERROR) << "graph_store is not set properly";
     return false;
   }
+  auto schema_node = graph_node["schema"];
 
-  if (!graph_node["vertex"]) {
-    LOG(ERROR) << "vertex is not set";
+  if (!graph_node["schema"]) {
+    LOG(ERROR) << "schema is not set";
     return false;
   }
 
-  if (!parse_vertices_schema(graph_node["vertex"], schema)) {
+  if (!parse_vertices_schema(schema_node["vertex_types"], schema)) {
     return false;
   }
 
-  if (graph_node["edge"]) {
-    if (!parse_edges_schema(graph_node["edge"], schema)) {
+  if (schema_node["edge_types"]) {
+    if (!parse_edges_schema(schema_node["edge_types"], schema)) {
       return false;
     }
   }
 
-  if (root["stored_procedures"]) {
+  if (graph_node["stored_procedures"]) {
+    auto stored_procedure_node = graph_node["stored_procedures"];
+    auto directory = stored_procedure_node["directory"].as<std::string>();
+    // check is directory
+    if (!std::filesystem::exists(directory)) {
+      LOG(ERROR) << "plugin directory - " << directory << " not found...";
+      return false;
+    }
     std::vector<std::string> files_got;
-    if (!get_sequence(root, "stored_procedures", files_got)) {
+    if (!get_sequence(stored_procedure_node, "enable_lists", files_got)) {
       LOG(ERROR) << "stored_procedures is not set properly";
     }
     for (auto& f : files_got) {
@@ -757,12 +963,12 @@ static bool parse_schema_config_file(
 
 }  // namespace config_parsing
 
-std::tuple<
-    Schema, std::vector<std::pair<std::string, std::string>>,
-    std::vector<std::tuple<std::string, std::string, std::string, std::string>>,
-    std::vector<std::string>>
+std::tuple<Schema, std::vector<std::pair<std::string, std::string>>,
+           std::vector<std::tuple<std::string, std::string, std::string,
+                                  int32_t, int32_t, std::string>>,
+           std::vector<std::string>, LoadConfig>
 Schema::LoadFromYaml(const std::string& schema_config,
-                     const std::string& load_config) {
+                     const std::string& bulk_load_config) {
   Schema schema;
   std::vector<std::string> plugins;
   if (!schema_config.empty() && std::filesystem::exists(schema_config)) {
@@ -770,14 +976,18 @@ Schema::LoadFromYaml(const std::string& schema_config,
   }
 
   std::vector<std::pair<std::string, std::string>> vertex_files;
-  std::vector<std::tuple<std::string, std::string, std::string, std::string>>
+  std::vector<std::tuple<std::string, std::string, std::string, int32_t,
+                         int32_t, std::string>>
       edge_files;
-  if (!load_config.empty() && std::filesystem::exists(load_config)) {
-    config_parsing::parse_bulk_load_config_file(load_config, vertex_files,
-                                                edge_files);
+  LoadConfig load_config;
+  if (!bulk_load_config.empty() && std::filesystem::exists(bulk_load_config)) {
+    config_parsing::parse_bulk_load_config_file(
+        bulk_load_config, load_config.data_source_, load_config.delimiter_,
+        load_config.method_, vertex_files, edge_files);
   }
 
-  return std::make_tuple(schema, vertex_files, edge_files, plugins);
+  return std::make_tuple(schema, vertex_files, edge_files, plugins,
+                         load_config);
 }
 
 }  // namespace gs

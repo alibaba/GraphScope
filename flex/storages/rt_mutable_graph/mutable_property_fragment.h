@@ -41,7 +41,7 @@ class MutablePropertyFragment {
       const Schema& schema,
       const std::vector<std::pair<std::string, std::string>>& vertex_files,
       const std::vector<std::tuple<std::string, std::string, std::string,
-                                   std::string>>& edge_files,
+                                   int32_t, int32_t, std::string>>& edge_files,
       int thread_num = 1);
 
   void IngestEdge(label_t src_label, vid_t src_lid, label_t dst_label,
@@ -108,7 +108,7 @@ class MutablePropertyFragment {
   void initEdges(
       label_t src_label_i, label_t dst_label_i, label_t edge_label_i,
       const std::vector<std::tuple<std::string, std::string, std::string,
-                                   std::string>>& edge_files);
+                                   int32_t, int32_t, std::string>>& edge_files);
 
   Schema schema_;
   std::vector<LFIndexer<vid_t>> lf_indexers_;
