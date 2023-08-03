@@ -84,9 +84,6 @@ except ModuleNotFoundError:
 #   1) get from environment variable `GRAPHSCOPE_HOME`, if not exist,
 #   2) infer from COORDINATOR_HOME
 GRAPHSCOPE_HOME = os.environ.get("GRAPHSCOPE_HOME", None)
-ANALYTICAL_ENGINE_HOME = GRAPHSCOPE_HOME
-ANALYTICAL_ENGINE_PATH = os.path.join(GRAPHSCOPE_HOME, "bin", "grape_engine")
-INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
 
 if GRAPHSCOPE_HOME is None:
     # Note: The order of locations matters
@@ -100,12 +97,13 @@ if GRAPHSCOPE_HOME is None:
         ANALYTICAL_ENGINE_PATH = os.path.join(location, "bin", "grape_engine")
         if os.path.isfile(ANALYTICAL_ENGINE_PATH):
             GRAPHSCOPE_HOME = location
-            ANALYTICAL_ENGINE_HOME = GRAPHSCOPE_HOME
-
-            INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
             break
 
-if GRAPHSCOPE_HOME is None:
+if GRAPHSCOPE_HOME is not None:
+    ANALYTICAL_ENGINE_HOME = GRAPHSCOPE_HOME
+    ANALYTICAL_ENGINE_PATH = os.path.join(GRAPHSCOPE_HOME, "bin", "grape_engine")
+    INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
+else:
     # resolve from develop source tree
     # Here the GRAPHSCOPE_HOME has been set to the root of the source tree,
     # So the engine location doesn't need to check again,
