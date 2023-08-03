@@ -80,52 +80,57 @@ try:
 except ModuleNotFoundError:
     COORDINATOR_HOME = os.path.abspath(os.path.join(__file__, "..", ".."))
 
-# template directory for codegen
-TEMPLATE_DIR = os.path.join(COORDINATOR_HOME, "gscoordinator", "template")
-
-# builtin app resource
-BUILTIN_APP_RESOURCE_PATH = os.path.join(
-    COORDINATOR_HOME, "gscoordinator", "builtin/app/builtin_app.gar"
-)
-# default config file in gar resource
-DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
-DEFAULT_GRAPHSCOPE_HOME = "/usr/local"
-
 # GRAPHSCOPE_HOME
 #   1) get from environment variable `GRAPHSCOPE_HOME`, if not exist,
 #   2) infer from COORDINATOR_HOME
 GRAPHSCOPE_HOME = os.environ.get("GRAPHSCOPE_HOME", None)
-
-# resolve from pip installed package
 if GRAPHSCOPE_HOME is None:
-    if os.path.isdir(os.path.join(COORDINATOR_HOME, "graphscope.runtime")):
-        GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "graphscope.runtime")
+    # Note: The order of locations matters
+    possible_locations = [
+        os.path.join(COORDINATOR_HOME, "graphscope.runtime"),  # installed by pip
+        "/opt/graphscope",  # installed by gs script
+        "/usr/local",  # a popular location
+    ]
 
-# find from DEFAULT_GRAPHSCOPE_HOME
-if GRAPHSCOPE_HOME is None:
-    if os.path.isdir(DEFAULT_GRAPHSCOPE_HOME):
-        GRAPHSCOPE_HOME = DEFAULT_GRAPHSCOPE_HOME
+    for location in possible_locations:
+        ANALYTICAL_ENGINE_PATH = os.path.join(location, "bin", "grape_engine")
+        if os.path.isfile(ANALYTICAL_ENGINE_PATH):
+            GRAPHSCOPE_HOME = location
+            ANALYTICAL_ENGINE_HOME = GRAPHSCOPE_HOME
 
-# resolve from develop source tree
-# Here the GRAPHSCOPE_HOME has been set to the root of the source tree,
-# So the engine location doesn't need to check again,
-# just rely on GRAPHSCOPE_HOME.
+            INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
+            break
+
 if GRAPHSCOPE_HOME is None:
+    # resolve from develop source tree
+    # Here the GRAPHSCOPE_HOME has been set to the root of the source tree,
+    # So the engine location doesn't need to check again,
+    # just rely on GRAPHSCOPE_HOME.
     GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..")
+    ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME, "analytical_engine")
+    ANALYTICAL_ENGINE_PATH = os.path.join(
+        ANALYTICAL_ENGINE_HOME, "build", "grape_engine"
+    )
 
-# ANALYTICAL_ENGINE_HOME
-#   1) infer from GRAPHSCOPE_HOME
-ANALYTICAL_ENGINE_HOME = GRAPHSCOPE_HOME
-ANALYTICAL_ENGINE_PATH = os.path.join(ANALYTICAL_ENGINE_HOME, "bin", "grape_engine")
-if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
-    # try to get analytical engine from build dir
-    if os.path.isfile(
-        os.path.join(GRAPHSCOPE_HOME, "analytical_engine", "build", "grape_engine")
-    ):
-        ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME, "analytical_engine")
-        ANALYTICAL_ENGINE_PATH = os.path.join(
-            ANALYTICAL_ENGINE_HOME, "build", "grape_engine"
-        )
+    INTERACTIVE_ENGINE_SCRIPT = os.path.join(
+        GRAPHSCOPE_HOME,
+        "interactive_engine",
+        "assembly",
+        "src",
+        "bin",
+        "graphscope",
+        "giectl",
+    )
+
+# template directory for code generation
+TEMPLATE_DIR = os.path.join(COORDINATOR_HOME, "gscoordinator", "template")
+
+# builtin app resource
+BUILTIN_APP_RESOURCE_PATH = os.path.join(
+    COORDINATOR_HOME, "gscoordinator", "builtin", "app", "builtin_app.gar"
+)
+# default config file in gar resource
+DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 
 ANALYTICAL_BUILTIN_SPACE = os.path.join(GRAPHSCOPE_HOME, "precompiled", "builtin")
 
@@ -152,20 +157,6 @@ ANALYTICAL_ENGINE_JAVA_JVM_OPTS += (
 )
 
 
-# INTERACTIVE_ENGINE_SCRIPT
-INTERACTIVE_INSTANCE_TIMEOUT_SECONDS = 120  # 2 mins
-INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
-if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
-    if os.path.isfile(
-        os.path.join(GRAPHSCOPE_HOME, ".install_prefix", "bin", "giectl")
-    ):
-        INTERACTIVE_ENGINE_SCRIPT = os.path.join(
-            GRAPHSCOPE_HOME, ".install_prefix", "bin", "giectl"
-        )
-
-# default threads per worker configuration for GIE/GAIA
-INTERACTIVE_ENGINE_THREADS_PER_WORKER = 2
-
 # JAVA SDK related CONSTANTS
 LLVM4JNI_HOME = os.environ.get("LLVM4JNI_HOME", None)
 LLVM4JNI_USER_OUT_DIR_BASE = "user-llvm4jni-output"
@@ -177,8 +168,14 @@ GRAPE_PROCESSOR_JAR = os.path.join(
 
 GIRAPH_DRIVER_CLASS = "com.alibaba.graphscope.app.GiraphComputationAdaptor"
 
-# 2 GB
+# increase grpc max message size to 2 GB
 GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
+
+# INTERACTIVE_ENGINE_SCRIPT
+INTERACTIVE_INSTANCE_TIMEOUT_SECONDS = 120  # 2 mins
+
+# default threads per worker configuration for GIE/GAIA
+INTERACTIVE_ENGINE_THREADS_PER_WORKER = 2
 
 
 def get_timestamp() -> float:
