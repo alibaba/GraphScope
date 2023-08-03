@@ -30,6 +30,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    overview/positioning
    overview/glossary
    release_notes
+   loading_graphs
    frequently_asked_questions
 
 .. toctree::
