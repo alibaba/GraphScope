@@ -1,6 +1,7 @@
 #include <vector>
 
 #include "grin/predefine.h"
+#include "storages/rt_mutable_graph/loader/loader_factory.h"
 #include "storages/rt_mutable_graph/loading_config.h"
 #include "storages/rt_mutable_graph/mutable_property_fragment.h"
 

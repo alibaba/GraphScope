@@ -1,4 +1,4 @@
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.4
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.6
 ARG CI=false
 
 # change bash as default

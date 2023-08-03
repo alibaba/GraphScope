@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
   }
 
   for (auto i = 0; i < graph.schema().edge_label_num(); ++i) {
-    LOG(INFO) << "vertex label " << i
+    LOG(INFO) << "edge label " << i
               << " name: " << graph.schema().get_edge_label_name(i);
   }
 

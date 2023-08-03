@@ -22,10 +22,41 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include "arrow/api.h"
+#include "arrow/csv/options.h"
 #include "flex/storages/rt_mutable_graph/schema.h"
+#include "flex/utils/arrow_utils.h"
 #include "flex/utils/yaml_utils.h"
 
+#include "boost/algorithm/string.hpp"
+
 namespace gs {
+
+namespace reader_options {
+static const int32_t DEFAULT_BLOCK_SIZE = (1 << 20);  // 1MB
+
+// KEY_WORDS for configurations
+static const char* DELIMITER = "delimiter";
+static const char* HEADER_ROW = "header_row";
+static const char* INCLUDE_COLUMNS = "include_columns";
+static const char* COLUMN_TYPES = "column_types";
+static const char* ESCAPING = "escaping";
+static const char* ESCAPE_CHAR = "escape_char";
+static const char* QUOTING = "quoting";
+static const char* QUOTE_CHAR = "quote_char";
+static const char* DOUBLE_QUOTE = "double_quote";
+static const char* BATCH_SIZE_KEY = "batch_size";
+// whether or not to use record batch reader. If true, the reader will read
+// data in batches, otherwise, the reader will read data row by row.
+static const char* BATCH_READER = "batch_reader";
+
+// static unordered_set
+static const std::unordered_set<std::string> CSV_META_KEY_WORDS = {
+    DELIMITER,    HEADER_ROW,     INCLUDE_COLUMNS, COLUMN_TYPES,
+    ESCAPING,     ESCAPE_CHAR,    QUOTING,         QUOTE_CHAR,
+    DOUBLE_QUOTE, BATCH_SIZE_KEY, BATCH_READER};
+
+}  // namespace reader_options
 
 class LoadingConfig;
 
@@ -42,7 +73,6 @@ class LoadingConfig {
   using edge_triplet_type =
       std::tuple<schema_label_type, schema_label_type,
                  schema_label_type>;  // src_label_t, dst_label_t, edge_label_t
-  static const std::unordered_set<std::string> valid_delimiter_;
 
   // Check whether loading config file is consistent with schema
   static LoadingConfig ParseFromYaml(const Schema& schema,
@@ -66,13 +96,22 @@ class LoadingConfig {
                       size_t dst_pri_key_ind, const std::string& file_path);
 
   void SetScheme(const std::string& data_source);
-  void SetDelimiter(const std::string& delimiter);
+  void SetDelimiter(const char& delimiter);
   void SetMethod(const std::string& method);
 
   // getters
   const std::string& GetScheme() const;
   const std::string& GetDelimiter() const;
   const std::string& GetMethod() const;
+  const std::string& GetFormat() const;
+  bool GetHasHeaderRow() const;
+  const std::string& GetEscapeChar() const;
+  bool GetIsEscaping() const;
+  const std::string& GetQuotingChar() const;
+  bool GetIsQuoting() const;
+  bool GetIsDoubleQuoting() const;
+  int32_t GetBlockSize() const;
+  bool GetIsBatchReader() const;
   const std::unordered_map<schema_label_type, std::vector<std::string>>&
   GetVertexLoadingMeta() const;
   const std::unordered_map<edge_triplet_type, std::vector<std::string>,
@@ -81,33 +120,36 @@ class LoadingConfig {
 
   // Get vertex column mappings. Each element in the vector is a pair of
   // <column_index, property_name>.
-  const std::vector<std::pair<size_t, std::string>>& GetVertexColumnMappings(
-      label_t label_id) const;
+  const std::vector<std::tuple<size_t, std::string, std::string>>&
+  GetVertexColumnMappings(label_t label_id) const;
 
   // Get edge column mappings. Each element in the vector is a pair of
-  // <column_index, schema_property_name>.
-  const std::vector<std::pair<size_t, std::string>>& GetEdgeColumnMappings(
-      label_t src_label_id, label_t dst_label_id, label_t edge_label_id) const;
+  // <column_index,column_name, schema_property_name>.
+  const std::vector<std::tuple<size_t, std::string, std::string>>&
+  GetEdgeColumnMappings(label_t src_label_id, label_t dst_label_id,
+                        label_t edge_label_id) const;
 
   // Get src_id and dst_id column index for edge label.
   const std::pair<std::vector<size_t>, std::vector<size_t>>& GetEdgeSrcDstCol(
       label_t src_label_id, label_t dst_label_id, label_t edge_label_id) const;
 
-  static const std::unordered_set<std::string>& GetValidDelimiters();
-
  private:
   const Schema& schema_;
-  std::string scheme_;     // "file", "hdfs", "oss", "s3"
-  std::string delimiter_;  // "\t", ",", " ", "|"
-  std::string method_;     // init, append, overwrite
-  std::string format_;     // csv, tsv, json, parquet
+  std::string scheme_;  // "file", "hdfs", "oss", "s3"
+  std::string method_;  // init, append, overwrite
+  std::string format_;  // csv, tsv, json, parquet
+
+  // meta_data, stores all the meta info about loading
+  std::unordered_map<std::string, std::string> metadata_;
 
   std::unordered_map<schema_label_type, std::vector<std::string>>
       vertex_loading_meta_;  // <vertex_label_id, std::vector<file_path_>>
   std::unordered_map<schema_label_type,
-                     std::vector<std::pair<size_t, std::string>>>
+                     std::vector<std::tuple<size_t, std::string, std::string>>>
       vertex_column_mappings_;  // match which column in file to which property
-                                // in schema
+                                // in schema. {col_ind, col_name,
+                                // schema_prop_name}
+                                // col_name can be empty
 
   std::unordered_map<edge_triplet_type, std::vector<std::string>,
                      boost::hash<edge_triplet_type>>
@@ -116,10 +158,11 @@ class LoadingConfig {
                            // <file_path>
   // All Edge Files share the same File schema.
   std::unordered_map<edge_triplet_type,
-                     std::vector<std::pair<size_t, std::string>>,
+                     std::vector<std::tuple<size_t, std::string, std::string>>,
                      boost::hash<edge_triplet_type>>
       edge_column_mappings_;  // match which column in file to which property in
-                              // schema
+                              // schema, {col_ind, col_name, schema_prop_name}
+                              // col_name can be empty
 
   std::unordered_map<edge_triplet_type,
                      std::pair<std::vector<size_t>, std::vector<size_t>>,
