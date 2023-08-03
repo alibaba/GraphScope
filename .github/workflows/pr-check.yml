@@ -50,6 +50,7 @@ jobs:
             insight
             analytical
             learning
+            flex
           # A scope can be not provided.
           requireScope: false
           disallowScopes: |
