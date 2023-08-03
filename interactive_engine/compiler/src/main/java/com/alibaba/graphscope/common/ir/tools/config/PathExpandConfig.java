@@ -147,7 +147,8 @@ public class PathExpandConfig {
                                 config.getOpt(),
                                 innerBuilder.getTableConfig(
                                         config.getLabels(), GraphOpt.Source.EDGE),
-                                AliasInference.DEFAULT_NAME);
+                                AliasInference.DEFAULT_NAME,
+                                AliasInference.DEFAULT_ID);
                 innerBuilder.push(this.expand);
             }
             return this;
@@ -163,7 +164,8 @@ public class PathExpandConfig {
                                 config.getOpt(),
                                 innerBuilder.getTableConfig(
                                         config.getLabels(), GraphOpt.Source.VERTEX),
-                                AliasInference.DEFAULT_NAME);
+                                AliasInference.DEFAULT_NAME,
+                                AliasInference.DEFAULT_ID);
                 // (the alias of endV is given in the getV
                 // base)
                 innerBuilder.push(this.getV);

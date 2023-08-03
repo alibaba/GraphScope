@@ -18,11 +18,9 @@ package com.alibaba.graphscope.common.ir.rel.graph;
 
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
@@ -34,8 +32,9 @@ public class GraphLogicalSource extends AbstractBindableTableScan {
             List<RelHint> hints,
             GraphOpt.Source opt,
             TableConfig tableConfig,
-            @Nullable String alias) {
-        super(cluster, hints, tableConfig, alias);
+            String alias,
+            int aliasId) {
+        super(cluster, hints, tableConfig, alias, aliasId);
         this.opt = opt;
     }
 
@@ -44,8 +43,9 @@ public class GraphLogicalSource extends AbstractBindableTableScan {
             List<RelHint> hints,
             GraphOpt.Source opt,
             TableConfig tableConfig,
-            @Nullable String alias) {
-        return new GraphLogicalSource(cluster, hints, opt, tableConfig, alias);
+            String alias,
+            int aliasId) {
+        return new GraphLogicalSource(cluster, hints, opt, tableConfig, alias, aliasId);
     }
 
     public GraphOpt.Source getOpt() {

@@ -18,10 +18,7 @@ package com.alibaba.graphscope.cypher.antlr4.visitor;
 
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariable;
-import com.alibaba.graphscope.common.ir.tools.AliasIdGenerator;
-import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
-import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.common.ir.tools.*;
 import com.alibaba.graphscope.cypher.antlr4.visitor.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
@@ -33,21 +30,21 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.commons.lang3.ObjectUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     private final GraphBuilderVisitor parent;
     private final GraphBuilder builder;
-    private final AliasIdGenerator paramIdGenerator;
+    private final ParamIdGenerator paramIdGenerator;
 
     public ExpressionVisitor(GraphBuilderVisitor parent) {
         this.parent = parent;
         this.builder = Objects.requireNonNull(parent).getGraphBuilder();
-        this.paramIdGenerator = new AliasIdGenerator();
+        this.paramIdGenerator = new ParamIdGenerator();
     }
 
     @Override
@@ -318,5 +315,24 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     private ExprVisitorResult unaryCall(SqlOperator operator, ExprVisitorResult operand) {
         return new ExprVisitorResult(
                 operand.getAggCalls(), builder.call(operator, operand.getExpr()));
+    }
+
+    private class ParamIdGenerator {
+        private final AtomicInteger idGenerator;
+        private Map<String, Integer> paramNameToIdMap;
+
+        public ParamIdGenerator() {
+            this.idGenerator = new AtomicInteger();
+            this.paramNameToIdMap = new HashMap<>();
+        }
+
+        public int generate(@Nullable String paramName) {
+            Integer paramId = paramNameToIdMap.get(paramName);
+            if (paramId == null) {
+                paramId = idGenerator.getAndIncrement();
+                paramNameToIdMap.put(paramName, paramId);
+            }
+            return paramId;
+        }
     }
 }

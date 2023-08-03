@@ -276,7 +276,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
             for (int i = 0; i < keys.groupKeyCount(); ++i) {
                 RelDataTypeField field = fields.get(i);
                 RexVariable rexVar =
-                        RexGraphVariable.of(field.getIndex(), field.getName(), field.getType());
+                        RexGraphVariable.of(field.getIndex(), AliasInference.DEFAULT_COLUMN_ID, field.getName(), field.getType());
                 OuterExpression.Variable exprVar =
                         rexVar.accept(new RexToProtoConverter(true, isColumnId))
                                 .getOperators(0)

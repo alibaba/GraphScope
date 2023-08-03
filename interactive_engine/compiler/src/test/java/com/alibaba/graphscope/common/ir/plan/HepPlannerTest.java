@@ -5,9 +5,9 @@ import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
-
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.rules.CoreRules;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -147,5 +147,74 @@ public class HepPlannerTest {
                     + " opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 after.explain().trim());
+    }
+
+    @Test
+    public void push_filter_4_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode sentence1 =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "x"))
+                        .expand(
+                                new ExpandConfig(
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("knows"),
+                                        "y"))
+                        .build();
+        RelNode sentence2 =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "x"))
+                        .expand(
+                                new ExpandConfig(
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("knows"),
+                                        "z"))
+                        .build();
+        RelNode filter = builder
+                .match(sentence1, GraphOpt.Match.INNER)
+                .filter(
+                        builder.call(
+                                GraphStdOperatorTable.AND,
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.variable("x", "age"),
+                                        builder.literal(10)),
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.variable("y", "weight"),
+                                        builder.literal(1.0))))
+                .match(sentence2, GraphOpt.Match.INNER)
+                .filter(
+                builder.call(
+                        GraphStdOperatorTable.AND,
+                        builder.call(
+                                GraphStdOperatorTable.EQUALS,
+                                builder.variable("y", "weight"),
+                                builder.literal(10)),
+                        builder.call(
+                                GraphStdOperatorTable.EQUALS,
+                                builder.variable("z", "weight"),
+                                builder.literal(1.0))))
+                        .build();
+        System.out.println(filter.explain());
+        RelOptPlanner planner = Utils.mockPlanner(CoreRules.FILTER_INTO_JOIN.config.toRule(), FilterMatchRule.Config.DEFAULT.toRule());
+        planner.setRoot(filter);
+        RelNode after = planner.findBestExp();
+        System.out.println(after.explain());
+//        Assert.assertEquals(
+//                "GraphLogicalSingleMatch(input=[null],"
+//                        + " sentence=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+//                        + " alias=[y], opt=[OUT])\n"
+//                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+//                        + " alias=[x], fusedFilter=[[OR(=(DEFAULT.age, 10), =(DEFAULT.age, 20))]],"
+//                        + " opt=[VERTEX])\n"
+//                        + "], matchOpt=[INNER])",
+//                after.explain().trim());
     }
 }

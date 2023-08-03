@@ -63,7 +63,8 @@ public class GraphLogicalPathExpand extends SingleRel {
             @Nullable RexNode fetch,
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
-            @Nullable String aliasName) {
+            String aliasName,
+            int aliasId) {
         super(cluster, RelTraitSet.createEmpty(), input);
         this.expand = Objects.requireNonNull(expand);
         this.getV = Objects.requireNonNull(getV);
@@ -71,10 +72,12 @@ public class GraphLogicalPathExpand extends SingleRel {
         this.fetch = fetch;
         this.resultOpt = resultOpt;
         this.pathOpt = pathOpt;
-        this.aliasName =
-                AliasInference.inferDefault(
-                        aliasName, AliasInference.getUniqueAliasList(input, true));
-        this.aliasId = cluster.getIdGenerator().generate(this.aliasName);
+        this.aliasName = Objects.requireNonNull(aliasName);
+        this.aliasId = aliasId;
+//        this.aliasName =
+//                AliasInference.inferDefault(
+//                        aliasName, AliasInference.getUniqueAliasList(input, true));
+//        this.aliasId = cluster.getIdGenerator().generate(input, this.aliasName);
     }
 
     public static GraphLogicalPathExpand create(
@@ -87,9 +90,10 @@ public class GraphLogicalPathExpand extends SingleRel {
             @Nullable RexNode fetch,
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
-            String aliasName) {
+            String aliasName,
+            int aliasId) {
         return new GraphLogicalPathExpand(
-                cluster, hints, input, expand, getV, offset, fetch, resultOpt, pathOpt, aliasName);
+                cluster, hints, input, expand, getV, offset, fetch, resultOpt, pathOpt, aliasName, aliasId);
     }
 
     @Override
@@ -101,7 +105,8 @@ public class GraphLogicalPathExpand extends SingleRel {
                 .itemIf("fetch", fetch, fetch != null)
                 .item("path_opt", getPathOpt())
                 .item("result_opt", getResultOpt())
-                .item("alias", AliasInference.SIMPLE_NAME(getAliasName()));
+                .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
+                .item("aliasId", getAliasId());
     }
 
     public String getAliasName() {

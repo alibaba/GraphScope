@@ -50,7 +50,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
     // for field trimmer
     protected @Nullable ImmutableIntList project;
 
-    protected final @Nullable RelNode input;
+    protected @Nullable RelNode input;
 
     protected final TableConfig tableConfig;
 
@@ -63,7 +63,8 @@ public abstract class AbstractBindableTableScan extends TableScan {
             List<RelHint> hints,
             @Nullable RelNode input,
             TableConfig tableConfig,
-            @Nullable String aliasName) {
+            String aliasName,
+            int aliasId) {
         super(
                 cluster,
                 RelTraitSet.createEmpty(),
@@ -73,18 +74,17 @@ public abstract class AbstractBindableTableScan extends TableScan {
                         : tableConfig.getTables().get(0));
         this.input = input;
         this.tableConfig = Objects.requireNonNull(tableConfig);
-        this.aliasName =
-                AliasInference.inferDefault(
-                        aliasName, AliasInference.getUniqueAliasList(input, true));
-        this.aliasId = cluster.getIdGenerator().generate(this.aliasName);
+        this.aliasName = Objects.requireNonNull(aliasName);
+        this.aliasId = aliasId;
     }
 
     protected AbstractBindableTableScan(
             GraphOptCluster cluster,
             List<RelHint> hints,
             TableConfig tableConfig,
-            String aliasName) {
-        this(cluster, hints, null, tableConfig, aliasName);
+            String aliasName,
+            int aliasId) {
+        this(cluster, hints, null, tableConfig, aliasName, aliasId);
     }
 
     @Override
@@ -127,6 +127,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
         return pw.itemIf("input", input, !Objects.isNull(input))
                 .item("tableConfig", tableConfig)
                 .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
+                .item("aliasId", getAliasId())
                 .itemIf("fusedProject", project, !ObjectUtils.isEmpty(project))
                 .itemIf("fusedFilter", filters, !ObjectUtils.isEmpty(filters));
     }
@@ -142,5 +143,17 @@ public abstract class AbstractBindableTableScan extends TableScan {
 
     public @Nullable ImmutableList<RexNode> getFilters() {
         return filters;
+    }
+
+    public TableConfig getTableConfig() {
+        return tableConfig;
+    }
+
+    @Override
+    public void replaceInput(int i, RelNode newInput) {
+        if (this.input == null) {
+            throw new IllegalArgumentException("operator " + this.getClass() + " should not have input");
+        }
+        this.input = newInput;
     }
 }

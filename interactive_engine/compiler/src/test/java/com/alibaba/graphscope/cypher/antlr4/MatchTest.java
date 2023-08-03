@@ -19,6 +19,8 @@ package com.alibaba.graphscope.cypher.antlr4;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Join;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.junit.Assert;
@@ -128,11 +130,32 @@ public class MatchTest {
     // Return a
     @Test
     public void match_7_test() {
-        RelNode multiMatch = Utils.eval("Match (a:person)-[]->(b:person) Optional Match (a:person)-[]->(c:person) Return a").build();
-        System.out.println(multiMatch.explain());
-//        GraphLogicalSource source = (GraphLogicalSource) project.getInput(0);
-//        RexCall condition = (RexCall) source.getFilters().get(0);
-//        Assert.assertEquals(
-//                SqlTypeName.BIGINT, condition.getOperands().get(1).getType().getSqlTypeName());
+        RelNode multiMatch = Utils.eval("Match (a:person)-[x:knows]->(b:person), (b:person)-[:knows]-(c:person) Optional Match (a:person)-[]->(c:person) Return a").build();
+        Join join = (Join) multiMatch.getInput(0);
+        printDataType(join.getRowType());
+        printDataType(join.getLeft().getRowType());
+        printDataType(join.getRight().getRowType());
+//        System.out.println(join.getRowType());
+//        System.out.println(join.getInput(0).getRowType());
+//        Assert.assertEquals("RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) b, Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) a, Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) c)",
+//                join.getRowType().toString());
+//        System.out.println(join.getRight().explain());
+//        Assert.assertEquals("GraphLogicalProject(a=[a], isAppend=[false])\n" +
+//                "  GraphLogicalJoin(condition=[a], joinType=[left])\n" +
+//                "    GraphLogicalSingleMatch(input=[null], sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[b], opt=[END])\n" +
+//                "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}], alias=[DEFAULT], opt=[OUT])\n" +
+//                "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[a], opt=[VERTEX])\n" +
+//                "], matchOpt=[INNER])\n" +
+//                "    GraphLogicalSingleMatch(input=[null], sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[c], opt=[END])\n" +
+//                "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}], alias=[DEFAULT], opt=[OUT])\n" +
+//                "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[a], opt=[VERTEX])\n" +
+//                "], matchOpt=[OPTIONAL])", multiMatch.explain().trim());
+    }
+
+    private void printDataType(RelDataType dataType) {
+        dataType.getFieldList().forEach(k -> {
+            System.out.print(k.getIndex() + " " + k.getName() + "; ");
+        });
+        System.out.println("\n");
     }
 }
