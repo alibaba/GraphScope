@@ -475,7 +475,7 @@ class Graph(_GraphBase):
             oid_type = utils.normalize_data_type_str(
                 utils.data_type_to_cpp(self._schema.oid_type)
             )
-            oid_type = utils.normalize_data_type_str(
+            vid_type = utils.normalize_data_type_str(
                 utils.data_type_to_cpp(self._schema.vid_type)
             )
             vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
@@ -485,7 +485,7 @@ class Graph(_GraphBase):
             oid_type = utils.normalize_data_type_str(
                 utils.data_type_to_cpp(self._schema.oid_type)
             )
-            oid_type = utils.normalize_data_type_str(
+            vid_type = utils.normalize_data_type_str(
                 utils.data_type_to_cpp(self._schema.vid_type)
             )
             vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
