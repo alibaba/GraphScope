@@ -1254,9 +1254,7 @@ def test_app_on_local_vm_graph(
     a1 = Pregel_API_Test()
     # Comment out some base case to reduce the compile time.
     # a1(p2p_property_graph_undirected_local_vm, param1="graphscope", param2="graphscope2")
-    a1(
-        p2p_property_graph_undirected_local_vm_string,
-        param1="graphscope",
-        param2="graphscope2",
-    )
-    # a1(p2p_property_graph_undirected_local_vm_int32, param1="graphscope", param2="graphscope2")
+    a2 = PIE_API_Test()
+    a2(p2p_property_graph_undirected_local_vm_int32)
+    # a1(p2p_property_graph_undirected_local_vm_string)
+    # a1(p2p_property_graph_undirected_local_vm_int32)
