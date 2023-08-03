@@ -5,6 +5,7 @@ import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
+
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rules.CoreRules;
@@ -149,6 +150,7 @@ public class HepPlannerTest {
                 after.explain().trim());
     }
 
+    // push filter down to match
     @Test
     public void push_filter_4_test() {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -176,45 +178,81 @@ public class HepPlannerTest {
                                         new LabelConfig(false).addLabel("knows"),
                                         "z"))
                         .build();
-        RelNode filter = builder
-                .match(sentence1, GraphOpt.Match.INNER)
-                .filter(
-                        builder.call(
-                                GraphStdOperatorTable.AND,
+        RelNode before =
+                builder.match(sentence1, GraphOpt.Match.INNER)
+                        .match(sentence2, GraphOpt.Match.INNER)
+                        .filter(
                                 builder.call(
-                                        GraphStdOperatorTable.EQUALS,
-                                        builder.variable("x", "age"),
-                                        builder.literal(10)),
-                                builder.call(
-                                        GraphStdOperatorTable.EQUALS,
-                                        builder.variable("y", "weight"),
-                                        builder.literal(1.0))))
-                .match(sentence2, GraphOpt.Match.INNER)
-                .filter(
-                builder.call(
-                        GraphStdOperatorTable.AND,
-                        builder.call(
-                                GraphStdOperatorTable.EQUALS,
-                                builder.variable("y", "weight"),
-                                builder.literal(10)),
-                        builder.call(
-                                GraphStdOperatorTable.EQUALS,
-                                builder.variable("z", "weight"),
-                                builder.literal(1.0))))
+                                        GraphStdOperatorTable.AND,
+                                        builder.call(
+                                                GraphStdOperatorTable.EQUALS,
+                                                builder.variable("y", "weight"),
+                                                builder.literal(10)),
+                                        builder.call(
+                                                GraphStdOperatorTable.EQUALS,
+                                                builder.variable("z", "weight"),
+                                                builder.literal(20))))
                         .build();
-        System.out.println(filter.explain());
-        RelOptPlanner planner = Utils.mockPlanner(CoreRules.FILTER_INTO_JOIN.config.toRule(), FilterMatchRule.Config.DEFAULT.toRule());
-        planner.setRoot(filter);
-        RelNode after = planner.findBestExp();
-        System.out.println(after.explain());
-//        Assert.assertEquals(
-//                "GraphLogicalSingleMatch(input=[null],"
-//                        + " sentence=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-//                        + " alias=[y], opt=[OUT])\n"
-//                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-//                        + " alias=[x], fusedFilter=[[OR(=(DEFAULT.age, 10), =(DEFAULT.age, 20))]],"
-//                        + " opt=[VERTEX])\n"
-//                        + "], matchOpt=[INNER])",
-//                after.explain().trim());
+        Assert.assertEquals(
+                "LogicalFilter(condition=[AND(=(y.weight, 10), =(z.weight, 20))])\n"
+                    + "  LogicalJoin(condition=[=(x, x)], joinType=[inner])\n"
+                    + "    GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                    + " alias=[y], opt=[OUT])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[x], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])\n"
+                    + "    GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                    + " alias=[z], opt=[OUT])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[x], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                before.explain().trim());
+
+        // check plan after applying FILTER_INTO_JOIN rule from calcite
+        RelOptPlanner planner = Utils.mockPlanner(CoreRules.FILTER_INTO_JOIN.config.toRule());
+        planner.setRoot(before);
+        RelNode after1 = planner.findBestExp();
+        Assert.assertEquals(
+                "LogicalJoin(condition=[=(x, x)], joinType=[inner])\n"
+                    + "  LogicalFilter(condition=[=(y.weight, 10)])\n"
+                    + "    GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                    + " alias=[y], opt=[OUT])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[x], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])\n"
+                    + "  LogicalFilter(condition=[=(z.weight, 20)])\n"
+                    + "    GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                    + " alias=[z], opt=[OUT])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[x], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                after1.explain().trim());
+
+        // check plan after applying FILTER_INTO_JOIN and FILTER_MATCH rules
+        planner =
+                Utils.mockPlanner(
+                        CoreRules.FILTER_INTO_JOIN.config.toRule(),
+                        FilterMatchRule.Config.DEFAULT.toRule());
+        planner.setRoot(before);
+        RelNode after2 = planner.findBestExp();
+        Assert.assertEquals(
+                "LogicalJoin(condition=[=(x, x)], joinType=[inner])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                    + " alias=[y], fusedFilter=[[=(DEFAULT.weight, 10)]], opt=[OUT])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[x], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                    + " alias=[z], fusedFilter=[[=(DEFAULT.weight, 20)]], opt=[OUT])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[x], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                after2.explain().trim());
     }
 }

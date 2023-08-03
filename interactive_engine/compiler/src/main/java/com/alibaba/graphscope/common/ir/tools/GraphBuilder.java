@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
+import static java.util.Objects.requireNonNull;
+
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
@@ -28,8 +30,8 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphRelCollations;
-import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.rex.*;
+import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
@@ -42,6 +44,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelFieldCollation;
@@ -64,8 +67,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Integrate interfaces to build algebra structures,
@@ -114,15 +115,14 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     public GraphBuilder source(SourceConfig config) {
-        String aliasName = AliasInference.inferDefault(config.getAlias(), Sets.newHashSet());
+        String aliasName = AliasInference.inferDefault(config.getAlias(), new HashSet<>());
         RelNode source =
                 GraphLogicalSource.create(
                         (GraphOptCluster) cluster,
                         ImmutableList.of(),
                         config.getOpt(),
                         getTableConfig(config.getLabels(), config.getOpt()),
-                        aliasName,
-                        ((GraphOptCluster) getCluster()).getIdGenerator().generate((RelNode) null, aliasName));
+                        aliasName);
         push(source);
         return this;
     }
@@ -135,7 +135,6 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder expand(ExpandConfig config) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
-        String aliasName = AliasInference.inferDefault(config.getAlias(), AliasInference.getUniqueAliasList(input, true));
         RelNode expand =
                 GraphLogicalExpand.create(
                         (GraphOptCluster) cluster,
@@ -143,8 +142,7 @@ public class GraphBuilder extends RelBuilder {
                         input,
                         config.getOpt(),
                         getTableConfig(config.getLabels(), GraphOpt.Source.EDGE),
-                        aliasName,
-                        ((GraphOptCluster) getCluster()).getIdGenerator().generate(input, aliasName));
+                        config.getAlias());
         replaceTop(expand);
         return this;
     }
@@ -157,7 +155,6 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder getV(GetVConfig config) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
-        String aliasName = AliasInference.inferDefault(config.getAlias(), AliasInference.getUniqueAliasList(input, true));
         RelNode getV =
                 GraphLogicalGetV.create(
                         (GraphOptCluster) cluster,
@@ -165,8 +162,7 @@ public class GraphBuilder extends RelBuilder {
                         input,
                         config.getOpt(),
                         getTableConfig(config.getLabels(), GraphOpt.Source.VERTEX),
-                        aliasName,
-                        ((GraphOptCluster) getCluster()).getIdGenerator().generate(input, aliasName));
+                        config.getAlias());
         replaceTop(getV);
         return this;
     }
@@ -191,7 +187,6 @@ public class GraphBuilder extends RelBuilder {
 
         RelNode expand = Objects.requireNonNull(pxdConfig.getExpand());
         RelNode getV = Objects.requireNonNull(pxdConfig.getGetV());
-        String aliasName = AliasInference.inferDefault(pxdConfig.getAlias(), AliasInference.getUniqueAliasList(input, true));
         RelNode pathExpand =
                 GraphLogicalPathExpand.create(
                         (GraphOptCluster) cluster,
@@ -203,8 +198,7 @@ public class GraphBuilder extends RelBuilder {
                         fetchNode,
                         pxdConfig.getResultOpt(),
                         pxdConfig.getPathOpt(),
-                        aliasName,
-                        ((GraphOptCluster) getCluster()).getIdGenerator().generate(input, aliasName));
+                        pxdConfig.getAlias());
         replaceTop(pathExpand);
         return this;
     }
@@ -255,6 +249,17 @@ public class GraphBuilder extends RelBuilder {
         }
     }
 
+    /** f
+     * generate a new alias id for the given alias name
+     *
+     * @param alias
+     * @return
+     */
+    private int generateAliasId(@Nullable String alias) {
+        RelOptCluster cluster = getCluster();
+        return ((GraphOptCluster) cluster).getIdGenerator().generate(alias);
+    }
+
     /**
      * validate and build an algebra structure of {@code GraphLogicalSingleMatch}
      * which wrappers all graph operators in one sentence.
@@ -269,9 +274,11 @@ public class GraphBuilder extends RelBuilder {
     public GraphBuilder match(RelNode single, GraphOpt.Match opt) {
         RelNode input = size() > 0 ? peek() : null;
         // unwrap match if there is only one source operator in the sentence
-        RelNode match = (single.getInputs().isEmpty() && single instanceof GraphLogicalSource) ? single :
-                GraphLogicalSingleMatch.create(
-                        (GraphOptCluster) cluster, null, null, single, opt);
+        RelNode match =
+                (single.getInputs().isEmpty() && single instanceof GraphLogicalSource)
+                        ? single
+                        : GraphLogicalSingleMatch.create(
+                                (GraphOptCluster) cluster, null, null, single, opt);
         if (input == null) {
             push(match);
         } else {
@@ -324,7 +331,7 @@ public class GraphBuilder extends RelBuilder {
                                     firstFields.size() + getColumnIndex(second, secondField),
                                     AliasInference.SIMPLE_NAME(secondField.getName()),
                                     secondField.getType());
-                   conditions.add(equals(leftKey, rightKey));
+                    conditions.add(equals(leftKey, rightKey));
                 }
             }
         }
@@ -332,8 +339,10 @@ public class GraphBuilder extends RelBuilder {
     }
 
     private boolean isGraphElementTypeWithSameOpt(RelDataType first, RelDataType second) {
-        return first instanceof GraphSchemaType && second instanceof GraphSchemaType
-                && ((GraphSchemaType) first).getScanOpt() == ((GraphSchemaType) second).getScanOpt();
+        return first instanceof GraphSchemaType
+                && second instanceof GraphSchemaType
+                && ((GraphSchemaType) first).getScanOpt()
+                        == ((GraphSchemaType) second).getScanOpt();
     }
 
     private JoinRelType getJoinRelType(GraphOpt.Match opt) {
@@ -358,7 +367,10 @@ public class GraphBuilder extends RelBuilder {
         ColumnField columnField = getAliasField(alias);
         RelDataTypeField aliasField = columnField.right;
         return RexGraphVariable.of(
-                aliasField.getIndex(), columnField.left, AliasInference.SIMPLE_NAME(alias), aliasField.getType());
+                aliasField.getIndex(),
+                columnField.left,
+                AliasInference.SIMPLE_NAME(alias),
+                aliasField.getType());
     }
 
     /**
@@ -465,11 +477,12 @@ public class GraphBuilder extends RelBuilder {
                 List<RelDataTypeField> fields = cur.getRowType().getFieldList();
                 // to support `head` in gremlin
                 if (nodeIdx++ == 0 && alias == AliasInference.DEFAULT_NAME && fields.size() == 1) {
-                    return new ColumnField(AliasInference.DEFAULT_COLUMN_ID,
+                    return new ColumnField(
+                            AliasInference.DEFAULT_COLUMN_ID,
                             new RelDataTypeFieldImpl(
-                            AliasInference.DEFAULT_NAME,
-                            AliasInference.DEFAULT_ID,
-                            fields.get(0).getType()));
+                                    AliasInference.DEFAULT_NAME,
+                                    AliasInference.DEFAULT_ID,
+                                    fields.get(0).getType()));
                 }
                 for (RelDataTypeField field : fields) {
                     if (alias != AliasInference.DEFAULT_NAME && field.getName().equals(alias)) {
@@ -498,19 +511,22 @@ public class GraphBuilder extends RelBuilder {
     }
 
     private int getColumnIndex(RelNode node, RelDataTypeField field) {
-        Set<RelDataTypeField> uniqueFields = Sets.newHashSet();
-        if (!visitField(node, field, uniqueFields)) {
+        Set<String> uniqueFieldNames = Sets.newHashSet();
+        if (!visitField(node, field, uniqueFieldNames)) {
             throw new IllegalArgumentException("field " + field + " not found in node" + node);
         }
-        return uniqueFields.size();
+        return uniqueFieldNames.size();
     }
 
-    private boolean visitField(RelNode topNode, RelDataTypeField targetField, Set<RelDataTypeField> uniqueFields) {
+    // find column index of the target field in recursive way
+    // i.e. (a)-[b]->(c) -> a:0, b:1, c:2
+    private boolean visitField(
+            RelNode topNode, RelDataTypeField targetField, Set<String> uniqueFieldNames) {
         if (!(AliasInference.removeAlias(topNode)
                 || topNode instanceof Join
                 || topNode instanceof AbstractLogicalMatch)) {
             for (RelNode child : topNode.getInputs()) {
-                if (visitField(child, targetField, uniqueFields)) {
+                if (visitField(child, targetField, uniqueFieldNames)) {
                     return true;
                 }
             }
@@ -519,8 +535,9 @@ public class GraphBuilder extends RelBuilder {
         for (RelDataTypeField field : fields) {
             if (field.getName() != AliasInference.DEFAULT_NAME && field.equals(targetField)) {
                 return true;
-            } else if (field.getName() != AliasInference.DEFAULT_NAME && !uniqueFields.contains(field)) {
-                uniqueFields.add(field);
+            } else if (field.getName() != AliasInference.DEFAULT_NAME
+                    && !uniqueFieldNames.contains(field.getName())) {
+                uniqueFieldNames.add(field.getName());
             }
         }
         return false;
@@ -676,9 +693,18 @@ public class GraphBuilder extends RelBuilder {
         }
     }
 
+    public GraphBuilder project(RexNode... nodes) {
+        return project(ImmutableList.copyOf(nodes));
+    }
+
     @Override
     public GraphBuilder project(Iterable<? extends RexNode> nodes) {
-        return project(nodes, ImmutableList.of(), false);
+        return project(nodes, ImmutableList.of());
+    }
+
+    public GraphBuilder project(
+            Iterable<? extends RexNode> nodes, Iterable<? extends @Nullable String> fieldNames) {
+        return project(nodes, fieldNames, false);
     }
 
     @Override
@@ -734,8 +760,9 @@ public class GraphBuilder extends RelBuilder {
         List<RelDataTypeField> fields = Lists.newArrayList();
         for (int i = 0; i < aliasList.size(); ++i) {
             String aliasName = aliasList.get(i);
-            int aliasId = isAppend ? ((GraphOptCluster) getCluster()).getIdGenerator().generate(input, aliasName) : i;
-            fields.add(new RelDataTypeFieldImpl(aliasName, aliasId, nodeList.get(i).getType()));
+            fields.add(
+                    new RelDataTypeFieldImpl(
+                            aliasName, generateAliasId(aliasName), nodeList.get(i).getType()));
         }
         return new RelRecordType(StructKind.FULLY_QUALIFIED, fields);
     }
@@ -999,32 +1026,50 @@ public class GraphBuilder extends RelBuilder {
     }
 
     @Override
-    public RelBuilder join(JoinRelType joinType, RexNode condition, Set<CorrelationId> variablesSet) {
+    public RelBuilder join(
+            JoinRelType joinType, RexNode condition, Set<CorrelationId> variablesSet) {
         Join join = (Join) super.join(joinType, condition, variablesSet).peek();
-        Utils.setFieldValue(AbstractRelNode.class, join, "rowType",reOrgRowType(join));
+        Utils.setFieldValue(AbstractRelNode.class, join, "rowType", reorgAliasId(join));
         return this;
     }
 
-    private RelDataType reOrgRowType(Join join) {
+    /**
+     * in the official implementation of {@code join}, the aliasId in rowType actually represents the columnId, but we need to preserve the original aliasId before the {@code join}
+     * @param join
+     * @return
+     */
+    private RelDataType reorgAliasId(Join join) {
         RelDataType originalType = join.getRowType();
         RelDataType leftType = join.getLeft().getRowType();
         RelDataType rightType = join.getRight().getRowType();
         Preconditions.checkArgument(
-                originalType.getFieldCount() == leftType.getFieldCount() + rightType.getFieldCount(),
-                "join field count is not equal to left field count + right field count");
-        List<RelDataTypeField> newFields = originalType.getFieldList().stream().map(k -> {
-            if (k.getIndex() < leftType.getFieldCount()) {
-                return new RelDataTypeFieldImpl(
-                        k.getName(),
-                        leftType.getFieldList().get(k.getIndex()).getIndex(),
-                        k.getType());
-            } else {
-                return new RelDataTypeFieldImpl(
-                        k.getName(),
-                        rightType.getFieldList().get(k.getIndex() - leftType.getFieldCount()).getIndex(),
-                        k.getType());
-            }
-        }).collect(Collectors.toList());
+                originalType.getFieldCount()
+                        == leftType.getFieldCount() + rightType.getFieldCount(),
+                "join field count is not equal to left field count plus right field count");
+        List<RelDataTypeField> newFields =
+                originalType.getFieldList().stream()
+                        .map(
+                                k -> {
+                                    if (k.getIndex() < leftType.getFieldCount()) {
+                                        return new RelDataTypeFieldImpl(
+                                                k.getName(),
+                                                leftType.getFieldList()
+                                                        .get(k.getIndex())
+                                                        .getIndex(),
+                                                k.getType());
+                                    } else {
+                                        return new RelDataTypeFieldImpl(
+                                                k.getName(),
+                                                rightType
+                                                        .getFieldList()
+                                                        .get(
+                                                                k.getIndex()
+                                                                        - leftType.getFieldCount())
+                                                        .getIndex(),
+                                                k.getType());
+                                    }
+                                })
+                        .collect(Collectors.toList());
         return new RelRecordType(StructKind.FULLY_QUALIFIED, newFields);
     }
 

@@ -21,7 +21,6 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.google.common.collect.ImmutableList;
 
-import com.google.common.collect.Lists;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
@@ -81,14 +80,16 @@ public class GraphLogicalAggregate extends Aggregate {
             rexNodes.add(aggCall.rexCall());
             aliases.add(aggCall.getAlias());
         }
-        List<RelDataTypeField> fields = Lists.newArrayList();
+        List<RelDataTypeField> fields = new ArrayList<>();
         if (ObjectUtils.isNotEmpty(rexNodes)) {
             List<String> aliasList =
                     AliasInference.inferProject(rexNodes, aliases, new HashSet<>());
             assert aliasList.size() == rexNodes.size();
             for (int i = 0; i < rexNodes.size(); ++i) {
                 String aliasName = aliasList.get(i);
-                fields.add(new RelDataTypeFieldImpl(aliasName, i, rexNodes.get(i).getType()));
+                RelOptCluster cluster = getCluster();
+                int aliasId = ((GraphOptCluster) cluster).getIdGenerator().generate(aliasName);
+                fields.add(new RelDataTypeFieldImpl(aliasName, aliasId, rexNodes.get(i).getType()));
             }
             // update aliases in groupKey
             this.groupKey =

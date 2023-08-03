@@ -46,7 +46,11 @@ public class RexGraphVariable extends RexInputRef {
     }
 
     protected RexGraphVariable(
-            int aliasId, GraphProperty property, int columnId, @Nullable String name, RelDataType type) {
+            int aliasId,
+            GraphProperty property,
+            int columnId,
+            @Nullable String name,
+            RelDataType type) {
         this(aliasId, columnId, name, type);
         this.property = Objects.requireNonNull(property);
     }
@@ -58,7 +62,8 @@ public class RexGraphVariable extends RexInputRef {
      * @param type
      * @return
      */
-    public static RexGraphVariable of(int aliasId, int columnId, @Nullable String name, RelDataType type) {
+    public static RexGraphVariable of(
+            int aliasId, int columnId, @Nullable String name, RelDataType type) {
         return new RexGraphVariable(aliasId, columnId, name, type);
     }
 
@@ -71,7 +76,11 @@ public class RexGraphVariable extends RexInputRef {
      * @return
      */
     public static RexGraphVariable of(
-            int aliasId, GraphProperty property, int columnId, @Nullable String name, RelDataType type) {
+            int aliasId,
+            GraphProperty property,
+            int columnId,
+            @Nullable String name,
+            RelDataType type) {
         return new RexGraphVariable(aliasId, property, columnId, name, type);
     }
 
@@ -80,7 +89,9 @@ public class RexGraphVariable extends RexInputRef {
         if (rexVisitor instanceof RexChecker) {
             return null;
         } else if (rexVisitor instanceof RelOptUtil.RexInputConverter) {
-            return (R) new RexConverterAdaptor(true, (RelOptUtil.RexInputConverter) rexVisitor).visitInputRef(this);
+            return (R)
+                    new RexConverterAdaptor(true, (RelOptUtil.RexInputConverter) rexVisitor)
+                            .visitInputRef(this);
         } else {
             return rexVisitor.visitInputRef(this);
         }

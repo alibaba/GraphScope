@@ -57,7 +57,11 @@ public class RexVariableAliasConverter extends RexVisitorImpl<RexNode> {
                                 + AliasInference.DELIMITER
                                 + variable.getName().substring(delimPos + 1);
         return RexGraphVariable.of(
-                targetAliasId, variable.getProperty(), variable.getIndex(), targetVarName, variable.getType());
+                targetAliasId,
+                variable.getProperty(),
+                variable.getIndex(),
+                targetVarName,
+                variable.getType());
     }
 
     @Override

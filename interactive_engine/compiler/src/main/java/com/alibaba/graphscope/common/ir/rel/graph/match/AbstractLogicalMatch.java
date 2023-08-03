@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.rel.graph.match;
 
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
@@ -44,18 +45,19 @@ public abstract class AbstractLogicalMatch extends SingleRel {
     }
 
     protected void addFields(List<RelDataTypeField> addTo, RelNode topNode) {
-        RelVisitor visitor = new RelVisitor() {
-            @Override
-            public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
-                super.visit(node, ordinal, parent);
-                List<RelDataTypeField> fields = node.getRowType().getFieldList();
-                for (RelDataTypeField field : fields) {
-                    if (!field.getName().equals(AliasInference.DEFAULT_NAME)) {
-                        addTo.add(field);
+        RelVisitor visitor =
+                new RelVisitor() {
+                    @Override
+                    public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
+                        super.visit(node, ordinal, parent);
+                        List<RelDataTypeField> fields = node.getRowType().getFieldList();
+                        for (RelDataTypeField field : fields) {
+                            if (!field.getName().equals(AliasInference.DEFAULT_NAME)) {
+                                addTo.add(field);
+                            }
+                        }
                     }
-                }
-            }
-        };
+                };
         visitor.go(topNode);
     }
 

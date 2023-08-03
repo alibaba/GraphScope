@@ -41,7 +41,16 @@ public class RexConverterAdaptor extends RexVisitorImpl<RexNode> {
     private RexNode visitGraphVariable(RexGraphVariable variable) {
         RexInputRef original = (RexInputRef) convertor.visitInputRef(variable);
         return variable.getProperty() == null
-                ? RexGraphVariable.of(variable.getAliasId(), original.getIndex(), variable.getName(), variable.getType())
-                : RexGraphVariable.of(variable.getAliasId(), variable.getProperty(), original.getIndex(), variable.getName(), variable.getType());
+                ? RexGraphVariable.of(
+                        variable.getAliasId(),
+                        original.getIndex(),
+                        variable.getName(),
+                        variable.getType())
+                : RexGraphVariable.of(
+                        variable.getAliasId(),
+                        variable.getProperty(),
+                        original.getIndex(),
+                        variable.getName(),
+                        variable.getType());
     }
 }

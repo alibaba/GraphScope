@@ -40,6 +40,8 @@ import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.rules.CoreRules;
+import org.apache.calcite.rel.rules.FilterJoinRule;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -173,6 +175,11 @@ public class GraphPlanner {
                                         if (k.equals(FilterMatchRule.class.getSimpleName())) {
                                             hepBuilder.addRuleInstance(
                                                     FilterMatchRule.Config.DEFAULT.toRule());
+                                        } else if (k.equals(
+                                                FilterJoinRule.FilterIntoJoinRule.class
+                                                        .getSimpleName())) {
+                                            hepBuilder.addRuleInstance(
+                                                    CoreRules.FILTER_INTO_JOIN.config.toRule());
                                         } else {
                                             // todo: add more rules
                                         }
@@ -187,10 +194,6 @@ public class GraphPlanner {
             // return HepPlanner with empty rules if optimization is turned off
             return new HepPlanner(HepProgram.builder().build());
         }
-    }
-
-    public AtomicLong getIdGenerator() {
-        return idGenerator;
     }
 
     public static void main(String[] args) throws Exception {
