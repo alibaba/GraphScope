@@ -136,7 +136,6 @@
             </goals>
             <phase>package</phase>
             <configuration>
-              <minimizeJar>true</minimizeJar>
               <artifactSet>
                 <includes>
                   <include>com.alibaba.graphscope:*</include>

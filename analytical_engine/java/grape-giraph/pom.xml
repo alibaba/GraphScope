@@ -52,10 +52,6 @@
       <version>${hadoop-core.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.alibaba.fastffi</groupId>
-      <artifactId>llvm4jni-runtime</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>grape-jdk</artifactId>
     </dependency>
@@ -63,10 +59,6 @@
       <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
       <version>${dep.netty.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>it.unimi.dsi</groupId>
-      <artifactId>fastutil</artifactId>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
@@ -102,7 +94,6 @@
             </goals>
             <phase>package</phase>
             <configuration>
-              <minimizeJar>true</minimizeJar>
               <filters>
                 <filter>
                   <artifact>*:*</artifact>
@@ -110,6 +101,9 @@
                     <exclude>META-INF/*.SF</exclude>
                     <exclude>META-INF/*.DSA</exclude>
                     <exclude>META-INF/*.RSA</exclude>
+                    <exclude>org/python/**</exclude>
+                    <exclude>org/eclipse/**</exclude>
+                    <exclude>it/unimi/dsi/fastutil/**</exclude>
                   </excludes>
                 </filter>
               </filters>

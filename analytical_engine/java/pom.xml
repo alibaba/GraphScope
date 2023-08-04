@@ -401,7 +401,6 @@
                 <goal>shade</goal>
               </goals>
               <configuration>
-                <minimizeJar>true</minimizeJar>
                 <shadedArtifactAttached>true</shadedArtifactAttached>
                 <transformers>
                   <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
