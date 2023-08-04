@@ -206,10 +206,6 @@ class LocalLauncher(AbstractLauncher):
 
         env = os.environ.copy()
         env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
-        if ".install_prefix" in INTERACTIVE_ENGINE_SCRIPT:
-            env["GRAPHSCOPE_HOME"] = os.path.dirname(
-                os.path.dirname(INTERACTIVE_ENGINE_SCRIPT)
-            )
 
         if os.environ.get("PARALLEL_INTERACTIVE_EXECUTOR_ON_VINEYARD", "OFF") != "ON":
             # only one GIE/GAIA executor will be launched locally, even there are
@@ -323,10 +319,6 @@ class LocalLauncher(AbstractLauncher):
     def close_interactive_instance(self, object_id):
         env = os.environ.copy()
         env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
-        if ".install_prefix" in INTERACTIVE_ENGINE_SCRIPT:
-            env["GRAPHSCOPE_HOME"] = os.path.dirname(
-                os.path.dirname(INTERACTIVE_ENGINE_SCRIPT)
-            )
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "close_gremlin_instance_on_local",
