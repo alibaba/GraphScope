@@ -23,7 +23,7 @@ use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::algebra::pattern::binder::Item;
 use ir_common::generated::common as common_pb;
-use ir_common::{KeyId, NameOrId};
+use ir_common::{KeyId, LabelId, NameOrId};
 use vec_map::VecMap;
 
 use crate::error::{IrError, IrResult};
@@ -279,6 +279,18 @@ impl LogicalPlan {
         }
     }
 
+    pub fn is_root_dummy(&self) -> bool {
+        if let Some(root) = self.get_first_node() {
+            if let Some(pb::logical_plan::operator::Opr::Root(_dummy)) = root.borrow().opr.opr.as_ref() {
+                true
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    }
+
     /// Get a node reference from the logical plan
     pub fn get_node(&self, id: NodeId) -> Option<NodeType> {
         self.nodes.get(id as usize).cloned()
@@ -409,7 +421,7 @@ impl LogicalPlan {
 
     /// Append an operator into the logical plan, as a new node with `self.max_node_id` as its id.
     pub fn append_operator_as_node(
-        &mut self, mut opr: pb::logical_plan::Operator, parent_ids: Vec<NodeId>,
+        &mut self, mut opr: pb::logical_plan::Operator, mut parent_ids: Vec<NodeId>,
     ) -> IrResult<NodeId> {
         use pb::logical_plan::operator::Opr;
 
@@ -444,43 +456,74 @@ impl LogicalPlan {
                     // 4. if match binders of PathExpand exists, it should at least range from 1
                     let is_pattern_source_whole_graph = self
                         .get_opr(parent_ids[0])
-                        .map(|pattern_source| pattern_source.is_whole_graph())
+                        .map(|pattern_source| is_whole_graph(&pattern_source))
                         .ok_or(IrError::ParentNodeNotExist(parent_ids[0]))?;
                     let extend_strategy = if is_pattern_source_whole_graph {
                         ExtendStrategy::init(&pattern, &self.meta)
                     } else {
                         Err(IrPatternError::Unsupported("pattern source is not whole graph".to_string()))
                     };
-                    match extend_strategy {
+
+                    let match_plan = match extend_strategy {
                         Ok(extend_strategy) => {
                             debug!("pattern matching by ExtendStrategy");
-                            let plan = extend_strategy.build_logical_plan()?;
-                            let new_node_id = self.append_plan(plan, parent_ids.clone())?;
-                            self.reset_root_as_dummy();
-                            Ok(new_node_id)
+                            // If root is not dummy, it suggests that it is the first match step
+                            if !self.is_root_dummy() {
+                                // For extend strategy, its plan has already contained its optimized source
+                                // In addition, the original source must be whole graph source
+                                // Therefore, we only set the original source to be dummy and use the optimized source
+                                self.reset_root_as_dummy();
+                            }
+                            extend_strategy.build_logical_plan()
                         }
                         Err(err) => match err {
                             IrPatternError::Unsupported(_) => {
                                 // if is not supported in ExtendStrategy, try NaiveStrategy
                                 debug!("pattern matching by NaiveStrategy");
                                 let naive_strategy = NaiveStrategy::try_from(pattern.clone())?;
-                                let plan = naive_strategy.build_logical_plan()?;
-                                // TODO: If the root node of logical plan is a `Scan`, make it as the source of the `Pattern` plan,
-                                //          and add a Dummy Root to the original logical plan,
-                                //          which makes the plan looks like: Dummy -> Scan -> Pattern
-                                //       Otherwise, if the root is already a Dummy, then add a `ScanAll` for the `Pattern` plan.
-                                self.append_plan(plan, parent_ids.clone())
+                                let mut native_plan = naive_strategy.build_logical_plan()?;
+                                // If root is not dummy, it suggests that it is the first match step
+                                // For the first match step, we add all of its previous steps to the match plan as its source
+                                if !self.is_root_dummy() {
+                                    // Clone all nodes from source(id = 0) to the parent node
+                                    // And append all these nodes to the root of the naive plan one by one
+                                    for node_id in (0..parent_ids[0] + 1).rev() {
+                                        let operator = self
+                                            .get_node(node_id)
+                                            .ok_or(IrError::ParentNodeNotExist(node_id))?
+                                            .borrow()
+                                            .opr
+                                            .clone();
+                                        native_plan.append_root(operator);
+                                    }
+                                    // Remove these source operators from the original plan
+                                    for node_id in 1..parent_ids[0] + 1 {
+                                        self.remove_node(node_id);
+                                    }
+                                    // Also set the original source to be dummy
+                                    self.reset_root_as_dummy();
+                                    // Set the parent node be the dummy node
+                                    parent_ids = vec![0];
+                                }
+                                // If root is dummy, it suggests that it is not the first match step
+                                // For these match steps, we use whole graph as their sources
+                                else {
+                                    // Add whole graph scan to the naive plan
+                                    native_plan.append_root(pb::Scan::default().into());
+                                }
+                                Ok(native_plan)
                             }
                             _ => Err(err.into()),
                         },
-                    }
+                    }?;
+                    self.append_plan(match_plan, parent_ids)
                 } else {
                     Err(IrError::Unsupported(
                         "only one single parent is supported for the `Pattern` operator".to_string(),
                     ))
                 }
             }
-            _ => self.append_node(Node::new(new_curr_node, opr), parent_ids.clone()),
+            _ => self.append_node(Node::new(new_curr_node, opr), parent_ids),
         };
 
         // As in this case, the current id will not refer to any actual nodes, it is fine to
@@ -1287,6 +1330,57 @@ impl AsLogical for pb::IndexPredicate {
         }
 
         Ok(())
+    }
+}
+
+fn is_whole_graph(operator: &pb::logical_plan::Operator) -> bool {
+    if let Some(opr) = &operator.opr {
+        match opr {
+            pb::logical_plan::operator::Opr::Scan(scan) => {
+                scan.idx_predicate.is_none()
+                    && scan.alias.is_none()
+                    && scan
+                        .params
+                        .as_ref()
+                        .map(|params| !params.is_queryable() && is_params_all_labels(params))
+                        .unwrap_or(true)
+            }
+            pb::logical_plan::operator::Opr::Root(_) => true,
+            _ => false,
+        }
+    } else {
+        false
+    }
+}
+
+fn is_params_all_labels(params: &pb::QueryParams) -> bool {
+    if let Ok(store_meta) = STORE_META.read() {
+        if let Some(schema) = store_meta.schema.as_ref() {
+            params.tables.is_empty() || {
+                let params_label_ids: BTreeSet<LabelId> = params
+                    .tables
+                    .iter()
+                    .filter_map(|name_or_id| {
+                        if let Some(ir_common::generated::common::name_or_id::Item::Id(id)) =
+                            name_or_id.item.as_ref()
+                        {
+                            Some(*id)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                let meta_label_ids: BTreeSet<LabelId> = schema
+                    .entity_labels_iter()
+                    .map(|(_, label_id)| label_id)
+                    .collect();
+                params_label_ids.eq(&meta_label_ids)
+            }
+        } else {
+            false
+        }
+    } else {
+        false
     }
 }
 

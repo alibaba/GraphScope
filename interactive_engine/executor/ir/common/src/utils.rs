@@ -589,24 +589,16 @@ impl From<(pb::EdgeExpand, pb::GetV)> for pb::path_expand::ExpandBase {
     }
 }
 
-impl pb::logical_plan::Operator {
-    pub fn is_whole_graph(&self) -> bool {
-        if let Some(opr) = &self.opr {
-            match opr {
-                pb::logical_plan::operator::Opr::Scan(scan) => {
-                    scan.idx_predicate.is_none()
-                        && scan.alias.is_none()
-                        && scan
-                            .params
-                            .as_ref()
-                            .map(|params| !params.is_queryable())
-                            .unwrap_or(true)
-                }
-                pb::logical_plan::operator::Opr::Root(_) => true,
-                _ => false,
+impl pb::LogicalPlan {
+    pub fn append_root(&mut self, operator: pb::logical_plan::Operator) {
+        let root_node = pb::logical_plan::Node { opr: Some(operator), children: self.roots.clone() };
+        self.nodes.insert(0, root_node);
+        self.roots = vec![0];
+        // Edit node children
+        for node in self.nodes.iter_mut() {
+            for child in node.children.iter_mut() {
+                *child = *child + 1;
             }
-        } else {
-            false
         }
     }
 }
