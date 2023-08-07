@@ -121,7 +121,6 @@
             </goals>
             <phase>test</phase>
             <configuration>
-              <minimizeJar>true</minimizeJar>
               <dataFile>target/jacoco.exec</dataFile>
               <outputDirectory>target/jacoco.out</outputDirectory>
             </configuration>

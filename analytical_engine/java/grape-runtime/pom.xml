@@ -134,6 +134,8 @@
                   <include>com.alibaba:fastjson</include>
                   <include>org.slf4j:*</include>
                   <include>org.apache.logging.log4j:*</include>
+                  <include>org.ow2.asm:*</include>
+                  <include>com.google.testing.compile:*</include>
                 </includes>
               </artifactSet>
               <filters>
