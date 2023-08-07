@@ -74,7 +74,7 @@ interactive_engine/executor/ir/Cargo.lock
 **/.flattened-pom.xml
 
 # java sdk
-java/**/dependency-reduced-pom.xml
+analytical_engine/java/**/dependency-reduced-pom.xml
 
 # GraphLearn
 coordinator/graphlearn*
