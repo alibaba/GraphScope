@@ -4,13 +4,13 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.05.20 -->
+    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
         <title>graphscope.framework.graph_builder - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css" />
@@ -699,6 +699,7 @@ MathJax = {
     <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64_t&quot;</span><span class="p">,</span>
+    <span class="n">vid_type</span><span class="o">=</span><span class="s2">&quot;uint64_t&quot;</span><span class="p">,</span>
     <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">retain_oid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">vformat</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -800,6 +801,8 @@ MathJax = {
 <span class="sd">        directed (bool, optional): Indicate whether the graph</span>
 <span class="sd">            should be treated as directed or undirected.</span>
 <span class="sd">        oid_type (str, optional): ID type of graph. Can be &quot;int32_t&quot;, &quot;int64_t&quot; or &quot;string&quot;. Defaults to &quot;int64_t&quot;.</span>
+<span class="sd">        vid_type (str, optional): Internal vertex ID type of graph. Can be &quot;uint32_t&quot; and &quot;uint64_t&quot;.</span>
+<span class="sd">            Defaults to &quot;uint64_t&quot;.</span>
 <span class="sd">        generate_eid (bool, optional): Whether to generate a unique edge id for each edge. Generated eid will be placed</span>
 <span class="sd">            in third column. This feature is for cooperating with interactive engine.</span>
 <span class="sd">            If you only need to work with analytical engine, set it to False. Defaults to True.</span>
@@ -824,6 +827,9 @@ MathJax = {
     <span class="n">oid_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">normalize_data_type_str</span><span class="p">(</span><span class="n">oid_type</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">oid_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;int32_t&quot;</span><span class="p">,</span> <span class="s2">&quot;int64_t&quot;</span><span class="p">,</span> <span class="s2">&quot;std::string&quot;</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;oid_type can only be int32_t, int64_t or string.&quot;</span><span class="p">)</span>
+    <span class="n">vid_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">normalize_data_type_str</span><span class="p">(</span><span class="n">vid_type</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vid_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;uint32_t&quot;</span><span class="p">,</span> <span class="s2">&quot;uint64_t&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;vid_type can only be uint32_t or uint64_t.&quot;</span><span class="p">)</span>
     <span class="n">v_labels</span> <span class="o">=</span> <span class="n">normalize_parameter_vertices</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">oid_type</span><span class="p">,</span> <span class="n">vformat</span><span class="p">)</span>
     <span class="n">e_labels</span> <span class="o">=</span> <span class="n">normalize_parameter_edges</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">oid_type</span><span class="p">,</span> <span class="n">eformat</span><span class="p">)</span>
     <span class="c1"># generate and add a loader op to dag</span>
@@ -834,9 +840,9 @@ MathJax = {
     <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">DIRECTED</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="n">directed</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">OID_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">oid_type</span><span class="p">),</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">VID_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">vid_type</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">GENERATE_EID</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="n">generate_eid</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">RETAIN_OID</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="n">retain_oid</span><span class="p">),</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">VID_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="s2">&quot;uint64_t&quot;</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">IS_FROM_VINEYARD_ID</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="kc">False</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">IS_FROM_GAR</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="kc">False</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">VERTEX_MAP_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">i_to_attr</span><span class="p">(</span><span class="n">vertex_map</span><span class="p">),</span>
@@ -849,6 +855,7 @@ MathJax = {
     <span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">(</span>
         <span class="n">op</span><span class="p">,</span>
         <span class="n">oid_type</span><span class="o">=</span><span class="n">oid_type</span><span class="p">,</span>
+        <span class="n">vid_type</span><span class="o">=</span><span class="n">vid_type</span><span class="p">,</span>
         <span class="n">directed</span><span class="o">=</span><span class="n">directed</span><span class="p">,</span>
         <span class="n">generate_eid</span><span class="o">=</span><span class="n">generate_eid</span><span class="p">,</span>
         <span class="n">retain_oid</span><span class="o">=</span><span class="n">retain_oid</span><span class="p">,</span>
@@ -863,6 +870,7 @@ MathJax = {
     <span class="n">graph_info_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64_t&quot;</span><span class="p">,</span>
+    <span class="n">vid_type</span><span class="o">=</span><span class="s2">&quot;uint64_t&quot;</span><span class="p">,</span>
     <span class="n">vertex_map</span><span class="o">=</span><span class="s2">&quot;global&quot;</span><span class="p">,</span>
     <span class="n">compact_edges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">use_perfect_hash</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -871,6 +879,9 @@ MathJax = {
     <span class="n">oid_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">normalize_data_type_str</span><span class="p">(</span><span class="n">oid_type</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">oid_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;int32_t&quot;</span><span class="p">,</span> <span class="s2">&quot;int64_t&quot;</span><span class="p">,</span> <span class="s2">&quot;std::string&quot;</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The &#39;oid_type&#39; can only be int32_t, int64_t or string.&quot;</span><span class="p">)</span>
+    <span class="n">vid_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">normalize_data_type_str</span><span class="p">(</span><span class="n">vid_type</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vid_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;uint32_t&quot;</span><span class="p">,</span> <span class="s2">&quot;uint64_t&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The &#39;vid_type&#39; can only be uint32_t or uint64_t.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">compact_edges</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s2">&quot;Loading from gar with &#39;compact_edges&#39; hasn&#39;t been supported yet.&quot;</span>
@@ -885,9 +896,9 @@ MathJax = {
     <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">DIRECTED</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="n">directed</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">OID_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">oid_type</span><span class="p">),</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">VID_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">vid_type</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">GENERATE_EID</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="kc">False</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">RETAIN_OID</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="kc">False</span><span class="p">),</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">VID_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="s2">&quot;uint64_t&quot;</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">IS_FROM_VINEYARD_ID</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="kc">False</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">IS_FROM_GAR</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="kc">True</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">VERTEX_MAP_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">i_to_attr</span><span class="p">(</span><span class="n">vertex_map</span><span class="p">),</span>
@@ -901,6 +912,7 @@ MathJax = {
     <span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">(</span>
         <span class="n">op</span><span class="p">,</span>
         <span class="n">oid_type</span><span class="o">=</span><span class="n">oid_type</span><span class="p">,</span>
+        <span class="n">vid_type</span><span class="o">=</span><span class="n">vid_type</span><span class="p">,</span>
         <span class="n">directed</span><span class="o">=</span><span class="n">directed</span><span class="p">,</span>
         <span class="n">vertex_map</span><span class="o">=</span><span class="n">vertex_map</span><span class="p">,</span>
         <span class="n">compact_edges</span><span class="o">=</span><span class="n">compact_edges</span><span class="p">,</span>

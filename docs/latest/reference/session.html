@@ -15,13 +15,13 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="graphscope.session" href="generated/graphscope.session.html" /><link rel="prev" title="Python API Reference" href="python_index.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.05.20 -->
+    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
         <title>Session - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
@@ -985,6 +985,31 @@ install self as a default session.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="graphscope.Session.g">
+<span class="sig-name descname"><span class="pre">g</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uint64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_oid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compact_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_perfect_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><span class="pre">GraphDAGNode</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.g"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.g" title="Permalink to this definition">#</a></dt>
+<dd><p>Construct a GraphScope graph object on the default session.</p>
+<p>It will launch and set a session to default when there is no default session found.</p>
+<p>See params detail in <a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Evaluated in eager mode.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span> <span class="c1"># creating graph on the session &quot;sess&quot;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.get_config">
 <span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.get_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Get configuration of the session.</p>
@@ -1271,6 +1296,7 @@ Supported types:
 <li><a class="reference internal" href="#graphscope.Session.close"><code class="docutils literal notranslate"><span class="pre">Session.close()</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.Session.connected"><code class="docutils literal notranslate"><span class="pre">Session.connected()</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.Session.engine_config"><code class="docutils literal notranslate"><span class="pre">Session.engine_config</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.Session.g"><code class="docutils literal notranslate"><span class="pre">Session.g()</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.Session.get_config"><code class="docutils literal notranslate"><span class="pre">Session.get_config()</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.Session.get_vineyard_object_mapping_table"><code class="docutils literal notranslate"><span class="pre">Session.get_vineyard_object_mapping_table()</span></code></a></li>
 <li><a class="reference internal" href="#graphscope.Session.graphlearn"><code class="docutils literal notranslate"><span class="pre">Session.graphlearn()</span></code></a></li>

@@ -15,13 +15,13 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Guide and Examples" href="guide_and_examples.html" /><link rel="prev" title="Customized Algorithms" href="customized_algorithms.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.05.20 -->
+    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
         <title>Performance Tuning - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
@@ -711,8 +711,8 @@ edges. The CSR matrix consists of a <code class="docutils literal notranslate"><
 the <code class="docutils literal notranslate"><span class="pre">indptr</span></code> array is a <code class="docutils literal notranslate"><span class="pre">(neighbor_vertex_id,</span> <span class="pre">edge_table_index)</span></code> pair where the
 first the neighbor vertex id and the second is the index points to the
 corresponding edge table.</p>
-<p>By default, the type of <code class="docutils literal notranslate"><span class="pre">neighbor_vertex_id</span></code> is <code class="docutils literal notranslate"><span class="pre">uint64_t</span></code> and the type of
-<code class="docutils literal notranslate"><span class="pre">edge_table_index</span></code> is <code class="docutils literal notranslate"><span class="pre">size_t</span></code>.</p>
+<p>By default, the type of <code class="docutils literal notranslate"><span class="pre">neighbor_vertex_id</span></code> is <code class="docutils literal notranslate"><span class="pre">uint64_t</span></code> or <code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> and
+the type of <code class="docutils literal notranslate"><span class="pre">edge_table_index</span></code> is <code class="docutils literal notranslate"><span class="pre">size_t</span></code>.</p>
 <p>The size of the <code class="docutils literal notranslate"><span class="pre">indptr</span></code> array is <code class="docutils literal notranslate"><span class="pre">num_edges</span></code>.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ie_offsets_lists_-&lt;vertex_label&gt;-&lt;edge_label&gt;</span></code>: the <code class="docutils literal notranslate"><span class="pre">indices</span></code> array, each
@@ -730,8 +730,8 @@ of current partition.</p>
 the <code class="docutils literal notranslate"><span class="pre">indptr</span></code> array is a <code class="docutils literal notranslate"><span class="pre">(neighbor_vertex_id,</span> <span class="pre">edge_table_index)</span></code> pair where the
 first the neighbor vertex id and the second is the index points to the
 corresponding edge table.</p>
-<p>By default, the type of <code class="docutils literal notranslate"><span class="pre">neighbor_vertex_id</span></code> is <code class="docutils literal notranslate"><span class="pre">uint64_t</span></code> and the type of
-<code class="docutils literal notranslate"><span class="pre">edge_table_index</span></code> is <code class="docutils literal notranslate"><span class="pre">size_t</span></code>.</p>
+<p>By default, the type of <code class="docutils literal notranslate"><span class="pre">neighbor_vertex_id</span></code> is <code class="docutils literal notranslate"><span class="pre">uint64_t</span></code> or <code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> and
+the type of <code class="docutils literal notranslate"><span class="pre">edge_table_index</span></code> is <code class="docutils literal notranslate"><span class="pre">size_t</span></code>.</p>
 <p>The size of the <code class="docutils literal notranslate"><span class="pre">indptr</span></code> array is <code class="docutils literal notranslate"><span class="pre">num_edges</span></code>.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">oe_offsets_lists_-&lt;vertex_label&gt;-&lt;edge_label&gt;</span></code>: the <code class="docutils literal notranslate"><span class="pre">indices</span></code> array, each
@@ -818,7 +818,15 @@ does has some limitations on the flexibility that can only used when loading gra
 </ul>
 </li>
 <li><p>Optimizing topologies:</p>
-<ul class="simple">
+<ul>
+<li><p>GraphScope uses <code class="docutils literal notranslate"><span class="pre">uint64_t</span></code> as the <code class="docutils literal notranslate"><span class="pre">VID_T</span></code> (internal vertex id) to support large-scale
+graphs. However, from above analysis, the type of <code class="docutils literal notranslate"><span class="pre">VID_T</span></code> is one of the key factors
+that affects the memory footprint of the topology part.</p>
+<p>If you are sure your graph is fairly small (less than <code class="docutils literal notranslate"><span class="pre">10^8</span></code> of vertices, the absolute
+value depends on number of labels and number of partitions), you can use <code class="docutils literal notranslate"><span class="pre">int32_t</span></code>
+as the <code class="docutils literal notranslate"><span class="pre">VID_T</span></code> to optimize the memory usage, by <code class="docutils literal notranslate"><span class="pre">vid_type=&quot;int32_t&quot;</span></code> option in
+<code class="docutils literal notranslate"><span class="pre">graphscope.g()</span></code> and <code class="docutils literal notranslate"><span class="pre">graphscope.load_from()</span></code>.s</p>
+</li>
 <li><p>GraphScope supports options <code class="docutils literal notranslate"><span class="pre">compact_edges=True</span></code> in <code class="docutils literal notranslate"><span class="pre">graphscope.g()</span></code> and <code class="docutils literal notranslate"><span class="pre">graphscope.load_from()</span></code>
 to compact the <code class="docutils literal notranslate"><span class="pre">ie_lists</span></code> and <code class="docutils literal notranslate"><span class="pre">oe_lists</span></code> arrays using delta and varint encoding. Such compression
 can half the memory footprint of the topology part, but has overhead in computation during

@@ -6,7 +6,7 @@
    3. [Filter](#filter)
    4. [Project](#project)
    5. [Aggregate](#aggregate)
-   6. [Order](#order)
+   6. [Order](#gremlin-order)
    7. [Statistics](#statistics)
    8. [Union](#union)
    9. [Match](#match)
@@ -457,7 +457,7 @@ Usages of the key by()-step:
     g.V().groupCount().by(values("name")) # = g.V().groupCount().by("name")
     g.V().groupCount().by(out().count())
     ```
-### Order
+### <h3 id="gremlin-order">Order</h3>
 #### [order()](https://tinkerpop.apache.org/docs/current/reference/#order-step)
 Order all the objects in the traversal up to this point and then emit them one-by-one in their ordered sequence.
 
