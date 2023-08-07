@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.ir.type;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
 import org.apache.calcite.linq4j.Ord;
+import org.apache.calcite.rel.type.RelDataTypeFamily;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rel.type.StructKind;
@@ -72,7 +73,7 @@ public class GraphSchemaType extends RelRecordType {
                 sb.append(", ");
             }
 
-            RelDataTypeField field = (RelDataTypeField) ord.e;
+            RelDataTypeField field = ord.e;
             if (withDetail) {
                 sb.append(field.getType().getFullTypeString());
             } else {
@@ -84,5 +85,15 @@ public class GraphSchemaType extends RelRecordType {
         }
 
         sb.append(")");
+    }
+
+    @Override
+    public boolean isStruct() {
+        return false;
+    }
+
+    @Override
+    public RelDataTypeFamily getFamily() {
+        return scanOpt;
     }
 }

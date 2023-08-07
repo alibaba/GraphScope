@@ -311,10 +311,12 @@ public class GraphBuilder extends RelBuilder {
         return this;
     }
 
-    private RexNode getJoinCondition(RelNode first, RelNode second) {
+    public RexNode getJoinCondition(RelNode first, RelNode second) {
         List<RexNode> conditions = Lists.newArrayList();
-        List<RelDataTypeField> firstFields = first.getRowType().getFieldList();
-        List<RelDataTypeField> secondFields = second.getRowType().getFieldList();
+        List<RelDataTypeField> firstFields =
+                com.alibaba.graphscope.common.ir.tools.Utils.getOutputType(first).getFieldList();
+        List<RelDataTypeField> secondFields =
+                com.alibaba.graphscope.common.ir.tools.Utils.getOutputType(second).getFieldList();
         for (RelDataTypeField firstField : firstFields) {
             for (RelDataTypeField secondField : secondFields) {
                 if (isGraphElementTypeWithSameOpt(firstField.getType(), secondField.getType())
@@ -612,7 +614,8 @@ public class GraphBuilder extends RelBuilder {
                 || (sqlKind == SqlKind.OTHER_FUNCTION && operator.getName().equals("POWER"))
                 || (sqlKind == SqlKind.MINUS_PREFIX)
                 || (sqlKind == SqlKind.CASE)
-                || (sqlKind == SqlKind.PROCEDURE_CALL);
+                || (sqlKind == SqlKind.PROCEDURE_CALL)
+                || (sqlKind == SqlKind.NOT);
     }
 
     @Override

@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.config.FileLoadType;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
+import com.alibaba.graphscope.common.ir.planner.rules.NotExistToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
@@ -172,14 +173,17 @@ public class GraphPlanner {
                             .getRules()
                             .forEach(
                                     k -> {
-                                        if (k.equals(FilterMatchRule.class.getSimpleName())) {
-                                            hepBuilder.addRuleInstance(
-                                                    FilterMatchRule.Config.DEFAULT.toRule());
-                                        } else if (k.equals(
+                                        if (k.equals(
                                                 FilterJoinRule.FilterIntoJoinRule.class
                                                         .getSimpleName())) {
                                             hepBuilder.addRuleInstance(
                                                     CoreRules.FILTER_INTO_JOIN.config.toRule());
+                                        } else if (k.equals(FilterMatchRule.class.getSimpleName())) {
+                                            hepBuilder.addRuleInstance(
+                                                    FilterMatchRule.Config.DEFAULT.toRule());
+                                        } else if (k.equals(NotExistToAntiJoinRule.class.getSimpleName())) {
+                                            hepBuilder.addRuleInstance(
+                                                    NotExistToAntiJoinRule.Config.DEFAULT.toRule());
                                         } else {
                                             // todo: add more rules
                                         }

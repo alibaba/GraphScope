@@ -19,25 +19,16 @@ package com.alibaba.graphscope.cypher.executor;
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
-import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
+import com.alibaba.graphscope.common.ir.tools.Utils;
 import com.alibaba.graphscope.cypher.result.CypherRecordParser;
 import com.alibaba.graphscope.cypher.result.CypherRecordProcessor;
-import com.google.common.collect.Lists;
 
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rel.type.RelRecordType;
-import org.apache.calcite.rel.type.StructKind;
 import org.neo4j.fabric.stream.StatementResults;
 import org.neo4j.kernel.impl.query.QueryExecution;
 import org.neo4j.kernel.impl.query.QuerySubscriber;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class GraphPlanExecution<C> implements StatementResults.SubscribableExecution {
     private final ExecutionClient<C> client;
@@ -75,19 +66,7 @@ public class GraphPlanExecution<C> implements StatementResults.SubscribableExecu
 
     private RelDataType getOutputType(LogicalPlan logicalPlan) {
         if (logicalPlan.getRegularQuery() != null) {
-            List<RelNode> inputs = Lists.newArrayList(logicalPlan.getRegularQuery());
-            List<RelDataTypeField> outputFields = new ArrayList<>();
-            while (!inputs.isEmpty()) {
-                RelNode cur = inputs.remove(0);
-                outputFields.addAll(cur.getRowType().getFieldList());
-                if (AliasInference.removeAlias(cur)) {
-                    break;
-                }
-                inputs.addAll(cur.getInputs());
-            }
-            return new RelRecordType(
-                    StructKind.FULLY_QUALIFIED,
-                    outputFields.stream().distinct().collect(Collectors.toList()));
+            return Utils.getOutputType(logicalPlan.getRegularQuery());
         } else {
             return logicalPlan.getProcedureCall().getType();
         }

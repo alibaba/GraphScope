@@ -18,7 +18,9 @@ package com.alibaba.graphscope.cypher.antlr4.visitor;
 
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariable;
-import com.alibaba.graphscope.common.ir.tools.*;
+import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.cypher.antlr4.visitor.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
@@ -26,7 +28,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.commons.lang3.ObjectUtils;
@@ -61,14 +66,25 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     @Override
     public ExprVisitorResult visitOC_AndExpression(CypherGSParser.OC_AndExpressionContext ctx) {
-        if (ObjectUtils.isEmpty(ctx.oC_ComparisonExpression())) {
-            throw new IllegalArgumentException("comparison expression should not be empty");
+        if (ObjectUtils.isEmpty(ctx.oC_NotExpression())) {
+            throw new IllegalArgumentException("operands should not be empty in 'AND' operator");
         }
         return binaryCall(
                 GraphStdOperatorTable.AND,
-                ctx.oC_ComparisonExpression().stream()
-                        .map(k -> visitOC_ComparisonExpression(k))
+                ctx.oC_NotExpression().stream()
+                        .map(k -> visitOC_NotExpression(k))
                         .collect(Collectors.toList()));
+    }
+
+    @Override
+    public ExprVisitorResult visitOC_NotExpression(CypherGSParser.OC_NotExpressionContext ctx) {
+        ExprVisitorResult operand = visitOC_ComparisonExpression(ctx.oC_ComparisonExpression());
+        List<TerminalNode> notNodes = ctx.NOT();
+        return unaryCall(
+                ObjectUtils.isNotEmpty(notNodes) && (notNodes.size() & 1) != 0
+                        ? ImmutableList.of(GraphStdOperatorTable.NOT)
+                        : ImmutableList.of(),
+                operand);
     }
 
     @Override
@@ -145,7 +161,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         ExprVisitorResult operand = visitOC_ListOperatorExpression(ctx.oC_ListOperatorExpression());
         List<SqlOperator> operators =
                 Utils.getOperators(ctx.children, ImmutableList.of("-", "+"), true);
-        return (operators.isEmpty()) ? operand : unaryCall(operators.get(0), operand);
+        return unaryCall(operators, operand);
     }
 
     @Override
@@ -174,6 +190,14 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     public ExprVisitorResult visitOC_Variable(CypherGSParser.OC_VariableContext ctx) {
         String aliasName = ctx.getText();
         return new ExprVisitorResult(builder.variable(aliasName));
+    }
+
+    @Override
+    public ExprVisitorResult visitOC_PatternPredicate(
+            CypherGSParser.OC_PatternPredicateContext ctx) {
+        RelNode subQuery =
+                parent.visitOC_RelationshipsPattern(ctx.oC_RelationshipsPattern()).build();
+        return new ExprVisitorResult(RexSubQuery.exists(subQuery));
     }
 
     @Override
@@ -312,9 +336,17 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         return new ExprVisitorResult(aggCalls, expr);
     }
 
-    private ExprVisitorResult unaryCall(SqlOperator operator, ExprVisitorResult operand) {
-        return new ExprVisitorResult(
-                operand.getAggCalls(), builder.call(operator, operand.getExpr()));
+    /**
+     *
+     * @param operators at most one operator, can be empty
+     * @param operand
+     * @return
+     */
+    private ExprVisitorResult unaryCall(List<SqlOperator> operators, ExprVisitorResult operand) {
+        return (operators.isEmpty())
+                ? operand
+                : new ExprVisitorResult(
+                        operand.getAggCalls(), builder.call(operators.get(0), operand.getExpr()));
     }
 
     private class ParamIdGenerator {

@@ -254,5 +254,6 @@ public class HepPlannerTest {
                     + " alias=[x], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 after2.explain().trim());
+        System.out.println(after2.getRowType());
     }
 }

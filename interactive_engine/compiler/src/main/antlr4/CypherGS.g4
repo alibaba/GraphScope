@@ -79,6 +79,9 @@ oC_PatternElement
                   | ( '(' oC_PatternElement ')' )
                   ;
 
+oC_RelationshipsPattern
+           :  oC_NodePattern ( SP? oC_PatternElementChain )+ ;
+
 // (n)
 // (n:Person)
 // (n:Person {name : 'marko'})
@@ -219,9 +222,12 @@ OR : ( 'O' | 'o' ) ( 'R' | 'r' ) ;
 XOR : ( 'X' | 'x' ) ( 'O' | 'o' ) ( 'R' | 'r' ) ;
 
 oC_AndExpression
-             :  oC_ComparisonExpression ( SP AND SP oC_ComparisonExpression )* ;
+             :  oC_NotExpression ( SP AND SP oC_NotExpression )* ;
 
 AND : ( 'A' | 'a' ) ( 'N' | 'n' ) ( 'D' | 'd' ) ;
+
+oC_NotExpression
+             :  ( NOT SP? )* oC_ComparisonExpression ;
 
 NOT : ( 'N' | 'n' ) ( 'O' | 'o' ) ( 'T' | 't' ) ;
 
@@ -277,7 +283,11 @@ oC_Atom
         | oC_CountAny
         | oC_Parameter
         | oC_CaseExpression
+        | oC_PatternPredicate
         ;
+
+oC_PatternPredicate
+    :  oC_RelationshipsPattern ;
 
 oC_Parameter
     : '$' ( oC_SymbolicName ) ;

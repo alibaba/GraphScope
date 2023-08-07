@@ -96,7 +96,7 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
     @Override
     public GraphBuilder visitOC_NodePattern(CypherGSParser.OC_NodePatternContext ctx) {
         // source
-        if (ctx.parent instanceof CypherGSParser.OC_PatternElementContext) {
+        if (!(ctx.parent instanceof CypherGSParser.OC_PatternElementChainContext)) {
             builder.source(Utils.sourceConfig(ctx));
         } else { // getV
             builder.getV(Utils.getVConfig(ctx));
