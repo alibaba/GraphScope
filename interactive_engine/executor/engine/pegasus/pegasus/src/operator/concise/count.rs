@@ -33,7 +33,7 @@ impl<D: Data> Count<D> for Stream<D> {
                                 session.give_last(cnt, end)?;
                             } else {
                                 let worker = crate::worker_id::get_current_worker().index;
-                                if end.peers_contains(worker) {
+                                if end.contains_source(worker) {
                                     let mut session = output.new_session(&batch.tag)?;
                                     trace_worker!("local count {} of {:?}", 0, batch.tag);
                                     session.give_last(0, end)?;
