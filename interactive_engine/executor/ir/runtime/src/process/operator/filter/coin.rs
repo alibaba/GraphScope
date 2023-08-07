@@ -17,13 +17,13 @@ use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::FilterFunction;
 use pegasus::api::function::FnResult;
+use rand::prelude::StdRng;
+use rand::{Rng, SeedableRng};
 
 use crate::error::FnGenError;
 use crate::error::FnGenResult;
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::record::Record;
-use rand::prelude::StdRng;
-use rand::{Rng, SeedableRng};
 
 #[derive(Debug)]
 struct CoinOperator {

@@ -33,6 +33,7 @@ use pegasus::{BuildJobError, Worker};
 use pegasus_server::job::{JobAssembly, JobDesc};
 use pegasus_server::job_pb as server_pb;
 use prost::Message;
+use rand::Rng;
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::process::functions::{ApplyGen, CompareFunction, FoldGen, GroupGen, JoinKeyGen, KeyFunction};
@@ -158,7 +159,7 @@ impl<P: PartitionInfo, C: ClusterInfo> FnGenerator<P, C> {
         Ok(opr.gen_map()?)
     }
 
-    fn gen_sample(&self, opr: algebra_pb::Sample) -> FnGenResult<RecordFilter> {
+    fn gen_coin(&self, opr: algebra_pb::Sample) -> FnGenResult<RecordFilter> {
         Ok(opr.gen_filter()?)
     }
 
@@ -252,6 +253,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                 .map(move |cnt| fold_map.exec(cnt))?
                                 .into_stream()?;
                         } else {
+                            // TODO: optimize this by fold_partiton + fold
                             let fold_accum = fold.gen_fold_accum()?;
                             stream = stream
                                 .fold(fold_accum, || {
@@ -631,8 +633,72 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     })?;
                 }
                 OpKind::Sample(sample) => {
-                    let func = self.udf_gen.gen_sample(sample)?;
-                    stream = stream.filter(move |input| func.test(input))?;
+                    if sample.sample_weight.is_some() {
+                        Err(FnGenError::from(ParsePbError::ParseError(
+                            "sample_weight is not supported yet".to_string(),
+                        )))?;
+                    } else {
+                        if let Some(sample_type) = &sample.sample_type {
+                            match &sample_type.inner {
+                                // the case of Coin
+                                Some(algebra_pb::sample::sample_type::Inner::SampleByRatio(_)) => {
+                                    let func = self.udf_gen.gen_coin(sample)?;
+                                    stream = stream.filter(move |input| func.test(input))?;
+                                }
+                                // the case of Sample
+                                Some(algebra_pb::sample::sample_type::Inner::SampleByNum(
+                                    sample_by_num,
+                                )) => {
+                                    let sample_num = sample_by_num.num as usize;
+                                    stream = stream
+                                        .fold_partition(Vec::with_capacity(sample_num), move || {
+                                            move |mut part_collection, next| {
+                                                if part_collection.len() <= sample_num {
+                                                    part_collection.push(next);
+                                                } else {
+                                                    // TODO: any better idea?
+                                                    let mut rng = rand::thread_rng();
+                                                    let index = rng.gen_range(0..sample_num);
+                                                    part_collection[index] = next;
+                                                }
+                                                Ok(part_collection)
+                                            }
+                                        })?
+                                        .into_stream()?
+                                        .fold(Vec::with_capacity(sample_num), move || {
+                                            move |mut sample_collection, part_collection| {
+                                                sample_collection.extend(part_collection);
+                                                Ok(sample_collection)
+                                            }
+                                        })?
+                                        .unfold(move |sample_collection| {
+                                            if sample_collection.len() <= sample_num {
+                                                // If sample collection is not enough, sample all. No upsampling.
+                                                Ok(sample_collection.into_iter())
+                                            } else {
+                                                let mut rng = rand::thread_rng();
+                                                let sample_result: Vec<Record> = rand::seq::index::sample(
+                                                    &mut rng,
+                                                    sample_collection.len(),
+                                                    sample_num,
+                                                )
+                                                .iter()
+                                                .map(move |i| sample_collection[i].clone())
+                                                .collect();
+                                                Ok(sample_result.into_iter())
+                                            }
+                                        })?;
+                                }
+                                None => Err(FnGenError::from(ParsePbError::EmptyFieldError(
+                                    "pb::Sample::sample_type.inner".to_string(),
+                                )))?,
+                            }
+                        } else {
+                            Err(FnGenError::from(ParsePbError::EmptyFieldError(
+                                "pb::Sample::sample_type".to_string(),
+                            )))?;
+                        }
+                    }
                 }
                 OpKind::Root(_) => {
                     // this would be processed in assemble, and can not be reached when install.
