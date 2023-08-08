@@ -178,10 +178,12 @@ public class GraphPlanner {
                                                         .getSimpleName())) {
                                             hepBuilder.addRuleInstance(
                                                     CoreRules.FILTER_INTO_JOIN.config.toRule());
-                                        } else if (k.equals(FilterMatchRule.class.getSimpleName())) {
+                                        } else if (k.equals(
+                                                FilterMatchRule.class.getSimpleName())) {
                                             hepBuilder.addRuleInstance(
                                                     FilterMatchRule.Config.DEFAULT.toRule());
-                                        } else if (k.equals(NotExistToAntiJoinRule.class.getSimpleName())) {
+                                        } else if (k.equals(
+                                                NotExistToAntiJoinRule.class.getSimpleName())) {
                                             hepBuilder.addRuleInstance(
                                                     NotExistToAntiJoinRule.Config.DEFAULT.toRule());
                                         } else {
