@@ -62,6 +62,6 @@ jobs:
         FLEX_DATA_DIR: ${{ github.workspace }}/flex/storages/rt_mutable_graph/modern_graph/
       run: |
         cd ${GITHUB_WORKSPACE}/flex/build/
-        GLOG_v=10 ./tests/rt_mutable_graph/test_graph_loading \
-            ../storages/rt_mutable_graph/modern_graph/modern_graph.yaml 
-            ../storages/rt_mutable_graph/modern_graph/bulk_load.yaml /tmp/csr-data-dir/
+        SCHEMA_FILE=../storages/rt_mutable_graph/modern_graph/modern_graph.yaml
+        BULK_LOAD_FILE=../storages/rt_mutable_graph/modern_graph/bulk_load.yaml
+        GLOG_v=10 ./tests/rt_mutable_graph/test_graph_loading  ${SCHEMA_FILE} ${BULK_LOAD_FILE} /tmp/csr-data-dir/
