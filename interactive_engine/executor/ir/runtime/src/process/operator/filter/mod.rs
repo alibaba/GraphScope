@@ -15,15 +15,11 @@
 mod coin;
 mod select;
 
-use pegasus::api::function::{FilterFunction, MutFilterFunction};
+use pegasus::api::function::FilterFunction;
 
 use crate::error::FnGenResult;
 use crate::process::record::Record;
 
 pub trait FilterFuncGen {
     fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>>;
-}
-
-pub trait MutFilterFunctionGen {
-    fn gen_mut_filter(self) -> FnGenResult<Box<dyn MutFilterFunction<Record>>>;
 }

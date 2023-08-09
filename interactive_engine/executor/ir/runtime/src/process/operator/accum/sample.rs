@@ -17,7 +17,8 @@ use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::DynIter;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
-use rand::Rng;
+use rand::prelude::StdRng;
+use rand::{Rng, SeedableRng};
 
 use crate::error::{FnExecResult, FnGenError, FnGenResult};
 use crate::process::operator::accum::accumulator::Accumulator;
@@ -31,6 +32,8 @@ pub struct SampleAccum {
     accumulator: Vec<Record>,
     count: usize,
     sample_num: usize,
+    rng: StdRng,
+    seed: Option<u64>,
 }
 
 impl Accumulator<Record, DynIter<Record>> for SampleAccum {
@@ -38,8 +41,7 @@ impl Accumulator<Record, DynIter<Record>> for SampleAccum {
         if self.count < self.sample_num {
             self.accumulator.push(next);
         } else {
-            let mut rng = rand::thread_rng();
-            let index = rng.gen_range(0..=self.count);
+            let index = self.rng.gen_range(0..=self.count);
             if index < self.sample_num {
                 self.accumulator[index] = next;
             }
@@ -70,6 +72,12 @@ impl SampleAccumFactoryGen for algebra_pb::Sample {
                         sample_num: num.num as usize,
                         accumulator: Vec::with_capacity(num.num as usize),
                         count: 0,
+                        rng: if let Some(seed) = self.seed {
+                            StdRng::seed_from_u64(seed as u64)
+                        } else {
+                            StdRng::from_entropy()
+                        },
+                        seed: self.seed.map(|s| s as u64),
                     };
                     if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
                         debug!("Runtime sample operator: {:?}", sample);
@@ -91,6 +99,7 @@ impl Encode for SampleAccum {
         self.accumulator.write_to(writer)?;
         writer.write_u64(self.count as u64)?;
         writer.write_u64(self.sample_num as u64)?;
+        self.seed.write_to(writer)?;
         Ok(())
     }
 }
@@ -100,6 +109,8 @@ impl Decode for SampleAccum {
         let accumulator = <Vec<Record>>::read_from(reader)?;
         let count = reader.read_u64()? as usize;
         let sample_num = reader.read_u64()? as usize;
-        Ok(SampleAccum { accumulator, count, sample_num })
+        let seed = Option::<u64>::read_from(reader)?;
+        let rng = if let Some(seed) = seed { StdRng::seed_from_u64(seed) } else { StdRng::from_entropy() };
+        Ok(SampleAccum { accumulator, count, sample_num, rng, seed })
     }
 }

@@ -118,11 +118,11 @@ mod test {
         result_collection.len()
     }
 
-    fn scan_out_sample_by_num(worker_num: u32, sample_num: i32) -> usize {
+    fn scan_out_sample_by_num(sample_num: i32) -> usize {
         initialize();
         let sample_by_num = gen_sample_by_num_opr(sample_num, None);
         let request = init_scan_out_sample_request(sample_by_num);
-        let mut results = submit_query(request, worker_num);
+        let mut results = submit_query(request, 2);
         let mut result_collection = vec![];
         while let Some(result) = results.next() {
             match result {
@@ -139,6 +139,29 @@ mod test {
         }
         print!("{:?}", result_collection);
         result_collection.len()
+    }
+
+    fn scan_sample_by_num_with_seed(sample_num: i32, seed: i32) -> Vec<i64> {
+        initialize();
+        let sample_by_num = gen_sample_by_num_opr(sample_num, Some(seed));
+        let request = init_scan_sample_request(sample_by_num);
+        let mut results = submit_query(request, 2);
+        let mut result_collection = vec![];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let record = parse_result(res).unwrap();
+                    if let Some(vertex) = record.get(None).unwrap().as_vertex() {
+                        result_collection.push(vertex.id());
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        print!("{:?}", result_collection);
+        result_collection
     }
 
     fn scan_sample_by_ratio(worker_num: u32, sample_ratio: f64) -> usize {
@@ -164,11 +187,11 @@ mod test {
         result_collection.len()
     }
 
-    fn scan_out_sample_by_ratio(worker_num: u32, sample_ratio: f64) -> usize {
+    fn scan_out_sample_by_ratio(sample_ratio: f64) -> usize {
         initialize();
         let sample_by_ratio = gen_sample_by_ratio_opr(sample_ratio, None);
         let request = init_scan_out_sample_request(sample_by_ratio);
-        let mut results = submit_query(request, worker_num);
+        let mut results = submit_query(request, 2);
         let mut result_collection = vec![];
         while let Some(result) = results.next() {
             match result {
@@ -187,11 +210,11 @@ mod test {
         result_collection.len()
     }
 
-    fn scan_sample_by_ratio_with_seed(worker_num: u32, sample_ratio: f64) -> usize {
+    fn scan_sample_by_ratio_with_seed(sample_ratio: f64, seed: i32) -> Vec<i64> {
         initialize();
-        let sample_by_ratio = gen_sample_by_ratio_opr(sample_ratio, Some(97));
+        let sample_by_ratio = gen_sample_by_ratio_opr(sample_ratio, Some(seed));
         let request = init_scan_sample_request(sample_by_ratio);
-        let mut results = submit_query(request, worker_num);
+        let mut results = submit_query(request, 2);
         let mut result_collection = vec![];
         while let Some(result) = results.next() {
             match result {
@@ -207,7 +230,7 @@ mod test {
             }
         }
         print!("{:?}", result_collection);
-        result_collection.len()
+        result_collection
     }
 
     // g.V().sample(2) with worker_num = 1
@@ -243,16 +266,28 @@ mod test {
     // g.V().out().sample(2)
     #[test]
     fn scan_out_sample_by_num_test() {
-        let res_num = scan_out_sample_by_num(1, 2);
+        let res_num = scan_out_sample_by_num(2);
         assert_eq!(res_num, 2);
     }
 
     // g.V().out().sample(10)
     #[test]
     fn scan_out_sample_by_num_test_02() {
-        let res_num = scan_out_sample_by_num(2, 10);
+        let res_num = scan_out_sample_by_num(10);
         // no upsampling
         assert_eq!(res_num, 6);
+    }
+
+    // g.V().sample(2).with("REPEATABLE", 97)
+    #[test]
+    fn scan_sample_by_num_with_seed_test() {
+        let mut first_sample = scan_sample_by_num_with_seed(2, 97);
+        first_sample.sort();
+        for _i in 0..3 {
+            let mut try_sample = scan_sample_by_num_with_seed(2, 97);
+            try_sample.sort();
+            assert_eq!(first_sample, try_sample);
+        }
     }
 
     // g.V().coin(1.0) with worker_num = 1
@@ -269,24 +304,43 @@ mod test {
         assert_eq!(res_num, 6);
     }
 
+    // g.V().coin(0.1) with worker_num = 1
+    #[test]
+    fn scan_sample_by_coin_01_test() {
+        let res_num = scan_sample_by_ratio(1, 0.1);
+        assert!(res_num < 6);
+    }
+
+    // g.V().coin(0.1) with worker_num = 2
+    #[test]
+    fn scan_sample_by_coin_01_w2_test() {
+        let res_num = scan_sample_by_ratio(2, 0.1);
+        assert!(res_num < 6);
+    }
+
     // g.V().out().coin(1.0)
     #[test]
     fn scan_out_sample_by_coin_test() {
-        let res_num = scan_out_sample_by_ratio(2, 1.0);
+        let res_num = scan_out_sample_by_ratio(1.0);
         assert_eq!(res_num, 6);
     }
 
-    // g.V().coin(0.1)
+    // g.V().out().coin(0.1)
     #[test]
-    fn scan_sample_by_coin_01_test() {
-        let res_num = scan_sample_by_ratio(2, 0.1);
+    fn scan_out_sample_by_coin_01_test() {
+        let res_num = scan_out_sample_by_ratio(0.1);
         assert!(res_num < 6);
     }
 
     // g.V().coin(0.8).with("REPEATABLE", 97)
     #[test]
     fn scan_sample_by_coin_with_seed_test() {
-        let res_num = scan_sample_by_ratio_with_seed(2, 0.8);
-        assert_eq!(res_num, 6);
+        let mut first_sample = scan_sample_by_ratio_with_seed(0.8, 97);
+        first_sample.sort();
+        for _i in 0..3 {
+            let mut try_sample = scan_sample_by_ratio_with_seed(0.8, 97);
+            try_sample.sort();
+            assert_eq!(first_sample, try_sample);
+        }
     }
 }
