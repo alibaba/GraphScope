@@ -1918,6 +1918,57 @@ mod as_opr {
     }
 }
 
+mod sample {
+    use super::*;
+
+    /// To initialize a Sample operator
+    #[no_mangle]
+    pub extern "C" fn init_sample_operator() -> *const c_void {
+        let sample: Box<pb::Sample> =
+            Box::new(pb::Sample { sample_type: None, seed: None, sample_weight: None });
+        Box::into_raw(sample) as *const c_void
+    }
+
+    /// Set the sample type for the sample operator
+    #[no_mangle]
+    pub extern "C" fn set_sample_type(
+        ptr_sample: *const c_void, ptr_sample_type: FfiPbPointer,
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut sample = unsafe { Box::from_raw(ptr_sample as *mut pb::Sample) };
+        let sample_type_res = ptr_to_pb::<pb::sample::SampleType>(ptr_sample_type);
+        match sample_type_res {
+            Ok(sample_type) => sample.sample_type = Some(sample_type),
+            Err(e) => result = e,
+        }
+        std::mem::forget(sample);
+        result
+    }
+
+    /// Set the sample seed for the sample operator
+    #[no_mangle]
+    pub extern "C" fn set_sample_seed(ptr_sample: *const c_void, sample_seed: i32) -> FfiResult {
+        let mut sample = unsafe { Box::from_raw(ptr_sample as *mut pb::Sample) };
+        sample.seed = Some(sample_seed);
+        std::mem::forget(sample);
+        FfiResult::success()
+    }
+
+    /// Append a Sample  operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_sample_operator(
+        ptr_plan: *const c_void, ptr_sample: *const c_void, parent: i32, id: *mut i32,
+    ) -> FfiResult {
+        let sample = unsafe { Box::from_raw(ptr_sample as *mut pb::Sample) };
+        append_operator(ptr_plan, sample.as_ref().clone().into(), vec![parent], id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_sample_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Sample>(ptr)
+    }
+}
+
 mod sink {
     use super::*;
 

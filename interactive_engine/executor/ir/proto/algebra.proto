@@ -489,6 +489,7 @@ message LogicalPlan {
       As as = 14;
       Intersect intersect = 15;
       Sink sink = 16;
+      Sample sample = 17;
       // Saving the room for relational operators
       GetV vertex = 30;
       EdgeExpand edge = 31;
