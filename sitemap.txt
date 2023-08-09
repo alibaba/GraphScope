@@ -12,6 +12,7 @@ https://graphscope.io/docs/latest/zh/
 https://slack.graphscope.io
 
 https://graphscope.io/blog/
+https://graphscope.io/blog/tech/2023/08/06/Dynamic-Graph-Sampling-Service-for-Realtime-GNN-Inference-at-Scale
 https://graphscope.io/blog/tech/2023/07/23/Developing-and-Running-Customized-Analytical-Algorithms-for-GraphScope
 https://graphscope.io/blog/tech/2023/07/11/Simplifying-Complex-Graph-Loading-with-Jupyter-Notebook
 https://graphscope.io/blog/releasenotes/2023/07/27/release-notes-0.23.0
