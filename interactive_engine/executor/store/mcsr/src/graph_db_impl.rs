@@ -31,6 +31,37 @@ use crate::types::*;
 use crate::utils::{Iter, LabeledIterator, LabeledRangeIterator, Range};
 use crate::vertex_map::VertexMap;
 
+pub trait BasicSubgraphOps<'a>: Send + Sync {
+    type GIDType: Send + Sync + IndexType;
+    type IIDType: Send + Sync + IndexType;
+
+    fn get_src_label(&self) -> LabelId;
+
+    fn get_dst_label(&self) -> LabelId;
+
+    fn get_edge_label(&self) -> LabelId;
+
+    fn get_vertex_num(&self) -> Self::IIDType;
+
+    fn get_edge_num(&self) -> usize;
+
+    fn degree(&self, src_id: Self::IIDType) -> i64;
+
+    fn get_adj_list(&self, src_id: Self::IIDType) -> Option<NbrIter<Self::IIDType>>;
+
+    fn get_adj_list_with_offset(&self, src_id: Self::IIDType) -> Option<NbrOffsetIter<Self::IIDType>>;
+
+    fn get_internal_id(&self, id: Self::GIDType) -> Option<(LabelId, Self::IIDType)>;
+
+    fn get_src_global_id(&self, id: Self::IIDType) -> Option<Self::GIDType>;
+
+    fn get_dst_global_id(&self, id: Self::IIDType) -> Option<Self::GIDType>;
+
+    fn get_vertex(&self, id: Self::GIDType) -> Self::IIDType;
+
+    fn get_properties(&self) -> Option<&'a ColTable>;
+}
+
 #[derive(Copy, Clone)]
 pub struct SubGraph<'a, G: Send + Sync + IndexType = DefaultId, I: Send + Sync + IndexType = InternalId> {
     pub csr: &'a MutableCsr<I>,
@@ -54,73 +85,68 @@ where
     ) -> Self {
         Self { csr, vm, src_label, dst_label, e_label, vertex_data, edge_data }
     }
+}
 
-    pub fn get_src_label(&self) -> LabelId {
+impl<'a, G, I> BasicSubgraphOps<'a> for SubGraph<'a, G, I>
+where
+    G: Send + Sync + IndexType,
+    I: Send + Sync + IndexType,
+{
+    type GIDType = G;
+    type IIDType = I;
+
+    fn get_src_label(&self) -> LabelId {
         self.src_label
     }
 
-    pub fn get_dst_label(&self) -> LabelId {
+    fn get_dst_label(&self) -> LabelId {
         self.dst_label
     }
 
-    pub fn get_edge_label(&self) -> LabelId {
+    fn get_edge_label(&self) -> LabelId {
         self.e_label
     }
 
-    pub fn get_vertex_num(&self) -> I {
+    fn get_vertex_num(&self) -> Self::IIDType {
         self.csr.vertex_num()
     }
 
-    pub fn get_edge_num(&self) -> usize {
+    fn get_edge_num(&self) -> usize {
         self.csr.edge_num()
     }
 
-    pub fn degree(&self, src_id: I) -> i64 {
+    fn degree(&self, src_id: Self::IIDType) -> i64 {
         self.csr.degree(src_id)
     }
 
-    pub fn get_adj_list(&self, src_id: I) -> Option<NbrIter<I>> {
+    fn get_adj_list(&self, src_id: Self::IIDType) -> Option<NbrIter<Self::IIDType>> {
         self.csr.get_edges(src_id)
     }
 
-    pub fn get_adj_list_with_offset(&self, src_id: I) -> Option<NbrOffsetIter<I>> {
+    fn get_adj_list_with_offset(&self, src_id: I) -> Option<NbrOffsetIter<Self::IIDType>> {
         self.csr.get_edges_with_offset(src_id)
     }
 
-    pub fn get_internal_id(&self, id: G) -> Option<(LabelId, I)> {
+    fn get_internal_id(&self, id: Self::GIDType) -> Option<(LabelId, Self::IIDType)> {
         self.vm.get_internal_id(id)
     }
 
-    pub fn get_src_global_id(&self, id: I) -> Option<G> {
+    fn get_src_global_id(&self, id: Self::IIDType) -> Option<Self::GIDType> {
         self.vm.get_global_id(self.src_label, id)
     }
 
-    pub fn get_dst_global_id(&self, id: I) -> Option<G> {
+    fn get_dst_global_id(&self, id: Self::IIDType) -> Option<Self::GIDType> {
         self.vm.get_global_id(self.dst_label, id)
     }
 
-    pub fn get_vertex(&self, id: G) -> I {
+    fn get_vertex(&self, id: Self::GIDType) -> Self::IIDType {
         self.vm.get_internal_id(id).unwrap().1
     }
 
-    pub fn get_properties(&self) -> Option<&ColTable> {
+    fn get_properties(&self) -> Option<&'a ColTable> {
         self.edge_data
     }
 }
-//
-// impl<'a, G, I> Clone for SubGraph<'a, G, I> {
-//     fn clone(&self) -> Self {
-//         SubGraph {
-//             csr: self.csr,
-//             vm:self.vm,
-//             src_label: self.src_label,
-//             dst_label: self.dst_label,
-//             e_label: self.e_label,
-//             vertex_data: self.vertex_data,
-//             edge_data: self.edge_data
-//         }
-//     }
-// }
 
 #[derive(Copy, Clone)]
 pub struct SingleSubGraph<
@@ -150,55 +176,68 @@ where
         Self { csr, vm, src_label, dst_label, e_label, vertex_data, edge_data }
     }
 
-    pub fn get_src_label(&self) -> LabelId {
-        self.src_label
-    }
-
-    pub fn get_dst_label(&self) -> LabelId {
-        self.dst_label
-    }
-
-    pub fn get_edge_label(&self) -> LabelId {
-        self.e_label
-    }
-
-    pub fn get_vertex_num(&self) -> I {
-        self.csr.vertex_num()
-    }
-
-    pub fn get_edge_num(&self) -> usize {
-        self.csr.edge_num()
-    }
-
-    pub fn get_adj_list(&self, src_id: I) -> Option<NbrIter<I>> {
-        self.csr.get_edges(src_id)
-    }
-
-    pub fn get_adj_list_with_offset(&self, src_id: I) -> Option<NbrOffsetIter<I>> {
-        self.csr.get_edges_with_offset(src_id)
-    }
-
-    pub fn get_internal_id(&self, id: G) -> Option<(LabelId, I)> {
-        self.vm.get_internal_id(id)
-    }
-
-    pub fn get_src_global_id(&self, id: I) -> Option<G> {
-        self.vm.get_global_id(self.src_label, id)
-    }
-
-    pub fn get_dst_global_id(&self, id: I) -> Option<G> {
-        self.vm.get_global_id(self.dst_label, id)
-    }
-
-    pub fn get_vertex(&self, id: G) -> I {
-        self.vm.get_internal_id(id).unwrap().1
-    }
-
     pub fn desc(&self) {
         self.csr.desc();
     }
+}
 
-    pub fn get_properties(&self) -> Option<&ColTable> {
+impl<'a, G, I> BasicSubgraphOps<'a> for SingleSubGraph<'a, G, I>
+where
+    G: Send + Sync + IndexType,
+    I: Send + Sync + IndexType,
+{
+    type GIDType = G;
+    type IIDType = I;
+
+    fn get_src_label(&self) -> LabelId {
+        self.src_label
+    }
+
+    fn get_dst_label(&self) -> LabelId {
+        self.dst_label
+    }
+
+    fn get_edge_label(&self) -> LabelId {
+        self.e_label
+    }
+
+    fn get_vertex_num(&self) -> Self::IIDType {
+        self.csr.vertex_num()
+    }
+
+    fn get_edge_num(&self) -> usize {
+        self.csr.edge_num()
+    }
+
+    fn degree(&self, src_id: Self::IIDType) -> i64 {
+        self.csr.degree(src_id)
+    }
+
+    fn get_adj_list(&self, src_id: Self::IIDType) -> Option<NbrIter<Self::IIDType>> {
+        self.csr.get_edges(src_id)
+    }
+
+    fn get_adj_list_with_offset(&self, src_id: Self::IIDType) -> Option<NbrOffsetIter<Self::IIDType>> {
+        self.csr.get_edges_with_offset(src_id)
+    }
+
+    fn get_internal_id(&self, id: Self::GIDType) -> Option<(LabelId, Self::IIDType)> {
+        self.vm.get_internal_id(id)
+    }
+
+    fn get_src_global_id(&self, id: Self::IIDType) -> Option<Self::GIDType> {
+        self.vm.get_global_id(self.src_label, id)
+    }
+
+    fn get_dst_global_id(&self, id: Self::IIDType) -> Option<Self::GIDType> {
+        self.vm.get_global_id(self.dst_label, id)
+    }
+
+    fn get_vertex(&self, id: Self::GIDType) -> Self::IIDType {
+        self.vm.get_internal_id(id).unwrap().1
+    }
+
+    fn get_properties(&self) -> Option<&'a ColTable> {
         self.edge_data
     }
 }

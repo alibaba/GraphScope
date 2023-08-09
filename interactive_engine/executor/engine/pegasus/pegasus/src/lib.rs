@@ -70,8 +70,8 @@ pub use worker::Worker;
 pub use worker_id::{get_current_worker, get_current_worker_checked, set_current_worker, WorkerId};
 
 use crate::api::Source;
-pub use crate::errors::{BuildJobError, CancelError, JobSubmitError, SpawnJobError, StartupError};
-use crate::resource::PartitionedResource;
+pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupError};
+use crate::resource::{PartitionedKeydResource, PartitionedResource};
 use crate::result::{ResultSink, ResultStream};
 use crate::worker_id::WorkerIdIter;
 
@@ -225,11 +225,11 @@ pub fn shutdown_all() {
 }
 
 pub fn run<DI, DO, F, FN>(conf: JobConf, func: F) -> Result<ResultStream<DO>, JobSubmitError>
-    where
-        DI: Data,
-        DO: Debug + Send + 'static,
-        F: Fn() -> FN,
-        FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
+where
+    DI: Data,
+    DO: Debug + Send + 'static,
+    F: Fn() -> FN,
+    FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
 {
     let (tx, rx) = crossbeam_channel::unbounded();
     let sink = ResultSink::new(tx);
@@ -242,12 +242,12 @@ pub fn run<DI, DO, F, FN>(conf: JobConf, func: F) -> Result<ResultStream<DO>, Jo
 pub fn run_with_resources<DI, DO, F, FN, R>(
     conf: JobConf, mut resource: R, func: F,
 ) -> Result<ResultStream<DO>, JobSubmitError>
-    where
-        DI: Data,
-        DO: Debug + Send + 'static,
-        R: PartitionedResource,
-        F: Fn() -> FN,
-        FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
+where
+    DI: Data,
+    DO: Debug + Send + 'static,
+    R: PartitionedResource,
+    F: Fn() -> FN,
+    FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
 {
     let (tx, rx) = crossbeam_channel::unbounded();
     let sink = ResultSink::new(tx);
@@ -263,11 +263,51 @@ pub fn run_with_resources<DI, DO, F, FN, R>(
     Ok(results)
 }
 
+pub fn run_with_keyed_resources<DI, DO, F, FN, R, K>(
+    conf: JobConf, mut resource: Option<R>, mut keyed_resource: Option<K>, func: F,
+) -> Result<ResultStream<DO>, JobSubmitError>
+where
+    DI: Data,
+    DO: Debug + Send + 'static,
+    R: PartitionedResource,
+    K: PartitionedKeydResource,
+    F: Fn() -> FN,
+    FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
+{
+    let (tx, rx) = crossbeam_channel::unbounded();
+    let sink = ResultSink::new(tx);
+    let cancel_hook = sink.get_cancel_hook().clone();
+    let results = ResultStream::new(conf.job_id, cancel_hook, rx);
+    run_opt(conf, sink, |worker| {
+        let index = worker.id.index as usize;
+        if resource.is_some() {
+            let mut resource = resource
+                .take()
+                .expect("Failed to take resource");
+            if let Some(r) = resource.take_resource(index) {
+                worker.add_resource(r);
+            }
+        }
+        if keyed_resource.is_some() {
+            let mut keyed_resource = keyed_resource
+                .take()
+                .expect("Failed to take resource");
+            if let Some(rs) = keyed_resource.take_keyed_resource(index) {
+                for (k, r) in rs {
+                    worker.add_resource_with_key(k, r);
+                }
+            }
+        }
+        worker.dataflow(func())
+    })?;
+    Ok(results)
+}
+
 pub fn run_opt<DI, DO, F>(conf: JobConf, sink: ResultSink<DO>, mut logic: F) -> Result<(), JobSubmitError>
-    where
-        DI: Data,
-        DO: Debug + Send + 'static,
-        F: FnMut(&mut Worker<DI, DO>) -> Result<(), BuildJobError>,
+where
+    DI: Data,
+    DO: Debug + Send + 'static,
+    F: FnMut(&mut Worker<DI, DO>) -> Result<(), BuildJobError>,
 {
     init_env();
     let cancel_hook = sink.get_cancel_hook().clone();

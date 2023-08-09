@@ -36,7 +36,10 @@ impl REntry {
         let r = self.entry.downcast_ref::<T>()?;
         let ref_cnt = self.ref_cnt.clone();
         ref_cnt.fetch_add(1, Ordering::SeqCst);
-        Some(ArcRef { cnt: ref_cnt, inner: r })
+        Some(ArcRef {
+            cnt: ref_cnt,
+            inner: r,
+        })
     }
 
     fn get_ref_cnt(&self) -> usize {
@@ -79,10 +82,17 @@ impl<'a, T> Drop for ArcRef<'a, T> {
 
 impl KeyedResourceMap {
     fn new() -> Self {
-        KeyedResourceMap { index: ShardedLock::new(HashMap::new()), values: UnsafeCell::new(Vec::new()) }
+        KeyedResourceMap {
+            index: ShardedLock::new(HashMap::new()),
+            values: UnsafeCell::new(Vec::new()),
+        }
     }
 
-    pub fn add_resource<T: Send + Sync + 'static>(&self, key: String, res: T) -> Option<(String, T)> {
+    pub fn add_resource<T: Send + Sync + 'static>(
+        &self,
+        key: String,
+        res: T,
+    ) -> Option<(String, T)> {
         let mut locked = self.index.write().expect("lock write poisoned");
         if locked.contains_key(&key) {
             return Some((key, res));
@@ -155,7 +165,8 @@ impl KeyedResourceMap {
 }
 
 lazy_static! {
-    static ref GLOBAL_RESOURCE_MAP: ShardedLock<SharedResourceMap> = ShardedLock::new(Default::default());
+    static ref GLOBAL_RESOURCE_MAP: ShardedLock<SharedResourceMap> =
+        ShardedLock::new(Default::default());
     static ref GLOBAL_KEYED_RESOURCES: KeyedResourceMap = KeyedResourceMap::new();
 }
 
@@ -379,7 +390,10 @@ impl<T> DistributedParResource<T> {
                     }
                 }
             }
-            let pr = DistributedParResource { partitions, start_index };
+            let pr = DistributedParResource {
+                partitions,
+                start_index,
+            };
             Ok(pr)
         }
     }
@@ -405,18 +419,126 @@ impl<T: Send + Sync + 'static> PartitionedResource for DistributedParResource<T>
     }
 }
 
+pub trait PartitionedKeydResource {
+    type Res: Send + 'static;
+
+    fn get_keyed_resource(&self, par: usize) -> Option<&Vec<(String, Self::Res)>>;
+
+    fn take_keyed_resource(&mut self, par: usize) -> Option<Vec<(String, Self::Res)>>;
+}
+
+pub struct DefaultParKeyedResource<T> {
+    partitions: Vec<Option<Vec<(String, T)>>>,
+}
+
+impl<T> DefaultParKeyedResource<T> {
+    pub fn new(conf: &JobConf, res: Vec<Vec<(String, T)>>) -> Result<Self, Vec<Vec<(String, T)>>> {
+        if res.len() as u32 != conf.workers {
+            Err(res)
+        } else {
+            let mut partitions = Vec::with_capacity(res.len());
+            for r in res {
+                partitions.push(Some(r));
+            }
+            let pr = DefaultParKeyedResource { partitions };
+            Ok(pr)
+        }
+    }
+}
+
+impl<T: Send + Sync + 'static> PartitionedKeydResource for DefaultParKeyedResource<T> {
+    type Res = T;
+
+    fn get_keyed_resource(&self, par: usize) -> Option<&Vec<(String, Self::Res)>> {
+        if par < self.partitions.len() {
+            self.partitions[par].as_ref()
+        } else {
+            None
+        }
+    }
+
+    fn take_keyed_resource(&mut self, par: usize) -> Option<Vec<(String, Self::Res)>> {
+        if par < self.partitions.len() {
+            self.partitions[par].take()
+        } else {
+            None
+        }
+    }
+}
+
+pub struct DistributedParKeyedResource<T> {
+    partitions: Vec<Option<Vec<(String, T)>>>,
+    start_index: usize,
+}
+
+impl<T> DistributedParKeyedResource<T> {
+    pub fn new(conf: &JobConf, res: Vec<Vec<(String, T)>>) -> Result<Self, Vec<Vec<(String, T)>>> {
+        if res.len() as u32 != conf.workers {
+            Err(res)
+        } else {
+            let mut partitions = Vec::with_capacity(res.len());
+            for r in res {
+                partitions.push(Some(r));
+            }
+            let server_conf = conf.servers();
+            let servers = match server_conf {
+                ServerConf::Local => vec![0],
+                ServerConf::Partial(ids) => ids.clone(),
+                ServerConf::All => crate::get_servers(),
+            };
+            let mut start_index = 0 as usize;
+            if !servers.is_empty() && (servers.len() > 1) {
+                if let Some(my_id) = crate::server_id() {
+                    let mut my_index = -1;
+                    for (index, id) in servers.iter().enumerate() {
+                        if *id == my_id {
+                            my_index = index as i64;
+                        }
+                    }
+                    if my_index >= 0 {
+                        start_index = (conf.workers * (my_index as u32)) as usize;
+                    }
+                }
+            }
+            let pr = DistributedParKeyedResource {
+                partitions,
+                start_index,
+            };
+            Ok(pr)
+        }
+    }
+}
+
+impl<T: Send + Sync + 'static> PartitionedKeydResource for DistributedParKeyedResource<T> {
+    type Res = T;
+
+    fn get_keyed_resource(&self, par: usize) -> Option<&Vec<(String, Self::Res)>> {
+        if par >= self.start_index && par < self.start_index + self.partitions.len() {
+            self.partitions[par - self.start_index].as_ref()
+        } else {
+            None
+        }
+    }
+
+    fn take_keyed_resource(&mut self, par: usize) -> Option<Vec<(String, Self::Res)>> {
+        if par >= self.start_index && par < self.start_index + self.partitions.len() {
+            self.partitions[par - self.start_index].take()
+        } else {
+            None
+        }
+    }
+}
+
 #[allow(dead_code)]
-fn add_resource<T: Any + Send + Sync>(res: T) {
+pub fn add_resource<T: Any + Send + Sync>(res: T) {
     let type_id = TypeId::of::<T>();
     RESOURCES.with(|store| {
-        store
-            .borrow_mut()
-            .insert(type_id, Box::new(res));
+        store.borrow_mut().insert(type_id, Box::new(res));
     })
 }
 
 #[allow(dead_code)]
-fn add_resource_with_key<T: Any + Send + Sync>(key: String, res: T) {
+pub fn add_resource_with_key<T: Any + Send + Sync>(key: String, res: T) {
     KEYED_RESOURCES.with(|store| {
         store.borrow_mut().insert(key, Box::new(res));
     })
