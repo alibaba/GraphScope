@@ -59,12 +59,12 @@ impl FilterFuncGen for algebra_pb::Sample {
                 algebra_pb::sample::sample_type::Inner::SampleByRatio(ratio) => {
                     let coin = CoinOperator { seed: self.seed, ratio: ratio.ratio };
                     if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
-                        debug!("Runtime path end operator: {:?}", coin);
+                        debug!("Runtime coin operator: {:?}", coin);
                     }
                     Ok(Box::new(coin))
                 }
                 algebra_pb::sample::sample_type::Inner::SampleByNum(_num) => {
-                    todo!()
+                    Err(FnGenError::ParseError("SampleByNum should be a fold function".into()))
                 }
             }
         } else {

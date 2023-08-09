@@ -33,11 +33,11 @@ use pegasus::{BuildJobError, Worker};
 use pegasus_server::job::{JobAssembly, JobDesc};
 use pegasus_server::job_pb as server_pb;
 use prost::Message;
-use rand::Rng;
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::process::functions::{ApplyGen, CompareFunction, FoldGen, GroupGen, JoinKeyGen, KeyFunction};
 use crate::process::operator::accum::accumulator::Accumulator;
+use crate::process::operator::accum::{SampleAccum, SampleAccumFactoryGen};
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::operator::keyed::KeyFunctionGen;
@@ -161,6 +161,10 @@ impl<P: PartitionInfo, C: ClusterInfo> FnGenerator<P, C> {
 
     fn gen_coin(&self, opr: algebra_pb::Sample) -> FnGenResult<RecordFilter> {
         Ok(opr.gen_filter()?)
+    }
+
+    fn gen_sample(&self, opr: algebra_pb::Sample) -> FnGenResult<SampleAccum> {
+        Ok(opr.gen_accum()?)
     }
 
     fn gen_sink(&self, opr: pb::PhysicalOpr) -> FnGenResult<Sinker> {
@@ -646,47 +650,24 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                     stream = stream.filter(move |input| func.test(input))?;
                                 }
                                 // the case of Sample
-                                Some(algebra_pb::sample::sample_type::Inner::SampleByNum(
-                                    sample_by_num,
-                                )) => {
-                                    let sample_num = sample_by_num.num as usize;
+                                Some(algebra_pb::sample::sample_type::Inner::SampleByNum(_)) => {
+                                    let partial_sample_accum = self.udf_gen.gen_sample(sample)?;
+                                    let sample_accum = partial_sample_accum.clone();
                                     stream = stream
-                                        .fold_partition((Vec::with_capacity(sample_num), 0), move || {
-                                            move |(mut partial_sample_collection, mut i), next| {
-                                                if i < sample_num {
-                                                    partial_sample_collection.push(next);
-                                                } else {
-                                                    let mut rng = rand::thread_rng();
-                                                    let index = rng.gen_range(0..=i);
-                                                    if index < sample_num {
-                                                        partial_sample_collection[index] = next;
-                                                    }
-                                                }
-                                                i = i + 1;
-                                                Ok((partial_sample_collection, i))
+                                        .fold_partition(partial_sample_accum, move || {
+                                            move |mut sample_accum, next| {
+                                                sample_accum.accum(next)?;
+                                                Ok(sample_accum)
                                             }
                                         })?
-                                        .unfold(move |(partial_sample_collection, _)| {
-                                            Ok(partial_sample_collection.into_iter())
-                                        })?
-                                        .fold((Vec::with_capacity(sample_num), 0), move || {
-                                            move |(mut sample_collection, mut i), next| {
-                                                if i < sample_num {
-                                                    sample_collection.push(next);
-                                                } else {
-                                                    let mut rng = rand::thread_rng();
-                                                    let index = rng.gen_range(0..=i);
-                                                    if index < sample_num {
-                                                        sample_collection[index] = next;
-                                                    }
-                                                }
-                                                i = i + 1;
-                                                Ok((sample_collection, i))
+                                        .unfold(move |mut sample_accum| Ok(sample_accum.finalize()?))?
+                                        .fold(sample_accum, move || {
+                                            move |mut sample_accum, next| {
+                                                sample_accum.accum(next)?;
+                                                Ok(sample_accum)
                                             }
                                         })?
-                                        .unfold(move |(sample_collection, _)| {
-                                            Ok(sample_collection.into_iter())
-                                        })?;
+                                        .unfold(move |mut sample_accum| Ok(sample_accum.finalize()?))?
                                 }
                                 None => Err(FnGenError::from(ParsePbError::EmptyFieldError(
                                     "pb::Sample::sample_type.inner".to_string(),
