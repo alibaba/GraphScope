@@ -651,42 +651,41 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                 )) => {
                                     let sample_num = sample_by_num.num as usize;
                                     stream = stream
-                                        .fold_partition(Vec::with_capacity(sample_num), move || {
-                                            move |mut part_collection, next| {
-                                                if part_collection.len() <= sample_num {
-                                                    part_collection.push(next);
+                                        .fold_partition((Vec::with_capacity(sample_num), 0), move || {
+                                            move |(mut partial_sample_collection, mut i), next| {
+                                                if i < sample_num {
+                                                    partial_sample_collection.push(next);
                                                 } else {
-                                                    // TODO: any better idea?
                                                     let mut rng = rand::thread_rng();
-                                                    let index = rng.gen_range(0..sample_num);
-                                                    part_collection[index] = next;
+                                                    let index = rng.gen_range(0..=i);
+                                                    if index < sample_num {
+                                                        partial_sample_collection[index] = next;
+                                                    }
                                                 }
-                                                Ok(part_collection)
+                                                i = i + 1;
+                                                Ok((partial_sample_collection, i))
                                             }
                                         })?
-                                        .into_stream()?
-                                        .fold(Vec::with_capacity(sample_num), move || {
-                                            move |mut sample_collection, part_collection| {
-                                                sample_collection.extend(part_collection);
-                                                Ok(sample_collection)
+                                        .unfold(move |(partial_sample_collection, _)| {
+                                            Ok(partial_sample_collection.into_iter())
+                                        })?
+                                        .fold((Vec::with_capacity(sample_num), 0), move || {
+                                            move |(mut sample_collection, mut i), next| {
+                                                if i < sample_num {
+                                                    sample_collection.push(next);
+                                                } else {
+                                                    let mut rng = rand::thread_rng();
+                                                    let index = rng.gen_range(0..=i);
+                                                    if index < sample_num {
+                                                        sample_collection[index] = next;
+                                                    }
+                                                }
+                                                i = i + 1;
+                                                Ok((sample_collection, i))
                                             }
                                         })?
-                                        .unfold(move |sample_collection| {
-                                            if sample_collection.len() <= sample_num {
-                                                // If sample collection is not enough, sample all. No upsampling.
-                                                Ok(sample_collection.into_iter())
-                                            } else {
-                                                let mut rng = rand::thread_rng();
-                                                let sample_result: Vec<Record> = rand::seq::index::sample(
-                                                    &mut rng,
-                                                    sample_collection.len(),
-                                                    sample_num,
-                                                )
-                                                .iter()
-                                                .map(move |i| sample_collection[i].clone())
-                                                .collect();
-                                                Ok(sample_result.into_iter())
-                                            }
+                                        .unfold(move |(sample_collection, _)| {
+                                            Ok(sample_collection.into_iter())
                                         })?;
                                 }
                                 None => Err(FnGenError::from(ParsePbError::EmptyFieldError(
