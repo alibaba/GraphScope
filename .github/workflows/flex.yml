@@ -63,5 +63,5 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/build/
         GLOG_v=10 ./tests/rt_mutable_graph/test_graph_loading \
-            ../storages/rt_mutable_graph/modern_graph/modern_graph_new.yaml 
-            ../storages/rt_mutable_graph/modern_graph/bulk_load_new.yaml /tmp/csr-data-dir/
+            ../storages/rt_mutable_graph/modern_graph/modern_graph.yaml 
+            ../storages/rt_mutable_graph/modern_graph/bulk_load.yaml /tmp/csr-data-dir/
