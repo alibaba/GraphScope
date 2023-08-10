@@ -39,7 +39,8 @@ import java.util.Map;
 
 public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
-    public abstract Traversal<Vertex, Map<Object, Long>> get_g_V_group_by_by_dedup_count_order_by_key();
+    public abstract Traversal<Vertex, Map<Object, Long>>
+            get_g_V_group_by_by_dedup_count_order_by_key();
 
     public abstract Traversal<Vertex, Map<Object, List>> get_g_V_group_by_outE_count_order_by_key();
 
@@ -47,13 +48,17 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Object> get_g_V_hasLabel_hasId_values();
 
-    public abstract Traversal<Vertex, Object> get_g_V_out_as_a_in_select_a_as_b_select_b_by_values();
+    public abstract Traversal<Vertex, Object>
+            get_g_V_out_as_a_in_select_a_as_b_select_b_by_values();
 
-    public abstract Traversal<Vertex, Map<String, Vertex>> get_g_V_matchXa_in_b__b_out_c__not_c_out_aX();
+    public abstract Traversal<Vertex, Map<String, Vertex>>
+            get_g_V_matchXa_in_b__b_out_c__not_c_out_aX();
 
-    public abstract Traversal<Vertex, Object> get_g_V_matchXa_knows_b__b_created_cX_select_c_values();
+    public abstract Traversal<Vertex, Object>
+            get_g_V_matchXa_knows_b__b_created_cX_select_c_values();
 
-    public abstract Traversal<Vertex, Object> get_g_V_matchXa_out_b__b_in_cX_select_c_out_dedup_values();
+    public abstract Traversal<Vertex, Object>
+            get_g_V_matchXa_out_b__b_in_cX_select_c_out_dedup_values();
 
     public abstract Traversal<Vertex, String> get_g_V_has_name_marko_label();
 
@@ -76,7 +81,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_group_by_by_dedup_count_test() {
-        Traversal<Vertex, Map<Object, Long>> traversal = this.get_g_V_group_by_by_dedup_count_order_by_key();
+        Traversal<Vertex, Map<Object, Long>> traversal =
+                this.get_g_V_group_by_by_dedup_count_order_by_key();
         this.printTraversalForm(traversal);
 
         String expected = "{1=1, 2=1, 3=1, 4=1, 5=1, 6=1}";
@@ -89,7 +95,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_group_by_outE_count_test() {
-        Traversal<Vertex, Map<Object, List>> traversal = this.get_g_V_group_by_outE_count_order_by_key();
+        Traversal<Vertex, Map<Object, List>> traversal =
+                this.get_g_V_group_by_outE_count_order_by_key();
         this.printTraversalForm(traversal);
         Map<Object, List> result = traversal.next();
         Assert.assertEquals(4, result.size());
@@ -137,7 +144,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_out_as_a_in_select_a_as_b_select_b_by_valueMap() {
-        Traversal<Vertex, Object> traversal = this.get_g_V_out_as_a_in_select_a_as_b_select_b_by_values();
+        Traversal<Vertex, Object> traversal =
+                this.get_g_V_out_as_a_in_select_a_as_b_select_b_by_values();
         this.printTraversalForm(traversal);
         int counter = 0;
 
@@ -155,7 +163,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_matchXa_in_b__b_out_c__not_c_out_aX() {
-        final Traversal<Vertex, Map<String, Vertex>> traversal = get_g_V_matchXa_in_b__b_out_c__not_c_out_aX();
+        final Traversal<Vertex, Map<String, Vertex>> traversal =
+                get_g_V_matchXa_in_b__b_out_c__not_c_out_aX();
         printTraversalForm(traversal);
         checkResults(
                 makeMapList(
@@ -190,7 +199,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_matchXa_knows_b__b_created_cX_select_c_values() {
-        final Traversal<Vertex, Object> traversal = get_g_V_matchXa_knows_b__b_created_cX_select_c_values();
+        final Traversal<Vertex, Object> traversal =
+                get_g_V_matchXa_knows_b__b_created_cX_select_c_values();
         printTraversalForm(traversal);
         int counter = 0;
 
@@ -208,7 +218,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_matchXa_out_b__b_in_cX_select_c_out_dedup_values() {
-        final Traversal<Vertex, Object> traversal = get_g_V_matchXa_out_b__b_in_cX_select_c_out_dedup_values();
+        final Traversal<Vertex, Object> traversal =
+                get_g_V_matchXa_out_b__b_in_cX_select_c_out_dedup_values();
         printTraversalForm(traversal);
         int counter = 0;
 
@@ -258,7 +269,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_a_out_b_select_a_b_by_label_id() {
-        final Traversal<Vertex, Map<String, Object>> traversal = get_g_V_a_out_b_select_a_b_by_label_id();
+        final Traversal<Vertex, Map<String, Object>> traversal =
+                get_g_V_a_out_b_select_a_b_by_label_id();
         printTraversalForm(traversal);
         Assert.assertEquals("{a=person, b=lop}", traversal.next().toString());
     }
@@ -303,16 +315,18 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
         @Override
         public Traversal<Vertex, Map<Object, Long>> get_g_V_group_by_by_dedup_count_order_by_key() {
-            return (IrCustomizedTraversal) g.V().group()
-                    .by("id")
-                    .by(dedup().count())
-                    .order()
-                    .by(__.select(Column.keys), Order.asc);
+            return (IrCustomizedTraversal)
+                    g.V().group()
+                            .by("id")
+                            .by(dedup().count())
+                            .order()
+                            .by(__.select(Column.keys), Order.asc);
         }
 
         @Override
         public Traversal<Vertex, Map<Object, List>> get_g_V_group_by_outE_count_order_by_key() {
-            return (IrCustomizedTraversal) g.V().group().by(outE().count()).by("id").order().by(__.select(Column.keys));
+            return (IrCustomizedTraversal)
+                    g.V().group().by(outE().count()).by("id").order().by(__.select(Column.keys));
         }
 
         @Override
@@ -331,11 +345,12 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         }
 
         @Override
-        public Traversal<Vertex, Map<String, Vertex>> get_g_V_matchXa_in_b__b_out_c__not_c_out_aX() {
+        public Traversal<Vertex, Map<String, Vertex>>
+                get_g_V_matchXa_in_b__b_out_c__not_c_out_aX() {
             return g.V().match(
-                    as("a").in("knows").as("b"),
-                    as("b").out("knows").as("c"),
-                    not(as("c").out("knows").as("a")));
+                            as("a").in("knows").as("b"),
+                            as("b").out("knows").as("c"),
+                            not(as("c").out("knows").as("a")));
         }
 
         @Override
@@ -346,10 +361,11 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         }
 
         @Override
-        public Traversal<Vertex, Object> get_g_V_matchXa_out_b__b_in_cX_select_c_out_dedup_values() {
+        public Traversal<Vertex, Object>
+                get_g_V_matchXa_out_b__b_in_cX_select_c_out_dedup_values() {
             return g.V().match(
-                    as("a").out("created").has("name", "lop").as("b"),
-                    as("b").in("created").has("age", 29).as("c"))
+                            as("a").out("created").has("name", "lop").as("b"),
+                            as("b").in("created").has("age", 29).as("c"))
                     .select("c")
                     .out("knows")
                     .dedup()
@@ -390,34 +406,22 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
         @Override
         public Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_sum() {
-            return g.V()
-                    .group()
-                    .by()
-                    .by(values("age").sum());
+            return g.V().group().by().by(values("age").sum());
         }
 
         @Override
         public Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_max() {
-            return g.V()
-                    .group()
-                    .by()
-                    .by(values("age").max());
+            return g.V().group().by().by(values("age").max());
         }
 
         @Override
         public Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_min() {
-            return g.V()
-                    .group()
-                    .by()
-                    .by(values("age").min());
+            return g.V().group().by().by(values("age").min());
         }
 
         @Override
         public Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_mean() {
-            return g.V()
-                    .group()
-                    .by()
-                    .by(values("age").mean());
+            return g.V().group().by().by(values("age").mean());
         }
     }
 }
