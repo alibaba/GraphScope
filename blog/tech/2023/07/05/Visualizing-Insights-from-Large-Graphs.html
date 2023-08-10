@@ -232,7 +232,7 @@ npm <span class="nb">install
         <a href="http://github.com/rosario/kasper">Kasper theme</a>
       </section>
     </footer>
-    
+
     <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
     <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
     <script type="text/javascript" src="/blog/assets/js/index.js"></script>
@@ -261,6 +261,22 @@ npm <span class="nb">install
         var s = document.getElementsByTagName("script")[0];
         s.parentNode.insertBefore(hm, s);
       })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
     </script>
 </body>
 </html>
