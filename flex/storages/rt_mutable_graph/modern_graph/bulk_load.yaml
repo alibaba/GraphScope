@@ -1,8 +1,8 @@
 graph: modern
 loading_config:
-  data_source: file  # file, oss, s3, hdfs
+  data_source: file  # file, oss, s3, hdfs; only file is supported now
 #  data_location: # specify it or use FLEX_DATA_DIR env.
-  method: init # append, overwrite
+  method: init # append, overwrite, only init is supported now
   meta_data:
     delimiter: "|"  # other loading configuration places here
 vertex_mappings:
@@ -10,44 +10,10 @@ vertex_mappings:
     inputs:
       - path: person.csv
         format: standard_csv
-      # Define how each data filed, after splitting, map with the property in the schema
-      # The data field has index start from 0
-      # It is not necessary to load all data fields, therefore, the mapping can be partial
-      #  but guarantee that the number of loaded data fields is equal to the number of properties
-    # column_mappings:
-    #   - column:
-    #       index: 0    # can be omitted if the index is the same as the property index
-    #       name: id  # can be omitted if the name is not known
-    #     property: id
-    #   - column:
-    #       index: 1
-    #       name: name
-    #     property: name
-    #   - column:
-    #       index: 2
-    #       name: age
-    #     property: age
   - type_name: software
     inputs:
       - path: software.csv
         format: standard_csv
-    # column_mappings:
-    #   - column:
-    #       index: 0      # can be omitted if the index is the same as the property index
-    #       name: id    # can be omitted if the name is not known
-    #     property: id  # must align with the schema
-    #   - column:
-    #       index: 1
-    #       name: name
-    #     property: name
-    #   - column:
-    #       index: 2
-    #       name: lang
-    #     property: lang
-    #   - column:
-    #       index: 3
-    #       name: creationDateTime
-    #     property: creationDateTime
 edge_mappings:
   - type_triplet:
       edge: knows
@@ -57,7 +23,7 @@ edge_mappings:
       - path: person_knows_person.csv
         format: standard_csv
     source_vertex_mappings:
-      - column: # there may need multiple data fields to identify a vertex
+      - column:
           index: 0
           name: src_id
     destination_vertex_mappings:
