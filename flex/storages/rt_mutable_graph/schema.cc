@@ -558,7 +558,7 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
   // remove primary key from properties.
   std::string primary_key_name = primary_key_node[0].as<std::string>();
   int primary_key_ind = -1;
-  for (int i = 0; i < property_names.size(); ++i) {
+  for (size_t i = 0; i < property_names.size(); ++i) {
     if (property_names[i] == primary_key_name) {
       primary_key_ind = i;
       break;
@@ -583,7 +583,7 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
   std::string debug_str;
   {
     std::stringstream ss;
-    for (auto i = 0; i < property_names.size(); ++i) {
+    for (size_t i = 0; i < property_names.size(); ++i) {
       ss << property_names[i] << "(";
       ss << property_types[i] << "),";
     }
@@ -948,8 +948,7 @@ static bool parse_schema_config_file(
     auto directory = stored_procedure_node["directory"].as<std::string>();
     // check is directory
     if (!std::filesystem::exists(directory)) {
-      LOG(ERROR) << "plugin directory - " << directory << " not found...";
-      return false;
+      LOG(WARNING) << "plugin directory - " << directory << " not found...";
     }
     std::vector<std::string> files_got;
     if (!get_sequence(stored_procedure_node, "enable_lists", files_got)) {
@@ -958,9 +957,9 @@ static bool parse_schema_config_file(
     for (auto& f : files_got) {
       if (!std::filesystem::exists(f)) {
         LOG(ERROR) << "plugin - " << f << " file not found...";
-        return false;
+      } else {
+        stored_procedures.push_back(std::filesystem::canonical(f));
       }
-      stored_procedures.push_back(std::filesystem::canonical(f));
     }
   }
 
