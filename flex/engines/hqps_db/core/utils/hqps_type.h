@@ -25,6 +25,7 @@ inline bool operator==(const Dist& a, const Dist& b) {
 
 // distance in path.
 using dist_t = Dist;
+static constexpr label_t INVALID_LABEL_ID = std::numeric_limits<label_t>::max();
 using offset_t = size_t;
 using vertex_set_key_t = size_t;
 static constexpr vid_t INVALID_VID = std::numeric_limits<vid_t>::max();
