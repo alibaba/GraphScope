@@ -45,13 +45,12 @@ class GraphDB {
 
   static GraphDB& get();
 
-  void Init(
-      const Schema& schema,
-      const std::vector<std::pair<std::string, std::string>>& vertex_files,
-      const std::vector<std::tuple<std::string, std::string, std::string,
-                                   int32_t, int32_t, std::string>>& edge_files,
-      const std::vector<std::string>& plugins, const LoadConfig& config,
-      const std::string& data_dir, int thread_num = 1);
+  void Init(const Schema& schema,
+            const std::vector<VertexLoadingMeta>& vertex_files,
+            const std::vector<EdgeLoadingMeta>& edge_files,
+            const std::vector<std::string>& plugins,
+            const LoadingConfig& config, const std::string& data_dir,
+            int thread_num = 1);
 
   /** @brief Create a transaction to read vertices and edges.
    *

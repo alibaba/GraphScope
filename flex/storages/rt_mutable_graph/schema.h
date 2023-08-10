@@ -24,7 +24,6 @@
 namespace gs {
 
 static constexpr const char* DT_SIGNED_INT32 = "DT_SIGNED_INT32";
-static constexpr const char* DT_UINT64 = "DT_UINT64";
 static constexpr const char* DT_STRING = "DT_STRING";
 static constexpr const char* DT_SIGNED_INT64 = "DT_SIGNED_INT64";
 static constexpr const char* DT_DOUBLE = "DT_DOUBLE";
@@ -110,15 +109,11 @@ class Schema {
   void Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader);
 
   // Returns:
-  // 0. Schema
-  // 1. vertex label name and file path
-  // 2. src label , dst label, edge label, src_column_id, dst_column_id, file
-  // path
-  static std::tuple<
-      Schema, std::vector<std::pair<std::string, std::string>>,
-      std::vector<std::tuple<std::string, std::string, std::string, int32_t,
-                             int32_t, std::string>>,
-      std::vector<std::string>, LoadConfig>
+  //  std::tuple<Schema, vectorOfVertexLoadingMeta, vectorOfEdgeLoadingMeta,
+  //  Plugin List, LoadingConfig>
+  static std::tuple<Schema, std::vector<VertexLoadingMeta>,
+                    std::vector<EdgeLoadingMeta>, std::vector<std::string>,
+                    LoadingConfig>
   LoadFromYaml(const std::string& schema_config,
                const std::string& load_config);
 

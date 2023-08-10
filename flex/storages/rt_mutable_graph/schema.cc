@@ -704,9 +704,9 @@ static bool access_file(std::string& file_path) {
   return std::filesystem::exists(path);
 }
 
-static bool parse_vertex_files(
-    YAML::Node node, const std::string& data_location,
-    std::vector<std::pair<std::string, std::string>>& files) {
+static bool parse_vertex_files(YAML::Node node,
+                               const std::string& data_location,
+                               std::vector<VertexLoadingMeta>& files) {
   std::string label_name;
   if (!get_scalar(node, "type_name", label_name)) {
     return false;
@@ -753,9 +753,9 @@ static bool parse_vertex_files(
   }
 }
 
-static bool parse_vertices_files_schema(
-    YAML::Node node, const std::string& data_location,
-    std::vector<std::pair<std::string, std::string>>& files) {
+static bool parse_vertices_files_schema(YAML::Node node,
+                                        const std::string& data_location,
+                                        std::vector<VertexLoadingMeta>& files) {
   if (!node.IsSequence()) {
     LOG(FATAL) << "vertex is not set properly";
     return false;
@@ -769,10 +769,8 @@ static bool parse_vertices_files_schema(
   return true;
 }
 
-static bool parse_edge_files(
-    YAML::Node node, const std::string& data_location,
-    std::vector<std::tuple<std::string, std::string, std::string, int32_t,
-                           int32_t, std::string>>& files) {
+static bool parse_edge_files(YAML::Node node, const std::string& data_location,
+                             std::vector<EdgeLoadingMeta>& files) {
   if (!node["type_triplet"]) {
     LOG(FATAL) << "edge [type_triplet] is not set properly";
     return false;
@@ -849,10 +847,9 @@ static bool parse_edge_files(
   return true;
 }
 
-static bool parse_edges_files_schema(
-    YAML::Node node, const std::string& data_location,
-    std::vector<std::tuple<std::string, std::string, std::string, int32_t,
-                           int32_t, std::string>>& files) {
+static bool parse_edges_files_schema(YAML::Node node,
+                                     const std::string& data_location,
+                                     std::vector<EdgeLoadingMeta>& files) {
   if (!node.IsSequence()) {
     LOG(ERROR) << "edge is not set properly";
     return false;
@@ -870,9 +867,8 @@ static bool parse_edges_files_schema(
 static bool parse_bulk_load_config_file(
     const std::string& load_config, std::string& data_source,
     std::string delimiter, std::string& method,
-    std::vector<std::pair<std::string, std::string>>& vertex_files,
-    std::vector<std::tuple<std::string, std::string, std::string, int32_t,
-                           int32_t, std::string>>& edge_files) {
+    std::vector<VertexLoadingMeta>& vertex_load_meta,
+    std::vector<EdgeLoadingMeta>& edge_load_meta) {
   YAML::Node root = YAML::LoadFile(load_config);
   data_source = "file";
   std::string data_location;
@@ -899,14 +895,14 @@ static bool parse_bulk_load_config_file(
   if (root["vertex_mappings"]) {
     VLOG(10) << "vertex_mappings is set";
     if (!parse_vertices_files_schema(root["vertex_mappings"], data_location,
-                                     vertex_files)) {
+                                     vertex_load_meta)) {
       return false;
     }
   }
   if (root["edge_mappings"]) {
     VLOG(10) << "edge_mappings is set";
     if (!parse_edges_files_schema(root["edge_mappings"], data_location,
-                                  edge_files)) {
+                                  edge_load_meta)) {
       return false;
     }
   }
@@ -968,10 +964,8 @@ static bool parse_schema_config_file(
 
 }  // namespace config_parsing
 
-std::tuple<Schema, std::vector<std::pair<std::string, std::string>>,
-           std::vector<std::tuple<std::string, std::string, std::string,
-                                  int32_t, int32_t, std::string>>,
-           std::vector<std::string>, LoadConfig>
+std::tuple<Schema, std::vector<VertexLoadingMeta>, std::vector<EdgeLoadingMeta>,
+           std::vector<std::string>, LoadingConfig>
 Schema::LoadFromYaml(const std::string& schema_config,
                      const std::string& bulk_load_config) {
   Schema schema;
@@ -980,18 +974,16 @@ Schema::LoadFromYaml(const std::string& schema_config,
     config_parsing::parse_schema_config_file(schema_config, schema, plugins);
   }
 
-  std::vector<std::pair<std::string, std::string>> vertex_files;
-  std::vector<std::tuple<std::string, std::string, std::string, int32_t,
-                         int32_t, std::string>>
-      edge_files;
-  LoadConfig load_config;
+  std::vector<VertexLoadingMeta> vertex_load_meta;
+  std::vector<EdgeLoadingMeta> edge_load_meta;
+  LoadingConfig load_config;
   if (!bulk_load_config.empty() && std::filesystem::exists(bulk_load_config)) {
     config_parsing::parse_bulk_load_config_file(
         bulk_load_config, load_config.data_source_, load_config.delimiter_,
-        load_config.method_, vertex_files, edge_files);
+        load_config.method_, vertex_load_meta, edge_load_meta);
   }
 
-  return std::make_tuple(schema, vertex_files, edge_files, plugins,
+  return std::make_tuple(schema, vertex_load_meta, edge_load_meta, plugins,
                          load_config);
 }
 
