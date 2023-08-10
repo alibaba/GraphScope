@@ -58,7 +58,7 @@ schema:
           property_type:
             primitive_type: DT_DOUBLE
     - type_name: created
-      x_csr_params: 
+      x_csr_params:
         incoming_edge_strategy: None
         outgoing_edge_strategy: Single
       vertex_type_pair_relations:

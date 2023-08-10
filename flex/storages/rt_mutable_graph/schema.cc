@@ -497,9 +497,13 @@ static bool parse_edge_properties(YAML::Node node,
                                   const std::string& label_name,
                                   std::vector<PropertyType>& types,
                                   std::vector<std::string>& names) {
-  if (!node || !node.IsSequence()) {
+  if (!node) {
+    LOG(INFO) << "no edge properties specified for edge-" << label_name;
+    return true;
+  }
+  if (!node.IsSequence()) {
     LOG(ERROR) << "properties of vertex-" << label_name
-               << " not set properly... ";
+               << " not set properly, should be a sequence...";
     return false;
   }
 
@@ -726,11 +730,12 @@ static bool parse_vertex_files(
         return false;
       }
       if (file_format != "standard_csv") {
-        LOG(ERROR) << "file_format is not set properly";
+        LOG(ERROR) << "file_format is not set properly, currenly only support "
+                      "standard_csv";
         return false;
       }
       if (!get_scalar(files_node[i], "path", file_path)) {
-        LOG(ERROR) << "file_path is not set properly";
+        LOG(ERROR) << "file_path is not set properly, should be path: xxx";
         return false;
       }
       if (!data_location.empty()) {
@@ -752,7 +757,7 @@ static bool parse_vertices_files_schema(
     YAML::Node node, const std::string& data_location,
     std::vector<std::pair<std::string, std::string>>& files) {
   if (!node.IsSequence()) {
-    LOG(ERROR) << "vertex is not set properly";
+    LOG(FATAL) << "vertex is not set properly";
     return false;
   }
   int num = node.size();
@@ -769,21 +774,21 @@ static bool parse_edge_files(
     std::vector<std::tuple<std::string, std::string, std::string, int32_t,
                            int32_t, std::string>>& files) {
   if (!node["type_triplet"]) {
-    LOG(ERROR) << "edge [type_triplet] is not set properly";
+    LOG(FATAL) << "edge [type_triplet] is not set properly";
     return false;
   }
   auto triplet_node = node["type_triplet"];
   std::string src_label, dst_label, edge_label;
   if (!get_scalar(triplet_node, "source_vertex", src_label)) {
-    LOG(ERROR) << "source_vertex is not set properly";
+    LOG(FATAL) << "source_vertex is not set properly";
     return false;
   }
   if (!get_scalar(triplet_node, "destination_vertex", dst_label)) {
-    LOG(ERROR) << "destination_vertex is not set properly";
+    LOG(FATAL) << "destination_vertex is not set properly";
     return false;
   }
   if (!get_scalar(triplet_node, "edge", edge_label)) {
-    LOG(ERROR) << "edge is not set properly";
+    LOG(FATAL) << "edge is not set properly";
     return false;
   }
 
