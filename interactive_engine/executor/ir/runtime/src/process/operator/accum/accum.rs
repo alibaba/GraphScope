@@ -126,12 +126,12 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                 let list_entry = CollectionEntry { inner: list.finalize()? };
                 Ok(DynEntry::new(list_entry))
             }
-            EntryAccumulator::ToMin(min) => min
+            EntryAccumulator::ToMin(min) => Ok(min
                 .finalize()?
-                .ok_or(FnExecError::accum_error("min_entry is none")),
-            EntryAccumulator::ToMax(max) => max
+                .unwrap_or(DynEntry::new(Object::None))),
+            EntryAccumulator::ToMax(max) => Ok(max
                 .finalize()?
-                .ok_or(FnExecError::accum_error("max_entry is none")),
+                .unwrap_or(DynEntry::new(Object::None))),
             EntryAccumulator::ToSet(set) => {
                 let set_entry = CollectionEntry { inner: set.finalize()? };
                 Ok(DynEntry::new(set_entry))
@@ -141,24 +141,27 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                 Ok(DynEntry::new(object!(cnt)))
             }
             EntryAccumulator::ToSum(sum) => {
-                let primitive = sum
-                    .finalize()?
-                    .ok_or(FnExecError::accum_error("sum_entry is none"))?;
-                Ok(DynEntry::new(object!(primitive)))
+                let primitive = sum.finalize()?;
+                if let Some(primitive) = primitive {
+                    Ok(DynEntry::new(object!(primitive)))
+                } else {
+                    Ok(DynEntry::new(Object::None))
+                }
             }
             EntryAccumulator::ToAvg(sum, count) => {
-                let sum_primitive = sum
-                    .finalize()?
-                    .ok_or(FnExecError::accum_error("sum_entry is none"))?;
-                let cnt = count.finalize()?;
-                // TODO: confirm if it should be Object::None, or throw error;
-                if cnt == 0 {
-                    warn!("cnt value is 0 in accum avg");
-                    Ok(DynEntry::new(Object::None))
+                let sum_primitive = sum.finalize()?;
+                if let Some(sum_primitive) = sum_primitive {
+                    let cnt = count.finalize()?;
+                    if cnt == 0 {
+                        warn!("cnt value is 0 in accum avg");
+                        Ok(DynEntry::new(Object::None))
+                    } else {
+                        let cnt_primitive = Primitives::Float(cnt as f64);
+                        let result = sum_primitive.div(cnt_primitive);
+                        Ok(DynEntry::new(object!(result)))
+                    }
                 } else {
-                    let cnt_primitive = Primitives::Float(cnt as f64);
-                    let result = sum_primitive.div(cnt_primitive);
-                    Ok(DynEntry::new(object!(result)))
+                    Ok(DynEntry::new(Object::None))
                 }
             }
         }
@@ -330,6 +333,7 @@ mod tests {
 
     use std::cmp::Ordering;
 
+    use dyn_type::Object;
     use ir_common::generated::common as common_pb;
     use ir_common::generated::physical as pb;
     use pegasus::api::{Fold, Sink};
@@ -600,5 +604,70 @@ mod tests {
             }
         }
         assert_eq!(res, object!(20));
+    }
+
+    fn fold_with_none_record_test(aggregate: i32) {
+        let r = Record::new(Object::None, None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate,
+            alias: Some(TAG_A.into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r], fold_opr_pb);
+        let mut res_num = 0;
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(TAG_A)) {
+                assert!(entry.is_none());
+                res_num += 1;
+            }
+        }
+        assert_eq!(res_num, 1);
+    }
+
+    fn fold_with_none_vertex_prop_record_test(aggregate: i32) {
+        let v1 = init_vertex1();
+        let v2 = init_vertex2();
+        let r1 = Record::new(v1, None);
+        let r2 = Record::new(v2, None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@.addr".to_string())],
+            aggregate,
+            alias: Some(TAG_A.into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2], fold_opr_pb);
+        let mut res_num = 0;
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(TAG_A)) {
+                assert!(entry.is_none());
+                res_num += 1;
+            }
+        }
+        assert_eq!(res_num, 1);
+    }
+
+    #[test]
+    fn min_with_none_test() {
+        fold_with_none_record_test(1);
+        fold_with_none_vertex_prop_record_test(1);
+    }
+
+    #[test]
+    fn max_with_none_test() {
+        fold_with_none_record_test(2);
+        fold_with_none_vertex_prop_record_test(2);
+    }
+
+    #[test]
+    fn sum_with_none_test() {
+        fold_with_none_record_test(0);
+        fold_with_none_vertex_prop_record_test(0);
+    }
+
+    #[test]
+    fn avg_with_none_test() {
+        fold_with_none_record_test(7);
+        fold_with_none_vertex_prop_record_test(7);
     }
 }
