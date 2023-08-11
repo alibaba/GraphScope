@@ -57,6 +57,11 @@ impl FilterFuncGen for algebra_pb::Sample {
                     )))?;
             match sample_type {
                 algebra_pb::sample::sample_type::Inner::SampleByRatio(ratio) => {
+                    if ratio.ratio < 0.0 || ratio.ratio > 1.0 {
+                        return Err(FnGenError::ParseError(
+                            "SampleByRatio ratio should be in [0, 1]".into(),
+                        ));
+                    }
                     let coin = CoinOperator { seed: self.seed, ratio: ratio.ratio };
                     if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
                         debug!("Runtime coin operator: {:?}", coin);

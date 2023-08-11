@@ -432,7 +432,7 @@ message Sample {
   // The seed for random number generator, which is optional
   google.protobuf.Int32Value seed = 2;
   // The variable refer to the sample weight, which is optional
-  common.Property sample_weight = 3;
+  common.Variable sample_weight = 3;
 }
 
 message Sink {

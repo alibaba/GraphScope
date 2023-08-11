@@ -1954,6 +1954,23 @@ mod sample {
         FfiResult::success()
     }
 
+    /// Set the sample weight for the sample operator
+    #[no_mangle]
+    pub extern "C" fn set_sample_weight_variable(
+        ptr_sample: *const c_void, ptr_weight_var_pb: FfiPbPointer,
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut sample = unsafe { Box::from_raw(ptr_sample as *mut pb::Sample) };
+        let sample_weight_result = ptr_to_pb::<common_pb::Variable>(ptr_weight_var_pb);
+        if let Ok(sample_weight) = sample_weight_result {
+            sample.sample_weight = Some(sample_weight);
+        } else {
+            result = sample_weight_result.err().unwrap();
+        }
+        std::mem::forget(sample);
+        result
+    }
+
     /// Append a Sample  operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_sample_operator(
