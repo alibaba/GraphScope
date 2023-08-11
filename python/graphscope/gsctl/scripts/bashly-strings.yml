@@ -1,0 +1,38 @@
+# When overriding from the user folder, feel free to delete everything
+# you do not plan on overriding to keep the default string.
+
+# Usage captions
+usage: "Usage:"
+options: "Options:"
+arguments: "Arguments:"
+commands: "Commands:"
+examples: "Examples:"
+environment_variables: "Environment Variables:"
+group: "%{group} Commands:"
+
+# Usage helpers
+command_alias: "Alias: %{alias}"
+default_command_summary: "%{summary} (default)"
+required: "(required)"
+repeatable: "(repeatable)"
+default: "Default: %{value}"
+allowed: "Allowed: %{values}"
+
+# Fixed flags help text
+help_flag_text: Show this help
+version_flag_text: Show version number
+
+# Error messages
+flag_requires_an_argument: "%{name} requires an argument: %{usage}"
+invalid_argument: "invalid argument: %s"
+invalid_flag: "invalid option: %s"
+invalid_command: "invalid command: %s"
+conflicting_flags: "conflicting options: %s cannot be used with %s"
+missing_required_argument: "missing required argument: %{arg}\\nusage: %{usage}"
+missing_required_flag: "missing required flag: %{usage}"
+missing_required_environment_variable: "missing required environment variable: %{var}"
+missing_dependency: "missing dependency: %{dependency}"
+disallowed_flag: "%{name} must be one of: %{allowed}"
+disallowed_argument: "%{name} must be one of: %{allowed}"
+unsupported_bash_version: "bash version 4 or higher is required. If you are using macOS, please run 'brew install bash && bash' to upgrade bash."
+validation_error: "validation error in %s:\\n%s"

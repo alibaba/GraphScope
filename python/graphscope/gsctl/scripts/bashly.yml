@@ -1,0 +1,174 @@
+name: gs
+help: A bash utility for GraphScope
+version: 0.1.0
+
+footer: |
+  GraphScope is open sourced at https://github.com/alibaba/GraphScope
+  by DAMO Academy, Alibaba Group.
+
+environment_variables:
+- name: GRAPHSCOPE_HOME
+  help: Installed HOME for GraphScope.
+  default: /opt/graphscope
+  required: true
+
+commands:
+
+- name: make
+  help: Build GraphScope on local.
+
+  args:
+  - name: component
+    help: component to build.
+    allowed: [all, install, analytical, analytical-java, interactive, learning, analytical-install, analytical-java-install, interactive-install, learning-install, client, coordinator, clean]
+    required: false
+    default: all
+  
+  flags:
+  - long: --install-prefix
+    arg: prefix
+    help: Install dependency files to [prefix]. By default, './gs make install' will install all the files in '/opt/graphscope/bin', '/opt/graphscope/lib' etc. You can specify an installation prefix other than '/opt/graphscope' using '--install-prefix', for instance '--install-prefix=\$HOME'.
+    default: /opt/graphscope
+  
+  - long: --storage-type
+    arg: storage_type
+    help: make gie with specified storage type
+    default: default
+
+  examples:
+  - gs make analytical
+  - gs make interactive
+  - gs make install 
+
+- name: make-image
+  alias: mi
+  help: Build GraphScope docker images.
+
+  args:
+  - name: image
+    help: Images to build.
+    # Whitelist + required
+    allowed: [all, graphscope-dev, coordinator, analytical, analytical-java, interactive, interactive-frontend, interactive-executor, learning, vineyard-dev, vineyard-runtime]
+    required: true
+  
+  flags:
+  - long: --registry
+    arg: registry
+    help: registry name
+    default: registry.cn-hongkong.aliyuncs.com
+  
+  - long: --tag
+    arg: tag
+    help: image tag name to build
+    default: latest
+  
+  examples:
+  - gs make-image graphscope-dev
+  - gs make-image analytical --registry registry.cn-hongkong.aliyuncs.com
+  - gs make-image analytical --registry docker.io
+
+  dependencies:
+  - docker
+
+- name: dev
+  alias: d
+  help: Open a develop environment with docker.
+
+  flags:
+  - long: --local
+    short: -l
+    arg: local
+    help: Local path to the source code of GraphScope.
+
+  examples:
+  - gs dev  # open an dev container
+  - gs dev --local ~/graphscope  # open an dev container and mount ~/graphscope to /workspaces/graphscope
+
+  dependencies:
+  - docker
+
+- name: test
+  alias: t
+  help: Run tests of graphscope
+
+  args:
+  - name: type
+    help: test a subset of the codebase, organized by components.
+    allowed: [analytical, analytical-java, interactive, learning, e2e, groot]
+
+  flags:
+  - long: --local
+    help: Run local tests
+
+  - long: --storage-type
+    arg: storage_type
+    help: test gie with specified storage type
+    default: default
+
+  - long: --k8s
+    help: Run k8s tests
+
+  - long: --nx
+    help: Run nx tests
+  
+  - long: --testdata
+    arg: directory
+    default: "/tmp/gstest"
+    help: assign a custom test data location. This could be cloned from https://github.com/graphscope/gstest
+
+- name: install-deps
+  alias: i
+  help: Install dependencies on local machine.
+
+  args:
+  - name: type
+    help: dependencies for development or client
+    # whitelist + required
+    allowed: [dev, client]
+    required: true
+
+  flags:
+  - long: --cn
+    help: Whether to use CN located mirrors to speed up download.
+
+  - long: --from-local
+    short: -l
+    arg: directory
+    default: /tmp/gs-local-deps
+    help: Find raw dependencies of GraphScope from a local directory. The raw dependencies would then be built and installed to [prefix]. If the directory is empty or not exists, dependency files would be downloaded to [directory].
+
+  - long: --install-prefix
+    arg: prefix
+    help: Install dependency files to [prefix]. By default, './gs install-deps dev' will install all the files in '/opt/graphscope/bin', '/opt/graphscope/lib' etc. You can specify an installation prefix other than '/opt/graphscope' using '--install-prefix', for instance '--install-prefix=\$HOME'.
+    default: /opt/graphscope
+
+  - long: --v6d-version
+    arg: v6d-version
+    help: v6d version to clone
+    default: main
+
+  - long: --jobs
+    short: -j
+    arg: jobs
+    help: Concurrent jobs in building, i.e., -j argument passed to make.
+
+  - long: --for-analytical
+    help: Only install analytical engine dependencies
+
+  - long: --no-v6d
+    help: Do not install v6d, for build base docker images, could only be used with '--for-analytical'
+
+  examples:
+  - gs install-deps client
+  - gs install-deps dev
+  - gs install-deps dev --cn
+  - gs install-deps dev --cn -j 6
+  - gs install-deps dev --from-local ~/Downloads/gs-all-deps
+  - gs install-deps dev --install-prefix ~/gs
+
+- name: format
+  args:
+  - name: lang
+    help: format which part of languages
+    allowed: [cpp, java, python, rust]
+    required: true
