@@ -70,6 +70,14 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Map<String, Object>> get_g_V_a_out_b_select_a_b_by_label_id();
 
+    public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_sum();
+
+    public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_max();
+
+    public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_min();
+
+    public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_mean();
+
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_group_by_by_dedup_count_test() {
@@ -267,6 +275,42 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals("{a=person, b=lop}", traversal.next().toString());
     }
 
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_group_by_by_sum() {
+        final Traversal<Vertex, Map<Object, Object>> traversal = get_g_V_group_by_by_sum();
+        printTraversalForm(traversal);
+        Map<Object, Object> result = traversal.next();
+        Assert.assertEquals(4, result.size());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_group_by_by_max() {
+        final Traversal<Vertex, Map<Object, Object>> traversal = get_g_V_group_by_by_max();
+        printTraversalForm(traversal);
+        Map<Object, Object> result = traversal.next();
+        Assert.assertEquals(4, result.size());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_group_by_by_min() {
+        final Traversal<Vertex, Map<Object, Object>> traversal = get_g_V_group_by_by_min();
+        printTraversalForm(traversal);
+        Map<Object, Object> result = traversal.next();
+        Assert.assertEquals(4, result.size());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_group_by_by_mean() {
+        final Traversal<Vertex, Map<Object, Object>> traversal = get_g_V_group_by_by_mean();
+        printTraversalForm(traversal);
+        Map<Object, Object> result = traversal.next();
+        Assert.assertEquals(4, result.size());
+    }
+
     public static class Traversals extends IrGremlinQueryTest {
 
         @Override
@@ -358,6 +402,26 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                     .select("a", "b")
                     .by(label())
                     .by("name");
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_sum() {
+            return g.V().group().by().by(values("age").sum());
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_max() {
+            return g.V().group().by().by(values("age").max());
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_min() {
+            return g.V().group().by().by(values("age").min());
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_mean() {
+            return g.V().group().by().by(values("age").mean());
         }
     }
 }
