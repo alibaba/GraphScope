@@ -394,8 +394,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                 if batch.get_seq() == 0 {
                     // multi source;
                     self.pushes[target].push(batch)?;
-                    let children =
-                        if end.tag.is_root() { DynPeers::all() } else { DynPeers::single(target as u32) };
+                    let children = DynPeers::all();
                     for i in 0..self.pushes.len() {
                         let mut new_end = end.clone();
                         if i != target {
@@ -660,6 +659,7 @@ impl<D: Data> ExchangeByBatchPush<D> {
     fn handle_last_batch(
         &mut self, target: usize, mut end: EndOfScope, mut batch: MicroBatch<D>,
     ) -> Result<(), IOError> {
+        debug_worker!("src is {}, but peers is {:?}", self.src, end.peers());
         assert!(end.peers_contains(self.src));
 
         if end.peers().value() == 1 {
