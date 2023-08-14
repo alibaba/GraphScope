@@ -224,14 +224,13 @@ static bool parse_edges_files_schema(
 
 static bool parse_bulk_load_config_file(
     const std::string& load_config, std::string& data_source,
-    std::string delimiter, std::string& method,
+    std::string& delimiter, std::string& method,
     std::vector<std::pair<std::string, std::string>>& vertex_load_meta,
     std::vector<std::tuple<std::string, std::string, std::string, int32_t,
                            int32_t, std::string>>& edge_load_meta) {
   YAML::Node root = YAML::LoadFile(load_config);
   data_source = "file";
   std::string data_location;
-  delimiter = "|";
   if (root["loading_config"]) {
     get_scalar(root["loading_config"], "data_source", data_source);
     get_scalar(root["loading_config"], "data_location", data_location);
@@ -239,6 +238,15 @@ static bool parse_bulk_load_config_file(
     if (root["loading_config"]["meta_data"]) {
       get_scalar(root["loading_config"]["meta_data"], "delimiter", delimiter);
     }
+  }
+  // only delimeter with | is supported now
+  if (delimiter != "|") {
+    LOG(FATAL) << "Only support | as delimiter now";
+    return false;
+  }
+  if (method != "init") {
+    LOG(FATAL) << "Only support init method now";
+    return false;
   }
   if (data_location.empty()) {
     LOG(WARNING) << "data_location is not set";
