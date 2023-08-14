@@ -659,7 +659,6 @@ impl<D: Data> ExchangeByBatchPush<D> {
     fn handle_last_batch(
         &mut self, target: usize, mut end: EndOfScope, mut batch: MicroBatch<D>,
     ) -> Result<(), IOError> {
-        debug_worker!("src is {}, but peers is {:?}", self.src, end.peers());
         assert!(end.peers_contains(self.src));
 
         if end.peers().value() == 1 {
