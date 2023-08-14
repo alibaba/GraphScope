@@ -35,6 +35,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.SampleGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexStep;
@@ -743,23 +744,36 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_coin(
             final GremlinGSParser.TraversalMethod_coinContext ctx) {
-        Step endStep = graphTraversal.asAdmin().getEndStep();
-        if (!(endStep instanceof GraphStep)) {
-            throw new UnsupportedEvalException(
-                    ctx.getClass(), "coin should follow source step, i.e. V().coin(0.2)");
-        }
         return graphTraversal.coin(Double.valueOf(ctx.floatLiteral().getText()));
     }
 
     @Override
-    public Traversal visitTraversalMethod_with(GremlinGSParser.TraversalMethod_withContext ctx) {
-        Step endStep = graphTraversal.asAdmin().getEndStep();
-        if (!(endStep instanceof PathExpandStep)) {
-            throw new UnsupportedEvalException(
-                    ctx.getClass(),
-                    "with should follow source or path expand, i.e. g.with(..) or"
-                            + " out('1..2').with(..)");
+    public Traversal visitTraversalMethod_sample(
+            final GremlinGSParser.TraversalMethod_sampleContext ctx) {
+        Number amountToSample =
+                (Number)
+                        GenericLiteralVisitor.getInstance()
+                                .visitIntegerLiteral(ctx.integerLiteral());
+        graphTraversal.sample(amountToSample.intValue());
+        SampleGlobalStep sample = (SampleGlobalStep) graphTraversal.asAdmin().getEndStep();
+        if (ctx.traversalMethod_sampleby() != null) {
+            GremlinGSParser.TraversalMethod_samplebyContext byCtx = ctx.traversalMethod_sampleby();
+            if (byCtx.traversalToken() != null) {
+                sample.modulateBy(
+                        TraversalEnumParser.parseTraversalEnumFromContext(
+                                T.class, byCtx.traversalToken()));
+            } else if (byCtx.stringLiteral() != null) {
+                sample.modulateBy(GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
+            } else if (byCtx.nestedTraversal() != null) {
+                Traversal nested = visitNestedTraversal(byCtx.nestedTraversal());
+                sample.modulateBy(nested.asAdmin());
+            }
         }
+        return graphTraversal;
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_with(GremlinGSParser.TraversalMethod_withContext ctx) {
         String optKey = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
         Object optValue =
                 GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral());

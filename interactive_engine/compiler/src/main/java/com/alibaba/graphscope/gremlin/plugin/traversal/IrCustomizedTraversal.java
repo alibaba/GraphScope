@@ -16,11 +16,15 @@
 
 package com.alibaba.graphscope.gremlin.plugin.traversal;
 
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.gremlin.plugin.step.*;
 
+import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.step.Configuring;
+import org.apache.tinkerpop.gremlin.process.traversal.step.Seedable;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.EdgeVertexStep;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
 import org.apache.tinkerpop.gremlin.structure.Direction;
@@ -105,5 +109,31 @@ public class IrCustomizedTraversal<S, E> extends DefaultTraversal<S, E>
     public <K> GraphTraversal<S, Map<K, Long>> groupCount() {
         this.asAdmin().getBytecode().addStep("groupCount", new Object[0]);
         return this.asAdmin().addStep(new GroupCountStep<>(this.asAdmin()));
+    }
+
+    @Override
+    public GraphTraversal<S, E> with(final String key, final Object value) {
+        this.asAdmin().getBytecode().addStep(GraphTraversal.Symbols.with, key, value);
+        final Object[] configPair = {key, value};
+        Step endStep = this.asAdmin().getEndStep();
+        if (endStep instanceof Configuring) {
+            ((Configuring) this.asAdmin().getEndStep()).configure(configPair);
+        } else if (endStep instanceof Seedable) {
+            if (key.equalsIgnoreCase(ArgUtils.SEED_KEY) && value instanceof Number) {
+                ((Seedable) this.asAdmin().getEndStep()).resetSeed(((Number) value).longValue());
+            } else {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "The provided key/value pair [%s] does not map to a Seedable step",
+                                configPair));
+            }
+        } else {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "The provided key/value pair [%s] does not map to a Configuring or"
+                                    + " Seedable step",
+                            configPair));
+        }
+        return this;
     }
 }

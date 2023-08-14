@@ -59,7 +59,8 @@ public class SinkOutputProcessor implements InterOpProcessor {
                     || cur instanceof LimitOp
                     || cur instanceof OrderOp
                     || cur instanceof SelectOp
-                    || cur instanceof AsNoneOp) {
+                    || cur instanceof AsNoneOp
+                    || cur instanceof SampleOp) {
                 continue;
             } else if (cur instanceof ExpandOp
                     || cur instanceof ScanFusionOp
