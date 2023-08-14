@@ -309,10 +309,11 @@ mod test {
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
         let mut plan = LogicalPlan::default();
-        plan.append_operator_as_node(source.into(), vec![])
+        let srouce_id = plan
+            .append_operator_as_node(source.into(), vec![0])
             .unwrap();
         let id = plan
-            .append_operator_as_node(pattern.into(), vec![0])
+            .append_operator_as_node(pattern.into(), vec![srouce_id])
             .unwrap();
         plan.append_operator_as_node(sink.into(), vec![id])
             .unwrap();
@@ -335,10 +336,11 @@ mod test {
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C, TAG_D]);
 
         let mut plan = LogicalPlan::default();
-        plan.append_operator_as_node(source.into(), vec![])
+        let source_id = plan
+            .append_operator_as_node(source.into(), vec![0])
             .unwrap();
         let id = plan
-            .append_operator_as_node(pattern.into(), vec![0])
+            .append_operator_as_node(pattern.into(), vec![source_id])
             .unwrap();
         plan.append_operator_as_node(sink.into(), vec![id])
             .unwrap();
@@ -365,7 +367,7 @@ mod test {
 
         let mut plan = LogicalPlan::default();
         let source_id = plan
-            .append_operator_as_node(source.into(), vec![])
+            .append_operator_as_node(source.into(), vec![0])
             .unwrap();
 
         let pattern_0_id = plan
@@ -390,7 +392,6 @@ mod test {
     // ).join(
     //    match(__.as('a').out("knows").as('b'))
     // )
-    // two matches both follow the "in()" step: not supported, expected to panic, the error should be ParentNotExist
     fn init_match_case4_request() -> JobRequest {
         let source = pb::Scan::default();
 
@@ -406,7 +407,7 @@ mod test {
 
         let mut plan = LogicalPlan::default();
         let source_id = plan
-            .append_operator_as_node(source.into(), vec![])
+            .append_operator_as_node(source.into(), vec![0])
             .unwrap();
 
         let in_edge_id = plan
@@ -453,7 +454,7 @@ mod test {
 
         let mut plan = LogicalPlan::default();
         let source_id = plan
-            .append_operator_as_node(source.into(), vec![])
+            .append_operator_as_node(source.into(), vec![0])
             .unwrap();
 
         let in_edge_id = plan
@@ -473,8 +474,6 @@ mod test {
             .unwrap();
         plan.append_operator_as_node(sink.into(), vec![join_id])
             .unwrap();
-
-        println!("{:?}", plan);
 
         build_job_request(plan)
     }
@@ -498,7 +497,7 @@ mod test {
 
         let mut plan = LogicalPlan::default();
         let source_id = plan
-            .append_operator_as_node(source.into(), vec![])
+            .append_operator_as_node(source.into(), vec![0])
             .unwrap();
 
         let pattern_0_id = plan
@@ -536,7 +535,7 @@ mod test {
 
         let mut plan = LogicalPlan::default();
         let source_id = plan
-            .append_operator_as_node(source.into(), vec![])
+            .append_operator_as_node(source.into(), vec![0])
             .unwrap();
 
         let pattern_0_id = plan
@@ -574,7 +573,7 @@ mod test {
 
         let mut plan = LogicalPlan::default();
         let source_id = plan
-            .append_operator_as_node(source.into(), vec![])
+            .append_operator_as_node(source.into(), vec![0])
             .unwrap();
 
         let pattern_0_id = plan
@@ -612,7 +611,7 @@ mod test {
 
         let mut plan = LogicalPlan::default();
         let source_id = plan
-            .append_operator_as_node(source.into(), vec![])
+            .append_operator_as_node(source.into(), vec![0])
             .unwrap();
 
         let pattern_0_id = plan
@@ -738,12 +737,12 @@ mod test {
     }
 
     #[test]
-    #[should_panic]
     fn match_case4() {
         initialize();
         let request = init_match_case4_request();
         let mut results = submit_query(request, 2);
         let mut result_collection = vec![];
+        let expected_result_ids = vec![(1, 4, 1 << 56 | 3); 9];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
@@ -759,6 +758,7 @@ mod test {
             }
         }
         result_collection.sort();
+        assert_eq!(expected_result_ids, result_collection);
     }
 
     #[test]
