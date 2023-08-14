@@ -13,7 +13,9 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
+import com.alibaba.graphscope.groot.sdk.schema.Edge;
 import com.alibaba.graphscope.groot.sdk.schema.Schema;
+import com.alibaba.graphscope.groot.sdk.schema.Vertex;
 import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.ManagedChannel;
@@ -28,6 +30,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class GrootClient {
     private final ClientGrpc.ClientBlockingStub clientStub;
@@ -35,9 +38,6 @@ public class GrootClient {
     private final ClientBackupGrpc.ClientBackupBlockingStub backupStub;
 
     private final GrootDdlServiceGrpc.GrootDdlServiceBlockingStub ddlStub;
-    private String clientId = "DEFAULT";
-
-    private BatchWriteRequest.Builder batchWriteBuilder;
 
     private GrootClient(
             ClientGrpc.ClientBlockingStub clientBlockingStub,
@@ -48,14 +48,9 @@ public class GrootClient {
         this.writeStub = clientWriteBlockingStub;
         this.backupStub = clientBackupBlockingStub;
         this.ddlStub = ddlServiceBlockingStub;
-        this.reset();
     }
 
     public void close() {}
-
-    private void reset() {
-        this.batchWriteBuilder = BatchWriteRequest.newBuilder().setClientId(this.clientId);
-    }
 
     public com.alibaba.graphscope.proto.GraphDefPb submitSchema(Schema schema) {
         BatchSubmitRequest request = schema.toProto();
@@ -67,10 +62,149 @@ public class GrootClient {
         return submitSchema(schema.build());
     }
 
-    public void initWriteSession() {
-        this.clientId =
-                this.writeStub.getClientId(GetClientIdRequest.newBuilder().build()).getClientId();
-        this.reset();
+    private BatchWriteRequest.Builder getNewWriteBuilder() {
+        String clientId = writeStub.getClientId(GetClientIdRequest.newBuilder().build()).getClientId();
+        return BatchWriteRequest.newBuilder().setClientId(clientId);
+    }
+
+
+
+    /**
+     * Block until this snapshot becomes available.
+     * @param snapshotId the snapshot id to be flushed
+     */
+    public void remoteFlush(long snapshotId) {
+        if (snapshotId == 0) {
+            return;
+        }
+        this.writeStub.remoteFlush(
+                RemoteFlushRequest.newBuilder().setSnapshotId(snapshotId).build());
+    }
+
+    /**
+     * Add vertex by realtime write
+     * @param vertex vertex that contains label and pk properties and other properties
+     */
+    public long addVertex(Vertex vertex) {
+        WriteRequestPb request = vertex.toWriteRequest(WriteTypePb.INSERT);
+        return submit(request);
+    }
+
+    public long addVertex(String label, Map<String, String> properties) {
+        return addVertex(new Vertex(label, properties));
+    }
+
+    public long addVertices(List<Vertex> vertices) {
+        List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, WriteTypePb.INSERT);
+        return submit(requests);
+    }
+
+    /**
+     * Update existed vertex by realtime write
+     * @param vertex vertex that contains label and pk properties and other properties
+     */
+    public long updateVertex(Vertex vertex) {
+        WriteRequestPb request = vertex.toWriteRequest(WriteTypePb.UPDATE);
+        return submit(request);
+    }
+
+    public long updateVertex(String label, Map<String, String> properties) {
+        return updateVertex(new Vertex(label, properties));
+    }
+
+    public long updateVertices(List<Vertex> vertices) {
+        List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, WriteTypePb.UPDATE);
+        return submit(requests);
+    }
+
+    /**
+     * Delete vertex by its primary key
+     * @param vertex vertex that contains label and primary key properties
+     */
+    public long deleteVertex(Vertex vertex) {
+        WriteRequestPb request = vertex.toWriteRequest(WriteTypePb.DELETE);
+        return submit(request);
+    }
+
+    public long deleteVertex(String label, Map<String, String> pk_properties) {
+        return deleteVertex(new Vertex(label, pk_properties));
+    }
+
+    public long deleteVertices(List<Vertex> vertices) {
+        List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, WriteTypePb.DELETE);
+        return submit(requests);
+    }
+
+    /**
+     * Add edge by realtime write
+     * @param edge edge that contains label, src vertex label and pk, dst label and pk, and properties
+     */
+    public long addEdge(Edge edge) {
+        WriteRequestPb request = edge.toWriteRequest(WriteTypePb.INSERT);
+        return submit(request);
+    }
+
+    public long addEdge(
+            String label,
+            String srcLabel,
+            String dstLabel,
+            Map<String, String> srcPk,
+            Map<String, String> dstPk,
+            Map<String, String> properties) {
+        return addEdge(new Edge(label, srcLabel, dstLabel, srcPk, dstPk, properties));
+    }
+
+
+    public long addEdges(List<Edge> edges) {
+        List<WriteRequestPb> requests = getEdgeWriteRequestPbs(edges, WriteTypePb.INSERT);
+        return submit(requests);
+    }
+
+    /**
+     * Update existed edge by realtime write
+     * @param edge edge that contains label, src vertex label and pk, dst label and pk, and properties
+     */
+    public long updateEdge(Edge edge) {
+        WriteRequestPb request = edge.toWriteRequest(WriteTypePb.UPDATE);
+        return submit(request);
+    }
+
+    public long updateEdge(
+            String label,
+            String srcLabel,
+            String dstLabel,
+            Map<String, String> srcPk,
+            Map<String, String> dstPk,
+            Map<String, String> properties) {
+        return updateEdge(new Edge(label, srcLabel, dstLabel, srcPk, dstPk, properties));
+    }
+
+    public long updateEdges(List<Edge> edges) {
+        List<WriteRequestPb> requests = getEdgeWriteRequestPbs(edges, WriteTypePb.UPDATE);
+        return submit(requests);
+    }
+
+    /**
+     * Delete an edge by realtime write
+     * @param edge edge that contains label, src vertex label and pk, dst label and pk, no properties required
+     */
+    public long deleteEdge(Edge edge) {
+        WriteRequestPb request = edge.toWriteRequest(WriteTypePb.DELETE);
+        return submit(request);
+    }
+
+    public long deleteEdge(
+            String label,
+            String srcLabel,
+            String dstLabel,
+            Map<String, String> srcPk,
+            Map<String, String> dstPk) {
+        return addEdge(new Edge(label, srcLabel, dstLabel, srcPk, dstPk));
+    }
+
+    public long deleteEdges(List<Edge> edges) {
+        List<WriteRequestPb> requests = getEdgeWriteRequestPbs(edges, WriteTypePb.DELETE);
+        return submit(requests);
     }
 
     /**
@@ -78,119 +212,19 @@ public class GrootClient {
      * @return The snapshot_id. The data committed would be available after a while, or you could remoteFlush(snapshot_id)
      * and wait for its return.
      */
-    public long commit() {
-        long snapshotId = 0L;
-        if (this.batchWriteBuilder.getWriteRequestsCount() > 0) {
-            BatchWriteResponse response = this.writeStub.batchWrite(this.batchWriteBuilder.build());
-            snapshotId = response.getSnapshotId();
+    private long submit(WriteRequestPb request) {
+        BatchWriteRequest.Builder batchWriteBuilder = getNewWriteBuilder();
+        batchWriteBuilder.addWriteRequests(request);
+        return writeStub.batchWrite(batchWriteBuilder.build()).getSnapshotId();
+    }
+
+    private long submit(List<WriteRequestPb> requests) {
+        if (requests.isEmpty()) {
+            return 0;
         }
-        this.reset();
-        return snapshotId;
-    }
-
-    /**
-     * Block until this snapshot becomes available.
-     * @param snapshotId the snapshot id to be flushed
-     */
-    public void remoteFlush(long snapshotId) {
-        this.writeStub.remoteFlush(
-                RemoteFlushRequest.newBuilder().setSnapshotId(snapshotId).build());
-    }
-
-    /**
-     * Add vertex by realtime write
-     * @param label vertex label
-     * @param properties properties, including the primary key
-     */
-    public void addVertex(String label, Map<String, String> properties) {
-        DataRecordPb record = getVertexDataRecord(label, properties);
-        WriteRequestPb request = getWriteRequestPb(record, WriteTypePb.INSERT);
-        this.batchWriteBuilder.addWriteRequests(request);
-    }
-
-    /**
-     * Update existed vertex by realtime write
-     * @param label vertex label
-     * @param properties properties, including the primary key
-     */
-    public void updateVertex(String label, Map<String, String> properties) {
-        DataRecordPb record = getVertexDataRecord(label, properties);
-        WriteRequestPb request = getWriteRequestPb(record, WriteTypePb.UPDATE);
-        this.batchWriteBuilder.addWriteRequests(request);
-    }
-
-    /**
-     * Delete vertex by its primary key
-     * @param label vertex label
-     * @param properties properties, contains only the primary key
-     */
-    public void deleteVertex(String label, Map<String, String> properties) {
-        DataRecordPb record = getVertexDataRecord(label, properties);
-        WriteRequestPb request = getWriteRequestPb(record, WriteTypePb.DELETE);
-        this.batchWriteBuilder.addWriteRequests(request);
-    }
-
-    /**
-     * Add edge by realtime write
-     * @param label edge label
-     * @param srcLabel source vertex label
-     * @param dstLabel destination vertex label
-     * @param srcPk source primary keys
-     * @param dstPk destination primary keys
-     * @param properties edge properties
-     */
-    public void addEdge(
-            String label,
-            String srcLabel,
-            String dstLabel,
-            Map<String, String> srcPk,
-            Map<String, String> dstPk,
-            Map<String, String> properties) {
-        DataRecordPb record =
-                getEdgeDataRecord(label, srcLabel, dstLabel, srcPk, dstPk, properties);
-        WriteRequestPb request = getWriteRequestPb(record, WriteTypePb.INSERT);
-        this.batchWriteBuilder.addWriteRequests(request);
-    }
-
-    /**
-     * Update existed edge by realtime write
-     * @param label edge label
-     * @param srcLabel source vertex label
-     * @param dstLabel destination vertex label
-     * @param srcPk source primary keys
-     * @param dstPk destination primary keys
-     * @param properties edge properties
-     */
-    public void updateEdge(
-            String label,
-            String srcLabel,
-            String dstLabel,
-            Map<String, String> srcPk,
-            Map<String, String> dstPk,
-            Map<String, String> properties) {
-        DataRecordPb record =
-                getEdgeDataRecord(label, srcLabel, dstLabel, srcPk, dstPk, properties);
-        WriteRequestPb request = getWriteRequestPb(record, WriteTypePb.INSERT);
-        this.batchWriteBuilder.addWriteRequests(request);
-    }
-
-    /**
-     * Delete an edge by realtime write
-     * @param label edge label
-     * @param srcLabel source vertex label
-     * @param dstLabel destination vertex label
-     * @param srcPk source primary keys
-     * @param dstPk destination primary keys
-     */
-    public void deleteEdge(
-            String label,
-            String srcLabel,
-            String dstLabel,
-            Map<String, String> srcPk,
-            Map<String, String> dstPk) {
-        DataRecordPb record = getEdgeDataRecord(label, srcLabel, dstLabel, srcPk, dstPk, null);
-        WriteRequestPb request = getWriteRequestPb(record, WriteTypePb.INSERT);
-        this.batchWriteBuilder.addWriteRequests(request);
+        BatchWriteRequest.Builder batchWriteBuilder = getNewWriteBuilder();
+        batchWriteBuilder.addAllWriteRequests(requests);
+        return writeStub.batchWrite(batchWriteBuilder.build()).getSnapshotId();
     }
 
     public GraphDefPb getSchema() {
@@ -383,58 +417,12 @@ public class GrootClient {
         }
     }
 
-    private VertexRecordKeyPb getVertexRecordKeyPb(String label, Map<String, String> properties) {
-        VertexRecordKeyPb.Builder builder = VertexRecordKeyPb.newBuilder().setLabel(label);
-        if (properties != null) {
-            builder.putAllPkProperties(properties);
-        }
-        return builder.build();
+
+    private List<WriteRequestPb> getVertexWriteRequestPbs(List<Vertex> vertices, WriteTypePb writeType) {
+        return vertices.stream().map(element -> element.toWriteRequest(writeType)).collect(Collectors.toList());
     }
 
-    private EdgeRecordKeyPb getEdgeRecordKeyPb(
-            String label, VertexRecordKeyPb src, VertexRecordKeyPb dst) {
-        return EdgeRecordKeyPb.newBuilder()
-                .setLabel(label)
-                .setSrcVertexKey(src)
-                .setDstVertexKey(dst)
-                .build();
-    }
-
-    private DataRecordPb getDataRecordPb(VertexRecordKeyPb key, Map<String, String> properties) {
-        DataRecordPb.Builder builder = DataRecordPb.newBuilder().setVertexRecordKey(key);
-        if (properties != null) {
-            builder.putAllProperties(properties);
-        }
-        return builder.build();
-    }
-
-    private DataRecordPb getDataRecordPb(EdgeRecordKeyPb key, Map<String, String> properties) {
-        DataRecordPb.Builder builder = DataRecordPb.newBuilder().setEdgeRecordKey(key);
-        if (properties != null) {
-            builder.putAllProperties(properties);
-        }
-        return builder.build();
-    }
-
-    private DataRecordPb getVertexDataRecord(String label, Map<String, String> properties) {
-        VertexRecordKeyPb vertexRecordKey = getVertexRecordKeyPb(label, null);
-        return getDataRecordPb(vertexRecordKey, properties);
-    }
-
-    private DataRecordPb getEdgeDataRecord(
-            String label,
-            String srcLabel,
-            String dstLabel,
-            Map<String, String> srcPk,
-            Map<String, String> dstPk,
-            Map<String, String> properties) {
-        VertexRecordKeyPb src = getVertexRecordKeyPb(srcLabel, srcPk);
-        VertexRecordKeyPb dst = getVertexRecordKeyPb(dstLabel, dstPk);
-        EdgeRecordKeyPb edgeRecordKeyPb = getEdgeRecordKeyPb(label, src, dst);
-        return getDataRecordPb(edgeRecordKeyPb, properties);
-    }
-
-    private WriteRequestPb getWriteRequestPb(DataRecordPb record, WriteTypePb writeType) {
-        return WriteRequestPb.newBuilder().setWriteType(writeType).setDataRecord(record).build();
+    private List<WriteRequestPb> getEdgeWriteRequestPbs(List<Edge> edges, WriteTypePb writeType) {
+        return edges.stream().map(element -> element.toWriteRequest(writeType)).collect(Collectors.toList());
     }
 }

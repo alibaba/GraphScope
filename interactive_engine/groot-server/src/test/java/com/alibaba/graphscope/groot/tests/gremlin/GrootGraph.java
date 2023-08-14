@@ -134,8 +134,7 @@ public class GrootGraph extends RemoteTestGraph {
         Thread.sleep(5000);
         String graphName = graphData.name().toLowerCase();
         if (graphName.equals("modern")) {
-            ddlClient.initWriteSession();
-
+            long snapshotId;
             Map<String, String> v1 = new HashMap<>();
             v1.put("id", "1");
             v1.put("name", "marko");
@@ -170,10 +169,9 @@ public class GrootGraph extends RemoteTestGraph {
             v5.put("id", "5");
             v5.put("name", "ripple");
             v5.put("lang", "java");
-            ddlClient.addVertex("software", v5);
+            snapshotId = ddlClient.addVertex("software", v5);
 
-            ddlClient.commit();
-            Thread.sleep(5000);
+            ddlClient.remoteFlush(snapshotId);
 
             ddlClient.addEdge(
                     "knows",
@@ -215,16 +213,14 @@ public class GrootGraph extends RemoteTestGraph {
                     Collections.singletonMap("id", "5"),
                     Collections.singletonMap("weight", "1.0"));
 
-            ddlClient.addEdge(
+            snapshotId = ddlClient.addEdge(
                     "created",
                     "person",
                     "software",
                     Collections.singletonMap("id", "6"),
                     Collections.singletonMap("id", "3"),
                     Collections.singletonMap("weight", "0.2"));
-
-            ddlClient.commit();
-            Thread.sleep(5000);
+            ddlClient.remoteFlush(snapshotId);
         } else {
             throw new UnsupportedOperationException("graph " + graphName + " is unsupported yet");
         }
