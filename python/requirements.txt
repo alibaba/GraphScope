@@ -12,7 +12,7 @@ networkx==2.6.0;python_version<"3.8"
 numpy
 orjson
 packaging
-pandas
+pandas<=2.0.3
 protobuf>=4
 psutil
 pyarrow>=10
