@@ -3,19 +3,21 @@ package com.alibaba.graphscope.common.ir.rel.metadata.schema;
 import java.net.URISyntaxException;
 import java.rmi.server.ExportException;
 import java.util.List;
+import java.util.Map;
 
 import org.javatuples.Triplet;
 import org.jgrapht.*;
 import org.jgrapht.graph.*;
 
-import com.alibaba.graphscope.compiler.api.schema.EdgeRelation;
-import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
-import com.alibaba.graphscope.compiler.api.schema.GraphVertex;
-import com.alibaba.graphscope.sdkcommon.schema.mapper.DefaultEdgeRelation;
-import com.alibaba.graphscope.sdkcommon.schema.mapper.DefaultGraphEdge;
-import com.alibaba.graphscope.sdkcommon.schema.mapper.DefaultGraphSchema;
-import com.alibaba.graphscope.sdkcommon.schema.mapper.DefaultGraphVertex;
+import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
+import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
+import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
+import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
+import com.alibaba.graphscope.groot.common.schema.impl.DefaultEdgeRelation;
+import com.alibaba.graphscope.groot.common.schema.impl.DefaultGraphEdge;
+import com.alibaba.graphscope.groot.common.schema.impl.DefaultGraphSchema;
+import com.alibaba.graphscope.groot.common.schema.impl.DefaultGraphVertex;
+import com.google.common.collect.Maps;
 
 public class GlogueSchema {
     private Graph<Integer, EdgeTypeId> schemaGraph;
@@ -65,15 +67,22 @@ public class GlogueSchema {
     }
 
     public GlogueSchema DefaultGraphSchema() {
-        DefaultGraphSchema graphSchema = new DefaultGraphSchema();
-        DefaultGraphVertex person = new DefaultGraphVertex("person", 11, List.of(), List.of("name"), 0, -1);
-        DefaultGraphVertex software = new DefaultGraphVertex("software", 22, List.of(), List.of("name"), 0, -1);
-        graphSchema.createVertexType(person);
-        graphSchema.createVertexType(software);
+        Map<String, GraphVertex> vertexList = Maps.newHashMap();
+        Map<String, GraphEdge> edgeList = Maps.newHashMap();
+
+        
+        DefaultGraphVertex person = new DefaultGraphVertex(11, "person",  List.of(), List.of("name"), 0, -1);
+        DefaultGraphVertex software = new DefaultGraphVertex(22, "software", List.of(), List.of("name"), 0, -1);
+        vertexList.put("person", person);
+        vertexList.put("software", software);
         DefaultEdgeRelation knowsRelation = new DefaultEdgeRelation(person, person);
-        graphSchema.createEdgeType(new DefaultGraphEdge("knows", 1111, List.of(), List.of(knowsRelation), 0));
+        DefaultGraphEdge knows = new DefaultGraphEdge(1111, "knows", List.of(), List.of(knowsRelation), 0);
         DefaultEdgeRelation createdRelation = new DefaultEdgeRelation(person, software);
-        graphSchema.createEdgeType(new DefaultGraphEdge("created", 1112, List.of(), List.of(createdRelation), 0));
+        DefaultGraphEdge created = new DefaultGraphEdge(1112, "created", List.of(), List.of(createdRelation), 0);
+        edgeList.put("knows", knows);
+        edgeList.put("created", created);
+
+        DefaultGraphSchema graphSchema = new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
         GlogueSchema g = new GlogueSchema(graphSchema);
         return g;
     }
