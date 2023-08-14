@@ -5,7 +5,7 @@ This guide will walk you through the process of installing GraphScope on your lo
 ## Prerequisites
 
 - Ubuntu 20.04 or later, CentOS 7 or later, or macOS 11 (Intel) / macOS 12 (Apple silicon) or later
-- Python 3.7 ~ 3.11
+- Python 3.7 ~ 3.11, and pip >= 19.3
 - OpenJDK 8 or later (If you want to use GIE)
 
 ## Install from packages
@@ -24,6 +24,14 @@ If you occur a very low downloading speed, try to use a mirror site for the pip.
 ```bash
 python3 -m pip install graphscope --upgrade \
     -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host=mirrors.aliyun.com
+```
+
+If you encounter errors like `Could not find a version that satisfies the requirement graphscope (from versions: )`,
+please check if you are working with an old pip, and ensure pip's version >= 19.3, as graphscope wheels are
+compatible with [the manylinux2014 ABI](https://github.com/pypa/manylinux).
+
+```bash
+python3 -m pip install --upgrade pip
 ```
 ````
 

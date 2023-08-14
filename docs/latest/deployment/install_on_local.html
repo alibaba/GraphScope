@@ -671,7 +671,7 @@ MathJax = {
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Ubuntu 20.04 or later, CentOS 7 or later, or macOS 11 (Intel) / macOS 12 (Apple silicon) or later</p></li>
-<li><p>Python 3.7 ~ 3.11</p></li>
+<li><p>Python 3.7 ~ 3.11, and pip &gt;= 19.3</p></li>
 <li><p>OpenJDK 8 or later (If you want to use GIE)</p></li>
 </ul>
 </div>
@@ -689,6 +689,12 @@ MathJax = {
 <p>If you occur a very low downloading speed, try to use a mirror site for the pip.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>graphscope<span class="w"> </span>--upgrade<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>-i<span class="w"> </span>http://mirrors.aliyun.com/pypi/simple/<span class="w"> </span>--trusted-host<span class="o">=</span>mirrors.aliyun.com
+</pre></div>
+</div>
+<p>If you encounter errors like <code class="docutils literal notranslate"><span class="pre">Could</span> <span class="pre">not</span> <span class="pre">find</span> <span class="pre">a</span> <span class="pre">version</span> <span class="pre">that</span> <span class="pre">satisfies</span> <span class="pre">the</span> <span class="pre">requirement</span> <span class="pre">graphscope</span> <span class="pre">(from</span> <span class="pre">versions:</span> <span class="pre">)</span></code>,
+please check if you are working with an old pip, and ensure pip’s version &gt;= 19.3, as graphscope wheels are
+compatible with <a class="reference external" href="https://github.com/pypa/manylinux">the manylinux2014 ABI</a>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pip
 </pre></div>
 </div>
 </div>
