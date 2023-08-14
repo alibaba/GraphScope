@@ -33,13 +33,14 @@ MutablePropertyFragment::~MutablePropertyFragment() {
 }
 
 void MutablePropertyFragment::initVertices(
-    label_t v_label_i, const std::vector<VertexLoadingMeta>& vertex_files) {
+    label_t v_label_i,
+    const std::vector<std::pair<std::string, std::string>>& vertex_files) {
   IdIndexer<oid_t, vid_t> indexer;
   std::string v_label_name = schema_.get_vertex_label_name(v_label_i);
   std::vector<std::string> filenames;
   for (auto& pair : vertex_files) {
-    if (pair.vertex_label_name_ == v_label_name) {
-      filenames.push_back(pair.file_path_);
+    if (pair.first == v_label_name) {
+      filenames.push_back(pair.second);
     }
   }
   VLOG(10) << "Start init vertices for label " << v_label_i << " with "
@@ -250,17 +251,18 @@ std::pair<MutableCsrBase*, MutableCsrBase*> construct_csr(
 
 void MutablePropertyFragment::initEdges(
     label_t src_label_i, label_t dst_label_i, label_t edge_label_i,
-    const std::vector<EdgeLoadingMeta>& edge_files) {
+    const std::vector<std::tuple<std::string, std::string, std::string, int32_t,
+                                 int32_t, std::string>>& edge_files) {
   std::string src_label_name = schema_.get_vertex_label_name(src_label_i);
   std::string dst_label_name = schema_.get_vertex_label_name(dst_label_i);
   std::string edge_label_name = schema_.get_edge_label_name(edge_label_i);
   std::vector<std::tuple<int32_t, int32_t, std::string>> filenames;
   for (auto& tuple : edge_files) {
-    if (tuple.src_label_ == src_label_name &&
-        tuple.dst_label_ == dst_label_name &&
-        tuple.edge_label_ == edge_label_name) {
-      filenames.emplace_back(tuple.src_primary_key_ind_,
-                             tuple.dst_primary_key_ind_, tuple.file_path_);
+    if (std::get<0>(tuple) == src_label_name &&
+        std::get<1>(tuple) == dst_label_name &&
+        std::get<2>(tuple) == edge_label_name) {
+      filenames.emplace_back(std::get<3>(tuple), std::get<4>(tuple),
+                             std::get<5>(tuple));
     }
   }
   if (filenames.size() <= 0) {
@@ -342,8 +344,11 @@ void MutablePropertyFragment::initEdges(
 }
 
 void MutablePropertyFragment::Init(
-    const Schema& schema, const std::vector<VertexLoadingMeta>& vertex_files,
-    const std::vector<EdgeLoadingMeta>& edge_files, int thread_num) {
+    const Schema& schema,
+    const std::vector<std::pair<std::string, std::string>>& vertex_files,
+    const std::vector<std::tuple<std::string, std::string, std::string, int32_t,
+                                 int32_t, std::string>>& edge_files,
+    int thread_num) {
   schema_ = schema;
   vertex_label_num_ = schema_.vertex_label_num();
   edge_label_num_ = schema_.edge_label_num();

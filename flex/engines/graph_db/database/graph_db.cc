@@ -106,7 +106,7 @@ void GraphDB::Init(const Schema& schema, const LoadingConfig& load_config,
     contexts_[i].logger.open(wal_dir.string(), i);
   }
 
-  initApps(schema.get_plugin_list());
+  initApps(schema.GetPluginsList());
 }
 
 ReadTransaction GraphDB::GetReadTransaction() {

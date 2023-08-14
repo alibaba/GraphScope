@@ -19,6 +19,7 @@
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/id_indexer.h"
 #include "flex/utils/property/table.h"
+#include "flex/utils/yaml_utils.h"
 
 namespace gs {
 
@@ -111,7 +112,9 @@ class Schema {
 
   bool Equals(const Schema& other) const;
 
-  const std::vector<std::string>& get_plugin_list() const;
+  const std::vector<std::string>& GetPluginsList() const;
+
+  void EmplacePlugin(const std::string& plugin_name);
 
  private:
   label_t vertex_label_to_index(const std::string& label);

@@ -19,8 +19,10 @@
 #include <filesystem>
 #include <string>
 #include "flex/storages/rt_mutable_graph/schema.h"
+#include "flex/utils/yaml_utils.h"
 
 namespace gs {
+
 // Provide meta info about bulk loading.
 struct LoadingConfig {
   std::string data_source_;  // "file", "hdfs", "oss", "s3"
@@ -35,21 +37,7 @@ struct LoadingConfig {
                              // edge_label, src_pri_key_ind,
                              // dst_pri_key_ind, file_path>
 
-  static LoadingConfig ParseFromConfigYaml(const std::string& yaml_file) {
-    LoadingConfig load_config;
-    if (!bulk_load_config.empty() &&
-        std::filesystem::exists(bulk_load_config)) {
-      if (!config_parsing::parse_bulk_load_config_file(
-              bulk_load_config, load_config.data_source_,
-              load_config.delimiter_, load_config.method_,
-              load_config.vertex_loading_config_,
-              load_config.edge_loading_config_)) {
-        LOG(FATAL) << "Failed to parse bulk load config file: "
-                   << bulk_load_config;
-      }
-    }
-    return load_config;
-  }
+  static LoadingConfig ParseFromYaml(const std::string& yaml_file);
 };
 
 }  // namespace gs

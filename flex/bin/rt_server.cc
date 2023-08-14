@@ -83,8 +83,7 @@ int main(int argc, char** argv) {
   auto& db = gs::GraphDB::get();
 
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-  auto loading_config =
-      gs::LoadingConfig::LoadFromYaml(schema, bulk_load_config_path);
+  auto loading_config = gs::LoadingConfig::ParseFromYaml(bulk_load_config_path);
   db.Init(schema, loading_config, data_path, shard_num);
 
   t0 += grape::GetCurrentTime();

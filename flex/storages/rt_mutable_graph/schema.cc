@@ -326,46 +326,6 @@ bool Schema::Equals(const Schema& other) const {
 
 namespace config_parsing {
 
-template <typename T>
-bool get_scalar(YAML::Node node, const std::string& key, T& value) {
-  YAML::Node cur = node[key];
-  if (cur && cur.IsScalar()) {
-    value = cur.as<T>();
-    return true;
-  }
-  return false;
-}
-
-template <typename T>
-bool get_sequence(YAML::Node node, const std::string& key,
-                  std::vector<T>& seq) {
-  YAML::Node cur = node[key];
-  if (cur && cur.IsSequence()) {
-    int num = cur.size();
-    seq.clear();
-    for (int i = 0; i < num; ++i) {
-      seq.push_back(cur[i].as<T>());
-    }
-    return true;
-  }
-  return false;
-}
-
-static bool expect_config(YAML::Node root, const std::string& key,
-                          const std::string& value) {
-  std::string got;
-  if (!get_scalar(root, key, got)) {
-    LOG(ERROR) << "Expect key: " << key << "set to " << value << " but not set";
-    return false;
-  }
-  if (got != value) {
-    LOG(ERROR) << "Expect key: " << key << "set to " << value << " but got "
-               << got;
-    return false;
-  }
-  return true;
-}
-
 static PropertyType StringToPropertyType(const std::string& str) {
   if (str == "int32" || str == DT_SIGNED_INT32) {
     return PropertyType::kInt32;
@@ -404,31 +364,6 @@ StorageStrategy StringToStorageStrategy(const std::string& str) {
   } else {
     return StorageStrategy::kMem;
   }
-}
-
-static bool fetch_src_dst_column_mapping(YAML::Node node,
-                                         const std::string& key,
-                                         int32_t& column_id) {
-  if (node[key]) {
-    auto column_mappings = node[key];
-    if (!column_mappings.IsSequence()) {
-      LOG(ERROR) << "value for column_mappings should be a sequence";
-      return false;
-    }
-    if (column_mappings.size() > 1) {
-      LOG(ERROR) << "Only only source vertex mapping is needed";
-      return false;
-    }
-    auto column_mapping = column_mappings[0]["column"];
-    if (!get_scalar(column_mapping, "index", column_id)) {
-      LOG(ERROR) << "Expect column index for source vertex mapping";
-      return false;
-    }
-  } else {
-    LOG(WARNING)
-        << "source_vertex_mappings is not set, use default src_column = 0";
-  }
-  return true;
 }
 
 static bool parse_vertex_properties(YAML::Node node,
@@ -676,256 +611,13 @@ static bool parse_edges_schema(YAML::Node node, Schema& schema) {
   return true;
 }
 
-static bool access_file(std::string& file_path) {
-  if (file_path.size() == 0) {
-    return false;
-  }
-  if (file_path[0] == '/') {
-    std::filesystem::path path(file_path);
-    return std::filesystem::exists(path);
-  }
-  char* flex_data_dir = std::getenv("FLEX_DATA_DIR");
-  if (flex_data_dir != NULL) {
-    auto temp = std::string(flex_data_dir) + "/" + file_path;
-    std::filesystem::path path(temp);
-    if (std::filesystem::exists(path)) {
-      file_path = temp;
-      return true;
-    }
-  }
-  file_path =
-      std::filesystem::current_path().generic_string() + "/" + file_path;
-  std::filesystem::path path(file_path);
-  return std::filesystem::exists(path);
-}
-
-static bool parse_vertex_files(
-    YAML::Node node, const std::string& data_location,
-    std::vector<std::pair<std::string, std::string>>& files) {
-  std::string label_name;
-  if (!get_scalar(node, "type_name", label_name)) {
-    return false;
-  }
-  YAML::Node files_node = node["inputs"];
-
-  if (node["column_mappings"]) {
-    LOG(ERROR)
-        << "configuration for column_mappings is not supported currently";
-    return false;
-  }
-  if (files_node) {
-    if (!files_node.IsSequence()) {
-      LOG(ERROR) << "Expect field [inputs] for vertex [" << label_name
-                 << "] to be a list";
-      return false;
-    }
-    int num = files_node.size();
-    for (int i = 0; i < num; ++i) {
-      std::string file_format;
-      std::string file_path;
-      if (!get_scalar(files_node[i], "format", file_format)) {
-        return false;
-      }
-      if (file_format != "standard_csv") {
-        LOG(ERROR) << "file_format is not set properly, currenly only support "
-                      "standard_csv";
-        return false;
-      }
-      if (!get_scalar(files_node[i], "path", file_path)) {
-        LOG(ERROR) << "Field [path] is not set properly for vertex ["
-                   << label_name << "]";
-        return false;
-      }
-      if (!data_location.empty()) {
-        file_path = data_location + "/" + file_path;
-      }
-      if (!access_file(file_path)) {
-        LOG(ERROR) << "vertex file - " << file_path << " file not found...";
-      }
-      std::filesystem::path path(file_path);
-      files.emplace_back(label_name, std::filesystem::canonical(path));
-    }
-    return true;
-  } else {
-    return true;
-  }
-}
-
-static bool parse_vertices_files_schema(
-    YAML::Node node, const std::string& data_location,
-    std::vector<std::pair<std::string, std::string>>& files) {
-  if (!node.IsSequence()) {
-    LOG(FATAL) << "vertex is not set properly";
-    return false;
-  }
-  int num = node.size();
-  for (int i = 0; i < num; ++i) {
-    if (!parse_vertex_files(node[i], data_location, files)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-static bool parse_edge_files(
-    YAML::Node node, const std::string& data_location,
-    std::vector<std::tuple<std::string, std::string, std::string, int32_t,
-                           int32_t, std::string>>& files) {
-  if (!node["type_triplet"]) {
-    LOG(FATAL) << "edge [type_triplet] is not set properly";
-    return false;
-  }
-  auto triplet_node = node["type_triplet"];
-  std::string src_label, dst_label, edge_label;
-  if (!get_scalar(triplet_node, "edge", edge_label)) {
-    LOG(FATAL) << "Field [edge] is not set for edge [" << triplet_node << "]";
-    return false;
-  }
-  if (!get_scalar(triplet_node, "source_vertex", src_label)) {
-    LOG(FATAL) << "Field [source_vertex] is not set for edge [" << edge_label
-               << "]";
-    return false;
-  }
-  if (!get_scalar(triplet_node, "destination_vertex", dst_label)) {
-    LOG(FATAL) << "Field [destination_vertex] is not set for edge ["
-               << edge_label << "]";
-    return false;
-  }
-
-  // parse the vertex mapping. currently we only need one column to identify the
-  // vertex.
-  int32_t src_column = 0;
-  int32_t dst_column = 1;
-
-  if (!fetch_src_dst_column_mapping(node, "source_vertex_mappings",
-                                    src_column)) {
-    LOG(ERROR) << "Field [source_vertex_mappings] is not set for edge ["
-               << src_label << "->[" << edge_label << "]->" << dst_label << "]";
-    return false;
-  }
-  if (!fetch_src_dst_column_mapping(node, "destination_vertex_mappings",
-                                    dst_column)) {
-    LOG(ERROR) << "Field [destination_vertex_mappings] is not set for edge["
-               << src_label << "->[" << edge_label << "]->" << dst_label;
-    return false;
-  }
-
-  YAML::Node files_node = node["inputs"];
-  if (files_node) {
-    if (!files_node.IsSequence()) {
-      LOG(ERROR) << "files is not set properly";
-      return false;
-    }
-    int num = files_node.size();
-    for (int i = 0; i < num; ++i) {
-      std::string file_format;
-      std::string file_path;
-      if (!get_scalar(files_node[i], "format", file_format)) {
-        LOG(ERROR) << "Field [format] is not set for edge [" << edge_label
-                   << "]'s inputs";
-        return false;
-      }
-      if (file_format != "standard_csv") {
-        LOG(ERROR) << "Currently only support standard_csv, but got "
-                   << file_format << " for edge [" << edge_label
-                   << "]'s inputs";
-        return false;
-      }
-      if (!get_scalar(files_node[i], "path", file_path)) {
-        LOG(ERROR) << "Field [path] is not set for edge [" << edge_label
-                   << "]'s inputs";
-        return false;
-      }
-      if (!data_location.empty()) {
-        file_path = data_location + "/" + file_path;
-      }
-      if (!access_file(file_path)) {
-        LOG(ERROR) << "edge file - " << file_path << " file not found...";
-      }
-      std::filesystem::path path(file_path);
-      VLOG(10) << "src " << src_label << " dst " << dst_label << " edge "
-               << edge_label << " src_column " << src_column << " dst_column "
-               << dst_column << " path " << std::filesystem::canonical(path);
-      files.emplace_back(src_label, dst_label, edge_label, src_column,
-                         dst_column, std::filesystem::canonical(path));
-    }
-  } else {
-    LOG(FATAL) << "No edge files found for edge " << edge_label << "...";
-  }
-  return true;
-}
-
-static bool parse_edges_files_schema(
-    YAML::Node node, const std::string& data_location,
-    std::vector<std::tuple<std::string, std::string, std::string, int32_,
-                           t int32_, t std::string>>& files) {
-  if (!node.IsSequence()) {
-    LOG(ERROR) << "Field [edge_mappings] should be a list";
-    return false;
-  }
-  int num = node.size();
-  LOG(INFO) << " Try to parse " << num << "edge configuration";
-  for (int i = 0; i < num; ++i) {
-    if (!parse_edge_files(node[i], data_location, files)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-static bool parse_bulk_load_config_file(
-    const std::string& load_config, std::string& data_source,
-    std::string delimiter, std::string& method,
-    std::vector<std::pair<std::string, std::string>>& vertex_load_meta,
-    std::vector<std::tuple<std::string, std::string, std::string, int32_t,
-                           int32_t, std::string>>& edge_load_meta) {
-  YAML::Node root = YAML::LoadFile(load_config);
-  data_source = "file";
-  std::string data_location;
-  delimiter = "|";
-  if (root["loading_config"]) {
-    get_scalar(root["loading_config"], "data_source", data_source);
-    get_scalar(root["loading_config"], "data_location", data_location);
-    get_scalar(root["loading_config"], "method", method);
-    if (root["loading_config"]["meta_data"]) {
-      get_scalar(root["loading_config"]["meta_data"], "delimiter", delimiter);
-    }
-  }
-  if (data_location.empty()) {
-    LOG(WARNING) << "data_location is not set";
-  }
-  if (data_source != "file") {
-    LOG(ERROR) << "Only support [file] data source now";
-    return false;
-  }
-  LOG(INFO) << "data_source: " << data_source
-            << ", data_location: " << data_location << ", method: " << method
-            << ", delimiter: " << delimiter;
-
-  if (root["vertex_mappings"]) {
-    VLOG(10) << "vertex_mappings is set";
-    if (!parse_vertices_files_schema(root["vertex_mappings"], data_location,
-                                     vertex_load_meta)) {
-      return false;
-    }
-  }
-  if (root["edge_mappings"]) {
-    VLOG(10) << "edge_mappings is set";
-    if (!parse_edges_files_schema(root["edge_mappings"], data_location,
-                                  edge_load_meta)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 static bool parse_schema_config_file(const std::string& path, Schema& schema) {
   YAML::Node graph_node = YAML::LoadFile(path);
   if (!graph_node || !graph_node.IsMap()) {
     LOG(ERROR) << "graph is not set properly";
     return false;
   }
-  if (!expect_config(graph_node, "store_type", "mutable_csr")) {
+  if (!expect_config(graph_node, "store_type", std::string("mutable_csr"))) {
     return false;
   }
   auto schema_node = graph_node["schema"];
@@ -960,7 +652,7 @@ static bool parse_schema_config_file(const std::string& path, Schema& schema) {
       if (!std::filesystem::exists(f)) {
         LOG(ERROR) << "plugin - " << f << " file not found...";
       } else {
-        schema.plugin_list_.push_back(std::filesystem::canonical(f));
+        schema.EmplacePlugin(std::filesystem::canonical(f));
       }
     }
   }
@@ -968,9 +660,15 @@ static bool parse_schema_config_file(const std::string& path, Schema& schema) {
   return true;
 }
 
-const std::vector<std::string>& get_plugin_list() const { return plugin_list_; }
-
 }  // namespace config_parsing
+
+const std::vector<std::string>& Schema::GetPluginsList() const {
+  return plugin_list_;
+}
+
+void Schema::EmplacePlugin(const std::string& plugin) {
+  plugin_list_.emplace_back(plugin);
+}
 
 Schema Schema::LoadFromYaml(const std::string& schema_config) {
   Schema schema;

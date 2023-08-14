@@ -30,6 +30,7 @@
 #include "flex/engines/graph_db/database/single_vertex_insert_transaction.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
 #include "flex/engines/graph_db/database/version_manager.h"
+#include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 
 namespace gs {

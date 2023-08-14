@@ -14,6 +14,7 @@
  */
 
 #include "flex/engines/hqps_db/database/mutable_csr_interface.h"
+#include "flex/storages/rt_mutable_graph/loading_config.h"
 
 #include <yaml-cpp/yaml.h>
 
@@ -35,9 +36,10 @@ int main(int argc, char** argv) {
   double t0 = -grape::GetCurrentTime();
   auto& db = gs::GraphDB::get();
 
-  auto ret = gs::Schema::LoadFromYaml(schema_file, bulk_load_config_path);
-  db.Init(std::get<0>(ret), std::get<1>(ret), std::get<2>(ret),
-          std::get<3>(ret), std::get<4>(ret), data_path, 1);
+  auto schema = gs::Schema::LoadFromYaml(schema_file);
+  auto bulk_load_config =
+      gs::LoadingConfig::ParseFromYaml(bulk_load_config_path);
+  db.Init(schema, bulk_load_config, data_path, 1);
 
   t0 += grape::GetCurrentTime();
   auto& graph = db.graph();
