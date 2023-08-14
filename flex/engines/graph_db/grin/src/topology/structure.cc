@@ -43,11 +43,11 @@ GRIN_GRAPH grin_get_graph_from_storage(const char* uri) {
     return GRIN_NULL_GRAPH;
   }
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-  auto loading_config =
-      gs::LoadingConfig::LoadFromYaml(schema, bulk_load_config_path);
+  auto loading_config = gs::LoadingConfig::ParseFromYaml(bulk_load_config_path);
 
   GRIN_GRAPH_T* g = new GRIN_GRAPH_T();
-  g->g.Init(schema, loading_config);
+  g->g.Init(schema, loading_config.vertex_loading_config_,
+            loading_config.edge_loading_config_);
   init_cache(g);
   return g;
 }

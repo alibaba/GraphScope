@@ -59,7 +59,7 @@ add_custom_target(grin_clformat
 
 file(GLOB SOURCES "src/*.cc" "src/topology/*.cc" "src/property/*.cc" "src/index/*.cc" "src/common/*.cc" "../../../utils/property/*.cc" "../../../storages/rt_mutable_graph/*.cc")
 add_library(flex_grin SHARED ${SOURCES})
-target_link_libraries(flex_grin ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS}  ${YAML_CPP_LIBRARIES})
+target_link_libraries(flex_grin ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS}  ${YAML_CPP_LIBRARIES} flex_utils)
 
 
 add_executable(run_grin_test test/test.c)
