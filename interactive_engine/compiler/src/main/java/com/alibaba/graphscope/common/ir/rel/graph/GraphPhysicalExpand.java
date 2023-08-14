@@ -46,6 +46,8 @@ public class GraphPhysicalExpand extends SingleRel {
     private final String aliasName;
     private final int aliasId;
 
+    private final boolean optional;
+
     protected GraphPhysicalExpand(
             RelOptCluster cluster,
             List<RelHint> hints,
@@ -53,7 +55,8 @@ public class GraphPhysicalExpand extends SingleRel {
             GraphLogicalExpand fusedExpand,
             GraphLogicalGetV fusedGetV,
             GraphOpt.PhysicalExpandOpt physicalOpt,
-            String aliasName) {
+            String aliasName,
+            boolean optional) {
         super(cluster, RelTraitSet.createEmpty(), input);
         this.physicalOpt = physicalOpt;
         this.fusedExpand = fusedExpand;
@@ -62,6 +65,7 @@ public class GraphPhysicalExpand extends SingleRel {
                 AliasInference.inferDefault(
                         aliasName, AliasInference.getUniqueAliasList(input, true));
         this.aliasId = ((GraphOptCluster) cluster).getIdGenerator().generate(this.aliasName);
+        this.optional = optional;
     }
 
     public static GraphPhysicalExpand create(
@@ -71,31 +75,16 @@ public class GraphPhysicalExpand extends SingleRel {
             GraphLogicalExpand fusedExpand,
             GraphLogicalGetV fusedGetV,
             GraphOpt.PhysicalExpandOpt physicalOpt,
-            String aliasName) {
-        GraphLogicalGetV newGetV = null;
-        if (fusedGetV != null) {
-            // if fused to output vertices, build a new getV if a new aliasName is given, to make
-            // sure the derived row type is correct (which is derived by getV)
-            if (fusedGetV.getAliasName().equals(aliasName)) {
-                newGetV = fusedGetV;
-            } else {
-                newGetV =
-                        GraphLogicalGetV.create(
-                                (GraphOptCluster) fusedGetV.getCluster(),
-                                fusedGetV.getHints(),
-                                input,
-                                fusedGetV.getOpt(),
-                                fusedGetV.getTableConfig(),
-                                aliasName,
-                                fusedGetV.getStartAlias());
-                if (ObjectUtils.isNotEmpty(fusedGetV.getFilters())) {
-                    // should not have filters, as it would built as a new PhysicalGetV
-                    newGetV.setFilters(fusedGetV.getFilters());
-                }
-            }
-        }
+            String alias) {
         return new GraphPhysicalExpand(
-                cluster, hints, input, fusedExpand, newGetV, physicalOpt, aliasName);
+                cluster,
+                hints,
+                input,
+                fusedExpand,
+                fusedGetV,
+                physicalOpt,
+                alias,
+                fusedExpand.isOptional());
     }
 
     public GraphOpt.PhysicalExpandOpt getPhysicalOpt() {
@@ -122,11 +111,15 @@ public class GraphPhysicalExpand extends SingleRel {
         return fusedExpand.getFilters();
     }
 
+    public boolean isOptional() {
+        return optional;
+    }
+
     @Override
     public RelDataType deriveRowType() {
         switch (physicalOpt) {
             case EDGE:
-                return fusedExpand.getRowType();
+                return fusedExpand.deriveRowType();
             case DEGREE:
                 {
                     RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
@@ -139,7 +132,7 @@ public class GraphPhysicalExpand extends SingleRel {
                 }
             case VERTEX:
             default:
-                return fusedGetV.getRowType();
+                return fusedGetV.deriveRowType();
         }
     }
 
@@ -162,7 +155,8 @@ public class GraphPhysicalExpand extends SingleRel {
                         fusedExpand.getFilters(),
                         !ObjectUtils.isEmpty(fusedExpand.getFilters()))
                 .item("opt", fusedExpand.getOpt())
-                .item("physicalOpt", getPhysicalOpt());
+                .item("physicalOpt", getPhysicalOpt())
+                .itemIf("optional", optional, optional);
     }
 
     @Override

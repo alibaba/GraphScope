@@ -1,0 +1,420 @@
+name: ldbc_snb
+store_type: mutable_csr
+stored_procedures:
+  directory: /workspaces/GraphScope/flex/interactive/examples/ldbc/plugins
+  enable_lists:
+    - libic1.so
+    - libic2.so
+    - libic3.so
+    - libic4.so
+    - libic5.so
+    - libic6.so
+    - libic7.so
+    - libic8.so
+    - libic9.so
+    - libic10.so
+    - libic11.so
+    - libic12.so
+    - libic13.so
+    - libic14.so
+    - libis1.so
+    - libis2.so
+    - libis3.so
+    - libis4.so
+    - libis5.so
+    - libis6.so
+    - libis7.so
+    - libins1.so
+    - libins2.so
+    - libins3.so
+    - libins4.so
+    - libins5.so
+    - libins6.so
+    - libins7.so
+    - libins8.so
+schema:
+  vertex_types:
+    - type_id: 0
+      type_name: PLACE
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_id: 1
+          property_name: name
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 2
+          property_name: url
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 3
+          property_name: type
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+    - type_id: 1
+      type_name: PERSON
+      properties:
+        - property_id: 0 
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_id: 1
+          property_name: firstName
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 2
+          property_name: lastName
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 3
+          property_name: gender
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 4
+          property_name: birthday
+          property_type:
+            primitive_type: DT_DATE32
+        - property_id: 5
+          property_name: creationDate
+          property_type:
+            primitive_type: DT_DATE32
+        - property_id: 6
+          property_name: locationIP
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 7
+          property_name: browserUsed
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 8
+          property_name: language
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 9
+          property_name: email
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+    - type_id: 2
+      type_name: COMMENT
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_id: 1
+          property_name: creationDate
+          property_type:
+            primitive_type: DT_DATE32
+        - property_id: 2
+          property_name: locationIP
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 3
+          property_name: browserUsed
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 4
+          property_name: content
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 5
+          property_name: length
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+      primary_keys:
+        - id
+    - type_id: 3
+      type_name: POST
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_id: 1
+          property_name: imageFile
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 2
+          property_name: creationDate
+          property_type:
+            primitive_type: DT_DATE32
+        - property_id: 3
+          property_name: locationIP
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 4
+          property_name: browserUsed
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 5
+          property_name: language
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 6
+          property_name: content
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 7
+          property_name: length
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+      primary_keys:
+        - id
+    - type_id: 4
+      type_name: FORUM
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_id: 1
+          property_name: title
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 2
+          property_name: creationDate
+          property_type:
+            primitive_type: DT_DATE32
+      primary_keys:
+        - id
+    - type_id: 5
+      type_name: ORGANISATION
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_id: 1
+          property_name: type
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 2
+          property_name: name
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 3
+          property_name: url
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+    - type_id: 6
+      type_name: TAGCLASS
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_id: 1
+          property_name: name
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 2
+          property_name: url
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+    - type_id: 7
+      type_name: TAG
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_id: 1
+          property_name: name
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 2
+          property_name: url
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+  edge_types:
+    - type_id: 0
+      type_name: HASCREATOR
+      vertex_type_pair_relations:
+        - source_vertex: COMMENT
+          destination_vertex: PERSON
+          relation: MANY_TO_ONE
+          x_csr_params:
+            oe_mutability: IMMUTABLE 
+            sort_on_compaction: TRUE
+        - source_vertex: POST
+          destination_vertex: PERSON
+          relation: MANY_TO_ONE
+          x_csr_params:
+            oe_mutability: IMMUTABLE 
+            sort_on_compaction: TRUE
+      properties:
+        - property_id: 0
+          property_name: creationDate 
+          property_type:
+            primitive_type: DT_DATE32
+    - type_id: 1
+      type_name: HASTAG
+      vertex_type_pair_relations:
+        - source_vertex: POST
+          destination_vertex: TAG
+          relation: MANY_TO_MANY
+    - type_id: 2
+      type_name: REPLYOF
+      vertex_type_pair_relations:
+        - source_vertex: COMMENT
+          destination_vertex: COMMENT
+          relation: MANY_TO_ONE
+          x_csr_params:
+            oe_mutability: IMMUTABLE 
+        - source_vertex: COMMENT
+          destination_vertex: POST
+          relation: MANY_TO_ONE
+          x_csr_params:
+            oe_mutability: IMMUTABLE 
+    - type_id: 3
+      type_name: CONTAINEROF
+      vertex_type_pair_relations:
+        - source_vertex: FORUM
+          destination_vertex: POST
+          relation: ONE_TO_MANY
+          x_csr_params:
+            ie_mutability: IMMUTABLE 
+            edge_storage_strategy: ONLY_IN
+    - type_id: 4
+      type_name: HASMEMBER
+      vertex_type_pair_relations:
+        - source_vertex: FORUM
+          destination_vertex: PERSON
+          relation: MANY_TO_MANY
+          x_csr_params:
+            edge_storage_strategy: ONLY_IN
+            sort_on_compaction: TRUE
+      properties:
+        - property_id: 0
+          property_name: joinDate
+          property_type:
+            primitive_type: DT_DATE32
+    - type_id: 5
+      type_name: HASMODERATOR
+      vertex_type_pair_relations:
+        - source_vertex: FORUM
+          destination_vertex: PERSON
+          relation: MANY_TO_ONE
+          x_csr_params:
+            oe_mutability: IMMUTABLE 
+            edge_storage_strategy: ONLY_OUT
+    - type_id: 6
+      type_name: HASINTEREST
+      vertex_type_pair_relations:
+        - source_vertex: PERSON
+          destination_vertex: TAG
+          relation: MANY_TO_MANY
+          x_csr_params:
+            edge_storage_strategy: ONLY_OUT
+    - type_id: 7
+      type_name: ISLOCATEDIN
+      vertex_type_pair_relations:
+        - source_vertex: COMMENT
+          destination_vertex: PLACE
+          relation: MANY_TO_ONE
+          x_csr_params:
+            oe_mutability: IMMUTABLE 
+        - source_vertex: PERSON
+          destination_vertex: PLACE
+          relation: MANY_TO_ONE
+          x_csr_params:
+            oe_mutability: IMMUTABLE 
+        - source_vertex: POST
+          destination_vertex: PLACE
+          relation: MANY_TO_ONE
+          x_csr_params:
+            oe_mutability: IMMUTABLE 
+        - source_vertex: ORGANISATION
+          destination_vertex: PLACE
+          relation: MANY_TO_ONE
+          x_csr_params:
+            oe_mutability: IMMUTABLE 
+    - type_id: 8
+      type_name: KNOWS
+      vertex_type_pair_relations:
+        - source_vertex: PERSON
+          destination_vertex: PERSON
+          relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: creationDate
+          property_type:
+            primitive_type: DT_DATE32
+    - type_id: 9
+      type_name: LIKES
+      vertex_type_pair_relations:
+        - source_vertex: PERSON
+          destination_vertex: COMMENT
+          relation: MANY_TO_MANY
+          x_csr_params:
+            edge_storage_strategy: ONLY_IN
+        - source_vertex: PERSON
+          destination_vertex: POST
+          relation: MANY_TO_MANY
+          x_csr_params:
+            edge_storage_strategy: ONLY_IN
+      properties:
+        - property_id: 0
+          property_name: creationDate
+          property_type:
+            primitive_type: DT_DATE32
+    - type_id: 10
+      type_name: WORKAT
+      vertex_type_pair_relations:
+        - source_vertex: PERSON
+          destination_vertex: ORGANISATION
+          relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: workFrom
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+    - type_id: 11
+      type_name: ISPARTOF
+      vertex_type_pair_relations:
+        - source_vertex: PLACE
+          destination_vertex: PLACE
+          relation: MANY_TO_ONE
+          x_csr_params:
+            oe_mutability: IMMUTABLE 
+    - type_id: 12
+      type_name: HASTYPE
+      vertex_type_pair_relations:
+        - source_vertex: TAG
+          destination_vertex: TAGCLASS
+          relation: MANY_TO_ONE
+          x_csr_params:
+            oe_mutability: IMMUTABLE 
+    - type_id: 13
+      type_name: ISSUBCLASSOF
+      vertex_type_pair_relations:
+        - source_vertex: TAGCLASS
+          destination_vertex: TAGCLASS
+          relation: MANY_TO_ONE
+          x_csr_params:
+            oe_mutability: IMMUTABLE 
+    - type_id: 14
+      type_name: STUDYAT
+      vertex_type_pair_relations:
+        - source_vertex: PERSON
+          destination_vertex: ORGANISATION
+          relation: MANY_TO_MANY
+          x_csr_params:
+            edge_storage_strategy: ONLY_OUT
+      properties:
+        - property_id: 0
+          property_name: classYear
+          property_type:
+            primitive_type: DT_SIGNED_INT32

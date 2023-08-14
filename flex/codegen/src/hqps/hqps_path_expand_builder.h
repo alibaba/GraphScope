@@ -387,10 +387,20 @@ static std::string BuildPathExpandVOp(
 
   // CHECK(!path_expand_pb.has_alias());
   builder.out_tag(out_tag_id);  // out_tag_id overrides alias
+  LOG(INFO) << "path expand op: " << path_expand_pb.DebugString()
+            << ", has get_v: "
+            << std::to_string(path_expand_pb.base().has_get_v());
+
+  physical::GetV get_v_pb;
+  if (path_expand_pb.base().has_get_v()) {
+    get_v_pb = path_expand_pb.base().get_v();
+  } else {
+    VLOG(10) << "get_v seems fused into edge_expand_base";
+    get_v_pb.set_opt(physical::GetV_VOpt_OTHER);
+  }
 
   return builder
-      .path_expand_opt(path_expand_pb.base().edge_expand(),
-                       path_expand_pb.base().get_v(),
+      .path_expand_opt(path_expand_pb.base().edge_expand(), get_v_pb,
                        meta_data)  // get_v_opt must be called first to
                                    // provide dst_label ids.
       .hop_range(path_expand_pb.hop_range())
@@ -422,9 +432,16 @@ static std::string BuildPathExpandPathOp(
     builder.out_tag(-1);
   }
 
+  physical::GetV get_v_pb;
+  if (path_expand_pb.base().has_get_v()) {
+    get_v_pb = path_expand_pb.base().get_v();
+  } else {
+    VLOG(10) << "get_v seems fused into edge_expand_base";
+    get_v_pb.set_opt(physical::GetV_VOpt_OTHER);
+  }
+
   return builder
-      .path_expand_opt(path_expand_pb.base().edge_expand(),
-                       path_expand_pb.base().get_v(),
+      .path_expand_opt(path_expand_pb.base().edge_expand(), get_v_pb,
                        meta_data)  // get_v_opt must be called first to
                                    // provide dst_label ids.
       .hop_range(path_expand_pb.hop_range())

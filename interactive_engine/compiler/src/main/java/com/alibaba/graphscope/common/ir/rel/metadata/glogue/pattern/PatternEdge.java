@@ -52,6 +52,12 @@ public abstract class PatternEdge {
         return isomorphismChecker;
     }
 
+
+    public ElementDetails getDetails() {
+        return elementDetails;
+    }
+
+
     @Override
     public String toString() {
         return getSrcVertex().getId()

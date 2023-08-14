@@ -354,7 +354,12 @@ enum JoinKind {
   LeftOuterJoin = 3,
 };
 
-enum Direction { Out = 0, In = 1, Both = 2 };
+enum Direction {
+  Out = 0,
+  In = 1,
+  Both = 2,
+  Unknown = 3,
+};
 enum VOpt {
   Start = 0,   // The start vertex of current expanded edge.
   End = 1,     // the ending vertex of this expanding.
@@ -395,6 +400,8 @@ struct DateTimeExtractor<Interval::YEAR> {
     gmtime_r((time_t*) (&micro_second), &tm);
     return tm.tm_year + 1900;
   }
+
+  static int32_t extract(const Day& day) { return day.year(); }
 };
 
 template <>
@@ -405,6 +412,8 @@ struct DateTimeExtractor<Interval::MONTH> {
     gmtime_r((time_t*) (&micro_second), &tm);
     return tm.tm_mon + 1;
   }
+
+  static int32_t extract(const Day& day) { return day.month(); }
 };
 
 template <>
@@ -415,6 +424,8 @@ struct DateTimeExtractor<Interval::DAY> {
     gmtime_r((time_t*) (&micro_second), &tm);
     return tm.tm_mday;
   }
+
+  static int32_t extract(const Day& day) { return day.day(); }
 };
 
 template <>
@@ -425,6 +436,8 @@ struct DateTimeExtractor<Interval::HOUR> {
     gmtime_r((time_t*) (&micro_second), &tm);
     return tm.tm_hour;
   }
+
+  static int32_t extract(const Day& day) { return day.hour(); }
 };
 
 template <>

@@ -172,12 +172,25 @@ struct __attribute__((packed)) Date {
 
   std::string to_string() const;
 
-  bool operator<(const Date& rhs) const {
-    return milli_second < rhs.milli_second;
-  }
-
   int64_t milli_second;
 };
+
+inline bool operator<(const Date& lhs, const Date& rhs) {
+  return lhs.milli_second < rhs.milli_second;
+}
+inline bool operator>(const Date& lhs, const Date& rhs) {
+  return lhs.milli_second > rhs.milli_second;
+}
+inline bool operator==(const Date& lhs, const Date& rhs) {
+  return lhs.milli_second == rhs.milli_second;
+}
+
+inline bool operator<=(const Date& lhs, const Date& rhs) {
+  return lhs.milli_second <= rhs.milli_second;
+}
+inline bool operator>=(const Date& lhs, const Date& rhs) {
+  return lhs.milli_second >= rhs.milli_second;
+}
 
 struct DayValue {
   uint32_t year : 18;
@@ -189,6 +202,8 @@ struct DayValue {
 struct Day {
   Day() = default;
   ~Day() = default;
+
+  Day(uint32_t year, uint32_t month, uint32_t day, uint32_t hour);
 
   Day(int64_t ts);
 

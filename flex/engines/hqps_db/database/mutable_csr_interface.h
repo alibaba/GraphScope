@@ -665,12 +665,13 @@ class MutableCSRInterface {
                                                    edge_label_id);
       auto oe_csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
                                                    edge_label_id);
-      auto size = 0;
+      size_t size = 0;
       for (size_t i = 0; i < vids.size(); ++i) {
         auto v = vids[i];
         size += ie_csr->edge_iter(v)->size();
         size += oe_csr->edge_iter(v)->size();
       }
+      LOG(INFO) << "size: " << size;
       ret_v.reserve(size);
       ret_offset.reserve(vids.size() + 1);
       ret_offset.emplace_back(0);
@@ -836,6 +837,8 @@ class MutableCSRInterface {
         column = std::dynamic_pointer_cast<TypedRefColumn<T>>(
             create_ref_column(ptr));
       } else {
+        LOG(WARNING) << "Property " << prop_name << " not found in label "
+                     << std::to_string(label_id);
         return nullptr;
       }
     }
@@ -889,6 +892,9 @@ class MutableCSRInterface {
     } else if (type == PropertyType::kFloat) {
       return std::make_shared<TypedRefColumn<float>>(
           *std::dynamic_pointer_cast<TypedColumn<float>>(column));
+    } else if (type == PropertyType::kDay) {
+      return std::make_shared<TypedRefColumn<Day>>(
+          *std::dynamic_pointer_cast<TypedColumn<Day>>(column));
     } else {
       LOG(FATAL) << "unexpected type to create column, "
                  << static_cast<int>(type.type_enum);

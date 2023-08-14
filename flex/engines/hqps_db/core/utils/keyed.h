@@ -20,6 +20,7 @@
 #include "flex/engines/hqps_db/database/mutable_csr_interface.h"
 #include "flex/engines/hqps_db/structures/collection.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/adj_edge_set.h"
+#include "flex/engines/hqps_db/structures/multi_edge_set/flat_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/untyped_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/general_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/keyed_row_vertex_set.h"
@@ -168,24 +169,15 @@ struct KeyedT<KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, SET_T...>,
 };
 
 // group by vertex set' id, for generate vertex set.
-template <typename VID_T, typename LabelT, typename... T>
-struct KeyedT<GeneralVertexSet<VID_T, LabelT, T...>,
-              PropertySelector<grape::EmptyType>> {
-  using keyed_builder_t = GeneralVertexSetKeyedBuilder<VID_T, LabelT, T...>;
-  using keyed_set_t = GeneralVertexSet<VID_T, LabelT, T...>;
-  using unkeyed_builder_t =
-      typename GeneralVertexSet<LabelT, VID_T, LabelT, T...>::builder_t;
-  static keyed_builder_t create_keyed_builder(
-      const GeneralVertexSet<VID_T, LabelT, T...>& set,
-      const PropertySelector<grape::EmptyType>& selector) {
-    return keyed_builder_t(set);
-  }
-  static unkeyed_builder_t create_unkeyedkeyed_builder(
-      const GeneralVertexSet<VID_T, LabelT, T...>& set,
-      const PropertySelector<grape::EmptyType>& selector) {
-    return set.CreateBuilder();
-  }
-};
+// template <typename VID_T, typename LabelT, size_t N>
+// struct KeyedT<GeneralVertexSet<VID_T, LabelT, N>,
+//               PropertySelector<grape::EmptyType>> {
+//   using keyed_set_t = KeyedRowVertexSet<LabelT, VID_T, VID_T,
+//   grape::EmptyType>;
+//   // // The builder type.
+//   using builder_t =
+//       KeyedRowVertexSetBuilder<LabelT, VID_T, VID_T, grape::EmptyType>;
+// };
 
 template <typename VID_T, typename LabelT, typename... T>
 struct KeyedT<GeneralVertexSet<VID_T, LabelT, T...>,
@@ -218,6 +210,26 @@ struct KeyedT<Collection<T>, PropertySelector<grape::EmptyType>> {
     return unkeyed_builder_t();
   }
 };
+
+// template <typename VID_T, typename LabelT, typename EDATA_T>
+// struct KeyedT<SingleLabelEdgeSet<VID_T, LabelT, EDATA_T>,
+//                                  PropertySelector<grape::EmptyType>> {
+//   using keyed_set_t = Collection<T>;
+//   // // The builder type.
+//   using keyed_builder_t = KeyedCollectionBuilder<T>;
+//   using unkeyed_builder_t = CollectionBuilder<T>;
+
+//   static keyed_builder_t create_keyed_builder(
+//       const Collection<T>& set,
+//       const PropertySelector<grape::EmptyType>& selector) {
+//     return keyed_builder_t(set);
+//   }
+//   static unkeyed_builder_t create_unkeyed_builder(
+//       const Collection<T>& set,
+//       const PropertySelector<grape::EmptyType>& selector) {
+//     return unkeyed_builder_t();
+//   }
+// };
 
 // when keyed with aggregation function, (which we currently only support
 // collection)

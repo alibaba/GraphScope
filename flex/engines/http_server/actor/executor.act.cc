@@ -43,7 +43,7 @@ seastar::future<query_result> executor::run_graph_db_query(
   if (!ret.ok()) {
     LOG(ERROR) << "Eval failed: " << ret.status().error_message();
     return seastar::make_exception_future<query_result>(
-      "Query failed: " + ret.status().error_message());
+        "Query failed: " + ret.status().error_message());
   }
   auto result = ret.value();
   seastar::sstring content(result.data(), result.size());

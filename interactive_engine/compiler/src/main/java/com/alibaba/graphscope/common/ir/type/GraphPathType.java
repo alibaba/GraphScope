@@ -26,7 +26,11 @@ import java.util.Objects;
 
 public class GraphPathType extends ArraySqlType {
     public GraphPathType(ElementType elementType) {
-        super(elementType, false);
+        this(elementType, false);
+    }
+
+    public GraphPathType(ElementType elementType, boolean nullable) {
+        super(elementType, nullable);
     }
 
     @Override

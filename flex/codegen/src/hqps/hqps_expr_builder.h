@@ -358,7 +358,7 @@ class ExprBuilder {
       // and also set a expr node for it. which is unique.
       make_var_name_unique(param_const);
       func_call_vars_.push_back(param_const);
-      expr_nodes_.emplace_back(param_const.var_name);
+      expr_nodes_.emplace_back(param_const.expr_var_name);
 
       // expr_nodes_.emplace_back(param_const.var_name);
       // convert a variable to a tag property,
@@ -389,7 +389,7 @@ class ExprBuilder {
       VLOG(10) << "receive param const: " << param_const_pb.DebugString();
       make_var_name_unique(param_const);
       construct_params_.push_back(param_const);
-      expr_nodes_.emplace_back(param_const.var_name + "_");
+      expr_nodes_.emplace_back(param_const.expr_var_name);
       break;
     }
 
@@ -534,7 +534,7 @@ class ExprBuilder {
     std::stringstream ss;
     for (size_t i = 0; i < construct_params_.size(); ++i) {
       ss << data_type_2_string(construct_params_[i].type) << " "
-         << construct_params_[i].var_name;
+         << construct_params_[i].expr_var_name;
       if (i + 1 != construct_params_.size()) {
         ss << ",";
       }
@@ -548,8 +548,8 @@ class ExprBuilder {
       ss << ":";
     }
     for (size_t i = 0; i < construct_params_.size(); ++i) {
-      ss << construct_params_[i].var_name << "_"
-         << "(" << construct_params_[i].var_name << ")";
+      ss << construct_params_[i].expr_var_name << "("
+         << construct_params_[i].expr_var_name << ")";
       if (i != construct_params_.size() - 1) {
         ss << ",";
       }
@@ -578,7 +578,7 @@ class ExprBuilder {
     std::stringstream ss;
     for (size_t i = 0; i < func_call_vars_.size(); ++i) {
       ss << data_type_2_string(func_call_vars_[i].type) << " "
-         << func_call_vars_[i].var_name;
+         << func_call_vars_[i].expr_var_name;
       if (i != func_call_vars_.size() - 1) {
         ss << ",";
       }
@@ -600,7 +600,7 @@ class ExprBuilder {
     std::stringstream ss;
     for (size_t i = 0; i < construct_params_.size(); ++i) {
       ss << data_type_2_string(construct_params_[i].type) << " "
-         << construct_params_[i].var_name << "_;" << std::endl;
+         << construct_params_[i].expr_var_name << ";" << std::endl;
     }
     return ss.str();
   }
@@ -608,23 +608,23 @@ class ExprBuilder {
   void make_var_name_unique(codegen::ParamConst& param_const) {
     std::unordered_set<std::string> var_names;
     for (auto& param : construct_params_) {
-      auto res = var_names.insert(param.var_name);
-      CHECK(res.second) << "var name: " << param.var_name
+      auto res = var_names.insert(param.expr_var_name);
+      CHECK(res.second) << "var name: " << param.expr_var_name
                         << " already exists, illegal state";
     }
     for (auto& param : func_call_vars_) {
-      auto res = var_names.insert(param.var_name);
-      CHECK(res.second) << "var name: " << param.var_name
+      auto res = var_names.insert(param.expr_var_name);
+      CHECK(res.second) << "var name: " << param.expr_var_name
                         << " already exists, illegal state";
     }
-    auto cur_var_name = param_const.var_name;
+    auto cur_var_name = param_const.expr_var_name;
     int i = 0;
     while (var_names.find(cur_var_name) != var_names.end()) {
-      cur_var_name = param_const.var_name + "_" + std::to_string(i);
+      cur_var_name = param_const.expr_var_name + "_" + std::to_string(i);
       ++i;
     }
-    param_const.var_name = cur_var_name;
-    VLOG(10) << "make var name unique: " << param_const.var_name;
+    param_const.expr_var_name = cur_var_name;
+    VLOG(10) << "make var name unique: " << param_const.expr_var_name;
   }
 
   // this corresponding to the input params.
