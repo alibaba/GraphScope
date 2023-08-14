@@ -637,47 +637,48 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     })?;
                 }
                 OpKind::Sample(sample) => {
-                    if sample.sample_weight.is_some() {
-                        Err(FnGenError::from(ParsePbError::ParseError(
-                            "sample_weight is not supported yet".to_string(),
-                        )))?;
-                    } else {
-                        if let Some(sample_type) = &sample.sample_type {
-                            match &sample_type.inner {
-                                // the case of Coin
-                                Some(algebra_pb::sample::sample_type::Inner::SampleByRatio(_)) => {
-                                    let func = self.udf_gen.gen_coin(sample)?;
-                                    stream = stream.filter(move |input| func.test(input))?;
-                                }
-                                // the case of Sample
-                                Some(algebra_pb::sample::sample_type::Inner::SampleByNum(_)) => {
-                                    let partial_sample_accum = self.udf_gen.gen_sample(sample)?;
-                                    let sample_accum = partial_sample_accum.clone();
-                                    stream = stream
-                                        .fold_partition(partial_sample_accum, move || {
-                                            move |mut sample_accum, next| {
-                                                sample_accum.accum(next)?;
-                                                Ok(sample_accum)
-                                            }
-                                        })?
-                                        .unfold(move |mut sample_accum| Ok(sample_accum.finalize()?))?
-                                        .fold(sample_accum, move || {
-                                            move |mut sample_accum, next| {
-                                                sample_accum.accum(next)?;
-                                                Ok(sample_accum)
-                                            }
-                                        })?
-                                        .unfold(move |mut sample_accum| Ok(sample_accum.finalize()?))?
-                                }
-                                None => Err(FnGenError::from(ParsePbError::EmptyFieldError(
-                                    "pb::Sample::sample_type.inner".to_string(),
-                                )))?,
-                            }
-                        } else {
-                            Err(FnGenError::from(ParsePbError::EmptyFieldError(
-                                "pb::Sample::sample_type".to_string(),
+                    if let Some(sample_weight) = &sample.sample_weight {
+                        if sample_weight.tag.is_some() || sample_weight.property.is_some() {
+                            return Err(FnGenError::from(ParsePbError::ParseError(
+                                "sample_weight is not supported yet".to_string(),
                             )))?;
                         }
+                    }
+                    if let Some(sample_type) = &sample.sample_type {
+                        match &sample_type.inner {
+                            // the case of Coin
+                            Some(algebra_pb::sample::sample_type::Inner::SampleByRatio(_)) => {
+                                let func = self.udf_gen.gen_coin(sample)?;
+                                stream = stream.filter(move |input| func.test(input))?;
+                            }
+                            // the case of Sample
+                            Some(algebra_pb::sample::sample_type::Inner::SampleByNum(_)) => {
+                                let partial_sample_accum = self.udf_gen.gen_sample(sample)?;
+                                let sample_accum = partial_sample_accum.clone();
+                                stream = stream
+                                    .fold_partition(partial_sample_accum, move || {
+                                        move |mut sample_accum, next| {
+                                            sample_accum.accum(next)?;
+                                            Ok(sample_accum)
+                                        }
+                                    })?
+                                    .unfold(move |mut sample_accum| Ok(sample_accum.finalize()?))?
+                                    .fold(sample_accum, move || {
+                                        move |mut sample_accum, next| {
+                                            sample_accum.accum(next)?;
+                                            Ok(sample_accum)
+                                        }
+                                    })?
+                                    .unfold(move |mut sample_accum| Ok(sample_accum.finalize()?))?
+                            }
+                            None => Err(FnGenError::from(ParsePbError::EmptyFieldError(
+                                "pb::Sample::sample_type.inner".to_string(),
+                            )))?,
+                        }
+                    } else {
+                        Err(FnGenError::from(ParsePbError::EmptyFieldError(
+                            "pb::Sample::sample_type".to_string(),
+                        )))?;
                     }
                 }
                 OpKind::Root(_) => {
