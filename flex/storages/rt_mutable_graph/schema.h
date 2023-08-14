@@ -16,7 +16,6 @@
 #ifndef GRAPHSCOPE_FRAGMENT_SCHEMA_H_
 #define GRAPHSCOPE_FRAGMENT_SCHEMA_H_
 
-#include "flex/storages/rt_mutable_graph/load_config.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/id_indexer.h"
 #include "flex/utils/property/table.h"
@@ -108,16 +107,11 @@ class Schema {
 
   void Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader);
 
-  // Returns:
-  //  std::tuple<Schema, vectorOfVertexLoadingMeta, vectorOfEdgeLoadingMeta,
-  //  Plugin List, LoadingConfig>
-  static std::tuple<Schema, std::vector<VertexLoadingMeta>,
-                    std::vector<EdgeLoadingMeta>, std::vector<std::string>,
-                    LoadingConfig>
-  LoadFromYaml(const std::string& schema_config,
-               const std::string& load_config);
+  static Schema LoadFromYaml(const std::string& schema_config);
 
   bool Equals(const Schema& other) const;
+
+  const std::vector<std::string>& get_plugin_list() const;
 
  private:
   label_t vertex_label_to_index(const std::string& label);
@@ -137,6 +131,7 @@ class Schema {
   std::map<uint32_t, EdgeStrategy> oe_strategy_;
   std::map<uint32_t, EdgeStrategy> ie_strategy_;
   std::vector<size_t> max_vnum_;
+  std::vector<std::string> plugin_list_;
 };
 
 }  // namespace gs

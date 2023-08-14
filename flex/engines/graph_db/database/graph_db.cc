@@ -48,12 +48,10 @@ GraphDB& GraphDB::get() {
   return db;
 }
 
-void GraphDB::Init(const Schema& schema,
-                   const std::vector<VertexLoadingMeta>& vertex_load_meta,
-                   const std::vector<EdgeLoadingMeta>& edge_load_meta,
-                   const std::vector<std::string>& plugins,
-                   const LoadingConfig& load_config,
+void GraphDB::Init(const Schema& schema, const LoadingConfig& load_config,
                    const std::string& data_dir, int thread_num) {
+  auto& vertex_load_meta = load_config.vertex_loading_config_;
+  auto& edge_load_meta = load_config.edge_loading_config_;
   std::filesystem::path data_dir_path(data_dir);
   if (!std::filesystem::exists(data_dir_path)) {
     std::filesystem::create_directory(data_dir_path);
@@ -108,7 +106,7 @@ void GraphDB::Init(const Schema& schema,
     contexts_[i].logger.open(wal_dir.string(), i);
   }
 
-  initApps(plugins);
+  initApps(schema.get_plugin_list());
 }
 
 ReadTransaction GraphDB::GetReadTransaction() {
