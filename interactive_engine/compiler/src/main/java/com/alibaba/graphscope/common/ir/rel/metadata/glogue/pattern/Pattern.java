@@ -1,21 +1,13 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 
-import java.lang.reflect.Array;
-import java.net.URISyntaxException;
-import java.rmi.server.ExportException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.kerby.util.SysUtil;
-import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DirectedPseudograph;
-import org.jgrapht.graph.Multigraph;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendStep;
@@ -257,7 +249,7 @@ public class Pattern {
         return this.patternGraph.hashCode();
     }
 
-    public static void main(String[] args) throws URISyntaxException, ExportException {
+    public static void main(String[] args) {
         EdgeTypeId e = new EdgeTypeId(11, 22, 1122);
 
         Pattern p = new Pattern();

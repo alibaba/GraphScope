@@ -11,7 +11,6 @@ import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DirectedPseudograph;
 
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.pattern.PatternCode;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
@@ -19,8 +18,6 @@ import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.VertexTypeId;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
-import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
-import com.alibaba.graphscope.compiler.api.schema.GraphVertex;
 
 public class Glogue {
     // the topology of GLogue graph

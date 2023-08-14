@@ -1,7 +1,5 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 
-import com.alibaba.graphscope.common.ir.rel.metadata.schema.VertexTypeId;
-
 public class PatternVertex {
     private Integer vertexTypeId;
     private Integer id;
