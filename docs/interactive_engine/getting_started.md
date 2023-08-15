@@ -59,6 +59,7 @@ the modern graph, which has been widely used in [Tinkerpop](https://tinkerpop.ap
 ```python
 import graphscope as gs
 from graphscope.dataset.modern_graph import load_modern_graph
+from neo4j import GraphDatabase, RoutingControl
 
 gs.set_option(show_log=True)
 
@@ -75,7 +76,7 @@ q2 = g.execute('g.V().hasLabel(\'person\')')
 print(q2.all().result())  # should print [[v[2], v[3], v[0], v[1]]]
 
 # or `execute` any supported Cypher query, by passing `lang="cypher"`
-q3 = g.execute("MATCH (n:person) RETURN count(n)", lang="cypher", routing_=RoutingControl.READ)
+q3 = g.execute("MATCH (n) RETURN count(n)", lang="cypher", routing_=RoutingControl.READ)
 print(q3.records[0][0])  # should print 6
 ```
 
