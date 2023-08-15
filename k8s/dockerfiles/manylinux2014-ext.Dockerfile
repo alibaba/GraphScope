@@ -5,13 +5,17 @@ FROM centos:7 AS builder
 
 # shanghai zoneinfo
 ENV TZ=Asia/Shanghai
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+ENV LC_ALL=en_US.utf-8
+ENV LANG=en_US.utf-8
+RUN yum install python3-pip -y && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo '$TZ' > /etc/timezone
 
-COPY ./gs ./gs
-RUN ./gs install-deps dev --cn --for-analytical --no-v6d  && \
-    yum clean all -y --enablerepo='*' && \
-    rm -fr /var/cache/yum
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
+RUN cd /home/graphscope/GraphScope/python && \
+    pip3 install click && pip3 install --editable .&& \
+    cd /home/graphscope/GraphScope && \
+    gsctl install-deps dev --cn --for-analytical --no-v6d
 
 # install hadoop for processing hadoop data source
 RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \

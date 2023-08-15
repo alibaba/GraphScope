@@ -22,6 +22,7 @@ ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin:$HADOOP_HOME/bin:/home/graphscope/.local/bin
 COPY --from=ext /opt/hadoop-3.3.0 /opt/hadoop-3.3.0
 
 RUN apt-get update && \
+    apt-get install python3-pip -y && \
     apt-get install -y sudo default-jre && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
@@ -36,7 +37,7 @@ RUN mkdir -p /var/log/graphscope && chown -R graphscope:graphscope /var/log/grap
 USER graphscope
 WORKDIR /home/graphscope
 
-COPY ./gs ./gs
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 ARG VINEYARD_VERSION=main
 RUN sudo chmod a+wrx /tmp && \
     ./gs install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION -j $(nproc) && \
