@@ -506,23 +506,24 @@ impl LogicalPlan {
     /// - Dummy root node with only single child
     /// - Scan node with empty child
     pub(crate) fn clean_redundant_nodes(&mut self) {
-        let mut node_ids_to_clean = vec![];
-
+        // Remove scan node with empty child
+        let mut scan_ids_to_clean = vec![];
         for (_, node) in self.nodes.iter() {
-            if is_node_dummy(&node.borrow()) && node.borrow().children.len() <= 1 {
-                let single_child_dummy_id = node.borrow().id;
-                node_ids_to_clean.push(single_child_dummy_id);
-            }
-
             // Empty Children Scan nodes
             if is_node_scan(&node.borrow()) && node.borrow().children.len() == 0 {
                 let empty_child_scan_id = node.borrow().id;
-                node_ids_to_clean.push(empty_child_scan_id);
+                scan_ids_to_clean.push(empty_child_scan_id);
             }
         }
-
-        for id in node_ids_to_clean {
+        for id in scan_ids_to_clean {
             self.remove_node(id);
+        }
+        // Remove dummy node with single child
+        if let Some(node) = self.get_first_node() {
+            if is_node_dummy(&node.borrow()) && node.borrow().children.len() <= 1 {
+                let single_child_dummy_id = node.borrow().id;
+                self.remove_node(single_child_dummy_id);
+            }
         }
     }
 
