@@ -230,7 +230,7 @@ static bool parse_edge_files(
                  << "the schema";
       return false;
     }
-    if (!schema.has_edge_label(edge_label)) {
+    if (!schema.has_edge_label(src_label, dst_label, edge_label)) {
       LOG(ERROR) << "Edge label [" << edge_label << "] does not exist in "
                  << "the schema";
       return false;
@@ -457,8 +457,8 @@ bool LoadingConfig::AddVertexSources(const std::string& label,
 bool LoadingConfig::AddEdgeSources(const std::string& src_label,
                                    const std::string& dst_label,
                                    const std::string& edge_label,
-                                   int32_t src_pri_key_ind,
-                                   int32_t dst_pri_key_ind,
+                                   size_t src_pri_key_ind,
+                                   size_t dst_pri_key_ind,
                                    const std::string& file_path) {
   LOG(INFO) << "Add edge source: " << src_label << ", " << dst_label
             << ", edge label" << edge_label << ", src_col: " << src_pri_key_ind

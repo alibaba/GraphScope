@@ -485,6 +485,12 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
   if (!get_scalar(node, "type_name", label_name)) {
     return false;
   }
+  // Can not add two vertex label with same name
+  if (schema.has_vertex_label(label_name)) {
+    LOG(ERROR) << "Vertex label " << label_name << " already exists";
+    return false;
+  }
+
   size_t max_num = ((size_t) 1) << 32;
   if (node["x_csr_params"]) {
     auto csr_node = node["x_csr_params"];
@@ -587,6 +593,14 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
                << edge_label_name << "] in vertex_type_pair_relations";
     return false;
   }
+
+  // check whether edge triplet exists in current schema
+  if (schema.has_edge_label(src_label_name, dst_label_name, edge_label_name)) {
+    LOG(ERROR) << "Edge [" << edge_label_name << "] from [" << src_label_name
+               << "] to [" << dst_label_name << "] already exists";
+    return false;
+  }
+
   std::vector<PropertyType> property_types;
   std::vector<std::string> prop_names;
   if (!parse_edge_properties(node["properties"], edge_label_name,
@@ -722,9 +736,18 @@ bool Schema::has_vertex_label(const std::string& label) const {
   return vlabel_indexer_.get_index(label, ret);
 }
 
-bool Schema::has_edge_label(const std::string& label) const {
-  label_t ret;
-  return elabel_indexer_.get_index(label, ret);
+bool Schema::has_edge_label(const std::string& src_label,
+                            const std::string& dst_label,
+                            const std::string& label) const {
+  label_t edge_label_id;
+  auto src_label_id = get_vertex_label_id(src_label);
+  auto dst_label_id = get_vertex_label_id(dst_label);
+  if (!elabel_indexer_.get_index(label, edge_label_id)) {
+    return false;
+  }
+  auto e_label_id =
+      generate_edge_label(src_label_id, dst_label_id, edge_label_id);
+  return eprop_names_.find(e_label_id) != eprop_names_.end();
 }
 
 Schema Schema::LoadFromYaml(const std::string& schema_config) {

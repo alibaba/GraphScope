@@ -59,8 +59,8 @@ class LoadingConfig {
   // specified.
   bool AddEdgeSources(const std::string& src_label,
                       const std::string& dst_label,
-                      const std::string& edge_label, int32_t src_pri_key_ind,
-                      int32_t dst_pri_key_ind, const std::string& file_path);
+                      const std::string& edge_label, size_t src_pri_key_ind,
+                      size_t dst_pri_key_ind, const std::string& file_path);
 
   void SetDataSource(const std::string& data_source);
   void SetDelimiter(const std::string& delimiter);
@@ -113,6 +113,7 @@ class LoadingConfig {
                      std::vector<std::pair<size_t, std::string>>,
                      boost::hash<edge_triplet_type>>
       edge_column_mappings_;  // match which column in file to which property in
+                              // schema
 
   std::unordered_map<edge_triplet_type, std::pair<size_t, size_t>,
                      boost::hash<edge_triplet_type>>

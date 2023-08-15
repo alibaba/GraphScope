@@ -97,7 +97,9 @@ class Schema {
 
   bool has_vertex_label(const std::string& label) const;
 
-  bool has_edge_label(const std::string& label) const;
+  bool has_edge_label(const std::string& src_label,
+                      const std::string& dst_label,
+                      const std::string& edge_label) const;
 
   bool valid_edge_property(const std::string& src_label,
                            const std::string& dst_label,
