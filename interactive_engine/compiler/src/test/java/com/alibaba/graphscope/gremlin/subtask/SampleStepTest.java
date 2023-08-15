@@ -25,8 +25,10 @@ import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.gremlin.integration.suite.utils.__;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
+import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
 
+import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -44,6 +46,16 @@ public class SampleStepTest {
         IrStandardOpProcessor.applyStrategies(traversal);
         TraversalParent parent = (TraversalParent) traversal.asAdmin().getEndStep();
         return TraversalParentTransformFactory.SAMPLE_BY_STEP.apply(parent);
+    }
+
+    // g.V().coin()
+    @Test
+    public void g_V_coin_test() {
+        Traversal traversal = g.V().coin(0.5);
+        Step graphStep = traversal.asAdmin().getEndStep();
+        SampleOp op = (SampleOp) StepTransformFactory.COIN_STEP.apply(graphStep);
+        Assert.assertEquals(
+                0.5, ((SampleOp.RatioType) op.getSampleType()).getRatio(), Math.ulp(0.5));
     }
 
     @Test
