@@ -13,7 +13,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class RealtimeWrite {
-    private static long recordNum = 10;
+    private static int startId = 0;
+    private static int recordNum = 10000 + startId;
 
     public void initSchema(GrootClient client) {
         VertexLabel.Builder person = VertexLabel.newBuilder();
@@ -115,7 +116,7 @@ public class RealtimeWrite {
 
     private static List<Vertex> getVerticesA() {
         List<Vertex> vertices = new ArrayList<>();
-        for (int i = 0; i < recordNum; ++i) {
+        for (int i = startId; i < recordNum; ++i) {
             Map<String, String> properties = new HashMap<>();
             properties.put("id", String.valueOf(i));
             properties.put("name", "person-" + i);
@@ -126,18 +127,18 @@ public class RealtimeWrite {
     }
     private static List<Vertex> getVerticesB() {
         List<Vertex> vertices = new ArrayList<>();
-        for (int i = 0; i < recordNum; ++i) {
+        for (int i = startId; i < recordNum; ++i) {
             Map<String, String> properties = new HashMap<>();
             properties.put("id", String.valueOf(i));
             properties.put("name", "software-" + i);
             properties.put("lang", String.valueOf(i + 200));
-            vertices.add(new Vertex("person", properties));
+            vertices.add(new Vertex("software", properties));
         }
         return vertices;
     }
     private static List<Edge> getEdges() {
         List<Edge> edges = new ArrayList<>();
-        for (int i = 0; i < recordNum; ++i) {
+        for (int i = startId; i < recordNum; ++i) {
             Map<String, String> srcPk = new HashMap<>();
             Map<String, String> dstPk = new HashMap<>();
             Map<String, String> properties = new HashMap<>();
@@ -153,50 +154,212 @@ public class RealtimeWrite {
     class ClientTask implements Runnable {
 
         private GrootClient client;
+        private List<Vertex> vertices;
+        private List<Edge> edges;
 
-        ClientTask(GrootClient client) {
+        private int type;
+
+
+        ClientTask(GrootClient client, int type, List<Vertex> vertices, List<Edge> edges) {
             this.client = client;
+            this.type = type;
+            this.vertices = vertices;
+            this.edges = edges;
         }
 
         @Override
         public void run() {
-            System.out.println("x");
+            if (type == 0) {
+                for (int i = 0; i < vertices.size(); ++i) {
+                    client.addVertex(vertices.get(i));
+                }
+            } else {
+                for (int i = 0; i < edges.size(); ++i) {
+                    client.addEdge(edges.get(i));
+                }
+            }
+
         }
     }
 
-    public void submitAsync(GrootClient client) throws InterruptedException {
+    public void submitAsync(GrootClient client, List<Vertex> verticesA, List<Vertex> verticesB, List<Edge> edges) throws InterruptedException {
         // Create thread pool with 10 threads
-        ExecutorService executor = Executors.newFixedThreadPool(10);
+        int taskNum = 30;
+        int offset = 10000 / taskNum;
+        TimeWatch watch = TimeWatch.start();
+        {
+            ExecutorService executor = Executors.newFixedThreadPool(10);
+            // Submit 10 tasks to call submit()
 
-        // Submit 10 tasks to call submit()
-        for(int i=0; i<10; i++) {
-            executor.submit(new ClientTask(client));
+            for(int i = 0; i < taskNum * offset; i += offset) {
+                int start = i;
+                int end = start + offset;
+                List<Vertex> subVerticesA = verticesA.subList(start, end);
+                List<Vertex> subVerticesB = verticesB.subList(start, end);
+                executor.submit(new ClientTask(client, 0, subVerticesA, null));
+                executor.submit(new ClientTask(client, 0, subVerticesB, null));
+            }
+            executor.shutdown();
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            watch.status("Vertices");
         }
+        {
+            Thread.sleep(2000);
+            ExecutorService executor = Executors.newFixedThreadPool(10);
+            watch.reset();
+            for (int i = 0; i < taskNum * offset; i += offset) {
+                int start = i;
+                int end = start + offset;
+                List<Edge> subEdges = edges.subList(start, end);
+                executor.submit(new ClientTask(client, 1, null, subEdges));            
+            }
+            executor.shutdown();
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            watch.status("Edges");
+        }
+    }
 
-        // Shut down thread pool
-        executor.shutdown();
+    public void sequential(GrootClient client, List<Vertex> verticesA, List<Vertex> verticesB, List<Edge> edges) {
+        long snapshotId = 0;
 
-        // Wait for tasks to complete
-        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        TimeWatch watch = TimeWatch.start();
+
+        {
+            watch.reset();
+            // snapshotId = client.addVertices(vertices);
+            for (Vertex vertex : verticesA) {
+                snapshotId = client.addVertex(vertex);
+            }
+            watch.status("VerticesA");
+        }
+        {
+            watch.reset();
+            // snapshotId = client.addVertices(vertices);
+            for (Vertex vertex : verticesB) {
+                snapshotId = client.addVertex(vertex);
+            }
+            watch.status("VerticesB");
+        }
+        {
+            watch.reset();
+            client.remoteFlush(snapshotId);
+            watch.status("Flush Vertices");
+            System.out.println("Finished add vertices");
+        }
+        {
+            watch.reset();
+            // snapshotId = client.addEdges(edges);
+            for (Edge edge : edges) {
+                snapshotId = client.addEdge(edge);
+            }
+            watch.status("Edges");
+        }
+        {
+            watch.reset();
+            client.remoteFlush(snapshotId);
+            watch.status("Flush Edges");
+            System.out.println("Finished add edges");
+        }
+    }
+
+    public void sequentialBatch(GrootClient client, List<Vertex> verticesA, List<Vertex> verticesB, List<Edge> edges) {
+        long snapshotId = 0;
+
+        TimeWatch watch = TimeWatch.start();
+
+        {
+            watch.reset();
+            // snapshotId = client.addVertices(vertices);
+            for (int i = 0; i < verticesA.size(); i += 1000) {
+                snapshotId = client.addVertices(verticesA.subList(i, i + 1000));
+            }
+            watch.status("VerticesA");
+        }
+        {
+            watch.reset();
+            // snapshotId = client.addVertices(vertices);
+            for (int i = 0; i < verticesB.size(); i += 1000) {
+                snapshotId = client.addVertices(verticesB.subList(i, i + 1000));
+            }
+            watch.status("VerticesB");
+        }
+        {
+            watch.reset();
+            client.remoteFlush(snapshotId);
+            watch.status("Flush Vertices");
+            System.out.println("Finished add vertices");
+        }
+        {
+            watch.reset();
+            // snapshotId = client.addEdges(edges);
+            for (int i = 0; i < edges.size(); i += 1000) {
+                snapshotId = client.addEdges(edges.subList(i, i + 1000));
+            }
+            watch.status("Edges");
+        }
+        {
+            watch.reset();
+            client.remoteFlush(snapshotId);
+            watch.status("Flush Edges");
+            System.out.println("Finished add edges");
+        }
     }
 
     public static void main(String[] args) throws InterruptedException {
         String hosts = "localhost";
         int port = 55556;
+        hosts = "192.168.0.137";
+        port = 32387;
         GrootClient client = GrootClient.newBuilder().addHost(hosts, port).build();
 
         RealtimeWrite writer = new RealtimeWrite();
-        long snapshotId = 0;
 
+        client.dropSchema();
         writer.initSchema(client);
-        List<Vertex> vertices = RealtimeWrite.getVerticesA();
-        snapshotId = client.addVertices(vertices);
-        vertices = RealtimeWrite.getVerticesB();
-        snapshotId = client.addVertices(vertices);
+
+        List<Vertex> verticesA = RealtimeWrite.getVerticesA();
+        List<Vertex> verticesB = RealtimeWrite.getVerticesB();
         List<Edge> edges = RealtimeWrite.getEdges();
-        snapshotId = client.addEdges(edges);
-        client.remoteFlush(snapshotId);
-        System.out.println("Finished add edges");
-//        writer.submitAsync(client);
+        
+        TimeWatch watch = TimeWatch.start();
+        // writer.sequential(client, verticesA, verticesB, edges);
+        // writer.submitAsync(client, verticesA, verticesB, edges);
+        writer.sequentialBatch(client, verticesA, verticesB, edges);
+        watch.status("Total");
+        
+    }
+}
+
+class TimeWatch {
+    long starts;
+
+    public static TimeWatch start() {
+        return new TimeWatch();
+    }
+
+    private TimeWatch() {
+        reset();
+    }
+
+    public TimeWatch reset() {
+        starts = System.currentTimeMillis();
+        return this;
+    }
+
+    public long time() {
+        long ends = System.currentTimeMillis();
+        return ends - starts;
+    }
+
+    public long time(TimeUnit unit) {
+        return unit.convert(time(), TimeUnit.MILLISECONDS);
+    }
+
+    public void status(String prefix) {
+        System.out.println(prefix + ": " + time() + " ms");
+    }
+    
+    public void status() {
+        status("Duration");
     }
 }

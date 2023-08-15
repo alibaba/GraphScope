@@ -52,7 +52,6 @@ public class ClientBackupTest {
             properties.put("age", "18");
             client.addVertex("person", properties);
         }
-        client.commit();
         Thread.sleep(3000L);
 
         List<BackupInfoPb> backupInfoList;
@@ -70,7 +69,6 @@ public class ClientBackupTest {
             properties.put("lang", "java");
             client.addVertex("software", properties);
         }
-        client.commit();
         Thread.sleep(3000L);
 
         int backupId2 = client.createNewGraphBackup();

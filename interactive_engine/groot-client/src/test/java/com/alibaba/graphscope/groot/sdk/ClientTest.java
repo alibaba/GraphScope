@@ -70,7 +70,6 @@ public class ClientTest {
 
     @Test
     void testAddData() {
-        client.initWriteSession();
         Map<String, String> properties = new HashMap<>();
         properties.put("name", "alice");
         properties.put("id", "12345");
@@ -94,6 +93,5 @@ public class ClientTest {
                 Collections.singletonMap("id", "12345"),
                 Collections.singletonMap("id", "88888"),
                 Collections.singletonMap("weight", "20201111"));
-        client.commit();
     }
 }
