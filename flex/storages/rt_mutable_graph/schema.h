@@ -30,13 +30,14 @@ static constexpr const char* DT_DOUBLE = "DT_DOUBLE";
 
 class Schema {
  public:
+  using label_type = label_t;
   Schema();
   ~Schema();
 
   void add_vertex_label(
       const std::string& label, const std::vector<PropertyType>& property_types,
       const std::vector<std::string>& property_names,
-      const std::tuple<PropertyType, std::string, int32_t>& primary_key,
+      const std::tuple<PropertyType, std::string>& primary_key,
       const std::vector<StorageStrategy>& strategies = {},
       size_t max_vnum = static_cast<size_t>(1) << 32);
 
@@ -63,6 +64,9 @@ class Schema {
   const std::vector<PropertyType>& get_vertex_properties(
       const std::string& label) const;
 
+  const std::vector<std::string>& get_vertex_property_names(
+      const std::string& label) const;
+
   const std::vector<PropertyType>& get_vertex_properties(label_t label) const;
 
   const std::vector<StorageStrategy>& get_vertex_storage_strategies(
@@ -78,6 +82,22 @@ class Schema {
       const std::string& label) const;
 
   PropertyType get_edge_property(label_t src, label_t dst, label_t edge) const;
+
+  const std::vector<std::string>& get_edge_property_names(
+      const std::string& src_label, const std::string& dst_label,
+      const std::string& label) const;
+
+  bool vertex_has_property(const std::string& label,
+                           const std::string& prop) const;
+
+  bool edge_has_property(const std::string& src_label,
+                         const std::string& dst_label,
+                         const std::string& edge_label,
+                         const std::string& prop) const;
+
+  bool has_vertex_label(const std::string& label) const;
+
+  bool has_edge_label(const std::string& label) const;
 
   bool valid_edge_property(const std::string& src_label,
                            const std::string& dst_label,
@@ -104,6 +124,8 @@ class Schema {
 
   PropertyType get_vertex_primary_key_type(label_t index) const;
 
+  const std::string& get_vertex_primary_key_name(label_t index) const;
+
   void Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer);
 
   void Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader);
@@ -127,7 +149,7 @@ class Schema {
   IdIndexer<std::string, label_t> elabel_indexer_;
   std::vector<std::vector<PropertyType>> vproperties_;
   std::vector<std::vector<std::string>> vprop_names_;
-  std::vector<std::tuple<PropertyType, std::string, int32_t>> v_primary_keys_;
+  std::vector<std::tuple<PropertyType, std::string>> v_primary_keys_;
   std::vector<std::vector<StorageStrategy>> vprop_storage_;
   std::map<uint32_t, std::vector<PropertyType>> eproperties_;
   std::map<uint32_t, std::vector<std::string>> eprop_names_;

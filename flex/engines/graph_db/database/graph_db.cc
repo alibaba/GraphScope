@@ -50,8 +50,6 @@ GraphDB& GraphDB::get() {
 
 void GraphDB::Init(const Schema& schema, const LoadingConfig& load_config,
                    const std::string& data_dir, int thread_num) {
-  auto& vertex_load_meta = load_config.vertex_loading_config_;
-  auto& edge_load_meta = load_config.edge_loading_config_;
   std::filesystem::path data_dir_path(data_dir);
   if (!std::filesystem::exists(data_dir_path)) {
     std::filesystem::create_directory(data_dir_path);
@@ -59,22 +57,24 @@ void GraphDB::Init(const Schema& schema, const LoadingConfig& load_config,
 
   std::filesystem::path serial_path = data_dir_path / "init_snapshot.bin";
   if (!std::filesystem::exists(serial_path)) {
-    if (!vertex_load_meta.empty() || !edge_load_meta.empty()) {
+    if (!load_config.GetVertexLoadingMeta().empty() ||
+        !load_config.GetEdgeLoadingMeta().empty()) {
       LOG(INFO) << "Initializing graph db through bulk loading";
       {
         MutablePropertyFragment graph;
-        graph.Init(schema, vertex_load_meta, edge_load_meta, thread_num);
+        graph.Init(schema, load_config, thread_num);
         graph.Serialize(data_dir_path.string());
       }
       graph_.Deserialize(data_dir_path.string());
     } else {
       LOG(INFO) << "Initializing empty graph db";
-      graph_.Init(schema, vertex_load_meta, edge_load_meta, thread_num);
+      graph_.Init(schema, load_config, thread_num);
       graph_.Serialize(data_dir_path.string());
     }
   } else {
     LOG(INFO) << "Initializing graph db from data files of work directory";
-    if (!vertex_load_meta.empty() || !edge_load_meta.empty()) {
+    if (!load_config.GetVertexLoadingMeta().empty() ||
+        !load_config.GetEdgeLoadingMeta().empty()) {
       LOG(WARNING) << "Bulk loading is ignored because data files of work "
                       "directory exist";
     }

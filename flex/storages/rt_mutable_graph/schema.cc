@@ -25,7 +25,7 @@ Schema::~Schema() = default;
 void Schema::add_vertex_label(
     const std::string& label, const std::vector<PropertyType>& property_types,
     const std::vector<std::string>& property_names,
-    const std::tuple<PropertyType, std::string, int32_t>& primary_key,
+    const std::tuple<PropertyType, std::string>& primary_key,
     const std::vector<StorageStrategy>& strategies, size_t max_vnum) {
   label_t v_label_id = vertex_label_to_index(label);
   vproperties_[v_label_id] = property_types;
@@ -95,6 +95,14 @@ const std::vector<PropertyType>& Schema::get_vertex_properties(
   return vproperties_[label];
 }
 
+const std::vector<std::string>& Schema::get_vertex_property_names(
+    const std::string& label) const {
+  label_t index;
+  CHECK(vlabel_indexer_.get_index(label, index));
+  CHECK(index < vprop_names_.size());
+  return vprop_names_[index];
+}
+
 const std::vector<StorageStrategy>& Schema::get_vertex_storage_strategies(
     const std::string& label) const {
   label_t index;
@@ -134,6 +142,16 @@ PropertyType Schema::get_edge_property(label_t src, label_t dst,
   uint32_t index = generate_edge_label(src, dst, edge);
   auto& vec = eproperties_.at(index);
   return vec.empty() ? PropertyType::kEmpty : vec[0];
+}
+const std::vector<std::string>& Schema::get_edge_property_names(
+    const std::string& src_label, const std::string& dst_label,
+    const std::string& label) const {
+  label_t src, dst, edge;
+  CHECK(vlabel_indexer_.get_index(src_label, src));
+  CHECK(vlabel_indexer_.get_index(dst_label, dst));
+  CHECK(elabel_indexer_.get_index(label, edge));
+  uint32_t index = generate_edge_label(src, dst, edge);
+  return eprop_names_.at(index);
 }
 
 bool Schema::valid_edge_property(const std::string& src_label,
@@ -192,14 +210,14 @@ std::string Schema::get_edge_label_name(label_t index) const {
   return ret;
 }
 
-int32_t Schema::get_vertex_primary_key_ind(label_t index) const {
-  CHECK(v_primary_keys_.size() > index);
-  return std::get<2>(v_primary_keys_.at(index));
-}
-
 PropertyType Schema::get_vertex_primary_key_type(label_t index) const {
   CHECK(v_primary_keys_.size() > index);
   return std::get<0>(v_primary_keys_.at(index));
+}
+
+const std::string& Schema::get_vertex_primary_key_name(label_t index) const {
+  CHECK(v_primary_keys_.size() > index);
+  return std::get<1>(v_primary_keys_.at(index));
 }
 
 void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) {
@@ -425,7 +443,7 @@ static bool parse_edge_properties(YAML::Node node,
                                   std::vector<PropertyType>& types,
                                   std::vector<std::string>& names) {
   if (!node) {
-    LOG(INFO) << "Found no edge properties specified for edge: " << label_name;
+    VLOG(10) << "Found no edge properties specified for edge: " << label_name;
     return true;
   }
   if (!node.IsSequence()) {
@@ -509,9 +527,9 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
     LOG(ERROR) << "Primary key " << primary_key_name << " should be int64";
     return false;
   }
-  auto tuple =
-      std::make_tuple(property_types[primary_key_ind],
-                      property_names[primary_key_ind], primary_key_ind);
+  LOG(INFO) << "Primary key is [" << primary_key_name << "] for " << label_name;
+  auto tuple = std::make_tuple(property_types[primary_key_ind],
+                               property_names[primary_key_ind]);
   // remove primary key from properties.
   property_names.erase(property_names.begin() + primary_key_ind);
   property_types.erase(property_types.begin() + primary_key_ind);
@@ -524,7 +542,6 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
     }
     debug_str = ss.str();
   }
-  LOG(INFO) << "After erase, got properties " << debug_str;
 
   schema.add_vertex_label(label_name, property_types, property_names, tuple,
                           strategies, max_num);
@@ -668,6 +685,46 @@ const std::vector<std::string>& Schema::GetPluginsList() const {
 
 void Schema::EmplacePlugin(const std::string& plugin) {
   plugin_list_.emplace_back(plugin);
+}
+
+// check whether prop in vprop_names, or is the primary key
+bool Schema::vertex_has_property(const std::string& label,
+                                 const std::string& prop) const {
+  auto v_label_id = get_vertex_label_id(label);
+  CHECK(v_label_id < vprop_names_.size());
+  auto& v_prop_names = vprop_names_[v_label_id];
+  return std::find(v_prop_names.begin(), v_prop_names.end(), prop) !=
+             v_prop_names.end() ||
+         prop == std::get<1>(v_primary_keys_[v_label_id]);
+}
+
+bool Schema::edge_has_property(const std::string& src_label,
+                               const std::string& dst_label,
+                               const std::string& edge_label,
+                               const std::string& prop) const {
+  auto e_label_id = get_edge_label_id(edge_label);
+  auto src_label_id = get_vertex_label_id(src_label);
+  auto dst_label_id = get_vertex_label_id(dst_label);
+  auto label_id = generate_edge_label(src_label_id, dst_label_id, e_label_id);
+  if (eprop_names_.find(label_id) == eprop_names_.end()) {
+    LOG(FATAL) << "edge label " << edge_label << ": (" << src_label << ", "
+               << dst_label << ") not found,  e_label_id "
+               << std::to_string(label_id)
+               << ", total size: " << eprop_names_.size();
+  }
+  auto& e_prop_names = eprop_names_.at(label_id);
+  return std::find(e_prop_names.begin(), e_prop_names.end(), prop) !=
+         e_prop_names.end();
+}
+
+bool Schema::has_vertex_label(const std::string& label) const {
+  label_t ret;
+  return vlabel_indexer_.get_index(label, ret);
+}
+
+bool Schema::has_edge_label(const std::string& label) const {
+  label_t ret;
+  return elabel_indexer_.get_index(label, ret);
 }
 
 Schema Schema::LoadFromYaml(const std::string& schema_config) {

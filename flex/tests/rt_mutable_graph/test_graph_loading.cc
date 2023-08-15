@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 
   auto schema = gs::Schema::LoadFromYaml(schema_file);
   auto bulk_load_config =
-      gs::LoadingConfig::ParseFromYaml(bulk_load_config_path);
+      gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
   db.Init(schema, bulk_load_config, data_path, 1);
 
   t0 += grape::GetCurrentTime();

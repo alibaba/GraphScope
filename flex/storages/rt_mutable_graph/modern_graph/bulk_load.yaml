@@ -10,10 +10,36 @@ vertex_mappings:
     inputs:
       - path: person.csv
         format: standard_csv
+    column_mappings:
+      - column:
+          index: 0    # can be omitted if the index is the same as the property index
+          name: id  # can be omitted if the name is not known
+        property: id
+      - column:
+          index: 1
+          name: name
+        property: name
+      - column:
+          index: 2
+          name: age
+        property: age
   - type_name: software
     inputs:
       - path: software.csv
         format: standard_csv
+    column_mappings:
+      - column:
+          index: 0      # can be omitted if the index is the same as the property index
+          name: id    # can be omitted if the name is not known
+        property: id  # must align with the schema
+      - column:
+          index: 1
+          name: name
+        property: name
+      - column:
+          index: 2
+          name: lang
+        property: lang
 edge_mappings:
   - type_triplet:
       edge: knows
