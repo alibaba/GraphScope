@@ -41,7 +41,11 @@ graphscope: all
 
 dev-wheel:
 	cd $(WORKING_DIR) && \
+<<<<<<< HEAD
 	cd ../ && \
+=======
+	cp ../python  ./ -r && \
+>>>>>>> d955a407 (modified version)
 	docker build \
 		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
@@ -52,7 +56,11 @@ dev-wheel:
 
 manylinux2014-ext:
 	cd $(WORKING_DIR) && \
+<<<<<<< HEAD
 	cd ../  && \
+=======
+	cp ../python  ./ -r  && \
+>>>>>>> d955a407 (modified version)
 	docker build \
 		--progress=$(BUILD_PROGRESS) \
 		-t graphscope/manylinux2014:20230407-ext \
@@ -60,7 +68,11 @@ manylinux2014-ext:
 
 graphscope-dev:
 	cd $(WORKING_DIR) && \
+<<<<<<< HEAD
 	cd ../  && \
+=======
+	cp ../python  ./ -r  && \
+>>>>>>> d955a407 (modified version)
 	docker build \
 		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \
@@ -70,7 +82,11 @@ graphscope-dev:
 
 vineyard-dev:
 	cd $(WORKING_DIR) && \
+<<<<<<< HEAD
 	cd ../  && \
+=======
+	cp ../python  ./ -r  && \
+>>>>>>> d955a407 (modified version)
 	docker build \
 		--progress=$(BUILD_PROGRESS) \
 		--build-arg REGISTRY=$(REGISTRY) \

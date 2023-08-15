@@ -12,10 +12,17 @@ RUN yum install python3-pip -y && \
     echo '$TZ' > /etc/timezone
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
+<<<<<<< HEAD
 RUN cd /home/graphscope/GraphScope && \
     make client && \
     gsctl install-deps dev --cn --for-analytical --no-v6d && \
     cd /home/graphscope && sudo rm -rf /home/graphscope/GraphScope
+=======
+RUN cd /home/graphscope/GraphScope/python && \
+    pip3 install click && pip3 install --editable .&& \
+    cd /home/graphscope/GraphScope && \
+    gsctl install-deps dev --cn --for-analytical --no-v6d
+>>>>>>> d955a407 (modified version)
 
 # install hadoop for processing hadoop data source
 RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
