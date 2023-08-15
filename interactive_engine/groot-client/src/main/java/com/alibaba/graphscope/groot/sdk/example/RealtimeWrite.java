@@ -3,6 +3,8 @@ package com.alibaba.graphscope.groot.sdk.example;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.groot.sdk.schema.*;
 import com.alibaba.graphscope.proto.groot.DataTypePb;
+import io.grpc.stub.StreamObserver;
+import com.alibaba.graphscope.proto.groot.BatchWriteResponse;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -182,51 +184,13 @@ public class RealtimeWrite {
         }
     }
 
-    public void submitAsync(GrootClient client, List<Vertex> verticesA, List<Vertex> verticesB, List<Edge> edges) throws InterruptedException {
-        // Create thread pool with 10 threads
-        int taskNum = 30;
-        int offset = 10000 / taskNum;
-        TimeWatch watch = TimeWatch.start();
-        {
-            ExecutorService executor = Executors.newFixedThreadPool(10);
-            // Submit 10 tasks to call submit()
 
-            for(int i = 0; i < taskNum * offset; i += offset) {
-                int start = i;
-                int end = start + offset;
-                List<Vertex> subVerticesA = verticesA.subList(start, end);
-                List<Vertex> subVerticesB = verticesB.subList(start, end);
-                executor.submit(new ClientTask(client, 0, subVerticesA, null));
-                executor.submit(new ClientTask(client, 0, subVerticesB, null));
-            }
-            executor.shutdown();
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-            watch.status("Vertices");
-        }
-        {
-            Thread.sleep(2000);
-            ExecutorService executor = Executors.newFixedThreadPool(10);
-            watch.reset();
-            for (int i = 0; i < taskNum * offset; i += offset) {
-                int start = i;
-                int end = start + offset;
-                List<Edge> subEdges = edges.subList(start, end);
-                executor.submit(new ClientTask(client, 1, null, subEdges));            
-            }
-            executor.shutdown();
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-            watch.status("Edges");
-        }
-    }
 
     public void sequential(GrootClient client, List<Vertex> verticesA, List<Vertex> verticesB, List<Edge> edges) {
         long snapshotId = 0;
-
         TimeWatch watch = TimeWatch.start();
-
         {
             watch.reset();
-            // snapshotId = client.addVertices(vertices);
             for (Vertex vertex : verticesA) {
                 snapshotId = client.addVertex(vertex);
             }
@@ -234,7 +198,6 @@ public class RealtimeWrite {
         }
         {
             watch.reset();
-            // snapshotId = client.addVertices(vertices);
             for (Vertex vertex : verticesB) {
                 snapshotId = client.addVertex(vertex);
             }
@@ -248,7 +211,6 @@ public class RealtimeWrite {
         }
         {
             watch.reset();
-            // snapshotId = client.addEdges(edges);
             for (Edge edge : edges) {
                 snapshotId = client.addEdge(edge);
             }
@@ -305,11 +267,98 @@ public class RealtimeWrite {
         }
     }
 
+    public void parallel(GrootClient client, List<Vertex> verticesA, List<Vertex> verticesB, List<Edge> edges) throws InterruptedException {
+        // Create thread pool with 10 threads
+        int taskNum = 30;
+        int offset = 10000 / taskNum;
+        TimeWatch watch = TimeWatch.start();
+        {
+            ExecutorService executor = Executors.newFixedThreadPool(10);
+            // Submit 10 tasks to call submit()
+
+            for(int i = 0; i < taskNum * offset; i += offset) {
+                int start = i;
+                int end = start + offset;
+                List<Vertex> subVerticesA = verticesA.subList(start, end);
+                List<Vertex> subVerticesB = verticesB.subList(start, end);
+                executor.submit(new ClientTask(client, 0, subVerticesA, null));
+                executor.submit(new ClientTask(client, 0, subVerticesB, null));
+            }
+            executor.shutdown();
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            watch.status("Vertices");
+        }
+        {
+            Thread.sleep(2000);
+            ExecutorService executor = Executors.newFixedThreadPool(10);
+            watch.reset();
+            for (int i = 0; i < taskNum * offset; i += offset) {
+                int start = i;
+                int end = start + offset;
+                List<Edge> subEdges = edges.subList(start, end);
+                executor.submit(new ClientTask(client, 1, null, subEdges));            
+            }
+            executor.shutdown();
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            watch.status("Edges");
+        }
+    }
+    public void sequentialAsync(GrootClient client, List<Vertex> verticesA, List<Vertex> verticesB, List<Edge> edges) throws InterruptedException {
+        long snapshotId = 0;
+        TimeWatch watch = TimeWatch.start();
+        class VertexCallBack implements StreamObserver<BatchWriteResponse> {
+            @Override
+            public void onNext(BatchWriteResponse value) {
+                // System.out.println("on next");
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                // System.out.println("on next");
+            }
+
+            @Override
+            public void onCompleted() {
+                // System.out.println("completed");
+            }
+        }
+        {
+            watch.reset();
+            for (Vertex vertex : verticesA) {
+                client.addVertex(vertex, new VertexCallBack());
+            }
+            watch.status("VerticesA");
+        }
+        {
+            watch.reset();
+            for (Vertex vertex : verticesB) {
+                client.addVertex(vertex, new VertexCallBack());
+            }
+            watch.status("VerticesB");
+        }
+        // {
+        //     watch.reset();
+        //     client.remoteFlush(snapshotId);
+        //     watch.status("Flush Vertices");
+        //     System.out.println("Finished add vertices");
+        // }
+        // {
+        //     watch.reset();
+        //     for (Edge edge : edges) {
+        //         snapshotId = client.addEdge(edge);
+        //     }
+        //     watch.status("Edges");
+        // }
+        // {
+        //     watch.reset();
+        //     client.remoteFlush(snapshotId);
+        //     watch.status("Flush Edges");
+        //     System.out.println("Finished add edges");
+        // }     
+    }
     public static void main(String[] args) throws InterruptedException {
         String hosts = "localhost";
         int port = 55556;
-        hosts = "192.168.0.137";
-        port = 32387;
         GrootClient client = GrootClient.newBuilder().addHost(hosts, port).build();
 
         RealtimeWrite writer = new RealtimeWrite();
@@ -323,8 +372,9 @@ public class RealtimeWrite {
         
         TimeWatch watch = TimeWatch.start();
         // writer.sequential(client, verticesA, verticesB, edges);
-        // writer.submitAsync(client, verticesA, verticesB, edges);
-        writer.sequentialBatch(client, verticesA, verticesB, edges);
+        // writer.parallel(client, verticesA, verticesB, edges);
+        // writer.sequentialBatch(client, verticesA, verticesB, edges);
+        writer.sequentialAsync(client, verticesA, verticesB, edges);
         watch.status("Total");
         
     }

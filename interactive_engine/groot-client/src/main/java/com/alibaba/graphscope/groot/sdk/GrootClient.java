@@ -20,6 +20,7 @@ import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 public class GrootClient {
     private final ClientGrpc.ClientBlockingStub clientStub;
     private final ClientWriteGrpc.ClientWriteBlockingStub writeStub;
+    private final ClientWriteGrpc.ClientWriteStub asyncWriteStub;
     private final ClientBackupGrpc.ClientBackupBlockingStub backupStub;
 
     private final GrootDdlServiceGrpc.GrootDdlServiceBlockingStub ddlStub;
@@ -42,10 +44,12 @@ public class GrootClient {
     private GrootClient(
             ClientGrpc.ClientBlockingStub clientBlockingStub,
             ClientWriteGrpc.ClientWriteBlockingStub clientWriteBlockingStub,
+            ClientWriteGrpc.ClientWriteStub clientWriteStub,
             ClientBackupGrpc.ClientBackupBlockingStub clientBackupBlockingStub,
             GrootDdlServiceGrpc.GrootDdlServiceBlockingStub ddlServiceBlockingStub) {
         this.clientStub = clientBlockingStub;
         this.writeStub = clientWriteBlockingStub;
+        this.asyncWriteStub = clientWriteStub;
         this.backupStub = clientBackupBlockingStub;
         this.ddlStub = ddlServiceBlockingStub;
     }
@@ -88,6 +92,11 @@ public class GrootClient {
     public long addVertex(Vertex vertex) {
         WriteRequestPb request = vertex.toWriteRequest(WriteTypePb.INSERT);
         return submit(request);
+    }
+
+    public void addVertex(Vertex vertex, StreamObserver<BatchWriteResponse> callback) {
+        WriteRequestPb request = vertex.toWriteRequest(WriteTypePb.INSERT);
+        submit(request, callback);
     }
 
     public long addVertex(String label, Map<String, String> properties) {
@@ -225,6 +234,12 @@ public class GrootClient {
         BatchWriteRequest.Builder batchWriteBuilder = getNewWriteBuilder();
         batchWriteBuilder.addAllWriteRequests(requests);
         return writeStub.batchWrite(batchWriteBuilder.build()).getSnapshotId();
+    }
+
+    private void submit(WriteRequestPb request, StreamObserver<BatchWriteResponse> callback) {
+        BatchWriteRequest.Builder batchWriteBuilder = getNewWriteBuilder();
+        batchWriteBuilder.addWriteRequests(request);
+        asyncWriteStub.batchWrite(batchWriteBuilder.build(), callback);
     }
 
     public GraphDefPb getSchema() {
@@ -398,6 +413,7 @@ public class GrootClient {
             ClientGrpc.ClientBlockingStub clientBlockingStub = ClientGrpc.newBlockingStub(channel);
             ClientWriteGrpc.ClientWriteBlockingStub clientWriteBlockingStub =
                     ClientWriteGrpc.newBlockingStub(channel);
+            ClientWriteGrpc.ClientWriteStub clientWriteStub = ClientWriteGrpc.newStub(channel);
             ClientBackupGrpc.ClientBackupBlockingStub clientBackupBlockingStub =
                     ClientBackupGrpc.newBlockingStub(channel);
             GrootDdlServiceGrpc.GrootDdlServiceBlockingStub ddlServiceBlockingStub =
@@ -406,12 +422,14 @@ public class GrootClient {
                 BasicAuth basicAuth = new BasicAuth(username, password);
                 clientBlockingStub = clientBlockingStub.withCallCredentials(basicAuth);
                 clientWriteBlockingStub = clientWriteBlockingStub.withCallCredentials(basicAuth);
+                clientWriteStub = clientWriteStub.withCallCredentials(basicAuth);
                 clientBackupBlockingStub = clientBackupBlockingStub.withCallCredentials(basicAuth);
                 ddlServiceBlockingStub = ddlServiceBlockingStub.withCallCredentials(basicAuth);
             }
             return new GrootClient(
                     clientBlockingStub,
                     clientWriteBlockingStub,
+                    clientWriteStub,
                     clientBackupBlockingStub,
                     ddlServiceBlockingStub);
         }

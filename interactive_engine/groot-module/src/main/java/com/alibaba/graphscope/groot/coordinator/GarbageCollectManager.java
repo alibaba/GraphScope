@@ -44,12 +44,12 @@ public class GarbageCollectManager {
                             for (int i = 0; i < CommonConfig.STORE_NODE_COUNT.get(configs); i++) {
                                 CoordinatorSnapshotClient client = clients.getClient(i);
                                 client.synchronizeSnapshot(offlineVersion);
-                                logger.info(
-                                        "Offline version of store ["
-                                                + i
-                                                + "] updated to ["
-                                                + offlineVersion
-                                                + "]");
+                                // logger.info(
+                                //         "Offline version of store ["
+                                //                 + i
+                                //                 + "] updated to ["
+                                //                 + offlineVersion
+                                //                 + "]");
                             }
                         }
                     } catch (Exception e) {
