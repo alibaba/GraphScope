@@ -171,12 +171,13 @@ std::pair<MutableCsrBase*, MutableCsrBase*> construct_empty_csr(
 
 // each file name is tuple <src_column_ind, dst_column_id, edata(currently only
 // one edata)> src_column_id indicate which column is src id, dst_column_id
-// indicate which column is dst id
-// default is 0, 1
+// indicate which column is dst id default is 0, 1
 template <typename EDATA_T>
 std::pair<MutableCsrBase*, MutableCsrBase*> construct_csr(
-    const std::vector<std::string>& filenames, size_t src_col_ind,
-    size_t dst_col_ind, const std::vector<PropertyType>& property_types,
+    const Schema& schema, const std::vector<std::string>& filenames,
+    size_t src_col_ind, size_t dst_col_ind,
+    const std::vector<PropertyType>& property_types,
+    const std::vector<std::pair<size_t, std::string>>& column_mappings,
     EdgeStrategy ie_strategy, EdgeStrategy oe_strategy,
     const LFIndexer<vid_t>& src_indexer, const LFIndexer<vid_t>& dst_indexer) {
   TypedMutableCsrBase<EDATA_T>* ie_csr = create_typed_csr<EDATA_T>(ie_strategy);
@@ -191,12 +192,16 @@ std::pair<MutableCsrBase*, MutableCsrBase*> construct_csr(
   oid_t src, dst;
   EDATA_T data;
 
-  bool first_file = true;
   size_t col_num = property_types.size();
   std::vector<Any> header(col_num + 2);
   for (auto& item : header) {
     item.type = PropertyType::kString;
   }
+
+  // fetch header first
+  get_header_row(filenames[0], header);  // filenames must not be empty
+  // check header matches schema
+
   for (auto filename : filenames) {
     VLOG(10) << "processing " << filename << " with src_col_id " << src_col_ind
              << " and dst_col_id " << dst_col_ind;
@@ -204,11 +209,7 @@ std::pair<MutableCsrBase*, MutableCsrBase*> construct_csr(
     if (fgets(line_buf, 4096, fin) == NULL) {
       continue;
     }
-    preprocess_line(line_buf);
-    if (first_file) {
-      ParseRecord(line_buf, header);
-      first_file = false;
-    }
+    preprocess_line(line_buf);  // do nothing
 
     // if match the default configuration, use ParseRecordX to fasten the
     // parsing
@@ -295,14 +296,39 @@ void MutablePropertyFragment::initEdges(
   EdgeStrategy ie_strtagy = schema_.get_incoming_edge_strategy(
       src_label_name, dst_label_name, edge_label_name);
 
+  {
+    // check column mappings consistent,
+    // TODO(zhanglei): Check column mappings after multiple property on edge is
+    // supported
+    if (column_mappings.size() > 1) {
+      LOG(FATAL) << "Edge column mapping must be less than 1";
+    }
+    if (column_mappings.size() > 0) {
+      auto& mapping = column_mappings[0];
+      if (mapping.first == src_col_ind || mapping.first == dst_col_ind) {
+        LOG(FATAL) << "Edge column mappings must not contain src_col_ind or "
+                      "dst_col_ind";
+      }
+      // check property exists in schema
+      if (!schema_.edge_has_property(src_label_name, dst_label_name,
+                                     edge_label_name, mapping.second)) {
+        LOG(FATAL) << "property " << mapping.second
+                   << " not exists in schema for edge triplet "
+                   << src_label_name << " -> " << edge_label_name << " -> "
+                   << dst_label_name;
+      }
+    }
+  }
+
   if (col_num == 0) {
     if (filenames.empty()) {
       std::tie(ie_[index], oe_[index]) =
           construct_empty_csr<grape::EmptyType>(ie_strtagy, oe_strtagy);
     } else {
       std::tie(ie_[index], oe_[index]) = construct_csr<grape::EmptyType>(
-          filenames, src_col_ind, dst_col_ind, property_types, ie_strtagy,
-          oe_strtagy, lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
+          schema_, filenames, src_col_ind, dst_col_ind, property_types,
+          column_mappings, ie_strtagy, oe_strtagy, lf_indexers_[src_label_i],
+          lf_indexers_[dst_label_i]);
     }
   } else if (property_types[0] == PropertyType::kDate) {
     if (filenames.empty()) {
@@ -310,8 +336,9 @@ void MutablePropertyFragment::initEdges(
           construct_empty_csr<Date>(ie_strtagy, oe_strtagy);
     } else {
       std::tie(ie_[index], oe_[index]) = construct_csr<Date>(
-          filenames, src_col_ind, dst_col_ind, property_types, ie_strtagy,
-          oe_strtagy, lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
+          schema_, filenames, src_col_ind, dst_col_ind, property_types,
+          column_mappings, ie_strtagy, oe_strtagy, lf_indexers_[src_label_i],
+          lf_indexers_[dst_label_i]);
     }
   } else if (property_types[0] == PropertyType::kInt32) {
     if (filenames.empty()) {
@@ -319,8 +346,9 @@ void MutablePropertyFragment::initEdges(
           construct_empty_csr<int>(ie_strtagy, oe_strtagy);
     } else {
       std::tie(ie_[index], oe_[index]) = construct_csr<int>(
-          filenames, src_col_ind, dst_col_ind, property_types, ie_strtagy,
-          oe_strtagy, lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
+          schema_, filenames, src_col_ind, dst_col_ind, property_types,
+          column_mappings, ie_strtagy, oe_strtagy, lf_indexers_[src_label_i],
+          lf_indexers_[dst_label_i]);
     }
   } else if (property_types[0] == PropertyType::kInt64) {
     if (filenames.empty()) {
@@ -328,8 +356,9 @@ void MutablePropertyFragment::initEdges(
           construct_empty_csr<int64_t>(ie_strtagy, oe_strtagy);
     } else {
       std::tie(ie_[index], oe_[index]) = construct_csr<int64_t>(
-          filenames, src_col_ind, dst_col_ind, property_types, ie_strtagy,
-          oe_strtagy, lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
+          schema_, filenames, src_col_ind, dst_col_ind, property_types,
+          column_mappings, ie_strtagy, oe_strtagy, lf_indexers_[src_label_i],
+          lf_indexers_[dst_label_i]);
     }
   } else if (property_types[0] == PropertyType::kString) {
     if (filenames.empty()) {
@@ -344,8 +373,9 @@ void MutablePropertyFragment::initEdges(
           construct_empty_csr<double>(ie_strtagy, oe_strtagy);
     } else {
       std::tie(ie_[index], oe_[index]) = construct_csr<double>(
-          filenames, src_col_ind, dst_col_ind, property_types, ie_strtagy,
-          oe_strtagy, lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
+          schema_, filenames, src_col_ind, dst_col_ind, property_types,
+          column_mappings, ie_strtagy, oe_strtagy, lf_indexers_[src_label_i],
+          lf_indexers_[dst_label_i]);
     }
   } else {
     LOG(FATAL) << "Unsupported edge property type.";

@@ -21,7 +21,8 @@
 int main(int argc, char** argv) {
   if (argc < 4) {
     std::cout << "Usage: " << argv[0]
-              << "<schema_file> <bulk load file> <data dir>" << std::endl;
+              << "<schema_file> <bulk load file> <data dir> [thread_num]"
+              << std::endl;
     return 0;
   }
 
@@ -29,9 +30,13 @@ int main(int argc, char** argv) {
   tzset();
 
   std::string data_path, schema_file, bulk_load_config_path;
+  int32_t thread_num = 1;
   schema_file = argv[1];
   bulk_load_config_path = argv[2];
   data_path = argv[3];
+  if (argc > 4) {
+    thread_num = atoi(argv[4]);
+  }
 
   double t0 = -grape::GetCurrentTime();
   auto& db = gs::GraphDB::get();
@@ -39,7 +44,7 @@ int main(int argc, char** argv) {
   auto schema = gs::Schema::LoadFromYaml(schema_file);
   auto bulk_load_config =
       gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
-  db.Init(schema, bulk_load_config, data_path, 1);
+  db.Init(schema, bulk_load_config, data_path, thread_num);
 
   t0 += grape::GetCurrentTime();
   auto& graph = db.graph();

@@ -79,4 +79,4 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex/build/
         SCHEMA_FILE=${FLEX_DATA_DIR}/audit_graph_schema.yaml
         BULK_LOAD_FILE=${FLEX_DATA_DIR}/audit_bulk_load.yaml
-        GLOG_v=10 ./tests/rt_mutable_graph/test_graph_loading  ${SCHEMA_FILE} ${BULK_LOAD_FILE} /tmp/csr-data-dir/
+        GLOG_v=10 ./tests/rt_mutable_graph/test_graph_loading  ${SCHEMA_FILE} ${BULK_LOAD_FILE} /tmp/csr-data-dir/ 2
