@@ -368,22 +368,28 @@ static bool parse_bulk_load_config_file(const std::string& config_file,
                                         LoadingConfig& load_config) {
   YAML::Node root = YAML::LoadFile(config_file);
   std::string data_location;
-  load_config.data_source_ = "file";  // default data source is file
+  load_config.scheme_ = "file";  // default data source is file
   if (root["loading_config"]) {
-    get_scalar(root["loading_config"], "data_source", load_config.data_source_);
-    get_scalar(root["loading_config"], "data_location", data_location);
-    get_scalar(root["loading_config"], "method", load_config.method_);
-
-    get_scalar(root["loading_config"], "format", load_config.format_);
-    if (load_config.format_ == "csv") {
-      if (root["loading_config"]["meta_data"]) {
-        get_scalar(root["loading_config"]["meta_data"], "delimiter",
-                   load_config.delimiter_);
+    auto loading_config_node = root["loading_config"];
+    if (loading_config_node["data_source"]) {
+      auto data_source_node = loading_config_node["data_source"];
+      get_scalar(data_source_node, "scheme", load_config.scheme_);
+      get_scalar(data_source_node, "location", data_location);
+    }
+    get_scalar(loading_config_node, "import_option", load_config.method_);
+    auto format_node = loading_config_node["format"];
+    load_config.delimiter_ = "|";
+    load_config.format_ = "csv";
+    if (format_node) {
+      get_scalar(format_node, "type", load_config.format_);
+      if (load_config.format_ == "csv") {
+        if (format_node["meta_data"]) {
+          get_scalar(format_node["meta_data"], "delimiter",
+                     load_config.delimiter_);
+        }
       } else {
-        load_config.delimiter_ = "|";
+        LOG(FATAL) << "Only support csv format now";
       }
-    } else {
-      LOG(FATAL) << "Only support csv format now";
     }
   }
   // only delimeter with | is supported now
@@ -398,11 +404,11 @@ static bool parse_bulk_load_config_file(const std::string& config_file,
   if (data_location.empty()) {
     LOG(WARNING) << "data_location is not set";
   }
-  if (load_config.data_source_ != "file") {
+  if (load_config.scheme_ != "file") {
     LOG(ERROR) << "Only support [file] data source now";
     return false;
   }
-  LOG(INFO) << "data_source: " << load_config.data_source_
+  LOG(INFO) << "scheme: " << load_config.scheme_
             << ", data_location: " << data_location
             << ", method: " << load_config.method_
             << ", delimiter: " << load_config.delimiter_;
@@ -446,7 +452,7 @@ LoadingConfig LoadingConfig::ParseFromYaml(const Schema& schema,
 
 LoadingConfig::LoadingConfig(const Schema& schema)
     : schema_(schema),
-      data_source_("file"),
+      scheme_("file"),
       delimiter_("|"),
       method_("init"),
       format_("csv") {}
@@ -457,7 +463,7 @@ LoadingConfig::LoadingConfig(const Schema& schema,
                              const std::string& method,
                              const std::string& format)
     : schema_(schema),
-      data_source_(data_source),
+      scheme_(data_source),
       delimiter_(delimiter),
       method_(method),
       format_(format) {}
@@ -486,16 +492,14 @@ bool LoadingConfig::AddEdgeSources(const std::string& src_label,
   return true;
 }
 
-void LoadingConfig::SetDataSource(const std::string& data_source) {
-  data_source_ = data_source;
-}
+void LoadingConfig::SetScheme(const std::string& scheme) { scheme_ = scheme; }
 void LoadingConfig::SetDelimiter(const std::string& delimiter) {
   delimiter_ = delimiter;
 }
 void LoadingConfig::SetMethod(const std::string& method) { method_ = method; }
 
 // getters
-const std::string& LoadingConfig::GetDataSource() const { return data_source_; }
+const std::string& LoadingConfig::GetScheme() const { return scheme_; }
 
 const std::string& LoadingConfig::GetDelimiter() const { return delimiter_; }
 

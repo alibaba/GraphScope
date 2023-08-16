@@ -1,11 +1,13 @@
 graph: modern
 loading_config:
-  data_source: file  # file, oss, s3, hdfs; only file is supported now
-#  data_location: # specify it or use FLEX_DATA_DIR env.
-  format: csv  # csv, json, parquet, orc, avro, etc.
-  method: init # append, overwrite, only init is supported now
-  meta_data:
-    delimiter: "|"  # other loading configuration places here
+  data_source:
+    scheme: file  # file, oss, s3, hdfs; only file is supported now
+    #  location: # specify it or use FLEX_DATA_DIR env.
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: csv
+    metadata:
+      delimiter: "|"  # other loading configuration places here
 vertex_mappings:
   - type_name: person  # must align with the schema
     inputs:

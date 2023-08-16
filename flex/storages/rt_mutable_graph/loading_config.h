@@ -63,12 +63,12 @@ class LoadingConfig {
                       const std::string& edge_label, size_t src_pri_key_ind,
                       size_t dst_pri_key_ind, const std::string& file_path);
 
-  void SetDataSource(const std::string& data_source);
+  void SetScheme(const std::string& data_source);
   void SetDelimiter(const std::string& delimiter);
   void SetMethod(const std::string& method);
 
   // getters
-  const std::string& GetDataSource() const;
+  const std::string& GetScheme() const;
   const std::string& GetDelimiter() const;
   const std::string& GetMethod() const;
   const std::unordered_map<schema_label_type, std::vector<std::string>>&
@@ -93,10 +93,10 @@ class LoadingConfig {
 
  private:
   const Schema& schema_;
-  std::string data_source_;  // "file", "hdfs", "oss", "s3"
-  std::string delimiter_;    // "\t", ",", " ", "|"
-  std::string method_;       // init, append, overwrite
-  std::string format_;       // csv, tsv, json, parquet
+  std::string scheme_;     // "file", "hdfs", "oss", "s3"
+  std::string delimiter_;  // "\t", ",", " ", "|"
+  std::string method_;     // init, append, overwrite
+  std::string format_;     // csv, tsv, json, parquet
 
   std::unordered_map<schema_label_type, std::vector<std::string>>
       vertex_loading_meta_;  // <vertex_label_id, std::vector<file_path_>>
