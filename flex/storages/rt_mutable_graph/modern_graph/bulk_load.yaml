@@ -2,14 +2,14 @@ graph: modern
 loading_config:
   data_source: file  # file, oss, s3, hdfs; only file is supported now
 #  data_location: # specify it or use FLEX_DATA_DIR env.
+  format: csv  # csv, json, parquet, orc, avro, etc.
   method: init # append, overwrite, only init is supported now
   meta_data:
     delimiter: "|"  # other loading configuration places here
 vertex_mappings:
   - type_name: person  # must align with the schema
     inputs:
-      - path: person.csv
-        format: standard_csv
+      - person.csv
     column_mappings:
       - column:
           index: 0    # can be omitted if the index is the same as the property index
@@ -25,8 +25,7 @@ vertex_mappings:
         property: age
   - type_name: software
     inputs:
-      - path: software.csv
-        format: standard_csv
+      - software.csv
     column_mappings:
       - column:
           index: 0      # can be omitted if the index is the same as the property index
@@ -46,16 +45,15 @@ edge_mappings:
       source_vertex:  person
       destination_vertex:  person
     inputs:
-      - path: person_knows_person.csv
-        format: standard_csv
+      - person_knows_person.csv
     source_vertex_mappings:
       - column:
           index: 0
-          name: src_id
+          name: id
     destination_vertex_mappings:
       - column:
           index: 1
-          name: dst_id
+          name: id
     column_mappings:
       - column:
           index: 2
@@ -66,16 +64,15 @@ edge_mappings:
       source_vertex: person
       destination_vertex: software
     inputs:
-      - path: person_created_software.csv
-        format: standard_csv
+      -  person_created_software.csv
     source_vertex_mappings:
       - column:
           index: 0
-          name: src_id
+          name: id
     destination_vertex_mappings:
       - column:
           index: 1
-          name: dst_id
+          name: id
     column_mappings:
       - column:
           index: 2

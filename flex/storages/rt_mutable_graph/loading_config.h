@@ -49,7 +49,8 @@ class LoadingConfig {
   LoadingConfig(const Schema& schema);
 
   LoadingConfig(const Schema& schema, const std::string& data_source,
-                const std::string& delimiter, const std::string& method);
+                const std::string& delimiter, const std::string& method,
+                const std::string& format);
 
   // Add source files for vertex label. Each label can have multiple files.
   bool AddVertexSources(const std::string& label, const std::string& file_path);
@@ -87,7 +88,7 @@ class LoadingConfig {
       label_t src_label_id, label_t dst_label_id, label_t edge_label_id) const;
 
   // Get src_id and dst_id column index for edge label.
-  const std::pair<size_t, size_t>& GetEdgeSrcDstCol(
+  const std::pair<std::vector<size_t>, std::vector<size_t>>& GetEdgeSrcDstCol(
       label_t src_label_id, label_t dst_label_id, label_t edge_label_id) const;
 
  private:
@@ -95,6 +96,7 @@ class LoadingConfig {
   std::string data_source_;  // "file", "hdfs", "oss", "s3"
   std::string delimiter_;    // "\t", ",", " ", "|"
   std::string method_;       // init, append, overwrite
+  std::string format_;       // csv, tsv, json, parquet
 
   std::unordered_map<schema_label_type, std::vector<std::string>>
       vertex_loading_meta_;  // <vertex_label_id, std::vector<file_path_>>
@@ -115,7 +117,8 @@ class LoadingConfig {
       edge_column_mappings_;  // match which column in file to which property in
                               // schema
 
-  std::unordered_map<edge_triplet_type, std::pair<size_t, size_t>,
+  std::unordered_map<edge_triplet_type,
+                     std::pair<std::vector<size_t>, std::vector<size_t>>,
                      boost::hash<edge_triplet_type>>
       edge_src_dst_col_;  // Which two columns are src_id and dst_id
 

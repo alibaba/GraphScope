@@ -25,7 +25,7 @@ Schema::~Schema() = default;
 void Schema::add_vertex_label(
     const std::string& label, const std::vector<PropertyType>& property_types,
     const std::vector<std::string>& property_names,
-    const std::tuple<PropertyType, std::string>& primary_key,
+    const std::vector<std::pair<PropertyType, std::string>>& primary_key,
     const std::vector<StorageStrategy>& strategies, size_t max_vnum) {
   label_t v_label_id = vertex_label_to_index(label);
   vproperties_[v_label_id] = property_types;
@@ -210,14 +210,10 @@ std::string Schema::get_edge_label_name(label_t index) const {
   return ret;
 }
 
-PropertyType Schema::get_vertex_primary_key_type(label_t index) const {
+const std::vector<std::pair<PropertyType, std::string>>&
+Schema::get_vertex_primary_key(label_t index) const {
   CHECK(v_primary_keys_.size() > index);
-  return std::get<0>(v_primary_keys_.at(index));
-}
-
-const std::string& Schema::get_vertex_primary_key_name(label_t index) const {
-  CHECK(v_primary_keys_.size() > index);
-  return std::get<1>(v_primary_keys_.at(index));
+  return v_primary_keys_.at(index);
 }
 
 void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) {
@@ -508,49 +504,41 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
     return false;
   }
   auto primary_key_node = node["primary_keys"];
-  if (!primary_key_node.IsSequence() || primary_key_node.size() != 1) {
-    LOG(ERROR)
-        << "[Primary_keys] should be sequence, and only one primary key is "
-           "supported";
+  if (!primary_key_node.IsSequence()) {
+    LOG(ERROR) << "[Primary_keys] should be sequence";
     return false;
   }
   // remove primary key from properties.
-  std::string primary_key_name = primary_key_node[0].as<std::string>();
-  int primary_key_ind = -1;
-  for (size_t i = 0; i < property_names.size(); ++i) {
-    if (property_names[i] == primary_key_name) {
-      primary_key_ind = i;
-      break;
+
+  std::vector<int> primary_key_inds(primary_key_node.size(), -1);
+  std::vector<std::pair<PropertyType, std::string>> primary_keys;
+  for (auto i = 0; i < primary_key_node.size(); ++i) {
+    auto cur_primary_key = primary_key_node[i];
+    std::string primary_key_name = primary_key_node[0].as<std::string>();
+    for (size_t j = 0; j < property_names.size(); ++j) {
+      if (property_names[j] == primary_key_name) {
+        primary_key_inds[i] = j;
+        break;
+      }
     }
-  }
-  if (primary_key_ind == -1) {
-    LOG(ERROR) << "Primary key " << primary_key_name
-               << " is not found in properties";
-    return false;
+    if (primary_key_inds[i] == -1) {
+      LOG(ERROR) << "Primary key " << primary_key_name
+                 << " is not found in properties";
+      return false;
+    }
+    if (property_types[primary_key_inds[i]] != PropertyType::kInt64) {
+      LOG(ERROR) << "Primary key " << primary_key_name << " should be int64";
+      return false;
+    }
+    primary_keys.emplace_back(property_types[primary_key_inds[i]],
+                              property_names[primary_key_inds[i]]);
+    // remove primary key from properties.
+    property_names.erase(property_names.begin() + primary_key_inds[i]);
+    property_types.erase(property_types.begin() + primary_key_inds[i]);
   }
 
-  if (property_types[primary_key_ind] != PropertyType::kInt64) {
-    LOG(ERROR) << "Primary key " << primary_key_name << " should be int64";
-    return false;
-  }
-  LOG(INFO) << "Primary key is [" << primary_key_name << "] for " << label_name;
-  auto tuple = std::make_tuple(property_types[primary_key_ind],
-                               property_names[primary_key_ind]);
-  // remove primary key from properties.
-  property_names.erase(property_names.begin() + primary_key_ind);
-  property_types.erase(property_types.begin() + primary_key_ind);
-  std::string debug_str;
-  {
-    std::stringstream ss;
-    for (size_t i = 0; i < property_names.size(); ++i) {
-      ss << property_names[i] << "(";
-      ss << property_types[i] << "),";
-    }
-    debug_str = ss.str();
-  }
-
-  schema.add_vertex_label(label_name, property_types, property_names, tuple,
-                          strategies, max_num);
+  schema.add_vertex_label(label_name, property_types, property_names,
+                          primary_keys, strategies, max_num);
   return true;
 }
 
@@ -709,7 +697,20 @@ bool Schema::vertex_has_property(const std::string& label,
   auto& v_prop_names = vprop_names_[v_label_id];
   return std::find(v_prop_names.begin(), v_prop_names.end(), prop) !=
              v_prop_names.end() ||
-         prop == std::get<1>(v_primary_keys_[v_label_id]);
+         vertex_has_primary_key(label, prop);
+}
+
+bool Schema::vertex_has_primary_key(const std::string& label,
+                                    const std::string& prop) const {
+  auto v_label_id = get_vertex_label_id(label);
+  CHECK(v_label_id < vprop_names_.size());
+  auto& keys = v_primary_keys_[v_label_id];
+  for (auto i = 0; i < keys.size(); ++i) {
+    if (keys[i].second == prop) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool Schema::edge_has_property(const std::string& src_label,

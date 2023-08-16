@@ -74,6 +74,14 @@ MutablePropertyFragment::~MutablePropertyFragment() {
 void MutablePropertyFragment::initVertices(
     label_t v_label_i, const std::vector<std::string>& filenames,
     const std::vector<std::pair<size_t, std::string>>& vertex_column_mappings) {
+  // Check primary key num and type.
+  auto primary_keys = schema_.get_vertex_primary_key(v_label_i);
+  if (primary_keys.size() != 1) {
+    LOG(FATAL) << "Only support one primary key for vertex.";
+  }
+  if (primary_keys[0].first != PropertyType::kInt64) {
+    LOG(FATAL) << "Only support int64_t primary key for vertex.";
+  }
   IdIndexer<oid_t, vid_t> indexer;
   std::string v_label_name = schema_.get_vertex_label_name(v_label_i);
   VLOG(10) << "Start init vertices for label " << v_label_i << " with "
@@ -422,10 +430,16 @@ void MutablePropertyFragment::Init(const Schema& schema,
         auto& e_files = iter->second;
         auto src_dst_col_pair = loading_config.GetEdgeSrcDstCol(
             src_label_id, dst_label_id, e_label_id);
+        // We currenly only support one src primary key and one dst primary key
+        if (src_dst_col_pair.first.size() != 1 ||
+            src_dst_col_pair.second.size() != 1) {
+          LOG(FATAL) << "We currenly only support one src primary key and one "
+                        "dst primary key";
+        }
         initEdges(src_label_id, dst_label_id, e_label_id, e_files,
                   loading_config.GetEdgeColumnMappings(
                       src_label_id, dst_label_id, e_label_id),
-                  src_dst_col_pair.first, src_dst_col_pair.second);
+                  src_dst_col_pair.first[0], src_dst_col_pair.second[0]);
       }
     }
 
@@ -491,12 +505,18 @@ void MutablePropertyFragment::Init(const Schema& schema,
               auto dst_label_id = std::get<1>(edge_file.first);
               auto e_label_id = std::get<2>(edge_file.first);
               auto& file_names = edge_file.second;
-              auto src_dst_ind_col = loading_config.GetEdgeSrcDstCol(
+              auto src_dst_col_pair = loading_config.GetEdgeSrcDstCol(
                   src_label_id, dst_label_id, e_label_id);
+              if (src_dst_col_pair.first.size() != 1 ||
+                  src_dst_col_pair.second.size() != 1) {
+                LOG(FATAL)
+                    << "We currenly only support one src primary key and one "
+                       "dst primary key";
+              }
               initEdges(src_label_id, dst_label_id, e_label_id, file_names,
                         loading_config.GetEdgeColumnMappings(
                             src_label_id, dst_label_id, e_label_id),
-                        src_dst_ind_col.first, src_dst_ind_col.second);
+                        src_dst_col_pair.first[0], src_dst_col_pair.second[0]);
             }
           });
         }
@@ -792,7 +812,8 @@ void MutablePropertyFragment::parseVertexFiles(
   auto& table = vertex_data_[label_index];
   auto& property_types = schema_.get_vertex_properties(vertex_label);
   size_t col_num = property_types.size();
-  auto primary_key_name = schema_.get_vertex_primary_key_name(label_index);
+  auto primary_key = schema_.get_vertex_primary_key(label_index)[0];
+  auto primary_key_name = primary_key.second;
 
   // vertex_column_mappings can be empty, empty means the each column in the
   // file is mapped to the same column in the table.
@@ -848,7 +869,7 @@ void MutablePropertyFragment::parseVertexFiles(
     } else if (i > primary_key_ind) {
       properties[i].type = property_types[i - 1];
     } else {
-      properties[i].type = schema_.get_vertex_primary_key_type(label_index);
+      properties[i].type = primary_key.first;
     }
   }
 
@@ -868,7 +889,7 @@ void MutablePropertyFragment::parseVertexFiles(
     file_col_to_schema_col_ind.resize(max_ind + 1, -1);
     for (auto& pair : vertex_column_mappings) {
       // if meet primary key, skip it.
-      if (pair.second == schema_.get_vertex_primary_key_name(label_index)) {
+      if (pair.second == primary_key_name) {
         VLOG(10) << "Skip primary key column " << pair.first << ", "
                  << pair.second;
         continue;

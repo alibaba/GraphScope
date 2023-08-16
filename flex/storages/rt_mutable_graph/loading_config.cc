@@ -23,27 +23,44 @@
 namespace gs {
 namespace config_parsing {
 
-static bool fetch_src_dst_column_mapping(YAML::Node node,
+// fetch the primary key of the src and dst vertex label in the edge file,
+// also check whether the primary key exists in the schema, and number equals.
+static bool fetch_src_dst_column_mapping(const Schema& schema, YAML::Node node,
+                                         label_t label_id,
                                          const std::string& key,
-                                         int32_t& column_id) {
+                                         std::vector<size_t>& column_inds) {
   if (node[key]) {
     auto column_mappings = node[key];
     if (!column_mappings.IsSequence()) {
       LOG(ERROR) << "value for column_mappings should be a sequence";
       return false;
     }
-    if (column_mappings.size() > 1) {
-      LOG(ERROR) << "Only only source vertex mapping is needed";
+    auto& schema_primary_key = schema.get_vertex_primary_key(label_id);
+
+    if (column_mappings.size() != schema_primary_key.size()) {
+      LOG(INFO) << "Specification in " << key
+                << " doesn't match schema primary key for label "
+                << schema.get_vertex_label_name(label_id);
       return false;
     }
-    auto column_mapping = column_mappings[0]["column"];
-    if (!get_scalar(column_mapping, "index", column_id)) {
-      LOG(ERROR) << "Expect column index for source vertex mapping";
-      return false;
+    column_inds.resize(column_mappings.size());
+    for (auto i = 0; i < column_mappings.size(); ++i) {
+      auto column_mapping = column_mappings[i]["column"];
+      auto name = column_mapping["name"].as<std::string>();
+      if (name != schema_primary_key[i].second) {
+        LOG(ERROR) << "Expect column name [" << schema_primary_key[i].second
+                   << "] for source vertex mapping, at index: " << i
+                   << ", got: " << name;
+        return false;
+      }
+      if (!get_scalar(column_mapping, "index", column_inds[i])) {
+        LOG(ERROR) << "Expect column index for source vertex mapping";
+        return false;
+      }
     }
+
   } else {
-    LOG(WARNING)
-        << "source_vertex_mappings is not set, use default src_column = 0";
+    LOG(FATAL) << "No primary key column mapping for [" << key << "]";
   }
   return true;
 }
@@ -103,6 +120,14 @@ static bool parse_vertex_files(
     return false;
   }
   auto label_id = schema.get_vertex_label_id(label_name);
+
+  // Check whether the label has been set.
+  if (files.find(label_id) != files.end()) {
+    LOG(ERROR) << "Loading configuration for Vertex label [" << label_name
+               << "] has been set";
+    return false;
+  }
+
   YAML::Node files_node = node["inputs"];
 
   if (node["column_mappings"]) {
@@ -135,21 +160,7 @@ static bool parse_vertex_files(
     }
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
-      std::string file_format;
-      std::string file_path;
-      if (!get_scalar(files_node[i], "format", file_format)) {
-        return false;
-      }
-      if (file_format != "standard_csv") {
-        LOG(ERROR) << "file_format is not set properly, currenly only support "
-                      "standard_csv";
-        return false;
-      }
-      if (!get_scalar(files_node[i], "path", file_path)) {
-        LOG(ERROR) << "Field [path] is not set properly for vertex ["
-                   << label_name << "]";
-        return false;
-      }
+      std::string file_path = files_node[i].as<std::string>();
       if (!data_location.empty()) {
         file_path = data_location + "/" + file_path;
       }
@@ -194,7 +205,7 @@ static bool parse_edge_files(
                        boost::hash<typename LoadingConfig::edge_triplet_type>>&
         edge_mapping,
     std::unordered_map<typename LoadingConfig::edge_triplet_type,
-                       std::pair<size_t, size_t>,
+                       std::pair<std::vector<size_t>, std::vector<size_t>>,
                        boost::hash<typename LoadingConfig::edge_triplet_type>>&
         edge_src_dst_col) {
   if (!node["type_triplet"]) {
@@ -240,30 +251,39 @@ static bool parse_edge_files(
   auto dst_label_id = schema.get_vertex_label_id(dst_label);
   auto edge_label_id = schema.get_edge_label_id(edge_label);
 
+  if (files.find(std::make_tuple(src_label_id, dst_label_id, edge_label_id)) !=
+      files.end()) {
+    LOG(ERROR) << "Edge [" << edge_label << "] between [" << src_label
+               << "] and "
+               << "[" << dst_label << "] loading config already exists";
+    return false;
+  }
+
   // parse the vertex mapping. currently we only need one column to identify the
   // vertex.
   {
-    int32_t src_column = 0;
-    int32_t dst_column = 1;
+    std::vector<size_t> src_columns, dst_columns;
 
-    if (!fetch_src_dst_column_mapping(node, "source_vertex_mappings",
-                                      src_column)) {
+    if (!fetch_src_dst_column_mapping(schema, node, src_label_id,
+                                      "source_vertex_mappings", src_columns)) {
       LOG(ERROR) << "Field [source_vertex_mappings] is not set for edge ["
                  << src_label << "->[" << edge_label << "]->" << dst_label
                  << "]";
       return false;
     }
-    if (!fetch_src_dst_column_mapping(node, "destination_vertex_mappings",
-                                      dst_column)) {
+    if (!fetch_src_dst_column_mapping(schema, node, dst_label_id,
+                                      "destination_vertex_mappings",
+                                      dst_columns)) {
       LOG(ERROR) << "Field [destination_vertex_mappings] is not set for edge["
                  << src_label << "->[" << edge_label << "]->" << dst_label;
       return false;
     }
 
-    VLOG(10) << "src: " << src_label << ", dst: " << dst_label << " src_column "
-             << src_column << " dst_column " << dst_column;
+    VLOG(10) << "src: " << src_label << ", dst: " << dst_label
+             << " src_column size:  " << src_columns.size() << " dst_column "
+             << dst_columns.size();
     edge_src_dst_col[std::tuple{src_label_id, dst_label_id, edge_label_id}] =
-        std::pair{src_column, dst_column};
+        std::pair{src_columns, dst_columns};
   }
 
   if (node["column_mappings"]) {
@@ -296,24 +316,7 @@ static bool parse_edge_files(
     }
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
-      std::string file_format;
-      std::string file_path;
-      if (!get_scalar(files_node[i], "format", file_format)) {
-        LOG(ERROR) << "Field [format] is not set for edge [" << edge_label
-                   << "]'s inputs";
-        return false;
-      }
-      if (file_format != "standard_csv") {
-        LOG(ERROR) << "Currently only support standard_csv, but got "
-                   << file_format << " for edge [" << edge_label
-                   << "]'s inputs";
-        return false;
-      }
-      if (!get_scalar(files_node[i], "path", file_path)) {
-        LOG(ERROR) << "Field [path] is not set for edge [" << edge_label
-                   << "]'s inputs";
-        return false;
-      }
+      std::string file_path = files_node[i].as<std::string>();
       if (!data_location.empty()) {
         file_path = data_location + "/" + file_path;
       }
@@ -342,7 +345,7 @@ static bool parse_edges_files_schema(
                        boost::hash<typename LoadingConfig::edge_triplet_type>>&
         edge_mapping,
     std::unordered_map<std::tuple<label_t, label_t, label_t>,
-                       std::pair<size_t, size_t>,
+                       std::pair<std::vector<size_t>, std::vector<size_t>>,
                        boost::hash<typename LoadingConfig::edge_triplet_type>>&
         edge_src_dst_col) {
   if (!node.IsSequence()) {
@@ -363,40 +366,46 @@ static bool parse_edges_files_schema(
 static bool parse_bulk_load_config_file(const std::string& config_file,
                                         const Schema& schema,
                                         LoadingConfig& load_config) {
-  std::string& data_source = load_config.data_source_;
-  std::string& delimiter = load_config.delimiter_;
-  std::string& method = load_config.method_;
-
   YAML::Node root = YAML::LoadFile(config_file);
-  data_source = "file";
   std::string data_location;
+  load_config.data_source_ = "file";  // default data source is file
   if (root["loading_config"]) {
-    get_scalar(root["loading_config"], "data_source", data_source);
+    get_scalar(root["loading_config"], "data_source", load_config.data_source_);
     get_scalar(root["loading_config"], "data_location", data_location);
-    get_scalar(root["loading_config"], "method", method);
-    if (root["loading_config"]["meta_data"]) {
-      get_scalar(root["loading_config"]["meta_data"], "delimiter", delimiter);
+    get_scalar(root["loading_config"], "method", load_config.method_);
+
+    get_scalar(root["loading_config"], "format", load_config.format_);
+    if (load_config.format_ == "csv") {
+      if (root["loading_config"]["meta_data"]) {
+        get_scalar(root["loading_config"]["meta_data"], "delimiter",
+                   load_config.delimiter_);
+      } else {
+        load_config.delimiter_ = "|";
+      }
+    } else {
+      LOG(FATAL) << "Only support csv format now";
     }
   }
   // only delimeter with | is supported now
-  if (delimiter != "|") {
+  if (load_config.delimiter_ != "|") {
     LOG(FATAL) << "Only support | as delimiter now";
     return false;
   }
-  if (method != "init") {
+  if (load_config.method_ != "init") {
     LOG(FATAL) << "Only support init method now";
     return false;
   }
   if (data_location.empty()) {
     LOG(WARNING) << "data_location is not set";
   }
-  if (data_source != "file") {
+  if (load_config.data_source_ != "file") {
     LOG(ERROR) << "Only support [file] data source now";
     return false;
   }
-  LOG(INFO) << "data_source: " << data_source
-            << ", data_location: " << data_location << ", method: " << method
-            << ", delimiter: " << delimiter;
+  LOG(INFO) << "data_source: " << load_config.data_source_
+            << ", data_location: " << data_location
+            << ", method: " << load_config.method_
+            << ", delimiter: " << load_config.delimiter_;
 
   if (root["vertex_mappings"]) {
     VLOG(10) << "vertex_mappings is set";
@@ -436,16 +445,22 @@ LoadingConfig LoadingConfig::ParseFromYaml(const Schema& schema,
 }
 
 LoadingConfig::LoadingConfig(const Schema& schema)
-    : schema_(schema), data_source_("file"), delimiter_("|"), method_("init") {}
+    : schema_(schema),
+      data_source_("file"),
+      delimiter_("|"),
+      method_("init"),
+      format_("csv") {}
 
 LoadingConfig::LoadingConfig(const Schema& schema,
                              const std::string& data_source,
                              const std::string& delimiter,
-                             const std::string& method)
+                             const std::string& method,
+                             const std::string& format)
     : schema_(schema),
       data_source_(data_source),
       delimiter_(delimiter),
-      method_(method) {}
+      method_(method),
+      format_(format) {}
 
 bool LoadingConfig::AddVertexSources(const std::string& label,
                                      const std::string& file_path) {
@@ -514,8 +529,9 @@ LoadingConfig::GetEdgeColumnMappings(label_t src_label_id, label_t dst_label_id,
   return edge_column_mappings_.at(key);
 }
 
-const std::pair<size_t, size_t>& LoadingConfig::GetEdgeSrcDstCol(
-    label_t src_label_id, label_t dst_label_id, label_t edge_label_id) const {
+const std::pair<std::vector<size_t>, std::vector<size_t>>&
+LoadingConfig::GetEdgeSrcDstCol(label_t src_label_id, label_t dst_label_id,
+                                label_t edge_label_id) const {
   auto key = std::make_tuple(src_label_id, dst_label_id, edge_label_id);
   CHECK(edge_src_dst_col_.find(key) != edge_src_dst_col_.end());
   return edge_src_dst_col_.at(key);
