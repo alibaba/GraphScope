@@ -227,6 +227,7 @@ public class GrootGraph extends RemoteTestGraph {
                                     Collections.singletonMap("id", "3"),
                                     Collections.singletonMap("weight", "0.2")));
             ddlClient.remoteFlush(snapshotId);
+            Thread.sleep(5000);
         } else {
             throw new UnsupportedOperationException("graph " + graphName + " is unsupported yet");
         }
