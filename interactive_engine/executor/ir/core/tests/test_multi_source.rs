@@ -93,7 +93,7 @@ mod tests {
 
         let mut plan = LogicalPlan::default();
         let scan_id = plan
-            .append_operator_as_node(scan_opr.into(), vec![])
+            .append_operator_as_node(scan_opr.into(), vec![0])
             .unwrap();
         let left_match_id = plan
             .append_operator_as_node(left_pattern.into(), vec![scan_id])
@@ -171,13 +171,13 @@ mod tests {
 
         let mut plan = LogicalPlan::default();
         let left_scan_id = plan
-            .append_operator_as_node(scan_opr.clone().into(), vec![])
+            .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
         let left_match_id = plan
             .append_operator_as_node(left_pattern.into(), vec![left_scan_id])
             .unwrap();
         let right_scan_id = plan
-            .append_operator_as_node(scan_opr.into(), vec![])
+            .append_operator_as_node(scan_opr.into(), vec![0])
             .unwrap();
         let right_match_id = plan
             .append_operator_as_node(right_pattern.into(), vec![right_scan_id])
@@ -264,13 +264,13 @@ mod tests {
 
         let mut plan = LogicalPlan::default();
         let left_scan_id = plan
-            .append_operator_as_node(scan_opr.clone().into(), vec![])
+            .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
         let left_match_id = plan
             .append_operator_as_node(left_pattern.into(), vec![left_scan_id])
             .unwrap();
         let right_scan_id = plan
-            .append_operator_as_node(scan_opr.clone().into(), vec![])
+            .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
         let right_match_id = plan
             .append_operator_as_node(right_pattern.into(), vec![right_scan_id])
@@ -280,7 +280,7 @@ mod tests {
             .unwrap();
 
         let third_scan_id = plan
-            .append_operator_as_node(scan_opr.into(), vec![])
+            .append_operator_as_node(scan_opr.into(), vec![0])
             .unwrap();
         let third_match_id = plan
             .append_operator_as_node(third_pattern.into(), vec![third_scan_id])
@@ -369,8 +369,7 @@ mod tests {
         println!("hello i'm physical plan");
         println!("{:#?}", physical_plan);
         // dummy, join1, join2, sink
-        println!("res {:?}", res);
-        // assert_eq!(physical_plan.len(), 4);
+        assert_eq!(physical_plan.len(), 4);
     }
 
     fn multi_join_logical_plan() -> LogicalPlan {
@@ -386,16 +385,16 @@ mod tests {
 
         let mut plan = LogicalPlan::default();
         let scan1_id = plan
-            .append_operator_as_node(scan_opr.clone().into(), vec![])
+            .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
         let scan2_id = plan
-            .append_operator_as_node(scan_opr.clone().into(), vec![])
+            .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
         let join1_id = plan
             .append_operator_as_node(join_opr.clone().into(), vec![scan1_id, scan2_id])
             .unwrap();
         let scan3_id = plan
-            .append_operator_as_node(scan_opr.clone().into(), vec![])
+            .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
         let join2_id = plan
             .append_operator_as_node(join_opr.clone().into(), vec![join1_id, scan3_id])
