@@ -53,41 +53,41 @@ impl DateTime {
             .year()
     }
 
-    pub fn month(&self) -> u32 {
+    pub fn month(&self) -> i32 {
         chrono::NaiveDateTime::from_timestamp_millis(self.inner)
             .unwrap()
-            .month()
+            .month() as i32
     }
 
-    pub fn day(&self) -> u32 {
+    pub fn day(&self) -> i32 {
         chrono::NaiveDateTime::from_timestamp_millis(self.inner)
             .unwrap()
-            .day()
+            .day() as i32
     }
 
-    pub fn hour(&self) -> u32 {
+    pub fn hour(&self) -> i32 {
         chrono::NaiveDateTime::from_timestamp_millis(self.inner)
             .unwrap()
-            .hour()
+            .hour() as i32
     }
 
-    pub fn minute(&self) -> u32 {
+    pub fn minute(&self) -> i32 {
         chrono::NaiveDateTime::from_timestamp_millis(self.inner)
             .unwrap()
-            .minute()
+            .minute() as i32
     }
 
-    pub fn second(&self) -> u32 {
+    pub fn second(&self) -> i32 {
         chrono::NaiveDateTime::from_timestamp_millis(self.inner)
             .unwrap()
-            .second()
+            .second() as i32
     }
 
-    pub fn millisecond(&self) -> u32 {
-        chrono::NaiveDateTime::from_timestamp_millis(self.inner)
+    pub fn millisecond(&self) -> i32 {
+        (chrono::NaiveDateTime::from_timestamp_millis(self.inner)
             .unwrap()
             .timestamp_subsec_nanos()
-            / 1000000
+            / 1000000) as i32
     }
 
     pub fn to_i64(&self) -> i64 {
