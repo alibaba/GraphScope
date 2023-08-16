@@ -74,7 +74,7 @@ jobs:
         # remove modern graph indices
         rm -rf /tmp/csr-data-dir/
 
-        git clone -b master --single-branch --depth=1 https://github.com/zhanglei1949/gstest.git ${GS_TEST_DIR}
+        git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
 
         cd ${GITHUB_WORKSPACE}/flex/build/
         SCHEMA_FILE=${FLEX_DATA_DIR}/audit_graph_schema.yaml
