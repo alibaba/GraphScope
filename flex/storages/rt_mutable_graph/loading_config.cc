@@ -105,7 +105,7 @@ static bool parse_column_mappings(
 
 // These files share the same column mapping.
 static bool parse_vertex_files(
-    YAML::Node node, const Schema& schema,
+    YAML::Node node, const Schema& schema, const std::string& data_location,
     std::unordered_map<label_t, std::vector<std::string>>& files,
     std::unordered_map<label_t, std::vector<std::pair<size_t, std::string>>>&
         vertex_mapping) {
@@ -161,7 +161,7 @@ static bool parse_vertex_files(
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
       std::string file_path = files_node[i].as<std::string>();
-      if (!access_file(file_path)) {
+      if (!access_file(data_location, file_path)) {
         LOG(ERROR) << "vertex file - " << file_path << " file not found...";
       }
       std::filesystem::path path(file_path);
@@ -175,7 +175,7 @@ static bool parse_vertex_files(
 }
 
 static bool parse_vertices_files_schema(
-    YAML::Node node, const Schema& schema,
+    YAML::Node node, const Schema& schema, const std::string& data_location,
     std::unordered_map<label_t, std::vector<std::string>>& files,
     std::unordered_map<label_t, std::vector<std::pair<size_t, std::string>>>&
         column_mappings) {
@@ -185,7 +185,8 @@ static bool parse_vertices_files_schema(
   }
   int num = node.size();
   for (int i = 0; i < num; ++i) {
-    if (!parse_vertex_files(node[i], schema, files, column_mappings)) {
+    if (!parse_vertex_files(node[i], schema, data_location, files,
+                            column_mappings)) {
       return false;
     }
   }
@@ -193,7 +194,7 @@ static bool parse_vertices_files_schema(
 }
 
 static bool parse_edge_files(
-    YAML::Node node, const Schema& schema,
+    YAML::Node node, const Schema& schema, const std::string& data_location,
     std::unordered_map<
         std::tuple<label_t, label_t, label_t>, std::vector<std::string>,
         boost::hash<std::tuple<label_t, label_t, label_t>>>& files,
@@ -314,7 +315,7 @@ static bool parse_edge_files(
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
       std::string file_path = files_node[i].as<std::string>();
-      if (!access_file(file_path)) {
+      if (!access_file(data_location, file_path)) {
         LOG(ERROR) << "edge file - " << file_path << " file not found...";
       }
       std::filesystem::path path(file_path);
@@ -330,7 +331,7 @@ static bool parse_edge_files(
 }
 
 static bool parse_edges_files_schema(
-    YAML::Node node, const Schema& schema,
+    YAML::Node node, const Schema& schema, const std::string& data_location,
     std::unordered_map<
         std::tuple<label_t, label_t, label_t>, std::vector<std::string>,
         boost::hash<std::tuple<label_t, label_t, label_t>>>& files,
@@ -349,7 +350,7 @@ static bool parse_edges_files_schema(
   int num = node.size();
   LOG(INFO) << " Try to parse " << num << "edge configuration";
   for (int i = 0; i < num; ++i) {
-    if (!parse_edge_files(node[i], schema, files, edge_mapping,
+    if (!parse_edge_files(node[i], schema, data_location, files, edge_mapping,
                           edge_src_dst_col)) {
       return false;
     }
@@ -400,18 +401,9 @@ static bool parse_bulk_load_config_file(const std::string& config_file,
     return false;
   }
   if (data_location.empty()) {
-    // check FLEX_DATA_DIR env variable
-    const char* flex_data_dir = std::getenv("FLEX_DATA_DIR");
-    if (!flex_data_dir) {
-      LOG(ERROR) << "data_location is not set, and FLEX_DATA_DIR is not set";
-      return false;
-    } else {
-      LOG(INFO) << "data_location is not set, use FLEX_DATA_DIR: "
-                << flex_data_dir;
-    }
-  } else {
-    // override FLEX_DATA_DIR env variable
-    setenv("FLEX_DATA_DIR", data_location.c_str(), 1);
+    LOG(WARNING) << "No data location is configured, If it is intended, "
+                    "please ignore this warning. Proceeding assuming all files "
+                    "are give in absolute path";
   }
 
   if (load_config.scheme_ != "file") {
@@ -426,6 +418,7 @@ static bool parse_bulk_load_config_file(const std::string& config_file,
   if (root["vertex_mappings"]) {
     VLOG(10) << "vertex_mappings is set";
     if (!parse_vertices_files_schema(root["vertex_mappings"], schema,
+                                     data_location,
                                      load_config.vertex_loading_meta_,
                                      load_config.vertex_column_mappings_)) {
       return false;
@@ -433,9 +426,10 @@ static bool parse_bulk_load_config_file(const std::string& config_file,
   }
   if (root["edge_mappings"]) {
     VLOG(10) << "edge_mappings is set";
-    if (!parse_edges_files_schema(
-            root["edge_mappings"], schema, load_config.edge_loading_meta_,
-            load_config.edge_column_mappings_, load_config.edge_src_dst_col_)) {
+    if (!parse_edges_files_schema(root["edge_mappings"], schema, data_location,
+                                  load_config.edge_loading_meta_,
+                                  load_config.edge_column_mappings_,
+                                  load_config.edge_src_dst_col_)) {
       return false;
     }
   }
