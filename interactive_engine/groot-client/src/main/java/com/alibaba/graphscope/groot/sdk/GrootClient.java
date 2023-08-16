@@ -67,22 +67,66 @@ public class GrootClient {
     }
 
     private BatchWriteRequest.Builder getNewWriteBuilder() {
-        String clientId = writeStub.getClientId(GetClientIdRequest.newBuilder().build()).getClientId();
+        String clientId =
+                writeStub.getClientId(GetClientIdRequest.newBuilder().build()).getClientId();
         return BatchWriteRequest.newBuilder().setClientId(clientId);
     }
-
-
 
     /**
      * Block until this snapshot becomes available.
      * @param snapshotId the snapshot id to be flushed
      */
     public void remoteFlush(long snapshotId) {
-        if (snapshotId == 0) {
-            return;
+        if (snapshotId != 0) {
+            this.writeStub.remoteFlush(
+                    RemoteFlushRequest.newBuilder().setSnapshotId(snapshotId).build());
         }
-        this.writeStub.remoteFlush(
-                RemoteFlushRequest.newBuilder().setSnapshotId(snapshotId).build());
+    }
+
+    private long modifyVertex(Vertex vertex, WriteTypePb writeType) {
+        WriteRequestPb request = vertex.toWriteRequest(writeType);
+        return submit(request);
+    }
+
+    private long modifyVertex(List<Vertex> vertices, WriteTypePb writeType) {
+        List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, writeType);
+        return submit(requests);
+    }
+
+    private void modifyVertex(
+            Vertex vertex, StreamObserver<BatchWriteResponse> callback, WriteTypePb writeType) {
+        WriteRequestPb request = vertex.toWriteRequest(writeType);
+        submit(request, callback);
+    }
+
+    private void modifyVertex(
+            List<Vertex> vertices,
+            StreamObserver<BatchWriteResponse> callback,
+            WriteTypePb writeType) {
+        List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, writeType);
+        submit(requests, callback);
+    }
+
+    private long modifyEdge(Edge edge, WriteTypePb writeType) {
+        WriteRequestPb request = edge.toWriteRequest(writeType);
+        return submit(request);
+    }
+
+    private long modifyEdge(List<Edge> edges, WriteTypePb writeType) {
+        List<WriteRequestPb> requests = getEdgeWriteRequestPbs(edges, writeType);
+        return submit(requests);
+    }
+
+    private void modifyEdge(
+            Edge edge, StreamObserver<BatchWriteResponse> callback, WriteTypePb writeType) {
+        WriteRequestPb request = edge.toWriteRequest(writeType);
+        submit(request, callback);
+    }
+
+    private void modifyEdge(
+            List<Edge> edges, StreamObserver<BatchWriteResponse> callback, WriteTypePb writeType) {
+        List<WriteRequestPb> requests = getEdgeWriteRequestPbs(edges, writeType);
+        submit(requests, callback);
     }
 
     /**
@@ -90,22 +134,19 @@ public class GrootClient {
      * @param vertex vertex that contains label and pk properties and other properties
      */
     public long addVertex(Vertex vertex) {
-        WriteRequestPb request = vertex.toWriteRequest(WriteTypePb.INSERT);
-        return submit(request);
-    }
-
-    public void addVertex(Vertex vertex, StreamObserver<BatchWriteResponse> callback) {
-        WriteRequestPb request = vertex.toWriteRequest(WriteTypePb.INSERT);
-        submit(request, callback);
-    }
-
-    public long addVertex(String label, Map<String, String> properties) {
-        return addVertex(new Vertex(label, properties));
+        return modifyVertex(vertex, WriteTypePb.INSERT);
     }
 
     public long addVertices(List<Vertex> vertices) {
-        List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, WriteTypePb.INSERT);
-        return submit(requests);
+        return modifyVertex(vertices, WriteTypePb.INSERT);
+    }
+
+    public void addVertex(Vertex vertex, StreamObserver<BatchWriteResponse> callback) {
+        modifyVertex(vertex, callback, WriteTypePb.INSERT);
+    }
+
+    public void addVertices(List<Vertex> vertices, StreamObserver<BatchWriteResponse> callback) {
+        modifyVertex(vertices, callback, WriteTypePb.INSERT);
     }
 
     /**
@@ -113,17 +154,19 @@ public class GrootClient {
      * @param vertex vertex that contains label and pk properties and other properties
      */
     public long updateVertex(Vertex vertex) {
-        WriteRequestPb request = vertex.toWriteRequest(WriteTypePb.UPDATE);
-        return submit(request);
-    }
-
-    public long updateVertex(String label, Map<String, String> properties) {
-        return updateVertex(new Vertex(label, properties));
+        return modifyVertex(vertex, WriteTypePb.UPDATE);
     }
 
     public long updateVertices(List<Vertex> vertices) {
-        List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, WriteTypePb.UPDATE);
-        return submit(requests);
+        return modifyVertex(vertices, WriteTypePb.UPDATE);
+    }
+
+    public void updateVertex(Vertex vertex, StreamObserver<BatchWriteResponse> callback) {
+        modifyVertex(vertex, callback, WriteTypePb.UPDATE);
+    }
+
+    public void updateVertices(List<Vertex> vertices, StreamObserver<BatchWriteResponse> callback) {
+        modifyVertex(vertices, callback, WriteTypePb.UPDATE);
     }
 
     /**
@@ -135,13 +178,17 @@ public class GrootClient {
         return submit(request);
     }
 
-    public long deleteVertex(String label, Map<String, String> pk_properties) {
-        return deleteVertex(new Vertex(label, pk_properties));
-    }
-
     public long deleteVertices(List<Vertex> vertices) {
         List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, WriteTypePb.DELETE);
         return submit(requests);
+    }
+
+    public void deleteVertex(Vertex vertex, StreamObserver<BatchWriteResponse> callback) {
+        modifyVertex(vertex, callback, WriteTypePb.DELETE);
+    }
+
+    public void deleteVertices(List<Vertex> vertices, StreamObserver<BatchWriteResponse> callback) {
+        modifyVertex(vertices, callback, WriteTypePb.DELETE);
     }
 
     /**
@@ -149,24 +196,19 @@ public class GrootClient {
      * @param edge edge that contains label, src vertex label and pk, dst label and pk, and properties
      */
     public long addEdge(Edge edge) {
-        WriteRequestPb request = edge.toWriteRequest(WriteTypePb.INSERT);
-        return submit(request);
+        return modifyEdge(edge, WriteTypePb.INSERT);
     }
-
-    public long addEdge(
-            String label,
-            String srcLabel,
-            String dstLabel,
-            Map<String, String> srcPk,
-            Map<String, String> dstPk,
-            Map<String, String> properties) {
-        return addEdge(new Edge(label, srcLabel, dstLabel, srcPk, dstPk, properties));
-    }
-
 
     public long addEdges(List<Edge> edges) {
-        List<WriteRequestPb> requests = getEdgeWriteRequestPbs(edges, WriteTypePb.INSERT);
-        return submit(requests);
+        return modifyEdge(edges, WriteTypePb.INSERT);
+    }
+
+    public void addEdge(Edge edge, StreamObserver<BatchWriteResponse> callback) {
+        modifyEdge(edge, callback, WriteTypePb.INSERT);
+    }
+
+    public void addEdges(List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
+        modifyEdge(edges, callback, WriteTypePb.INSERT);
     }
 
     /**
@@ -174,23 +216,19 @@ public class GrootClient {
      * @param edge edge that contains label, src vertex label and pk, dst label and pk, and properties
      */
     public long updateEdge(Edge edge) {
-        WriteRequestPb request = edge.toWriteRequest(WriteTypePb.UPDATE);
-        return submit(request);
-    }
-
-    public long updateEdge(
-            String label,
-            String srcLabel,
-            String dstLabel,
-            Map<String, String> srcPk,
-            Map<String, String> dstPk,
-            Map<String, String> properties) {
-        return updateEdge(new Edge(label, srcLabel, dstLabel, srcPk, dstPk, properties));
+        return modifyEdge(edge, WriteTypePb.UPDATE);
     }
 
     public long updateEdges(List<Edge> edges) {
-        List<WriteRequestPb> requests = getEdgeWriteRequestPbs(edges, WriteTypePb.UPDATE);
-        return submit(requests);
+        return modifyEdge(edges, WriteTypePb.UPDATE);
+    }
+
+    public void updateEdge(Edge edge, StreamObserver<BatchWriteResponse> callback) {
+        modifyEdge(edge, callback, WriteTypePb.UPDATE);
+    }
+
+    public void updateEdges(List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
+        modifyEdge(edges, callback, WriteTypePb.UPDATE);
     }
 
     /**
@@ -198,22 +236,19 @@ public class GrootClient {
      * @param edge edge that contains label, src vertex label and pk, dst label and pk, no properties required
      */
     public long deleteEdge(Edge edge) {
-        WriteRequestPb request = edge.toWriteRequest(WriteTypePb.DELETE);
-        return submit(request);
-    }
-
-    public long deleteEdge(
-            String label,
-            String srcLabel,
-            String dstLabel,
-            Map<String, String> srcPk,
-            Map<String, String> dstPk) {
-        return addEdge(new Edge(label, srcLabel, dstLabel, srcPk, dstPk));
+        return modifyEdge(edge, WriteTypePb.DELETE);
     }
 
     public long deleteEdges(List<Edge> edges) {
-        List<WriteRequestPb> requests = getEdgeWriteRequestPbs(edges, WriteTypePb.DELETE);
-        return submit(requests);
+        return modifyEdge(edges, WriteTypePb.DELETE);
+    }
+
+    public void deleteEdge(Edge edge, StreamObserver<BatchWriteResponse> callback) {
+        modifyEdge(edge, callback, WriteTypePb.DELETE);
+    }
+
+    public void deleteEdges(List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
+        modifyEdge(edges, callback, WriteTypePb.DELETE);
     }
 
     /**
@@ -240,6 +275,15 @@ public class GrootClient {
         BatchWriteRequest.Builder batchWriteBuilder = getNewWriteBuilder();
         batchWriteBuilder.addWriteRequests(request);
         asyncWriteStub.batchWrite(batchWriteBuilder.build(), callback);
+    }
+
+    private void submit(
+            List<WriteRequestPb> requests, StreamObserver<BatchWriteResponse> callback) {
+        if (!requests.isEmpty()) {
+            BatchWriteRequest.Builder batchWriteBuilder = getNewWriteBuilder();
+            batchWriteBuilder.addAllWriteRequests(requests);
+            asyncWriteStub.batchWrite(batchWriteBuilder.build(), callback);
+        }
     }
 
     public GraphDefPb getSchema() {
@@ -435,12 +479,16 @@ public class GrootClient {
         }
     }
 
-
-    private List<WriteRequestPb> getVertexWriteRequestPbs(List<Vertex> vertices, WriteTypePb writeType) {
-        return vertices.stream().map(element -> element.toWriteRequest(writeType)).collect(Collectors.toList());
+    private List<WriteRequestPb> getVertexWriteRequestPbs(
+            List<Vertex> vertices, WriteTypePb writeType) {
+        return vertices.stream()
+                .map(element -> element.toWriteRequest(writeType))
+                .collect(Collectors.toList());
     }
 
     private List<WriteRequestPb> getEdgeWriteRequestPbs(List<Edge> edges, WriteTypePb writeType) {
-        return edges.stream().map(element -> element.toWriteRequest(writeType)).collect(Collectors.toList());
+        return edges.stream()
+                .map(element -> element.toWriteRequest(writeType))
+                .collect(Collectors.toList());
     }
 }

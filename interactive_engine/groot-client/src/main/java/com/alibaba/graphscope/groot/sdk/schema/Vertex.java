@@ -7,7 +7,6 @@ import com.alibaba.graphscope.proto.groot.WriteTypePb;
 
 import java.util.Map;
 
-
 public class Vertex {
     public String label;
     public Map<String, String> properties;
@@ -31,12 +30,13 @@ public class Vertex {
 
     public VertexRecordKeyPb toVertexRecordKey(String label) {
         VertexRecordKeyPb.Builder builder = VertexRecordKeyPb.newBuilder().setLabel(label);
-//        builder.putAllPkProperties(properties);
+        //        builder.putAllPkProperties(properties);
         return builder.build();
     }
 
     public DataRecordPb toDataRecord() {
-        DataRecordPb.Builder builder = DataRecordPb.newBuilder().setVertexRecordKey(toVertexRecordKey(label));
+        DataRecordPb.Builder builder =
+                DataRecordPb.newBuilder().setVertexRecordKey(toVertexRecordKey(label));
         if (properties != null) {
             builder.putAllProperties(properties);
         }
@@ -44,6 +44,9 @@ public class Vertex {
     }
 
     public WriteRequestPb toWriteRequest(WriteTypePb writeType) {
-        return WriteRequestPb.newBuilder().setWriteType(writeType).setDataRecord(toDataRecord()).build();
+        return WriteRequestPb.newBuilder()
+                .setWriteType(writeType)
+                .setDataRecord(toDataRecord())
+                .build();
     }
 }

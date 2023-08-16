@@ -21,7 +21,13 @@ public class Edge {
      * @param dstPk destination primary keys
      * @param properties edge properties
      */
-    public Edge(String label, String srcLabel, String dstLabel, Map<String, String> srcPk, Map<String, String> dstPk, Map<String, String> properties) {
+    public Edge(
+            String label,
+            String srcLabel,
+            String dstLabel,
+            Map<String, String> srcPk,
+            Map<String, String> dstPk,
+            Map<String, String> properties) {
         this.label = label;
         this.srcLabel = srcLabel;
         this.dstLabel = dstLabel;
@@ -30,12 +36,23 @@ public class Edge {
         this.properties = properties;
     }
 
-    public Edge(String label, String srcLabel, String dstLabel, Map<String, String> srcPk, Map<String, String> dstPk) {
+    public Edge(
+            String label,
+            String srcLabel,
+            String dstLabel,
+            Map<String, String> srcPk,
+            Map<String, String> dstPk) {
         this(label, srcLabel, dstLabel, srcPk, dstPk, null);
     }
 
     public Edge(String label, Vertex src, Vertex dst, Map<String, String> properties) {
-        this(label, src.getLabel(), dst.getLabel(), src.getProperties(), dst.getProperties(), properties);
+        this(
+                label,
+                src.getLabel(),
+                dst.getLabel(),
+                src.getProperties(),
+                dst.getProperties(),
+                properties);
     }
 
     public Edge(String label, Vertex src, Vertex dst) {
@@ -75,7 +92,8 @@ public class Edge {
     }
 
     public DataRecordPb toDataRecord() {
-        DataRecordPb.Builder builder = DataRecordPb.newBuilder().setEdgeRecordKey(toEdgeRecordKey());
+        DataRecordPb.Builder builder =
+                DataRecordPb.newBuilder().setEdgeRecordKey(toEdgeRecordKey());
         if (properties != null) {
             builder.putAllProperties(properties);
         }
@@ -83,7 +101,10 @@ public class Edge {
     }
 
     public WriteRequestPb toWriteRequest(WriteTypePb writeType) {
-        return WriteRequestPb.newBuilder().setWriteType(writeType).setDataRecord(toDataRecord()).build();
+        return WriteRequestPb.newBuilder()
+                .setWriteType(writeType)
+                .setDataRecord(toDataRecord())
+                .build();
     }
 
     private VertexRecordKeyPb toVertexRecordKey(String label, Map<String, String> properties) {

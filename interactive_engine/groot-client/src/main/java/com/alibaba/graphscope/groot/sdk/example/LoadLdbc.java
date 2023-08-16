@@ -182,9 +182,14 @@ public class LoadLdbc {
                         //                        }
                         properties.put(propertyName, propertyVal);
                     }
-                    edges.add(new Edge(label, srcLabel, dstLabel, Collections.singletonMap("id", items[0]),
-                            Collections.singletonMap("id", items[1]),
-                            properties));
+                    edges.add(
+                            new Edge(
+                                    label,
+                                    srcLabel,
+                                    dstLabel,
+                                    Collections.singletonMap("id", items[0]),
+                                    Collections.singletonMap("id", items[1]),
+                                    properties));
                     count++;
                     if (count == batchSize) {
                         snapshotId = client.addEdges(edges);

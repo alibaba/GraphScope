@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
+import com.alibaba.graphscope.groot.sdk.schema.Vertex;
 import com.alibaba.graphscope.proto.groot.BackupInfoPb;
 
 import org.junit.jupiter.api.Assertions;
@@ -50,7 +51,7 @@ public class ClientBackupTest {
             properties.put("id", "" + i);
             properties.put("name", "young_" + i);
             properties.put("age", "18");
-            client.addVertex("person", properties);
+            client.addVertex(new Vertex("person", properties));
         }
         Thread.sleep(3000L);
 
@@ -67,7 +68,7 @@ public class ClientBackupTest {
             properties.put("id", "" + i);
             properties.put("name", "lop_" + i);
             properties.put("lang", "java");
-            client.addVertex("software", properties);
+            client.addVertex(new Vertex("software", properties));
         }
         Thread.sleep(3000L);
 
