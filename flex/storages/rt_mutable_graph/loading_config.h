@@ -21,6 +21,7 @@
 #include <filesystem>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include "flex/storages/rt_mutable_graph/schema.h"
 #include "flex/utils/yaml_utils.h"
 
@@ -41,6 +42,7 @@ class LoadingConfig {
   using edge_triplet_type =
       std::tuple<schema_label_type, schema_label_type,
                  schema_label_type>;  // src_label_t, dst_label_t, edge_label_t
+  static const std::unordered_set<std::string> valid_delimiter_;
 
   // Check whether loading config file is consistent with schema
   static LoadingConfig ParseFromYaml(const Schema& schema,
@@ -90,6 +92,8 @@ class LoadingConfig {
   // Get src_id and dst_id column index for edge label.
   const std::pair<std::vector<size_t>, std::vector<size_t>>& GetEdgeSrcDstCol(
       label_t src_label_id, label_t dst_label_id, label_t edge_label_id) const;
+
+  static const std::unordered_set<std::string>& GetValidDelimiters();
 
  private:
   const Schema& schema_;
