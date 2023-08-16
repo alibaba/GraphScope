@@ -36,7 +36,7 @@ public class EdgeTypeId {
 
     @Override
     public String toString() {
-        return String.format("[%d->%d]", getSrcLabelId(), getDstLabelId());
+        return String.format("[%d-%d->%d]", getSrcLabelId(), getEdgeLabelId(), getDstLabelId());
     }
 
     @Override
@@ -55,5 +55,13 @@ public class EdgeTypeId {
     @Override
     public EdgeTypeId clone() {
         return new EdgeTypeId(this.getSrcLabelId(), this.getDstLabelId(), this.getEdgeLabelId());
+    }
+
+    public int compareTo(EdgeTypeId other) {
+        if (this.edgeType.equals(other.edgeType)) {
+            return 0;
+        } else {
+            return this.edgeType.getValue0() < other.edgeType.getValue0() ? -1 : 1;
+        }
     }
 }

@@ -1,11 +1,10 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
-import java.net.URISyntaxException;
-import java.rmi.server.ExportException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
@@ -14,10 +13,7 @@ import org.jgrapht.graph.DirectedPseudograph;
 import com.alibaba.graphscope.common.ir.rel.graph.pattern.PatternCode;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
-import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
-import com.alibaba.graphscope.common.ir.rel.metadata.schema.VertexTypeId;
-import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 
 public class Glogue {
     // the topology of GLogue graph
@@ -58,11 +54,11 @@ public class Glogue {
 
         while (patternQueue.size() > 0) {
             Pattern pattern = patternQueue.pop();
-            System.out.println("~~~~~~~~pop pattern in queue~~~~~~~~~~");
-            System.out.println("original pattern " + pattern.toString());
             if (pattern.size() >= maxPatternSize) {
                 continue;
             }
+            System.out.println("~~~~~~~~pop pattern in queue~~~~~~~~~~");
+            System.out.println("original pattern " + pattern.toString());
             List<ExtendStep> extendSteps = pattern.getExtendSteps(schema);
             for (ExtendStep extendStep : extendSteps) {
                 System.out.println(extendStep);
@@ -70,7 +66,8 @@ public class Glogue {
                 System.out.println("new pattern " + newPattern);
                 // TODO: cointains logic should be based on pattern code; pattern code should
                 // based on types of vertices and edges
-                if (!this.containsPattern(newPattern)) {
+                Optional<Pattern> existingPattern = this.containsPattern(newPattern);
+                if (!existingPattern.isPresent()) {
                     this.addPattern(newPattern);
                     this.addPatternEdge(pattern, newPattern);
                     System.out.println("add new pattern");
@@ -78,10 +75,12 @@ public class Glogue {
                     // System.out.println("after add new pattern, glogue: " + this);
                     patternQueue.add(newPattern);
                 } else {
-                    System.out.println("pattern already exists");
-                    // System.out.println("pattern " + newPattern.toString() + " already exists");
-                    this.addPatternEdge(pattern, newPattern);
-                    // System.out.println("after add new edge, glogue: " + this);
+                    if (!this.containsPatternEdge(pattern, existingPattern.get())) {
+                        DefaultEdge defaultEdge = this.addPatternEdge(pattern, existingPattern.get());
+                        System.out.println("pattern already exists, add edge " + defaultEdge);
+                    } else {
+                        System.out.println("pattern already exists, edge already exists");
+                    }
                 }
             }
             System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -90,16 +89,25 @@ public class Glogue {
         return this;
     }
 
-    private boolean containsPattern(Pattern pattern) {
-        return this.gLogueGraph.containsVertex(pattern);
+    private Optional<Pattern> containsPattern(Pattern pattern) {
+        for (Pattern p : this.gLogueGraph.vertexSet()) {
+            if (p.equals(pattern)) {
+                return Optional.of(p);
+            } 
+        }
+        return Optional.empty();
+    }
+
+    private boolean containsPatternEdge(Pattern pattern1, Pattern pattern2) {
+        return this.gLogueGraph.containsEdge(pattern1, pattern2);
     }
 
     private void addPattern(Pattern pattern) {
         this.gLogueGraph.addVertex(pattern);
     }
 
-    private void addPatternEdge(Pattern pattern1, Pattern pattern2) {
-        this.gLogueGraph.addEdge(pattern1, pattern2);
+    private DefaultEdge addPatternEdge(Pattern pattern1, Pattern pattern2) {
+       return gLogueGraph.addEdge(pattern1, pattern2);
     }
 
     @Override
@@ -107,7 +115,7 @@ public class Glogue {
         return "Vertices: " + this.gLogueGraph.vertexSet() + ", Edges: " + this.gLogueGraph.edgeSet();
     }
 
-    public static void main(String[] args) throws URISyntaxException, ExportException {
+    public static void main(String[] args) {
         GlogueSchema g = new GlogueSchema().DefaultGraphSchema();
         Glogue gl = new Glogue().create(g, 3);
         System.out.println("NewGlogue " + gl.toString());

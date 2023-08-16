@@ -3,8 +3,7 @@ package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 
 public class PatternEdge {
-    private Integer id;
-    private int rank;
+    private int id;
     private EdgeTypeId edgeTypeId;
     private PatternVertex srcVertex;
     private PatternVertex dstVertex;
@@ -12,14 +11,11 @@ public class PatternEdge {
     public PatternEdge(EdgeTypeId edgeTypeId, int id) {
         this.edgeTypeId = edgeTypeId;
         this.id = id;
-        this.rank = 0;
     }
 
     public PatternEdge(PatternVertex src, PatternVertex dst, EdgeTypeId edgeTypeId, int id) {
         this.edgeTypeId = edgeTypeId;
         this.id = id;
-        // TODO: update rank
-        this.rank = id;
         this.srcVertex = src;
         this.dstVertex = dst;
     }
@@ -32,8 +28,16 @@ public class PatternEdge {
         return dstVertex;
     }
 
+    public EdgeTypeId getEdgeTypeId() {
+        return edgeTypeId;
+    }
+
+    public int getId() {
+        return id;
+    }
+
     public String toString() {
-        return srcVertex.getId() + "->" + dstVertex.getId() + "[" + edgeTypeId.toString() + "]";
+        return srcVertex.getPosition() + "->" + dstVertex.getPosition() + "[" + edgeTypeId.toString() + "]";
     }
 
     public int hashCode() {
@@ -42,6 +46,10 @@ public class PatternEdge {
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof PatternEdge) && (toString().equals(o.toString()));
+        if (!(o instanceof PatternEdge)) {
+            return false;
+        }
+        PatternEdge other = (PatternEdge) o;
+        return this.edgeTypeId.equals(other.edgeTypeId);
     }
 }
