@@ -14,6 +14,8 @@
 package com.alibaba.graphscope.groot.sdk.example;
 
 import com.alibaba.graphscope.groot.sdk.GrootClient;
+import com.alibaba.graphscope.groot.sdk.schema.Edge;
+import com.alibaba.graphscope.groot.sdk.schema.Vertex;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -91,7 +93,7 @@ public class LoadLdbc {
     }
 
     private static void processVertex(GrootClient client, String label, Path path, int batchSize)
-            throws IOException, ParseException {
+            throws IOException {
         List<String> propertyNames = new ArrayList<>();
         int count = 0;
         long snapshotId = 0;
@@ -103,6 +105,7 @@ public class LoadLdbc {
                         propertyNames.add(item.split(":")[0]);
                     }
                 } else {
+                    List<Vertex> vertices = new ArrayList<>();
                     Map<String, String> properties = new HashMap<>();
                     String[] items = line.split("\\|");
                     for (int i = 0; i < items.length; i++) {
@@ -117,29 +120,27 @@ public class LoadLdbc {
                         //                        }
                         properties.put(propertyName, propertyVal);
                     }
-                    try {
-                        client.addVertex(label, properties);
-                    } catch (Exception e) {
-                        System.err.println(
-                                "add vertex label ["
-                                        + label
-                                        + "], properties ["
-                                        + properties
-                                        + "] failed. Reason: "
-                                        + e);
-                    }
+                    vertices.add(new Vertex(label, properties));
                     count++;
                     if (count == batchSize) {
-                        snapshotId = client.commit();
+                        try {
+                            snapshotId = client.addVertices(vertices);
+                        } catch (Exception e) {
+                            System.err.println(
+                                    "add vertex label ["
+                                            + label
+                                            + "], properties ["
+                                            + properties
+                                            + "] failed. Reason: "
+                                            + e);
+                        }
                         count = 0;
                     }
                 }
             }
         }
-        long maybeSnapshotId = client.commit();
-        long flushSnapshotId = maybeSnapshotId == 0 ? snapshotId : maybeSnapshotId;
-        System.out.println("flush snapshotId [" + flushSnapshotId + "]");
-        client.remoteFlush(flushSnapshotId);
+        System.out.println("flush snapshotId [" + snapshotId + "]");
+        client.remoteFlush(snapshotId);
         System.out.println("done");
     }
 
@@ -150,7 +151,7 @@ public class LoadLdbc {
             String dstLabel,
             Path path,
             int batchSize)
-            throws IOException, ParseException {
+            throws IOException {
         List<String> propertyNames = new ArrayList<>();
         int count = 0;
         long snapshotId = 0;
@@ -162,6 +163,7 @@ public class LoadLdbc {
                         propertyNames.add(item.split(":")[0]);
                     }
                 } else {
+                    List<Edge> edges = new ArrayList<>();
                     Map<String, String> properties = new HashMap<>();
                     String[] items = line.split("\\|");
                     for (int i = 2; i < items.length; i++) {
@@ -180,25 +182,24 @@ public class LoadLdbc {
                         //                        }
                         properties.put(propertyName, propertyVal);
                     }
-                    client.addEdge(
-                            label,
-                            srcLabel,
-                            dstLabel,
-                            Collections.singletonMap("id", items[0]),
-                            Collections.singletonMap("id", items[1]),
-                            properties);
+                    edges.add(
+                            new Edge(
+                                    label,
+                                    srcLabel,
+                                    dstLabel,
+                                    Collections.singletonMap("id", items[0]),
+                                    Collections.singletonMap("id", items[1]),
+                                    properties));
                     count++;
                     if (count == batchSize) {
-                        snapshotId = client.commit();
+                        snapshotId = client.addEdges(edges);
                         count = 0;
                     }
                 }
             }
         }
-        long maybeSnapshotId = client.commit();
-        long flushSnapshotId = maybeSnapshotId == 0 ? snapshotId : maybeSnapshotId;
-        System.out.println("flush snapshotId [" + flushSnapshotId + "]");
-        client.remoteFlush(flushSnapshotId);
+        System.out.println("flush snapshotId [" + snapshotId + "]");
+        client.remoteFlush(snapshotId);
         System.out.println("done");
     }
 }
