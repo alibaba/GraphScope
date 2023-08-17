@@ -13,6 +13,8 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
+import com.alibaba.graphscope.groot.sdk.schema.Edge;
+import com.alibaba.graphscope.groot.sdk.schema.Vertex;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 
 import org.junit.jupiter.api.Test;
@@ -70,30 +72,29 @@ public class ClientTest {
 
     @Test
     void testAddData() {
-        client.initWriteSession();
         Map<String, String> properties = new HashMap<>();
         properties.put("name", "alice");
         properties.put("id", "12345");
-        client.addVertex("person", properties);
+        client.addVertex(new Vertex("person", properties));
         properties = new HashMap<>();
         properties.put("name", "bob");
         properties.put("id", "88888");
-        client.addVertex("person", properties);
+        client.addVertex(new Vertex("person", properties));
 
         for (int i = 0; i < 100; i++) {
             properties = new HashMap<>();
             properties.put("name", "test" + i);
             properties.put("id", "" + i);
-            client.addVertex("person", properties);
+            client.addVertex(new Vertex("person", properties));
         }
 
         client.addEdge(
-                "knows",
-                "person",
-                "person",
-                Collections.singletonMap("id", "12345"),
-                Collections.singletonMap("id", "88888"),
-                Collections.singletonMap("weight", "20201111"));
-        client.commit();
+                new Edge(
+                        "knows",
+                        "person",
+                        "person",
+                        Collections.singletonMap("id", "12345"),
+                        Collections.singletonMap("id", "88888"),
+                        Collections.singletonMap("weight", "20201111")));
     }
 }

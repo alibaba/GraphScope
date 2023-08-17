@@ -42,14 +42,12 @@ GRIN_GRAPH grin_get_graph_from_storage(const char* uri) {
       !(std::filesystem::exists(bulk_load_config_path))) {
     return GRIN_NULL_GRAPH;
   }
-  auto ret = gs::Schema::LoadFromYaml(graph_schema_path, bulk_load_config_path);
-  const auto& schema = std::get<0>(ret);
-  auto& vertex_files = std::get<1>(ret);
-
-  auto& edge_files = std::get<2>(ret);
+  auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
+  auto loading_config =
+      gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
 
   GRIN_GRAPH_T* g = new GRIN_GRAPH_T();
-  g->g.Init(schema, vertex_files, edge_files);
+  g->g.Init(schema, loading_config);
   init_cache(g);
   return g;
 }

@@ -488,6 +488,10 @@ Else, please proceed to ingest and commit.
 
 Groot graph have several methods for realtime write as follows:
 
+#### Python
+
+Refer to [test_store_service.py](https://github.com/alibaba/GraphScope/blob/main/python/graphscope/tests/kubernetes/test_store_service.py) for examples.
+
 ```python
 # Inserts one vertex
 def insert_vertex(self, vertex: VertexRecordKey, properties: dict) -> int: pass
@@ -548,6 +552,13 @@ class EdgeRecordKey:
         self.dst_vertex_key: VertexRecordKey = dst_vertex_key
         self.eid: int = eid  # Only required in update and delete operation
 ```
+
+
+#### Java
+
+We also have a java sdk for realtime write and schema management.
+
+Refer to [RealtimeWrite.java](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/groot-client/src/main/java/com/alibaba/graphscope/groot/sdk/example/RealtimeWrite.java) for examples.
 
 ## Uninstalling and Restarting
 
