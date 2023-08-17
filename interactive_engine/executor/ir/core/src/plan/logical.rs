@@ -264,6 +264,51 @@ impl LogicalPlan {
             None
         }
     }
+
+    /// Get the corresponding branch node of the given merge node.
+    fn get_branch_node(&self, merge_node: NodeType) -> Option<NodeType> {
+        if merge_node.borrow().parents.len() > 1 {
+            let merge_parents: BTreeSet<u32> = merge_node
+                .borrow()
+                .parents
+                .iter()
+                .cloned()
+                .collect();
+            let mut node_merge_parent_map = HashMap::new();
+            let mut queue = VecDeque::new();
+            for &merge_parent_id in merge_parents.iter() {
+                queue.push_back(merge_parent_id);
+                node_merge_parent_map.insert(merge_parent_id, BTreeSet::from([merge_parent_id]));
+            }
+            'outer: loop {
+                if let Some(relaxed_node_id) = queue.pop_front() {
+                    let relaxed_node = self.get_node(relaxed_node_id)?;
+                    let related_merge_parent_nodes = node_merge_parent_map
+                        .get(&relaxed_node_id)
+                        .cloned()?;
+                    for relaxed_node_parent in relaxed_node.borrow().parents.iter() {
+                        if !node_merge_parent_map.contains_key(relaxed_node_parent) {
+                            queue.push_back(*relaxed_node_parent);
+                        }
+
+                        let parent_related_merge_parent_nodes = node_merge_parent_map
+                            .entry(*relaxed_node_parent)
+                            .or_insert(BTreeSet::new());
+                        for merge_parent_node in related_merge_parent_nodes.iter() {
+                            parent_related_merge_parent_nodes.insert(*merge_parent_node);
+                        }
+                        if *parent_related_merge_parent_nodes == merge_parents {
+                            break 'outer self.get_node(*relaxed_node_parent);
+                        }
+                    }
+                } else {
+                    break None;
+                }
+            }
+        } else {
+            None
+        }
+    }
 }
 
 #[allow(dead_code)]
@@ -278,6 +323,10 @@ impl LogicalPlan {
         nodes.insert(node_id as usize, Rc::new(RefCell::new(node)));
 
         Self { nodes, max_node_id: node_id + 1, meta }
+    }
+
+    fn empty() -> Self {
+        LogicalPlan { nodes: VecMap::new(), max_node_id: 0, meta: PlanMeta::default() }
     }
 
     /// Get a node reference from the logical plan
@@ -583,84 +632,78 @@ impl LogicalPlan {
     /// than one child), and its corresponding merge_node present.
     ///   * `None` and empty sub-plans if otherwise.
     pub fn get_branch_plans(&self, branch_node: NodeType) -> (Option<NodeType>, Vec<LogicalPlan>) {
-        let mut plans = vec![];
-        let mut merge_node_opt = None;
-        if branch_node.borrow().children.len() > 1 {
-            merge_node_opt = self.get_merge_node(branch_node.clone());
-            if let Some(merge_node) = &merge_node_opt {
-                for &child_node_id in &branch_node.borrow().children {
-                    if let Some(child_node) = self.get_node(child_node_id) {
-                        if let Some(subplan) = self.subplan(child_node, merge_node.clone()) {
-                            plans.push(subplan)
-                        }
-                    }
-                }
-            }
-        }
-
+        let merge_node_opt = self.get_merge_node(branch_node.clone());
+        let plans = if let Some(merge_node) = merge_node_opt.clone() {
+            self.get_branch_plans_internal(branch_node, merge_node)
+        } else {
+            vec![]
+        };
         (merge_node_opt, plans)
     }
 
-    /// To construct a subplan from every node lying between `from_node` (included) and `to_node` (excluded)
-    /// in the logical plan. Thus, for the subplan to be valid, `to_node` must refer to a
-    /// downstream node against `from_node` in the plan.
-    ///
-    /// If there are some branches between `from_node` and `to_node`, there are two cases:
-    /// * 1. `to_node` lies within a sub-branch. In this case, **NO** subplan can be produced;
-    /// * 2. `to_node` is a downstream node of the merge node of the branch, then all branches
-    /// of nodes must be included in the subplan. For example, F is a `from_node` which has two
-    /// branches, namely F -> A1 -> B1 -> M, and F -> A2 -> B2 -> M. we have `to_node` T connected
-    /// to M in the logical plan, as M -> T0 -> T, the subplan from F to T, must include the operators
-    /// of F, A1, B1, A2, B2, M and T0.
-    ///
-    /// # Return
-    ///   * The subplan in case of success,
-    ///   * `None` if `from_node` is `to_node`, or could not arrive at `to_node` following the
-    ///  plan, or there is a branch node in between, but fail to locate the corresponding merge node.
-    pub fn subplan(&self, from_node: NodeType, to_node: NodeType) -> Option<LogicalPlan> {
-        if from_node == to_node {
-            return None;
-        }
-        let mut plan = LogicalPlan::with_root(clone_node(from_node.clone()));
-        plan.meta = self.meta.clone();
-        let mut curr_node = from_node;
-        while curr_node != to_node {
-            if curr_node.borrow().children.is_empty() {
-                // While still not locating to_node
-                return None;
-            } else if curr_node.borrow().children.len() == 1 {
-                let next_node_id = curr_node.borrow().get_first_child().unwrap();
-                if let Some(next_node) = self.get_node(next_node_id) {
-                    if next_node.borrow().id != to_node.borrow().id {
-                        plan.append_node(clone_node(next_node.clone()), vec![curr_node.borrow().id])
-                            .expect("append node to subplan error");
-                    }
-                    curr_node = next_node;
-                } else {
-                    return None;
-                }
-            } else {
-                let (merge_node_opt, subplans) = self.get_branch_plans(curr_node.clone());
-                if let Some(merge_node) = merge_node_opt {
-                    plan.append_branch_plans(plan.get_node(curr_node.borrow().id).unwrap(), subplans);
-                    if merge_node.borrow().id != to_node.borrow().id {
-                        let merge_node_parent = merge_node
-                            .borrow()
-                            .parents
-                            .iter()
-                            .map(|x| *x)
-                            .collect();
-                        let merge_node_clone = clone_node(merge_node.clone());
-                        plan.append_node(merge_node_clone, merge_node_parent)
-                            .expect("append node to subplan error");
-                    }
-                    curr_node = merge_node;
-                } else {
-                    return None;
-                }
+    fn get_branch_plans_internal(&self, branch_node: NodeType, merge_node: NodeType) -> Vec<LogicalPlan> {
+        let mut plans = vec![];
+        for merge_parent_node in merge_node
+            .borrow()
+            .parents
+            .iter()
+            .filter_map(|&id| self.get_node(id))
+        {
+            if let Some(sub_plan) = self.subplan(branch_node.clone(), merge_parent_node, false) {
+                plans.push(sub_plan)
             }
         }
-        Some(plan)
+        plans
+    }
+
+    pub fn subplan(
+        &self, from_node: NodeType, to_node: NodeType, contain_from_node: bool,
+    ) -> Option<LogicalPlan> {
+        if from_node == to_node {
+            let mut plan = if contain_from_node {
+                LogicalPlan::with_root(clone_node(from_node))
+            } else {
+                LogicalPlan::empty()
+            };
+            plan.meta = self.meta.clone();
+            return Some(plan);
+        }
+
+        let to_node_parents: Vec<u32> = to_node
+            .borrow()
+            .parents
+            .iter()
+            .cloned()
+            .collect();
+
+        if to_node_parents.len() == 1 {
+            let parent_node = self.get_node(to_node_parents[0])?;
+            let mut plan = self.subplan(from_node, parent_node, contain_from_node)?;
+            plan.append_node(clone_node(to_node), to_node_parents)
+                .expect("append node to subplan error");
+            Some(plan)
+        } else if to_node_parents.len() > 1 {
+            let branch_node = self.get_branch_node(to_node.clone())?;
+            let mut plan = self.subplan(from_node, branch_node.clone(), contain_from_node)?;
+            let branch_plans = self.get_branch_plans_internal(branch_node.clone(), to_node.clone());
+            if plan.get_node(branch_node.borrow().id).is_none() {
+                let node = Node::new(
+                    branch_node.borrow().id,
+                    pb::logical_plan::Operator {
+                        opr: Some(pb::logical_plan::operator::Opr::Branch(pb::Branch {})),
+                    },
+                );
+                plan.append_node(node, vec![])
+                    .expect("append node to subplan error");
+            }
+            plan.append_branch_plans(plan.get_node(branch_node.borrow().id).unwrap(), branch_plans);
+            let to_node_clone = clone_node(to_node);
+            plan.append_node(to_node_clone, to_node_parents)
+                .expect("append node to subplan error");
+            Some(plan)
+        } else {
+            None
+        }
     }
 
     /// Given a node that contains a subtask, which is typically an  `Apply` operator,
@@ -681,25 +724,7 @@ impl LogicalPlan {
                     {
                         curr_node = to_node.clone();
                     }
-                    let parent_ids = curr_node
-                        .borrow()
-                        .parents
-                        .iter()
-                        .cloned()
-                        .collect();
-                    let mut subplan = if from_node == curr_node {
-                        let mut p = LogicalPlan::default();
-                        p.meta = self.meta.clone();
-                        Some(p)
-                    } else {
-                        self.subplan(from_node, curr_node.clone())
-                    };
-                    if let Some(plan) = subplan.as_mut() {
-                        plan.append_node(curr_node.borrow().clone(), parent_ids)
-                            .expect("append node to subplan error!");
-                        plan.clean_redundant_nodes();
-                    }
-                    subplan
+                    self.subplan(from_node, curr_node, true)
                 } else {
                     None
                 }
@@ -3245,17 +3270,17 @@ mod test {
     }
 
     // The plan looks like:
-    //       root
+    //       root(1)
     //       / \
-    //      1    2
+    //      2    3
     //     / \   |
-    //    3   4  |
+    //    4   5  |
     //    \   /  |
-    //      5    |
+    //      6    |
     //       \  /
-    //         6
-    //         |
     //         7
+    //         |
+    //         8
     fn create_logical_plan1() -> LogicalPlan {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
@@ -3284,13 +3309,13 @@ mod test {
     }
 
     // The plan looks like:
-    //         root
+    //         root(1)
     //      /   |   \
-    //     1    2    3
+    //     2    3    4
     //     \   /    /
-    //       4     /
+    //       5     /
     //        \   /
-    //          5
+    //          6
     fn create_logical_plan2() -> LogicalPlan {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
@@ -3315,13 +3340,13 @@ mod test {
     }
 
     // The plan looks like:
-    //         root
+    //         root(1)
     //      /   |   \
-    //     1    2    3
+    //     2    3    4
     //     \   / \   /
-    //       4     5
+    //       5     6
     //        \   /
-    //          6
+    //          7
     fn create_logical_plan3() -> LogicalPlan {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
@@ -3418,18 +3443,15 @@ mod test {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
-        let subplan = plan.subplan(plan.get_node(3).unwrap(), plan.get_node(8).unwrap());
-        let mut expected_plan = LogicalPlan::with_root(Node::new(3, opr.clone()));
-        expected_plan
-            .append_node(Node::new(7, opr.clone()), vec![3])
-            .unwrap();
+        let subplan = plan.subplan(plan.get_node(1).unwrap(), plan.get_node(3).unwrap(), false);
+        let expected_plan = LogicalPlan::with_root(Node::new(3, opr.clone()));
         assert_eq!(subplan.unwrap(), expected_plan);
 
         // The node 3 is at one of the branches, which is incomplete and hence invalid subplan
-        let subplan = plan.subplan(plan.get_node(2).unwrap(), plan.get_node(4).unwrap());
+        let subplan = plan.subplan(plan.get_node(3).unwrap(), plan.get_node(5).unwrap(), false);
         assert!(subplan.is_none());
 
-        let subplan = plan.subplan(plan.get_node(2).unwrap(), plan.get_node(7).unwrap());
+        let subplan = plan.subplan(plan.get_node(1).unwrap(), plan.get_node(6).unwrap(), false);
         let mut expected_plan = LogicalPlan::with_root(Node::new(2, opr.clone()));
         expected_plan
             .append_node(Node::new(4, opr.clone()), vec![2])
@@ -3459,17 +3481,19 @@ mod test {
         assert_eq!(subplans, vec![plan1, plan2]);
 
         let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(1).unwrap());
-        let mut plan1 = LogicalPlan::with_root(Node::new(2, opr.clone()));
-        plan1
+
+        let plan1 = LogicalPlan::with_root(Node::new(3, opr.clone()));
+
+        let mut plan2 = LogicalPlan::with_root(Node::new(2, opr.clone()));
+        plan2
             .append_node(Node::new(4, opr.clone()), vec![2])
             .unwrap();
-        plan1
+        plan2
             .append_node(Node::new(5, opr.clone()), vec![2])
             .unwrap();
-        plan1
+        plan2
             .append_node(Node::new(6, opr.clone()), vec![4, 5])
             .unwrap();
-        let plan2 = LogicalPlan::with_root(Node::new(3, opr.clone()));
 
         assert_eq!(merge_node, plan.get_node(7));
         assert_eq!(subplans, vec![plan1, plan2]);

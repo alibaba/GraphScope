@@ -386,16 +386,16 @@ mod tests {
 
         let mut plan = LogicalPlan::default();
         let scan1_id = plan
-            .append_operator_as_node(scan_opr.clone().into(), vec![])
+            .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
         let scan2_id = plan
-            .append_operator_as_node(scan_opr.clone().into(), vec![])
+            .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
         let join1_id = plan
             .append_operator_as_node(join_opr.clone().into(), vec![scan1_id, scan2_id])
             .unwrap();
         let scan3_id = plan
-            .append_operator_as_node(scan_opr.clone().into(), vec![])
+            .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
         let join2_id = plan
             .append_operator_as_node(join_opr.clone().into(), vec![join1_id, scan3_id])
@@ -426,7 +426,7 @@ mod tests {
         let physical_plan = builder.take();
         println!("hello i'm physical plan");
         println!("{:#?}", physical_plan);
-        // dummy, join1, join2, sink
-        assert_eq!(physical_plan.len(), 4);
+        // dummy, join1(join2), sink
+        assert_eq!(physical_plan.len(), 3);
     }
 }

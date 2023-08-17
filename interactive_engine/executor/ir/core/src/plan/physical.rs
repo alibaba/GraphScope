@@ -556,6 +556,7 @@ impl AsPhysical for pb::logical_plan::Operator {
                     builder.add_dummy_source();
                     Ok(())
                 }
+                Branch(_) => Ok(()),
                 _ => Err(IrError::Unsupported(format!("the operator {:?}", self))),
             }
         } else {
@@ -714,7 +715,7 @@ impl AsPhysical for LogicalPlan {
                             add_intersect_job_builder(builder, plan_meta, intersect, &subplans)?;
                         }
                         Some(Join(join_opr)) => {
-                            if curr_node.borrow().children.len() != 2 {
+                            if merge_node.borrow().parents.len() != 2 {
                                 // For now we only support joining two branches
                                 return Err(IrError::Unsupported(
                                     "joining more than two branches".to_string(),
