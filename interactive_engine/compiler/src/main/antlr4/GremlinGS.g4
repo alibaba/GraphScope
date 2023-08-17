@@ -455,7 +455,6 @@ traversalMethod_union
     ;
 
 // coin(0.5)
-// set 'REPEATABLE' using with: coin(0.5).with('REPEATABLE', 123)
 traversalMethod_coin
 	: 'coin' LPAREN floatLiteral RPAREN
 	;
@@ -465,7 +464,6 @@ traversalMethod_coin
 // sample(100).by('name')
 // sample(100).by(select('a').by('name'))
 // sample(100).by(out().count())
-// set 'REPEATABLE' using with: sample(100).by(..).with('REPEATABLE', 123)
 traversalMethod_sample
     : 'sample' LPAREN integerLiteral RPAREN (DOT traversalMethod_sampleby) ?
     ;

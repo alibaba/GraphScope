@@ -275,12 +275,10 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals("{a=person, b=lop}", traversal.next().toString());
     }
 
-
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_sample_by_2() {
-        final Traversal<Vertex, Vertex> traversal =
-                get_g_V_sample_by_2();
+        final Traversal<Vertex, Vertex> traversal = get_g_V_sample_by_2();
         int counter = 0;
         while (traversal.hasNext()) {
             ++counter;
@@ -291,8 +289,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_sample_by_7() {
-        final Traversal<Vertex, Vertex> traversal =
-                get_g_V_sample_by_7();
+        final Traversal<Vertex, Vertex> traversal = get_g_V_sample_by_7();
         int counter = 0;
         while (traversal.hasNext()) {
             ++counter;
@@ -303,27 +300,24 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_coin_by_ratio() {
-        final Traversal<Vertex, Vertex> traversal =
-                get_g_V_coin_by_ratio();
+        final Traversal<Vertex, Vertex> traversal = get_g_V_coin_by_ratio();
         int counter = 0;
         while (traversal.hasNext()) {
             ++counter;
         }
-        Assert.assertTrue(counter<6);
+        Assert.assertTrue(counter < 6);
     }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_coin_by_ratio_1() {
-        final Traversal<Vertex, Vertex> traversal =
-                get_g_V_coin_by_ratio_1();
+        final Traversal<Vertex, Vertex> traversal = get_g_V_coin_by_ratio_1();
         int counter = 0;
         while (traversal.hasNext()) {
             ++counter;
         }
         Assert.assertEquals(6, counter);
     }
-
 
     public static class Traversals extends IrGremlinQueryTest {
 

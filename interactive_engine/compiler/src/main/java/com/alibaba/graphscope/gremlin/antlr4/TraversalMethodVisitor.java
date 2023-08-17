@@ -774,6 +774,13 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_with(GremlinGSParser.TraversalMethod_withContext ctx) {
+        Step endStep = graphTraversal.asAdmin().getEndStep();
+        if (!(endStep instanceof PathExpandStep)) {
+            throw new UnsupportedEvalException(
+                    ctx.getClass(),
+                    "with should follow source or path expand, i.e. g.with(..) or"
+                            + " out('1..2').with(..)");
+        }
         String optKey = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
         Object optValue =
                 GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral());

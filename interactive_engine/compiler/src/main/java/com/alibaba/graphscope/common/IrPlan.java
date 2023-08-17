@@ -324,11 +324,6 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(
                             baseOp.getClass(), "sampleType", "setSampleType returns " + error1.msg);
                 }
-                FfiResult.ByValue error2 = irCoreLib.setSampleSeed(ptrSample, sampleOp.getSeed());
-                if (error2.code != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(
-                            baseOp.getClass(), "seed", "setSampleSeed returns " + error2.msg);
-                }
                 FfiResult.ByValue error3 =
                         irCoreLib.setSampleWeightVariable(
                                 ptrSample,
