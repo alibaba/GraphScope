@@ -16,33 +16,24 @@
 
 package com.alibaba.graphscope.gremlin;
 
-
-
 import com.alibaba.graphscope.common.IrPlan;
-import com.alibaba.graphscope.common.ir.Utils;
-import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
+import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.AsNoneOp;
 import com.alibaba.graphscope.common.intermediate.operator.UnionOp;
+import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.gremlin.integration.suite.utils.__;
-import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
-import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
-import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IdentityStep;
-import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
-import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
-import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversalStrategies;
 import org.junit.Assert;
 import org.junit.Test;
-import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
 
+import java.util.List;
 
 
 public class IdentityStepTest {
@@ -73,7 +64,9 @@ public class IdentityStepTest {
         Traversal bothVTraversal = __.bothV();
         // Traversal test = g.V().union(identity(), out());
 
-        UnionStep unionStep = new UnionStep(getEdge.asAdmin(), identityTraversal.asAdmin(), bothVTraversal.asAdmin());
+        UnionStep unionStep = 
+                new UnionStep(
+                        getEdge.asAdmin(), identityTraversal.asAdmin(), bothVTraversal.asAdmin());
         
         Traversal.Admin identityAdmin = (Traversal.Admin) unionStep.getGlobalChildren().get(0);
         Traversal.Admin bothVAdmin = (Traversal.Admin) unionStep.getGlobalChildren().get(1);
@@ -81,8 +74,10 @@ public class IdentityStepTest {
         bothVAdmin.removeStep(1);
 
         UnionOp op = (UnionOp) StepTransformFactory.UNION_STEP.apply(unionStep);
-        List<InterOpCollection> collection = (List<InterOpCollection>) op.getSubOpCollectionList().get().applyArg();
-        InterOpCollection identityCollection = (new InterOpCollectionBuilder(identityTraversal)).build();
+        List<InterOpCollection> collection = 
+                (List<InterOpCollection>) op.getSubOpCollectionList().get().applyArg();
+        InterOpCollection identityCollection = 
+                (new InterOpCollectionBuilder(identityTraversal)).build();
         InterOpCollection bothVCollection = (new InterOpCollectionBuilder(bothVTraversal)).build();
 
         IrPlan identityUnionPlan = new IrPlan(Utils.schemaMeta, collection.get(0));
