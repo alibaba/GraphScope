@@ -62,6 +62,12 @@ class Table {
 
   void insert(size_t index, const std::vector<Any>& values);
 
+  // insert properties except for the primary key
+  // col_ind_mapping: the mapping from the column index in the raw file row to
+  // the column index in the schema
+  void insert(size_t index, const std::vector<Any>& values,
+              const std::vector<int32_t>& col_ind_mapping);
+
   void Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer,
                  const std::string& prefix, size_t row_num);
 
