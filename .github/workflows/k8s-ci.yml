@@ -497,7 +497,6 @@ jobs:
           fail_ci_if_error: false
 
       - name: HDFS test
-        if: false  # temporarily disabled
         env:
           JAVA_HOME: /usr/lib/jvm/default-java
           GS_TEST_DIR: ${{ github.workspace }}/gstest
