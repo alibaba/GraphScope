@@ -320,8 +320,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_haslabel_identity() {
-        Traversal<Vertex, Object> traversal =
-                this.get_g_V_identity_values();
+        Traversal<Vertex, Object> traversal = this.get_g_V_identity_values();
         this.printTraversalForm(traversal);
         int counter = 0;
 
@@ -338,8 +337,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_haslabel_as_identity_values() {
-        Traversal<Vertex, Object> traversal =
-                this.get_g_V_haslabel_as_identity_values();
+        Traversal<Vertex, Object> traversal = this.get_g_V_haslabel_as_identity_values();
         this.printTraversalForm(traversal);
         int counter = 0;
 
@@ -356,8 +354,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_haslabel_union_identity_out_values() {
-        Traversal<Vertex, Object> traversal =
-                this.get_g_V_has_union_identity_out_values();
+        Traversal<Vertex, Object> traversal = this.get_g_V_has_union_identity_out_values();
         this.printTraversalForm(traversal);
         int counter = 0;
 
