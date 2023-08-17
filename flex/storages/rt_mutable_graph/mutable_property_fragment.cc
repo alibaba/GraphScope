@@ -17,6 +17,43 @@
 
 namespace gs {
 
+void preprocess_line(char* line) {
+  size_t len = strlen(line);
+  while (len >= 0) {
+    if (line[len] != '\0' && line[len] != '\n' && line[len] != '\r' &&
+        line[len] != ' ' && line[len] != '\t') {
+      break;
+    } else {
+      --len;
+    }
+  }
+  line[len + 1] = '\0';
+}
+
+void get_header_row(const std::string& file_name, std::vector<Any>& header) {
+  char line_buf[4096];
+  FILE* fin = fopen(file_name.c_str(), "r");
+  if (fgets(line_buf, 4096, fin) == NULL) {
+    LOG(FATAL) << "Failed to read header from file: " << file_name;
+    return;
+  }
+  preprocess_line(line_buf);
+  ParseRecord(line_buf, header);
+}
+
+std::vector<std::pair<size_t, std::string>> generate_default_column_mapping(
+    const std::string& file_name, std::string primary_key_name,
+    const std::vector<std::string>& column_names) {
+  std::vector<std::pair<size_t, std::string>> column_mapping;
+  for (size_t i = 0; i < column_names.size(); ++i) {
+    auto col_name = column_names[i];
+    if (col_name != primary_key_name) {
+      column_mapping.emplace_back(i, col_name);
+    }
+  }
+  return column_mapping;
+}
+
 MutablePropertyFragment::MutablePropertyFragment() {}
 
 MutablePropertyFragment::~MutablePropertyFragment() {
@@ -32,29 +69,40 @@ MutablePropertyFragment::~MutablePropertyFragment() {
   }
 }
 
+// vertex_column_mappings is a vector of pairs, each pair is (column_ind in
+// file, the cooresponding property name in schema).
 void MutablePropertyFragment::initVertices(
-    label_t v_label_i,
-    const std::vector<std::pair<std::string, std::string>>& vertex_files) {
+    label_t v_label_i, const std::vector<std::string>& filenames,
+    const std::vector<std::pair<size_t, std::string>>& vertex_column_mappings) {
+  // Check primary key num and type.
+  auto primary_keys = schema_.get_vertex_primary_key(v_label_i);
+  if (primary_keys.size() != 1) {
+    LOG(FATAL) << "Only support one primary key for vertex.";
+  }
+  if (primary_keys[0].first != PropertyType::kInt64) {
+    LOG(FATAL) << "Only support int64_t primary key for vertex.";
+  }
   IdIndexer<oid_t, vid_t> indexer;
   std::string v_label_name = schema_.get_vertex_label_name(v_label_i);
-  std::vector<std::string> filenames;
-  for (auto& pair : vertex_files) {
-    if (pair.first == v_label_name) {
-      filenames.push_back(pair.second);
-    }
-  }
+  VLOG(10) << "Start init vertices for label " << v_label_i << " with "
+           << filenames.size() << " files.";
   auto& table = vertex_data_[v_label_i];
   auto& property_types = schema_.get_vertex_properties(v_label_name);
+  auto& property_names = schema_.get_vertex_property_names(v_label_name);
+
+  // col num should be property num - 1, because one column will be used as
+  // primary key
+  CHECK(property_types.size() > 0);
   size_t col_num = property_types.size();
 
-  std::vector<std::string> col_names;
-  for (size_t col_i = 0; col_i < col_num; ++col_i) {
-    col_names.push_back("col_" + std::to_string(col_i));
-  }
-  table.init(col_names, property_types,
+  // create real property_types_vec for table
+  VLOG(10) << "Init table for table: " << v_label_name
+           << ", with property num: " << col_num;
+  table.init(property_names, property_types,
              schema_.get_vertex_storage_strategies(v_label_name),
              schema_.get_max_vnum(v_label_name));
-  parseVertexFiles(v_label_name, filenames, indexer);
+  // Match the records read from the file with the schema
+  parseVertexFiles(v_label_name, filenames, vertex_column_mappings, indexer);
   if (indexer.bucket_count() == 0) {
     indexer._rehash(schema_.get_max_vnum(v_label_name));
   }
@@ -129,25 +177,17 @@ std::pair<MutableCsrBase*, MutableCsrBase*> construct_empty_csr(
   return std::make_pair(ie_csr, oe_csr);
 }
 
-void preprocess_line(char* line) {
-  size_t len = strlen(line);
-  while (len >= 0) {
-    if (line[len] != '\0' && line[len] != '\n' && line[len] != '\r' &&
-        line[len] != ' ' && line[len] != '\t') {
-      break;
-    } else {
-      --len;
-    }
-  }
-  line[len + 1] = '\0';
-}
-
+// each file name is tuple <src_column_ind, dst_column_id, edata(currently only
+// one edata)> src_column_id indicate which column is src id, dst_column_id
+// indicate which column is dst id default is 0, 1
 template <typename EDATA_T>
 std::pair<MutableCsrBase*, MutableCsrBase*> construct_csr(
-    const std::vector<std::string>& filenames,
-    const std::vector<PropertyType>& property_types, EdgeStrategy ie_strategy,
-    EdgeStrategy oe_strategy, const LFIndexer<vid_t>& src_indexer,
-    const LFIndexer<vid_t>& dst_indexer) {
+    const Schema& schema, const std::vector<std::string>& filenames,
+    size_t src_col_ind, size_t dst_col_ind,
+    const std::vector<PropertyType>& property_types,
+    const std::vector<std::pair<size_t, std::string>>& column_mappings,
+    EdgeStrategy ie_strategy, EdgeStrategy oe_strategy,
+    const LFIndexer<vid_t>& src_indexer, const LFIndexer<vid_t>& dst_indexer) {
   TypedMutableCsrBase<EDATA_T>* ie_csr = create_typed_csr<EDATA_T>(ie_strategy);
   TypedMutableCsrBase<EDATA_T>* oe_csr = create_typed_csr<EDATA_T>(oe_strategy);
 
@@ -160,36 +200,65 @@ std::pair<MutableCsrBase*, MutableCsrBase*> construct_csr(
   oid_t src, dst;
   EDATA_T data;
 
-  bool first_file = true;
   size_t col_num = property_types.size();
   std::vector<Any> header(col_num + 2);
   for (auto& item : header) {
     item.type = PropertyType::kString;
   }
+
+  // fetch header first
+  get_header_row(filenames[0], header);  // filenames must not be empty
+  // check header matches schema
+
   for (auto filename : filenames) {
+    VLOG(10) << "processing " << filename << " with src_col_id " << src_col_ind
+             << " and dst_col_id " << dst_col_ind;
     FILE* fin = fopen(filename.c_str(), "r");
     if (fgets(line_buf, 4096, fin) == NULL) {
       continue;
     }
-    preprocess_line(line_buf);
-    if (first_file) {
-      ParseRecord(line_buf, header);
-      std::vector<std::string> col_names(col_num);
-      for (size_t i = 0; i < col_num; ++i) {
-        col_names[i] = std::string(header[i + 2].value.s.data(),
-                                   header[i + 2].value.s.size());
+    preprocess_line(line_buf);  // do nothing
+
+    // if match the default configuration, use ParseRecordX to fasten the
+    // parsing
+    if (src_col_ind == 0 && dst_col_ind == 1) {
+      while (fgets(line_buf, 4096, fin) != NULL) {
+        // ParseRecord src_id, dst_id, data from row.
+        ParseRecordX(line_buf, src, dst, data);
+        src_index = src_indexer.get_index(src);
+        dst_index = dst_indexer.get_index(dst);
+        ++idegree[dst_index];
+        ++odegree[src_index];
+        parsed_edges.emplace_back(src_index, dst_index, data);
       }
-      first_file = false;
+    } else {
+      std::vector<Any> row(col_num + 2);
+      CHECK(src_col_ind < row.size() && dst_col_ind < row.size());
+      row[src_col_ind].type = PropertyType::kInt64;
+      row[dst_col_ind].type = PropertyType::kInt64;
+      int32_t data_col_id = -1;
+      // the left column is must the edata.
+      for (auto i = 0; i < row.size(); ++i) {
+        if (row[i].type == PropertyType::kEmpty) {
+          // The index 0's type must exists
+          row[i].type = property_types[0];
+          data_col_id = i;
+          break;
+        }
+      }
+      CHECK(data_col_id != -1);
+      while (fgets(line_buf, 4096, fin) != NULL) {
+        // ParseRecord src_id, dst_id, data from row.
+        ParseRecord(line_buf, row);
+        src_index = src_indexer.get_index(row[src_col_ind].AsInt64());
+        dst_index = dst_indexer.get_index(row[dst_col_ind].AsInt64());
+        ConvertAny<EDATA_T>::to(row[data_col_id], data);
+        ++idegree[dst_index];
+        ++odegree[src_index];
+        parsed_edges.emplace_back(src_index, dst_index, data);
+      }
     }
 
-    while (fgets(line_buf, 4096, fin) != NULL) {
-      ParseRecordX(line_buf, src, dst, data);
-      src_index = src_indexer.get_index(src);
-      dst_index = dst_indexer.get_index(dst);
-      ++idegree[dst_index];
-      ++odegree[src_index];
-      parsed_edges.emplace_back(src_index, dst_index, data);
-    }
     fclose(fin);
   }
 
@@ -208,19 +277,21 @@ std::pair<MutableCsrBase*, MutableCsrBase*> construct_csr(
 
 void MutablePropertyFragment::initEdges(
     label_t src_label_i, label_t dst_label_i, label_t edge_label_i,
-    const std::vector<std::tuple<std::string, std::string, std::string,
-                                 std::string>>& edge_files) {
-  std::string src_label_name = schema_.get_vertex_label_name(src_label_i);
-  std::string dst_label_name = schema_.get_vertex_label_name(dst_label_i);
-  std::string edge_label_name = schema_.get_edge_label_name(edge_label_i);
-  std::vector<std::string> filenames;
-  for (auto& tuple : edge_files) {
-    if (std::get<0>(tuple) == src_label_name &&
-        std::get<1>(tuple) == dst_label_name &&
-        std::get<2>(tuple) == edge_label_name) {
-      filenames.push_back(std::get<3>(tuple));
-    }
+    const std::vector<std::string>& filenames,
+    const std::vector<std::pair<size_t, std::string>>& column_mappings,
+    size_t src_col_ind, size_t dst_col_ind) {
+  auto src_label_name = schema_.get_vertex_label_name(src_label_i);
+  auto dst_label_name = schema_.get_vertex_label_name(dst_label_i);
+  auto edge_label_name = schema_.get_edge_label_name(edge_label_i);
+  if (filenames.size() <= 0) {
+    LOG(FATAL) << "No edge files found for src label: " << src_label_name
+               << " dst label: " << dst_label_name
+               << " edge label: " << edge_label_name;
   }
+  VLOG(10) << "Init edges src label: " << src_label_name
+           << " dst label: " << dst_label_name
+           << " edge label: " << edge_label_name
+           << " filenames: " << filenames.size();
   auto& property_types = schema_.get_edge_properties(
       src_label_name, dst_label_name, edge_label_name);
   size_t col_num = property_types.size();
@@ -233,14 +304,39 @@ void MutablePropertyFragment::initEdges(
   EdgeStrategy ie_strtagy = schema_.get_incoming_edge_strategy(
       src_label_name, dst_label_name, edge_label_name);
 
+  {
+    // check column mappings consistent,
+    // TODO(zhanglei): Check column mappings after multiple property on edge is
+    // supported
+    if (column_mappings.size() > 1) {
+      LOG(FATAL) << "Edge column mapping must be less than 1";
+    }
+    if (column_mappings.size() > 0) {
+      auto& mapping = column_mappings[0];
+      if (mapping.first == src_col_ind || mapping.first == dst_col_ind) {
+        LOG(FATAL) << "Edge column mappings must not contain src_col_ind or "
+                      "dst_col_ind";
+      }
+      // check property exists in schema
+      if (!schema_.edge_has_property(src_label_name, dst_label_name,
+                                     edge_label_name, mapping.second)) {
+        LOG(FATAL) << "property " << mapping.second
+                   << " not exists in schema for edge triplet "
+                   << src_label_name << " -> " << edge_label_name << " -> "
+                   << dst_label_name;
+      }
+    }
+  }
+
   if (col_num == 0) {
     if (filenames.empty()) {
       std::tie(ie_[index], oe_[index]) =
           construct_empty_csr<grape::EmptyType>(ie_strtagy, oe_strtagy);
     } else {
       std::tie(ie_[index], oe_[index]) = construct_csr<grape::EmptyType>(
-          filenames, property_types, ie_strtagy, oe_strtagy,
-          lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
+          schema_, filenames, src_col_ind, dst_col_ind, property_types,
+          column_mappings, ie_strtagy, oe_strtagy, lf_indexers_[src_label_i],
+          lf_indexers_[dst_label_i]);
     }
   } else if (property_types[0] == PropertyType::kDate) {
     if (filenames.empty()) {
@@ -248,8 +344,9 @@ void MutablePropertyFragment::initEdges(
           construct_empty_csr<Date>(ie_strtagy, oe_strtagy);
     } else {
       std::tie(ie_[index], oe_[index]) = construct_csr<Date>(
-          filenames, property_types, ie_strtagy, oe_strtagy,
-          lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
+          schema_, filenames, src_col_ind, dst_col_ind, property_types,
+          column_mappings, ie_strtagy, oe_strtagy, lf_indexers_[src_label_i],
+          lf_indexers_[dst_label_i]);
     }
   } else if (property_types[0] == PropertyType::kInt32) {
     if (filenames.empty()) {
@@ -257,8 +354,9 @@ void MutablePropertyFragment::initEdges(
           construct_empty_csr<int>(ie_strtagy, oe_strtagy);
     } else {
       std::tie(ie_[index], oe_[index]) = construct_csr<int>(
-          filenames, property_types, ie_strtagy, oe_strtagy,
-          lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
+          schema_, filenames, src_col_ind, dst_col_ind, property_types,
+          column_mappings, ie_strtagy, oe_strtagy, lf_indexers_[src_label_i],
+          lf_indexers_[dst_label_i]);
     }
   } else if (property_types[0] == PropertyType::kInt64) {
     if (filenames.empty()) {
@@ -266,8 +364,9 @@ void MutablePropertyFragment::initEdges(
           construct_empty_csr<int64_t>(ie_strtagy, oe_strtagy);
     } else {
       std::tie(ie_[index], oe_[index]) = construct_csr<int64_t>(
-          filenames, property_types, ie_strtagy, oe_strtagy,
-          lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
+          schema_, filenames, src_col_ind, dst_col_ind, property_types,
+          column_mappings, ie_strtagy, oe_strtagy, lf_indexers_[src_label_i],
+          lf_indexers_[dst_label_i]);
     }
   } else if (property_types[0] == PropertyType::kString) {
     if (filenames.empty()) {
@@ -282,22 +381,18 @@ void MutablePropertyFragment::initEdges(
           construct_empty_csr<double>(ie_strtagy, oe_strtagy);
     } else {
       std::tie(ie_[index], oe_[index]) = construct_csr<double>(
-          filenames, property_types, ie_strtagy, oe_strtagy,
-          lf_indexers_[src_label_i], lf_indexers_[dst_label_i]);
-
-      //      LOG(FATAL) << "Unsupported edge property type.";
+          schema_, filenames, src_col_ind, dst_col_ind, property_types,
+          column_mappings, ie_strtagy, oe_strtagy, lf_indexers_[src_label_i],
+          lf_indexers_[dst_label_i]);
     }
   } else {
     LOG(FATAL) << "Unsupported edge property type.";
   }
 }
 
-void MutablePropertyFragment::Init(
-    const Schema& schema,
-    const std::vector<std::pair<std::string, std::string>>& vertex_files,
-    const std::vector<std::tuple<std::string, std::string, std::string,
-                                 std::string>>& edge_files,
-    int thread_num) {
+void MutablePropertyFragment::Init(const Schema& schema,
+                                   const LoadingConfig& loading_config,
+                                   int thread_num) {
   schema_ = schema;
   vertex_label_num_ = schema_.vertex_label_num();
   edge_label_num_ = schema_.edge_label_num();
@@ -306,86 +401,128 @@ void MutablePropertyFragment::Init(
   oe_.resize(vertex_label_num_ * vertex_label_num_ * edge_label_num_, NULL);
   lf_indexers_.resize(vertex_label_num_);
 
+  auto& vertex_sources = loading_config.GetVertexLoadingMeta();
+  auto& edge_sources = loading_config.GetEdgeLoadingMeta();
+
   if (thread_num == 1) {
-    for (size_t v_label_i = 0; v_label_i != vertex_label_num_; ++v_label_i) {
-      initVertices(v_label_i, vertex_files);
-    }
-    if (!vertex_files.empty()) {
-      LOG(INFO) << "finished loading vertices";
+    if (vertex_sources.empty()) {
+      LOG(INFO) << "Skip loading vertices since no vertex source is specified.";
+    } else {
+      for (auto iter = vertex_sources.begin(); iter != vertex_sources.end();
+           ++iter) {
+        auto v_label_id = iter->first;
+        auto v_files = iter->second;
+        initVertices(v_label_id, v_files,
+                     loading_config.GetVertexColumnMappings(v_label_id));
+      }
     }
 
-    for (size_t src_label_i = 0; src_label_i != vertex_label_num_;
-         ++src_label_i) {
-      std::string src_label_name = schema_.get_vertex_label_name(src_label_i);
-      for (size_t dst_label_i = 0; dst_label_i != vertex_label_num_;
-           ++dst_label_i) {
-        std::string dst_label_name = schema_.get_vertex_label_name(dst_label_i);
-        for (size_t e_label_i = 0; e_label_i != edge_label_num_; ++e_label_i) {
-          std::string e_label_name = schema_.get_edge_label_name(e_label_i);
-          if (schema_.valid_edge_property(src_label_name, dst_label_name,
-                                          e_label_name)) {
-            initEdges(src_label_i, dst_label_i, e_label_i, edge_files);
-          }
+    if (edge_sources.empty()) {
+      LOG(INFO) << "Skip loading edges since no edge source is specified.";
+    } else {
+      LOG(INFO) << "Loading edges...";
+      for (auto iter = edge_sources.begin(); iter != edge_sources.end();
+           ++iter) {
+        // initEdges(iter->first, iter->second);
+        auto& src_label_id = std::get<0>(iter->first);
+        auto& dst_label_id = std::get<1>(iter->first);
+        auto& e_label_id = std::get<2>(iter->first);
+        auto& e_files = iter->second;
+        auto src_dst_col_pair = loading_config.GetEdgeSrcDstCol(
+            src_label_id, dst_label_id, e_label_id);
+        // We currenly only support one src primary key and one dst primary key
+        if (src_dst_col_pair.first.size() != 1 ||
+            src_dst_col_pair.second.size() != 1) {
+          LOG(FATAL) << "We currenly only support one src primary key and one "
+                        "dst primary key";
         }
+        initEdges(src_label_id, dst_label_id, e_label_id, e_files,
+                  loading_config.GetEdgeColumnMappings(
+                      src_label_id, dst_label_id, e_label_id),
+                  src_dst_col_pair.first[0], src_dst_col_pair.second[0]);
       }
     }
-    if (!edge_files.empty()) {
-      LOG(INFO) << "finished loading edges";
-    }
+
   } else {
+    // copy vertex_sources and edge sources to vector, since we need to
+    // use multi-thread loading.
+    std::vector<std::pair<label_t, std::vector<std::string>>> vertex_files;
+    for (auto iter = vertex_sources.begin(); iter != vertex_sources.end();
+         ++iter) {
+      vertex_files.emplace_back(iter->first, iter->second);
+    }
+    std::vector<std::pair<typename LoadingConfig::edge_triplet_type,
+                          std::vector<std::string>>>
+        edge_files;
+    for (auto iter = edge_sources.begin(); iter != edge_sources.end(); ++iter) {
+      edge_files.emplace_back(iter->first, iter->second);
+    }
+    LOG(INFO) << "Parallel loading with " << thread_num << " threads, "
+              << " " << vertex_files.size() << " vertex files, "
+              << edge_files.size() << " edge files.";
     {
-      std::atomic<size_t> v_label_id(0);
-      std::vector<std::thread> threads(thread_num);
-      for (int i = 0; i < thread_num; ++i) {
-        threads[i] = std::thread([&]() {
-          while (true) {
-            size_t cur = v_label_id.fetch_add(1);
-            if (cur >= vertex_label_num_) {
-              break;
+      if (vertex_sources.empty()) {
+        LOG(INFO)
+            << "Skip loading vertices since no vertex source is specified.";
+      } else {
+        std::atomic<size_t> v_ind(0);
+        std::vector<std::thread> threads(thread_num);
+        for (int i = 0; i < thread_num; ++i) {
+          threads[i] = std::thread([&]() {
+            while (true) {
+              size_t cur = v_ind.fetch_add(1);
+              if (cur >= vertex_files.size()) {
+                break;
+              }
+              auto v_label_id = vertex_files[cur].first;
+              initVertices(v_label_id, vertex_files[cur].second,
+                           loading_config.GetVertexColumnMappings(v_label_id));
             }
-            initVertices(cur, vertex_files);
-          }
-        });
-      }
-      for (auto& thrd : threads) {
-        thrd.join();
-      }
-      if (!vertex_files.empty()) {
+          });
+        }
+        for (auto& thrd : threads) {
+          thrd.join();
+        }
+
         LOG(INFO) << "finished loading vertices";
       }
     }
     {
-      std::atomic<size_t> e_label_index(0);
-      size_t e_label_num =
-          vertex_label_num_ * vertex_label_num_ * edge_label_num_;
-      std::vector<std::thread> threads(thread_num);
-      for (int i = 0; i < thread_num; ++i) {
-        threads[i] = std::thread([&]() {
-          while (true) {
-            size_t cur = e_label_index.fetch_add(1);
-            if (cur >= e_label_num) {
-              break;
+      if (edge_sources.empty()) {
+        LOG(INFO) << "Skip loading edges since no edge source is specified.";
+      } else {
+        std::atomic<size_t> e_ind(0);
+        std::vector<std::thread> threads(thread_num);
+        for (int i = 0; i < thread_num; ++i) {
+          threads[i] = std::thread([&]() {
+            while (true) {
+              size_t cur = e_ind.fetch_add(1);
+              if (cur >= edge_files.size()) {
+                break;
+              }
+              auto& edge_file = edge_files[cur];
+              auto src_label_id = std::get<0>(edge_file.first);
+              auto dst_label_id = std::get<1>(edge_file.first);
+              auto e_label_id = std::get<2>(edge_file.first);
+              auto& file_names = edge_file.second;
+              auto src_dst_col_pair = loading_config.GetEdgeSrcDstCol(
+                  src_label_id, dst_label_id, e_label_id);
+              if (src_dst_col_pair.first.size() != 1 ||
+                  src_dst_col_pair.second.size() != 1) {
+                LOG(FATAL)
+                    << "We currenly only support one src primary key and one "
+                       "dst primary key";
+              }
+              initEdges(src_label_id, dst_label_id, e_label_id, file_names,
+                        loading_config.GetEdgeColumnMappings(
+                            src_label_id, dst_label_id, e_label_id),
+                        src_dst_col_pair.first[0], src_dst_col_pair.second[0]);
             }
-            size_t e_label_i = cur % edge_label_num_;
-            cur = cur / edge_label_num_;
-            size_t dst_label_i = cur % vertex_label_num_;
-            size_t src_label_i = cur / vertex_label_num_;
-            std::string src_label_name =
-                schema_.get_vertex_label_name(src_label_i);
-            std::string dst_label_name =
-                schema_.get_vertex_label_name(dst_label_i);
-            std::string e_label_name = schema_.get_edge_label_name(e_label_i);
-            if (schema_.valid_edge_property(src_label_name, dst_label_name,
-                                            e_label_name)) {
-              initEdges(src_label_i, dst_label_i, e_label_i, edge_files);
-            }
-          }
-        });
-      }
-      for (auto& thrd : threads) {
-        thrd.join();
-      }
-      if (!edge_files.empty()) {
+          });
+        }
+        for (auto& thrd : threads) {
+          thrd.join();
+        }
         LOG(INFO) << "finished loading edges";
       }
     }
@@ -484,6 +621,14 @@ inline MutableCsrBase* create_csr(EdgeStrategy es,
       return new MutableCsr<int64_t>();
     } else if (es == EdgeStrategy::kNone) {
       return new EmptyCsr<int64_t>();
+    }
+  } else if (properties[0] == PropertyType::kDouble) {
+    if (es == EdgeStrategy::kSingle) {
+      return new SingleMutableCsr<double>();
+    } else if (es == EdgeStrategy::kMultiple) {
+      return new MutableCsr<double>();
+    } else if (es == EdgeStrategy::kNone) {
+      return new EmptyCsr<double>();
     }
   }
   LOG(FATAL) << "not support edge strategy or edge data type";
@@ -654,50 +799,143 @@ const MutableCsrBase* MutablePropertyFragment::get_ie_csr(
 
 void MutablePropertyFragment::parseVertexFiles(
     const std::string& vertex_label, const std::vector<std::string>& filenames,
+    const std::vector<std::pair<size_t, std::string>>&
+        in_vertex_column_mappings,
     IdIndexer<oid_t, vid_t>& indexer) {
   if (filenames.empty()) {
     return;
   }
+  LOG(INFO) << "Parsing vertex files for label " << vertex_label;
+  auto vertex_column_mappings = in_vertex_column_mappings;
 
   size_t label_index = schema_.get_vertex_label_id(vertex_label);
   auto& table = vertex_data_[label_index];
   auto& property_types = schema_.get_vertex_properties(vertex_label);
   size_t col_num = property_types.size();
-  std::vector<Any> properties(col_num);
-  for (size_t col_i = 0; col_i != col_num; ++col_i) {
-    properties[col_i].type = property_types[col_i];
+  auto primary_key = schema_.get_vertex_primary_key(label_index)[0];
+  auto primary_key_name = primary_key.second;
+
+  // vertex_column_mappings can be empty, empty means the each column in the
+  // file is mapped to the same column in the table.
+  std::vector<Any> header(col_num + 1);
+  {
+    for (auto i = 0; i < header.size(); ++i) {
+      header[i].type = PropertyType::kString;
+    }
+  }
+  std::vector<Any> properties(col_num + 1);
+  std::vector<std::string> column_names(col_num + 1);
+  size_t primary_key_ind = col_num + 1;
+
+  // First get header
+  get_header_row(filenames[0], header);
+  // construct column_names
+  for (auto i = 0; i < header.size(); ++i) {
+    column_names[i] =
+        std::string(header[i].value.s.data(), header[i].value.s.size());
+  }
+
+  if (vertex_column_mappings.empty()) {
+    vertex_column_mappings = generate_default_column_mapping(
+        filenames[0], primary_key_name, column_names);
+    VLOG(10) << "vertex_column_mappings is empty, "
+                "generate_default_column_mapping returns "
+             << vertex_column_mappings.size() << " mappings";
+  }
+  for (auto i = 0; i < properties.size(); ++i) {
+    if (column_names[i] == primary_key_name) {
+      primary_key_ind = i;
+      break;
+    }
+    VLOG(10) << " compare: " << column_names[i] << " " << primary_key_name;
+  }
+  CHECK(primary_key_ind != col_num + 1);
+  {
+    // reset header of table with primary key removed
+    std::vector<std::string> header_col_names;
+    for (auto i = 0; i < column_names.size(); ++i) {
+      if (i != primary_key_ind) {
+        header_col_names.emplace_back(column_names[i]);
+      }
+    }
+    table.reset_header(header_col_names);
+    VLOG(10) << "reset header of table with primary key removed: "
+             << header_col_names.size();
+  }
+
+  for (auto i = 0; i < properties.size(); ++i) {
+    if (i < primary_key_ind) {
+      properties[i].type = property_types[i];
+    } else if (i > primary_key_ind) {
+      properties[i].type = property_types[i - 1];
+    } else {
+      properties[i].type = primary_key.first;
+    }
   }
 
   char line_buf[4096];
+  // we can't assume oid will be the first column.
   oid_t oid;
   vid_t v_index;
-  bool first_file = true;
-  std::vector<Any> header(col_num + 1);
-  for (auto& item : header) {
-    item.type = PropertyType::kString;
+
+  std::vector<int32_t> file_col_to_schema_col_ind;
+  {
+    // parse from vertex_column_mappings, vertex_column_mappings doesn't
+    // contains primary key.
+    size_t max_ind = 0;
+    for (auto& pair : vertex_column_mappings) {
+      max_ind = std::max(max_ind, pair.first);
+    }
+    file_col_to_schema_col_ind.resize(max_ind + 1, -1);
+    for (auto& pair : vertex_column_mappings) {
+      // if meet primary key, skip it.
+      if (pair.second == primary_key_name) {
+        VLOG(10) << "Skip primary key column " << pair.first << ", "
+                 << pair.second;
+        continue;
+      }
+      if (file_col_to_schema_col_ind[pair.first] == -1) {
+        if (schema_.vertex_has_property(vertex_label, pair.second)) {
+          auto& prop_names = schema_.get_vertex_property_names(vertex_label);
+          // find index of pair.second in prop_names
+          auto iter =
+              std::find(prop_names.begin(), prop_names.end(), pair.second);
+          // must be a valid iter.
+          if (iter == prop_names.end()) {
+            LOG(FATAL) << "Column " << pair.first << " is mapped to a column "
+                       << "that does not exist in schema: " << pair.second;
+          }
+          file_col_to_schema_col_ind[pair.first] =
+              std::distance(prop_names.begin(), iter);
+          VLOG(10) << "Column " << std::to_string(pair.first)
+                   << " is mapped to column " << pair.second << " in schema.: "
+                   << std::to_string(file_col_to_schema_col_ind[pair.first]);
+        } else {
+          LOG(FATAL) << "Column " << pair.first << " is mapped to a column "
+                     << "that does not exist in schema: " << pair.second;
+        }
+      } else {
+        LOG(FATAL) << "Column " << pair.first << " is mapped to multiple "
+                   << "columns in bulk loading file.";
+      }
+    }
   }
+
   for (auto filename : filenames) {
+    VLOG(10) << "Processing file: " << filename;
     FILE* fin = fopen(filename.c_str(), "r");
+    // Just read first line, and do nothing, the header of file is not needed.
     if (fgets(line_buf, 4096, fin) == NULL) {
       continue;
     }
     preprocess_line(line_buf);
-    if (first_file) {
-      ParseRecord(line_buf, header);
-      std::vector<std::string> col_names(col_num);
-      for (size_t i = 0; i < col_num; ++i) {
-        col_names[i] = std::string(header[i + 1].value.s.data(),
-                                   header[i + 1].value.s.size());
-      }
-      table.reset_header(col_names);
-      first_file = false;
-    }
-
     while (fgets(line_buf, 4096, fin) != NULL) {
       preprocess_line(line_buf);
-      ParseRecord(line_buf, oid, properties);
+      ParseRecord(line_buf, properties);
+      oid = properties[primary_key_ind].AsInt64();
       if (indexer.add(oid, v_index)) {
-        table.insert(v_index, properties);
+        // insert properties except for primary_key_ind
+        table.insert(v_index, properties, file_col_to_schema_col_ind);
       }
     }
 

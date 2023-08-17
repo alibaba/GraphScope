@@ -39,7 +39,7 @@ WORKDIR /home/graphscope
 COPY ./gs ./gs
 ARG VINEYARD_VERSION=main
 RUN sudo chmod a+wrx /tmp && \
-    ./gs install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION -j 2 && \
+    ./gs install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION -j $(nproc) && \
     sudo apt-get clean -y && \
     sudo rm -rf /var/lib/apt/lists/*
 

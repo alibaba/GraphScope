@@ -14,6 +14,7 @@
 package com.alibaba.graphscope.groot.sdk.example;
 
 import com.alibaba.graphscope.groot.sdk.GrootClient;
+import com.alibaba.graphscope.groot.sdk.schema.Vertex;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -56,24 +57,23 @@ public class IngestFile {
                         propertyNames.add(item);
                     }
                 } else {
+                    List<Vertex> vertices = new ArrayList<>();
                     Map<String, String> properties = new HashMap<>();
                     String[] items = line.split("\\|");
                     for (int i = 0; i < items.length; i++) {
                         properties.put(propertyNames.get(i), items[i]);
                     }
-                    client.addVertex(label, properties);
+                    vertices.add(new Vertex(label, properties));
                     count++;
                     if (count == batchSize) {
-                        snapshotId = client.commit();
+                        snapshotId = client.addVertices(vertices);
                         count = 0;
                     }
                 }
             }
         }
-        long maybeSnapshotId = client.commit();
-        long flushSnapshotId = maybeSnapshotId == 0 ? snapshotId : maybeSnapshotId;
-        System.out.println("flush snapshotId [" + flushSnapshotId + "]");
-        client.remoteFlush(flushSnapshotId);
+        System.out.println("flush snapshotId [" + snapshotId + "]");
+        client.remoteFlush(snapshotId);
         System.out.println("done");
     }
 }
