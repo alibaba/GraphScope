@@ -82,9 +82,10 @@ int main(int argc, char** argv) {
   double t0 = -grape::GetCurrentTime();
   auto& db = gs::GraphDB::get();
 
-  auto ret = gs::Schema::LoadFromYaml(graph_schema_path, bulk_load_config_path);
-  db.Init(std::get<0>(ret), std::get<1>(ret), std::get<2>(ret),
-          std::get<3>(ret), data_path, shard_num);
+  auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
+  auto loading_config =
+      gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
+  db.Init(schema, loading_config, data_path, shard_num);
 
   t0 += grape::GetCurrentTime();
 

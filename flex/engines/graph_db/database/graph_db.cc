@@ -48,13 +48,8 @@ GraphDB& GraphDB::get() {
   return db;
 }
 
-void GraphDB::Init(
-    const Schema& schema,
-    const std::vector<std::pair<std::string, std::string>>& vertex_files,
-    const std::vector<std::tuple<std::string, std::string, std::string,
-                                 std::string>>& edge_files,
-    const std::vector<std::string>& plugins, const std::string& data_dir,
-    int thread_num) {
+void GraphDB::Init(const Schema& schema, const LoadingConfig& load_config,
+                   const std::string& data_dir, int thread_num) {
   std::filesystem::path data_dir_path(data_dir);
   if (!std::filesystem::exists(data_dir_path)) {
     std::filesystem::create_directory(data_dir_path);
@@ -62,22 +57,24 @@ void GraphDB::Init(
 
   std::filesystem::path serial_path = data_dir_path / "init_snapshot.bin";
   if (!std::filesystem::exists(serial_path)) {
-    if (!vertex_files.empty() || !edge_files.empty()) {
+    if (!load_config.GetVertexLoadingMeta().empty() ||
+        !load_config.GetEdgeLoadingMeta().empty()) {
       LOG(INFO) << "Initializing graph db through bulk loading";
       {
         MutablePropertyFragment graph;
-        graph.Init(schema, vertex_files, edge_files, thread_num);
+        graph.Init(schema, load_config, thread_num);
         graph.Serialize(data_dir_path.string());
       }
       graph_.Deserialize(data_dir_path.string());
     } else {
       LOG(INFO) << "Initializing empty graph db";
-      graph_.Init(schema, vertex_files, edge_files, thread_num);
+      graph_.Init(schema, load_config, thread_num);
       graph_.Serialize(data_dir_path.string());
     }
   } else {
     LOG(INFO) << "Initializing graph db from data files of work directory";
-    if (!vertex_files.empty() || !edge_files.empty()) {
+    if (!load_config.GetVertexLoadingMeta().empty() ||
+        !load_config.GetEdgeLoadingMeta().empty()) {
       LOG(WARNING) << "Bulk loading is ignored because data files of work "
                       "directory exist";
     }
@@ -109,7 +106,7 @@ void GraphDB::Init(
     contexts_[i].logger.open(wal_dir.string(), i);
   }
 
-  initApps(plugins);
+  initApps(schema.GetPluginsList());
 }
 
 ReadTransaction GraphDB::GetReadTransaction() {

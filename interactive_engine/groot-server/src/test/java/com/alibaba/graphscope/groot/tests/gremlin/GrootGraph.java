@@ -20,6 +20,8 @@ import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.GremlinConfig;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
+import com.alibaba.graphscope.groot.sdk.schema.Edge;
+import com.alibaba.graphscope.groot.sdk.schema.Vertex;
 import com.alibaba.graphscope.groot.servers.MaxNode;
 import com.alibaba.graphscope.groot.servers.NodeBase;
 import com.alibaba.graphscope.groot.tests.common.GrootIORegistry;
@@ -36,9 +38,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.ProfileStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.FilterRankingStrategy;
-import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 public class GrootGraph extends RemoteTestGraph {
@@ -134,96 +133,100 @@ public class GrootGraph extends RemoteTestGraph {
         Thread.sleep(5000);
         String graphName = graphData.name().toLowerCase();
         if (graphName.equals("modern")) {
-            ddlClient.initWriteSession();
-
+            long snapshotId;
             Map<String, String> v1 = new HashMap<>();
             v1.put("id", "1");
             v1.put("name", "marko");
             v1.put("age", "29");
-            ddlClient.addVertex("person", v1);
+            ddlClient.addVertex(new Vertex("person", v1));
 
             Map<String, String> v2 = new HashMap<>();
             v2.put("id", "2");
             v2.put("name", "vadas");
             v2.put("age", "27");
-            ddlClient.addVertex("person", v2);
+            ddlClient.addVertex(new Vertex("person", v2));
 
             Map<String, String> v4 = new HashMap<>();
             v4.put("id", "4");
             v4.put("name", "josh");
             v4.put("age", "32");
-            ddlClient.addVertex("person", v4);
+            ddlClient.addVertex(new Vertex("person", v4));
 
             Map<String, String> v6 = new HashMap<>();
             v6.put("id", "6");
             v6.put("name", "peter");
             v6.put("age", "35");
-            ddlClient.addVertex("person", v6);
+            ddlClient.addVertex(new Vertex("person", v6));
 
             Map<String, String> v3 = new HashMap<>();
             v3.put("id", "3");
             v3.put("name", "lop");
             v3.put("lang", "java");
-            ddlClient.addVertex("software", v3);
+            ddlClient.addVertex(new Vertex("software", v3));
 
             Map<String, String> v5 = new HashMap<>();
             v5.put("id", "5");
             v5.put("name", "ripple");
             v5.put("lang", "java");
-            ddlClient.addVertex("software", v5);
+            snapshotId = ddlClient.addVertex(new Vertex("software", v5));
 
-            ddlClient.commit();
-            Thread.sleep(5000);
-
-            ddlClient.addEdge(
-                    "knows",
-                    "person",
-                    "person",
-                    Collections.singletonMap("id", "1"),
-                    Collections.singletonMap("id", "2"),
-                    Collections.singletonMap("weight", "0.5"));
+            ddlClient.remoteFlush(snapshotId);
 
             ddlClient.addEdge(
-                    "created",
-                    "person",
-                    "software",
-                    Collections.singletonMap("id", "1"),
-                    Collections.singletonMap("id", "3"),
-                    Collections.singletonMap("weight", "0.4"));
+                    new Edge(
+                            "knows",
+                            "person",
+                            "person",
+                            Collections.singletonMap("id", "1"),
+                            Collections.singletonMap("id", "2"),
+                            Collections.singletonMap("weight", "0.5")));
 
             ddlClient.addEdge(
-                    "knows",
-                    "person",
-                    "person",
-                    Collections.singletonMap("id", "1"),
-                    Collections.singletonMap("id", "4"),
-                    Collections.singletonMap("weight", "1.0"));
+                    new Edge(
+                            "created",
+                            "person",
+                            "software",
+                            Collections.singletonMap("id", "1"),
+                            Collections.singletonMap("id", "3"),
+                            Collections.singletonMap("weight", "0.4")));
 
             ddlClient.addEdge(
-                    "created",
-                    "person",
-                    "software",
-                    Collections.singletonMap("id", "4"),
-                    Collections.singletonMap("id", "3"),
-                    Collections.singletonMap("weight", "0.4"));
+                    new Edge(
+                            "knows",
+                            "person",
+                            "person",
+                            Collections.singletonMap("id", "1"),
+                            Collections.singletonMap("id", "4"),
+                            Collections.singletonMap("weight", "1.0")));
 
             ddlClient.addEdge(
-                    "created",
-                    "person",
-                    "software",
-                    Collections.singletonMap("id", "4"),
-                    Collections.singletonMap("id", "5"),
-                    Collections.singletonMap("weight", "1.0"));
+                    new Edge(
+                            "created",
+                            "person",
+                            "software",
+                            Collections.singletonMap("id", "4"),
+                            Collections.singletonMap("id", "3"),
+                            Collections.singletonMap("weight", "0.4")));
 
             ddlClient.addEdge(
-                    "created",
-                    "person",
-                    "software",
-                    Collections.singletonMap("id", "6"),
-                    Collections.singletonMap("id", "3"),
-                    Collections.singletonMap("weight", "0.2"));
+                    new Edge(
+                            "created",
+                            "person",
+                            "software",
+                            Collections.singletonMap("id", "4"),
+                            Collections.singletonMap("id", "5"),
+                            Collections.singletonMap("weight", "1.0")));
 
-            ddlClient.commit();
+            snapshotId =
+                    ddlClient.addEdge(
+                            new Edge(
+                                    "created",
+                                    "person",
+                                    "software",
+                                    Collections.singletonMap("id", "6"),
+                                    Collections.singletonMap("id", "3"),
+                                    Collections.singletonMap("weight", "0.2")));
+            ddlClient.remoteFlush(snapshotId);
             Thread.sleep(5000);
         } else {
             throw new UnsupportedOperationException("graph " + graphName + " is unsupported yet");
@@ -240,11 +243,6 @@ public class GrootGraph extends RemoteTestGraph {
     }
 
     @Override
-    public Vertex addVertex(Object... keyValues) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public <C extends GraphComputer> C compute(Class<C> graphComputerClass)
             throws IllegalArgumentException {
         throw new UnsupportedOperationException();
@@ -252,16 +250,6 @@ public class GrootGraph extends RemoteTestGraph {
 
     @Override
     public GraphComputer compute() throws IllegalArgumentException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Iterator<Vertex> vertices(Object... vertexIds) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Iterator<Edge> edges(Object... edgeIds) {
         throw new UnsupportedOperationException();
     }
 

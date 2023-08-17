@@ -1,5 +1,5 @@
 Cython>=3.0.0b3
-gremlinpython==3.6.3rc1
+gremlinpython==3.7.0
 grpcio>=1.49
 grpcio-tools>=1.49
 kubernetes>=24.2.0
@@ -12,7 +12,7 @@ networkx==2.6.0;python_version<"3.8"
 numpy
 orjson
 packaging
-pandas
+pandas<=2.0.3
 protobuf>=4
 psutil
 pyarrow>=10
@@ -22,4 +22,4 @@ PyYAML
 rich
 tqdm
 click
-vineyard>=0.16.1;sys_platform!="win32"
+vineyard>=0.16.3;sys_platform!="win32"
