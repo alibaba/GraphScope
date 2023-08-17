@@ -507,12 +507,6 @@ g.V().coin(0.2) # range is [0.0, 1.0]
 g.V().out().coin(0.2)
 ```
 
-Usages of the with()-step: </br>
-keyValuePair - the options to set repeatable seed.
-```bash
-g.V().coin(0.2).with('REPEATABLE', 123)
-```
-
 #### [sample()](https://tinkerpop.apache.org/docs/current/reference/#sample-step)
 Generate a certain number of sample results.
 
@@ -521,12 +515,6 @@ number - allow specified number of objects to pass through the stream.
 ```bash
 g.V().sample(10)
 g.V().out().sample(10)
-```
-
-Usages of the with()-step: </br>
-keyValuePair - the options to set repeatable seed.
-```bash
-g.V().sample(10).with('REPEATABLE', 123)
 ```
 
 ### Union
