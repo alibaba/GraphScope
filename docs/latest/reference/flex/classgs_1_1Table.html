@@ -123,6 +123,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ad894c6d928a74f81654b24d4acfa923e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad238826670a14cd2c0cc1f6183ed52f3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#ad238826670a14cd2c0cc1f6183ed52f3">insert</a> (size_t index, const std::vector&lt; <a class="el" href="structgs_1_1Any.html">Any</a> &gt; &amp;values)</td></tr>
 <tr class="separator:ad238826670a14cd2c0cc1f6183ed52f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52c88009b5305fdc978862fcd910d69e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a52c88009b5305fdc978862fcd910d69e">insert</a> (size_t index, const std::vector&lt; <a class="el" href="structgs_1_1Any.html">Any</a> &gt; &amp;values, const std::vector&lt; int32_t &gt; &amp;col_ind_mapping)</td></tr>
+<tr class="separator:a52c88009b5305fdc978862fcd910d69e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3447f5915d44d43ca40480f5a69689b3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a3447f5915d44d43ca40480f5a69689b3">Serialize</a> (std::unique_ptr&lt; grape::LocalIOAdaptor &gt; &amp;writer, const std::string &amp;prefix, size_t row_num)</td></tr>
 <tr class="separator:a3447f5915d44d43ca40480f5a69689b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aced930e6983c9292e91cc7d3a68ebfb8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#aced930e6983c9292e91cc7d3a68ebfb8">Deserialize</a> (std::unique_ptr&lt; grape::LocalIOAdaptor &gt; &amp;reader, const std::string &amp;prefix)</td></tr>
@@ -556,7 +558,7 @@ Private Attributes</h2></td></tr>
 </div>
 </div>
 <a id="ad238826670a14cd2c0cc1f6183ed52f3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad238826670a14cd2c0cc1f6183ed52f3">&#9670;&nbsp;</a></span>insert()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ad238826670a14cd2c0cc1f6183ed52f3">&#9670;&nbsp;</a></span>insert() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -572,6 +574,40 @@ Private Attributes</h2></td></tr>
           <td></td>
           <td class="paramtype">const std::vector&lt; <a class="el" href="structgs_1_1Any.html">Any</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>values</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a52c88009b5305fdc978862fcd910d69e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a52c88009b5305fdc978862fcd910d69e">&#9670;&nbsp;</a></span>insert() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::Table::insert </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="structgs_1_1Any.html">Any</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>values</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; int32_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>col_ind_mapping</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

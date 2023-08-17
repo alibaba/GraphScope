@@ -1161,6 +1161,10 @@ Else, please proceed to ingest and commit.
 
 Groot graph have several methods for realtime write as follows:
 
+#### Python
+
+Refer to [test_store_service.py](https://github.com/alibaba/GraphScope/blob/main/python/graphscope/tests/kubernetes/test_store_service.py) for examples.
+
 ```python
 # Inserts one vertex
 def insert_vertex(self, vertex: VertexRecordKey, properties: dict) -&gt; int: pass
@@ -1220,6 +1224,11 @@ def remote_flush(self, snapshot_id: int): pass
 </pre></div>
 </div>
 </div>
+</div>
+<div class="section" id="id1">
+<h4>Java<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h4>
+<p>We also have a java sdk for realtime write and schema management.</p>
+<p>Refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/interactive_engine/groot-client/src/main/java/com/alibaba/graphscope/groot/sdk/example/RealtimeWrite.java">RealtimeWrite.java</a> for examples.</p>
 </div>
 </div>
 </div>
@@ -1396,6 +1405,7 @@ kubectl<span class="w"> </span>logs<span class="w"> </span>demo-graphscope-store
 <li><a class="reference internal" href="#build-building-a-partitioned-graph">Build: Building a partitioned graph</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#id1">Java</a></li>
 </ul>
 </li>
 </ul>

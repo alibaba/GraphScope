@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Processing 100-billion edges in one second: Empowering Graphalytics with GPU Acceleration</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2023-08-08">08 Aug 2023</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2023-08-08">08 Aug 2023</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Processing 100-billion edges in one second: Empowering Graphalytics with GPU Acceleration</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2023-08-08-title-picture.jpg" alt="GPU-feature" />
+Graph algorithms serve as essential building blocks for a wide range of applications, such as social network analytics, routing, constructing protein network and <a href="https://en.wikipedia.org/wiki/De_Bruijn_graph">De Bruijn graphs</a>, and mining valuable information in RDF (Resource Description Framework) graphs. Generally, graph analytics involve propagating labels across edges or iteratively accumulating values from adjacent vertices. Existing engines in both academia and industry, like <a href="https://github.com/jegonzal/PowerGraph">PowerGraph</a>, <a href="https://kowshik.github.io/JPregel/pregel_paper.pdf">Pregel</a>, and <a href="https://spark.apache.org/graphx/">GraphX</a>, have paved the way. However, in the era of big data, the computational and storage complexity of sophisticated algorithms coupled with rapidly growing datasets have exhausted the limits of a single device.</p>
+
+<p>Traditionally, graph analysis tasks, characterized by data-intensive workloads, have been performed on CPUs. 
+However, the emergence of diverse new hardware in recent years has led to the recognition of the potential in constructing heterogeneous computing platforms using accelerator cards (such as FPGAs and GPUs).
+These accelerators often offer higher degrees of parallelism; for instance, an Nvidia V100 GPU can provide over 5,000 computation cores.
+Additionally, they exhibit enhanced memory bandwidth capabilities; HBM, for instance, can deliver several TB/s of memory bandwidth. 
+Numerous tasks have already harnessed the potential of such accelerator to achieve significant performance boosts, including deep learning and image processing, and graph computation is no exception.</p>
+
+<h3 id="cpu-vs-gpu">CPU vs GPU</h3>
+
+<p><img src="/blog/assets/images/2023-08-08-cpu-vs-gpu.jpg" alt="CPU vs GPU" /></p>
+
+<p>The above figure illustrates the key differences in architecture between CPUs and GPUs.
+CPUs feature relatively complex components, with most of the area dedicated to elements like prefetching, branch prediction, and caching, all aimed at improving CPU core computational efficiency, enabling them to handle intricate logic. 
+In contrast, GPUs have simpler components but stack a large number of cores, with longer pipelines. 
+When processing data, GPUs operate in a SIMT (Single Instruction, Multiple Threads) manner, typically grouping 32 threads together (some GPUs use groups of 64 threads), known as thread warps (warp in Nvidia GPUs, wave in AMD GPUs). 
+These thread warps execute the same instruction stream simultaneously, and GPUs rely on warp schedulers to hide data fetch latencies. 
+Moreover, GPUs have multiple memory hierarchies, necessitating data movement between main memory, video memory, on-chip shared memory, and vector registers.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>E5 2682</th>
+      <th>NVIDIA V100</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Clock</td>
+      <td>2.5GHz</td>
+      <td>877MHz</td>
+    </tr>
+    <tr>
+      <td>Cores</td>
+      <td>8x2</td>
+      <td>5120 (FP32)</td>
+    </tr>
+    <tr>
+      <td>Prices</td>
+      <td>~$1,000</td>
+      <td>~$10,000</td>
+    </tr>
+    <tr>
+      <td>Mem b/w</td>
+      <td>~40GB/s</td>
+      <td>~1TB/s</td>
+    </tr>
+    <tr>
+      <td>Mem size</td>
+      <td>~2TB</td>
+      <td>16GB</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>This table provides a comparison of specific hardware parameters between CPUs and GPUs. 
+In terms of computational power, GPUs have more cores, allowing them to process more data simultaneously and achieve higher levels of parallelism. 
+This higher parallelism aligns well with the inherently high concurrency of graph algorithms, where each vertex can serve as a parallel unit. 
+Consequently, GPUs demonstrate higher throughput when handling graph algorithms. However, individual GPU cores are weaker and operate at lower clock frequencies compared to CPUs.
+This characteristic makes GPUs more susceptible to long tail effects when facing load imbalances.
+In scenarios with imbalanced workloads, most GPU cores might idle while waiting for a few weaker cores to complete their computations. 
+Unfortunately, graph data exhibits inherent irregularity, with skewed edge distributions, where a small number of vertices possess the majority of edges, while most vertices are only connected by a few edges. This irregularity further amplifies the challenge of achieving load balance on GPUs.</p>
+
+<p>When it comes to memory access capabilities, GPUs indeed have higher bandwidth, such as the Nvidia V100 equipped with HBM2, which offers a bandwidth of up to 1TB/s. When GPU warps access adjacent data blocks, they can trigger coalesced memory access, combining multiple memory requests into a single one, providing an advantage over CPUs when handling large amounts of data. However, graph algorithms, especially parallel graph traversal algorithms, require simultaneous processing of a large number of edge data. Although GPUs boast higher memory bandwidth than CPUs, the memory access patterns of graph algorithms are unpredictable. Graph algorithms often need to randomly access a significant amount of data from memory, with each access touching only a small portion of memory (usually representing vertex states, which are not very large in graph analysis tasks). This leads to highly inefficient memory bandwidth utilization, often falling short of the theoretical peak.
+Additionally, GPU memory capacity is much smaller than that of CPUs, making it challenging for GPUs to handle larger-scale graph data. Furthermore, GPUs struggle to execute algorithms with high memory requirements, especially those that need to store large amounts of intermediate results for graph mining tasks.</p>
+
+<h3 id="when-efficient-graph-algorithms-go-inefficient-on-gpus">When Efficient Graph Algorithms Go Inefficient on GPUs</h3>
+
+<p>There is a significant gap between GPU and CPU architectures. Merely transferring CPU algorithms to GPUs may not lead to improved performance; it could even result in performance degradation.</p>
+
+<p>Due to GPUs having more but weaker cores compared to CPUs, graph algorithms running on GPUs should be adjusted appropriately to fully leverage the high concurrency of GPUs. We can achieve higher concurrency by sacrificing some single-thread efficiency in the algorithm.
+For instance, in the case of the shortest path problem, efficient algorithms like <a href="https://en.wikipedia.org/wiki/Edsger_W._Dijkstra">Dijkstra</a> are commonly used on CPUs. 
+Dijkstra maintains a small min-heap and processes only the closest unprocessed vertices to the source vertex, ensuring that each vertex is processed only once. This ordered update approach is highly efficient but limits concurrency based on the degree of each vertex.</p>
+
+<p><img src="/blog/assets/images/2023-08-08-efficiency-vs-parallelism.jpg" alt="Efficiency vs Parallelism" /></p>
+
+<p>In contrast, Bellman-Ford processes all edges in each update round, providing higher concurrency, but with slightly lower update efficiency as each vertex might be processed multiple times. 
+As shown in the above Figure, during the first round of updates from the source vertex <em>S</em>, vertices <em>A</em> and <em>B</em> are modified, and <em>B</em>’s distance is updated to 30.
+Subsequently, vertex <em>B</em> updates its neighbors, and in the next round, its distance is modified to 21 via vertex <em>A</em>, triggering updates to other vertices by vertex <em>B</em>. Using Dijkstra, however, only the closer vertices are processed, avoiding repetitive transmission of invalid data by vertex B.</p>
+
+<p>By carefully considering the trade-off between concurrency and single-thread efficiency, graph algorithms can be tailored to effectively harness the potential of GPU’s high concurrency while optimizing their performance on GPUs.</p>
+
+<p>When considering GPUs, a delicate balance between parallelism and computational efficiency must be struck. On one hand, GPUs possess numerous cores; however, utilizing Dijkstra’s algorithm on them demands maintaining a costly concurrent heap, which subsequently curtails the achievable level of concurrency, thus impeding the exploitation of the GPU’s potential. 
+On the other hand, given the relatively weaker nature of GPU cores, adopting algorithms with lower computational efficiency could potentially lead to slower performance compared to directly employing efficient algorithms on CPUs.</p>
+
+<p>To navigate this trade-off, we introduce the concept of an update window, denoted as <em>w</em>. 
+<em>w</em> serve as a soft adjustable threshold value to balance the efficiency and parallelism.
+In each iteration round, only vertices with distances falling within the update window are processed (specifically, those vertices <em>u</em> satisfying <code class="language-plaintext highlighter-rouge">dis[u] &lt; w</code>). 
+After completing updates within a window, the window <em>w</em> is slid, targeting vertices with distances in next window, i.e. interval <em>[w, 2w)</em>. 
+This process continues until all active vertices have undergone updates, signaling the transition to the next iteration. 
+The size of the window <em>w</em> serves as a tuning parameter, affording users the flexibility to specify <em>w</em> and thus adapt to diverse datasets and computing platforms with precision.</p>
+
+<h3 id="load-balance-is-more-important-than-you-think">Load Balance is More Important than You Think</h3>
+
+<p><img src="/blog/assets/images/2023-08-08-load-balance.jpg" alt="Load balance" /></p>
+
+<p>As mentioned above, due to the irregular nature of graph algorithms, which does not align well with the SIMT architecture of GPUs, this irregular computation can result in severe load imbalance, making it crucial for GPU-based graph algorithms. 
+To cope with load imbalance, we have four different load balancing strategies, as illustrated in above.</p>
+
+<ul>
+  <li>
+    <p>TWC (Thread-Warp-CTA) is the lowest-overhead load balancing method. It divides the currently active vertex set based on their out-degrees into low, medium, and high-degree vertices, and then maps them to threads, warps, and CTAs for processing.</p>
+  </li>
+  <li>
+    <p>WM (Warp-Managed) primarily addresses load imbalance within a warp. It processes a fixed number of vertices as a batch and loads their neighbors into the GPU’s shared memory until all neighbors are processed before moving to the next batch. Each thread performs a binary search on the edges to determine their corresponding vertex.</p>
+  </li>
+  <li>
+    <p>CM (CTA-Managed) is similar to WM, but focuses on load imbalance within a CTA. Like WM, it processes a fixed number of vertices as a batch and loads their neighbors into shared memory. However, CM uses a broader binary search to find the corresponding vertex for the edge, and threads in CM require explicit synchronization.</p>
+  </li>
+  <li>
+    <p>STRICT is the highest-overhead load balancing method, ensuring that each thread in the GPU handles the same number of edges. It enforces equal edge distribution in each CTA, requiring additional preprocessing to partition the edges that need processing, with some nodes’ edges distributed across different CTAs, necessitating atomic operations during updates for consistency.</p>
+  </li>
+</ul>
+
+<p>Theoretically, STRICT guarantees the best load balancing, but it incurs the highest overhead. It is often the optimal choice when the active vertex set contains a vertex with a large number of edges. TWC offers the lowest overhead but only guarantees approximate balance. WM/CM falls between the two extremes, with WM’s primary overhead being the binary search, taking no more than <code class="language-plaintext highlighter-rouge">log2(warpsize)</code> steps to complete, while CM’s overhead is <code class="language-plaintext highlighter-rouge">log2(blocksize)</code> steps.</p>
+
+<h3 id="try-gpu-based-graphalytics-on-graphscope">Try GPU-based Graphalytics on GraphScope</h3>
+
+<p>If you are looking for an out-of-box GPU-based graphalytics library, come and try <a href="https://github.com/alibaba/GraphScope">GraphScope</a>.
+Our recent update on graph analytical engine (<a href="https://github.com/alibaba/libgrape-lite/">GAE</a>) of GraphScope introduces a new feature for GPU acceleration and achieves amazing performance on large graphs.</p>
+
+<p><img src="/blog/assets/images/2023-08-08-performance.jpg" alt="Performance" /></p>
+
+<p>The above chart illustrates the performance achieved by GPU-based GraphScope on a single node with eight A100 GPUs when running on graph data of various sizes. It showcases the throughput in terms of edges processed per second while handling this data. Processing a graph data set with 8 billion edges takes just 85 milliseconds, significantly outperforming the results obtained from a distributed cluster composed of multiple CPU nodes.</p>
+
+<p>GraphScope continues to evolve, and we are working on ways to provide flexibility and performance. 
+We are building out the next version of GraphScope that will start to provide more exciting features like GPU, <a href="https://en.wikipedia.org/wiki/Remote_direct_memory_access">RDMA</a> and <a href="https://en.wikipedia.org/wiki/Compute_Express_Link">CXL</a>. 
+Reach out to us via <a href="https://github.com/alibaba/GraphScope/discussions">Github Discussions</a>. We’re here to help.</p>
+
+<h3 id="references">References</h3>
+
+<ul>
+  <li>
+    <p>[1] Farzad Khorasani, Keval Vora, Rajiv Gupta, and Laxmi N. Bhuyan. CuSha: vertex-centric graph processing on GPUs. (<a href="https://dl.acm.org/doi/abs/10.1145/2600212.2600227">link</a>)</p>
+  </li>
+  <li>
+    <p>[2] Jianlong Zhong and Bingsheng He. Medusa: Simplified Graph Processing on GPUs. (<a href="https://ieeexplore.ieee.org/document/6497047">link</a>)</p>
+  </li>
+  <li>
+    <p>[3] Yangzihao Wang, Yuechao Pan, Andrew Davidson, Yuduo Wu, Carl Yang, Leyuan Wang, Muhammad Osama, Chenshan Yuan, Weitang Liu, Andy T. Riffel, and John D. Owens. Gunrock: GPU Graph Analytics. (<a href="https://dl.acm.org/doi/10.1145/3108140">link</a>)</p>
+  </li>
+  <li>
+    <p>[4] Tal Ben-Nun, Michael Sutton, Sreepathi Pai, and Keshav Pingali. Groute: An Asynchronous Multi-GPU Programming Model for Irregular Computations. (<a href="https://dl.acm.org/doi/10.1145/3018743.3018756">link</a>)</p>
+  </li>
+  <li>
+    <p>[5] Ke Meng, Jiajia Li, Guangming Tan, and Ninghui Sun. A pattern based algorithmic autotuner for graph processing on GPUs. (<a href="https://dl.acm.org/doi/10.1145/3293883.3295716">link</a>)</p>
+  </li>
+  <li>
+    <p>[6] K. Meng, L. Geng, X. Li, Q. Tao, W. Yu and J. Zhou, “Efficient Multi-GPU Graph Processing with Remote Work Stealing. (<a href="https://ieeexplore.ieee.org/document/10184847">link</a>)</p>
+  </li>
+</ul>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Processing 100-billion edges in one second: Empowering Graphalytics with GPU Acceleration&amp;url=https://graphscope.io/tech/2023/08/08/Empowering-Graph-Analysis-Tasks-with-GPU-Acceleration.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2023/08/08/Empowering-Graph-Analysis-Tasks-with-GPU-Acceleration.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2023/08/08/Empowering-Graph-Analysis-Tasks-with-GPU-Acceleration.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2023 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>

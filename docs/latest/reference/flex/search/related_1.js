@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['graphdbsession_1358',['GraphDBSession',['../classgs_1_1GraphDB.html#a0b4d57ebb58b9ea0063493d723462431',1,'gs::GraphDB']]]
+  ['parse_5fbulk_5fload_5fconfig_5ffile_1468',['parse_bulk_load_config_file',['../classgs_1_1LoadingConfig.html#ac9fd7c27f467c9a4d692016237bffd4a',1,'gs::LoadingConfig']]]
 ];

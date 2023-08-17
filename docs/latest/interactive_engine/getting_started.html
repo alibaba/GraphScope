@@ -715,6 +715,7 @@ your local machine. First of all, you import <code class="docutils literal notra
 the modern graph, which has been widely used in <a class="reference external" href="https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/">Tinkerpop</a> demos.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
 <span class="kn">from</span> <span class="nn">graphscope.dataset.modern_graph</span> <span class="kn">import</span> <span class="n">load_modern_graph</span>
+<span class="kn">from</span> <span class="nn">neo4j</span> <span class="kn">import</span> <span class="n">GraphDatabase</span><span class="p">,</span> <span class="n">RoutingControl</span>
 
 <span class="n">gs</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -731,7 +732,7 @@ the modern graph, which has been widely used in <a class="reference external" hr
 <span class="nb">print</span><span class="p">(</span><span class="n">q2</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>  <span class="c1"># should print [[v[2], v[3], v[0], v[1]]]</span>
 
 <span class="c1"># or `execute` any supported Cypher query, by passing `lang=&quot;cypher&quot;`</span>
-<span class="n">q3</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;MATCH (n:person) RETURN count(n)&quot;</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;cypher&quot;</span><span class="p">,</span> <span class="n">routing_</span><span class="o">=</span><span class="n">RoutingControl</span><span class="o">.</span><span class="n">READ</span><span class="p">)</span>
+<span class="n">q3</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;MATCH (n) RETURN count(n)&quot;</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;cypher&quot;</span><span class="p">,</span> <span class="n">routing_</span><span class="o">=</span><span class="n">RoutingControl</span><span class="o">.</span><span class="n">READ</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">q3</span><span class="o">.</span><span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># should print 6</span>
 </pre></div>
 </div>

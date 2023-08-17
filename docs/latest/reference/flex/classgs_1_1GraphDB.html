@@ -104,8 +104,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a2bbdc8b5c0738e9d11718ce7f6045f20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a1d99f950b499e9ca3a3d3745fbcf2f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDB.html#a8a1d99f950b499e9ca3a3d3745fbcf2f">~GraphDB</a> ()</td></tr>
 <tr class="separator:a8a1d99f950b499e9ca3a3d3745fbcf2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af398bed353dedfa8945674e64fccb850"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDB.html#af398bed353dedfa8945674e64fccb850">Init</a> (const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;<a class="el" href="classgs_1_1GraphDB.html#a55bc84ab369117c341c7e5784db47449">schema</a>, const std::vector&lt; std::pair&lt; std::string, std::string &gt;&gt; &amp;vertex_files, const std::vector&lt; std::tuple&lt; std::string, std::string, std::string, std::string &gt;&gt; &amp;edge_files, const std::vector&lt; std::string &gt; &amp;plugins, const std::string &amp;data_dir, int thread_num=1)</td></tr>
-<tr class="separator:af398bed353dedfa8945674e64fccb850"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac83276775bf7e6ac3c93eecc7c6d6d56"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDB.html#ac83276775bf7e6ac3c93eecc7c6d6d56">Init</a> (const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;<a class="el" href="classgs_1_1GraphDB.html#a55bc84ab369117c341c7e5784db47449">schema</a>, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;config, const std::string &amp;data_dir, int thread_num=1)</td></tr>
+<tr class="separator:ac83276775bf7e6ac3c93eecc7c6d6d56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab36c0f70619c2b0af202bd4c0d639588"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ReadTransaction.html">ReadTransaction</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDB.html#ab36c0f70619c2b0af202bd4c0d639588">GetReadTransaction</a> ()</td></tr>
 <tr class="memdesc:ab36c0f70619c2b0af202bd4c0d639588"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a transaction to read vertices and edges.  <a href="classgs_1_1GraphDB.html#ab36c0f70619c2b0af202bd4c0d639588">More...</a><br /></td></tr>
 <tr class="separator:ab36c0f70619c2b0af202bd4c0d639588"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -525,8 +525,8 @@ Friends</h2></td></tr>
 
 </div>
 </div>
-<a id="af398bed353dedfa8945674e64fccb850"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af398bed353dedfa8945674e64fccb850">&#9670;&nbsp;</a></span>Init()</h2>
+<a id="ac83276775bf7e6ac3c93eecc7c6d6d56"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac83276775bf7e6ac3c93eecc7c6d6d56">&#9670;&nbsp;</a></span>Init()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -540,20 +540,8 @@ Friends</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; std::pair&lt; std::string, std::string &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>vertex_files</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; std::tuple&lt; std::string, std::string, std::string, std::string &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>edge_files</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
-          <td class="paramname"><em>plugins</em>, </td>
+          <td class="paramtype">const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;&#160;</td>
+          <td class="paramname"><em>config</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
