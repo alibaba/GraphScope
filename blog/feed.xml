@@ -5,9 +5,104 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 14 Aug 2023 06:11:48 +0000</pubDate>
-    <lastBuildDate>Mon, 14 Aug 2023 06:11:48 +0000</lastBuildDate>
+    <pubDate>Thu, 17 Aug 2023 06:50:10 +0000</pubDate>
+    <lastBuildDate>Thu, 17 Aug 2023 06:50:10 +0000</lastBuildDate>
     <generator>Jekyll v4.3.2</generator>
+    
+      <item>
+        <title>FLASH: A Programming Model for Distributed Graph Algorithms</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-08-16-title-picture.jpg&quot; alt=&quot;flash-model&quot; /&gt;
+In this post, we will introduce &lt;a href=&quot;https://graphscope.io/publication/flash.pdf&quot;&gt;FLASH&lt;/a&gt;, which is a distributed programming model for programming a broad spectrum of graph algorithms, including clustering, centrality, traversal, matching, mining, etc. It makes diverse complex graph algorithms easy to write at the distributed runtime. The algorithms expressed in FLASH take only a few lines of code, and provide a satisfactory performance.&lt;/p&gt;
+
+&lt;h3 id=&quot;motivation&quot;&gt;Motivation&lt;/h3&gt;
+
+&lt;p&gt;The majority of recent graph processing frameworks only focus on a handful of fix-point graph algorithms such as breadth-first search, PageRank, shortest path, etc. It leaves the distributed computation of a large variety of graph algorithms suffering from low efficiency, limited expressiveness, or high implementation complexity with existing frameworks. The well-known vertex-centric implementation of a graph algorithm follows a common iterative, single-phased and value-propagation-based (short of ISVP) pattern: the algorithm runs iteratively until convergence, and in each iteration, all vertices receive messages from their neighbors to update their own states, then they send the updated states as messages to the neighbors for the next iteration. Such high-level abstraction brings productivity to some extent to users, however, at the sacrifice of expressiveness. This abstraction, while designed specifically for the ISVP algorithms, is almost infeasible to be applied to a large variety of algorithms that are not of the kind. At the same time, modern graph scenarios bring in the needs of more advanced and complex graph algorithms, which poses a big challenge for existing graph processing frameworks.&lt;/p&gt;
+
+&lt;p&gt;After investigating representative distributed graph algorithms, including many non-ISVP ones, we have distilled three requirements that are critical for programming them efficiently and productively in a distributed context, namely (1) flexible control flow; (2) operations on vertex subsets; and (3) beyond-neighborhood communication. However, existing graph frameworks all fall short in meeting these requirements. Therefore, there is a need to design a new programming model which fulfills all of the three requirements, and supports to program in a distributed context.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-flash-programming-model&quot;&gt;The FLASH Programming Model&lt;/h3&gt;
+
+&lt;h4 id=&quot;overview&quot;&gt;Overview&lt;/h4&gt;
+
+&lt;p&gt;FLASH follows the &lt;a href=&quot;https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html&quot;&gt;vertex-centric&lt;/a&gt; philosophy, but it moves a step further for stronger expressiveness by providing flexible control flow, the operations on arbitrary vertex sets and beyond-neighborhood communication.&lt;/p&gt;
+
+&lt;p&gt;The FLASH programming model is based on &lt;a href=&quot;https://github.com/jshun/ligra&quot;&gt;Ligra&lt;/a&gt; to inherit its support for the requirements of flexible control flow and operations on vertex subsets. By further enabling beyond-neighborhood communication, FLASH improves the expressiveness for programming a diverse variety of graph algorithms. Since Ligra is a single-machine parallel library, FLASH makes an extension to the distributed context, for which it must handle communication, synchronization, data races and task scheduling. To do so, a middleware called FlashWare is proposed that hides all the above details for distribution, and provides the capability to apply multiple system optimizations automatically and adaptively at the runtime.&lt;/p&gt;
+
+&lt;p&gt;We have implemented &lt;a href=&quot;https://github.com/alibaba/GraphScope/blob/main/python/graphscope/analytical/app/flash/__init__.py&quot;&gt;70+ graph algorithms&lt;/a&gt; with FLASH for 40+ different commonly used applications, and we can now program much more succinct codes using the FLASH programming interfaces, which also helps productivity. The evaluation results demonstrate FLASH’s capability of expressing many advanced algorithms (takes up to 92% less lines of code), while providing a satisfactory performance at the same time.&lt;/p&gt;
+
+&lt;h4 id=&quot;flash-api&quot;&gt;FLASH API&lt;/h4&gt;
+
+&lt;p&gt;FLASH is a functional programming model specific for distributed graph processing. It follows the Bulk Synchronous Parallel (BSP) computing paradigm with each of the primary functions constitutes a single superstep. It utilizes the &lt;em&gt;VertexSubset&lt;/em&gt; type which represents a set of vertices of the graph &lt;em&gt;G&lt;/em&gt;, containing a set of indices for all vertices in this set. The properties of vertices are maintained only once for a graph, shared by all &lt;em&gt;VertexSubset&lt;/em&gt;s. The following describes the APIs of FLASH based on &lt;em&gt;VertexSubset&lt;/em&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;VSize&lt;/em&gt;: This function returns the size of a &lt;em&gt;VertexSubset&lt;/em&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;VSize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;VertexSubset&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;VertexMap&lt;/em&gt;: This interface applies the map function to each vertex in &lt;em&gt;U&lt;/em&gt; that passes the condition checking function &lt;em&gt;F&lt;/em&gt;. The indices of the output vertices form the resulting &lt;em&gt;VertexSubset&lt;/em&gt;. Specially, the &lt;em&gt;M&lt;/em&gt; function could be omitted for implementing the filter semantics, with the vertex data unchanged.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;VertexSubset&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;VertexMap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;VertexSubset&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
+                       &lt;span class=&quot;n&quot;&gt;F&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                       &lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;EdgeMap&lt;/em&gt;: For a graph &lt;em&gt;G(V,E)&lt;/em&gt;, EdgeMap applies the update logic to the specific edges with source vertex in &lt;em&gt;U&lt;/em&gt; and target vertex satisfying &lt;em&gt;C&lt;/em&gt;. &lt;em&gt;H&lt;/em&gt; represents the edge set to conduct updates, which is &lt;em&gt;E&lt;/em&gt; in common cases. We allow the users to define arbitrary edge sets they want dynamically at runtime, even virtual edges generated during the algorithm’s execution. The edge set can be defined through defining a function which maps a source vertex index to a set of indices of the targets. We also provide some pre-defined operators for convenience, such as reverse edges, or edges with targets in a specific &lt;em&gt;VertexSubset&lt;/em&gt;. This extension makes the communication beyond the neighborhood-exchange limitation.
+If a chosen edge passes the condition checking &lt;em&gt;F&lt;/em&gt;, the map function &lt;em&gt;M&lt;/em&gt; is applied on it. The output of the function &lt;em&gt;M&lt;/em&gt; represents a temporary new value of the target vertex. This new value is applied immediately and sequentially if it is in the pull mode, while in the push mode, another parameter &lt;em&gt;R&lt;/em&gt; is required to apply all the temporary new values on a specific vertex to get its final value. The updated target vertices form the output set of &lt;em&gt;EdgeMap&lt;/em&gt;. The reduce function &lt;em&gt;R&lt;/em&gt; should be associative and commutative to ensure correctness, or it is not required for sequentially applying &lt;em&gt;M&lt;/em&gt;, i.e., to run EdgeMap always in the pull mode. The function &lt;em&gt;C&lt;/em&gt; is useful in algorithms where a value associated with a vertex only needs to be updated once. FLASH provides a default function &lt;em&gt;CTrue&lt;/em&gt; which always returns true, since the user does not need this functionality sometimes. Similarly, the &lt;em&gt;F&lt;/em&gt; function of EdgeMap and VertexMap can also be supplied using &lt;em&gt;CTrue&lt;/em&gt;, if it is unnecessary.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;VertexSubset&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;EdgeMap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;VertexSubset&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;U&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; 
+                     &lt;span class=&quot;n&quot;&gt;EdgeSet&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;H&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                     &lt;span class=&quot;n&quot;&gt;F&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                     &lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                     &lt;span class=&quot;n&quot;&gt;C&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                     &lt;span class=&quot;n&quot;&gt;R&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;d&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Other auxiliary APIs are provided by FLASH for conveniently conducting set operations (including &lt;em&gt;Union&lt;/em&gt;, &lt;em&gt;Minus&lt;/em&gt;, &lt;em&gt;Intersect&lt;/em&gt;, &lt;em&gt;Add&lt;/em&gt;, &lt;em&gt;Contain&lt;/em&gt;, etc.), traversing all vertices in a set (&lt;em&gt;Traverse&lt;/em&gt;), getting the data value of a single vertex (&lt;em&gt;GetV&lt;/em&gt;) and so on.&lt;/p&gt;
+
+&lt;h4 id=&quot;strong-expressiveness&quot;&gt;Strong Expressiveness&lt;/h4&gt;
+
+&lt;p&gt;Besides expressing existing vertex-centric algorithms, FLASH provides the possibility of expressing more advanced algorithms. It is the first distributed graph processing model that satisfies all of the three critical requirements for programming non-ISVP algorithms.&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;FLASH allows the users to define the arbitrary control flow by combining the primitives, thus it can naturally support multi-phased algorithms. In traditional vertex-centric models, these algorithms are supported in an awkward way since they only allow to provide a single user-defined function.&lt;/li&gt;
+  &lt;li&gt;The &lt;em&gt;VertexSubset&lt;/em&gt; structure supplements the perspective of a single vertex, allowing to conduct updates on arbitrary vertices. Multiple vertex subsets can be maintained at the same time, they can even be defined in a recursive function. Without this feature, a framework has to start from the whole graph every time and pick up specific vertices every time.&lt;/li&gt;
+  &lt;li&gt;FLASH allows the users to provide the arbitrary edge set they want to transfer messages, even when the edges do not exist in the original graph. Therefore, algorithms that contain communication beyond neighborhood can be expressed intuitively.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;implementation&quot;&gt;Implementation&lt;/h3&gt;
+
+&lt;h4 id=&quot;architecture&quot;&gt;Architecture&lt;/h4&gt;
+
+&lt;p&gt;The architecture of FLASH contains several main components, as shown in the following figure. The first is a code generator which takes the high-level FLASH APIs as input, and generates execution code to be run on the second component named FlashWare, which is a middleware designed and optimized for the FLASH model and is implemented based on the fundamental modules of GraphScope. The FlashWare executes the code produced by the code generator on the distributed runtime, utilizing the ability of parallel computing and communication ability of GraphScope.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-08-16-flash-architecture.jpg&quot; alt=&quot;flash-architecture&quot; /&gt;&lt;/p&gt;
+&lt;center&gt; Figure 1: The architecture of FLASH. &lt;/center&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;optimizations&quot;&gt;Optimizations&lt;/h4&gt;
+
+&lt;p&gt;Some optimizations are introduced in the implementation of the FLASH model:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;During graph processing, the type of an active set may be dense or sparse, FLASH could dispatch different computation kernels for different types of the active set: the push mode for sparse active sets and the pull mode for dense active sets. This auto-switch scheme is proved to be useful for real-world graphs. Also, FLASH ’s dual mode processing is optional: users may choose to execute in only one mode through calling EdgeMapDense/EdgeMapSparse, instead of EdgeMap.&lt;/li&gt;
+  &lt;li&gt;FLASH utilizes separate threads to execute message passing, while other threads perform parallel vertex-centric processing, thus the computation and communication tasks are co-scheduled, leading to a performance improvement.&lt;/li&gt;
+  &lt;li&gt;In some cases, there are multiple vertex properties, but not all of them are critical. A property is critical only if it is accessed by other vertices, thus the update to the master need to be broadcasted to its mirrors. On the contrary, if it is only useful in local computation, it is not critical. This optimization reduces the size of a single message from the total size of all properties to only that of critical properties.&lt;/li&gt;
+  &lt;li&gt;Another way to eliminate redundant messages is to communicate with only the necessary mirrors. For normal graph applications, the messages are transferred along the edges. Therefore, a vertex should only broadcast to the partitions that contain at least one neighbor of this vertex. Only in the cases that the programmers define virtual edges for EdgeMap, which beyond the scope of &lt;em&gt;E&lt;/em&gt;, FlashWare synchronizes the update on a vertex to all partitions, thus this optimization is disabled.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Wed, 16 Aug 2023 03:10:42 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2023/08/16/FLASH-A-Programming-Model-for-Distributed-Graph-Algorithms.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/08/16/FLASH-A-Programming-Model-for-Distributed-Graph-Algorithms.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>Processing 100-billion edges in one second: Empowering Graphalytics with GPU Acceleration</title>
@@ -1503,300 +1598,6 @@ We welcome everyone to try &lt;a href=&quot;https://graphscope.io/docs/latest/an
         <pubDate>Mon, 19 Jun 2023 11:00:00 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2023/06/19/Breaking-the-Language-Barrier-in-Large-Scale-Graph-Computing.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/06/19/Breaking-the-Language-Barrier-in-Large-Scale-Graph-Computing.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>Analyzing Graphs with GraphScope in the Style of NetworkX</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-06-13-title-picture.jpg&quot; alt=&quot;GraphScope-NetworkX&quot; /&gt;
-This article demonstrate how to analyze graph with GraphScope in the style of NetworkX.
-NetworkX is a tool for graph theory and complex network modeling developed in Python
-and it has a simple and easy-to-use graph analysis interface. GraphScope provides a set of NetworkX-compatible graph analysis interfaces that not only support the use of simple and easy-to-use interfaces like NetworkX but also provide high-performance graph analysis algorithms to support the processing of ultra-large-scale graph data.&lt;/p&gt;
-
-&lt;h2 id=&quot;what-is-networkx&quot;&gt;What is NetworkX&lt;/h2&gt;
-&lt;p&gt;NetworkX is a tool for graph theory and complex network modeling developed in Python.
-It comes with built-in graph and complex network analysis algorithms and provides a simple and easy-to-use
-graph analysis interface that allows for easy analysis of complex network data and simulation modeling.
-NetworkX’s interface design is very concise, making it easy for novices to quickly develop their
-understanding of graph data. Furthermore, the interface is easy to use for small to medium-sized data sets.&lt;/p&gt;
-
-&lt;p&gt;However, because NetworkX is based on the Python language, algorithm performance is not its strong suit,
-and it cannot effectively handle industrial-level large-scale graph data. In response to this challenge,
-GraphScope provides a set of NetworkX-compatible graph analysis interfaces that not only support the use of
-simple and easy-to-use interfaces like NetworkX but also provide high-performance graph analysis algorithms
-to support the processing of ultra-large-scale graph data.&lt;/p&gt;
-
-&lt;p&gt;We will use a small example to briefly introduce the graph analysis process of NetworkX.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;networkx&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# initialize an empty undirected graph
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;networkx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Graph&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# add edge lists through the &quot;add_edges_from&quot; interface.
-# here we add two edges (1, 2) and (1, 3)
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add_edges_from&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)])&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# add node 4 through the &quot;add_node&quot; interface
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add_node&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# check some graph information
-# use &quot;G.number_of_nodes()&quot; to query the current number of nodes/vertices in graph G
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;number_of_nodes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# 4
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# similarly, &quot;G.number_of_edges()&quot; can query the number of edges in graph G
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;number_of_edges&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# 2
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# use &quot;G.degree&quot; to query the degree of each vertex in graph G
-&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;sorted&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;d&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;d&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;degree&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# [0, 1, 1, 2]
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# finally, call the built-in algorithm of NetworkX to analyze the graph
-# here we call the &quot;connected_components&quot; algorithm to analyze the connected components of graph G
-&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;networkx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;connected_components&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# [{1, 2, 3}, {4},]
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# and call the &quot;clustering&quot; algorithm to analyze the clustering of graph G
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;networkx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;clustering&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# {1: 0, 2: 0, 3: 0, 4: 0}
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;The above example is just a simple introduction to graph analysis with NetworkX. For more information on
-NetworkX interfaces, detailed usage instructions, and built-in algorithms, please refer to &lt;a href=&quot;https://networkx.org/documentation/stable/index.html&quot;&gt;the official NetworkX documentation&lt;/a&gt;.&lt;/p&gt;
-
-&lt;h2 id=&quot;analysis-with-graphscope-in-the-style-of-networkx&quot;&gt;Analysis with GraphScope in the Style of NetworkX&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://networkx.org/documentation/stable/tutorial.html&quot;&gt;The official NetworkX tutorial&lt;/a&gt; is a beginner’s
-guide to using the NetworkX interface and graph analysis. To demonstrate GraphScope’s compatibility with
-NetworkX and how to use GraphScope’s NetworkX interface for graph analysis, we will use GraphScope to
-execute the examples in the tutorial.&lt;/p&gt;
-
-&lt;p&gt;Using GraphScope’s NetworkX compatible interface, we simply replace &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;import networkx as nx&lt;/code&gt; with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;import graphscope.nx as nx&lt;/code&gt; to use the same conventions as NetworkX.
-Of course, we can use other custom aliases, such as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;import graphscope.nx as gs_nx&lt;/code&gt;.&lt;/p&gt;
-
-&lt;h3 id=&quot;creating-a-graph&quot;&gt;Creating a Graph&lt;/h3&gt;
-&lt;p&gt;GraphScope supports the same graph syntax as NetworkX. In the example, we use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nx.Graph()&lt;/code&gt; to create an empty undirected graph.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graphscope.nx&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nx&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# initialize an empty undirected graph
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Graph&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;adding-nodes-and-edges&quot;&gt;Adding Nodes and Edges&lt;/h3&gt;
-&lt;p&gt;GraphScope’s graph operation functions are also compatible with NetworkX. Users can add nodes through
-&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;add_node&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;add_nodes_from&lt;/code&gt; and add edges through &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;add_edge&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;add_edges_from&lt;/code&gt;.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# add a node with &quot;add_node&quot;
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add_node&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# or add nodes from any iterable container, such as a list
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add_nodes_from&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# if the container is in the form of a tuple, you can also add node attributes while adding nodes
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add_nodes_from&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;sh&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;red&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}),&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;sh&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;green&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})])&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# for edges, you can add one edge with &quot;add_edge&quot;
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add_edge&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add_edge&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# add edge lists with &quot;add_edges_from&quot;
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add_edges_from&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)])&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# or add edge attributes while adding edges through edge tuples
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add_edges_from&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;weight&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;3.1415&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})])&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;querying-graph-elements&quot;&gt;Querying Graph Elements&lt;/h3&gt;
-&lt;p&gt;GraphScope supports NetworkX-compatible graph query interfaces. Users can use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;number_of_nodes&lt;/code&gt; and
-&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;number_of_edges&lt;/code&gt; to obtain the number of nodes and edges in the graph, and use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nodes&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;edges&lt;/code&gt;,
-&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;adj&lt;/code&gt;, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;degree&lt;/code&gt; interfaces to obtain the current nodes and edges in the graph, as well as
-information such as node neighbors and degrees.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# query the current number of nodes and edges in the graph
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;number_of_nodes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# 5
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;number_of_edges&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# 3
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# list the nodes and edges currently in the graph
-&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nodes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# [1, 2, 3, 4, 5]
-&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;edges&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# [(1, 2), (1, 3), (2, 3)]
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# query the neighbors of a node
-&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;adj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# [2, 3]
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# query the degree of a node
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;degree&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# 2
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;removing-elements-from-the-graph&quot;&gt;Removing Elements from the Graph&lt;/h3&gt;
-&lt;p&gt;Like NetworkX, GraphScope can also modify the graph by removing nodes and edges from the graph in a way
-similar to adding elements. For example, you can use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;remove_node&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;remove_nodes_from&lt;/code&gt; to delete
-nodes from the graph, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;remove_edge&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;remove_edges_from&lt;/code&gt; to delete edges from the graph.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# remove a node with &quot;remove_node&quot;
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;remove_node&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# check the nodes in graph, and we can see that node 5 has been removed
-&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nodes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# [1, 2, 3, 4]
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# remove multiple nodes using &quot;remove_nodes_from&quot;
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;remove_nodes_from&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# check the nodes in graph G, and we can see that node 4 has also been removed
-&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nodes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# [1, 2, 3]
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# remove an edge using &quot;remove_edge&quot;
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;remove_edge&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# check the edges in graph G now, and we can see that edge (1, 2) has been removed
-&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;edges&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# [(1, 3), (2, 3)]
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# remove multiple edges using &quot;remove_edges_from&quot;
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;remove_edges_from&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)])&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# check the edges in graph G now, and we can see that edges (1, 3) and (2, 3) no longer exist in G
-&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;edges&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# []
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# let&apos;s check the number of nodes and edges now
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;number_of_nodes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# 3
-&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;number_of_edges&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# 0
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;analyzing-graph&quot;&gt;Analyzing Graph&lt;/h3&gt;
-&lt;p&gt;GraphScope can perform various graph analysis algorithms through its NetworkX-compatible interface.
-In the example, we build a simple graph and use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;connected_components&lt;/code&gt; algorithm to analyze the graph’s connected components,
-use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clustering&lt;/code&gt; algorithm to obtain the clustering coefficients of each point in the graph,
-and use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;all_pairs_shortest_path&lt;/code&gt; algorithm to obtain the shortest path between nodes.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# first create the graph
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Graph&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add_edges_from&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)])&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add_node&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# use the connected_components algorithm to find the connected components in the graph
-&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;connected_components&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# [{4}， {1, 2, 3},]
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# use the clustering algorithm to calculate the clustering coefficient of each node
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;clustering&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# {4: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# calculate the shortest path between each pair of nodes in the graph
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;dict&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;all_pairs_shortest_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# check the shortest path between node 3 and other nodes
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# {3: [3], 1: [3, 1], 2: [3, 1, 2]}
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;drawing-graph&quot;&gt;Drawing Graph&lt;/h3&gt;
-&lt;p&gt;Like NetworkX, GraphScope supports simple graph drawing through &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;draw&lt;/code&gt;.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graphscope.nx&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nx&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# create a star graph with 5 nodes
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;star_graph&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# draw the graph with &quot;nx.draw&quot;
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;draw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;with_labels&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-06-13-graph-drawing.png&quot; alt=&quot;star_graph&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Through some simple examples, we have shown the compatibility of GraphScope with the NetworkX interface and
-demonstrated the use of some graph operation/analysis interfaces. More detailed usage can be found in the
-&lt;a href=&quot;https://graphscope.io/docs/reference/networkx/index.html&quot;&gt;GraphScope documentation&lt;/a&gt;.&lt;/p&gt;
-
-&lt;h2 id=&quot;magnitude-of-performance-improvement-compared-to-networkx&quot;&gt;Magnitude of Performance Improvement compared to NetworkX&lt;/h2&gt;
-&lt;p&gt;GraphScope supports some of the built-in graph algorithms in NetworkX, and we can call these algorithms by
-calling the NetworkX algorithm. Below, we use a simple experiment to see how much GraphScope improves
-algorithm performance compared to NetworkX.&lt;/p&gt;
-
-&lt;p&gt;This experiment uses &lt;a href=&quot;https://snap.stanford.edu/data/ego-Twitter.html&quot;&gt;twitter data&lt;/a&gt; from SNAP, and tests the &lt;a href=&quot;https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.cluster.clustering.html#networkx.algorithms.cluster.clustering&quot;&gt;Clustering algorithm&lt;/a&gt; built into NetworkX.
-The machine used for the experiment has 8 CPUs and 16G of memory.&lt;/p&gt;
-
-&lt;p&gt;First, we prepare the data and use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wget&lt;/code&gt; to download the dataset to the local environment.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;wget&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;https&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;//&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;raw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;githubusercontent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;com&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GraphScope&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gstest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;master&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;twitter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HOME&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;twitter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Then we load the snap-twitter data into GraphScope and NetworkX separately.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graphscope.nx&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gs_nx&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;networkx&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nx&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# load snap-twitter data into NetworkX
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;read_edgelist&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;expandvars&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;$HOME/twitter.e&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;nodetype&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;create_using&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Graph&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nf&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# networkx.classes.graph.Graph
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# load snap-twitter data into GraphScope
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gs_nx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;read_edgelist&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;expandvars&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;$HOME/twitter.e&lt;/span&gt;&lt;span class=&quot;sh&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;nodetype&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-     &lt;span class=&quot;n&quot;&gt;create_using&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gs_nx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Graph&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nf&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# graphscope.nx.classes.graph.Graph
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;We use the Clustering algorithm to analyze the graph and see how much GraphScope improves algorithm
-performance compared to NetworkX.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;%%&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# calculate the clustering coefficient of each node in the graph using GraphScope
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ret_gs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gs_nx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;clustering&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# CPU times: user 213 ms, sys: 163 ms, total: 376 ms
-# Wall time: 2.9 s
-&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;%%&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# calculate the clustering coefficient of each node in the graph using NetworkX
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ret_nx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;clustering&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# CPU times: user 54.8 s, sys: 0 ns, total: 54.8 s
-# Wall time: 54.8 s
-&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# compare the results
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ret_gs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ret_nx&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# True
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;From the experimental results, we can see that GraphScope’s built-in algorithms can achieve several orders
-of magnitude performance improvement compared to NetworkX, while providing simple and easy-to-use
-interfaces compatible with NetworkX.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-&lt;p&gt;This article introduces how to use GraphScope to operate and analyze graph in the style of NetworkX.
-Furthermore, we compare GraphScope’s compatibility with NetworkX interfaces and its high-performance
-analytical capabilities using clustering algorithms analyzed on the snap-twitter graph data.&lt;/p&gt;
-</description>
-        <pubDate>Tue, 13 Jun 2023 11:00:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2023/06/13/Analyzing-Graph-with-GraphScope-in-the-Style-of-NetworkX.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/06/13/Analyzing-Graph-with-GraphScope-in-the-Style-of-NetworkX.html</guid>
         
         
         <category>Tech</category>

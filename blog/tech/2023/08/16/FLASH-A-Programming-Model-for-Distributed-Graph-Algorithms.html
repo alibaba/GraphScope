@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">FLASH: A Programming Model for Distributed Graph Algorithms</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2023-08-16">16 Aug 2023</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2023-08-16">16 Aug 2023</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">FLASH: A Programming Model for Distributed Graph Algorithms</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2023-08-16-title-picture.jpg" alt="flash-model" />
+In this post, we will introduce <a href="https://graphscope.io/publication/flash.pdf">FLASH</a>, which is a distributed programming model for programming a broad spectrum of graph algorithms, including clustering, centrality, traversal, matching, mining, etc. It makes diverse complex graph algorithms easy to write at the distributed runtime. The algorithms expressed in FLASH take only a few lines of code, and provide a satisfactory performance.</p>
+
+<h3 id="motivation">Motivation</h3>
+
+<p>The majority of recent graph processing frameworks only focus on a handful of fix-point graph algorithms such as breadth-first search, PageRank, shortest path, etc. It leaves the distributed computation of a large variety of graph algorithms suffering from low efficiency, limited expressiveness, or high implementation complexity with existing frameworks. The well-known vertex-centric implementation of a graph algorithm follows a common iterative, single-phased and value-propagation-based (short of ISVP) pattern: the algorithm runs iteratively until convergence, and in each iteration, all vertices receive messages from their neighbors to update their own states, then they send the updated states as messages to the neighbors for the next iteration. Such high-level abstraction brings productivity to some extent to users, however, at the sacrifice of expressiveness. This abstraction, while designed specifically for the ISVP algorithms, is almost infeasible to be applied to a large variety of algorithms that are not of the kind. At the same time, modern graph scenarios bring in the needs of more advanced and complex graph algorithms, which poses a big challenge for existing graph processing frameworks.</p>
+
+<p>After investigating representative distributed graph algorithms, including many non-ISVP ones, we have distilled three requirements that are critical for programming them efficiently and productively in a distributed context, namely (1) flexible control flow; (2) operations on vertex subsets; and (3) beyond-neighborhood communication. However, existing graph frameworks all fall short in meeting these requirements. Therefore, there is a need to design a new programming model which fulfills all of the three requirements, and supports to program in a distributed context.</p>
+
+<h3 id="the-flash-programming-model">The FLASH Programming Model</h3>
+
+<h4 id="overview">Overview</h4>
+
+<p>FLASH follows the <a href="https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html">vertex-centric</a> philosophy, but it moves a step further for stronger expressiveness by providing flexible control flow, the operations on arbitrary vertex sets and beyond-neighborhood communication.</p>
+
+<p>The FLASH programming model is based on <a href="https://github.com/jshun/ligra">Ligra</a> to inherit its support for the requirements of flexible control flow and operations on vertex subsets. By further enabling beyond-neighborhood communication, FLASH improves the expressiveness for programming a diverse variety of graph algorithms. Since Ligra is a single-machine parallel library, FLASH makes an extension to the distributed context, for which it must handle communication, synchronization, data races and task scheduling. To do so, a middleware called FlashWare is proposed that hides all the above details for distribution, and provides the capability to apply multiple system optimizations automatically and adaptively at the runtime.</p>
+
+<p>We have implemented <a href="https://github.com/alibaba/GraphScope/blob/main/python/graphscope/analytical/app/flash/__init__.py">70+ graph algorithms</a> with FLASH for 40+ different commonly used applications, and we can now program much more succinct codes using the FLASH programming interfaces, which also helps productivity. The evaluation results demonstrate FLASH’s capability of expressing many advanced algorithms (takes up to 92% less lines of code), while providing a satisfactory performance at the same time.</p>
+
+<h4 id="flash-api">FLASH API</h4>
+
+<p>FLASH is a functional programming model specific for distributed graph processing. It follows the Bulk Synchronous Parallel (BSP) computing paradigm with each of the primary functions constitutes a single superstep. It utilizes the <em>VertexSubset</em> type which represents a set of vertices of the graph <em>G</em>, containing a set of indices for all vertices in this set. The properties of vertices are maintained only once for a graph, shared by all <em>VertexSubset</em>s. The following describes the APIs of FLASH based on <em>VertexSubset</em>.</p>
+
+<ul>
+  <li><em>VSize</em>: This function returns the size of a <em>VertexSubset</em>.</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">size_t</span> <span class="nf">VSize</span><span class="p">(</span><span class="n">VertexSubset</span> <span class="n">U</span><span class="p">);</span>
+</code></pre></div></div>
+
+<ul>
+  <li><em>VertexMap</em>: This interface applies the map function to each vertex in <em>U</em> that passes the condition checking function <em>F</em>. The indices of the output vertices form the resulting <em>VertexSubset</em>. Specially, the <em>M</em> function could be omitted for implementing the filter semantics, with the vertex data unchanged.</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">VertexSubset</span> <span class="nf">VertexMap</span><span class="p">(</span><span class="n">VertexSubset</span> <span class="n">U</span><span class="p">,</span> 
+                       <span class="n">F</span><span class="p">(</span><span class="n">Vertex</span> <span class="n">v</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">bool</span><span class="p">,</span>
+                       <span class="n">M</span><span class="p">(</span><span class="n">Vertex</span> <span class="n">v</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">vertex</span><span class="p">);</span>
+</code></pre></div></div>
+
+<ul>
+  <li><em>EdgeMap</em>: For a graph <em>G(V,E)</em>, EdgeMap applies the update logic to the specific edges with source vertex in <em>U</em> and target vertex satisfying <em>C</em>. <em>H</em> represents the edge set to conduct updates, which is <em>E</em> in common cases. We allow the users to define arbitrary edge sets they want dynamically at runtime, even virtual edges generated during the algorithm’s execution. The edge set can be defined through defining a function which maps a source vertex index to a set of indices of the targets. We also provide some pre-defined operators for convenience, such as reverse edges, or edges with targets in a specific <em>VertexSubset</em>. This extension makes the communication beyond the neighborhood-exchange limitation.
+If a chosen edge passes the condition checking <em>F</em>, the map function <em>M</em> is applied on it. The output of the function <em>M</em> represents a temporary new value of the target vertex. This new value is applied immediately and sequentially if it is in the pull mode, while in the push mode, another parameter <em>R</em> is required to apply all the temporary new values on a specific vertex to get its final value. The updated target vertices form the output set of <em>EdgeMap</em>. The reduce function <em>R</em> should be associative and commutative to ensure correctness, or it is not required for sequentially applying <em>M</em>, i.e., to run EdgeMap always in the pull mode. The function <em>C</em> is useful in algorithms where a value associated with a vertex only needs to be updated once. FLASH provides a default function <em>CTrue</em> which always returns true, since the user does not need this functionality sometimes. Similarly, the <em>F</em> function of EdgeMap and VertexMap can also be supplied using <em>CTrue</em>, if it is unnecessary.</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">VertexSubset</span> <span class="nf">EdgeMap</span><span class="p">(</span><span class="n">VertexSubset</span> <span class="n">U</span><span class="p">,</span> 
+                     <span class="n">EdgeSet</span> <span class="n">H</span><span class="p">,</span>
+                     <span class="n">F</span><span class="p">(</span><span class="n">Vertex</span> <span class="n">s</span><span class="p">,</span> <span class="n">Vertex</span> <span class="n">d</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">bool</span><span class="p">,</span>
+                     <span class="n">M</span><span class="p">(</span><span class="n">Vertex</span> <span class="n">s</span><span class="p">,</span> <span class="n">Vertex</span> <span class="n">d</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vertex</span><span class="p">,</span>
+                     <span class="n">C</span><span class="p">(</span><span class="n">Vertex</span> <span class="n">v</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">bool</span><span class="p">,</span>
+                     <span class="n">R</span><span class="p">(</span><span class="n">Vertex</span> <span class="n">t</span><span class="p">,</span> <span class="n">Vertex</span> <span class="n">d</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vertex</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Other auxiliary APIs are provided by FLASH for conveniently conducting set operations (including <em>Union</em>, <em>Minus</em>, <em>Intersect</em>, <em>Add</em>, <em>Contain</em>, etc.), traversing all vertices in a set (<em>Traverse</em>), getting the data value of a single vertex (<em>GetV</em>) and so on.</p>
+
+<h4 id="strong-expressiveness">Strong Expressiveness</h4>
+
+<p>Besides expressing existing vertex-centric algorithms, FLASH provides the possibility of expressing more advanced algorithms. It is the first distributed graph processing model that satisfies all of the three critical requirements for programming non-ISVP algorithms.</p>
+<ul>
+  <li>FLASH allows the users to define the arbitrary control flow by combining the primitives, thus it can naturally support multi-phased algorithms. In traditional vertex-centric models, these algorithms are supported in an awkward way since they only allow to provide a single user-defined function.</li>
+  <li>The <em>VertexSubset</em> structure supplements the perspective of a single vertex, allowing to conduct updates on arbitrary vertices. Multiple vertex subsets can be maintained at the same time, they can even be defined in a recursive function. Without this feature, a framework has to start from the whole graph every time and pick up specific vertices every time.</li>
+  <li>FLASH allows the users to provide the arbitrary edge set they want to transfer messages, even when the edges do not exist in the original graph. Therefore, algorithms that contain communication beyond neighborhood can be expressed intuitively.</li>
+</ul>
+
+<h3 id="implementation">Implementation</h3>
+
+<h4 id="architecture">Architecture</h4>
+
+<p>The architecture of FLASH contains several main components, as shown in the following figure. The first is a code generator which takes the high-level FLASH APIs as input, and generates execution code to be run on the second component named FlashWare, which is a middleware designed and optimized for the FLASH model and is implemented based on the fundamental modules of GraphScope. The FlashWare executes the code produced by the code generator on the distributed runtime, utilizing the ability of parallel computing and communication ability of GraphScope.</p>
+
+<p><img src="/blog/assets/images/2023-08-16-flash-architecture.jpg" alt="flash-architecture" /></p>
+<center> Figure 1: The architecture of FLASH. </center>
+<p><br /></p>
+
+<h4 id="optimizations">Optimizations</h4>
+
+<p>Some optimizations are introduced in the implementation of the FLASH model:</p>
+
+<ul>
+  <li>During graph processing, the type of an active set may be dense or sparse, FLASH could dispatch different computation kernels for different types of the active set: the push mode for sparse active sets and the pull mode for dense active sets. This auto-switch scheme is proved to be useful for real-world graphs. Also, FLASH ’s dual mode processing is optional: users may choose to execute in only one mode through calling EdgeMapDense/EdgeMapSparse, instead of EdgeMap.</li>
+  <li>FLASH utilizes separate threads to execute message passing, while other threads perform parallel vertex-centric processing, thus the computation and communication tasks are co-scheduled, leading to a performance improvement.</li>
+  <li>In some cases, there are multiple vertex properties, but not all of them are critical. A property is critical only if it is accessed by other vertices, thus the update to the master need to be broadcasted to its mirrors. On the contrary, if it is only useful in local computation, it is not critical. This optimization reduces the size of a single message from the total size of all properties to only that of critical properties.</li>
+  <li>Another way to eliminate redundant messages is to communicate with only the necessary mirrors. For normal graph applications, the messages are transferred along the edges. Therefore, a vertex should only broadcast to the partitions that contain at least one neighbor of this vertex. Only in the cases that the programmers define virtual edges for EdgeMap, which beyond the scope of <em>E</em>, FlashWare synchronizes the update on a vertex to all partitions, thus this optimization is disabled.</li>
+</ul>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=FLASH: A Programming Model for Distributed Graph Algorithms&amp;url=https://graphscope.io/tech/2023/08/16/FLASH-A-Programming-Model-for-Distributed-Graph-Algorithms.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2023/08/16/FLASH-A-Programming-Model-for-Distributed-Graph-Algorithms.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2023/08/16/FLASH-A-Programming-Model-for-Distributed-Graph-Algorithms.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2023 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>
