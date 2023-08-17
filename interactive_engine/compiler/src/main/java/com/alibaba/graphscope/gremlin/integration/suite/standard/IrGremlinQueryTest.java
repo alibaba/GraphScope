@@ -70,6 +70,14 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Map<String, Object>> get_g_V_a_out_b_select_a_b_by_label_id();
 
+    public abstract Traversal<Vertex, Vertex> get_g_V_sample_by_2();
+
+    public abstract Traversal<Vertex, Vertex> get_g_V_sample_by_7();
+
+    public abstract Traversal<Vertex, Vertex> get_g_V_coin_by_ratio();
+
+    public abstract Traversal<Vertex, Vertex> get_g_V_coin_by_ratio_1();
+
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_group_by_by_dedup_count_test() {
@@ -267,6 +275,56 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals("{a=person, b=lop}", traversal.next().toString());
     }
 
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_sample_by_2() {
+        final Traversal<Vertex, Vertex> traversal =
+                get_g_V_sample_by_2();
+        int counter = 0;
+        while (traversal.hasNext()) {
+            ++counter;
+        }
+        Assert.assertEquals(2, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_sample_by_7() {
+        final Traversal<Vertex, Vertex> traversal =
+                get_g_V_sample_by_7();
+        int counter = 0;
+        while (traversal.hasNext()) {
+            ++counter;
+        }
+        Assert.assertEquals(6, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_coin_by_ratio() {
+        final Traversal<Vertex, Vertex> traversal =
+                get_g_V_coin_by_ratio();
+        int counter = 0;
+        while (traversal.hasNext()) {
+            ++counter;
+        }
+        Assert.assertTrue(counter<6);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_coin_by_ratio_1() {
+        final Traversal<Vertex, Vertex> traversal =
+                get_g_V_coin_by_ratio_1();
+        int counter = 0;
+        while (traversal.hasNext()) {
+            ++counter;
+        }
+        Assert.assertEquals(6, counter);
+    }
+
+
     public static class Traversals extends IrGremlinQueryTest {
 
         @Override
@@ -358,6 +416,26 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                     .select("a", "b")
                     .by(label())
                     .by("name");
+        }
+
+        @Override
+        public Traversal<Vertex, Vertex> get_g_V_sample_by_2() {
+            return g.V().sample(2);
+        }
+
+        @Override
+        public Traversal<Vertex, Vertex> get_g_V_sample_by_7() {
+            return g.V().sample(7);
+        }
+
+        @Override
+        public Traversal<Vertex, Vertex> get_g_V_coin_by_ratio() {
+            return g.V().coin(0.1);
+        }
+
+        @Override
+        public Traversal<Vertex, Vertex> get_g_V_coin_by_ratio_1() {
+            return g.V().coin(1.0);
         }
     }
 }
