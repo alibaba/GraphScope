@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin;
 
 
+
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
@@ -41,6 +42,7 @@ import org.junit.Test;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
+
 
 
 public class IdentityStepTest {
