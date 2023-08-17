@@ -303,7 +303,7 @@ sess.close()
 现在你可以使用 `make` 来构建 GraphScope
 
 ```bash
-# 编译所有组件，包括 Python 包和 引擎可执行文件
+# 编译所有组件，包括 Python 包和引擎可执行文件
 sudo make install
 
 # 或者只编译指定的引擎
