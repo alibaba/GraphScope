@@ -28,6 +28,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SubgraphStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IdentityStep;
 
 import java.util.List;
 
@@ -40,7 +41,8 @@ public class GremlinResultAnalyzer {
                     || Utils.equalClass(step, ExpandFusionStep.class)
                     || Utils.equalClass(step, EdgeVertexStep.class)
                     || Utils.equalClass(step, EdgeOtherVertexStep.class)
-                    || Utils.equalClass(step, PathExpandStep.class)) {
+                    || Utils.equalClass(step, PathExpandStep.class)
+                    || Utils.equalClass(step, IdentityStep.class)) {
                 parserType = GremlinResultParserFactory.GRAPH_ELEMENT;
             } else if (Utils.equalClass(step, CountGlobalStep.class)
                     || Utils.equalClass(step, SumGlobalStep.class)
