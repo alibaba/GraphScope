@@ -331,8 +331,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
             Object result = traversal.next();
             Assert.assertTrue(expected.contains(result.toString()));
             ++counter;
-            System.out.println(result.toString());
         }
+        Assert.assertEquals(6, counter);
     }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
@@ -349,8 +349,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
             Object result = traversal.next();
             Assert.assertTrue(expected.contains(result.toString()));
             ++counter;
-            System.out.println(result.toString());
         }
+        Assert.assertEquals(4, counter);
     }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
@@ -367,9 +367,9 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
             Object result = traversal.next();
             Assert.assertTrue(expected.contains(result.toString()));
             ++counter;
-            System.out.println(result.toString());
         }
-
+        
+        Assert.assertEquals(4, counter);
     }
 
     public static class Traversals extends IrGremlinQueryTest {
