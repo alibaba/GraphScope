@@ -17,7 +17,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 
 public class Glogue {
     // the topology of GLogue graph
-    private Graph<Pattern, DefaultEdge> gLogueGraph;
+    private Graph<Pattern, GlogueEdge> gLogueGraph;
     // the index for pattern count query
     // key: pattern code of PatternGraph, i.e., vertices in gLogueGraph
     // value: pattern count
@@ -28,7 +28,7 @@ public class Glogue {
     private HashMap<PatternCode, Integer> patternLocate;
 
     protected Glogue() {
-        this.gLogueGraph = new DirectedPseudograph<Pattern, DefaultEdge>(DefaultEdge.class);
+        this.gLogueGraph = new DirectedPseudograph<Pattern, GlogueEdge>(GlogueEdge.class);
         this.patternCount = new HashMap<PatternCode, Double>();
         this.patternLocate = new HashMap<PatternCode, Integer>();
     }
@@ -69,17 +69,17 @@ public class Glogue {
                 Optional<Pattern> existingPattern = this.containsPattern(newPattern);
                 if (!existingPattern.isPresent()) {
                     this.addPattern(newPattern);
-                    this.addPatternEdge(pattern, newPattern);
+                    this.addPatternEdge(pattern, newPattern, extendStep);
                     System.out.println("add new pattern");
                     // System.out.println("add new pattern " + newPattern.toString());
                     // System.out.println("after add new pattern, glogue: " + this);
                     patternQueue.add(newPattern);
                 } else {
                     if (!this.containsPatternEdge(pattern, existingPattern.get())) {
-                        DefaultEdge defaultEdge = this.addPatternEdge(pattern, existingPattern.get());
-                        System.out.println("pattern already exists, add edge " + defaultEdge);
+                        this.addPatternEdge(pattern, existingPattern.get(), extendStep);
+                        System.out.println("pattern already exists: " + existingPattern.get() +", add edge " + extendStep);
                     } else {
-                        System.out.println("pattern already exists, edge already exists");
+                        System.out.println("pattern already exists: "+ existingPattern.get()+ ", edge already exists");
                     }
                 }
             }
@@ -102,12 +102,17 @@ public class Glogue {
         return this.gLogueGraph.containsEdge(pattern1, pattern2);
     }
 
-    private void addPattern(Pattern pattern) {
-        this.gLogueGraph.addVertex(pattern);
+    private boolean addPattern(Pattern pattern) {
+        return this.gLogueGraph.addVertex(pattern);
     }
 
-    private DefaultEdge addPatternEdge(Pattern pattern1, Pattern pattern2) {
-       return gLogueGraph.addEdge(pattern1, pattern2);
+    private boolean addPatternEdge(Pattern pattern1, Pattern pattern2, GlogueEdge edge) {
+        return this.gLogueGraph.addEdge(pattern1, pattern2, edge);
+    }
+
+    private boolean addPatternEdge(Pattern pattern1, Pattern pattern2, ExtendStep edge) {
+        GlogueExtendIntersectEdge glogueEdge = new GlogueExtendIntersectEdge(edge);
+        return addPatternEdge(pattern1, pattern2, glogueEdge);
     }
 
     @Override
