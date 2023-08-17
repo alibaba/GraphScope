@@ -73,9 +73,6 @@ public class IdentityStepTest {
         Traversal bothVTraversal = __.bothV();
         // Traversal test = g.V().union(identity(), out());
 
-        //System.out.println(identityTraversal.asAdmin());
-        //System.out.println(bothVTraversal.asAdmin());
-
         UnionStep unionStep = new UnionStep(getEdge.asAdmin(), identityTraversal.asAdmin(), bothVTraversal.asAdmin());
         
         Traversal.Admin identityAdmin = (Traversal.Admin) unionStep.getGlobalChildren().get(0);
