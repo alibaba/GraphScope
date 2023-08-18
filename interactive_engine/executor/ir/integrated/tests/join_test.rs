@@ -19,8 +19,6 @@ mod common;
 
 #[cfg(test)]
 mod test {
-    use std::vec;
-
     use graph_proxy::apis::GraphElement;
     use graph_store::common::DefaultId;
     use graph_store::ldbc::LDBCVertexParser;
