@@ -92,11 +92,7 @@ public class NotExistToAntiJoinRule<C extends NotExistToAntiJoinRule.Config> ext
                                                             return false;
                                                         })
                                                 .anyInputs())
-                        .withDescription("NotExistToAntiJoinRule")
-                        .withRelBuilderFactory(
-                                (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
-                                        GraphBuilder.create(
-                                                null, (GraphOptCluster) cluster, schema));
+                        .withDescription("NotExistToAntiJoinRule");
 
         private RelRule.OperandTransform operandSupplier;
         private @Nullable String description;

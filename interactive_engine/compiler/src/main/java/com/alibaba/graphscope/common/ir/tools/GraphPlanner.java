@@ -28,15 +28,17 @@ import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
+import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
@@ -44,8 +46,11 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rules.CoreRules;
 import org.apache.calcite.rel.rules.FilterJoinRule;
 import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -56,6 +61,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * A unified structure to build {@link PlannerInstance} which can further build logical and physical plan from an antlr tree
  */
 public class GraphPlanner {
+    private static final Logger logger = LoggerFactory.getLogger(GraphPlanner.class);
     private final Configs graphConfig;
     private final PlannerConfig plannerConfig;
     private final RelOptPlanner optPlanner;
@@ -66,7 +72,7 @@ public class GraphPlanner {
         this.graphConfig = graphConfig;
         this.plannerConfig = PlannerConfig.create(this.graphConfig);
         this.optPlanner = createRelOptPlanner(this.plannerConfig);
-        this.rexBuilder = new GraphRexBuilder(new JavaTypeFactoryImpl());
+        this.rexBuilder = new GraphRexBuilder(new GraphTypeFactoryImpl());
         this.idGenerator = new AtomicLong(FrontendConfig.FRONTEND_SERVER_ID.get(graphConfig));
     }
 
@@ -117,7 +123,7 @@ public class GraphPlanner {
                 RelNode regularQuery = logicalPlan.getRegularQuery();
                 RelOptPlanner planner = this.optCluster.getPlanner();
                 planner.setRoot(regularQuery);
-                logicalPlan = new LogicalPlan(planner.findBestExp(), logicalPlan.isReturnEmpty());
+                logicalPlan = new LogicalPlan(planner.findBestExp());
             }
             // build physical plan from logical plan
             PhysicalBuilder physicalBuilder;
@@ -165,6 +171,9 @@ public class GraphPlanner {
 
     private RelOptPlanner createRelOptPlanner(PlannerConfig plannerConfig) {
         if (plannerConfig.isOn()) {
+            RelBuilderFactory relBuilderFactory =
+                    (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
+                            GraphBuilder.create(null, (GraphOptCluster) cluster, schema);
             PlannerConfig.Opt opt = plannerConfig.getOpt();
             switch (opt) {
                 case RBO:
@@ -177,15 +186,28 @@ public class GraphPlanner {
                                                 FilterJoinRule.FilterIntoJoinRule.class
                                                         .getSimpleName())) {
                                             hepBuilder.addRuleInstance(
-                                                    CoreRules.FILTER_INTO_JOIN.config.toRule());
+                                                    CoreRules.FILTER_INTO_JOIN
+                                                            .config
+                                                            .withRelBuilderFactory(
+                                                                    relBuilderFactory)
+                                                            .toRule());
+                                            logger.info("add FILTER_INTO_JOIN");
                                         } else if (k.equals(
                                                 FilterMatchRule.class.getSimpleName())) {
                                             hepBuilder.addRuleInstance(
-                                                    FilterMatchRule.Config.DEFAULT.toRule());
+                                                    FilterMatchRule.Config.DEFAULT
+                                                            .withRelBuilderFactory(
+                                                                    relBuilderFactory)
+                                                            .toRule());
+                                            logger.info("add FilterMatchRule");
                                         } else if (k.equals(
                                                 NotExistToAntiJoinRule.class.getSimpleName())) {
                                             hepBuilder.addRuleInstance(
-                                                    NotExistToAntiJoinRule.Config.DEFAULT.toRule());
+                                                    NotExistToAntiJoinRule.Config.DEFAULT
+                                                            .withRelBuilderFactory(
+                                                                    relBuilderFactory)
+                                                            .toRule());
+                                            logger.info("add NotExistToAntiJoinRule");
                                         } else {
                                             // todo: add more rules
                                         }

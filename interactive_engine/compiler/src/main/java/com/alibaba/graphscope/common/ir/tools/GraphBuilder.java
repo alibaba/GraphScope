@@ -39,7 +39,6 @@ import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gremlin.Utils;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -278,7 +277,11 @@ public class GraphBuilder extends RelBuilder {
                 (single.getInputs().isEmpty() && single instanceof GraphLogicalSource)
                         ? single
                         : GraphLogicalSingleMatch.create(
-                                (GraphOptCluster) cluster, null, null, single, opt);
+                                (GraphOptCluster) cluster,
+                                null,
+                                null,
+                                single,
+                                GraphOpt.Match.INNER);
         if (input == null) {
             push(match);
         } else {
@@ -625,7 +628,6 @@ public class GraphBuilder extends RelBuilder {
 
     @Override
     public GraphBuilder filter(Iterable<? extends RexNode> conditions) {
-        ObjectUtils.requireNonEmpty(conditions);
         // make sure all conditions have the Boolean return type
         for (RexNode condition : conditions) {
             RelDataType type = condition.getType();
@@ -1036,6 +1038,13 @@ public class GraphBuilder extends RelBuilder {
         return this;
     }
 
+    @Override
+    public RelBuilder antiJoin(Iterable<? extends RexNode> conditions) {
+        Join join = (Join) super.antiJoin(conditions).peek();
+        Utils.setFieldValue(AbstractRelNode.class, join, "rowType", reorgAliasId(join));
+        return this;
+    }
+
     /**
      * in the official implementation of {@code join}, the aliasId in rowType actually represents the columnId, but we need to preserve the original aliasId before the {@code join}
      * @param join
@@ -1045,31 +1054,24 @@ public class GraphBuilder extends RelBuilder {
         RelDataType originalType = join.getRowType();
         RelDataType leftType = join.getLeft().getRowType();
         RelDataType rightType = join.getRight().getRowType();
-        Preconditions.checkArgument(
-                originalType.getFieldCount()
-                        == leftType.getFieldCount() + rightType.getFieldCount(),
-                "join field count is not equal to left field count plus right field count");
         List<RelDataTypeField> newFields =
                 originalType.getFieldList().stream()
                         .map(
                                 k -> {
                                     if (k.getIndex() < leftType.getFieldCount()) {
+                                        RelDataTypeField leftField =
+                                                leftType.getFieldList().get(k.getIndex());
                                         return new RelDataTypeFieldImpl(
-                                                k.getName(),
-                                                leftType.getFieldList()
-                                                        .get(k.getIndex())
-                                                        .getIndex(),
-                                                k.getType());
+                                                k.getName(), leftField.getIndex(), k.getType());
                                     } else {
-                                        return new RelDataTypeFieldImpl(
-                                                k.getName(),
+                                        RelDataTypeField rightField =
                                                 rightType
                                                         .getFieldList()
                                                         .get(
                                                                 k.getIndex()
-                                                                        - leftType.getFieldCount())
-                                                        .getIndex(),
-                                                k.getType());
+                                                                        - leftType.getFieldCount());
+                                        return new RelDataTypeFieldImpl(
+                                                k.getName(), rightField.getIndex(), k.getType());
                                     }
                                 })
                         .collect(Collectors.toList());
@@ -1153,5 +1155,17 @@ public class GraphBuilder extends RelBuilder {
     @Override
     public RexNode equals(RexNode operand0, RexNode operand1) {
         return this.call(GraphStdOperatorTable.EQUALS, operand0, operand1);
+    }
+
+    /**
+     * {@code FilterIntoJoinRule} will put a new project on top of the join, but it is not necessary and will lead to extra cost, here we override it and do nothing to skip the extra project
+     * @param castRowType
+     * @param rename
+     * @return
+     */
+    @Override
+    public RelBuilder convert(RelDataType castRowType, boolean rename) {
+        // do nothing
+        return this;
     }
 }

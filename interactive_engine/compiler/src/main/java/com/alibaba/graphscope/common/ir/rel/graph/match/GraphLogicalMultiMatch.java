@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.rel.graph.match;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
@@ -77,7 +78,16 @@ public class GraphLogicalMultiMatch extends AbstractLogicalMatch {
         for (RelNode node : sentences) {
             addFields(fields, node);
         }
-        List<RelDataTypeField> dedup = fields.stream().distinct().collect(Collectors.toList());
+        Set<String> fieldNames = Sets.newHashSet();
+        List<RelDataTypeField> dedup =
+                fields.stream()
+                        .filter(
+                                k -> {
+                                    boolean notExist = !fieldNames.contains(k.getName());
+                                    fieldNames.add(k.getName());
+                                    return notExist;
+                                })
+                        .collect(Collectors.toList());
         return new RelRecordType(StructKind.FULLY_QUALIFIED, dedup);
     }
 

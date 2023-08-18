@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.tools;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
@@ -25,6 +26,7 @@ import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rel.type.StructKind;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Utils {
@@ -39,8 +41,16 @@ public class Utils {
             }
             inputs.addAll(cur.getInputs());
         }
-        return new RelRecordType(
-                StructKind.FULLY_QUALIFIED,
-                outputFields.stream().distinct().collect(Collectors.toList()));
+        Set<String> fieldNames = Sets.newHashSet();
+        List<RelDataTypeField> dedup =
+                outputFields.stream()
+                        .filter(
+                                k -> {
+                                    boolean notExist = !fieldNames.contains(k.getName());
+                                    fieldNames.add(k.getName());
+                                    return notExist;
+                                })
+                        .collect(Collectors.toList());
+        return new RelRecordType(StructKind.FULLY_QUALIFIED, dedup);
     }
 }

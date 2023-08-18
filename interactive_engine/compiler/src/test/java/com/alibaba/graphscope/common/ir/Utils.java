@@ -21,11 +21,11 @@ import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
+import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.collect.ImmutableMap;
 
-import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelRule;
@@ -38,7 +38,7 @@ import org.apache.calcite.rex.RexBuilder;
 import java.net.URL;
 
 public class Utils {
-    public static final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
+    public static final RelDataTypeFactory typeFactory = new GraphTypeFactoryImpl();
     public static final RexBuilder rexBuilder = new GraphRexBuilder(typeFactory);
     public static final IrMeta schemaMeta = mockSchemaMeta();
 

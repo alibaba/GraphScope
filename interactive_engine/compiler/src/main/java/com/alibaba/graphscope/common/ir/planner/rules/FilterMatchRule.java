@@ -12,8 +12,9 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.collect.ImmutableList;
 
-import org.apache.calcite.plan.*;
-import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.RelRule;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.rules.TransformationRule;
@@ -146,11 +147,7 @@ public class FilterMatchRule<C extends FilterMatchRule.Config> extends RelRule<C
                                                                 b1.operand(
                                                                                 AbstractLogicalMatch
                                                                                         .class)
-                                                                        .anyInputs()))
-                        .withRelBuilderFactory(
-                                (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
-                                        GraphBuilder.create(
-                                                null, (GraphOptCluster) cluster, schema));
+                                                                        .anyInputs()));
 
         private RelRule.OperandTransform operandSupplier;
         private @Nullable String description;

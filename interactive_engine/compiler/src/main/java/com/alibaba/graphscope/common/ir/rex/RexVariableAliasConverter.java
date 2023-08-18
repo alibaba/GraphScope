@@ -2,6 +2,7 @@ package com.alibaba.graphscope.common.ir.rex;
 
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.type.GraphProperty;
 
 import org.apache.calcite.rex.*;
 
@@ -56,12 +57,16 @@ public class RexVariableAliasConverter extends RexVisitorImpl<RexNode> {
                         : AliasInference.SIMPLE_NAME(targetAliasName)
                                 + AliasInference.DELIMITER
                                 + variable.getName().substring(delimPos + 1);
-        return RexGraphVariable.of(
-                targetAliasId,
-                variable.getProperty(),
-                variable.getIndex(),
-                targetVarName,
-                variable.getType());
+        GraphProperty property = variable.getProperty();
+        return property == null
+                ? RexGraphVariable.of(
+                        targetAliasId, variable.getIndex(), targetVarName, variable.getType())
+                : RexGraphVariable.of(
+                        targetAliasId,
+                        property,
+                        variable.getIndex(),
+                        targetVarName,
+                        variable.getType());
     }
 
     @Override
