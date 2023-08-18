@@ -9,7 +9,6 @@ import com.alibaba.graphscope.common.ir.rex.RexVariableAliasCollector;
 import com.alibaba.graphscope.common.ir.rex.RexVariableAliasConverter;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.RelOptRuleCall;
@@ -41,12 +40,6 @@ public class FilterMatchRule<C extends FilterMatchRule.Config> extends RelRule<C
     public void onMatch(RelOptRuleCall call) {
         Filter filter = call.rel(0);
         AbstractLogicalMatch match = call.rel(1);
-        // if filter has been pushed down to optional or anti match, it will result in more 'null'
-        // values, which is not consistent with the original logical plan
-        if (match instanceof GraphLogicalSingleMatch
-                && ((GraphLogicalSingleMatch) match).getMatchOpt() != GraphOpt.Match.INNER) {
-            return;
-        }
         // do the transformation
         List<RelNode> sentences = getSentences(match);
         List<RexNode> conjunctions = RelOptUtil.conjunctions(filter.getCondition());
