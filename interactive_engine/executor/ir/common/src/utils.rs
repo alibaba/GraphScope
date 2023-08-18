@@ -183,6 +183,12 @@ impl From<Vec<String>> for common_pb::Value {
     }
 }
 
+impl From<common_pb::None> for common_pb::Value {
+    fn from(_none: common_pb::None) -> Self {
+        common_pb::Value { item: Some(common_pb::value::Item::None(common_pb::None {})) }
+    }
+}
+
 impl From<i32> for common_pb::NameOrId {
     fn from(i: i32) -> Self {
         common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(i)) }

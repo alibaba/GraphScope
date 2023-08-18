@@ -90,6 +90,8 @@ impl TryFrom<Token> for pb::ExprOpr {
             }
             Token::IdentArray(idents) => Ok((idents_to_vars(idents)?, false).into()),
             Token::IdentMap(idents) => Ok((idents_to_vars(idents)?, true).into()),
+            Token::Is => Ok(pb::Logical::Is.into()),
+            Token::Null => Ok(pb::Value::from(pb::None {}).into()),
         }
     }
 }

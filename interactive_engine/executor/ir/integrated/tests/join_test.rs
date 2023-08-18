@@ -22,6 +22,7 @@ mod test {
     use graph_proxy::apis::GraphElement;
     use graph_store::common::DefaultId;
     use graph_store::ldbc::LDBCVertexParser;
+    use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as algebra_pb;
     use ir_common::generated::common as common_pb;
     use ir_physical_client::physical_builder::*;
@@ -332,31 +333,34 @@ mod test {
             meta_data: None,
         };
 
-        // where b.is(None)
-        let select_opr = algebra_pb::Select {
-            predicate: Some(common_pb::Expression {
-                operators: vec![
-                    common_pb::ExprOpr {
-                        node_type: None,
-                        item: Some(common_pb::expr_opr::Item::Var(common_pb::Variable {
-                            tag: Some(1.into()),
-                            property: None,
-                            node_type: None,
-                        })),
-                    },
-                    common_pb::ExprOpr {
-                        node_type: None,
-                        item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Is as i32)),
-                    },
-                    common_pb::ExprOpr {
-                        node_type: None,
-                        item: Some(common_pb::expr_opr::Item::Const(common_pb::Value {
-                            item: Some(common_pb::value::Item::None(common_pb::None {})),
-                        })),
-                    },
-                ],
-            }),
-        };
+        // // where b.is(None)
+        // let select_opr = algebra_pb::Select {
+        //     predicate: Some(common_pb::Expression {
+        //         operators: vec![
+        //             common_pb::ExprOpr {
+        //                 node_type: None,
+        //                 item: Some(common_pb::expr_opr::Item::Var(common_pb::Variable {
+        //                     tag: Some(1.into()),
+        //                     property: None,
+        //                     node_type: None,
+        //                 })),
+        //             },
+        //             common_pb::ExprOpr {
+        //                 node_type: None,
+        //                 item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Is as i32)),
+        //             },
+        //             common_pb::ExprOpr {
+        //                 node_type: None,
+        //                 item: Some(common_pb::expr_opr::Item::Const(common_pb::Value {
+        //                     item: Some(common_pb::value::Item::None(common_pb::None {})),
+        //                 })),
+        //             },
+        //         ],
+        //     }),
+        // };
+
+        // where b.is(null)
+        let select_opr = algebra_pb::Select { predicate: str_to_expr_pb("@1 is null".to_string()).ok() };
 
         let mut job_builder = JobBuilder::default();
         job_builder.add_dummy_source();
@@ -429,34 +433,36 @@ mod test {
         };
 
         // where not(b.is(None))
-        let select_opr = algebra_pb::Select {
-            predicate: Some(common_pb::Expression {
-                operators: vec![
-                    common_pb::ExprOpr {
-                        node_type: None,
-                        item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Not as i32)),
-                    },
-                    common_pb::ExprOpr {
-                        node_type: None,
-                        item: Some(common_pb::expr_opr::Item::Var(common_pb::Variable {
-                            tag: Some(1.into()),
-                            property: None,
-                            node_type: None,
-                        })),
-                    },
-                    common_pb::ExprOpr {
-                        node_type: None,
-                        item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Is as i32)),
-                    },
-                    common_pb::ExprOpr {
-                        node_type: None,
-                        item: Some(common_pb::expr_opr::Item::Const(common_pb::Value {
-                            item: Some(common_pb::value::Item::None(common_pb::None {})),
-                        })),
-                    },
-                ],
-            }),
-        };
+        // let select_opr = algebra_pb::Select {
+        //     predicate: Some(common_pb::Expression {
+        //         operators: vec![
+        //             common_pb::ExprOpr {
+        //                 node_type: None,
+        //                 item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Not as i32)),
+        //             },
+        //             common_pb::ExprOpr {
+        //                 node_type: None,
+        //                 item: Some(common_pb::expr_opr::Item::Var(common_pb::Variable {
+        //                     tag: Some(1.into()),
+        //                     property: None,
+        //                     node_type: None,
+        //                 })),
+        //             },
+        //             common_pb::ExprOpr {
+        //                 node_type: None,
+        //                 item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Is as i32)),
+        //             },
+        //             common_pb::ExprOpr {
+        //                 node_type: None,
+        //                 item: Some(common_pb::expr_opr::Item::Const(common_pb::Value {
+        //                     item: Some(common_pb::value::Item::None(common_pb::None {})),
+        //                 })),
+        //             },
+        //         ],
+        //     }),
+        // };
+
+        let select_opr = algebra_pb::Select { predicate: str_to_expr_pb("!(@1 is null)".to_string()).ok() };
 
         let mut job_builder = JobBuilder::default();
         job_builder.add_dummy_source();
