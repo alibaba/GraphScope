@@ -118,17 +118,20 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     }
 
     protected AnyValue parseValue(Common.Value value, @Nullable RelDataType dataType) {
-        switch (value.getItemCase()) {
+        switch (dataType.getSqlTypeName()) {
             case BOOLEAN:
                 return value.getBoolean() ? BooleanValue.TRUE : BooleanValue.FALSE;
-            case I32:
+            case INTEGER:
                 return Values.intValue(value.getI32());
-            case I64:
+            case BIGINT:
                 return Values.longValue(value.getI64());
-            case F64:
+            case DOUBLE:
                 return Values.doubleValue(value.getF64());
-            case STR:
+            case CHAR:
                 return Values.stringValue(value.getStr());
+            case ARRAY:
+                // todo: support array of any component type in ir core
+                return Values.stringArray(value.getStrArray().getItemList().toArray(new String[0]));
             default:
                 throw new NotImplementedException(value.getItemCase() + " is unsupported yet");
         }

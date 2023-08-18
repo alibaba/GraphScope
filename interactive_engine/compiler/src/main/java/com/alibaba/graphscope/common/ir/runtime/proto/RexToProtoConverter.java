@@ -46,6 +46,8 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
         SqlOperator operator = call.getOperator();
         if (operator.getKind() == SqlKind.CASE) {
             return visitCase(call);
+        } else if (operator.getKind() == SqlKind.ARRAY_VALUE_CONSTRUCTOR) {
+            return visitArrayValueConstructor(call);
         } else {
             return visitOperator(call);
         }
@@ -68,6 +70,26 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                 .addOperators(
                         OuterExpression.ExprOpr.newBuilder()
                                 .setCase(caseBuilder)
+                                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
+                .build();
+    }
+
+    private OuterExpression.Expression visitArrayValueConstructor(RexCall call) {
+        OuterExpression.VariableKeys.Builder varsBuilder =
+                OuterExpression.VariableKeys.newBuilder();
+        call.getOperands()
+                .forEach(
+                        operand -> {
+                            Preconditions.checkArgument(
+                                    operand instanceof RexGraphVariable,
+                                    "component type of 'ARRAY_VALUE_CONSTRUCTOR' should be"
+                                        + " 'variable' in ir core structure");
+                            varsBuilder.addKeys(operand.accept(this).getOperators(0).getVar());
+                        });
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setVars(varsBuilder)
                                 .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
                 .build();
     }

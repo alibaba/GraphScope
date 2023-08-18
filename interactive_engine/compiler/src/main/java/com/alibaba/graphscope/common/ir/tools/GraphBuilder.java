@@ -512,7 +512,8 @@ public class GraphBuilder extends RelBuilder {
                 || (sqlKind == SqlKind.OTHER_FUNCTION && operator.getName().equals("POWER"))
                 || (sqlKind == SqlKind.MINUS_PREFIX)
                 || (sqlKind == SqlKind.CASE)
-                || (sqlKind == SqlKind.PROCEDURE_CALL);
+                || (sqlKind == SqlKind.PROCEDURE_CALL)
+                || sqlKind == SqlKind.ARRAY_VALUE_CONSTRUCTOR;
     }
 
     @Override

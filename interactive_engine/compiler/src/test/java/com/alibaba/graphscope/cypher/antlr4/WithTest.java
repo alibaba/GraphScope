@@ -153,4 +153,22 @@ public class WithTest {
                         + " alias=[a], opt=[VERTEX])",
                 project.explain().trim());
     }
+
+    @Test
+    public void with_10_test() {
+        RelNode project =
+                Utils.eval("Match (a:person)-[]-(b:person) Return [a.name, b.age, 1]").build();
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[ARRAY_VALUE_CONSTRUCTOR(a.name, b.age, 1)],"
+                    + " isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[b], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                project.explain().trim());
+    }
 }
