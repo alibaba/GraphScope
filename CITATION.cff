@@ -49,65 +49,7 @@ authors:
   - given-names: Rong
     family-names: Zhu
     affiliation: Alibaba Group
-references:
-  - type: conference-paper
-    title: 'GraphScope: a unified engine for big graph processing'
-    authors:
-    - given-names: Wenfei
-      family-names: Fan
-      affiliation: University of Edinburgh
-    - given-names: Tao
-      family-names: He
-      affiliation: 'Alibaba Group '
-    - given-names: Longbin
-      family-names: Lai
-      affiliation: Alibaba Group
-    - given-names: Xue
-      family-names: Li
-      affiliation: Alibaba Group
-    - given-names: Yong
-      family-names: Li
-      affiliation: Alibaba Group
-    - given-names: Zhao
-      family-names: Li
-      affiliation: Alibaba Group
-    - given-names: Zhengqian
-      family-names: Qian
-      affiliation: Alibaba Group
-    - given-names: Chao
-      family-names: Tian
-      affiliation: Alibaba Group
-    - given-names: Lei
-      family-names: Wang
-      affiliation: Alibaba Group
-    - given-names: Jingbo
-      family-names: Xu
-      affiliation: Alibaba Group
-    - given-names: Qiang
-      family-names: Yin
-      affiliation: Alibaba Group
-    - given-names: Wenyuan
-      family-names: Yu
-      affiliation: Alibaba Group
-    - given-names: Jingren
-      family-names: Zhou
-      affiliation: Alibaba Group
-    - given-names: Diwen
-      family-names: Zhu
-      affiliation: Alibaba Group
-    - given-names: Rong
-      family-names: Zhu
-      affiliation: Alibaba Group
-    year: 2021
-    collection-title: "Proceedings of the VLDB Endowment"
-    collection-doi: 10.14778/3476311.3476369
-    conference:
-      name: VLDB 2021 - 47th International Conference on Very Large Data Bases
-      location: Spock's Inn Hotel and Bar
-      city: Copenhagen
-      country: DK
-      date-start: 2021-08-16
-      date-end: 2021-08-20
+license: Apache-2.0
 identifiers:
   - type: doi
     value: 10.14778/3476311.3476369
@@ -138,4 +80,62 @@ abstract: >-
   framework. We describe the design and implementation of
   GraphScope and evaluate system performance using several
   real-world applications.
-license: Apache-2.0
+preferred-citation:
+  type: conference-paper
+  title: 'GraphScope: a unified engine for big graph processing'
+  authors:
+  - given-names: Wenfei
+    family-names: Fan
+    affiliation: University of Edinburgh
+  - given-names: Tao
+    family-names: He
+    affiliation: 'Alibaba Group '
+  - given-names: Longbin
+    family-names: Lai
+    affiliation: Alibaba Group
+  - given-names: Xue
+    family-names: Li
+    affiliation: Alibaba Group
+  - given-names: Yong
+    family-names: Li
+    affiliation: Alibaba Group
+  - given-names: Zhao
+    family-names: Li
+    affiliation: Alibaba Group
+  - given-names: Zhengqian
+    family-names: Qian
+    affiliation: Alibaba Group
+  - given-names: Chao
+    family-names: Tian
+    affiliation: Alibaba Group
+  - given-names: Lei
+    family-names: Wang
+    affiliation: Alibaba Group
+  - given-names: Jingbo
+    family-names: Xu
+    affiliation: Alibaba Group
+  - given-names: Qiang
+    family-names: Yin
+    affiliation: Alibaba Group
+  - given-names: Wenyuan
+    family-names: Yu
+    affiliation: Alibaba Group
+  - given-names: Jingren
+    family-names: Zhou
+    affiliation: Alibaba Group
+  - given-names: Diwen
+    family-names: Zhu
+    affiliation: Alibaba Group
+  - given-names: Rong
+    family-names: Zhu
+    affiliation: Alibaba Group
+  year: 2021
+  collection-title: "Proceedings of the VLDB Endowment"
+  collection-doi: 10.14778/3476311.3476369
+  conference:
+    name: VLDB 2021 - 47th International Conference on Very Large Data Bases
+    location: Spock's Inn Hotel and Bar
+    city: Copenhagen
+    country: DK
+    date-start: 2021-08-16
+    date-end: 2021-08-20
