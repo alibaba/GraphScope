@@ -365,7 +365,6 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
             Assert.assertTrue(expected.contains(result.toString()));
             ++counter;
         }
-        
         Assert.assertEquals(4, counter);
     }
 
