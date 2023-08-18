@@ -44,6 +44,8 @@ import com.sun.jna.ptr.IntByReference;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
@@ -52,6 +54,7 @@ import java.util.Objects;
  * build physical plan from logical plan of a regular query, the physical plan is actually denoted by ir core structure (FFI Pointer)
  */
 public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> {
+    private static final Logger logger = LoggerFactory.getLogger(FfiPhysicalBuilder.class);
     private static final IrCoreLibrary LIB = IrCoreLibrary.INSTANCE;
     private final IrMeta irMeta;
     private final Configs graphConfig;
@@ -166,14 +169,19 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
 
     @Override
     public byte[] build() {
-        appendSink(new IntByReference(this.planPointer.lastIdx));
-        FfiData.ByValue ffiData =
-                LIB.buildPhysicalPlan(
-                        this.planPointer.ptrPlan, getEngineWorkerNum(), getEngineServerNum());
-        checkFfiResult(ffiData.error);
-        byte[] bytes = ffiData.getBytes();
-        ffiData.close();
-        return bytes;
+        try {
+            appendSink(new IntByReference(this.planPointer.lastIdx));
+            FfiData.ByValue ffiData =
+                    LIB.buildPhysicalPlan(
+                            this.planPointer.ptrPlan, getEngineWorkerNum(), getEngineServerNum());
+            checkFfiResult(ffiData.error);
+            byte[] bytes = ffiData.getBytes();
+            ffiData.close();
+            return bytes;
+        } catch (Exception e) {
+            logger.error("ir core logical plan {}", explain());
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -216,7 +224,7 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
                         this.planPointer.ptrPlan, ffiNodes.get(1), oprIdx.getValue(), oprIdx));
     }
 
-    private void appendSink(IntByReference oprIdx) {
+    public void appendSink(IntByReference oprIdx) {
         Pointer ptrSink = LIB.initSinkOperator();
         checkFfiResult(
                 LIB.appendSinkOperator(
@@ -249,6 +257,7 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
 
         public PlanPointer(Pointer ptrPlan) {
             this.ptrPlan = Objects.requireNonNull(ptrPlan);
+            this.lastIdx = -1;
         }
     }
 }

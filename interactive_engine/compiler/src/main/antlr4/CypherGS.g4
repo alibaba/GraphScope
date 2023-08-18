@@ -244,9 +244,12 @@ oC_PartialComparisonExpression
                                ;
 
 oC_StringListNullPredicateExpression
-                                 :  oC_AddOrSubtractExpression ;
+                         :  oC_AddOrSubtractExpression ( oC_NullPredicateExpression )? ;
 
-IN : ( 'I' | 'i' ) ( 'N' | 'n' ) ;
+oC_NullPredicateExpression
+                       :  ( SP IS SP NULL )
+                           | ( SP IS SP NOT SP NULL )
+                           ;
 
 IS : ( 'I' | 'i' ) ( 'S' | 's' ) ;
 
@@ -277,14 +280,13 @@ oC_PropertyLookup
 
 oC_Atom
     :  oC_Literal
-        | oC_ParenthesizedExpression
-        | oC_Variable
-        | oC_FunctionInvocation
-        | oC_CountAny
         | oC_Parameter
         | oC_CaseExpression
+        | oC_CountAny
         | oC_PatternPredicate
-        ;
+        | oC_ParenthesizedExpression
+        | oC_FunctionInvocation
+        | oC_Variable ;
 
 oC_PatternPredicate
     :  oC_RelationshipsPattern ;

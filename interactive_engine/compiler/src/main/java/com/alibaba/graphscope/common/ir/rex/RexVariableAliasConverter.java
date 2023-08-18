@@ -73,4 +73,9 @@ public class RexVariableAliasConverter extends RexVisitorImpl<RexNode> {
     public RexNode visitDynamicParam(RexDynamicParam dynamicParam) {
         return dynamicParam;
     }
+
+    @Override
+    public RexNode visitSubQuery(RexSubQuery subQuery) {
+        return subQuery;
+    }
 }

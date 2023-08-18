@@ -618,7 +618,9 @@ public class GraphBuilder extends RelBuilder {
                 || (sqlKind == SqlKind.MINUS_PREFIX)
                 || (sqlKind == SqlKind.CASE)
                 || (sqlKind == SqlKind.PROCEDURE_CALL)
-                || (sqlKind == SqlKind.NOT);
+                || (sqlKind == SqlKind.NOT)
+                || sqlKind == SqlKind.IS_NULL
+                || sqlKind == SqlKind.IS_NOT_NULL;
     }
 
     @Override
@@ -649,8 +651,9 @@ public class GraphBuilder extends RelBuilder {
                     condition.accept(
                             new RexVariableAliasCollector<>(true, RexGraphVariable::getAliasId));
             // fuze all conditions into table scan
-            if (ImmutableList.of(AliasInference.DEFAULT_ID, tableScan.getAliasId())
-                    .containsAll(aliasIds)) {
+            if (!aliasIds.isEmpty()
+                    && ImmutableList.of(AliasInference.DEFAULT_ID, tableScan.getAliasId())
+                            .containsAll(aliasIds)) {
                 condition =
                         condition.accept(
                                 new RexVariableAliasConverter(

@@ -16,8 +16,10 @@
 
 package com.alibaba.graphscope.cypher.antlr4;
 
+import com.alibaba.graphscope.common.ir.planner.rules.NotExistToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 
+import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -160,5 +162,44 @@ public class MatchTest {
                     + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 multiMatch.explain().trim());
+    }
+
+    @Test
+    public void match_8_test() {
+        RelNode multiMatch = Utils.eval("Match (a) Where not (a)-[c]-(b) Return a Limit 1").build();
+        Assert.assertEquals(
+                "GraphLogicalSort(fetch=[1])\n"
+                    + "  GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "    LogicalFilter(condition=[NOT(EXISTS({\n"
+                    + "GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[b], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[c], opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "}))])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])",
+                multiMatch.explain().trim());
+        RelOptPlanner planner =
+                com.alibaba.graphscope.common.ir.Utils.mockPlanner(
+                        NotExistToAntiJoinRule.Config.DEFAULT);
+        planner.setRoot(multiMatch);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphLogicalSort(fetch=[1])\n"
+                    + "  GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "    LogicalJoin(condition=[=(a, a)], joinType=[anti])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "      GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[b], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[c], opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                after.explain().trim());
     }
 }
