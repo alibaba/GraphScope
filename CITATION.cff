@@ -9,7 +9,7 @@ authors:
     affiliation: University of Edinburgh
   - given-names: Tao
     family-names: He
-    affiliation: 'Alibaba Group '
+    affiliation: Alibaba Group
   - given-names: Longbin
     family-names: Lai
     affiliation: Alibaba Group
@@ -89,7 +89,7 @@ preferred-citation:
     affiliation: University of Edinburgh
   - given-names: Tao
     family-names: He
-    affiliation: 'Alibaba Group '
+    affiliation: Alibaba Group
   - given-names: Longbin
     family-names: Lai
     affiliation: Alibaba Group
@@ -138,4 +138,4 @@ preferred-citation:
   volume: 14
   number: 12
   publisher:
-    name: LDB Endowment
+    name: VLDB Endowment
