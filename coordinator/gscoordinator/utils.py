@@ -282,9 +282,9 @@ def check_java_app_graph_consistency(
     return True
 
 
-def run_command(args: str, cwd=None):
+def run_command(args: str, cwd=None, **kwargs):
     logger.info("Running command: %s, cwd: %s", args, cwd)
-    cp = subprocess.run(shlex.split(args), capture_output=True, cwd=cwd)
+    cp = subprocess.run(shlex.split(args), capture_output=True, cwd=cwd, **kwargs)
     if cp.returncode != 0:
         err = cp.stderr.decode("utf-8", errors="ignore")
         logger.error(
@@ -1894,7 +1894,7 @@ class ResolveMPICmdPrefix(object):
 
     @staticmethod
     def alloc(num_workers, hosts):
-        host_list = hosts.split(",")
+        host_list = hosts
         host_list_len = len(host_list)
         assert host_list_len != 0
 
@@ -1931,11 +1931,10 @@ class ResolveMPICmdPrefix(object):
             raise RuntimeError("mpirun command not found.")
         return mpi
 
-    def resolve(self, num_workers, hosts):
+    def resolve(self, num_workers: int, hosts: list[str]):
         cmd = []
         env = {}
-
-        if num_workers == 1 and (hosts == "localhost" or hosts == "127.0.0.1"):
+        if num_workers == 1 and hosts[0] in ("localhost", "127.0.0.1"):
             # run without mpi on localhost if workers num is 1
             if shutil.which("ssh") is None:
                 # also need a fake ssh agent

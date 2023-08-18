@@ -53,6 +53,8 @@ from graphscope.deploy.kubernetes.utils import resolve_api_client
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_tempdir
 from graphscope.proto import types_pb2
+from graphscope.config import KubernetesConfig, SessionConfig, VineyardConfig
+from graphscope.config import EngineConfig
 
 from gscoordinator.launcher import AbstractLauncher
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
@@ -76,6 +78,9 @@ class FakeKubeResponse:
 class KubernetesClusterLauncher(AbstractLauncher):
     def __init__(
         self,
+        session_config: SessionConfig,
+        vineyard_config: VineyardConfig,
+        launcher_config: KubernetesConfig,
         coordinator_name=None,
         coordinator_service_name=None,
         delete_namespace=None,
@@ -99,9 +104,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         preemptive=None,
         service_type=None,
         timeout_seconds=None,
-        kube_timeout_seconds=1,
         retry_time_seconds=2,
-        del_retry_time_seconds=1,
         vineyard_cpu=None,
         vineyard_deployment=None,
         vineyard_image=None,
@@ -121,39 +124,54 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._apps_api = kube_client.AppsV1Api(self._api_client)
         self._resource_object = ResourceManager(self._api_client)
 
-        self._instance_id = instance_id
-        self._namespace = namespace
-        self._delete_namespace = delete_namespace
+        # Session Config
+        self._num_workers = session_config.num_workers
+        self._glog_level = parse_as_glog_level(session_config.log_level)
+        self._instance_id = session_config.instance_id
+        self._timeout_seconds = session_config.timeout_seconds
+        self._retry_time_seconds = session_config.retry_time_seconds
 
-        self._coordinator_name = coordinator_name
-        self._coordinator_service_name = coordinator_service_name
+        # Vineyard Config
+        self._vineyard_socket = vineyard_config.socket
+        self._vineyard_rpc_port = vineyard_config.rpc_port
+    
+        # Launcher Config
+        self._namespace = launcher_config.namespace
+        self._delete_namespace = launcher_config.delete_namespace
 
+
+        # Coordinator Config
+        self._coordinator_name = launcher_config.coordinator.deployment_name
+        self._coordinator_service_name = self._coordinator_name
+
+        self._image_registry = launcher_config.image.registry
+        self._image_repository = launcher_config.image.repository
+        self._image_tag = launcher_config.image.tag
+        self._image_pull_policy = launcher_config.image.pull_policy
+        self._image_pull_secrets = launcher_config.image.pull_secrets
+
+        self._vineyard_image = launcher_config.image.vineyard_image
+
+        engine_config: EngineConfig = launcher_config.engine
+        self._vineyard_resource = launcher_config.engine.vineyard.resource
+
+        self._engine_resource = launcher_config.engine.resource
+
+        self._volumes = launcher_config.volumes
+        
+        
         self._owner_references = self.get_coordinator_owner_references()
-        self._image_registry = image_registry
-        self._image_repository = image_repository
-        self._image_tag = image_tag
-        self._image_pull_policy = image_pull_policy
 
-        self._image_pull_secrets = (
-            image_pull_secrets.split(",") if image_pull_secrets else []
-        )
-
-        self._glog_level = parse_as_glog_level(log_level)
 
         self._engine_pod_prefix = "gs-engine-"
 
-        self._num_workers = num_workers
 
         self._vineyard_image = vineyard_image
         self._vineyard_mem = vineyard_mem
         self._vineyard_cpu = vineyard_cpu
-        self._vineyard_size = vineyard_shared_mem
 
         self._vineyard_deployment = vineyard_deployment
 
-        self._engine_cpu = engine_cpu
-        self._engine_mem = engine_mem
-        self._engine_pod_node_selector = engine_pod_node_selector
         self._vineyard_shared_mem = vineyard_shared_mem
 
         self._volumes = volumes
@@ -162,15 +180,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._with_dataset = with_dataset
         self._preemptive = preemptive
         self._service_type = service_type
-
-        assert timeout_seconds is not None
-        self._timeout_seconds = timeout_seconds
-        # timeout seconds waiting for kube service ready
-        self._kube_timeout_seconds = kube_timeout_seconds
-        # retry time when waiting for kube service ready
-        self._retry_time_seconds = retry_time_seconds
-        # retry time when deleting dangling coordinators
-        self._del_retry_time_seconds = del_retry_time_seconds
 
         self._waiting_for_delete = waiting_for_delete
         self._serving = False
@@ -201,10 +210,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
                 self._with_analytical_java = True
 
         self._with_mars = with_mars
-        self._mars_scheduler_cpu = mars_scheduler_cpu
-        self._mars_scheduler_mem = mars_scheduler_mem
-        self._mars_worker_cpu = mars_worker_cpu
-        self._mars_worker_mem = mars_worker_mem
 
         # check the validity of deploy mode
         self._deploy_mode = deploy_mode
@@ -1026,7 +1031,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
                             self._core_api.list_namespaced_event,
                             namespace,
                             field_selector=field_selector,
-                            timeout_seconds=self._kube_timeout_seconds,
+                            timeout_seconds=1,
                         )
                         for event in stream:
                             msg = f"[{pod_name}]: {event['object'].message}"
@@ -1257,7 +1262,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
                             "Deleting dangling coordinator %s timeout",
                             self._coordinator_name,
                         )
-                    time.sleep(self._del_retry_time_seconds)
+                    time.sleep(self._retry_time_seconds)
 
     def _get_owner_reference_as_json(self):
         owner_reference = [
@@ -1374,7 +1379,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
                                     logger.error(
                                         "Deleting namespace %s timeout", self._namespace
                                     )
-                                time.sleep(self._del_retry_time_seconds)
+                                time.sleep(self._retry_time_seconds)
 
                 else:
                     # delete coordinator deployment and service

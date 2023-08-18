@@ -54,6 +54,7 @@ from graphscope.proto import coordinator_service_pb2_grpc
 from graphscope.proto import error_codes_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import types_pb2
+from graphscope.config import Config
 
 from gscoordinator.dag_manager import DAGManager
 from gscoordinator.dag_manager import GSEngine
@@ -660,282 +661,9 @@ class CoordinatorServiceServicer(
 
 
 def parse_sys_args():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-    parser.add_argument(
-        "--num_workers",
-        type=int,
-        default=4,
-        help="The number of graphscope engine workers.",
-    )
-    parser.add_argument(
-        "--preemptive",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=True,
-        help="Support resource preemption or resource guarantee",
-    )
-    parser.add_argument(
-        "--instance_id",
-        type=str,
-        help="Unique id for each GraphScope instance.",
-    )
-    parser.add_argument(
-        "--port",
-        type=int,
-        default=63800,
-        help="Coordinator service port.",
-    )
-    parser.add_argument(
-        "--log_level",
-        type=str,
-        default="info",
-        help="Log level, choose from 'info' or 'debug'.",
-    )
-    parser.add_argument(
-        "--hosts",
-        type=str,
-        default="localhost",
-        help="list of comma seperated hostnames of graphscope engine workers.",
-    )
-    parser.add_argument(
-        "--vineyard_socket",
-        type=str,
-        default=None,
-        help="Vineyard IPC socket path, a socket suffixed by timestamp will be created in '/tmp' if not given.",
-    )
-    parser.add_argument(
-        "--cluster_type",
-        type=str,
-        default="k8s",
-        help="Cluster type of deploying, choose from 'k8s' or 'local'.",
-    )
-    parser.add_argument(
-        "--k8s_namespace",
-        type=str,
-        default="graphscope",
-        help="The namespace to create all resource, which must exist in advance.",
-    )
-    parser.add_argument(
-        "--k8s_image_registry", type=str, default="", help="k8s image registry"
-    )
-    parser.add_argument(
-        "--k8s_image_repository",
-        type=str,
-        default="graphscope",
-        help="k8s image repository",
-    )
-    parser.add_argument(
-        "--k8s_image_tag", type=str, default=__version__, help="k8s image tag"
-    )
-    parser.add_argument(
-        "--k8s_service_type",
-        type=str,
-        default="NodePort",
-        help="Service type, choose from 'NodePort' or 'LoadBalancer'.",
-    )
-    parser.add_argument(
-        "--k8s_vineyard_deployment",
-        type=str,
-        default=None,
-        help="The name of vineyard deployment, it should exist as expected.",
-    )
-    parser.add_argument(
-        "--k8s_coordinator_name",
-        type=str,
-        default="",
-        help="Coordinator name of graphscope instance.",
-    )
-    parser.add_argument(
-        "--k8s_coordinator_service_name",
-        type=str,
-        default="",
-        help="Coordinator service name of graphscope instance.",
-    )
-    parser.add_argument(
-        "--k8s_image_pull_policy",
-        type=str,
-        default="IfNotPresent",
-        help="Kubernetes image pull policy.",
-    )
-    parser.add_argument(
-        "--k8s_image_pull_secrets",
-        type=str,
-        default="",
-        help="A list of comma separated secrets to pull image.",
-    )
-    parser.add_argument(
-        "--k8s_vineyard_cpu",
-        type=float,
-        default=1.0,
-        help="CPU cores of vineyard container.",
-    )
-    parser.add_argument(
-        "--k8s_vineyard_image",
-        type=str,
-        default=None,
-        help="Image for vineyard container",
-    )
-    parser.add_argument(
-        "--k8s_vineyard_mem",
-        type=str,
-        default="256Mi",
-        help="Memory of vineyard container, suffix with ['Mi', 'Gi', 'Ti'].",
-    )
-    parser.add_argument(
-        "--vineyard_shared_mem",
-        type=str,
-        default="8Gi",
-        help="Plasma memory in vineyard, suffix with ['Mi', 'Gi', 'Ti'].",
-    )
-    parser.add_argument(
-        "--k8s_engine_cpu",
-        type=float,
-        default=1.0,
-        help="CPU cores of engine container, default: 1.0",
-    )
-    parser.add_argument(
-        "--k8s_engine_mem",
-        type=str,
-        default="256Mi",
-        help="Memory of engine container, suffix with ['Mi', 'Gi', 'Ti'].",
-    )
-    parser.add_argument(
-        "--etcd_addrs",
-        type=str,
-        default=None,
-        help="The addr of external etcd cluster, with formats like 'etcd01:port,etcd02:port,etcd03:port' ",
-    )
-    parser.add_argument(
-        "--etcd_listening_client_port",
-        type=int,
-        default=2379,
-        help="The port that etcd server will beind to for accepting client connections. Defaults to 2379.",
-    )
-    parser.add_argument(
-        "--etcd_listening_peer_port",
-        type=int,
-        default=2380,
-        help="The port that etcd server will beind to for accepting peer connections. Defaults to 2380.",
-    )
-    parser.add_argument(
-        "--k8s_enabled_engines",
-        type=str,
-        default=None,
-        help="A set of engines to enable",
-    )
-    parser.add_argument(
-        "--k8s_with_mars",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=False,
-        help="Enable mars or not.",
-    )
-    parser.add_argument(
-        "--k8s_mars_worker_cpu",
-        type=float,
-        default=0.5,
-        help="CPU cores of mars worker container, default: 0.5",
-    )
-    parser.add_argument(
-        "--k8s_mars_worker_mem",
-        type=str,
-        default="4Gi",
-        help="Memory of Mars worker container, default: 4Gi",
-    )
-    parser.add_argument(
-        "--k8s_mars_scheduler_cpu",
-        type=float,
-        default=0.5,
-        help="CPU cores of Mars scheduler container, default: 0.5",
-    )
-    parser.add_argument(
-        "--k8s_mars_scheduler_mem",
-        type=str,
-        default="2Gi",
-        help="Memory of Mars scheduler container, default: 2Gi",
-    )
-    parser.add_argument(
-        "--k8s_engine_pod_node_selector",
-        type=str,
-        default="",
-        help="Node selector for engine pods, default is None",
-    )
-    parser.add_argument(
-        "--k8s_volumes",
-        type=str,
-        default="",
-        help="A json string specifies the kubernetes volumes to mount.",
-    )
-    parser.add_argument(
-        "--k8s_delete_namespace",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=False,
-        help="Delete the namespace that created by graphscope.",
-    )
-    parser.add_argument(
-        "--timeout_seconds",
-        type=int,
-        default=600,
-        help="The length of time to wait before giving up launching graphscope.",
-    )
-    parser.add_argument(
-        "--dangling_timeout_seconds",
-        type=int,
-        default=600,
-        help="The length of time to wait starting from client disconnected before killing the graphscope instance",
-    )
-    parser.add_argument(
-        "--waiting_for_delete",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=False,
-        help="Wait until the graphscope instance has been deleted successfully",
-    )
-    parser.add_argument(
-        "--k8s_with_dataset",
-        type=str2bool,
-        nargs="?",
-        const=False,
-        default=False,
-        help="Mount the aliyun dataset bucket as a volume by ossfs.",
-    )
-    parser.add_argument(
-        "--k8s_deploy_mode",
-        type=str,
-        default="eager",
-        help="The deploying mode of graphscope, eager or lazy.",
-    )
-    parser.add_argument(
-        "--monitor",
-        type=str2bool,
-        nargs="?",
-        const=False,
-        default=False,
-        help="Enable or disable prometheus exporter.",
-    )
-    parser.add_argument(
-        "--monitor_port",
-        type=int,
-        default=9968,
-        help="Coordinator prometheus exporter service port.",
-    )
-    parser.add_argument(
-        "--dataset_proxy",
-        type=str,
-        nargs="?",
-        const="",
-        default="",
-        help="A json string specifies the dataset proxy info."
-        "Available options of proxy: http_proxy, https_proxy, no_proxy.",
-    )
-    return parser.parse_args()
+    config_file = sys.argv[1]
+    config = Config.load(config_file)
+    return config
 
 
 def launch_graphscope():
@@ -944,57 +672,62 @@ def launch_graphscope():
     start_server(launcher, args)
 
 
-def get_launcher(args):
-    if args.cluster_type == "k8s":
-        launcher = KubernetesClusterLauncher(
-            coordinator_name=args.k8s_coordinator_name,
-            coordinator_service_name=args.k8s_coordinator_service_name,
-            delete_namespace=args.k8s_delete_namespace,
-            engine_cpu=args.k8s_engine_cpu,
-            engine_mem=args.k8s_engine_mem,
-            engine_pod_node_selector=args.k8s_engine_pod_node_selector,
-            image_pull_policy=args.k8s_image_pull_policy,
-            image_pull_secrets=args.k8s_image_pull_secrets,
-            image_registry=args.k8s_image_registry,
-            image_repository=args.k8s_image_repository,
-            image_tag=args.k8s_image_tag,
-            instance_id=args.instance_id,
-            log_level=args.log_level,
-            mars_worker_cpu=args.k8s_mars_worker_cpu,
-            mars_worker_mem=args.k8s_mars_worker_mem,
-            mars_scheduler_cpu=args.k8s_mars_scheduler_cpu,
-            mars_scheduler_mem=args.k8s_mars_scheduler_mem,
-            with_dataset=args.k8s_with_dataset,
-            namespace=args.k8s_namespace,
-            num_workers=args.num_workers,
-            preemptive=args.preemptive,
-            service_type=args.k8s_service_type,
-            timeout_seconds=args.timeout_seconds,
-            vineyard_cpu=args.k8s_vineyard_cpu,
-            vineyard_deployment=args.k8s_vineyard_deployment,
-            vineyard_image=args.k8s_vineyard_image,
-            vineyard_mem=args.k8s_vineyard_mem,
-            vineyard_shared_mem=args.vineyard_shared_mem,
-            volumes=args.k8s_volumes,
-            waiting_for_delete=args.waiting_for_delete,
-            with_mars=args.k8s_with_mars,
-            enabled_engines=args.k8s_enabled_engines,
-            dataset_proxy=args.dataset_proxy,
-            deploy_mode=args.k8s_deploy_mode,
-        )
-    elif args.cluster_type == "hosts":
-        launcher = LocalLauncher(
-            num_workers=args.num_workers,
-            hosts=args.hosts,
-            etcd_addrs=args.etcd_addrs,
-            etcd_listening_client_port=args.etcd_listening_client_port,
-            etcd_listening_peer_port=args.etcd_listening_peer_port,
-            vineyard_socket=args.vineyard_socket,
-            shared_mem=args.vineyard_shared_mem,
-            log_level=args.log_level,
-            instance_id=args.instance_id,
-            timeout_seconds=args.timeout_seconds,
-        )
+def get_launcher(config: Config):
+    if config.launcher_type == "hosts":
+        launcher = LocalLauncher(config.session, config.vineyard, config.hosts_launcher)
+    elif config.launcher_type == "k8s":
+        launcher = KubernetesClusterLauncher(config.session, config.vineyard, config.kubernetes_launcher)
+    
+    # if args.cluster_type == "k8s":
+    #     launcher = KubernetesClusterLauncher(
+    #         coordinator_name=args.k8s_coordinator_name,
+    #         coordinator_service_name=args.k8s_coordinator_service_name,
+    #         delete_namespace=args.k8s_delete_namespace,
+    #         engine_cpu=args.k8s_engine_cpu,
+    #         engine_mem=args.k8s_engine_mem,
+    #         engine_pod_node_selector=args.k8s_engine_pod_node_selector,
+    #         image_pull_policy=args.k8s_image_pull_policy,
+    #         image_pull_secrets=args.k8s_image_pull_secrets,
+    #         image_registry=args.k8s_image_registry,
+    #         image_repository=args.k8s_image_repository,
+    #         image_tag=args.k8s_image_tag,
+    #         instance_id=args.instance_id,
+    #         log_level=args.log_level,
+    #         mars_worker_cpu=args.k8s_mars_worker_cpu,
+    #         mars_worker_mem=args.k8s_mars_worker_mem,
+    #         mars_scheduler_cpu=args.k8s_mars_scheduler_cpu,
+    #         mars_scheduler_mem=args.k8s_mars_scheduler_mem,
+    #         with_dataset=args.k8s_with_dataset,
+    #         namespace=args.k8s_namespace,
+    #         num_workers=args.num_workers,
+    #         preemptive=args.preemptive,
+    #         service_type=args.k8s_service_type,
+    #         timeout_seconds=args.timeout_seconds,
+    #         vineyard_cpu=args.k8s_vineyard_cpu,
+    #         vineyard_deployment=args.k8s_vineyard_deployment,
+    #         vineyard_image=args.k8s_vineyard_image,
+    #         vineyard_mem=args.k8s_vineyard_mem,
+    #         vineyard_shared_mem=args.vineyard_shared_mem,
+    #         volumes=args.k8s_volumes,
+    #         waiting_for_delete=args.waiting_for_delete,
+    #         with_mars=args.k8s_with_mars,
+    #         enabled_engines=args.k8s_enabled_engines,
+    #         dataset_proxy=args.dataset_proxy,
+    #         deploy_mode=args.k8s_deploy_mode,
+    #     )
+    # elif args.cluster_type == "hosts":
+    #     launcher = LocalLauncher(
+    #         num_workers=args.num_workers,
+    #         hosts=args.hosts,
+    #         etcd_addrs=args.etcd_addrs,
+    #         etcd_listening_client_port=args.etcd_listening_client_port,
+    #         etcd_listening_peer_port=args.etcd_listening_peer_port,
+    #         vineyard_socket=args.vineyard_socket,
+    #         shared_mem=args.vineyard_shared_mem,
+    #         log_level=args.log_level,
+    #         instance_id=args.instance_id,
+    #         timeout_seconds=args.timeout_seconds,
+    #     )
     else:
         raise RuntimeError("Expect hosts or k8s of cluster_type parameter")
     return launcher

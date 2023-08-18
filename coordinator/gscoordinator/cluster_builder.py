@@ -28,6 +28,8 @@ except ImportError:
 
 from graphscope.deploy.kubernetes.resource_builder import ResourceBuilder
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
+from graphscope.config import Config, EngineConfig, KubernetesConfig, SessionConfig
+from gscoordinator.utils import parse_as_glog_level
 
 from gscoordinator.version import __version__
 
@@ -55,36 +57,22 @@ _annotations = {
 class EngineCluster:
     def __init__(
         self,
-        engine_cpu,
-        engine_mem,
-        engine_pod_node_selector,
+        config: Config,
         engine_pod_prefix,
-        glog_level,
-        image_pull_policy,
-        image_pull_secrets,
-        image_registry,
-        image_repository,
-        image_tag,
-        instance_id,
         learning_start_port,
-        namespace,
-        num_workers,
-        preemptive,
-        service_type,
-        vineyard_cpu,
-        vineyard_deployment,
-        vineyard_image,
-        vineyard_mem,
-        vineyard_shared_mem,
-        volumes,
-        with_analytical,
-        with_analytical_java,
-        with_dataset,
-        with_interactive,
-        with_learning,
-        with_mars,
-        dataset_proxy,
     ):
+
+        session_config: SessionConfig = config.session
+        launcher_config: KubernetesConfig = config.kubernetes_launcher
+
+        self._instance_id = session_config.instance_id
+        self._glog_level = parse_as_glog_level(session_config.log_level)
+        self._num_workers = session_config.num_workers
+
+        self._namespace = launcher_config.namespace
+
+
+
         self._gs_prefix = engine_pod_prefix
         self._analytical_prefix = "gs-analytical-"
         self._interactive_frontend_prefix = "gs-interactive-frontend-"
@@ -96,11 +84,9 @@ class EngineCluster:
         self._mars_scheduler_name_prefix = "mars-scheduler-"
         self._mars_service_name_prefix = "mars-"
 
-        self._instance_id = instance_id
 
         self._learning_start_port = learning_start_port
 
-        self._namespace = namespace
         self._engine_labels = {
             "app.kubernetes.io/name": "graphscope",
             "app.kubernetes.io/instance": self._instance_id,
@@ -112,7 +98,12 @@ class EngineCluster:
         self._frontend_labels = self._engine_labels.copy()
         self._frontend_labels["app.kubernetes.io/component"] = "frontend"
 
-        self._with_dataset = with_dataset
+        self._with_dataset = launcher_config.dataset.enable
+
+        image_registry = launcher_config.image.registry
+        image_repository = launcher_config.image.repository
+        image_tag = launcher_config.image.tag
+
         if not image_registry:
             image_prefix = image_repository
         else:
@@ -128,54 +119,41 @@ class EngineCluster:
         self._learning_image = f"{image_prefix}/learning:{image_tag}"
         self._dataset_image = f"{image_prefix}/dataset:{image_tag}"
 
-        self._vineyard_image = vineyard_image
+        self._vineyard_image = launcher_config.image.vineyard_image
 
-        self._image_pull_policy = image_pull_policy
-        self._image_pull_secrets = image_pull_secrets
+        self._image_pull_policy = launcher_config.image.pull_policy
+        self._image_pull_secrets = launcher_config.image.pull_secrets
 
-        self._vineyard_deployment = vineyard_deployment
+        self._vineyard_deployment = config.vineyard.deployment_name
 
-        self._with_analytical = with_analytical
-        self._with_analytical_java = with_analytical_java
-        self._with_interactive = with_interactive
-        self._with_learning = with_learning
-        self._with_mars = with_mars
+        self._with_analytical = launcher_config.engine.enable_gae
+        self._with_analytical_java = launcher_config.engine.enable_gae_java
+        self._with_interactive = launcher_config.engine.enable_gie
+        self._with_learning = launcher_config.engine.enable_gle
+        self._with_mars = launcher_config.mars.enable
 
-        if with_analytical and with_analytical_java:
-            logger.warning(
-                "Cannot setup `with_analytical` and `with_analytical_java` at the same time"
-            )
-            logger.warning("Disabled `analytical`.")
-            self._with_analytical = False
-
-        self._glog_level = glog_level
-        self._preemptive = preemptive
-        self._vineyard_shared_mem = vineyard_shared_mem
+        engine_pod_node_selector = launcher_config.engine.node_selector
 
         self._node_selector = (
             json.loads(self.base64_decode(engine_pod_node_selector))
             if engine_pod_node_selector
             else None
         )
-        self._num_workers = num_workers
+
+        volumes = launcher_config.volumes
         self._volumes = json.loads(self.base64_decode(volumes)) if volumes else None
+
+        dataset_proxy = launcher_config.dataset.proxy
         self._dataset_proxy = (
             json.loads(self.base64_decode(dataset_proxy)) if dataset_proxy else None
         )
 
         self._sock = "/tmp/vineyard_workspace/vineyard.sock"
 
-        self._vineyard_requests = {"cpu": vineyard_cpu, "memory": vineyard_mem}
-        self._analytical_requests = {"cpu": engine_cpu, "memory": engine_mem}
-        # Should give executor a smaller value, since it doesn't need to load the graph
-        self._executor_requests = {"cpu": "2000m", "memory": engine_mem}
-        self._learning_requests = {"cpu": "1000m", "memory": "256Mi"}
-        self._frontend_requests = {"cpu": "200m", "memory": "512Mi"}
         self._dataset_requests = {"cpu": "200m", "memory": "64Mi"}
 
-        self._service_type = service_type
-        self._vineyard_service_port = 9600  # fixed
-        self._etcd_port = 2379
+        self._service_type = launcher_config.service_type
+        self._vineyard_service_port = config.vineyard.rpc_port
 
         # This must be same with v6d:modules/io/python/drivers/io/kube_ssh.sh
         self.analytical_container_name = "engine"
@@ -454,7 +432,7 @@ class EngineCluster:
 
     def get_engine_headless_service(self):
         name = self.engine_stateful_set_name + "-headless"
-        ports = [kube_client.V1ServicePort(name="etcd", port=self._etcd_port)]
+        ports = [kube_client.V1ServicePort(name="etcd", port=2379)]
         service_spec = ResourceBuilder.get_service_spec(
             "ClusterIP", ports, self._engine_labels, None
         )
