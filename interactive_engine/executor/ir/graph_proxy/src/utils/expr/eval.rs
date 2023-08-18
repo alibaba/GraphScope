@@ -193,6 +193,7 @@ pub(crate) fn apply_logical<'a>(
                     .ends_with(b.as_str()?.as_ref())
                     .into()),
                 Not => unreachable!(),
+                Is => Ok((a == b).into()),
             }
         } else {
             Err(ExprEvalError::MissingOperands(InnerOpr::Logical(*logical).into()))

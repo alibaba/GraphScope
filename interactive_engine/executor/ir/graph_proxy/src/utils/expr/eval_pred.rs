@@ -316,7 +316,14 @@ impl EvalPred for Predicate {
             | Logical::Within
             | Logical::Without
             | Logical::Startswith
-            | Logical::Endswith => {
+            | Logical::Endswith => Ok(apply_logical(
+                &self.cmp,
+                self.left.eval(context)?.as_borrow_object(),
+                Some(self.right.eval(context)?.as_borrow_object()),
+            )?
+            .as_bool()
+            .unwrap_or(false)),
+            Logical::Is => {
                 let left_res = self.left.eval(context);
                 let left = match left_res {
                     Ok(left) => Ok(left),
@@ -432,7 +439,8 @@ fn process_predicates(
                             | Logical::Within
                             | Logical::Without
                             | Logical::Startswith
-                            | Logical::Endswith => partial.cmp(logical)?,
+                            | Logical::Endswith
+                            | Logical::Is => partial.cmp(logical)?,
                             Logical::Not => is_not = true,
                             Logical::And | Logical::Or => {
                                 predicates = predicates.merge_partial(curr_cmp, partial, is_not)?;

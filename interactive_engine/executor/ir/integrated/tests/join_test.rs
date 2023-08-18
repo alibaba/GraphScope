@@ -332,7 +332,7 @@ mod test {
             meta_data: None,
         };
 
-        // .where(expr("@b==None"))
+        // where b.is(None)
         let select_opr = algebra_pb::Select {
             predicate: Some(common_pb::Expression {
                 operators: vec![
@@ -346,7 +346,7 @@ mod test {
                     },
                     common_pb::ExprOpr {
                         node_type: None,
-                        item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Eq as i32)),
+                        item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Is as i32)),
                     },
                     common_pb::ExprOpr {
                         node_type: None,
@@ -388,6 +388,108 @@ mod test {
         let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
         let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
         let mut expected_result_ids = vec![v3, v5];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let record = parse_result(res).unwrap();
+                    println!("result {:?}", record);
+                    if let Some(vertex) = record.get(Some(TAG_A)).unwrap().as_vertex() {
+                        result_collection.push(vertex.id() as DefaultId);
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_ids.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_ids)
+    }
+
+    #[test]
+    fn left_join_is_not_none_test() {
+        initialize();
+        // g.V().as("a")
+        let source_opr_1 = algebra_pb::Scan {
+            scan_opt: 0,
+            alias: Some(TAG_A.into()),
+            params: Some(query_params(vec![], vec![], None)),
+            idx_predicate: None,
+            meta_data: None,
+        };
+
+        // g.V().hasLabel("person").as("b")
+        let source_opr_2 = algebra_pb::Scan {
+            scan_opt: 0,
+            alias: Some(TAG_B.into()),
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
+            idx_predicate: None,
+            meta_data: None,
+        };
+
+        // where not(b.is(None))
+        let select_opr = algebra_pb::Select {
+            predicate: Some(common_pb::Expression {
+                operators: vec![
+                    common_pb::ExprOpr {
+                        node_type: None,
+                        item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Not as i32)),
+                    },
+                    common_pb::ExprOpr {
+                        node_type: None,
+                        item: Some(common_pb::expr_opr::Item::Var(common_pb::Variable {
+                            tag: Some(1.into()),
+                            property: None,
+                            node_type: None,
+                        })),
+                    },
+                    common_pb::ExprOpr {
+                        node_type: None,
+                        item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Is as i32)),
+                    },
+                    common_pb::ExprOpr {
+                        node_type: None,
+                        item: Some(common_pb::expr_opr::Item::Const(common_pb::Value {
+                            item: Some(common_pb::value::Item::None(common_pb::None {})),
+                        })),
+                    },
+                ],
+            }),
+        };
+
+        let mut job_builder = JobBuilder::default();
+        job_builder.add_dummy_source();
+        job_builder.join_func(
+            unsafe { std::mem::transmute(1) },
+            move |left| {
+                left.add_scan_source(source_opr_1.clone());
+            },
+            move |right| {
+                right.add_scan_source(source_opr_2.clone());
+            },
+            // @a.~id
+            vec![common_pb::Variable::from("@0.~id".to_string())],
+            // @b.~id
+            vec![common_pb::Variable::from("@1.~id".to_string())],
+        );
+        job_builder.select(select_opr);
+        job_builder.sink(algebra_pb::Sink {
+            tags: vec![
+                common_pb::NameOrIdKey { key: Some(TAG_A.into()) },
+                common_pb::NameOrIdKey { key: Some(TAG_B.into()) },
+            ],
+            sink_target: default_sink_target(),
+        });
+
+        let request = job_builder.build().unwrap();
+        let mut results = submit_query(request, 1);
+        let mut result_collection = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
+        let mut expected_result_ids = vec![v1, v2, v4, v6];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
