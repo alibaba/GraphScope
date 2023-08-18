@@ -37,7 +37,7 @@ public class HepPlannerTest {
                                         builder.variable("y", "weight"),
                                         builder.literal(1.0)))
                         .build();
-        RelOptPlanner planner = Utils.mockPlanner(FilterMatchRule.Config.DEFAULT.toRule());
+        RelOptPlanner planner = Utils.mockPlanner(FilterMatchRule.Config.DEFAULT);
         planner.setRoot(filter);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
@@ -86,7 +86,7 @@ public class HepPlannerTest {
                                         builder.variable("z", "age"),
                                         builder.literal(10)))
                         .build();
-        RelOptPlanner planner = Utils.mockPlanner(FilterMatchRule.Config.DEFAULT.toRule());
+        RelOptPlanner planner = Utils.mockPlanner(FilterMatchRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
@@ -136,7 +136,7 @@ public class HepPlannerTest {
                                                 builder.variable("x", "age"),
                                                 builder.literal(20))))
                         .build();
-        RelOptPlanner planner = Utils.mockPlanner(FilterMatchRule.Config.DEFAULT.toRule());
+        RelOptPlanner planner = Utils.mockPlanner(FilterMatchRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
@@ -211,7 +211,7 @@ public class HepPlannerTest {
                 before.explain().trim());
 
         // check plan after applying FILTER_INTO_JOIN rule from calcite
-        RelOptPlanner planner = Utils.mockPlanner(CoreRules.FILTER_INTO_JOIN.config.toRule());
+        RelOptPlanner planner = Utils.mockPlanner(CoreRules.FILTER_INTO_JOIN.config);
         planner.setRoot(before);
         RelNode after1 = planner.findBestExp();
         Assert.assertEquals(
@@ -235,8 +235,7 @@ public class HepPlannerTest {
         // check plan after applying FILTER_INTO_JOIN and FILTER_MATCH rules
         planner =
                 Utils.mockPlanner(
-                        CoreRules.FILTER_INTO_JOIN.config.toRule(),
-                        FilterMatchRule.Config.DEFAULT.toRule());
+                        CoreRules.FILTER_INTO_JOIN.config, FilterMatchRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after2 = planner.findBestExp();
         Assert.assertEquals(

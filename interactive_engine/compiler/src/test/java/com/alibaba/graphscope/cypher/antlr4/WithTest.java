@@ -181,7 +181,7 @@ public class WithTest {
                     + " alias=[DEFAULT], opt=[OUT])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[b], opt=[VERTEX])\n"
-                    + "], matchOpt=[OPTIONAL])",
+                    + "], matchOpt=[INNER])",
                 project.explain().trim());
     }
 }

@@ -144,7 +144,7 @@ public class WhereTest {
 
         RelOptPlanner planner =
                 com.alibaba.graphscope.common.ir.Utils.mockPlanner(
-                        NotExistToAntiJoinRule.Config.DEFAULT.toRule());
+                        NotExistToAntiJoinRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(

@@ -396,12 +396,13 @@ public class RelToFfiConverter implements GraphRelShuttle {
     public PhysicalNode visit(LogicalJoin join) {
         Pointer ptrJoin = LIB.initJoinOperator(Utils.ffiJoinKind(join.getJoinType()));
         List<RexNode> conditions = RelOptUtil.conjunctions(join.getCondition());
+        String errorMessage =
+                "join condition in ir core should be 'AND' of equal conditions, each equal"
+                        + " condition has two variables as operands";
+        Preconditions.checkArgument(!conditions.isEmpty(), errorMessage);
         for (RexNode condition : conditions) {
             List<RexGraphVariable> leftRightVars = getLeftRightVariables(condition);
-            Preconditions.checkArgument(
-                    leftRightVars.size() == 2,
-                    "invalid join condition, should be an equal condition which contains two"
-                            + " variables");
+            Preconditions.checkArgument(leftRightVars.size() == 2, errorMessage);
             OuterExpression.Variable leftVar =
                     leftRightVars
                             .get(0)

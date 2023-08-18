@@ -281,7 +281,7 @@ public class GraphBuilder extends RelBuilder {
                                 null,
                                 null,
                                 single,
-                                GraphOpt.Match.INNER);
+                                (input == null) ? opt : GraphOpt.Match.INNER);
         if (input == null) {
             push(match);
         } else {

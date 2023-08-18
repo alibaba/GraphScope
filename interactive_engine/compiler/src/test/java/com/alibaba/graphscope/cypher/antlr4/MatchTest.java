@@ -158,7 +158,7 @@ public class MatchTest {
                     + " alias=[DEFAULT], opt=[OUT])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], opt=[VERTEX])\n"
-                    + "], matchOpt=[OPTIONAL])",
+                    + "], matchOpt=[INNER])",
                 multiMatch.explain().trim());
     }
 }
