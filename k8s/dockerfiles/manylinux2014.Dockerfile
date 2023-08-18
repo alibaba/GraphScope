@@ -51,9 +51,13 @@ RUN mkdir -p /opt/graphscope /opt/vineyard && chown -R graphscope:graphscope /op
 USER graphscope
 WORKDIR /home/graphscope
 
-COPY ./gs ./gs
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 ARG VINEYARD_VERSION=main
-RUN ./gs install-deps dev --v6d-version=$VINEYARD_VERSION -j 2 && \
+RUN cd /home/graphscope/GraphScope/python && \
+    pip3 install click && pip3 install --editable .&& \
+    cd /home/graphscope/GraphScope && \
+    gsctl install-deps dev --v6d-version=$VINEYARD_VERSION -j 2 && \
+    cd /home/graphscope && sudo rm -rf /home/graphscope/GraphScope && \
     sudo yum clean all -y && \
     sudo rm -fr /var/cache/yum
 RUN echo ". /home/graphscope/.graphscope_env" >> ~/.bashrc
