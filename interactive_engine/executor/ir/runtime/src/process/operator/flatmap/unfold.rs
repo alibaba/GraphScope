@@ -17,9 +17,10 @@ use graph_proxy::apis::{DynDetails, Element, Vertex};
 use ir_common::generated::physical as pb;
 use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
+use pegasus_common::downcast::AsAny;
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::process::entry::{CollectionEntry, EntryType};
+use crate::process::entry::{CollectionEntry, Entry, EntryType};
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::operator::map::IntersectionEntry;
 use crate::process::record::Record;
@@ -86,11 +87,44 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
                 )))?,
             }
         } else {
-            Err(FnExecError::unexpected_data_error(&format!(
-                "get mutable entry {:?} of tag {:?} failed in UnfoldOperator",
-                entry,
-                self.tag.as_ref()
-            )))?
+            // Get mutable entry failed, which indicates that the folded entry is preserved with alias, while only unfold head;
+            // In this case, the folded entry would not be taken, instead, it would be saved in each record after flatmap.
+            match entry.get_type() {
+                EntryType::Collection => {
+                    let collection = entry
+                        .as_any_ref()
+                        .downcast_ref::<CollectionEntry>()
+                        .unwrap();
+                    let mut res = Vec::with_capacity(collection.len());
+                    for item in collection.inner.iter() {
+                        let mut new_entry = input.clone();
+                        new_entry.append(item.clone(), self.alias);
+                        res.push(new_entry);
+                    }
+                    Ok(Box::new(res.into_iter()))
+                }
+                EntryType::Intersection => {
+                    let intersection = entry
+                        .as_any_ref()
+                        .downcast_ref::<IntersectionEntry>()
+                        .unwrap();
+                    let mut res = Vec::with_capacity(intersection.len());
+                    for item in intersection.iter() {
+                        let mut new_entry = input.clone();
+                        new_entry.append(Vertex::new(*item, None, DynDetails::default()), self.alias);
+                        res.push(new_entry);
+                    }
+                    Ok(Box::new(res.into_iter()))
+                }
+                EntryType::Path => Err(FnExecError::unsupported_error(&format!(
+                    "unfold path entry {:?} in UnfoldOperator",
+                    entry
+                )))?,
+                _ => Err(FnExecError::unexpected_data_error(&format!(
+                    "unfold entry {:?} in UnfoldOperator",
+                    entry
+                )))?,
+            }
         }
     }
 }
@@ -115,7 +149,9 @@ mod tests {
     use pegasus::api::{Fold, Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
+    use pegasus_common::downcast::AsAny;
 
+    use crate::process::entry::CollectionEntry;
     use crate::process::entry::Entry;
     use crate::process::functions::FoldGen;
     use crate::process::operator::accum::accumulator::Accumulator;
@@ -197,8 +233,8 @@ mod tests {
 
     #[test]
     // g.V().fold().as('a').unfold(head)
-    // This is not expected, since we can only unfold 'head', while collection tagged 'a' is still in the record.
-    fn fold_as_a_unfold_head_fail_test() {
+    // in this case, after unfold by head, each result record still contains a collection tagged 'a'.
+    fn fold_as_a_unfold_head_test() {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // ToList
@@ -208,15 +244,20 @@ mod tests {
         let unfold_opr_pb = pb::Unfold { tag: None, alias: None };
 
         let mut result = fold_unfold_test(fold_opr_pb, unfold_opr_pb);
-        if let Some(result) = result.next() {
-            match result {
-                Ok(_) => {
-                    assert!(false)
-                }
-                Err(_) => {
-                    assert!(true)
-                }
+        let expected_result = vec![1, 2];
+        let mut result_ids = vec![];
+        while let Some(Ok(res)) = result.next() {
+            if let Some(v) = res.get(None).unwrap().as_vertex() {
+                result_ids.push(v.id());
             }
+            let entry = res.get(Some(TAG_A)).unwrap();
+            let collection = entry
+                .as_any_ref()
+                .downcast_ref::<CollectionEntry>()
+                .unwrap();
+            assert!(collection.inner.len() == 2);
         }
+        result_ids.sort();
+        assert_eq!(result_ids, expected_result);
     }
 }
