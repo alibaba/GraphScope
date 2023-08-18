@@ -316,13 +316,27 @@ impl EvalPred for Predicate {
             | Logical::Within
             | Logical::Without
             | Logical::Startswith
-            | Logical::Endswith => Ok(apply_logical(
-                &self.cmp,
-                self.left.eval(context)?.as_borrow_object(),
-                Some(self.right.eval(context)?.as_borrow_object()),
-            )?
-            .as_bool()
-            .unwrap_or(false)),
+            | Logical::Endswith => {
+                let left_res = self.left.eval(context);
+                let left = match left_res {
+                    Ok(left) => Ok(left),
+                    Err(err) => match err {
+                        ExprEvalError::GetNoneFromContext => Ok(Object::None),
+                        _ => Err(err),
+                    },
+                };
+                let right_res = self.right.eval(context);
+                let right = match right_res {
+                    Ok(right) => Ok(right),
+                    Err(err) => match err {
+                        ExprEvalError::GetNoneFromContext => Ok(Object::None),
+                        _ => Err(err),
+                    },
+                };
+                Ok(apply_logical(&self.cmp, left?.as_borrow_object(), Some(right?.as_borrow_object()))?
+                    .as_bool()
+                    .unwrap_or(false))
+            }
             _ => Err(ExprEvalError::OtherErr(format!(
                 "invalid logical operator: {:?} in a predicate",
                 self.cmp
