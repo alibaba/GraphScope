@@ -26,7 +26,7 @@ use ir_common::generated::physical::physical_opr::operator::OpKind;
 use pegasus::api::function::*;
 use pegasus::api::{
     Collect, CorrelatedSubTask, Count, Dedup, EmitKind, Filter, Fold, FoldByKey, HasAny, IterCondition,
-    Iteration, Join, KeyBy, Limit, Map, Merge, PartitionByKey, Sink, SortBy, SortLimitBy,
+    Iteration, Join, KeyBy, Limit, Map, Merge, Sink, SortBy, SortLimitBy,
 };
 use pegasus::stream::Stream;
 use pegasus::{BuildJobError, Worker};
@@ -380,14 +380,10 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     let (left_stream, right_stream) = stream.copied()?;
                     let left_stream = self
                         .install(left_stream, &left_task.plan[..])?
-                        .key_by(move |record| left_key_selector.get_kv(record))?
-                        // TODO(bingqing): remove this when new keyed-join in gaia-x is ready;
-                        .partition_by_key();
+                        .key_by(move |record| left_key_selector.get_kv(record))?;
                     let right_stream = self
                         .install(right_stream, &right_task.plan[..])?
-                        .key_by(move |record| right_key_selector.get_kv(record))?
-                        // TODO(bingqing): remove this when new keyed-join in gaia-x is ready;
-                        .partition_by_key();
+                        .key_by(move |record| right_key_selector.get_kv(record))?;
                     stream = match join_kind {
                         JoinKind::Inner => left_stream
                             .inner_join(right_stream)?
