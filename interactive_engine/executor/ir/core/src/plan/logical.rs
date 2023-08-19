@@ -18,6 +18,7 @@ use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::iter::FromIterator;
+use std::ops::{Add, AddAssign, Div};
 use std::rc::Rc;
 
 use ir_common::error::ParsePbError;
@@ -223,166 +224,87 @@ impl LogicalPlan {
     /// Get the corresponding merge node of the given branch node.
     fn get_merge_node(&self, branch_node: NodeType) -> Option<NodeType> {
         if branch_node.borrow().children.len() > 1 {
-            let root_children: BTreeSet<u32> = branch_node
-                .borrow()
-                .children
-                .iter()
-                .cloned()
-                .collect();
-            let mut node_root_child_map = HashMap::new();
+            // Record the flow of each node
+            let mut node_flow_map: HashMap<u32, Fraction> =
+                HashMap::from_iter([(branch_node.borrow().id, Fraction::new(1, 1))]);
+            // BFS search to get the flow of each node
             let mut queue = VecDeque::new();
-            for root_child_id in root_children.iter() {
-                queue.push_back(*root_child_id);
-                node_root_child_map.insert(*root_child_id, BTreeSet::from([*root_child_id]));
+            for &branch_child_id in branch_node.borrow().children.iter() {
+                let branch_child_node = self.get_node(branch_child_id)?;
+                queue.push_back(branch_child_node);
             }
-            'outer: loop {
-                if let Some(relaxed_node_id) = queue.pop_front() {
-                    let relaxed_node = self.get_node(relaxed_node_id).unwrap();
-                    let related_root_child_nodes = node_root_child_map
-                        .get(&relaxed_node_id)
-                        .cloned()
-                        .unwrap();
-                    for relaxed_node_child in relaxed_node.borrow().children.iter() {
-                        if !node_root_child_map.contains_key(relaxed_node_child) {
-                            queue.push_back(*relaxed_node_child);
-                        }
-
-                        let child_related_root_child_nodes = node_root_child_map
-                            .entry(*relaxed_node_child)
-                            .or_insert(BTreeSet::new());
-                        for root_child_node in related_root_child_nodes.iter() {
-                            child_related_root_child_nodes.insert(*root_child_node);
-                        }
-                        if *child_related_root_child_nodes == root_children {
-                            let candidate_node = self.get_node(*relaxed_node_child)?;
-                            if self.is_final_merge_node(candidate_node.clone(), branch_node.clone()) {
-                                break 'outer Some(candidate_node);
-                            }
-                        }
+            while let Some(node) = queue.pop_front() {
+                let mut node_flow = Fraction::new(0, 1);
+                for &node_parent_id in node.borrow().parents.iter() {
+                    // Converge node parents' sub flows
+                    if let Some(&node_parent_flow) = node_flow_map.get(&node_parent_id) {
+                        // Add parent node's sub flow to the current node
+                        let node_parent = self.get_node(node_parent_id)?;
+                        let node_parent_children_len = node_parent.borrow().children.len();
+                        node_flow += node_parent_flow / node_parent_children_len;
+                    } else {
+                        // If one of current node's parent's flow is still not avaliable, it sugguests that
+                        // it is too early to get current node's flow
+                        // Therefore, we delay the current node's flow computation by adding it to the queue again
+                        // and jump to the next iteration
+                        queue.push_back(node.clone());
+                        continue;
                     }
-                } else {
-                    break None;
+                }
+                // The node is the final merge node only if all the sub flows from the branch node merge to it
+                // Thus its flow should be 1, otherwise it is not the final merge node
+                if node_flow == 1 {
+                    return Some(node);
+                }
+                // Store current node's flow
+                node_flow_map.insert(node.borrow().id, node_flow);
+                for &node_child_id in node.borrow().children.iter() {
+                    let node_child = self.get_node(node_child_id)?;
+                    queue.push_back(node_child);
                 }
             }
+            None
         } else {
             None
         }
     }
 
     /// Get the corresponding branch node of the given merge node.
+    /// - The algorithm is the same as the `get_merge_node` method but in the opposite direction
     fn get_branch_node(&self, merge_node: NodeType) -> Option<NodeType> {
         if merge_node.borrow().parents.len() > 1 {
-            let merge_parents: BTreeSet<u32> = merge_node
-                .borrow()
-                .parents
-                .iter()
-                .cloned()
-                .collect();
-            let mut node_merge_parent_map = HashMap::new();
+            let mut node_flow_map: HashMap<u32, Fraction> =
+                HashMap::from_iter([(merge_node.borrow().id, Fraction::new(1, 1))]);
             let mut queue = VecDeque::new();
-            for &merge_parent_id in merge_parents.iter() {
-                queue.push_back(merge_parent_id);
-                node_merge_parent_map.insert(merge_parent_id, BTreeSet::from([merge_parent_id]));
+            for &merge_parent_id in merge_node.borrow().parents.iter() {
+                let merge_parent_node = self.get_node(merge_parent_id)?;
+                queue.push_back(merge_parent_node);
             }
-            'outer: loop {
-                if let Some(relaxed_node_id) = queue.pop_front() {
-                    let relaxed_node = self.get_node(relaxed_node_id)?;
-                    let related_merge_parent_nodes = node_merge_parent_map
-                        .get(&relaxed_node_id)
-                        .cloned()?;
-                    for relaxed_node_parent in relaxed_node.borrow().parents.iter() {
-                        if !node_merge_parent_map.contains_key(relaxed_node_parent) {
-                            queue.push_back(*relaxed_node_parent);
-                        }
-
-                        let parent_related_merge_parent_nodes = node_merge_parent_map
-                            .entry(*relaxed_node_parent)
-                            .or_insert(BTreeSet::new());
-                        for merge_parent_node in related_merge_parent_nodes.iter() {
-                            parent_related_merge_parent_nodes.insert(*merge_parent_node);
-                        }
-                        if *parent_related_merge_parent_nodes == merge_parents {
-                            let candidate_node = self.get_node(*relaxed_node_parent)?;
-                            if self.is_first_branch_node(candidate_node.clone(), merge_node.clone()) {
-                                break 'outer Some(candidate_node);
-                            }
-                        }
+            while let Some(node) = queue.pop_front() {
+                let mut node_flow = Fraction::new(0, 1);
+                for &node_child_id in node.borrow().children.iter() {
+                    if let Some(&node_child_flow) = node_flow_map.get(&node_child_id) {
+                        let node_child = self.get_node(node_child_id)?;
+                        let node_child_parent_len = node_child.borrow().parents.len();
+                        node_flow += node_child_flow / node_child_parent_len;
+                    } else {
+                        queue.push_back(node.clone());
+                        continue;
                     }
-                } else {
-                    break None;
+                }
+                if node_flow == 1 {
+                    return Some(node);
+                }
+                node_flow_map.insert(node.borrow().id, node_flow);
+                for &node_parent_id in node.borrow().parents.iter() {
+                    let node_parent = self.get_node(node_parent_id)?;
+                    queue.push_back(node_parent);
                 }
             }
+            None
         } else {
             None
         }
-    }
-
-    fn is_final_merge_node(&self, candidate_node: NodeType, branch_node: NodeType) -> bool {
-        for &node_child_id in candidate_node.borrow().children.iter() {
-            if let Some(node_child) = self.get_node(node_child_id) {
-                let node_child_parents: BTreeSet<u32> = node_child
-                    .borrow()
-                    .parents
-                    .iter()
-                    .filter(|&&id| id != candidate_node.borrow().id)
-                    .cloned()
-                    .collect();
-                return !self.is_forward_reachable(branch_node, node_child_parents);
-            }
-        }
-        true
-    }
-
-    fn is_first_branch_node(&self, candidate_node: NodeType, merge_node: NodeType) -> bool {
-        for &node_parent_id in candidate_node.borrow().parents.iter() {
-            if let Some(node_parent) = self.get_node(node_parent_id) {
-                let node_parent_children: BTreeSet<u32> = node_parent
-                    .borrow()
-                    .children
-                    .iter()
-                    .filter(|&&id| id != candidate_node.borrow().id)
-                    .cloned()
-                    .collect();
-                return !self.is_backward_reachable(merge_node, node_parent_children);
-            }
-        }
-        true
-    }
-
-    fn is_forward_reachable(&self, from_node: NodeType, to_nodes_ids: BTreeSet<u32>) -> bool {
-        if to_nodes_ids.is_empty() {
-            return false;
-        }
-        let mut queue = VecDeque::from_iter([from_node]);
-        while let Some(node) = queue.pop_front() {
-            if to_nodes_ids.contains(&node.borrow().id) {
-                return true;
-            }
-            for &child_node_id in node.borrow().children.iter() {
-                if let Some(child_node) = self.get_node(child_node_id) {
-                    queue.push_back(child_node)
-                }
-            }
-        }
-        false
-    }
-
-    fn is_backward_reachable(&self, from_node: NodeType, to_nodes_ids: BTreeSet<u32>) -> bool {
-        if to_nodes_ids.is_empty() {
-            return false;
-        }
-        let mut queue = VecDeque::from_iter([from_node]);
-        while let Some(node) = queue.pop_front() {
-            if to_nodes_ids.contains(&node.borrow().id) {
-                return true;
-            }
-            for &parent_node_id in node.borrow().parents.iter() {
-                if let Some(parent_node) = self.get_node(parent_node_id) {
-                    queue.push_back(parent_node)
-                }
-            }
-        }
-        false
     }
 }
 
@@ -681,21 +603,28 @@ impl LogicalPlan {
     }
 
     /// Append branch plans to a certain node which has **no** children in this logical plan.
-    fn append_branch_plans(&mut self, node: NodeType, subplans: Vec<LogicalPlan>) {
-        if !node.borrow().children.is_empty() {
+    fn append_branch_plans(&mut self, connect_node: NodeType, branch_plans: Vec<LogicalPlan>) {
+        if !connect_node.borrow().children.is_empty() {
             return;
         } else {
-            for subplan in subplans {
-                if let Some((_, root)) = subplan.nodes.iter().next() {
-                    node.borrow_mut()
+            for branch_plan in branch_plans {
+                if let Some(branch_root) = branch_plan.get_first_node() {
+                    // Connect the branch root to the connect node
+                    connect_node
+                        .borrow_mut()
                         .children
-                        .insert(root.borrow().id);
-                    root.borrow_mut()
+                        .insert(branch_root.borrow().id);
+                    branch_root
+                        .borrow_mut()
                         .parents
-                        .insert(node.borrow().id);
+                        .insert(connect_node.borrow().id);
                 }
-                for (_, sub_node) in subplan.nodes.into_iter() {
+                for (_, sub_node) in branch_plan.nodes.into_iter() {
+                    // If a branch plan's node already exists in the self plan, just connect the
+                    // children of the branch plan's node to the existed node in the self plan
                     if let Some(exist_node) = self.get_node(sub_node.borrow().id) {
+                        // If existed node's children contains the sub node's id, just remove it
+                        // As a node in DAG logical plan cannot point to itself
                         exist_node
                             .borrow_mut()
                             .children
@@ -705,6 +634,7 @@ impl LogicalPlan {
                             .children
                             .extend(sub_node.borrow().children.iter().cloned());
                     } else {
+                        // Append the sub node to the self plan
                         self.nodes
                             .insert(sub_node.borrow().id as usize, sub_node.clone());
                     }
@@ -716,38 +646,51 @@ impl LogicalPlan {
     /// From a branch node `root`, obtain the sub-plans (branch node excluded), each representing
     /// a branch of operators, till the merge node (merge node excluded).
     ///
+    /// The merge node is the final merge node calculated by the private method `get_merge_node`
+    ///
     /// # Return
-    ///   * the merge node and sub-plans if the `brach_node` is indeed a branch node (has more
-    /// than one child), and its corresponding merge_node present.
-    ///   * `None` and empty sub-plans if otherwise.
-    pub fn get_branch_plans(&self, branch_node: NodeType) -> (Option<NodeType>, Vec<LogicalPlan>) {
-        let merge_node_opt = self.get_merge_node(branch_node.clone());
-        let plans = if let Some(merge_node) = merge_node_opt.clone() {
-            self.get_branch_plans_internal(branch_node, merge_node)
-        } else {
-            vec![]
-        };
-        (merge_node_opt, plans)
+    ///   * Some(the merge node and sub-plans) if the `brach_node` is indeed a branch node (has more
+    /// than one child), and its corresponding merge_node present, and for all the parent node of the
+    /// merge node, there is a corresponding subplan
+    ///   * `None` if otherwise.
+    pub fn get_branch_plans(&self, branch_node: NodeType) -> Option<(NodeType, Vec<LogicalPlan>)> {
+        let merge_node = self.get_merge_node(branch_node.clone())?;
+        let plans = self.get_branch_plans_internal(branch_node, merge_node.clone())?;
+        Some((merge_node, plans))
     }
 
-    fn get_branch_plans_internal(&self, branch_node: NodeType, merge_node: NodeType) -> Vec<LogicalPlan> {
+    /// From a branch node `root`, obtain the sub-plans (branch node excluded), each representing
+    /// a branch of operators, till the merge node (merge node excluded).
+    ///
+    /// The merge node is designated by the user, so it may be a sub merge node of the branch node
+    ///
+    /// # Return
+    ///   * Some(sub-plans): there should be a subplan for every parent node of the merge node
+    ///   * None otherwise
+    fn get_branch_plans_internal(
+        &self, branch_node: NodeType, merge_node: NodeType,
+    ) -> Option<Vec<LogicalPlan>> {
         let mut plans = vec![];
-        for merge_parent_node in merge_node
-            .borrow()
-            .parents
-            .iter()
-            .filter_map(|&id| self.get_node(id))
-        {
-            if let Some(sub_plan) = self.subplan(branch_node.clone(), merge_parent_node, false) {
-                plans.push(sub_plan)
-            }
+        for &merge_parent_id in merge_node.borrow().parents.iter() {
+            let merge_parent_node = self.get_node(merge_parent_id)?;
+            let sub_plan = self.subplan(branch_node.clone(), merge_parent_node, false)?;
+            plans.push(sub_plan);
         }
-        plans
+        Some(plans)
     }
 
+    /// To construct a subplan from every node lying between `from_node` (excluded or included)
+    /// and `to_node` (excluded) in the logical plan. Thus, for the subplan to be valid, `to_node`
+    /// must refer to a downstream node against `from_node` in the plan.
+    ///
+    /// # Return
+    ///   * The subplan in case of success,
+    ///   * `None` if `from_node` is `to_node`, or could not arrive at `to_node` following the
+    ///  plan, or there is a branch node in between, but fail to locate the corresponding merge node.
     pub fn subplan(
         &self, from_node: NodeType, to_node: NodeType, contain_from_node: bool,
     ) -> Option<LogicalPlan> {
+        // Decide whether need to include the from node or not
         if from_node == to_node {
             let mut plan = if contain_from_node {
                 LogicalPlan::with_root(clone_node(from_node))
@@ -766,30 +709,48 @@ impl LogicalPlan {
             .collect();
 
         if to_node_parents.len() == 1 {
+            // Get the sub_plan recursively
             let parent_node = self.get_node(to_node_parents[0])?;
-            let mut plan = self.subplan(from_node, parent_node, contain_from_node)?;
-            plan.append_node(clone_node(to_node), to_node_parents)
-                .expect("append node to subplan error");
-            Some(plan)
-        } else if to_node_parents.len() > 1 {
+            let mut sub_plan = self.subplan(from_node, parent_node, contain_from_node)?;
+            sub_plan
+                .append_node(clone_node(to_node), to_node_parents)
+                .ok()?;
+            Some(sub_plan)
+        }
+        // to node is a merge node
+        else if to_node_parents.len() > 1 {
+            // Get the branch node corresponds to the merge node (to node)
             let branch_node = self.get_branch_node(to_node.clone())?;
-            let mut plan = self.subplan(from_node, branch_node.clone(), contain_from_node)?;
-            let branch_plans = self.get_branch_plans_internal(branch_node.clone(), to_node.clone());
-            if plan.get_node(branch_node.borrow().id).is_none() {
+            // Get the sub_plan from the from_node to the branch node
+            let mut sub_plan = self.subplan(from_node, branch_node.clone(), contain_from_node)?;
+            // Get the branch plans between the branch node and the merge node (to node)
+            let branch_plans = self.get_branch_plans_internal(branch_node.clone(), to_node.clone())?;
+
+            // If sub_plan doesn't contain the branch node
+            // It suggests that the branch node is exactly the from_node and it is not contained
+            // To solve the problem, we append a Branch node to the sub plan
+            // The branch node doesn't correspond to any physical action, but only a marker suggest branches
+            if sub_plan
+                .get_node(branch_node.borrow().id)
+                .is_none()
+            {
                 let node = Node::new(
                     branch_node.borrow().id,
                     pb::logical_plan::Operator {
                         opr: Some(pb::logical_plan::operator::Opr::Branch(pb::Branch {})),
                     },
                 );
-                plan.append_node(node, vec![])
-                    .expect("append node to subplan error");
+                sub_plan.append_node(node, vec![]).ok()?;
             }
-            plan.append_branch_plans(plan.get_node(branch_node.borrow().id).unwrap(), branch_plans);
+            // Now sub_plan should always contain a "branch node"
+            // Append the branch plans to the sub_plan and connect on the branch node
+            sub_plan.append_branch_plans(sub_plan.get_node(branch_node.borrow().id)?, branch_plans);
+
             let to_node_clone = clone_node(to_node);
-            plan.append_node(to_node_clone, to_node_parents)
-                .expect("append node to subplan error");
-            Some(plan)
+            sub_plan
+                .append_node(to_node_clone, to_node_parents)
+                .ok()?;
+            Some(sub_plan)
         } else {
             None
         }
@@ -798,7 +759,6 @@ impl LogicalPlan {
     /// Given a node that contains a subtask, which is typically an  `Apply` operator,
     /// try to extract the subtask as a logical plan.
     ///
-    /// TODO(longbin): There may be an issue when the last node of a subtask is a merge node.
     pub fn extract_subplan(&self, node: NodeType) -> Option<LogicalPlan> {
         let node_borrow = node.borrow();
         match &node_borrow.opr.opr {
@@ -1636,6 +1596,65 @@ impl AsLogical for pb::logical_plan::Operator {
         }
         Ok(())
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Fraction {
+    numerator: usize,
+    denominator: usize,
+}
+
+impl Fraction {
+    fn new(numerator: usize, denominator: usize) -> Self {
+        Fraction { numerator, denominator }
+    }
+}
+
+impl Add for Fraction {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let denominator = get_lcm(self.denominator, rhs.denominator);
+        let numerator =
+            denominator / self.denominator * self.numerator + denominator / rhs.denominator * rhs.numerator;
+        Fraction { numerator, denominator }
+    }
+}
+
+impl AddAssign for Fraction {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = *self + rhs
+    }
+}
+
+impl Div<usize> for Fraction {
+    type Output = Self;
+
+    fn div(self, rhs: usize) -> Self::Output {
+        if self.numerator % rhs == 0 {
+            Fraction { numerator: self.numerator / rhs, denominator: self.denominator }
+        } else {
+            Fraction { numerator: self.numerator, denominator: self.denominator * rhs }
+        }
+    }
+}
+
+impl PartialEq<usize> for Fraction {
+    fn eq(&self, other: &usize) -> bool {
+        (self.denominator * *other).eq(&self.numerator)
+    }
+}
+
+fn get_gcd(a: usize, b: usize) -> usize {
+    if a % b == 0 {
+        b
+    } else {
+        get_gcd(b, a % b)
+    }
+}
+
+fn get_lcm(a: usize, b: usize) -> usize {
+    a * b / get_gcd(a, b)
 }
 
 #[cfg(test)]
@@ -3370,27 +3389,27 @@ mod test {
     //         7
     //         |
     //         8
-    fn create_logical_plan1() -> LogicalPlan {
+    fn create_nested_logical_plan1() -> LogicalPlan {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(opr.clone(), vec![0])
-            .unwrap(); // root
-        plan.append_operator_as_node(opr.clone(), vec![1])
-            .unwrap(); // node 1
+            .unwrap(); // root(1)
         plan.append_operator_as_node(opr.clone(), vec![1])
             .unwrap(); // node 2
-        plan.append_operator_as_node(opr.clone(), vec![2])
+        plan.append_operator_as_node(opr.clone(), vec![1])
             .unwrap(); // node 3
         plan.append_operator_as_node(opr.clone(), vec![2])
             .unwrap(); // node 4
-        plan.append_operator_as_node(opr.clone(), vec![4, 5])
+        plan.append_operator_as_node(opr.clone(), vec![2])
             .unwrap(); // node 5
-        plan.append_operator_as_node(opr.clone(), vec![3, 6])
+        plan.append_operator_as_node(opr.clone(), vec![4, 5])
             .unwrap(); // node 6
-        plan.append_operator_as_node(opr.clone(), vec![7])
+        plan.append_operator_as_node(opr.clone(), vec![3, 6])
             .unwrap(); // node 7
+        plan.append_operator_as_node(opr.clone(), vec![7])
+            .unwrap(); // node 8
 
         plan.clean_redundant_nodes();
 
@@ -3405,7 +3424,7 @@ mod test {
     //       5     /
     //        \   /
     //          6
-    fn create_logical_plan2() -> LogicalPlan {
+    fn create_nested_logical_plan2() -> LogicalPlan {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
@@ -3436,7 +3455,7 @@ mod test {
     //       5     6
     //        \   /
     //          7
-    fn create_logical_plan3() -> LogicalPlan {
+    fn create_nested_logical_plan3() -> LogicalPlan {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
@@ -3461,6 +3480,7 @@ mod test {
         plan
     }
 
+    // The plan looks like:
     //               root(1)
     //             /   |    \
     //           2     3     4
@@ -3470,7 +3490,7 @@ mod test {
     //               \      8
     //                \   /
     //                  9
-    fn create_logical_plan4() -> LogicalPlan {
+    fn create_nested_logical_plan4() -> LogicalPlan {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
@@ -3500,6 +3520,7 @@ mod test {
         plan
     }
 
+    // The plan looks like:
     //                root(1)
     //               /      \
     //              2        3
@@ -3509,7 +3530,7 @@ mod test {
     //              8       9
     //                \   /
     //                  10
-    fn create_logical_plan5() -> LogicalPlan {
+    fn create_nested_logical_plan5() -> LogicalPlan {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
@@ -3541,31 +3562,87 @@ mod test {
         plan
     }
 
+    // The plan looks like:
+    //                  root(1)
+    //                  /   \
+    //                 2     3
+    //                  \  /   \
+    //                   4      5
+    //                    \   /  \
+    //                      6     7
+    //                       \   /
+    //                         8
+    fn create_nested_logical_plan6() -> LogicalPlan {
+        let opr = pb::logical_plan::Operator {
+            opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
+        };
+        let mut plan = LogicalPlan::default();
+
+        plan.append_operator_as_node(opr.clone(), vec![0])
+            .unwrap(); // root(1)
+        plan.append_operator_as_node(opr.clone(), vec![1])
+            .unwrap(); // node 2
+        plan.append_operator_as_node(opr.clone(), vec![1])
+            .unwrap(); // node 3
+        plan.append_operator_as_node(opr.clone(), vec![2, 3])
+            .unwrap(); // node 4
+        plan.append_operator_as_node(opr.clone(), vec![3])
+            .unwrap(); // node 5
+        plan.append_operator_as_node(opr.clone(), vec![4, 5])
+            .unwrap(); // node 6
+        plan.append_operator_as_node(opr.clone(), vec![5])
+            .unwrap(); // node 7
+        plan.append_operator_as_node(opr.clone(), vec![6, 7])
+            .unwrap(); // node 8
+
+        plan.clean_redundant_nodes();
+
+        plan
+    }
+
     #[test]
     fn test_get_merge_node1() {
-        let plan = create_logical_plan1();
+        let plan = create_nested_logical_plan1();
         let merge_node = plan.get_merge_node(plan.get_node(2).unwrap());
         assert_eq!(merge_node, plan.get_node(6));
         let merge_node = plan.get_merge_node(plan.get_node(1).unwrap());
         assert_eq!(merge_node, plan.get_node(7));
         // Not a branch node
         let merge_node = plan.get_merge_node(plan.get_node(3).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(4).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(5).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(6).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(7).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(8).unwrap());
         assert!(merge_node.is_none());
     }
 
     #[test]
     fn test_get_merge_node2() {
-        let plan = create_logical_plan2();
+        let plan = create_nested_logical_plan2();
         let merge_node = plan.get_merge_node(plan.get_node(1).unwrap());
         assert_eq!(merge_node, plan.get_node(6));
         // Not a branch node
+        let merge_node = plan.get_merge_node(plan.get_node(2).unwrap());
+        assert!(merge_node.is_none());
         let merge_node = plan.get_merge_node(plan.get_node(3).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(4).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(5).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(6).unwrap());
         assert!(merge_node.is_none());
     }
 
     #[test]
     fn test_get_merge_node3() {
-        let plan = create_logical_plan3();
+        let plan = create_nested_logical_plan3();
         let merge_node = plan.get_merge_node(plan.get_node(1).unwrap());
         assert_eq!(merge_node, plan.get_node(7));
         let merge_node = plan.get_merge_node(plan.get_node(3).unwrap());
@@ -3573,11 +3650,19 @@ mod test {
         // Not a branch node
         let merge_node = plan.get_merge_node(plan.get_node(2).unwrap());
         assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(4).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(5).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(6).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(7).unwrap());
+        assert!(merge_node.is_none());
     }
 
     #[test]
     fn test_get_merge_node4() {
-        let plan = create_logical_plan4();
+        let plan = create_nested_logical_plan4();
         let merge_node = plan.get_merge_node(plan.get_node(1).unwrap());
         assert_eq!(merge_node, plan.get_node(9));
         let merge_node = plan.get_merge_node(plan.get_node(4).unwrap());
@@ -3585,11 +3670,23 @@ mod test {
         // Not a branch node
         let merge_node = plan.get_merge_node(plan.get_node(2).unwrap());
         assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(3).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(5).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(6).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(7).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node: Option<Rc<RefCell<Node>>> = plan.get_merge_node(plan.get_node(8).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(9).unwrap());
+        assert!(merge_node.is_none());
     }
 
     #[test]
     fn test_get_merge_node5() {
-        let plan = create_logical_plan5();
+        let plan = create_nested_logical_plan5();
         let merge_node = plan.get_merge_node(plan.get_node(1).unwrap());
         assert_eq!(merge_node, plan.get_node(10));
         let merge_node = plan.get_merge_node(plan.get_node(2).unwrap());
@@ -3597,37 +3694,87 @@ mod test {
         let merge_node = plan.get_merge_node(plan.get_node(3).unwrap());
         assert_eq!(merge_node, plan.get_node(9));
         // Not a branch node
+        let merge_node = plan.get_merge_node(plan.get_node(4).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(5).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(6).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(7).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node: Option<Rc<RefCell<Node>>> = plan.get_merge_node(plan.get_node(8).unwrap());
+        assert!(merge_node.is_none());
         let merge_node = plan.get_merge_node(plan.get_node(9).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(10).unwrap());
+        assert!(merge_node.is_none());
+    }
+
+    #[test]
+    fn test_get_merge_node6() {
+        let plan = create_nested_logical_plan6();
+        let merge_node = plan.get_merge_node(plan.get_node(1).unwrap());
+        assert_eq!(merge_node, plan.get_node(8));
+        let merge_node = plan.get_merge_node(plan.get_node(3).unwrap());
+        assert_eq!(merge_node, plan.get_node(8));
+        let merge_node = plan.get_merge_node(plan.get_node(5).unwrap());
+        assert_eq!(merge_node, plan.get_node(8));
+        // Not a branch node
+        let merge_node = plan.get_merge_node(plan.get_node(2).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(4).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(6).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(7).unwrap());
+        assert!(merge_node.is_none());
+        let merge_node = plan.get_merge_node(plan.get_node(8).unwrap());
         assert!(merge_node.is_none());
     }
 
     #[test]
     fn test_get_branch_node1() {
-        let plan = create_logical_plan1();
+        let plan = create_nested_logical_plan1();
         let branch_node = plan.get_branch_node(plan.get_node(6).unwrap());
         assert_eq!(branch_node, plan.get_node(2));
         let branch_node = plan.get_branch_node(plan.get_node(7).unwrap());
         assert_eq!(branch_node, plan.get_node(1));
         // Not a merge node
+        let branch_node = plan.get_branch_node(plan.get_node(1).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(2).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(3).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(4).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(5).unwrap());
+        assert!(branch_node.is_none());
         let branch_node = plan.get_branch_node(plan.get_node(8).unwrap());
         assert!(branch_node.is_none());
     }
 
     #[test]
     fn test_get_branch_node2() {
-        let plan = create_logical_plan2();
+        let plan = create_nested_logical_plan2();
         let branch_node = plan.get_branch_node(plan.get_node(5).unwrap());
         assert_eq!(branch_node, plan.get_node(1));
         let branch_node = plan.get_branch_node(plan.get_node(6).unwrap());
         assert_eq!(branch_node, plan.get_node(1));
         // Not a merge node
+        let branch_node = plan.get_branch_node(plan.get_node(1).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(2).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(3).unwrap());
+        assert!(branch_node.is_none());
         let branch_node = plan.get_branch_node(plan.get_node(4).unwrap());
         assert!(branch_node.is_none());
     }
 
     #[test]
     fn test_get_branch_node3() {
-        let plan = create_logical_plan3();
+        let plan = create_nested_logical_plan3();
         let branch_node = plan.get_branch_node(plan.get_node(5).unwrap());
         assert_eq!(branch_node, plan.get_node(1));
         let branch_node = plan.get_branch_node(plan.get_node(6).unwrap());
@@ -3635,13 +3782,19 @@ mod test {
         let branch_node = plan.get_branch_node(plan.get_node(7).unwrap());
         assert_eq!(branch_node, plan.get_node(1));
         // Not a merge node
+        let branch_node = plan.get_branch_node(plan.get_node(1).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(2).unwrap());
+        assert!(branch_node.is_none());
         let branch_node = plan.get_branch_node(plan.get_node(3).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(4).unwrap());
         assert!(branch_node.is_none());
     }
 
     #[test]
     fn test_get_branch_node4() {
-        let plan = create_logical_plan4();
+        let plan = create_nested_logical_plan4();
         let branch_node = plan.get_branch_node(plan.get_node(5).unwrap());
         assert_eq!(branch_node, plan.get_node(1));
         let branch_node = plan.get_branch_node(plan.get_node(8).unwrap());
@@ -3649,13 +3802,23 @@ mod test {
         let branch_node = plan.get_branch_node(plan.get_node(9).unwrap());
         assert_eq!(branch_node, plan.get_node(1));
         // Not a merge node
+        let branch_node = plan.get_branch_node(plan.get_node(1).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(2).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(3).unwrap());
+        assert!(branch_node.is_none());
         let branch_node = plan.get_branch_node(plan.get_node(4).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(6).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(7).unwrap());
         assert!(branch_node.is_none());
     }
 
     #[test]
     fn test_get_branch_node5() {
-        let plan = create_logical_plan5();
+        let plan = create_nested_logical_plan5();
         let branch_node = plan.get_branch_node(plan.get_node(10).unwrap());
         assert_eq!(branch_node, plan.get_node(1));
         let branch_node = plan.get_branch_node(plan.get_node(8).unwrap());
@@ -3663,7 +3826,41 @@ mod test {
         let branch_node = plan.get_branch_node(plan.get_node(9).unwrap());
         assert_eq!(branch_node, plan.get_node(3));
         // Not a merge node
+        let branch_node = plan.get_branch_node(plan.get_node(1).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(2).unwrap());
+        assert!(branch_node.is_none());
         let branch_node = plan.get_branch_node(plan.get_node(3).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(4).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(5).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(6).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(7).unwrap());
+        assert!(branch_node.is_none());
+    }
+
+    #[test]
+    fn test_get_branch_node6() {
+        let plan = create_nested_logical_plan6();
+        let branch_node = plan.get_branch_node(plan.get_node(8).unwrap());
+        assert_eq!(branch_node, plan.get_node(1));
+        let branch_node = plan.get_branch_node(plan.get_node(6).unwrap());
+        assert_eq!(branch_node, plan.get_node(1));
+        let branch_node = plan.get_branch_node(plan.get_node(4).unwrap());
+        assert_eq!(branch_node, plan.get_node(1));
+        // Not a merge node
+        let branch_node = plan.get_branch_node(plan.get_node(1).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(2).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(3).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(5).unwrap());
+        assert!(branch_node.is_none());
+        let branch_node = plan.get_branch_node(plan.get_node(7).unwrap());
         assert!(branch_node.is_none());
     }
 
@@ -3688,7 +3885,7 @@ mod test {
         let subplan2 = LogicalPlan::with_root(Node::new(3, opr.clone()));
 
         plan.append_branch_plans(plan.get_node(1).unwrap(), vec![subplan1, subplan2]);
-        let mut expected_plan = create_logical_plan1();
+        let mut expected_plan = create_nested_logical_plan1();
         expected_plan.remove_node(7);
 
         plan.append_node(Node::new(7, opr.clone()), vec![3, 6])
@@ -3696,12 +3893,12 @@ mod test {
         plan.append_node(Node::new(8, opr.clone()), vec![7])
             .unwrap();
 
-        assert_eq!(plan, create_logical_plan1());
+        assert_eq!(plan, create_nested_logical_plan1());
     }
 
     #[test]
     fn subplan1() {
-        let plan = create_logical_plan1();
+        let plan = create_nested_logical_plan1();
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
@@ -3730,7 +3927,7 @@ mod test {
 
     #[test]
     fn subplan2() {
-        let plan = create_logical_plan2();
+        let plan = create_nested_logical_plan2();
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
@@ -3783,7 +3980,7 @@ mod test {
 
     #[test]
     fn subplan3() {
-        let plan = create_logical_plan3();
+        let plan = create_nested_logical_plan3();
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
@@ -3847,7 +4044,7 @@ mod test {
 
     #[test]
     fn subplan4() {
-        let plan = create_logical_plan4();
+        let plan = create_nested_logical_plan4();
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
@@ -3932,7 +4129,7 @@ mod test {
 
     #[test]
     fn subplan5() {
-        let plan = create_logical_plan5();
+        let plan = create_nested_logical_plan5();
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
@@ -4034,9 +4231,111 @@ mod test {
     }
 
     #[test]
+    fn subplan6() {
+        let plan = create_nested_logical_plan6();
+        let opr = pb::logical_plan::Operator {
+            opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
+        };
+        let branch_opr = pb::logical_plan::Operator {
+            opr: Some(pb::logical_plan::operator::Opr::Branch(pb::Branch {})),
+        };
+        let subplan_from_1_to_4 = plan
+            .subplan(plan.get_node(1).unwrap(), plan.get_node(4).unwrap(), false)
+            .unwrap();
+        let mut subplan_from_1_to_4_expected = LogicalPlan::with_root(Node::new(1, branch_opr.clone()));
+        subplan_from_1_to_4_expected
+            .append_node(Node::new(2, opr.clone()), vec![1])
+            .unwrap();
+        subplan_from_1_to_4_expected
+            .append_node(Node::new(3, opr.clone()), vec![1])
+            .unwrap();
+        subplan_from_1_to_4_expected
+            .append_node(Node::new(4, opr.clone()), vec![2, 3])
+            .unwrap();
+        assert_eq!(subplan_from_1_to_4, subplan_from_1_to_4_expected);
+
+        let subplan_from_1_to_5 = plan
+            .subplan(plan.get_node(1).unwrap(), plan.get_node(5).unwrap(), false)
+            .unwrap();
+        let mut subplan_from_1_to_5_expected = LogicalPlan::empty();
+        subplan_from_1_to_5_expected
+            .append_node(Node::new(3, opr.clone()), vec![])
+            .unwrap();
+        subplan_from_1_to_5_expected
+            .append_node(Node::new(5, opr.clone()), vec![3])
+            .unwrap();
+        assert_eq!(subplan_from_1_to_5, subplan_from_1_to_5_expected);
+
+        let subplan_from_1_to_6 = plan
+            .subplan(plan.get_node(1).unwrap(), plan.get_node(6).unwrap(), false)
+            .unwrap();
+        let mut subplan_from_1_to_6_expected = LogicalPlan::with_root(Node::new(1, branch_opr.clone()));
+        subplan_from_1_to_6_expected
+            .append_node(Node::new(2, opr.clone()), vec![1])
+            .unwrap();
+        subplan_from_1_to_6_expected
+            .append_node(Node::new(3, opr.clone()), vec![1])
+            .unwrap();
+        subplan_from_1_to_6_expected
+            .append_node(Node::new(4, opr.clone()), vec![2, 3])
+            .unwrap();
+        subplan_from_1_to_6_expected
+            .append_node(Node::new(5, opr.clone()), vec![3])
+            .unwrap();
+        subplan_from_1_to_6_expected
+            .append_node(Node::new(6, opr.clone()), vec![4, 5])
+            .unwrap();
+        assert_eq!(subplan_from_1_to_6, subplan_from_1_to_6_expected);
+
+        let subplan_from_1_to_7 = plan
+            .subplan(plan.get_node(1).unwrap(), plan.get_node(7).unwrap(), false)
+            .unwrap();
+        let mut subplan_from_1_to_7_expected = LogicalPlan::empty();
+        subplan_from_1_to_7_expected
+            .append_node(Node::new(3, opr.clone()), vec![])
+            .unwrap();
+        subplan_from_1_to_7_expected
+            .append_node(Node::new(5, opr.clone()), vec![3])
+            .unwrap();
+        subplan_from_1_to_7_expected
+            .append_node(Node::new(7, opr.clone()), vec![5])
+            .unwrap();
+        assert_eq!(subplan_from_1_to_7, subplan_from_1_to_7_expected);
+
+        let subplan_from_1_to_8 = plan
+            .subplan(plan.get_node(1).unwrap(), plan.get_node(8).unwrap(), false)
+            .unwrap();
+        let mut subplan_from_1_to_8_expected = LogicalPlan::with_root(Node::new(1, branch_opr.clone()));
+        subplan_from_1_to_8_expected
+            .append_node(Node::new(2, opr.clone()), vec![1])
+            .unwrap();
+        subplan_from_1_to_8_expected
+            .append_node(Node::new(3, opr.clone()), vec![1])
+            .unwrap();
+        subplan_from_1_to_8_expected
+            .append_node(Node::new(4, opr.clone()), vec![2, 3])
+            .unwrap();
+        subplan_from_1_to_8_expected
+            .append_node(Node::new(5, opr.clone()), vec![3])
+            .unwrap();
+        subplan_from_1_to_8_expected
+            .append_node(Node::new(6, opr.clone()), vec![4, 5])
+            .unwrap();
+        subplan_from_1_to_8_expected
+            .append_node(Node::new(7, opr.clone()), vec![5])
+            .unwrap();
+        subplan_from_1_to_8_expected
+            .append_node(Node::new(8, opr.clone()), vec![6, 7])
+            .unwrap();
+        assert_eq!(subplan_from_1_to_8, subplan_from_1_to_8_expected);
+    }
+
+    #[test]
     fn get_branch_plans1() {
-        let plan = create_logical_plan1();
-        let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(2).unwrap());
+        let plan = create_nested_logical_plan1();
+        let (merge_node, subplans) = plan
+            .get_branch_plans(plan.get_node(2).unwrap())
+            .unwrap();
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
@@ -4044,10 +4343,12 @@ mod test {
         let plan1 = LogicalPlan::with_root(Node::new(4, opr.clone()));
         let plan2 = LogicalPlan::with_root(Node::new(5, opr.clone()));
 
-        assert_eq!(merge_node, plan.get_node(6));
+        assert_eq!(merge_node, plan.get_node(6).unwrap());
         assert_eq!(subplans, vec![plan1, plan2]);
 
-        let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(1).unwrap());
+        let (merge_node, subplans) = plan
+            .get_branch_plans(plan.get_node(1).unwrap())
+            .unwrap();
 
         let plan1 = LogicalPlan::with_root(Node::new(3, opr.clone()));
 
@@ -4062,7 +4363,7 @@ mod test {
             .append_node(Node::new(6, opr.clone()), vec![4, 5])
             .unwrap();
 
-        assert_eq!(merge_node, plan.get_node(7));
+        assert_eq!(merge_node, plan.get_node(7).unwrap());
         assert_eq!(subplans, vec![plan1, plan2]);
 
         let mut plan = LogicalPlan::default();
@@ -4077,20 +4378,24 @@ mod test {
         plan.append_operator_as_node(opr.clone(), vec![2, 3, 4])
             .unwrap(); // node 4
 
-        let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(1).unwrap());
+        let (merge_node, subplans) = plan
+            .get_branch_plans(plan.get_node(1).unwrap())
+            .unwrap();
         let plan1 = LogicalPlan::with_root(Node::new(2, opr.clone()));
         let plan2 = LogicalPlan::with_root(Node::new(3, opr.clone()));
         let plan3 = LogicalPlan::with_root(Node::new(4, opr.clone()));
 
-        assert_eq!(merge_node, plan.get_node(5));
+        assert_eq!(merge_node, plan.get_node(5).unwrap());
         assert_eq!(subplans, vec![plan1, plan2, plan3]);
     }
 
     #[test]
     fn get_branch_plans2() {
-        let plan = create_logical_plan2();
-        let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(1).unwrap());
-        assert_eq!(merge_node, plan.get_node(6));
+        let plan = create_nested_logical_plan2();
+        let (merge_node, subplans) = plan
+            .get_branch_plans(plan.get_node(1).unwrap())
+            .unwrap();
+        assert_eq!(merge_node, plan.get_node(6).unwrap());
         assert_eq!(
             subplans[0],
             plan.subplan(plan.get_node(1).unwrap(), plan.get_node(4).unwrap(), false)
@@ -4102,7 +4407,9 @@ mod test {
                 .unwrap()
         );
 
-        let subplans = plan.get_branch_plans_internal(plan.get_node(1).unwrap(), plan.get_node(5).unwrap());
+        let subplans = plan
+            .get_branch_plans_internal(plan.get_node(1).unwrap(), plan.get_node(5).unwrap())
+            .unwrap();
         assert_eq!(
             subplans[0],
             plan.subplan(plan.get_node(1).unwrap(), plan.get_node(2).unwrap(), false)
@@ -4117,9 +4424,11 @@ mod test {
 
     #[test]
     fn get_branch_plans3() {
-        let plan = create_logical_plan3();
-        let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(1).unwrap());
-        assert_eq!(merge_node, plan.get_node(7));
+        let plan = create_nested_logical_plan3();
+        let (merge_node, subplans) = plan
+            .get_branch_plans(plan.get_node(1).unwrap())
+            .unwrap();
+        assert_eq!(merge_node, plan.get_node(7).unwrap());
         assert_eq!(
             subplans[0],
             plan.subplan(plan.get_node(1).unwrap(), plan.get_node(5).unwrap(), false)
@@ -4131,7 +4440,9 @@ mod test {
                 .unwrap()
         );
 
-        let subplans = plan.get_branch_plans_internal(plan.get_node(1).unwrap(), plan.get_node(5).unwrap());
+        let subplans = plan
+            .get_branch_plans_internal(plan.get_node(1).unwrap(), plan.get_node(5).unwrap())
+            .unwrap();
         assert_eq!(
             subplans[0],
             plan.subplan(plan.get_node(1).unwrap(), plan.get_node(2).unwrap(), false)
@@ -4143,7 +4454,9 @@ mod test {
                 .unwrap()
         );
 
-        let subplans = plan.get_branch_plans_internal(plan.get_node(1).unwrap(), plan.get_node(6).unwrap());
+        let subplans = plan
+            .get_branch_plans_internal(plan.get_node(1).unwrap(), plan.get_node(6).unwrap())
+            .unwrap();
         assert_eq!(
             subplans[0],
             plan.subplan(plan.get_node(1).unwrap(), plan.get_node(3).unwrap(), false)
@@ -4158,9 +4471,11 @@ mod test {
 
     #[test]
     fn get_branch_plans4() {
-        let plan = create_logical_plan4();
-        let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(1).unwrap());
-        assert_eq!(merge_node, plan.get_node(9));
+        let plan = create_nested_logical_plan4();
+        let (merge_node, subplans) = plan
+            .get_branch_plans(plan.get_node(1).unwrap())
+            .unwrap();
+        assert_eq!(merge_node, plan.get_node(9).unwrap());
         assert_eq!(
             subplans[0],
             plan.subplan(plan.get_node(1).unwrap(), plan.get_node(5).unwrap(), false)
@@ -4172,7 +4487,9 @@ mod test {
                 .unwrap()
         );
 
-        let subplans = plan.get_branch_plans_internal(plan.get_node(1).unwrap(), plan.get_node(5).unwrap());
+        let subplans = plan
+            .get_branch_plans_internal(plan.get_node(1).unwrap(), plan.get_node(5).unwrap())
+            .unwrap();
         assert_eq!(
             subplans[0],
             plan.subplan(plan.get_node(1).unwrap(), plan.get_node(2).unwrap(), false)
@@ -4184,8 +4501,10 @@ mod test {
                 .unwrap()
         );
 
-        let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(4).unwrap());
-        assert_eq!(merge_node, plan.get_node(8));
+        let (merge_node, subplans) = plan
+            .get_branch_plans(plan.get_node(4).unwrap())
+            .unwrap();
+        assert_eq!(merge_node, plan.get_node(8).unwrap());
         assert_eq!(
             subplans[0],
             plan.subplan(plan.get_node(4).unwrap(), plan.get_node(6).unwrap(), false)
@@ -4200,9 +4519,11 @@ mod test {
 
     #[test]
     fn get_branch_plans5() {
-        let plan = create_logical_plan5();
-        let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(1).unwrap());
-        assert_eq!(merge_node, plan.get_node(10));
+        let plan = create_nested_logical_plan5();
+        let (merge_node, subplans) = plan
+            .get_branch_plans(plan.get_node(1).unwrap())
+            .unwrap();
+        assert_eq!(merge_node, plan.get_node(10).unwrap());
         assert_eq!(
             subplans[0],
             plan.subplan(plan.get_node(1).unwrap(), plan.get_node(8).unwrap(), false)
@@ -4214,8 +4535,10 @@ mod test {
                 .unwrap()
         );
 
-        let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(2).unwrap());
-        assert_eq!(merge_node, plan.get_node(8));
+        let (merge_node, subplans) = plan
+            .get_branch_plans(plan.get_node(2).unwrap())
+            .unwrap();
+        assert_eq!(merge_node, plan.get_node(8).unwrap());
         assert_eq!(
             subplans[0],
             plan.subplan(plan.get_node(2).unwrap(), plan.get_node(4).unwrap(), false)
@@ -4227,8 +4550,10 @@ mod test {
                 .unwrap()
         );
 
-        let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(3).unwrap());
-        assert_eq!(merge_node, plan.get_node(9));
+        let (merge_node, subplans) = plan
+            .get_branch_plans(plan.get_node(3).unwrap())
+            .unwrap();
+        assert_eq!(merge_node, plan.get_node(9).unwrap());
         assert_eq!(
             subplans[0],
             plan.subplan(plan.get_node(3).unwrap(), plan.get_node(6).unwrap(), false)
@@ -4237,6 +4562,53 @@ mod test {
         assert_eq!(
             subplans[1],
             plan.subplan(plan.get_node(3).unwrap(), plan.get_node(7).unwrap(), false)
+                .unwrap()
+        );
+    }
+
+    #[test]
+    fn get_branch_plans6() {
+        let plan = create_nested_logical_plan6();
+        let (merge_node, subplans) = plan
+            .get_branch_plans(plan.get_node(1).unwrap())
+            .unwrap();
+        assert_eq!(merge_node, plan.get_node(8).unwrap());
+        assert_eq!(
+            subplans[0],
+            plan.subplan(plan.get_node(1).unwrap(), plan.get_node(6).unwrap(), false)
+                .unwrap()
+        );
+        assert_eq!(
+            subplans[1],
+            plan.subplan(plan.get_node(1).unwrap(), plan.get_node(7).unwrap(), false)
+                .unwrap()
+        );
+
+        let subplans = plan
+            .get_branch_plans_internal(plan.get_node(1).unwrap(), plan.get_node(6).unwrap())
+            .unwrap();
+        assert_eq!(
+            subplans[0],
+            plan.subplan(plan.get_node(1).unwrap(), plan.get_node(4).unwrap(), false)
+                .unwrap()
+        );
+        assert_eq!(
+            subplans[1],
+            plan.subplan(plan.get_node(1).unwrap(), plan.get_node(5).unwrap(), false)
+                .unwrap()
+        );
+
+        let subplans = plan
+            .get_branch_plans_internal(plan.get_node(1).unwrap(), plan.get_node(4).unwrap())
+            .unwrap();
+        assert_eq!(
+            subplans[0],
+            plan.subplan(plan.get_node(1).unwrap(), plan.get_node(2).unwrap(), false)
+                .unwrap()
+        );
+        assert_eq!(
+            subplans[1],
+            plan.subplan(plan.get_node(1).unwrap(), plan.get_node(3).unwrap(), false)
                 .unwrap()
         );
     }

@@ -302,6 +302,7 @@ mod test {
     // if define source, g.V().hasLabel('person').match(...)
     fn init_match_case1_request(define_source: bool) -> JobRequest {
         init_schema();
+
         let source = if define_source { get_person_scan() } else { pb::Scan::default() };
 
         let pattern = get_pattern_case1();
@@ -329,6 +330,7 @@ mod test {
     // if define source, g.V().hasLabel('person').match(...)
     fn init_match_case2_request(define_source: bool) -> JobRequest {
         init_schema();
+
         let source = if define_source { get_person_scan() } else { pb::Scan::default() };
 
         let pattern = get_pattern_case2();
@@ -355,6 +357,8 @@ mod test {
     //    match(__.as('a').out("knows").as('b'))
     // )
     fn init_match_case3_request() -> JobRequest {
+        init_schema();
+
         let source = pb::Scan::default();
 
         let pattern_0 = get_pattern_case3();
@@ -393,6 +397,8 @@ mod test {
     //    match(__.as('a').out("knows").as('b'))
     // )
     fn init_match_case4_request() -> JobRequest {
+        init_schema();
+
         let source = pb::Scan::default();
 
         let in_edge = get_in_edge();
@@ -440,6 +446,8 @@ mod test {
     // first match follows the "in()" step
     // second match follows the "V()"(source operator) step
     fn init_match_case5_request() -> JobRequest {
+        init_schema();
+
         let source = pb::Scan::default();
 
         let in_edge = get_in_edge();
@@ -485,6 +493,8 @@ mod test {
     //    match(__.as('a').out().as('b'))
     // )
     fn init_match_case6_request() -> JobRequest {
+        init_schema();
+
         let source = pb::Scan::default();
 
         let pattern_0 = get_pattern_case5();
@@ -523,6 +533,8 @@ mod test {
     //    match(__.as('a').out().as('b'))
     // )
     fn init_match_case7_request() -> JobRequest {
+        init_schema();
+
         let source = get_person_scan();
 
         let pattern_0 = get_pattern_case5();
@@ -561,6 +573,8 @@ mod test {
     //    match(__.as('a').out().as('b'))
     // )
     fn init_match_case8_request() -> JobRequest {
+        init_schema();
+
         let source = get_person_scan();
 
         let pattern_0 = get_pattern_case3();
@@ -599,6 +613,8 @@ mod test {
     //    match(__.as('a').out("knows").as('b'))
     // )
     fn init_match_case9_request() -> JobRequest {
+        init_schema();
+
         let source = get_person_scan();
 
         let pattern_0 = get_pattern_case5();
