@@ -41,6 +41,7 @@ RUN useradd -m graphscope -u 1001 \
 
 # Install jdk-11
 RUN yum install -y sudo vim && \
+    yum install python3-pip -y && \
     yum remove java-1.8.0-openjdk-devel java-1.8.0-openjdk java-1.8.0-openjdk-headless -y && \
     yum install java-11-openjdk-devel -y && \
     yum clean all -y --enablerepo='*' && \
