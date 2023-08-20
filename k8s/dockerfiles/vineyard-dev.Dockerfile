@@ -40,24 +40,11 @@ WORKDIR /home/graphscope
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 ARG VINEYARD_VERSION=main
 RUN sudo chmod a+wrx /tmp && \
-<<<<<<< HEAD
-<<<<<<< HEAD
     cd /home/graphscope/GraphScope && \
     make client && \
     gsctl install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION -j $(nproc) && \
     cd /home/graphscope && sudo rm -rf /home/graphscope/GraphScope
-=======
-    cd /home/graphscope/GraphScope/python && \
-    pip install click && pip install --editable .&& \
-    cd /home/graphscope/GraphScope && \
-<<<<<<< HEAD
-    gsctl install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION -j 2
->>>>>>> d594b554 (modified version)
-=======
-    gsctl install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION -j $(nproc)
->>>>>>> 738424dd (refactor(interactive): Join operator in pegasus will repartition stream before join  (#3118))
 
->>>>>>> 7ec2bdca (refactor(interactive): Join operator in pegasus will repartition stream before join  (#3118))
 RUN python3 -m pip --no-cache install pyyaml --user
 
 # set the CLASSPATH for hadoop, must run after install java
