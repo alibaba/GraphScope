@@ -30,9 +30,8 @@ WORKDIR /home/graphscope
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 ARG VINEYARD_VERSION=main
-RUN cd /home/graphscope/GraphScope/python && \
-    pip install click && pip install --editable .&& \
-    cd /home/graphscope/GraphScope && \
+RUN cd /home/graphscope/GraphScope && \
+    make client && \
     gsctl install-deps dev --v6d-version=$VINEYARD_VERSION --cn -j $(nproc) && \
     cd /home/graphscope
 RUN echo ". /home/graphscope/.graphscope_env" >> ~/.bashrc

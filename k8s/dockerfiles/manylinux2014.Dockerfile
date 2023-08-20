@@ -54,9 +54,8 @@ WORKDIR /home/graphscope
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 ARG VINEYARD_VERSION=main
-RUN cd /home/graphscope/GraphScope/python && \
-    pip3 install click && pip3 install --editable .&& \
-    cd /home/graphscope/GraphScope && \
+RUN cd /home/graphscope/GraphScope && \
+    make client && \
     gsctl install-deps dev --v6d-version=$VINEYARD_VERSION -j 2 && \
     cd /home/graphscope && sudo rm -rf /home/graphscope/GraphScope && \
     sudo yum clean all -y && \

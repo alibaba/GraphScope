@@ -40,10 +40,10 @@ WORKDIR /home/graphscope
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 ARG VINEYARD_VERSION=main
 RUN sudo chmod a+wrx /tmp && \
-    cd /home/graphscope/GraphScope/python && \
-    pip install click && pip install --editable .&& \
     cd /home/graphscope/GraphScope && \
-    gsctl install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION -j $(nproc)
+    make client && \
+    gsctl install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION -j $(nproc) && \
+    cd /home/graphscope && sudo rm -rf /home/graphscope/GraphScope
 
 RUN python3 -m pip --no-cache install pyyaml --user
 
