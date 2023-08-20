@@ -144,7 +144,7 @@ impl DataflowBuilder {
         let mut op_names = vec![];
         op_names.push("root".to_owned());
         let mut depends = Dependency::default();
-        sch.add_schedule_op(0, 0, vec![], vec![]);
+        sch.add_schedule_op(self.worker_id, 0, 0, vec![], vec![]);
         let sinks = self.sinks.replace(vec![]);
         depends.set_sinks(sinks);
         for e in self.edges.borrow().iter() {
@@ -155,7 +155,13 @@ impl DataflowBuilder {
             assert_eq!(i + 1, op_index, "{:?}", op_b.info);
             let inputs_notify = op_b.take_inputs_notify();
             let outputs_cancel = op_b.build_outputs_cancel();
-            sch.add_schedule_op(op_index, op_b.info.scope_level, inputs_notify, outputs_cancel);
+            sch.add_schedule_op(
+                self.worker_id,
+                op_index,
+                op_b.info.scope_level,
+                inputs_notify,
+                outputs_cancel,
+            );
             let op = op_b.build();
             op_names.push(op.info.name.clone());
             if report {

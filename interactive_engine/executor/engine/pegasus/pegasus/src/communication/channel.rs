@@ -190,9 +190,8 @@ impl<T: Data> Channel<T> {
         let notify = raw.swap_remove(worker_index);
         let ch_info = ChannelInfo::new(id, scope_level, raw.len(), raw.len(), self.source, target);
         let mut pushes = Vec::with_capacity(raw.len());
-        let source = dfb.worker_id.index;
         for (idx, p) in raw.into_iter().enumerate() {
-            let push = EventEmitPush::new(ch_info, source, idx as u32, p, dfb.event_emitter.clone());
+            let push = EventEmitPush::new(ch_info, dfb.worker_id, idx as u32, p, dfb.event_emitter.clone());
             pushes.push(push);
         }
         Ok((ch_info, pushes, pull, notify))

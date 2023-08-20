@@ -39,7 +39,7 @@ impl<D: Data> BroadcastBatchPush<D> {
 
         if let Some(mut end) = batch.take_end() {
             if end.peers().value() == 1 && end.peers_contains(self.pushes[target].source_worker) {
-                end.update_peers(DynPeers::all(self.total_peers));
+                end.update_peers(DynPeers::all(self.total_peers), self.total_peers);
                 batch.set_end(end);
                 self.pushes[target].push(batch)?;
             } else {
