@@ -21,7 +21,7 @@ use crate::data_plane::GeneralPull;
 use crate::errors::IOResult;
 use crate::event::emitter::EventEmitter;
 use crate::progress::EndOfScope;
-use crate::{Data, Tag};
+use crate::{Data, Tag, WorkerId};
 
 /// Input abstraction without data type;
 pub trait InputProxy: AsAny + Send {
@@ -46,8 +46,9 @@ pub use session::InputSession;
 #[inline]
 pub(crate) fn new_input<D: Data>(
     ch_info: ChannelInfo, pull: GeneralPull<MicroBatch<D>>, event_emitter: &EventEmitter,
+    worker_id: WorkerId,
 ) -> Box<dyn InputProxy> {
-    let input = InputHandle::new(ch_info, pull, event_emitter.clone());
+    let input = InputHandle::new(ch_info, pull, event_emitter.clone(), worker_id);
     Box::new(RefWrapInput::wrap(input)) as Box<dyn InputProxy>
 }
 

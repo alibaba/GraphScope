@@ -98,7 +98,7 @@ impl DataflowBuilder {
         let index = self.operators.borrow().len() + 1;
         let info = OperatorInfo::new(name, index, scope_level);
         let core = Box::new(construct(&info));
-        let op_b = OperatorBuilder::new(info, GeneralOperator::Simple(core));
+        let op_b = OperatorBuilder::new(info, GeneralOperator::Simple(core), self.worker_id);
         self.operators.borrow_mut().push(op_b);
         OperatorRef::new(index, self.operators.clone(), self.config.clone())
     }
@@ -113,7 +113,7 @@ impl DataflowBuilder {
         let index = self.operators.borrow().len() + 1;
         let info = OperatorInfo::new(name, index, scope_level);
         let core = Box::new(construct(&info));
-        let op_b = OperatorBuilder::new(info, GeneralOperator::Notifiable(core));
+        let op_b = OperatorBuilder::new(info, GeneralOperator::Notifiable(core), self.worker_id);
         self.operators.borrow_mut().push(op_b);
         OperatorRef::new(index, self.operators.clone(), self.config.clone())
     }

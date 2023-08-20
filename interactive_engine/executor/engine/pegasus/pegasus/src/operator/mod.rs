@@ -33,7 +33,7 @@ use crate::progress::EndOfScope;
 use crate::schedule::state::inbound::InputEndNotify;
 use crate::schedule::state::outbound::OutputCancelState;
 use crate::tag::tools::map::TidyTagMap;
-use crate::{Data, Tag};
+use crate::{Data, Tag, WorkerId};
 use crate::{PROFILE_COMM_FLAG, PROFILE_TIME_FLAG};
 
 pub trait Notifiable: Send + 'static {
@@ -426,11 +426,12 @@ pub struct OperatorBuilder {
     inputs_notify: Vec<Option<Box<dyn InputEndNotify>>>,
     outputs: Vec<Box<dyn OutputBuilder>>,
     core: GeneralOperator,
+    worker_id: WorkerId
 }
 
 impl OperatorBuilder {
-    pub fn new(meta: OperatorInfo, core: GeneralOperator) -> Self {
-        OperatorBuilder { info: meta, inputs: vec![], inputs_notify: vec![], outputs: vec![], core }
+    pub fn new(meta: OperatorInfo, core: GeneralOperator, worker_id: WorkerId) -> Self {
+        OperatorBuilder { info: meta, inputs: vec![], inputs_notify: vec![], outputs: vec![], core ,worker_id}
     }
 
     pub fn index(&self) -> usize {
@@ -442,7 +443,7 @@ impl OperatorBuilder {
         notify: Option<GeneralPush<MicroBatch<T>>>, event_emitter: &EventEmitter,
     ) {
         assert_eq!(ch_info.target_port.port, self.inputs.len());
-        let input = new_input(ch_info, pull, event_emitter);
+        let input = new_input(ch_info, pull, event_emitter, self.worker_id);
         self.inputs.push(input);
         let n = notify.map(|p| Box::new(p) as Box<dyn InputEndNotify>);
         self.inputs_notify.push(n);

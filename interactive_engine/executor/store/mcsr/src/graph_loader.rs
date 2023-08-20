@@ -628,7 +628,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                             property_offset += 1;
                         }
 
-                        info!("start export ie");
+                        info!("start export ie, edge size {}", ie_csr.edge_num());
                         let ie_path = self
                             .partition_dir
                             .join(format!("ie_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
