@@ -106,6 +106,7 @@ class InteractiveQuery(object):
 
     def submit(self, query, lang="gremlin", request_options=None, **kwargs):
         from neo4j import RoutingControl
+
         """Execute gremlin or cypher querying scripts.
 
         <Gremlin>

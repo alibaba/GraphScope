@@ -251,6 +251,4 @@ def test_gremlin_timeout(sess):
 def test_cypher_endpoint(sess):
     g_node = load_p2p_network(sess)
     interactive = sess.interactive(g_node)
-    _ = interactive.execute(
-        "MATCH (n) RETURN n LIMIT 1", lang="cypher"
-    )
+    _ = interactive.execute("MATCH (n) RETURN n LIMIT 1", lang="cypher")
