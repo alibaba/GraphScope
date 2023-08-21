@@ -42,7 +42,8 @@ public class GremlinResultAnalyzer {
                     || Utils.equalClass(step, EdgeVertexStep.class)
                     || Utils.equalClass(step, EdgeOtherVertexStep.class)
                     || Utils.equalClass(step, PathExpandStep.class)
-                    || Utils.equalClass(step, IdentityStep.class)) {
+                    || Utils.equalClass(step, IdentityStep.class)
+                    || Utils.equalClass(step, UnfoldStep.class)) {
                 parserType = GremlinResultParserFactory.GRAPH_ELEMENT;
             } else if (Utils.equalClass(step, CountGlobalStep.class)
                     || Utils.equalClass(step, SumGlobalStep.class)

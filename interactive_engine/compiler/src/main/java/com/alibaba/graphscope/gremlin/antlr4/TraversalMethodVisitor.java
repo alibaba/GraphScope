@@ -747,6 +747,12 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
+    public Traversal visitTraversalMethod_unfold(
+            final GremlinGSParser.TraversalMethod_unfoldContext ctx) {
+        return graphTraversal.unfold();
+    }
+
+    @Override
     public Traversal visitTraversalMethod_coin(
             final GremlinGSParser.TraversalMethod_coinContext ctx) {
         Step endStep = graphTraversal.asAdmin().getEndStep();

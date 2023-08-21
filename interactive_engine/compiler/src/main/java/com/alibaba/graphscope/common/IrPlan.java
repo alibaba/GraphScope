@@ -461,6 +461,26 @@ public class IrPlan implements Closeable {
                 return ptrUnion;
             }
         },
+        UNFOLD_OP {
+            public Pointer apply(InterOpBase baseOp) {
+                UnfoldOp unfoldOp = (UnfoldOp) baseOp;
+
+                Pointer ptrUnfold = irCoreLib.initUnfoldOperator();
+                FfiAlias.ByValue tag = 
+                        (FfiAlias.ByValue) unfoldOp.getUnfoldTag().get().applyArg();
+
+                Optional<OpArg> aliasOpt = baseOp.getAlias();
+
+                if (aliasOpt.isPresent()) {
+                    FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().applyArg();
+                    irCoreLib.setUnfoldPair(ptrUnfold, tag.alias, alias.alias);
+                } else {
+                    irCoreLib.setUnfoldPair(ptrUnfold, tag.alias, ArgUtils.asNoneNameOrId());
+                }
+
+                return ptrUnfold;
+            }
+        },
         MATCH_OP {
             public Pointer apply(InterOpBase baseOp) {
                 MatchOp matchOp = (MatchOp) baseOp;
@@ -755,6 +775,9 @@ public class IrPlan implements Closeable {
         } else if (ClassUtils.equalClass(base, MatchOp.class)) {
             Pointer ptrMatch = TransformFactory.MATCH_OP.apply(base);
             error = irCoreLib.appendPatternOperator(ptrPlan, ptrMatch, oprId.getValue(), oprId);
+        } else if (ClassUtils.equalClass(base, UnfoldOp.class)) {
+            Pointer ptrUnfold = TransformFactory.UNFOLD_OP.apply(base);
+            error = irCoreLib.appendUnfoldOperator(ptrPlan, ptrUnfold, oprId.getValue(), oprId);
         } else if (ClassUtils.equalClass(base, AsNoneOp.class)) {
             Pointer ptrAs = TransformFactory.AS_NONE_OP.apply(base);
             error = irCoreLib.appendAsOperator(ptrPlan, ptrAs, oprId.getValue(), oprId);

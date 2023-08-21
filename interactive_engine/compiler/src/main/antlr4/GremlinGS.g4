@@ -84,6 +84,7 @@ traversalMethod
     | traversalMethod_match // match()
     | traversalMethod_subgraph // subgraph()
     | traversalMethod_bothV // bothV()
+    | traversalMethod_unfold // unfold()
     | traversalMethod_aggregate_func
     | traversalMethod_hasNot // hasNot()
     | traversalMethod_coin  // coin()
@@ -482,6 +483,10 @@ traversalMethod_subgraph
 traversalMethod_bothV
 	: 'bothV' LPAREN RPAREN
 	;
+
+traversalMethod_unfold
+    : 'unfold' LPAREN RPAREN
+    ;
 
 traversalMethod_id
 	: 'id' LPAREN RPAREN
