@@ -5,7 +5,7 @@ ARG CI=false
 SHELL ["/bin/bash", "-c"]
 
 # install graphscope
-RUN cd /home/graphscope/ && git clone  -b hqps-cypher-ci --single-branch https://github.com/zhanglei1949/GraphScope.git && \
+RUN cd /home/graphscope/ && git clone -b main --single-branch https://github.com/alibaba/GraphScope.git && \
     cd GraphScope/flex && mkdir build && cd build && cmake .. -DBUILD_DOC=OFF && sudo make -j install
 
 # install graphscope GIE
