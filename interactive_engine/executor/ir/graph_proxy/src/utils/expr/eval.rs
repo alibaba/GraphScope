@@ -41,7 +41,7 @@ pub struct Evaluator {
     suffix_tree: Vec<InnerOpr>,
     /// A stack for evaluating the suffix-tree-based expression
     /// Wrap it in a `RefCell` to avoid conflict mutable reference
-    stack: RefCell<Vec<Object>>,
+    stack: RefCell<Vec<ExprEvalResult<Object>>>,
 }
 
 unsafe impl Sync for Evaluator {}
@@ -337,38 +337,47 @@ impl Evaluate for Evaluator {
         stack.clear();
         for opr in &self.suffix_tree {
             if opr.is_operand() {
-                stack.push(opr.eval(context)?);
+                stack.push(opr.eval(context));
             } else {
                 if let Some(first) = stack.pop() {
-                    let first_borrow = first.as_borrow();
                     let rst = match opr {
                         InnerOpr::Logical(logical) => {
                             if logical == &common_pb::Logical::Not {
-                                apply_logical(logical, first_borrow, None)
+                                apply_logical(logical, first?.as_borrow(), None)
+                            } else if logical == &common_pb::Logical::Isnull {
+                                let first_obj = match first {
+                                    Ok(obj) => obj,
+                                    Err(err) => match err {
+                                        ExprEvalError::GetNoneFromContext => Object::None,
+                                        _ => return Err(err),
+                                    },
+                                };
+                                apply_logical(logical, first_obj.as_borrow(), None)
                             } else {
                                 if let Some(second) = stack.pop() {
-                                    apply_logical(logical, second.as_borrow(), Some(first_borrow))
+                                    apply_logical(logical, second?.as_borrow(), Some(first?.as_borrow()))
                                 } else {
                                     Err(ExprEvalError::OtherErr("invalid expression".to_string()))
                                 }
                             }
                         }
+
                         InnerOpr::Arith(arith) => {
                             if let Some(second) = stack.pop() {
-                                apply_arith(arith, second.as_borrow(), first_borrow)
+                                apply_arith(arith, second?.as_borrow(), first?.as_borrow())
                             } else {
                                 Err(ExprEvalError::OtherErr("invalid expression".to_string()))
                             }
                         }
                         _ => unreachable!(),
                     };
-                    stack.push((rst?).into());
+                    stack.push(rst);
                 }
             }
         }
 
         if stack.len() == 1 {
-            Ok(stack.pop().unwrap())
+            Ok(stack.pop().unwrap()?)
         } else {
             Err("invalid expression".into())
         }
@@ -964,14 +973,14 @@ mod tests {
         // [v1: id = 2, label = 11, age = 26, name = Jimmy, birthday = 19950816]
         let ctxt = prepare_context();
         let cases: Vec<&str> = vec![
-            "@0.hobbies isNull",    // false
-            "!(@0.hobbies isNull)", // true
-            "@1.hobbies isNull",    // true
-            "!(@1.hobbies isNull)", // false
-            "@0.hobbies == null",   // false
-            "!true isNull",         // false
-            "true isNull",          // false
-                                    // "@1.hobbies isNull && @1.age == 26", // true
+            "@0.hobbies isNull",                 // false
+            "!(@0.hobbies isNull)",              // true
+            "@1.hobbies isNull",                 // true
+            "!(@1.hobbies isNull)",              // false
+            "@0.hobbies == null",                // false
+            "true isNull",                       // false
+            "false isNull",                      // false
+            "@1.hobbies isNull && @1.age == 26", // true
         ];
         let expected: Vec<Object> = vec![
             object!(false),
@@ -981,12 +990,10 @@ mod tests {
             object!(false),
             object!(false),
             object!(false),
-            // object!(true),
+            object!(true),
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
-            let expr_pb = str_to_expr_pb(case.to_string()).unwrap();
-            println!("expr_pb {:?}", expr_pb);
             let eval = Evaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
             assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
         }
