@@ -28,9 +28,10 @@ int main(int argc, char** argv) {
   auto data_dir = std::string(argv[3]);
 
   auto& db = gs::GraphDB::get();
-  auto ret = gs::Schema::LoadFromYaml(graph_schema, bulk_load_yaml);
-  db.Init(std::get<0>(ret), std::get<1>(ret), std::get<2>(ret),
-          std::get<3>(ret), data_dir, 1);
+  auto schema = gs::Schema::LoadFromYaml(bulk_load_yaml);
+  auto bulk_load_config =
+      gs::LoadingConfig::ParseFromYaml(schema, bulk_load_yaml);
+  db.Init(schema, bulk_load_config, data_dir, 1);
   auto& sess = gs::GraphDB::get().GetSession(0);
 
   gs::SampleQuery query;
