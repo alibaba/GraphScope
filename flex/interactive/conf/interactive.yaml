@@ -7,9 +7,9 @@ directories:
     conf: conf # by default conf, relative to ${workspace}
     logs: logs  # by default logs, relative to ${workspace}
 logLevel: INFO # default INFO
-defaultGraph: modern  # configure the graph to be loaded while starting the service, if graph name not specified
+default_graph: modern  # configure the graph to be loaded while starting the service, if graph name not specified
   # may include other configuration items of other engines
-computeEngine:
+compute_engine:
   type: hiactor
   hosts:
     - localhost:10000  # currently only one host can be specified
@@ -17,7 +17,7 @@ computeEngine:
 compiler:
   planner: {"isOn":true,"opt":"RBO","rules":["FilterMatchRule"]} # Confirm这个配置
   endpoint:
-    defaultListenAddress: 0.0.0.0  # default localhost
-    boltConnector:   # for cypher, there may be other connectors, such as bolt_connector, https_connector
+    default_listen_address: localhost  # default localhost
+    bolt_connector:   # for cypher, there may be other connectors, such as bolt_connector, https_connector
       enabled: true   # default false
-      port: 7687  
+      port: 7687

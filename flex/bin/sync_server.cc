@@ -110,13 +110,13 @@ std::tuple<uint32_t, uint32_t> parse_from_server_config(
   YAML::Node config = YAML::LoadFile(server_config_path);
   uint32_t shard_num = DEFAULT_SHARD_NUM;
   uint32_t http_port = DEFAULT_HTTP_PORT;
-  auto engine_node = config["computeEngine"];
+  auto engine_node = config["compute_engine"];
   if (engine_node) {
     auto engine_type = engine_node["type"];
     if (engine_type) {
       auto engine_type_str = engine_type.as<std::string>();
       if (engine_type_str != "hiactor" && engine_type_str != "Hiactor") {
-        LOG(FATAL) << "computeEngine type should be hiactor, found: "
+        LOG(FATAL) << "compute_engine type should be hiactor, found: "
                    << engine_type_str;
       }
     }
@@ -132,7 +132,7 @@ std::tuple<uint32_t, uint32_t> parse_from_server_config(
       // host node is a list
       if (host_node.IsSequence()) {
         CHECK(host_node.size() == 1)
-            << "only support one host in computeEngine configuration";
+            << "only support one host in compute_engine configuration";
         auto host_str = host_node[0].as<std::string>();
         auto port_pos = host_str.find(":");
         if (port_pos != std::string::npos) {
@@ -147,7 +147,7 @@ std::tuple<uint32_t, uint32_t> parse_from_server_config(
     }
     return std::make_tuple(shard_num, http_port);
   } else {
-    LOG(FATAL) << "Fail to find computeEngine configuration";
+    LOG(FATAL) << "Fail to find compute_engine configuration";
   }
 }
 
