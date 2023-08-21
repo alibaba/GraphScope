@@ -19,12 +19,11 @@ package com.alibaba.graphscope.common.ir.procedure.reader;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-import org.apache.commons.io.FileUtils;
-
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
@@ -50,7 +49,7 @@ public class StoredProceduresFileReader implements StoredProceduresReader {
     }
 
     @Override
-    public String getProcedureMeta(URI uri) throws IOException {
-        return FileUtils.readFileToString(new File(uri), StandardCharsets.UTF_8);
+    public InputStream getProcedureMeta(URI uri) throws IOException {
+        return new FileInputStream(new File(uri));
     }
 }

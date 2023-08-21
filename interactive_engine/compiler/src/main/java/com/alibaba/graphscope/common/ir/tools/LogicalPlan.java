@@ -16,12 +16,24 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
+import com.alibaba.graphscope.common.ir.procedure.StoredProcedureMeta;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelRecordType;
+import org.apache.calcite.rel.type.StructKind;
 import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * logical plan for a query which can be a regular query or a procedure call
@@ -31,9 +43,19 @@ public class LogicalPlan {
     private @Nullable RexNode procedureCall;
     private boolean returnEmpty;
 
+    private List<StoredProcedureMeta.Parameter> dynamicParams;
+
     public LogicalPlan(RelNode regularQuery, boolean returnEmpty) {
+        this(regularQuery, returnEmpty, ImmutableList.of());
+    }
+
+    public LogicalPlan(
+            RelNode regularQuery,
+            boolean returnEmpty,
+            List<StoredProcedureMeta.Parameter> dynamicParams) {
         this.regularQuery = Objects.requireNonNull(regularQuery);
         this.returnEmpty = returnEmpty;
+        this.dynamicParams = Objects.requireNonNull(dynamicParams);
     }
 
     public LogicalPlan(RexNode procedureCall) {
@@ -50,6 +72,30 @@ public class LogicalPlan {
 
     public boolean isReturnEmpty() {
         return returnEmpty;
+    }
+
+    public List<StoredProcedureMeta.Parameter> getDynamicParams() {
+        return Collections.unmodifiableList(dynamicParams);
+    }
+
+    public RelDataType getOutputType() {
+        if (this.regularQuery != null) {
+            List<RelNode> inputs = Lists.newArrayList(this.regularQuery);
+            List<RelDataTypeField> outputFields = new ArrayList<>();
+            while (!inputs.isEmpty()) {
+                RelNode cur = inputs.remove(0);
+                outputFields.addAll(cur.getRowType().getFieldList());
+                if (AliasInference.removeAlias(cur)) {
+                    break;
+                }
+                inputs.addAll(cur.getInputs());
+            }
+            return new RelRecordType(
+                    StructKind.FULLY_QUALIFIED,
+                    outputFields.stream().distinct().collect(Collectors.toList()));
+        } else {
+            return this.procedureCall.getType();
+        }
     }
 
     public String explain() {

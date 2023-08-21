@@ -16,20 +16,37 @@
 
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
+import com.alibaba.graphscope.common.ir.procedure.StoredProcedureMeta;
+import com.alibaba.graphscope.common.ir.rel.graph.AbstractBindableTableScan;
+import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
+import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelVisitor;
+import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.logical.LogicalValues;
+import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexVisitor;
+import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.commons.lang3.ObjectUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class LogicalPlanVisitor extends CypherGSBaseVisitor<LogicalPlan> {
+    private static final Logger logger = LoggerFactory.getLogger(LogicalPlanVisitor.class);
     private final GraphBuilder builder;
     private final IrMeta irMeta;
 
@@ -46,11 +63,13 @@ public class LogicalPlanVisitor extends CypherGSBaseVisitor<LogicalPlan> {
     @Override
     public LogicalPlan visitOC_Query(CypherGSParser.OC_QueryContext ctx) {
         if (ctx.oC_RegularQuery() != null) {
+            GraphBuilderVisitor builderVisitor = new GraphBuilderVisitor(this.builder);
             RelNode regularQuery =
-                    new GraphBuilderVisitor(this.builder)
-                            .visitOC_RegularQuery(ctx.oC_RegularQuery())
-                            .build();
-            return new LogicalPlan(regularQuery, returnEmpty(regularQuery));
+                    builderVisitor.visitOC_RegularQuery(ctx.oC_RegularQuery()).build();
+            ImmutableMap<Integer, String> map =
+                    builderVisitor.getExpressionVisitor().getDynamicParams();
+            return new LogicalPlan(
+                    regularQuery, returnEmpty(regularQuery), getParameters(regularQuery, map));
         } else {
             RexNode procedureCall =
                     new ProcedureCallVisitor(this.builder, this.irMeta)
@@ -69,5 +88,50 @@ public class LogicalPlanVisitor extends CypherGSBaseVisitor<LogicalPlan> {
             inputs.addAll(cur.getInputs());
         }
         return false;
+    }
+
+    private List<StoredProcedureMeta.Parameter> getParameters(
+            RelNode relNode, ImmutableMap<Integer, String> paramsIdToName) {
+        List<StoredProcedureMeta.Parameter> params = Lists.newArrayList();
+        RexVisitor parameterCollector =
+                new RexVisitorImpl(true) {
+                    @Override
+                    public Void visitDynamicParam(RexDynamicParam dynamicParam) {
+                        String paramName = paramsIdToName.get(dynamicParam.getIndex());
+                        params.add(
+                                new StoredProcedureMeta.Parameter(
+                                        paramName, dynamicParam.getType()));
+                        return null;
+                    }
+                };
+        RelVisitor relVisitor =
+                new RelVisitor() {
+                    @Override
+                    public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
+                        super.visit(node, ordinal, parent);
+                        if (node instanceof GraphLogicalSingleMatch) {
+                            visit(((GraphLogicalSingleMatch) node).getSentence(), 0, null);
+                        } else if (node instanceof GraphLogicalMultiMatch) {
+                            ((GraphLogicalMultiMatch) node)
+                                    .getSentences()
+                                    .forEach(s -> visit(s, 0, null));
+                        } else if (node instanceof AbstractBindableTableScan) {
+                            ImmutableList<RexNode> filters =
+                                    ((AbstractBindableTableScan) node).getFilters();
+                            if (ObjectUtils.isNotEmpty(filters)) {
+                                for (RexNode filter : filters) {
+                                    filter.accept(parameterCollector);
+                                }
+                            }
+                        } else if (node instanceof Filter) {
+                            RexNode condition = ((Filter) node).getCondition();
+                            condition.accept(parameterCollector);
+                        } else {
+                            // todo: collect parameters from Project or Aggregate
+                        }
+                    }
+                };
+        relVisitor.go(relNode);
+        return params.stream().distinct().collect(Collectors.toList());
     }
 }

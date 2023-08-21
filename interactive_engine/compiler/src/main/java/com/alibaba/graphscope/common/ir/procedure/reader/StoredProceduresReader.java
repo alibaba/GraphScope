@@ -22,8 +22,10 @@ import com.google.common.collect.ImmutableList;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 
@@ -33,8 +35,8 @@ public interface StoredProceduresReader {
     // get all procedure uris under the root uri
     List<URI> getAllProcedureUris();
 
-    // read procedure meta from its uri
-    String getProcedureMeta(URI uri) throws IOException;
+    // return InputStream which contains deserialized bytes by reading from the uri
+    @Nullable InputStream getProcedureMeta(URI uri) throws IOException;
 
     // provide a factory to create a reader according to uri schema automatically
     class Factory {
@@ -62,8 +64,8 @@ public interface StoredProceduresReader {
                 }
 
                 @Override
-                public String getProcedureMeta(URI uri) throws IOException {
-                    return StringUtils.EMPTY;
+                public @Nullable InputStream getProcedureMeta(URI uri) throws IOException {
+                    return null;
                 }
             };
         }

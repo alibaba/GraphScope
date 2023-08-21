@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.cypher.antlr4;
 
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
@@ -121,5 +122,16 @@ public class MatchTest {
         RexCall condition = (RexCall) source.getFilters().get(0);
         Assert.assertEquals(
                 SqlTypeName.BIGINT, condition.getOperands().get(1).getType().getSqlTypeName());
+    }
+
+    @Test
+    public void match_7_test() {
+        LogicalPlan plan =
+                Utils.evalLogicalPlan(
+                        "Match (n:person {name: $name}) Where n.age = $age Return n.id;");
+        Assert.assertEquals(
+                "[Parameter{name='name', dataType=CHAR(1)}, Parameter{name='age',"
+                        + " dataType=INTEGER}]",
+                plan.getDynamicParams().toString());
     }
 }
