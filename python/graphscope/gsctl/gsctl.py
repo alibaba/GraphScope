@@ -22,10 +22,11 @@ import subprocess
 
 import click
 
-script_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),"scripts")
-install_deps_command = os.path.join(script_file,"install_deps_command.sh")
-make_command = os.path.join(script_file,"make_command.sh")
-make_image_command = os.path.join(script_file,"make_image_command.sh")
+script_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scripts")
+install_deps_command = os.path.join(script_file, "install_deps_command.sh")
+make_command = os.path.join(script_file, "make_command.sh")
+make_image_command = os.path.join(script_file, "make_image_command.sh")
+
 
 def run_shell_cmd(cmd, workingdir):
     """wrapper function to run a shell command/scripts."""
@@ -94,53 +95,105 @@ def cli(ctx, repo_home):
     "--v6d-version",
     default="main",
     show_default=True,
-    help="v6d version to clone.",    
+    help="v6d version to clone.",
 )
 @click.option(
-    "-j","--jobs",
+    "-j",
+    "--jobs",
     default="${nproc}",
-    help="Concurrent jobs in building, i.e., -j argument passed to make.",    
+    help="Concurrent jobs in building, i.e., -j argument passed to make.",
 )
 @click.option(
     "--for-analytical",
     is_flag=True,
     default=False,
-    help="Only install analytical engine dependencies.",    
+    help="Only install analytical engine dependencies.",
 )
 @click.option(
     "--no-v6d",
     is_flag=True,
     default=False,
-    help="Do not install v6d, for build base docker images, could only be used with '--for-analytical'",    
+    help="Do not install v6d, for build base docker images, could only be used with '--for-analytical'",
 )
 @click.pass_obj
-def install_deps(repo,type,cn,install_prefix,from_local,v6d_version,jobs,for_analytical,no_v6d):
+def install_deps(
+    repo,
+    type,
+    cn,
+    install_prefix,
+    from_local,
+    v6d_version,
+    jobs,
+    for_analytical,
+    no_v6d,
+):
     """Install dependencies for building GraphScope."""
-    click.echo("install_deps")   
-    if type == None:
-        cmd = ["bash", 
-        install_deps_command,
-        "-t", "dev", "-c", str(cn), "-i", install_prefix, "-d", from_local, 
-        "-v", str(v6d_version), "-j", str(jobs), "-a", str(for_analytical),
-        "-n", str(no_v6d)]
+    click.echo("install_deps")
+    if type is None:
+        cmd = [
+            "bash",
+            install_deps_command,
+            "-t",
+            "dev",
+            "-c",
+            str(cn),
+            "-i",
+            install_prefix,
+            "-d",
+            from_local,
+            "-v",
+            str(v6d_version),
+            "-j",
+            str(jobs),
+            "-a",
+            str(for_analytical),
+            "-n",
+            str(no_v6d),
+        ]
         run_shell_cmd(cmd, repo.home)
         return
-        
-    cmd = ["bash",
-    install_deps_command,
-    "-t", type, "-c", str(cn), "-i", install_prefix, "-d", from_local, 
-    "-v", str(v6d_version), "-j", str(jobs), "-a", str(for_analytical),
-    "-n", str(no_v6d)]
+
+    cmd = [
+        "bash",
+        install_deps_command,
+        "-t",
+        type,
+        "-c",
+        str(cn),
+        "-i",
+        install_prefix,
+        "-d",
+        from_local,
+        "-v",
+        str(v6d_version),
+        "-j",
+        str(jobs),
+        "-a",
+        str(for_analytical),
+        "-n",
+        str(no_v6d),
+    ]
     run_shell_cmd(cmd, repo.home)
     return
+
 
 @click.command()
 @click.argument(
     "component",
     type=click.Choice(
-        ["interactive", "interactive-install","analytical","analytical-java-install",
-         "analytical-install", "learning" ,"learning-install", "coordinator",
-         "client","clean","all"],
+        [
+            "interactive",
+            "interactive-install",
+            "analytical",
+            "analytical-java-install",
+            "analytical-install",
+            "learning",
+            "learning-install",
+            "coordinator",
+            "client",
+            "clean",
+            "all",
+        ],
         case_sensitive=False,
     ),
     required=False,
@@ -171,30 +224,42 @@ def make(repo, component, install_prefix, storage_type):
         f"Begin the make command, to build components [{component}] of GraphScope, with repo = {repo.home}",
         fg="green",
     )
-    if component == None:
-        cmd = ["bash", 
-        make_command,
-        "-c", "all", 
-        "-i", install_prefix]
+    if component is None:
+        cmd = ["bash", make_command, "-c", "all", "-i", install_prefix]
         run_shell_cmd(cmd, repo.home)
         return
-        
-    cmd = ["bash", 
-    make_command,
-    "-c", component, "-i",install_prefix, "-s", storage_type]
+
+    cmd = [
+        "bash",
+        make_command,
+        "-c",
+        component,
+        "-i",
+        install_prefix,
+        "-s",
+        storage_type,
+    ]
     run_shell_cmd(cmd, repo.home)
-    
-    
-        
 
 
 @click.command()
 @click.argument(
     "component",
     type=click.Choice(
-        ["all", "graphscope-dev","coordinator","analytical",
-         "analytical-java", "interactive" ,"interactive-frontend", "interactive-executor",
-         "learning,","vineyard-dev","vineyard-runtime","manylinux2014-ext"],
+        [
+            "all",
+            "graphscope-dev",
+            "coordinator",
+            "analytical",
+            "analytical-java",
+            "interactive",
+            "interactive-frontend",
+            "interactive-executor",
+            "learning,",
+            "vineyard-dev",
+            "vineyard-runtime",
+            "manylinux2014-ext",
+        ],
         case_sensitive=False,
     ),
     required=False,
@@ -203,13 +268,13 @@ def make(repo, component, install_prefix, storage_type):
     "--tag",
     default="latest",
     show_default=True,
-    help="image tag name to build",    
+    help="image tag name to build",
 )
 @click.option(
     "--registry",
     default="registry.cn-hongkong.aliyuncs.com",
     show_default=True,
-    help="registry name",    
+    help="registry name",
 )
 @click.pass_obj
 def make_image(repo, component, registry, tag):
@@ -217,19 +282,13 @@ def make_image(repo, component, registry, tag):
     \f
     TODO: fulfill this.
     """
-    if component == None:
-        cmd = ["bash", 
-        make_image_command,
-        "-c", "all", "-r", registry,
-        "-t",tag]
+    if component is None:
+        cmd = ["bash", make_image_command, "-c", "all", "-r", registry, "-t", tag]
         run_shell_cmd(cmd, repo.home)
         return
-    cmd = ["bash", 
-    make_image_command,
-    "-c", component, "-r", registry,
-    "-t",tag]
+    cmd = ["bash", make_image_command, "-c", component, "-r", registry, "-t", tag]
     run_shell_cmd(cmd, repo.home)
-       
+
 
 @click.command()
 @click.pass_obj
@@ -247,5 +306,5 @@ cli.add_command(make)
 cli.add_command(make_image)
 cli.add_command(test)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()
