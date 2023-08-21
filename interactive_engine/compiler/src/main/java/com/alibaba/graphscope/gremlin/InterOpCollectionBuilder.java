@@ -36,9 +36,9 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IdentityStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SubgraphStep;
+import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.javatuples.Pair;
 
 import java.util.*;
 
@@ -166,21 +166,22 @@ public class InterOpCollectionBuilder {
                     && opList.size() == 1
                     && Utils.equalClass(steps.get(indexer + 1), UnfoldStep.class)) {
                 ProjectOp projectOp = (ProjectOp) opList.get(0);
-                List<Pair<String, FfiAlias.ByValue>> pairList = 
-                        (List<Pair<String, FfiAlias.ByValue>>) projectOp.getExprWithAlias().get().getArg();
+                List<Pair<String, FfiAlias.ByValue>> pairList =
+                        (List<Pair<String, FfiAlias.ByValue>>)
+                                projectOp.getExprWithAlias().get().getArg();
                 Pair single = pairList.get(0);
                 tagname = (String) single.getValue0();
                 tagname = tagname.substring(1);
-                //System.out.println(tagname);
+                // System.out.println(tagname);
                 selectOneUnfoldOpt = true;
                 continue;
             }
 
-            //System.out.println("come here");
-            //System.out.println(step);
-            //System.out.println(opList);
-            //System.out.println(step.getLabels());
-            
+            System.out.println("come here");
+            System.out.println(step);
+            System.out.println(opList);
+            System.out.println(step.getLabels());
+
             for (int i = 0; i < opList.size(); ++i) {
                 InterOpBase op = opList.get(i);
 
@@ -196,9 +197,9 @@ public class InterOpCollectionBuilder {
                         String label = (String) step.getLabels().iterator().next();
                         op.setAlias(new OpArg(ArgUtils.asAlias(label, true)));
 
-                        //System.out.println("=====================hit");
-                        //System.out.println(label);
-                        //System.out.println(op.getAlias().get().getArg());
+                        System.out.println("=====================hit");
+                        System.out.println(label);
+                        System.out.println(op.getAlias().get().getArg());
 
                         afterAsOp = true;
                         tagname = label;

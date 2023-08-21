@@ -241,10 +241,10 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                     && aggAlias.alias.opt == FfiNameIdOpt.Name) {
                 step.removeLabel(aggFn.getAlias().alias.name);
             }
-            
-            //if (step instanceof FoldStep && (aggAlias == null || aggAlias.alias == null)) {
+
+            // if (step instanceof FoldStep && (aggAlias == null || aggAlias.alias == null)) {
             //  op.clearAlias();
-            //}
+            // }
             return op;
         }
     },

@@ -18,18 +18,9 @@ package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
-import com.alibaba.graphscope.common.intermediate.operator.ExpandOp;
-import com.alibaba.graphscope.common.intermediate.operator.GetVOp;
-import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
-import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
 import com.alibaba.graphscope.common.intermediate.operator.UnfoldOp;
-import com.alibaba.graphscope.common.jna.type.FfiDirection;
-import com.alibaba.graphscope.common.jna.type.FfiExpandOpt;
-import com.alibaba.graphscope.common.jna.type.FfiVOpt;
-import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
-import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
-import com.alibaba.graphscope.common.intermediate.operator.AsNoneOp;
 import com.alibaba.graphscope.common.jna.type.*;
+import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -38,9 +29,6 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class UnfoldStepTest {
     private Graph graph = TinkerFactory.createModern();
@@ -68,9 +56,11 @@ public class UnfoldStepTest {
 
     @Test
     public void debug() {
-        //Traversal traversal = g.V().fold().as("a").unfold();
-        Traversal traversal = g.V().as("a");//has("name","marko").as("a").select("a").unfold().values("id");
-        //Step unfoldStep = traversal.asAdmin.getEndStep();
+        System.out.println("DEBUG UNFOLD");
+        Traversal traversal = g.V().fold().as("a").unfold();
+        //Traversal traversal =
+         //       g.V().as("a"); // has("name","marko").as("a").select("a").unfold().values("id");
+        // Step unfoldStep = traversal.asAdmin.getEndStep();
         InterOpCollection bothVCollection = (new InterOpCollectionBuilder(traversal)).build();
     }
 }

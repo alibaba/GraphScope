@@ -565,7 +565,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
         @Override
         public Traversal<Vertex, Object> get_g_V_has_select_unfold_values() {
-            return g.V().has("name","marko").fold().as("a").select("a").unfold().values("id");
-        }      
+            return g.V().has("name", "marko").fold().as("a").select("a").unfold().values("id");
+        }
     }
 }

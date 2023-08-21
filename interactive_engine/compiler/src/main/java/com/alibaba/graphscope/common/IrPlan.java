@@ -466,8 +466,7 @@ public class IrPlan implements Closeable {
                 UnfoldOp unfoldOp = (UnfoldOp) baseOp;
 
                 Pointer ptrUnfold = irCoreLib.initUnfoldOperator();
-                FfiAlias.ByValue tag = 
-                        (FfiAlias.ByValue) unfoldOp.getUnfoldTag().get().applyArg();
+                FfiAlias.ByValue tag = (FfiAlias.ByValue) unfoldOp.getUnfoldTag().get().applyArg();
 
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
 
