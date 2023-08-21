@@ -719,6 +719,11 @@ gremlin> g.V().as("a").where(expr("@a.name == \"marko\" || (@a.age > 10)"))
 gremlin> g.V().where(expr("@.age isNull")).values("name")
 ==>ripple
 ==>lop
+gremlin>  g.V().where(expr("!(@.age isNull)")).values("name")
+==>marko
+==>vadas
+==>josh
+==>peter
 gremlin> g.V().select(expr("@.name"))
 ==>marko
 ==>vadas

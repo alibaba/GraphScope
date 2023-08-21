@@ -239,26 +239,25 @@ impl Evaluator {
             let first = _first.unwrap();
             let second = _second.unwrap();
             let third = _third.unwrap();
-
             if let InnerOpr::Logical(logical) = third {
                 // to deal with two unary operators cases, e.g., !(!true), !(a isNull) etc.
                 if common_pb::Logical::Not.eq(logical) || common_pb::Logical::Isnull.eq(logical) {
                     if let InnerOpr::Logical(inner_logical) = second {
-                        let first = match first.eval(context) {
-                            Ok(first) => Ok(first),
-                            Err(err) => match err {
-                                ExprEvalError::GetNoneFromContext => Ok(Object::None),
-                                _ => Err(err),
-                            },
-                        };
-                        let mut outer_first = Ok(apply_logical(inner_logical, first?.as_borrow(), None)?);
+                        let mut inner_first = first.eval(context);
                         if common_pb::Logical::Isnull.eq(inner_logical) {
-                            match outer_first {
-                                Err(ExprEvalError::GetNoneFromContext) => outer_first = Ok(Object::None),
+                            match inner_first {
+                                Err(ExprEvalError::GetNoneFromContext) => inner_first = Ok(Object::None),
                                 _ => {}
                             }
                         }
-                        return Ok(apply_logical(logical, outer_first?.as_borrow(), None)?);
+                        let mut first = Ok(apply_logical(inner_logical, inner_first?.as_borrow(), None)?);
+                        if common_pb::Logical::Isnull.eq(logical) {
+                            match first {
+                                Err(ExprEvalError::GetNoneFromContext) => first = Ok(Object::None),
+                                _ => {}
+                            }
+                        }
+                        return Ok(apply_logical(logical, first?.as_borrow(), None)?);
                     }
                 }
                 let a = first.eval(context)?;
@@ -980,12 +979,14 @@ mod tests {
             "@0.hobbies == null",                // false
             "true isNull",                       // false
             "false isNull",                      // false
+            "!true isNull",                      // i.e., !(true isNull), false
             "@1.hobbies isNull && @1.age == 26", // true
         ];
         let expected: Vec<Object> = vec![
             object!(false),
             object!(true),
             object!(true),
+            object!(false),
             object!(false),
             object!(false),
             object!(false),

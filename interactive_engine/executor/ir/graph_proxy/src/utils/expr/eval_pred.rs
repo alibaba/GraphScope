@@ -513,10 +513,7 @@ pub enum PEvaluator {
 impl EvalPred for PEvaluator {
     fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
         let result = match self {
-            PEvaluator::Predicates(pred) => {
-                println!("eval by predicates {:?}", pred);
-                pred.eval_bool(context)
-            }
+            PEvaluator::Predicates(pred) => pred.eval_bool(context),
             PEvaluator::General(eval) => eval.eval_bool(context),
         };
         match result {
