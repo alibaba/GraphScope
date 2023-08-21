@@ -129,6 +129,16 @@ impl From<Partial> for Option<Predicates> {
                         cmp: cmp.unwrap(),
                         right: right.unwrap(),
                     }))
+                } else if right.is_none() {
+                    if cmp.unwrap() == common_pb::Logical::Isnull {
+                        Some(Predicates::Predicate(Predicate {
+                            left: left.unwrap(),
+                            cmp: cmp.unwrap(),
+                            right: Operand::Const(Object::None),
+                        }))
+                    } else {
+                        None
+                    }
                 } else {
                     None
                 }
@@ -323,24 +333,15 @@ impl EvalPred for Predicate {
             )?
             .as_bool()
             .unwrap_or(false)),
-            Logical::Is => {
-                let left_res = self.left.eval(context);
-                let left = match left_res {
+            Logical::Isnull => {
+                let left = match self.left.eval(context) {
                     Ok(left) => Ok(left),
                     Err(err) => match err {
                         ExprEvalError::GetNoneFromContext => Ok(Object::None),
                         _ => Err(err),
                     },
                 };
-                let right_res = self.right.eval(context);
-                let right = match right_res {
-                    Ok(right) => Ok(right),
-                    Err(err) => match err {
-                        ExprEvalError::GetNoneFromContext => Ok(Object::None),
-                        _ => Err(err),
-                    },
-                };
-                Ok(apply_logical(&self.cmp, left?.as_borrow_object(), Some(right?.as_borrow_object()))?
+                Ok(apply_logical(&self.cmp, left?.as_borrow_object(), None)?
                     .as_bool()
                     .unwrap_or(false))
             }
@@ -440,7 +441,7 @@ fn process_predicates(
                             | Logical::Without
                             | Logical::Startswith
                             | Logical::Endswith
-                            | Logical::Is => partial.cmp(logical)?,
+                            | Logical::Isnull => partial.cmp(logical)?,
                             Logical::Not => is_not = true,
                             Logical::And | Logical::Or => {
                                 predicates = predicates.merge_partial(curr_cmp, partial, is_not)?;

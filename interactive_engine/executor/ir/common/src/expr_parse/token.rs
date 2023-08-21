@@ -46,8 +46,7 @@ pub enum Token {
     Without,    // Without
     StartsWith, // String StartsWith
     EndsWith,   // String EndsWith
-    Is,         // Is
-
+    IsNull,     // IsNull
     // Precedence
     LBrace, // (
     RBrace, // )
@@ -95,7 +94,7 @@ impl ExprToken for Token {
             Star | Slash | Percent => 100,
             Power => 120,
 
-            Eq | Ne | Gt | Lt | Ge | Le | Within | Without | StartsWith | EndsWith | Is => 80,
+            Eq | Ne | Gt | Lt | Ge | Le | Within | Without | StartsWith | EndsWith | IsNull => 80,
             And => 75,
             Or => 70,
             Not => 110,
@@ -363,8 +362,8 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
                     Some(Token::StartsWith)
                 } else if literal.to_lowercase().as_str() == "endswith" {
                     Some(Token::EndsWith)
-                } else if literal.to_lowercase().as_str() == "is" {
-                    Some(Token::Is)
+                } else if literal.to_lowercase().as_str() == "isnull" {
+                    Some(Token::IsNull)
                 } else if literal.to_lowercase().as_str() == "null" {
                     Some(Token::Null)
                 } else {
@@ -586,8 +585,8 @@ mod tests {
         let expected_case4 = vec![Token::Int(1), Token::Plus, Token::Int(-2), Token::Plus, Token::Int(2)];
         assert_eq!(case4, expected_case4);
 
-        let case5 = tokenize("@a is null");
-        let expected_case5 = vec![Token::Identifier("@a".to_string()), Token::Is, Token::Null];
+        let case5 = tokenize("@a isNull");
+        let expected_case5 = vec![Token::Identifier("@a".to_string()), Token::IsNull];
         assert_eq!(case5.unwrap(), expected_case5);
     }
 

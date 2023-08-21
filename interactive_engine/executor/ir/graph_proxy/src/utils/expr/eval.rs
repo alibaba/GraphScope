@@ -166,6 +166,8 @@ pub(crate) fn apply_logical<'a>(
     use common_pb::Logical::*;
     if logical == &Not {
         return Ok((!a.eval_bool::<(), NoneContext>(None)?).into());
+    } else if logical == &Isnull {
+        return Ok(a.eq(&BorrowObject::None).into());
     } else {
         if b_opt.is_some() {
             let b = b_opt.unwrap();
@@ -193,7 +195,7 @@ pub(crate) fn apply_logical<'a>(
                     .ends_with(b.as_str()?.as_ref())
                     .into()),
                 Not => unreachable!(),
-                Is => Ok((a == b).into()),
+                Isnull => unreachable!(),
             }
         } else {
             Err(ExprEvalError::MissingOperands(InnerOpr::Logical(*logical).into()))
