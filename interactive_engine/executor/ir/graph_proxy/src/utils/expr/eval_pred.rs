@@ -513,7 +513,10 @@ pub enum PEvaluator {
 impl EvalPred for PEvaluator {
     fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
         let result = match self {
-            PEvaluator::Predicates(pred) => pred.eval_bool(context),
+            PEvaluator::Predicates(pred) => {
+                println!("eval by predicates {:?}", pred);
+                pred.eval_bool(context)
+            }
             PEvaluator::General(eval) => eval.eval_bool(context),
         };
         match result {
@@ -917,5 +920,32 @@ mod tests {
         assert!(!p_eval
             .eval_bool::<_, Vertices>(Some(&context))
             .unwrap());
+    }
+
+    #[test]
+    fn test_eval_predicates_is_null() {
+        // [v0: id = 1, label = 9, age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]
+        // [v1: id = 2, label = 11, age = 26, name = Jimmy, birthday = 19950816]
+        let ctxt = prepare_context();
+        let cases: Vec<&str> = vec![
+            "@0.hobbies isNull",                 // false
+            "!(@0.hobbies isNull)",              // true
+            "@1.hobbies isNull",                 // true
+            "!(@1.hobbies isNull)",              // false
+            "@0.hobbies == null",                // false
+            "true isNull",                       // false
+            "false isNull",                      // false
+            "@1.hobbies isNull && @1.age == 26", // true
+        ];
+        let expected: Vec<bool> = vec![false, true, true, false, false, false, false, true];
+
+        for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval = PEvaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
+            assert_eq!(
+                eval.eval_bool::<_, Vertices>(Some(&ctxt))
+                    .unwrap(),
+                expected
+            );
+        }
     }
 }
