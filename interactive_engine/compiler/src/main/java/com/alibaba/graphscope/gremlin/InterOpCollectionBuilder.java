@@ -177,10 +177,10 @@ public class InterOpCollectionBuilder {
                 continue;
             }
 
-            System.out.println("come here");
-            System.out.println(step);
-            System.out.println(opList);
-            System.out.println(step.getLabels());
+            // System.out.println("come here");
+            // System.out.println(step);
+            // System.out.println(opList);
+            // System.out.println(step.getLabels());
 
             for (int i = 0; i < opList.size(); ++i) {
                 InterOpBase op = opList.get(i);
@@ -197,9 +197,9 @@ public class InterOpCollectionBuilder {
                         String label = (String) step.getLabels().iterator().next();
                         op.setAlias(new OpArg(ArgUtils.asAlias(label, true)));
 
-                        System.out.println("=====================hit");
-                        System.out.println(label);
-                        System.out.println(op.getAlias().get().getArg());
+                        // System.out.println("=====================hit");
+                        // System.out.println(label);
+                        // System.out.println(op.getAlias().get().getArg());
 
                         afterAsOp = true;
                         tagname = label;

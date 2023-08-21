@@ -53,14 +53,4 @@ public class UnfoldStepTest {
         Assert.assertEquals("", ArgUtils.tagName(arg.alias));
         Assert.assertEquals(false, op.getUnfoldAlias().isPresent());
     }
-
-    @Test
-    public void debug() {
-        System.out.println("DEBUG UNFOLD");
-        Traversal traversal = g.V().fold().as("a").unfold();
-        //Traversal traversal =
-         //       g.V().as("a"); // has("name","marko").as("a").select("a").unfold().values("id");
-        // Step unfoldStep = traversal.asAdmin.getEndStep();
-        InterOpCollection bothVCollection = (new InterOpCollectionBuilder(traversal)).build();
-    }
 }
