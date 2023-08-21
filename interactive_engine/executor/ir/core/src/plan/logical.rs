@@ -1389,10 +1389,10 @@ impl AsLogical for pb::Unfold {
             plan_meta.refer_to_nodes(curr_node, tag_nodes.clone());
         }
 
-        //if let Some(alias) = self.alias.as_mut() {
-        //    let alias_id = get_or_set_tag_id(alias, plan_meta)?;
-        //    plan_meta.set_tag_nodes(alias_id, vec![plan_meta.get_curr_node()]);
-        //}
+        if let Some(alias) = self.alias.as_mut() {
+            let alias_id = get_or_set_tag_id(alias, plan_meta)?;
+            plan_meta.set_tag_nodes(alias_id, vec![plan_meta.get_curr_node()]);
+        }
 
         Ok(())
     }
