@@ -1,2 +1,0 @@
-# GraphScope Interactive Installtion
-
