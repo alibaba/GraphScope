@@ -2,6 +2,7 @@ package com.alibaba.graphscope.common.ir.rel.metadata.schema;
 
 import java.net.URISyntaxException;
 import java.rmi.server.ExportException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,12 +22,15 @@ import com.google.common.collect.Maps;
 
 public class GlogueSchema {
     private Graph<Integer, EdgeTypeId> schemaGraph;
+    private HashMap<Integer, Double> vertexTypeCardinality;
+    private HashMap<EdgeTypeId, Double> edgeTypeCardinality;
 
     public GlogueSchema() {
         this.schemaGraph = new DirectedPseudograph<Integer, EdgeTypeId>(EdgeTypeId.class);
     }
 
-    public GlogueSchema(GraphSchema graphSchema) {
+    public GlogueSchema(GraphSchema graphSchema, HashMap<Integer, Double> vertexTypeCardinality,
+            HashMap<EdgeTypeId, Double> edgeTypeCardinality) {
         this.schemaGraph = new DirectedPseudograph<Integer, EdgeTypeId>(EdgeTypeId.class);
         for (GraphVertex vertex : graphSchema.getVertexList()) {
             this.schemaGraph.addVertex(vertex.getLabelId());
@@ -39,6 +43,9 @@ public class GlogueSchema {
                 this.schemaGraph.addEdge(sourceType, targetType, edgeType);
             }
         }
+
+        this.vertexTypeCardinality = vertexTypeCardinality;
+        this.edgeTypeCardinality = edgeTypeCardinality;
     }
 
     public List<Integer> getVertexTypes() {
@@ -57,15 +64,19 @@ public class GlogueSchema {
         return List.copyOf(this.schemaGraph.getAllEdges(source, target));
     }
 
-    public List<EdgeTypeId> getBiDirEdgeTypes(Integer source, Integer target) {
-        return List.copyOf(
-                this.schemaGraph.getAllEdges(source, target).addAll(this.schemaGraph.getAllEdges(target, source)));
-    }
-
     public Graph<Integer, EdgeTypeId> getSchemaGraph() {
         return this.schemaGraph;
     }
 
+    public Double getVertexTypeCardinality(Integer vertexType) {
+        return this.vertexTypeCardinality.get(vertexType);
+    }
+
+    public Double getEdgeTypeCardinality(EdgeTypeId edgeType) {
+        return this.edgeTypeCardinality.get(edgeType);
+    }
+
+    // modern graph schema
     public GlogueSchema DefaultGraphSchema() {
         Map<String, GraphVertex> vertexList = Maps.newHashMap();
         Map<String, GraphEdge> edgeList = Maps.newHashMap();
@@ -81,6 +92,32 @@ public class GlogueSchema {
         DefaultGraphEdge created = new DefaultGraphEdge(1112, "created", List.of(), List.of(createdRelation), 0);
         edgeList.put("knows", knows);
         edgeList.put("created", created);
+
+        DefaultGraphSchema graphSchema = new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
+        HashMap<Integer, Double> vertexTypeCardinality = new HashMap<Integer, Double>();
+        vertexTypeCardinality.put(11, 4.0);
+        vertexTypeCardinality.put(22, 2.0);
+
+        HashMap<EdgeTypeId, Double> edgeTypeCardinality = new HashMap<EdgeTypeId, Double>();
+        edgeTypeCardinality.put(new EdgeTypeId(11, 11, 1111), 2.0);
+        edgeTypeCardinality.put(new EdgeTypeId(11, 22, 1112), 4.0);
+
+        GlogueSchema g = new GlogueSchema(graphSchema, vertexTypeCardinality, edgeTypeCardinality);
+        return g;
+    }
+    
+    // person-knows->person, person-likes->person
+    public GlogueSchema DefaultGraphSchema2() {
+        Map<String, GraphVertex> vertexList = Maps.newHashMap();
+        Map<String, GraphEdge> edgeList = Maps.newHashMap();
+        DefaultGraphVertex person = new DefaultGraphVertex(11, "person",  List.of(), List.of("name"), 0, -1);
+        vertexList.put("person", person);
+        DefaultEdgeRelation knowsRelation = new DefaultEdgeRelation(person, person);
+        DefaultGraphEdge knows = new DefaultGraphEdge(1111, "knows", List.of(), List.of(knowsRelation), 0);
+        DefaultEdgeRelation likesRelation = new DefaultEdgeRelation(person, person);
+        DefaultGraphEdge likes = new DefaultGraphEdge(2222, "likes", List.of(), List.of(likesRelation), 0);
+        edgeList.put("knows", knows);
+        edgeList.put("likes", likes);
 
         DefaultGraphSchema graphSchema = new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
         GlogueSchema g = new GlogueSchema(graphSchema);

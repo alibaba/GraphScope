@@ -19,6 +19,7 @@ import org.jgrapht.alg.isomorphism.VF2SubgraphIsomorphismInspector;
 import org.jgrapht.graph.DirectedPseudograph;
 import org.jgrapht.graph.SimpleDirectedGraph;
 
+import com.alibaba.graphscope.common.ir.rel.graph.pattern.PatternCode;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendStep;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.utils.Combinations;
@@ -29,6 +30,9 @@ public class Pattern {
     private final Graph<PatternVertex, PatternEdge> patternGraph;
     private int maxVertexId;
     private int maxEdgeId;
+    // pattern position in Glogue
+    private Integer position;
+    
     // vertex comparator and edge comparator are used for isomorphism inspector
     final static Comparator<PatternVertex> vertexComparator = (o1, o2) -> o1.getVertexTypeId()
             .compareTo(o2.getVertexTypeId());
@@ -128,6 +132,10 @@ public class Pattern {
 
         }
         return newPattern;
+    }
+
+    public PatternCode encoding() {
+        return new PatternCode(this);
     }
 
     // add a pattern vertex into pattern, and increase pattern's maxVertexId
