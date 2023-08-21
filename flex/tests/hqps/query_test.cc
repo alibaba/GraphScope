@@ -19,7 +19,7 @@
 int main(int argc, char** argv) {
   // <oid> <label_name>
   if (argc != 4) {
-    LOG(ERROR) << "Usage: ./selector_test <graph_schema> "
+    LOG(ERROR) << "Usage: ./query_test <graph_schema> "
                   "<bulk_load_yaml> <data_dir>";
     return 1;
   }
@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
   auto data_dir = std::string(argv[3]);
 
   auto& db = gs::GraphDB::get();
-  auto schema = gs::Schema::LoadFromYaml(bulk_load_yaml);
+  auto schema = gs::Schema::LoadFromYaml(graph_schema);
   auto bulk_load_config =
       gs::LoadingConfig::ParseFromYaml(schema, bulk_load_yaml);
   db.Init(schema, bulk_load_config, data_dir, 1);
