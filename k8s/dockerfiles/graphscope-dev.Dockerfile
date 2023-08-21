@@ -1,7 +1,5 @@
 FROM ubuntu:22.04
 
-
-
 # shanghai zoneinfo
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \

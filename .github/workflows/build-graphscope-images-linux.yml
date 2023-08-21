@@ -20,19 +20,9 @@ env:
   REGISTRY: registry.cn-hongkong.aliyuncs.com
 
 jobs:
-<<<<<<< HEAD
   build-image-x86-64:
     if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: ubuntu-20.04
-=======
-  build-image:
-<<<<<<< HEAD
-       runs-on: ubuntu-20.04
->>>>>>> a0ace96e (Update build-graphscope-images-linux.yml)
-=======
-    runs-on: ubuntu-20.04
->>>>>>> 111cfab0 (Update build-graphscope-images-linux.yml)
-
     steps:
     - uses: actions/checkout@v3
       with:
