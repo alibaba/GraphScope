@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.commons.lang3.ObjectUtils;
@@ -245,6 +246,34 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                         !exprCtx.isEmpty(), "LENGTH function should have one argument");
                 return new ExprVisitorResult(
                         builder.variable(exprCtx.get(0).getText(), GraphProperty.LEN_KEY));
+            case "HEAD":
+                Preconditions.checkArgument(
+                        !exprCtx.isEmpty(), "HEAD function should have one argument");
+                String errorMessage =
+                        "'head(collect(...))' is the only supported usage of HEAD function";
+                ExprVisitorResult argResult = visitOC_Expression(exprCtx.get(0));
+                List<RelBuilder.AggCall> aggCalls = argResult.getAggCalls();
+                if (aggCalls.size() == 1) {
+                    GraphAggCall oldAggCall = (GraphAggCall) aggCalls.get(0);
+                    if (oldAggCall.getAggFunction().getKind() == SqlKind.COLLECT) {
+                        // convert 'head(collect)' to 'first_value' aggregate function
+                        RelBuilder.AggCall newAggCall =
+                                new GraphAggCall(
+                                                oldAggCall.getCluster(),
+                                                GraphStdOperatorTable.FIRST_VALUE,
+                                                oldAggCall.getOperands())
+                                        .as(oldAggCall.getAlias());
+                        return new ExprVisitorResult(
+                                ImmutableList.of(newAggCall), argResult.getExpr());
+                    } else {
+                        throw new UnsupportedOperationException(
+                                errorMessage
+                                        + " , but got "
+                                        + oldAggCall.getAggFunction().getName());
+                    }
+                } else {
+                    throw new UnsupportedOperationException(errorMessage);
+                }
             default:
                 throw new IllegalArgumentException(
                         "simple function " + functionName + " is unsupported yet");
@@ -254,6 +283,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     private FunctionType getFunctionType(String functionName) {
         switch (functionName.toUpperCase()) {
             case "LENGTH":
+            case "HEAD":
                 return FunctionType.SIMPLE;
             case "COUNT":
             case "SUM":

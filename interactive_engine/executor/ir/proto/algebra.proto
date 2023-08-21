@@ -115,6 +115,7 @@ message GroupBy {
       TO_LIST = 5;
       TO_SET = 6;
       AVG = 7;
+      FIRST = 8;
     }
 
     // The variables to apply this aggregation
