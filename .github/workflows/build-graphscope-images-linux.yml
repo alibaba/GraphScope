@@ -60,10 +60,12 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+        # x86_64
+        arch=$(uname -m)
         # docker tag: 0.15.0 -> 0.15.0a20220808
         time=$(date "+%Y%m%d")
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
-        tag="${version}a${time}"
+        tag="${version}a${time}"-${arch}
 
         # graphscope image
         sudo docker tag graphscope/coordinator:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
@@ -102,9 +104,10 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-
+        # x86_64
+        arch=$(uname -m)
         # Release version tag
-        tag=${{ steps.tag.outputs.TAG }}
+        tag=${{ steps.tag.outputs.TAG }}-${arch}
         # graphscope image
         sudo docker tag graphscope/coordinator:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker tag graphscope/analytical:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical:${tag}
@@ -129,7 +132,7 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/dataset:${tag}
 
         # Release the latest tag
-        tag=latest
+        tag=latest-${arch}
         sudo docker tag graphscope/coordinator:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker tag graphscope/analytical:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical:${tag}
         # skip build analytical-java
@@ -187,7 +190,7 @@ jobs:
           docker_username: ${{ secrets.DOCKER_USER }}
         run: |
           echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-          # x86_64
+          # aarch64
           arch=$(uname -m)
           # docker tag: 0.15.0 -> 0.15.0a20220808
           time=$(date "+%Y%m%d")
@@ -260,7 +263,7 @@ jobs:
           sudo docker push ${{ env.REGISTRY }}/graphscope/dataset:${tag}
   
           # Release the latest tag
-          tag=latest
+          tag=latest-${arch}
           sudo docker tag graphscope/coordinator:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
           sudo docker tag graphscope/analytical:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical:${tag}
           # skip build analytical-java
@@ -291,6 +294,8 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+        time=$(date "+%Y%m%d")
+        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         # create
         sudo docker manifest create \
           ${{ env.REGISTRY }}/graphscope/coordinator:${{ steps.tag.outputs.TAG }} \
@@ -341,6 +346,32 @@ jobs:
           ${{ env.REGISTRY }}/graphscope/learning:latest \
           ${{ env.REGISTRY }}/graphscope/learning:latest-x86_64 \
           ${{ env.REGISTRY }}/graphscope/learning:latest-aarch64
+
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/coordinator:${version}a${time} \
+          ${{ env.REGISTRY }}/graphscope/coordinator:${version}a${time}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/coordinator:${version}a${time}-aarch64 
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/analytical:${version}a${time} \
+          ${{ env.REGISTRY }}/graphscope/analytical:${version}a${time}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/analytical:${version}a${time}-aarch64 
+        
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/interactive-frontend:${version}a${time} \
+          ${{ env.REGISTRY }}/graphscope/interactive-frontend:${version}a${time}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/interactive-frontend:${version}a${time}-aarch64
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/interactive-executor:${version}a${time} \
+          ${{ env.REGISTRY }}/graphscope/interactive-executor:${version}a${time}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/interactive-executor:${version}a${time}-aarch64
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/learning:${version}a${time} \
+          ${{ env.REGISTRY }}/graphscope/learning:${version}a${time}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/learning:${version}a${time}-aarch64
         
         
         # push
@@ -355,3 +386,9 @@ jobs:
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-frontend:latest
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-executor:latest
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/learning:latest
+
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/coordinator:${version}a${time}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/analytical:${version}a${time}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${version}a${time}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-executor:${version}a${time}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/learning:${version}a${time}
