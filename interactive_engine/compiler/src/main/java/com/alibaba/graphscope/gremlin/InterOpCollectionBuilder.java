@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
+import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.*;
@@ -57,9 +58,11 @@ public class InterOpCollectionBuilder {
         int indexer = -1;
         boolean selectOneUnfoldOpt = false;
         boolean afterAsOp = false;
+        boolean aggregateType = false;
         String tagname = "";
         for (Step step : steps) {
             indexer += 1;
+            aggregateType = false;
             List<InterOpBase> opList = new ArrayList<>();
             // judge by class type instead of instance
             if (Utils.equalClass(step, GraphStep.class)) {
@@ -78,6 +81,7 @@ public class InterOpCollectionBuilder {
                     || Utils.equalClass(step, MinGlobalStep.class)
                     || Utils.equalClass(step, FoldStep.class)
                     || Utils.equalClass(step, MeanGlobalStep.class)) {
+                aggregateType = true;
                 opList.add(StepTransformFactory.AGGREGATE_STEP.apply(step));
             } else if (Utils.equalClass(step, PropertiesStep.class)
                     || Utils.equalClass(step, PropertyMapStep.class)
@@ -175,6 +179,20 @@ public class InterOpCollectionBuilder {
                 // System.out.println(tagname);
                 selectOneUnfoldOpt = true;
                 continue;
+            } else if (aggregateType) {
+                GroupOp gop = (GroupOp) opList.get(0);
+                List<ArgAggFn> aggFnList = (List<ArgAggFn>) gop.getGroupByValues().get().getArg();
+                ArgAggFn aggFn = aggFnList.get(0);
+                FfiAlias.ByValue aggAlias = aggFn.getAlias();
+                // System.out.println("hit out");
+                if (aggAlias != null
+                        && aggAlias.alias != null
+                        && aggAlias.alias.opt == FfiNameIdOpt.Name) {
+                    afterAsOp = true;
+                    tagname = aggFn.getAlias().alias.name;
+                    // System.out.println("hit in");
+                    // System.out.println(tagname);
+                }
             }
 
             // System.out.println("come here");
@@ -203,8 +221,6 @@ public class InterOpCollectionBuilder {
 
                         afterAsOp = true;
                         tagname = label;
-                    } else {
-                        afterAsOp = false;
                     }
                 }
                 opCollection.appendInterOp(op);
