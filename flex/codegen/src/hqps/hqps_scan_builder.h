@@ -41,8 +41,12 @@ namespace gs {
 /// 6. graph name
 /// 7. vertex label
 static constexpr const char* SCAN_OP_TEMPLATE_STR =
-    "auto %1% = gs::make_filter(%2%(%3%), %4%);\n"
+    "auto %1% = gs::make_filter(%2%(%3%) %4%);\n"
     "auto %5% = Engine::template ScanVertex<%6%>(%7%, %8%, std::move(%1%));\n";
+
+static constexpr const char* SCAN_OP_TEMPLATE_NO_EXPR_STR =
+    "auto %1% = Engine::template ScanVertex<%2%>(%3%, %4%, "
+    "Filter<TruePredicate>());\n";
 
 /// Args
 /// 1. res_ctx_name
@@ -79,7 +83,7 @@ class ScanOpBuilder {
   // get required oid from query params
   ScanOpBuilder& queryParams(const algebra::QueryParams& query_params) {
     if (!query_params.has_predicate()) {
-      throw std::runtime_error(std::string("expect expr in params"));
+      VLOG(10) << "No expr in params";
     }
     query_params_ = query_params;
     return *this;
@@ -96,15 +100,18 @@ class ScanOpBuilder {
     }
 
     // the user provide oid can be a const or a param const
-    auto& predicate = query_params_.predicate();
-    VLOG(10) << "predicate: " << predicate.DebugString();
-    // We first scan the predicate to find whether there is conditions on
-    // labels.
-    std::vector<int32_t> expr_label_ids;
-    if (try_to_get_label_ids_from_expr(predicate, expr_label_ids)) {
-      // join expr_label_ids with table_lable_ids;
-      VLOG(10) << "Found label ids in expr: " << gs::to_string(expr_label_ids);
-      labels_ids = expr_label_ids;
+    if (query_params_.has_predicate()) {
+      auto& predicate = query_params_.predicate();
+      VLOG(10) << "predicate: " << predicate.DebugString();
+      // We first scan the predicate to find whether there is conditions on
+      // labels.
+      std::vector<int32_t> expr_label_ids;
+      if (try_to_get_label_ids_from_expr(predicate, expr_label_ids)) {
+        // join expr_label_ids with table_lable_ids;
+        VLOG(10) << "Found label ids in expr: "
+                 << gs::to_string(expr_label_ids);
+        intersection(labels_ids, expr_label_ids);
+      }
     }
     // CHECK(labels_ids.size() == 1) << "only support one label in scan";
 
@@ -121,46 +128,52 @@ class ScanOpBuilder {
       VLOG(10) << "Fail to parse oid from expr";
       {
 #endif
-        auto expr_builder = ExprBuilder(ctx_);
-        expr_builder.set_return_type(common::DataType::BOOLEAN);
-        expr_builder.AddAllExprOpr(predicate.operators());
+        if (query_params_.has_predicate()) {
+          auto expr_builder = ExprBuilder(ctx_);
+          expr_builder.set_return_type(common::DataType::BOOLEAN);
+          expr_builder.AddAllExprOpr(query_params_.predicate().operators());
 
-        std::string expr_func_name, expr_code;
-        std::vector<codegen::ParamConst> func_call_param_const;
-        std::vector<std::pair<int32_t, std::string>> expr_tag_props;
-        common::DataType unused_expr_ret_type;
-        std::tie(expr_func_name, func_call_param_const, expr_tag_props,
-                 expr_code, unused_expr_ret_type) = expr_builder.Build();
-        VLOG(10) << "Found expr in edge_expand_opt:  " << expr_func_name;
-        // generate code.
-        ctx_.AddExprCode(expr_code);
-        std::string expr_var_name = ctx_.GetNextExprVarName();
-        std::string expr_construct_params;  // function construction params and
-        std::string selectors_str;          // selectors str, concatenated
-        {
-          std::stringstream ss;
-          for (auto i = 0; i < func_call_param_const.size(); ++i) {
-            ss << func_call_param_const[i].var_name;
-            if (i != func_call_param_const.size() - 1) {
+          std::string expr_func_name, expr_code;
+          std::vector<codegen::ParamConst> func_call_param_const;
+          std::vector<std::pair<int32_t, std::string>> expr_tag_props;
+          common::DataType unused_expr_ret_type;
+          std::tie(expr_func_name, func_call_param_const, expr_tag_props,
+                   expr_code, unused_expr_ret_type) = expr_builder.Build();
+          VLOG(10) << "Found expr in edge_expand_opt:  " << expr_func_name;
+          // generate code.
+          ctx_.AddExprCode(expr_code);
+          std::string expr_var_name = ctx_.GetNextExprVarName();
+          std::string
+              expr_construct_params;  // function construction params and
+          std::string selectors_str;  // selectors str, concatenated
+          {
+            std::stringstream ss;
+            for (auto i = 0; i < func_call_param_const.size(); ++i) {
+              ss << func_call_param_const[i].var_name;
+              if (i != func_call_param_const.size() - 1) {
+                ss << ",";
+              }
+            }
+            expr_construct_params = ss.str();
+          }
+          {
+            std::stringstream ss;
+            if (expr_tag_props.size() > 0) {
               ss << ",";
+              for (auto i = 0; i + 1 < expr_tag_props.size(); ++i) {
+                ss << expr_tag_props[i].second << ", ";
+              }
+              ss << expr_tag_props[expr_tag_props.size() - 1].second;
             }
+            selectors_str = ss.str();
           }
-          expr_construct_params = ss.str();
-        }
-        {
-          std::stringstream ss;
-          if (expr_tag_props.size() > 0) {
-            for (auto i = 0; i + 1 < expr_tag_props.size(); ++i) {
-              ss << expr_tag_props[i].second << ", ";
-            }
-            ss << expr_tag_props[expr_tag_props.size() - 1].second;
-          }
-          selectors_str = ss.str();
-        }
 
-        // use expression to filter.
-        return scan_with_expr(labels_ids, expr_var_name, expr_func_name,
-                              expr_construct_params, selectors_str);
+          // use expression to filter.
+          return scan_with_expr(labels_ids, expr_var_name, expr_func_name,
+                                expr_construct_params, selectors_str);
+        } else {
+          return scan_without_expr(labels_ids);
+        }
 
 #ifdef FAST_SCAN
       }
@@ -188,6 +201,29 @@ class ScanOpBuilder {
 
     boost::format formater(SCAN_OP_WITH_OID_TEMPLATE_STR);
     formater % next_ctx_name % append_opt % ctx_.GraphVar() % label_id % oid;
+    return formater.str();
+  }
+
+  std::string scan_without_expr(const std::vector<int32_t>& label_ids) const {
+    std::string label_ids_str;
+    {
+      std::stringstream ss;
+      CHECK(label_ids.size() > 0);
+      if (label_ids.size() == 1) {
+        ss << label_ids[0];
+      } else {
+        ss << "std::array<label_id_t, " << label_ids.size() << "> {";
+        for (auto i = 0; i + 1 < label_ids.size(); ++i) {
+          ss << std::to_string(label_ids[i]) << ", ";
+        }
+        ss << std::to_string(label_ids[label_ids.size() - 1]);
+        ss << "}";
+      }
+      label_ids_str = ss.str();
+    }
+    boost::format formater(SCAN_OP_TEMPLATE_NO_EXPR_STR);
+    formater % ctx_.GetCurCtxName() % res_alias_to_append_opt(res_alias_) %
+        ctx_.GraphVar() % label_ids_str;
     return formater.str();
   }
 

@@ -224,6 +224,8 @@ class ExprBuilder {
         }
         if (j == size) {
           LOG(WARNING) << "no right brace found" << j << "size: " << size;
+          // just add true, since the current expresion has no other expr_oprs
+          AddExprOpr(std::string("true"));
           i = j;
         }
       } else {
