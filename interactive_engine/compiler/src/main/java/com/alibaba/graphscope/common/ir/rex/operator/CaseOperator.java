@@ -16,23 +16,22 @@
 
 package com.alibaba.graphscope.common.ir.rex.operator;
 
-import static org.apache.calcite.util.Static.RESOURCE;
-
-import static java.util.Objects.requireNonNull;
-
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
-
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.type.SqlOperandCountRanges;
 import org.apache.calcite.sql.type.SqlOperandTypeInference;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.util.Objects.requireNonNull;
+import static org.apache.calcite.util.Static.RESOURCE;
 
 public class CaseOperator extends SqlOperator {
 
@@ -91,10 +90,14 @@ public class CaseOperator extends SqlOperator {
         List<RelDataType> thenTypes = new ArrayList<>();
         for (int j = 1; j < (argTypes.size() - 1); j += 2) {
             RelDataType argType = argTypes.get(j);
-            thenTypes.add(argType);
+            if (argType != null && argType.getSqlTypeName() != SqlTypeName.NULL) {
+                thenTypes.add(argType);
+            }
         }
-
-        thenTypes.add(Iterables.getLast(argTypes));
+        RelDataType lastType = Iterables.getLast(argTypes);
+        if (lastType != null && lastType.getSqlTypeName() != SqlTypeName.NULL) {
+            thenTypes.add(lastType);
+        }
         return requireNonNull(
                 typeFactory.leastRestrictive(thenTypes),
                 () -> "Can't find leastRestrictive type for " + thenTypes);
