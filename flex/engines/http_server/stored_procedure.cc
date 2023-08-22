@@ -14,6 +14,11 @@
  */
 #include "flex/engines/http_server/stored_procedure.h"
 #include "flex/engines/graph_db/database/graph_db.h"
+#include "flex/engines/http_server/generated/executor_ref.act.autogen.h"
+
+#include <seastar/core/alien.hh>
+#include <seastar/core/print.hh>
+#include <seastar/http/handlers.hh>
 
 namespace server {
 
@@ -92,6 +97,7 @@ std::vector<std::string> get_yaml_files(const std::string& plugin_dir) {
 }
 
 std::vector<StoredProcedureMeta> parse_from_multiple_yamls(
+  const std::string& plugin_dir,
     const std::vector<std::string>& stored_procedure_yamls) {
   std::vector<StoredProcedureMeta> stored_procedures;
   for (auto cur_yaml : stored_procedure_yamls) {
@@ -105,7 +111,14 @@ std::vector<StoredProcedureMeta> parse_from_multiple_yamls(
       std::string name = root["name"].as<std::string>();
       std::string path = root["library"].as<std::string>();
       if (!std::filesystem::exists(path)) {
-        LOG(ERROR) << "plugin - " << path << " file not found...";
+        // in case the path is relative to plugin_dir, prepend plugin_dir
+        path = plugin_dir + "/"  +path;
+        if (!std::filesystem::exists(path)) {
+          LOG(ERROR) << "plugin - " << path << " file not found...";
+        }
+        else {
+          stored_procedures.push_back({name, path});
+        }
       } else {
         stored_procedures.push_back({name, path});
       }
@@ -145,19 +158,20 @@ std::vector<StoredProcedureMeta> parse_stored_procedures(
 }
 
 std::shared_ptr<BaseStoredProcedure> create_stored_procedure_impl(
-    int32_t procedure_id, const std::string& procedure_path, int32_t shard_id) {
-  auto time_stamp = std::numeric_limits<int64_t>::max() - 1;
-  gs::MutableCSRInterface graph_store(gs::GraphDB::get().GetSession(shard_id));
+    int32_t procedure_id, const std::string& procedure_path) {
+  auto& sess = gs::GraphDB::get().GetSession(hiactor::local_shard_id());
+
+  gs::MutableCSRInterface graph_store(sess);
 
   return std::make_shared<
       server::CypherStoredProcedure<gs::MutableCSRInterface>>(
-      procedure_id, procedure_path, graph_store, gs::GraphStoreType::Grape);
+      procedure_id, procedure_path, std::move(graph_store),
+      gs::GraphStoreType::Grape);
 }
 
-std::string load_and_run(int32_t job_id, const std::string& lib_path,
-                         int32_t shard_id) {
+std::string load_and_run(int32_t job_id, const std::string& lib_path) {
   auto temp_stored_procedure =
-      server::create_stored_procedure_impl(job_id, lib_path, shard_id);
+      server::create_stored_procedure_impl(job_id, lib_path);
   LOG(INFO) << "Create stored procedure: " << temp_stored_procedure->ToString();
   std::vector<char> empty;
   gs::Decoder input_decoder(empty.data(), empty.size());

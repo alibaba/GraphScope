@@ -90,3 +90,8 @@ core.*
 
 # Flex related
 flex/docs/
+flex/interactive/data/*/indices/
+flex/interactive/data/*/plugins/
+flex/interactive/logs/*
+flex/interactive/examples/sf0.1-raw/
+flex/interactive/.running
