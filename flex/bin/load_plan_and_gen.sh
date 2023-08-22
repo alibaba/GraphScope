@@ -68,18 +68,15 @@ fi
 #fi
 
 cypher_to_plan() {
-  if [ $# -ne 4 ]; then
-    echo "Usage: $0 <input_file> <output_file> <ir_compiler_properties> <graph_schema_path>, but receive: "$#
-    exit 1
-  fi
-  # check GIE_HOME set
-  if [ -z ${GIE_HOME} ]; then
-    echo "GIE_HOME not set."
+  if [ $# -ne 5 ]; then
+    echo "Usage: $0 <input_file> <output_file> <ir_compiler_properties> <graph_schema_path> <gie_home>, but receive: "$#
     exit 1
   fi
   input_path=$1
   output_path=$2
   ir_compiler_properties=$3
+  graph_schema_path=$4
+  GIE_HOME=$5
   # find java executable
   echo "IR compiler properties = ${ir_compiler_properties}"
   #check file exists
@@ -137,16 +134,17 @@ cypher_to_plan() {
 
 compile_hqps_so() {
   #check input params size eq 2 or 3
-  if [ $# -ne 4 ] && [ $# -ne 5 ]; then
-    echo "Usage: $0 <input_file> <work_dir> <ir_compiler_properties_file> <graph_schema_file> [output_dir]"
+  if [ $# -ne 5 ] && [ $# -ne 6 ]; then
+    echo "Usage: $0 <input_file> <work_dir> <ir_compiler_properties_file> <graph_schema_file> <GIE_HOME>[output_dir]"
     exit 1
   fi
   input_path=$1
   work_dir=$2
   ir_compiler_properties=$3
   graph_schema_path=$4
-  if [ $# -eq 5 ]; then
-    output_dir=$5
+  gie_home=$5
+  if [ $# -eq 6 ]; then
+    output_dir=$6
   else
     output_dir=${work_dir}
   fi
@@ -154,6 +152,7 @@ compile_hqps_so() {
   echo "Work dir = ${work_dir}"
   echo "ir compiler properties = ${ir_compiler_properties}"
   echo "graph schema path = ${graph_schema_path}"
+  echo "GIE_HOME = ${gie_home}"
   echo "Output dir = ${output_dir}"
 
   last_file_name=$(basename ${input_path})
@@ -189,7 +188,7 @@ compile_hqps_so() {
 
   #only do codegen when receives a .pb file.
   if [[ $last_file_name == *.pb ]]; then
-    cmd="${CODEGEN_RUNNER} ${input_path} ${output_cc_path}"
+    cmd="${CODEGEN_RUNNER} -e hqps -i ${input_path} -o ${output_cc_path}"
     echo "Codegen command = ${cmd}"
     eval ${cmd}
     echo "----------------------------"
@@ -197,7 +196,7 @@ compile_hqps_so() {
     echo "Generating code from cypher query"
     # first do .cypher to .pb
     output_pb_path="${cur_dir}/${query_name}.pb"
-    cypher_to_plan ${input_path} ${output_pb_path} ${ir_compiler_properties} ${graph_schema_path}
+    cypher_to_plan ${input_path} ${output_pb_path} ${ir_compiler_properties} ${graph_schema_path} ${gie_home}
     echo "----------------------------"
     echo "Codegen from cypher query done."
     echo "----------------------------"
@@ -398,6 +397,20 @@ compile_pegasus_so() {
   echo "Finish copying, output to ${dst_so_path}"
 }
 
+function usage(){
+  cat << EOF
+  Usage: $0 [options]
+  Options:
+    -e, --engine_type=ENGINE_TYPE
+    -i, --input=INPUT
+    -w, --work_dir=WORK_DIR
+    --ir_conf=IR_CONF
+    --graph_schema_path=GRAPH_SCHEMA_PATH
+    --gie_home=GIE_HOME
+    [-o, --output_dir=OUTPUT_DIR]
+EOF
+}
+
 # input path
 # output dir
 run() {
@@ -415,8 +428,8 @@ run() {
       WORK_DIR="${i#*=}"
       shift # past argument=value
       ;;
-    -o=* | --output_dir=*)
-      OUTPUT_DIR="${i#*=}"
+    --gie_home=*)
+      GIE_HOME="${i#*=}"
       shift # past argument=value
       ;;
     --ir_conf=*)
@@ -425,6 +438,10 @@ run() {
       ;;
     --graph_schema_path=*)
       GRAPH_SCHEMA_PATH="${i#*=}"
+      shift # past argument=value
+      ;;
+    -o=* | --output_dir=*)
+      OUTPUT_DIR="${i#*=}"
       shift # past argument=value
       ;;
     -* | --*)
@@ -436,12 +453,14 @@ run() {
     esac
   done
 
+  echo "Engine type            ="${ENGINE_TYPE}
   echo "Input                  ="${INPUT}
   echo "Work dir               ="${WORK_DIR}
-  echo "Output path            ="${OUTPUT_DIR}
   echo "ir conf                ="${IR_CONF}
   echo "graph_schema_path      ="${GRAPH_SCHEMA_PATH}
-  echo "Engine type            ="${ENGINE_TYPE}
+  echo "GIE_HOME               ="${GIE_HOME}
+  echo "Output path            ="${OUTPUT_DIR}
+
 
   # check input exist
   if [ ! -f ${INPUT} ]; then
@@ -452,7 +471,7 @@ run() {
   # if engine_type equals hqps
   if [ ${ENGINE_TYPE} == "hqps" ]; then
     echo "Engine type is hqps, generating dynamic library for hqps engine."
-    compile_hqps_so ${INPUT} ${WORK_DIR} ${IR_CONF} ${GRAPH_SCHEMA_PATH} ${OUTPUT_DIR}
+    compile_hqps_so ${INPUT} ${WORK_DIR} ${IR_CONF} ${GRAPH_SCHEMA_PATH} ${GIE_HOME} ${OUTPUT_DIR} 
 
   # else if engine_type equals pegasus
   elif [ ${ENGINE_TYPE} == "pegasus" ]; then
@@ -465,10 +484,9 @@ run() {
   exit 0
 }
 
-if [ $# -lt 5 ]; then
-  echo "Usage: $0 input_file work_dir output_dir"
-  echo "Example: $0 -e=hqps/pegasus -i=../query/1.pb -o=/plugin/ --ir_conf=../conf/ir.conf --graph_schema_path=../conf/graph_schema.json -w=/tmp/codegen"
-  echo "your num args: "$#
+if [ $# -lt 6 ]; then
+  echo "only receives: $# args"
+  usage
   exit 1
 fi
 

@@ -852,6 +852,7 @@ subSetWithRemovedIndicesImpl(std::vector<offset_t>& removed_indices,
 template <typename LabelT, typename VID_T, typename... T>
 class RowVertexSetImpl {
  public:
+  using element_t = VID_T;
   using lid_t = VID_T;
   using data_tuple_t = std::tuple<T...>;
   using index_ele_tuple_t = std::tuple<size_t, VID_T>;
@@ -1170,6 +1171,7 @@ class RowVertexSetImpl {
 template <typename LabelT, typename VID_T>
 class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
  public:
+  using element_t = VID_T;
   using lid_t = VID_T;
   using data_tuple_t = std::tuple<grape::EmptyType>;
   // from this tuple, we can reconstruct the partial set.

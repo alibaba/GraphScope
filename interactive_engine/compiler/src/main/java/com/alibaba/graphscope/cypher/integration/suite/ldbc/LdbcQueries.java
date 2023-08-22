@@ -85,12 +85,14 @@ public class LdbcQueries {
 
     public static QueryContext get_ldbc_3_test() {
         String query =
-                "MATCH (countryX:PLACE {name:"
-                    + " 'Puerto_Rico'})<-[:ISLOCATEDIN]-(messageX)-[:HASCREATOR]->(otherP:PERSON),\n"
+                "MATCH (countryX:PLACE {name: 'Puerto_Rico'})<-[:ISLOCATEDIN]-(messageX: POST |"
+                    + " COMMENT )-[:HASCREATOR]->(otherP:PERSON),\n"
                     + "    \t(countryY:PLACE {name:"
-                    + " 'Republic_of_Macedonia'})<-[:ISLOCATEDIN]-(messageY)-[:HASCREATOR]->(otherP:PERSON),\n"
-                    + "    \t(otherP)-[:ISLOCATEDIN]->(city)-[:ISPARTOF]->(countryCity),\n"
-                    + "    \t(person:PERSON {id:15393162790207})-[:KNOWS*1..2]-(otherP)\n"
+                    + " 'Republic_of_Macedonia'})<-[:ISLOCATEDIN]-(messageY: POST |"
+                    + " COMMENT)-[:HASCREATOR]->(otherP:PERSON),\n"
+                    + "    \t(otherP: PERSON)-[:ISLOCATEDIN]->(city:"
+                    + " PLACE)-[:ISPARTOF]->(countryCity : PLACE),\n"
+                    + "    \t(person:PERSON {id:15393162790207})-[:KNOWS*1..2]-(otherP: PERSON)\n"
                     + "WHERE messageX.creationDate >= 20101201080000000 and messageX.creationDate <"
                     + " 20101231080000000\n"
                     + "  AND messageY.creationDate >= 20101201080000000 and messageY.creationDate <"

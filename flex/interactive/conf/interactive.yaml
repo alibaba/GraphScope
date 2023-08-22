@@ -1,0 +1,23 @@
+---
+version: 0.0.1
+directories:
+  workspace: /home/graphscope/interactive/
+  subdirs:
+    data: data  # by default data, relative to ${workspace}
+    conf: conf # by default conf, relative to ${workspace}
+    logs: logs  # by default logs, relative to ${workspace}
+logLevel: INFO # default INFO
+default_graph: modern  # configure the graph to be loaded while starting the service, if graph name not specified
+  # may include other configuration items of other engines
+compute_engine:
+  type: hiactor
+  hosts:
+    - localhost:10000  # currently only one host can be specified
+  shared_num: 1  # the number of shared workers, default 1
+compiler:
+  planner: {"isOn":true,"opt":"RBO","rules":["FilterMatchRule"]} # Confirm这个配置
+  endpoint:
+    default_listen_address: localhost  # default localhost
+    bolt_connector:   # for cypher, there may be other connectors, such as bolt_connector, https_connector
+      enabled: true   # default false
+      port: 7687

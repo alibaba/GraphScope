@@ -375,9 +375,6 @@ class ExprBuilder {
   // return the concatenated string of constructor's input params
   std::string get_constructor_params_str() const {
     std::stringstream ss;
-    if (!construct_params_.empty()) {
-      ss << ":";
-    }
     for (int i = 0; i < construct_params_.size(); ++i) {
       ss << data_type_2_string(construct_params_[i].type) << " "
          << construct_params_[i].var_name;
@@ -390,6 +387,9 @@ class ExprBuilder {
 
   std::string get_field_init_code_str() const {
     std::stringstream ss;
+    if (!construct_params_.empty()) {
+      ss << ":";
+    }
     for (int i = 0; i < construct_params_.size(); ++i) {
       ss << construct_params_[i].var_name << "_"
          << "(" << construct_params_[i].var_name << ")";

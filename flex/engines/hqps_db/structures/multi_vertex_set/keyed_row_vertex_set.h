@@ -920,6 +920,12 @@ class KeyedRowVertexSetBuilderImpl {
         prop_names_(old_set.GetPropNames()),
         ind_(0) {}
 
+  KeyedRowVertexSetBuilderImpl(
+      const KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, T...>& old_set)
+      : label_(old_set.GetLabel()),
+        prop_names_(old_set.GetPropNames()),
+        ind_(0) {}
+
   size_t insert(std::tuple<size_t, VID_T> ele_tuple, data_tuple_t data_tuple) {
     auto key = std::get<1>(ele_tuple);
     if (prop2ind_.find(key) != prop2ind_.end()) {
