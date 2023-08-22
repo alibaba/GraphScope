@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.runtime.proto;
 
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
+import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
@@ -78,6 +79,21 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
         SqlOperator operator = call.getOperator();
         RexNode operand = call.getOperands().get(0);
         switch (operator.getKind()) {
+                // convert IS_NULL to unary call: IS_NULL(XX)
+            case IS_NULL:
+                return visitIsNullOperator(operand);
+                // convert IS_NOT_NULL to NOT(IS_NULL(XX))
+            case IS_NOT_NULL:
+                return OuterExpression.Expression.newBuilder()
+                        .addOperators(Utils.protoOperator(GraphStdOperatorTable.NOT))
+                        .addOperators(
+                                OuterExpression.ExprOpr.newBuilder()
+                                        .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE))
+                        .addAllOperators(visitIsNullOperator(operand).getOperatorsList())
+                        .addOperators(
+                                OuterExpression.ExprOpr.newBuilder()
+                                        .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE))
+                        .build();
             case NOT:
             default:
                 return OuterExpression.Expression.newBuilder()
@@ -91,6 +107,19 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                                         .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE))
                         .build();
         }
+    }
+
+    private OuterExpression.Expression visitIsNullOperator(RexNode operand) {
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(Utils.protoOperator(GraphStdOperatorTable.IS_NULL))
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE))
+                .addAllOperators(operand.accept(this).getOperatorsList())
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE))
+                .build();
     }
 
     private OuterExpression.Expression visitBinaryOperator(RexCall call) {

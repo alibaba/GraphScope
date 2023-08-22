@@ -110,6 +110,23 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     }
 
     @Override
+    public ExprVisitorResult visitOC_StringListNullPredicateExpression(
+            CypherGSParser.OC_StringListNullPredicateExpressionContext ctx) {
+        ExprVisitorResult operand =
+                visitOC_AddOrSubtractExpression(ctx.oC_AddOrSubtractExpression());
+        List<SqlOperator> operators = Lists.newArrayList();
+        CypherGSParser.OC_NullPredicateExpressionContext nullCtx = ctx.oC_NullPredicateExpression();
+        if (nullCtx != null) {
+            if (nullCtx.IS() != null && nullCtx.NOT() != null && nullCtx.NULL() != null) {
+                operators.add(GraphStdOperatorTable.IS_NOT_NULL);
+            } else if (nullCtx.IS() != null && nullCtx.NULL() != null) {
+                operators.add(GraphStdOperatorTable.IS_NULL);
+            }
+        }
+        return unaryCall(operators, operand);
+    }
+
+    @Override
     public ExprVisitorResult visitOC_AddOrSubtractExpression(
             CypherGSParser.OC_AddOrSubtractExpressionContext ctx) {
         if (ObjectUtils.isEmpty(ctx.oC_MultiplyDivideModuloExpression())) {
