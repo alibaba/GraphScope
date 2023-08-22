@@ -470,16 +470,16 @@ auto transform_tuple(const std::tuple<T...>&& tuple, FUNC_T&& func) {
                               std::make_index_sequence<N>());
 }
 
-template <typename FUNC, typename... T>
-bool apply_on_tuple(const FUNC& func, const std::tuple<T...>& tuple) {
-  return apply_on_tuple_impl(func, tuple,
-                             std::make_index_sequence<sizeof...(T)>());
-}
-
 template <typename FUNC, typename... T, size_t... Is>
 bool apply_on_tuple_impl(const FUNC& func, const std::tuple<T...>& tuple,
                          std::index_sequence<Is...>) {
   return func(std::get<Is>(tuple)...);
+}
+
+template <typename FUNC, typename... T>
+bool apply_on_tuple(const FUNC& func, const std::tuple<T...>& tuple) {
+  return apply_on_tuple_impl(func, tuple,
+                             std::make_index_sequence<sizeof...(T)>());
 }
 
 template <typename T, size_t N, typename FUNC_T, size_t... Is,

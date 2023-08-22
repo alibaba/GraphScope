@@ -39,14 +39,21 @@ class CodegenProxy {
 
   bool Initialized() { return initialized_; }
 
+  // the last two params are needed temporally, should be remove after all
+  // configuration are merged
   void Init(std::string working_dir, std::string codegen_bin,
-            std::string db_home) {
+            std::string ir_compiler_prop, std::string compiler_graph_schema,
+            std::string gie_home) {
     working_directory_ = working_dir;
     codegen_bin_ = codegen_bin;
-    db_home_ = db_home;
+    ir_compiler_prop_ = ir_compiler_prop;
+    compiler_graph_schema_ = compiler_graph_schema;
+    gie_home_ = gie_home;
     initialized_ = true;
     LOG(INFO) << "CodegenProxy working dir: " << working_directory_
-              << ",codegen bin " << codegen_bin_ << ", db_home: " << db_home_;
+              << ",codegen bin " << codegen_bin_ << ", ir compiler prop "
+              << ir_compiler_prop_ << ", compiler graph schema "
+              << compiler_graph_schema_;
   }
 
   // Do gen
@@ -77,9 +84,11 @@ class CodegenProxy {
                                const std::string& work_dir) {
     // TODO: different suffix for different platform
     std::string res_lib_path = work_dir + "/lib" + query_name + ".so";
-    std::string cmd = codegen_bin_ + " -i=" + plan_path + " -w=" + work_dir +
-                      " --db_home=" + db_home_;
-    LOG(INFO) << "Start call codegen cmd: " << cmd;
+    std::string cmd = codegen_bin_ + " -e=hqps " + " -i=" + plan_path +
+                      " -w=" + work_dir + " --ir_conf=" + ir_compiler_prop_ +
+                      " --graph_schema_path=" + compiler_graph_schema_ +
+                      " --gie_home=" + gie_home_;
+    LOG(INFO) << "Start call codegen cmd: [" << cmd << "]";
     auto res = std::system(cmd.c_str());
     if (res != 0) {
       LOG(ERROR) << "call codegen cmd failed: " << cmd;
@@ -148,7 +157,9 @@ class CodegenProxy {
 
   std::string working_directory_;
   std::string codegen_bin_;
-  std::string db_home_;
+  std::string ir_compiler_prop_;
+  std::string compiler_graph_schema_;
+  std::string gie_home_;
   std::atomic<int32_t> next_job_id_{0};
   bool initialized_;
 };
