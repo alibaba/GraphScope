@@ -20,6 +20,8 @@
 """
 
 from dataclasses import dataclass, field
+from typing import Union
+
 from simple_parsing import ArgumentParser, choice, subgroups
 from simple_parsing.helpers import choice, list_field
 from simple_parsing.helpers import Serializable
@@ -102,7 +104,7 @@ class GSConfig(object):
     # Available options: analytical, analytical-java, interactive, learning
     enabled_engines = "analytical,interactive,learning"
 
-    # launch graphscope with mars
+    # launch graphscope with Mars
     with_mars = False
     # Demo dataset related
     with_dataset = False
@@ -114,7 +116,7 @@ class GSConfig(object):
     # support resource preemption or resource guarantee
     preemptive = True
 
-    # the deploy mode of engines on the kubernetes cluster, default to eager
+    # the deployment mode of engines on the kubernetes cluster, default to eager.
     # eager: create all engine pods at once
     # lazy: create engine pods when called
     k8s_deploy_mode = "eager"
@@ -136,21 +138,41 @@ class GSConfig(object):
 @dataclass
 class ResourceSpec():
     """Resource requirements for a container in kubernetes."""
-    cpu: float = 0.2  # CPU cores of container.
-    mem: str = "64Mi"  # Memory of container, suffix with ['Mi', 'Gi', 'Ti'].
+    cpu: Union[str, float] = None # CPU cores of container.
+    memory: str = None  # Memory of container, suffix with ['Mi', 'Gi', 'Ti'].
+
+    def as_dict(self):
+        ret = {}
+        if self.cpu is not None:
+            ret['cpu'] = self.cpu
+        if self.memory is not None:
+            ret['memory'] = self.memory
+        return ret
 
 @dataclass
 class ResourceConfig():
     """Resource spec for a container in kubernetes."""
-    requests: ResourceSpec = ResourceSpec()  # Resource requests of container.
-    limits: ResourceSpec = ResourceSpec()  # Resource limits of container.
+    requests: ResourceSpec = None  # Resource requests of container.
+    limits: ResourceSpec = None  # Resource limits of container.
 
+    def get_requests(self):
+        return self.requests.as_dict() if self.requests is not None else None
+    def get_limits(self):
+        return self.limits.as_dict() if self.limits is not None else None
 
-def _get_resource_config(cpu, mem):
+    def set_cpu_guarantee(self, cpu):
+        self.requests.cpu = cpu
+        self.limits.cpu = cpu
+
+    def set_mem_guarantee(self, memory):
+        self.requests.memory = memory
+        self.limits.memory = memory
+
+def _get_guarantee_resource_config(cpu, memory):
     """Get default resource config for a container in kubernetes."""
     return ResourceConfig(
-        requests=ResourceSpec(cpu=cpu, mem=mem),
-        limits=ResourceSpec(cpu=cpu, mem=mem),
+        requests=ResourceSpec(cpu=cpu, memory=memory),
+        limits=ResourceSpec(cpu=cpu, memory=memory),
     )
 
 @dataclass
@@ -165,6 +187,7 @@ class EtcdConfig():
     """The address of external etcd cluster, with formats like 'etcd01:port,etcd02:port,etcd03:port'.
     If address is set, all other etcd configurations are ignored.
     """
+    # replicas: int = 1
 
     listening_client_port: int = 2379  # The port that etcd server will bind to for accepting client connections. Defaults to 2379.
     listening_peer_port: int = 2380  # The port that etcd server will bind to for accepting peer connections. Defaults to 2380.
@@ -185,9 +208,9 @@ class ImageConfig():
 @dataclass
 class MarsConfig():
     """Mars configuration"""
-    enable: bool = False  # Enable mars or not.
-    worker: ContainerConfig = ContainerConfig(resource=_get_resource_config(0.2, "4Mi"))
-    scheduler: ContainerConfig = ContainerConfig(resource=_get_resource_config(0.2, "2Mi"))
+    enable: bool = False  # Enable Mars or not.
+    worker: ContainerConfig = ContainerConfig(resource=_get_guarantee_resource_config(0.2, "4Mi"))
+    scheduler: ContainerConfig = ContainerConfig(resource=_get_guarantee_resource_config(0.2, "2Mi"))
 
 @dataclass
 class DatasetConfig():
@@ -207,21 +230,39 @@ class EngineConfig():
     enable_gie: bool = True  # Enable or disable interactive engine.
     enable_gle: bool = True  # Enable or disable learning engine.
 
-    gae: ContainerConfig = ContainerConfig(resource=_get_resource_config(0.2, "1Gi"))
+    # gae: ContainerConfig = ContainerConfig(resource=_get_resource_config(0.2, "1Gi"))
+    gae: ContainerConfig = ContainerConfig()
     # Resource for analytical pod
 
-    executor: ContainerConfig = ContainerConfig(resource=_get_resource_config(1, "1Gi"))
+    executor: ContainerConfig = ContainerConfig(resource=_get_guarantee_resource_config(1, "1Gi"))
     # Resource for interactive executor pod
 
-    frontend: ContainerConfig = ContainerConfig(resource=_get_resource_config(0.2, "512Mi"))
+    frontend: ContainerConfig = ContainerConfig(resource=_get_guarantee_resource_config(0.2, "512Mi"))
     # Resource for interactive frontend pod
 
-    gle: ContainerConfig = ContainerConfig(resource=_get_resource_config(0.2, "1Gi"))
+    gle: ContainerConfig = ContainerConfig(resource=_get_guarantee_resource_config(0.2, "1Gi"))
     # Resource for learning pod
 
-    vineyard: ContainerConfig = ContainerConfig(resource=_get_resource_config(0.2, "256Mi"))
+    vineyard: ContainerConfig = ContainerConfig(resource=_get_guarantee_resource_config(0.2, "256Mi"))
     # Resource for vineyard sidecar container
 
+    def post_setup(self):
+        valid_engines = set(
+            "analytical,analytical-java,interactive,learning,gae,gae-java,gie,gle".split(
+                ","
+            )
+        )
+        for item in [item.strip() for item in self.enabled_engines.split(",")]:
+            if item not in valid_engines and item != "":
+                print(f"Not a valid engine name: {item}")
+            if item == "analytical" or item == "gae":
+                self.enable_gae = True
+            if item == "interactive" or item == "gie":
+                self.enable_gie = True
+            if item == "learning" or item == "gle":
+                self.enable_gle = True
+            if item == "analytical-java" or item == "gae-java":
+                self.enable_gae_java = True
 
 @dataclass
 class VineyardConfig():
@@ -230,6 +271,12 @@ class VineyardConfig():
     rpc_port: int = 9600  # Vineyard RPC port.
 
     deployment_name: str = None  # The name of vineyard deployment, it should exist as expected.
+
+@dataclass
+class CoordinatorDeploymentConfig():
+    deployment_name: str = None  # Name of the coordinator deployment and service.
+    node_selector: str = None  # Node selector for coordinator pod in kubernetes
+    coordinator: ContainerConfig = ContainerConfig(resource=_get_guarantee_resource_config(0.5, "512Mi"))  # Resource configuration of coordinator.
 
 @dataclass
 class CoordinatorConfig():
@@ -242,11 +289,8 @@ class CoordinatorConfig():
     monitor: bool = False  # Enable or disable prometheus exporter.
     monitor_port: int = 9090  # Coordinator prometheus exporter service port.
 
-@dataclass
-class CoordinatorDeploymentConfig():
-    deployment_name: str = None  # Name of the coordinator deployment and service.
-    node_selector: str = None  # Node selector for coordinator pod in kubernetes
-    coordinator: ContainerConfig = ContainerConfig(resource=_get_resource_config(0.5, "512Mi"))  # Resource configuration of coordinator.
+    coordinator: CoordinatorDeploymentConfig = CoordinatorDeploymentConfig()  # Coordinator deployment configuration.
+
 
 
 @dataclass
@@ -262,8 +306,10 @@ class KubernetesConfig():
     """Kubernetes cluster configuration."""
     namespace: str = "graphscope"  # The namespace to create all resource, which must exist in advance.
     delete_namespace: bool = True  # Delete the namespace that created by graphscope.
+
+    config_file: str = None  # kube config file path
     
-    deployment_mode = "eager" # The deploy mode of engines on the kubernetes cluster, choose from 'eager' or 'lazy'.
+    deployment_mode = "eager" # The deployment mode of engines on the kubernetes cluster, choose from 'eager' or 'lazy'.
 
     service_type: str = "NodePort"  # Service type, choose from 'NodePort' or 'LoadBalancer'.
 
@@ -275,7 +321,7 @@ class KubernetesConfig():
 
     image: ImageConfig = ImageConfig()  # Image configuration.
 
-    coordinator: CoordinatorDeploymentConfig = CoordinatorDeploymentConfig()  # Coordinator deployment configuration.
+
 
     engine: EngineConfig = EngineConfig()  # Engine configuration.
 
@@ -313,13 +359,98 @@ class Config(Serializable):
     hosts_launcher: HostsConfig = HostsConfig()  # Local cluster configuration.
     kubernetes_launcher: KubernetesConfig = KubernetesConfig()  # Kubernetes cluster configuration.
 
+    def post_setup(self):
+        self.kubernetes_launcher.engine.post_setup()
+
+    def set_option(self, key, value):
+        if key == "addr":
+            self.coordinator.address = value
+        if key == "mode":
+            self.session.execution_mode = value
+        if key == "cluster_type":
+            self.launcher_type = value
+        if key == "k8s_namespace":
+            self.kubernetes_launcher.namespace = value
+        if key == "k8s_image_registry":
+            self.kubernetes_launcher.image.registry = value
+        if key == "k8s_image_repository":
+            self.kubernetes_launcher.image.repository = value
+        if key == "k8s_image_tag":
+            self.kubernetes_launcher.image.tag = value
+        if key == "k8s_image_pull_policy":
+            self.kubernetes_launcher.image.pull_policy = value
+        if key == "k8s_image_secrets":
+            self.kubernetes_launcher.image.pull_secrets = value
+        if key == "k8s_coordinator_cpu":
+            self.kubernetes_launcher.coordinator.coordinator.resource.set_cpu_guarantee(value)
+        if key == "k8s_coordinator_mem":
+            self.kubernetes_launcher.coordinator.coordinator.resource.set_mem_guarantee(value)
+        if key == "etcd_addrs":
+            self.hosts_launcher.etcd.address = value
+        if key == "etcd_listening_client_port":
+            self.hosts_launcher.etcd.listening_client_port = value
+        if key == "etcd_listening_peer_port":
+            self.hosts_launcher.etcd.listening_peer_port = value
+        if key == "k8s_vineyard_image":
+            self.kubernetes_launcher.image.vineyard_image = value
+        if key == "k8s_vineyard_deployment":
+            self.vineyard.deployment_name = value
+        if key == "k8s_vineyard_cpu":
+            self.kubernetes_launcher.engine.vineyard.resource.set_cpu_guarantee(value)
+        if key == "k8s_vineyard_mem":
+            self.kubernetes_launcher.engine.vineyard.resource.set_mem_guarantee(value)
+        if key == "k8s_engine_cpu":
+            self.kubernetes_launcher.engine.gae.resource.set_cpu_guarantee(value)
+        if key == "k8s_engine_mem":
+            self.kubernetes_launcher.engine.gae.resource.set_mem_guarantee(value)
+        if key == "mars_worker_cpu":
+            self.kubernetes_launcher.mars.worker.resource.set_cpu_guarantee(value)
+        if key == "mars_worker_mem":
+            self.kubernetes_launcher.mars.worker.resource.set_mem_guarantee(value)
+        if key == "mars_scheduler_cpu":
+            self.kubernetes_launcher.mars.scheduler.resource.set_cpu_guarantee(value)
+        if key == "mars_scheduler_mem":
+            self.kubernetes_launcher.mars.scheduler.resource.set_mem_guarantee(value)
+        if key == "k8s_coordinator_pod_node_selector":
+            self.kubernetes_launcher.coordinator.node_selector = value
+        if key == "k8s_engine_pod_node_selector":
+            self.kubernetes_launcher.engine.node_selector = value
+        if key == "enabled_engines":
+            self.kubernetes_launcher.engine.enabled_engines = value
+        if key == "with_mars":
+            self.kubernetes_launcher.mars.enable = value
+        if key == "with_dataset":
+            self.kubernetes_launcher.dataset.enable = value
+        if key == "k8s_volumes":
+            self.kubernetes_launcher.volumes = value
+        if key == "k8s_service_type":
+            self.kubernetes_launcher.service_type = value
+        if key == "preemptive":
+            raise NotImplementedError()
+        if key == "k8s_deploy_mode":
+            self.kubernetes_launcher.deployment_mode = value
+        if key == "k8s_waiting_for_delete":
+            self.kubernetes_launcher.waiting_for_delete = value
+        if key == "num_workers":
+            self.session.num_workers = value
+        if key == "show_log":
+            self.session.show_log = value
+        if key == "log_level":
+            self.session.log_level = value
+        if key == "timeout_seconds":
+            self.session.timeout_seconds = value
+        if key == "dangling_timeout_seconds":
+            self.session.dangling_timeout_seconds = value
+        if key == "dataset_download_retries":
+            self.hosts_launcher.dataset_download_retries = value
+
 if __name__ == '__main__':
     config = Config()
     print(config.dumps_yaml())
-
-    config2 = Config()
-    config2.loads_yaml(config.dumps_yaml())
-    print(config2)
+    print(config.kubernetes_launcher.engine.gae.resource.as_dict())
+    # config2 = Config()
+    # config2.loads_yaml(config.dumps_yaml())
+    # print(config2)
 
     parser = ArgumentParser()
     parser.add_arguments(Config, dest="gs")

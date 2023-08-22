@@ -73,6 +73,7 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
+from graphscope.config import Config
 
 DEFAULT_CONFIG_FILE = os.environ.get(
     "GS_CONFIG_PATH", os.path.expanduser("~/.graphscope/session.json")
@@ -278,47 +279,8 @@ class Session(object):
     @set_defaults(gs_config)
     def __init__(
         self,
-        config=None,
-        addr=gs_config.addr,
-        mode=gs_config.mode,
-        cluster_type=gs_config.cluster_type,
-        num_workers=gs_config.num_workers,
-        preemptive=gs_config.preemptive,
-        k8s_namespace=gs_config.k8s_namespace,
-        k8s_service_type=gs_config.k8s_service_type,
-        k8s_image_registry=gs_config.k8s_image_registry,
-        k8s_image_repository=gs_config.k8s_image_repository,
-        k8s_image_tag=gs_config.k8s_image_tag,
-        k8s_image_pull_policy=gs_config.k8s_image_pull_policy,
-        k8s_image_pull_secrets=gs_config.k8s_image_pull_secrets,
-        k8s_coordinator_cpu=gs_config.k8s_coordinator_cpu,
-        k8s_coordinator_mem=gs_config.k8s_coordinator_mem,
-        etcd_addrs=gs_config.etcd_addrs,
-        etcd_listening_client_port=gs_config.etcd_listening_client_port,
-        etcd_listening_peer_port=gs_config.etcd_listening_peer_port,
-        k8s_vineyard_image=gs_config.k8s_vineyard_image,
-        k8s_vineyard_deployment=gs_config.k8s_vineyard_deployment,
-        k8s_vineyard_cpu=gs_config.k8s_vineyard_cpu,
-        k8s_vineyard_mem=gs_config.k8s_vineyard_mem,
-        vineyard_shared_mem=None,
-        k8s_engine_cpu=gs_config.k8s_engine_cpu,
-        k8s_engine_mem=gs_config.k8s_engine_mem,
-        k8s_mars_worker_cpu=gs_config.mars_worker_cpu,
-        k8s_mars_worker_mem=gs_config.mars_worker_mem,
-        k8s_mars_scheduler_cpu=gs_config.mars_scheduler_cpu,
-        k8s_mars_scheduler_mem=gs_config.mars_scheduler_mem,
-        k8s_coordinator_pod_node_selector=gs_config.k8s_coordinator_pod_node_selector,
-        k8s_engine_pod_node_selector=gs_config.k8s_engine_pod_node_selector,
-        k8s_volumes=gs_config.k8s_volumes,
-        k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
-        k8s_deploy_mode=gs_config.k8s_deploy_mode,
-        timeout_seconds=gs_config.timeout_seconds,
-        dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
-        enabled_engines=gs_config.enabled_engines,
-        with_mars=gs_config.with_mars,
-        with_dataset=gs_config.with_dataset,
-        reconnect=False,
-        hosts=["localhost"],
+        config: Config = None,
+        reconnect: bool = False,
         **kw,
     ):
         """Construct a new GraphScope session.
@@ -526,14 +488,6 @@ class Session(object):
         # supress the grpc warnings, see also grpc/grpc#29103
         os.environ["GRPC_ENABLE_FORK_SUPPORT"] = "false"
 
-        if vineyard_shared_mem is None:
-            if cluster_type == "k8s":
-                vineyard_shared_mem = gs_config.vineyard_shared_mem
-            else:
-                vineyard_shared_mem = gs_config._local_vineyard_shared_mem
-        if not isinstance(vineyard_shared_mem, str):
-            vineyard_shared_mem = str(vineyard_shared_mem)
-
         self._config_params = {}
         self._accessable_params = (
             "addr",
@@ -577,16 +531,13 @@ class Session(object):
             "with_dataset",
             "hosts",
         )
-        self._deprecated_params = (
-            "show_log",
-            "log_level",
-        )
 
         # the mapping table from old vineyard object id to new vineyard object id
         self._vineyard_object_mapping_table = {}
-
+        self._config = config
         saved_locals = locals()
         for param in self._accessable_params:
+            self._config.set_option(param, saved_locals[param])
             self._config_params[param] = saved_locals[param]
 
         # parse config, which should be a path to config file, or dict
@@ -607,39 +558,7 @@ class Session(object):
         # initial dag
         self._dag = Dag()
 
-        # mars cannot work with run-on-local mode
-        if self._cluster_type == types_pb2.HOSTS:
-            if self._config_params["with_mars"]:
-                logger.warning(
-                    "Mars cluster cannot be launched along with local GraphScope deployment"
-                )
-        if self._cluster_type == types_pb2.K8S:
-            engines = set([item.strip() for item in enabled_engines.split(",")])
-            valid_engines = set(
-                "analytical,analytical-java,interactive,learning,gae,gae-java,gie,gle".split(
-                    ","
-                )
-            )
-
-            for item in engines:
-                if item not in valid_engines:
-                    raise ValueError(
-                        f"Not a valid engine name: {item}, valid engines are {valid_engines}"
-                    )
-
-        # deprecated params handle
-        for param in self._deprecated_params:
-            if param in kw:
-                warnings.warn(
-                    f"The `{param}` parameter has been deprecated and has no effect.",
-                    category=DeprecationWarning,
-                )
-                if param == "show_log" or param == "log_level":
-                    warnings.warn(
-                        f"Please use `graphscope.set_option({param}={kw.pop(param, None)})` instead",
-                        category=DeprecationWarning,
-                    )
-                kw.pop(param, None)
+        self._config.post_setup()
 
         # update k8s_client_config params
         self._config_params["k8s_client_config"] = kw.pop("k8s_client_config", {})

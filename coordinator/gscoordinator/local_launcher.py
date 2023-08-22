@@ -33,7 +33,7 @@ from graphscope.framework.utils import get_java_version
 from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
-from graphscope.config import HostsConfig, SessionConfig, VineyardConfig
+from graphscope.config import Config
 
 from gscoordinator.launcher import AbstractLauncher
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
@@ -50,13 +50,14 @@ from gscoordinator.utils import run_command
 logger = logging.getLogger("graphscope")
 
 class LocalLauncher(AbstractLauncher):
-    def __init__(
-        self,
-        session_config: SessionConfig,
-        vineyard_config: VineyardConfig,
-        launcher_config: HostsConfig,
-    ):
+    def __init__(self, config):
         super().__init__()
+
+        self._config: Config = config
+        session_config = config.session
+        vineyard_config = config.vineyard
+        launcher_config = config.hosts_launcher
+
         # Session Config
         self._num_workers = session_config.num_workers
         self._glog_level = parse_as_glog_level(session_config.log_level)
@@ -261,7 +262,7 @@ class LocalLauncher(AbstractLauncher):
             + os.pathsep
             + os.path.dirname(os.path.dirname(__file__))
         )
-        env["PYTHONPATH"] = f"{env.get('PYTHONPATH', '')}{}"
+        env["PYTHONPATH"] = python_path
 
         self._learning_instance_processes[object_id] = []
         for index in range(self._num_workers):

@@ -674,60 +674,10 @@ def launch_graphscope():
 
 def get_launcher(config: Config):
     if config.launcher_type == "hosts":
-        launcher = LocalLauncher(config.session, config.vineyard, config.hosts_launcher)
+        launcher = LocalLauncher(config)
     elif config.launcher_type == "k8s":
-        launcher = KubernetesClusterLauncher(config.session, config.vineyard, config.kubernetes_launcher)
-    
-    # if args.cluster_type == "k8s":
-    #     launcher = KubernetesClusterLauncher(
-    #         coordinator_name=args.k8s_coordinator_name,
-    #         coordinator_service_name=args.k8s_coordinator_service_name,
-    #         delete_namespace=args.k8s_delete_namespace,
-    #         engine_cpu=args.k8s_engine_cpu,
-    #         engine_mem=args.k8s_engine_mem,
-    #         engine_pod_node_selector=args.k8s_engine_pod_node_selector,
-    #         image_pull_policy=args.k8s_image_pull_policy,
-    #         image_pull_secrets=args.k8s_image_pull_secrets,
-    #         image_registry=args.k8s_image_registry,
-    #         image_repository=args.k8s_image_repository,
-    #         image_tag=args.k8s_image_tag,
-    #         instance_id=args.instance_id,
-    #         log_level=args.log_level,
-    #         mars_worker_cpu=args.k8s_mars_worker_cpu,
-    #         mars_worker_mem=args.k8s_mars_worker_mem,
-    #         mars_scheduler_cpu=args.k8s_mars_scheduler_cpu,
-    #         mars_scheduler_mem=args.k8s_mars_scheduler_mem,
-    #         with_dataset=args.k8s_with_dataset,
-    #         namespace=args.k8s_namespace,
-    #         num_workers=args.num_workers,
-    #         preemptive=args.preemptive,
-    #         service_type=args.k8s_service_type,
-    #         timeout_seconds=args.timeout_seconds,
-    #         vineyard_cpu=args.k8s_vineyard_cpu,
-    #         vineyard_deployment=args.k8s_vineyard_deployment,
-    #         vineyard_image=args.k8s_vineyard_image,
-    #         vineyard_mem=args.k8s_vineyard_mem,
-    #         vineyard_shared_mem=args.vineyard_shared_mem,
-    #         volumes=args.k8s_volumes,
-    #         waiting_for_delete=args.waiting_for_delete,
-    #         with_mars=args.k8s_with_mars,
-    #         enabled_engines=args.k8s_enabled_engines,
-    #         dataset_proxy=args.dataset_proxy,
-    #         deploy_mode=args.k8s_deploy_mode,
-    #     )
-    # elif args.cluster_type == "hosts":
-    #     launcher = LocalLauncher(
-    #         num_workers=args.num_workers,
-    #         hosts=args.hosts,
-    #         etcd_addrs=args.etcd_addrs,
-    #         etcd_listening_client_port=args.etcd_listening_client_port,
-    #         etcd_listening_peer_port=args.etcd_listening_peer_port,
-    #         vineyard_socket=args.vineyard_socket,
-    #         shared_mem=args.vineyard_shared_mem,
-    #         log_level=args.log_level,
-    #         instance_id=args.instance_id,
-    #         timeout_seconds=args.timeout_seconds,
-    #     )
+        launcher = KubernetesClusterLauncher(config)
+
     else:
         raise RuntimeError("Expect hosts or k8s of cluster_type parameter")
     return launcher
