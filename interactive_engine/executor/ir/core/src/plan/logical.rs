@@ -156,7 +156,10 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
                     .map(|old| id_map[&old])
                     .collect::<Vec<NodeId>>();
 
-                if id == 0 && parent_ids.is_empty() {
+                // Point the nodes of pb root to the dummy RootScan
+                // For example, pb::LogicalPlan: scan->out->...
+                //              LogicalPlan: dummy root->scan->out...
+                if pb.roots.contains(&(id as i32)) && parent_ids.is_empty() {
                     parent_ids = vec![0];
                 }
 
