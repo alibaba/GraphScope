@@ -21,15 +21,73 @@
 #include <vector>
 
 #include "flex/engines/hqps_db/core/null_record.h"
+#include "flex/storages/rt_mutable_graph/mutable_csr.h"
+#include "flex/utils/property/types.h"
 
 namespace gs {
 
 namespace mutable_csr_graph_impl {
 
+template <typename LabelT>
+// Base interface for edge iterator
+class EdgeIter {
+ public:
+  using label_id_t = LabelT;
+  EdgeIter() {}
+  EdgeIter(const std::array<LabelT, 3>& label_triplet)
+      : label_triplet_(label_triplet) {}
+  EdgeIter(const EdgeIter& other)
+      : label_triplet_(other.label_triplet_), ptr1_(other.ptr1_) {}
+  EdgeIter(const std::array<LabelT, 3>& label_triplet,
+           std::shared_ptr<MutableCsrConstEdgeIterBase> ptr)
+      : label_triplet_(label_triplet), ptr1_(ptr) {}
+  inline void Next() const { ptr1_->next(); }
+  inline vid_t GetDstId() const { return ptr1_->get_neighbor(); }
+
+  inline label_id_t GetDstLabel() const { return label_triplet_[1]; }
+
+  inline label_id_t GetSrcLabel() const { return label_triplet_[0]; }
+
+  inline Any GetData() const { return ptr1_->get_data(); }
+  inline bool IsValid() const { return ptr1_->is_valid(); }
+
+  size_t Size() const { return ptr1_->size(); }
+
+ private:
+  std::shared_ptr<MutableCsrConstEdgeIterBase> ptr1_;
+  std::array<LabelT, 3> label_triplet_;
+};
+
+// A subGraph is a view of a simple graph, with one src label and one dst label.
+// Cound be empty.
+template <typename LabelT, typename VID_T>
+class SubGraph {
+ public:
+  using iterator = EdgeIter<LabelT>;
+  using label_id_t = LabelT;
+  SubGraph(const MutableCsrBase* first,
+           const std::array<label_id_t, 3>& label_triplet)
+      : first_(first), label_triplet_(label_triplet) {}
+
+  inline iterator get_edges(VID_T vid) const {
+    return iterator(label_triplet_, first_->edge_iter(vid));
+  }
+
+  label_id_t GetSrcLabel() const { return label_triplet_[0]; }
+  label_id_t GetEdgeLabel() const { return label_triplet_[2]; }
+  label_id_t GetDstLabel() const { return label_triplet_[1]; }
+
+ private:
+  const MutableCsrBase* first_;
+  // We assume first is out edge, second is in edge.
+  std::array<label_id_t, 3> label_triplet_;
+};
+
 template <typename T>
 class SinglePropGetter {
  public:
   using value_type = T;
+  static constexpr size_t prop_num = 1;
   SinglePropGetter() {}
   SinglePropGetter(std::shared_ptr<TypedRefColumn<T>> c) : column(c) {
     CHECK(column.get() != nullptr);
@@ -58,6 +116,7 @@ class MultiPropGetter {
  public:
   using column_tuple_t = std::tuple<std::shared_ptr<TypedRefColumn<T>>...>;
   using result_tuple_t = std::tuple<T...>;
+  static constexpr size_t prop_num = sizeof...(T);
   MultiPropGetter() {}
   MultiPropGetter(column_tuple_t c) : column(c) {}
 
@@ -390,10 +449,13 @@ class AdjListArray<T> {
   AdjListArray(const csr_base_t* csr, const std::vector<vid_t>& vids)
       : flag_(false) {
     slices_.reserve(vids.size());
-    const typed_csr_base_t* casted_csr =
-        dynamic_cast<const typed_csr_base_t*>(csr);
-    for (auto v : vids) {
-      slices_.emplace_back(std::make_pair(casted_csr->get_edges(v), slice_t()));
+    if (csr) {
+      const typed_csr_base_t* casted_csr =
+          dynamic_cast<const typed_csr_base_t*>(csr);
+      for (auto v : vids) {
+        slices_.emplace_back(
+            std::make_pair(casted_csr->get_edges(v), slice_t()));
+      }
     }
   }
   AdjListArray(const csr_base_t* csr0, const csr_base_t* csr1,
@@ -406,8 +468,18 @@ class AdjListArray<T> {
     const typed_csr_base_t* casted_csr1 =
         dynamic_cast<const typed_csr_base_t*>(csr1);
     for (auto v : vids) {
-      slices_.emplace_back(
-          std::make_pair(casted_csr0->get_edges(v), casted_csr1->get_edges(v)));
+      if (casted_csr0 && casted_csr1) {
+        slices_.emplace_back(std::make_pair(casted_csr0->get_edges(v),
+                                            casted_csr1->get_edges(v)));
+      } else if (casted_csr0 && !casted_csr1) {
+        slices_.emplace_back(
+            std::make_pair(casted_csr0->get_edges(v), slice_t()));
+      } else if (!casted_csr0 && casted_csr1) {
+        slices_.emplace_back(
+            std::make_pair(slice_t(), casted_csr1->get_edges(v)));
+      } else {
+        slices_.emplace_back(std::make_pair(slice_t(), slice_t()));
+      }
     }
   }
 

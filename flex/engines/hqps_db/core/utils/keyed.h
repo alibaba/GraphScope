@@ -19,6 +19,7 @@
 #include "flex/engines/hqps_db/core/utils/props.h"
 #include "flex/engines/hqps_db/structures/collection.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/adj_edge_set.h"
+#include "flex/engines/hqps_db/structures/multi_edge_set/untyped_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/general_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/keyed_row_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/row_vertex_set.h"
@@ -219,16 +220,16 @@ struct KeyedAggT<GI, TwoLabelVertexSet<VID_T, LabelT, T...>,
 };
 
 // general vertex set to_count
-template <typename GI, typename VID_T, typename LabelT, size_t N,
-          typename PropT, int tag_id>
-struct KeyedAggT<GI, GeneralVertexSet<VID_T, LabelT, N>, AggFunc::COUNT,
+template <typename GI, typename VID_T, typename LabelT, typename PropT,
+          int tag_id>
+struct KeyedAggT<GI, GeneralVertexSet<VID_T, LabelT>, AggFunc::COUNT,
                  std::tuple<PropT>, std::integer_sequence<int32_t, tag_id>> {
   using agg_res_t = Collection<size_t>;
   // build a counter array.
   using aggregate_res_builder_t = CountBuilder<tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
-      const GeneralVertexSet<VID_T, LabelT, N>& set, const GI& graph,
+      const GeneralVertexSet<VID_T, LabelT>& set, const GI& graph,
       std::tuple<PropertySelector<PropT>>& selectors) {
     return CountBuilder<tag_id>();
   }
@@ -367,6 +368,21 @@ struct KeyedAggT<GI, TwoLabelVertexSetImpl<VID_T, LabelT, T...>, AggFunc::FIRST,
   }
 };
 
+template <typename GI, typename VID_T, typename LabelT, int tag_id>
+struct KeyedAggT<GI, UnTypedEdgeSet<VID_T, LabelT, typename GI::sub_graph_t>,
+                 AggFunc::COUNT, std::tuple<grape::EmptyType>,
+                 std::integer_sequence<int32_t, tag_id>> {
+  using agg_res_t = Collection<size_t>;
+  using aggregate_res_builder_t = CountBuilder<tag_id>;
+
+  static aggregate_res_builder_t create_agg_builder(
+      const UnTypedEdgeSet<VID_T, LabelT, typename GI::sub_graph_t>& set,
+      const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
+    return CountBuilder<tag_id>();
+  }
+};
+
 template <typename LabelT, typename KEY_T, typename VID_T, typename... T,
           typename ELE, typename DATA>
 static inline auto insert_into_builder_v2_impl(
@@ -408,10 +424,10 @@ static inline auto insert_into_builder_v2_impl(BuilderT& builder,
   return builder.Insert(ele, data);
 }
 
-template <typename VID_T, typename LabelT, size_t N, typename... EDATA_T,
-          typename ELE, typename DATA>
+template <typename VID_T, typename LabelT, typename EDATA_T, typename ELE,
+          typename DATA>
 static inline auto insert_into_builder_v2_impl(
-    FlatEdgeSetBuilder<VID_T, LabelT, N, EDATA_T...>& builder, const ELE& ele,
+    FlatEdgeSetBuilder<VID_T, LabelT, EDATA_T>& builder, const ELE& ele,
     const DATA& data) {
   return builder.Insert(ele);
 }

@@ -90,7 +90,39 @@ class SyncEngine : public BaseEngine {
     return Context<COL_T, -1, 0, grape::EmptyType>(std::move(v_set_tuple));
   }
 
-  /// @brief Scan vertices with multiple labels
+  // Scan vertices with multiple labels, more than two labels
+  template <AppendOpt append_opt, size_t num_labels, typename EXPR,
+            typename... SELECTOR,
+            typename std::enable_if<(append_opt == AppendOpt::Persist &&
+                                     num_labels != 2)>::type* = nullptr,
+            typename COL_T = GeneralVertexSet<vertex_id_t, label_id_t>>
+  static Context<COL_T, 0, 0, grape::EmptyType> ScanVertex(
+      const GRAPH_INTERFACE& graph,
+      std::array<label_id_t, num_labels>&& v_labels,
+      Filter<EXPR, SELECTOR...>&& filter) {
+    auto v_set_tuple = Scan<GRAPH_INTERFACE>::template ScanMultiLabelVertex(
+        graph, v_labels, std::move(filter));
+
+    return Context<COL_T, 0, 0, grape::EmptyType>(std::move(v_set_tuple));
+  }
+
+  // Scan vertices with multiple labels, more than two labels, temporally stored
+  template <AppendOpt append_opt, size_t num_labels, typename EXPR,
+            typename... SELECTOR,
+            typename std::enable_if<(append_opt == AppendOpt::Temp &&
+                                     num_labels != 2)>::type* = nullptr,
+            typename COL_T = GeneralVertexSet<vertex_id_t, label_id_t>>
+  static Context<COL_T, 0, 0, grape::EmptyType> ScanVertex(
+      const GRAPH_INTERFACE& graph,
+      std::array<label_id_t, num_labels>&& v_labels,
+      Filter<EXPR, SELECTOR...>&& filter) {
+    auto v_set_tuple = Scan<GRAPH_INTERFACE>::template ScanMultiLabelVertex(
+        graph, v_labels, std::move(filter));
+
+    return Context<COL_T, -1, 0, grape::EmptyType>(std::move(v_set_tuple));
+  }
+
+  /// @brief Scan vertices with two labels
   /// @tparam FUNC
   /// @tparam COL_T
   /// @tparam res_alias
@@ -101,8 +133,8 @@ class SyncEngine : public BaseEngine {
   /// @return
   template <AppendOpt append_opt, size_t num_labels, typename EXPR,
             typename... SELECTOR,
-            typename std::enable_if<(append_opt == AppendOpt::Persist)>::type* =
-                nullptr,
+            typename std::enable_if<(append_opt == AppendOpt::Persist &&
+                                     num_labels == 2)>::type* = nullptr,
             typename COL_T = two_label_set_t>
   static Context<COL_T, 0, 0, grape::EmptyType> ScanVertex(
       const GRAPH_INTERFACE& graph,
@@ -114,11 +146,11 @@ class SyncEngine : public BaseEngine {
     return Context<COL_T, 0, 0, grape::EmptyType>(std::move(v_set_tuple));
   }
 
-  template <
-      AppendOpt append_opt, size_t num_labels, typename EXPR,
-      typename... SELECTOR,
-      typename std::enable_if<(append_opt == AppendOpt::Temp)>::type* = nullptr,
-      typename COL_T = two_label_set_t>
+  template <AppendOpt append_opt, size_t num_labels, typename EXPR,
+            typename... SELECTOR,
+            typename std::enable_if<(append_opt == AppendOpt::Temp &&
+                                     num_labels == 2)>::type* = nullptr,
+            typename COL_T = two_label_set_t>
   static Context<COL_T, -1, 0, grape::EmptyType> ScanVertex(
       const GRAPH_INTERFACE& graph,
       std::array<label_id_t, num_labels>&& v_labels,
@@ -155,6 +187,27 @@ class SyncEngine : public BaseEngine {
 
   //////////////////////////EdgeExpand////////////////////////////
 
+  ////Edge ExpandE with multiple edge label triplets. (src, dst, edge)
+  template <AppendOpt append_opt, int input_col_id, typename CTX_HEAD_T,
+            int cur_alias, int base_tag, typename... CTX_PREV, size_t num_pairs,
+            typename FILTER_T, typename... PropTuple>
+  static auto EdgeExpandE(
+      const GRAPH_INTERFACE& graph,
+      Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
+      EdgeExpandMultiEOpt<num_pairs, label_id_t, FILTER_T, PropTuple...>&&
+          edge_expand_opt,
+      size_t limit = INT_MAX) {
+    auto& select_node = gs::Get<input_col_id>(ctx);
+
+    auto pair = EdgeExpand<GRAPH_INTERFACE>::template EdgeExpandEMultiTriplet<
+        num_pairs, PropTuple...>(
+        graph, select_node, edge_expand_opt.dir_,
+        edge_expand_opt.edge_label_triplets_, edge_expand_opt.prop_names_,
+        std::move(edge_expand_opt.edge_filter_), limit);
+    return ctx.template AddNode<append_opt>(
+        std::move(pair.first), std::move(pair.second), input_col_id);
+  }
+
   /// @brief //////// Edge Expand to vertex, the output is vertices with out any
   /// property!
   /// According to whether the alias_to_use is the head node, we shall have two
@@ -188,6 +241,27 @@ class SyncEngine : public BaseEngine {
         graph, select_node, edge_expand_opt.dir_, edge_expand_opt.edge_label_,
         edge_expand_opt.other_label_, std::move(edge_expand_opt.edge_filter_),
         limit);
+    return ctx.template AddNode<append_opt>(
+        std::move(pair.first), std::move(pair.second), input_col_id);
+  }
+
+  // EdgeExpand via multiple edge triplet, got vertices with different labels.
+  template <AppendOpt append_opt, int input_col_id, typename CTX_HEAD_T,
+            int cur_alias, int base_tag, typename... CTX_PREV, size_t num_pairs,
+            typename EDGE_FILTER_T, typename... PropTuple>
+  static auto EdgeExpandV(
+      const GRAPH_INTERFACE& graph,
+      Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
+      EdgeExpandMultiEOpt<num_pairs, label_id_t, EDGE_FILTER_T, PropTuple...>&&
+          edge_expand_opt,
+      size_t limit = INT_MAX) {
+    auto& select_node = gs::Get<input_col_id>(ctx);
+
+    auto pair = EdgeExpand<GRAPH_INTERFACE>::template EdgeExpandVMultiTriplet<
+        num_pairs, PropTuple...>(
+        graph, select_node, edge_expand_opt.dir_,
+        edge_expand_opt.edge_label_triplets_, edge_expand_opt.prop_names_,
+        std::move(edge_expand_opt.edge_filter_), limit);
     return ctx.template AddNode<append_opt>(
         std::move(pair.first), std::move(pair.second), input_col_id);
   }
@@ -618,7 +692,7 @@ class SyncEngine : public BaseEngine {
     new_offsets.emplace_back(0);
     offset_t cur_offset = 0;
     offset_t cur_ind = 0;
-    auto& cur_ = ctx.GetHead();
+    auto& cur_ = ctx.GetMutableHead();
     select_indices.reserve(cur_.Size());
     // create prop_desc from in_col_id and selectors
     auto prop_descs = create_prop_descs_from_selectors<in_col_id...>(selectors);

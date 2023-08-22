@@ -77,13 +77,13 @@ auto make_vertex_set_b() {
 
 auto make_vertex_set_c() {
   std::vector<gs::vid_t> vids{0, 1, 4};
-  auto res = gs::MakeDefaultRowVertexSet(std::move(vids), "0");
+  auto res = gs::make_default_row_vertex_set(std::move(vids), "0");
   return res;
 }
 
 auto make_vertex_set_d() {
   std::vector<gs::vid_t> vids{2, 3, 1, 0};
-  auto res = gs::MakeDefaultRowVertexSet(std::move(vids), "0");
+  auto res = gs::make_default_row_vertex_set(std::move(vids), "0");
   return res;
 }
 

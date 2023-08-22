@@ -26,6 +26,7 @@ limitations under the License.
 #include "flex/codegen/src/hqps/hqps_fold_builder.h"
 #include "flex/codegen/src/hqps/hqps_get_v_builder.h"
 #include "flex/codegen/src/hqps/hqps_join_utils.h"
+#include "flex/codegen/src/hqps/hqps_limit_builder.h"
 #include "flex/codegen/src/hqps/hqps_path_expand_builder.h"
 #include "flex/codegen/src/hqps/hqps_project_builder.h"
 #include "flex/codegen/src/hqps/hqps_scan_builder.h"
@@ -494,6 +495,14 @@ class QueryGenerator {
 
       case physical::PhysicalOpr::Operator::kRepartition: {
         LOG(INFO) << "Found a repartition operator, just ignore";
+        break;
+      }
+
+      case physical::PhysicalOpr::Operator::kLimit: {
+        LOG(INFO) << "Found a limit operator";
+        auto& limit_op = opr.limit();
+        std::string limit_code = BuildLimitOp(ctx_, limit_op);
+        ss << limit_code << std::endl;
         break;
       }
 

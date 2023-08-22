@@ -40,7 +40,7 @@ static constexpr const char* GET_V_NO_FILTER_TEMPLATE_STR =
     "auto %4% = Engine::template GetV<%5%,%6%>(%7%, std::move(%8%), "
     "std::move(%1%));\n";
 static constexpr const char* GET_V_FILTER_TEMPLATE_STR =
-    "auto %1% = gs::make_filter(%2%(%3%), %4%);\n"
+    "auto %1% = gs::make_filter(%2%(%3%) %4%);\n"
     "auto %5% = make_getv_opt(%6%, %7%, std::move(%1%));\n"
     "auto %8% = Engine::template GetV<%9%,%10%>(%11%, std::move(%12%), "
     "std::move(%5%));\n";
@@ -186,6 +186,9 @@ class GetVOpBuilder {
       }
       {
         std::stringstream ss;
+        if (tag_propertys_.size() > 0) {
+          ss << ", ";
+        }
         for (int i = 0; i < tag_propertys_.size(); ++i) {
           ss << tag_propertys_[i].second;
           if (i != tag_propertys_.size() - 1) {

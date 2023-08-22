@@ -621,12 +621,12 @@ static bool parse_edges_schema(YAML::Node node, Schema& schema) {
     return false;
   }
   int num = node.size();
+  VLOG(10) << "Try to parse " << num << "edge configuration";
   for (int i = 0; i < num; ++i) {
     if (!parse_edge_schema(node[i], schema)) {
       return false;
     }
   }
-
   return true;
 }
 
