@@ -137,6 +137,8 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+        time=$(date "+%Y%m%d")
+        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         # create
         
         sudo docker manifest create \
