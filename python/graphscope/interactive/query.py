@@ -132,7 +132,7 @@ class InteractiveQuery(object):
         if lang == "gremlin":
             return self.gremlin_client.submit(query, request_options=request_options)
         elif lang == "cypher":
-            return self.cypher_driver.execute_query(query, routing_=RoutingControl.READ)
+            return self.cypher_driver.execute_query(query, routing_=RoutingControl.READ, **kwargs)
         else:
             raise ValueError(
                 f"Unsupported query language: {lang} other than gremlin and cypher"
