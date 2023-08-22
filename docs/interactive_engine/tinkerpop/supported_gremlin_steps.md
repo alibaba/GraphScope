@@ -701,6 +701,7 @@ Expression(s) in project or filter:
     g.V().where(expr("@.name == \"marko\"")) # = g.V().has("name", "marko")
     g.V().where(expr("@.age > 10")) # = g.V().has("age", P.gt(10))
     g.V().as("a").out().where(expr("@.name == \"marko\" || (@a.age > 10)"))
+    g.V().where(expr("@.age isNull"))
     ```
 * project: select(expr("..."))
     ```bash
@@ -715,6 +716,14 @@ gremlin> g.V().as("a").where(expr("@a.name == \"marko\" || (@a.age > 10)"))
 ==>v[1]
 ==>v[4]
 ==>v[6]
+gremlin> g.V().where(expr("@.age isNull")).values("name")
+==>ripple
+==>lop
+gremlin>  g.V().where(expr("!(@.age isNull)")).values("name")
+==>marko
+==>vadas
+==>josh
+==>peter
 gremlin> g.V().select(expr("@.name"))
 ==>marko
 ==>vadas
