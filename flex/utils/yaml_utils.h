@@ -53,11 +53,12 @@ static bool expect_config(YAML::Node root, const std::string& key,
                           const V& value) {
   V got;
   if (!get_scalar(root, key, got)) {
-    LOG(ERROR) << "Expect key: " << key << "set to " << value << " but not set";
+    LOG(ERROR) << "Expect key: " << key << " set to " << value
+               << " but not set";
     return false;
   }
   if (got != value) {
-    LOG(ERROR) << "Expect key: " << key << "set to " << value << " but got "
+    LOG(ERROR) << "Expect key: " << key << " set to " << value << " but got "
                << got;
     return false;
   }

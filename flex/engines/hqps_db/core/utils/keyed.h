@@ -56,17 +56,20 @@ struct KeyedT<RowVertexSet<LabelT, VID_T, T...>,
               PropertySelector<grape::EmptyType>> {
   using keyed_set_t = KeyedRowVertexSet<LabelT, VID_T, VID_T, T...>;
   // // The builder type.
-  using builder_t = KeyedRowVertexSetBuilder<LabelT, VID_T, VID_T, T...>;
-};
+  using keyed_builder_t = KeyedRowVertexSetBuilder<LabelT, VID_T, VID_T, T...>;
+  using unkeyed_builder_t = RowVertexSetBuilder<LabelT, VID_T, T...>;
 
-// group by the vertex set itself
-template <typename LabelT, typename VID_T>
-struct KeyedT<RowVertexSet<LabelT, VID_T, grape::EmptyType>,
-              PropertySelector<grape::EmptyType>> {
-  using keyed_set_t = KeyedRowVertexSet<LabelT, VID_T, VID_T, grape::EmptyType>;
-  // // The builder type.
-  using builder_t =
-      KeyedRowVertexSetBuilder<LabelT, VID_T, VID_T, grape::EmptyType>;
+  static keyed_builder_t create_keyed_builder(
+      const RowVertexSet<LabelT, VID_T, T...>& set,
+      const PropertySelector<grape::EmptyType>& selector) {
+    return keyed_builder_t(set);
+  }
+
+  static unkeyed_builder_t create_unkeyed_builder(
+      const RowVertexSet<LabelT, VID_T, T...>& set,
+      const PropertySelector<grape::EmptyType>& selector) {
+    return set.CreateBuilder();
+  }
 };
 
 // group by the vertex set' property
@@ -74,7 +77,20 @@ template <typename LabelT, typename VID_T, typename... T, typename PropT>
 struct KeyedT<RowVertexSet<LabelT, VID_T, T...>, PropertySelector<PropT>> {
   using keyed_set_t = Collection<PropT>;
   // // The builder type.
-  using builder_t = KeyedCollectionBuilder<PropT>;
+  using keyed_builder_t = KeyedCollectionBuilder<PropT>;
+  using unkeyed_builder_t = CollectionBuilder<PropT>;
+
+  static keyed_builder_t create_keyed_builder(
+      const RowVertexSet<LabelT, VID_T, T...>& set,
+      const PropertySelector<PropT>& selector) {
+    return keyed_builder_t(set);
+  }
+
+  static unkeyed_builder_t create_unkeyed_builder(
+      const RowVertexSet<LabelT, VID_T, T...>& set,
+      const PropertySelector<PropT>& selector) {
+    return unkeyed_builder_t();
+  }
 };
 
 // key on a keyed row vertex get us a unkeyed set.
@@ -83,24 +99,49 @@ struct KeyedT<KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, SET_T...>,
               PropertySelector<grape::EmptyType>> {
   using keyed_set_t = KeyedRowVertexSetImpl<LabelT, VID_T, SET_T...>;
   // // The builder type.
-  using builder_t = KeyedRowVertexSetBuilder<LabelT, VID_T, SET_T...>;
+  using keyed_builder_t = KeyedRowVertexSetBuilder<LabelT, VID_T, SET_T...>;
+  using unkeyed_builder_t =
+      typename KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, SET_T...>::builder_t;
+  static keyed_builder_t create_keyed_builder(
+      const KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, SET_T...>& set,
+      const PropertySelector<grape::EmptyType>& selector) {
+    return builder_t(set);
+  }
+  static unkeyed_builder_t create_unkyedkeyed_builder(
+      const KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, SET_T...>& set,
+      const PropertySelector<grape::EmptyType>& selector) {
+    return set.CreateBuilder();
+  }
 };
 
 // group by vertex set' id, for generate vertex set.
-template <typename VID_T, typename LabelT, size_t N>
-struct KeyedT<GeneralVertexSet<VID_T, LabelT, N>,
-              PropertySelector<grape::EmptyType>> {
-  using keyed_set_t = KeyedRowVertexSet<LabelT, VID_T, VID_T, grape::EmptyType>;
-  // // The builder type.
-  using builder_t =
-      KeyedRowVertexSetBuilder<LabelT, VID_T, VID_T, grape::EmptyType>;
-};
+// template <typename VID_T, typename LabelT, size_t N>
+// struct KeyedT<GeneralVertexSet<VID_T, LabelT, N>,
+//               PropertySelector<grape::EmptyType>> {
+//   using keyed_set_t = KeyedRowVertexSet<LabelT, VID_T, VID_T,
+//   grape::EmptyType>;
+//   // // The builder type.
+//   using builder_t =
+//       KeyedRowVertexSetBuilder<LabelT, VID_T, VID_T, grape::EmptyType>;
+// };
 
 template <typename T>
 struct KeyedT<Collection<T>, PropertySelector<grape::EmptyType>> {
   using keyed_set_t = Collection<T>;
   // // The builder type.
-  using builder_t = KeyedCollectionBuilder<T>;
+  using keyed_builder_t = KeyedCollectionBuilder<T>;
+  using unkeyed_builder_t = CollectionBuilder<T>;
+
+  static keyed_builder_t create_keyed_builder(
+      const Collection<T>& set,
+      const PropertySelector<grape::EmptyType>& selector) {
+    return builder_t(set);
+  }
+  static unkeyed_builder_t create_unkyedkeyed_builder(
+      const Collection<T>& set,
+      const PropertySelector<grape::EmptyType>& selector) {
+    return unkeyed_builder_t();
+  }
 };
 
 // when keyed with aggregation function, (which we currently only support

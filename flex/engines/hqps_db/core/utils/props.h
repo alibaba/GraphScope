@@ -733,6 +733,20 @@ auto create_prop_descs_from_selectors(
       std::make_index_sequence<sizeof...(SELECTOR)>());
 }
 
+template <typename... GROUP_KEY, size_t... Is>
+static auto create_prop_descs_from_group_keys_impl(
+    const std::tuple<GROUP_KEY...>& group_keys, std::index_sequence<Is...>) {
+  auto tuple = std::make_tuple(std::get<Is>(group_keys).selector_...);
+  return create_prop_descs_from_selectors<GROUP_KEY::col_id...>(tuple);
+}
+
+template <typename... GROUP_KEY>
+static auto create_prop_descs_from_group_keys(
+    const std::tuple<GROUP_KEY...>& group_keys) {
+  return create_prop_descs_from_group_keys_impl(
+      group_keys, std::make_index_sequence<sizeof...(GROUP_KEY)>());
+}
+
 }  // namespace gs
 
 #endif  // ENGINES_HQPS_ENGINE_OPERATOR_PROP_UTILS_H_

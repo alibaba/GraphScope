@@ -259,8 +259,6 @@ static std::string BuildGroupByOp(
     BuildingContext& ctx, const physical::GroupBy& group_by_pb,
     const physical::PhysicalOpr::MetaData& meta_data) {
   GroupByOpBuilder builder(ctx);
-  CHECK(group_by_pb.mappings_size() == 1)
-      << "Currently we only support one key";
   auto& key_aliases = group_by_pb.mappings();
 
   CHECK(group_by_pb.functions_size() >= 1);

@@ -81,23 +81,34 @@ jobs:
         cd ${GIE_HOME}/compiler
         make build
 
+    - name: Prepare dataset
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        # download dataset
+        git clone -b master --single-branch --depth=1 https://github.com/Graphscope/gstest.git ${GS_TEST_DIR}
+
+    - name: Sample Query test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/build
+        export FLEX_DATA_DIR=${GS_TEST_DIR}/flex/ldbc-sf01-long-date
+        ./tests/hqps/query_test ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml \
+        ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_bulk_load.yaml \
+        /tmp/csr-data-dir/
+
     - name: Run codegen test.
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
-        GIE_HOME: ${{ github.workspace }}/interactive_engine/
         HOME : /home/graphscope/
       run: |
-        # download dataset
-        git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
-
-        #flex_test_dir=${GS_TEST_DIR}/flex
-        ## preprocess bulk_load.yaml to use gstest_dir
-        #sed -i "s|workspaces/gstest|$GS_TEST_DIR|" ${flex_test_dir}/ldbc-sf01-long-date/audit_bulk_load.yaml
+        GIE_HOME=${GITHUB_WORKSPACE}/interactive_engine
 
         # create tmp ir.compiler.properties
         touch /tmp/ir.compiler.properties
         echo "engine.type: hiactor" >> /tmp/ir.compiler.properties
-        echo "graph.schema: ${GIE_HOME}/executor/ir/core/resource/modern_schema.json" >> /tmp/ir.compiler.properties
+        echo "graph.schema: ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/ldbc_schema_csr_ic.json" >> /tmp/ir.compiler.properties
         echo "graph.store: exp" >> /tmp/ir.compiler.properties
         echo "graph.planner: {\"isOn\":true,\"opt\":\"RBO\",\"rules\":[\"FilterMatchRule\"]}" >> /tmp/ir.compiler.properties
 
@@ -108,7 +119,16 @@ jobs:
           cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/ic${i}_adhoc.cypher -w=/tmp/codgen/"
           cmd=${cmd}" -o=/tmp/plugin --ir_conf=/tmp/ir.compiler.properties "
           cmd=${cmd}" --graph_schema_path=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/ldbc_schema_csr_ic.json"
+          cmd=${cmd}" --gie_home=${GIE_HOME}"
           echo $cmd
           eval ${cmd}
         done
+    - name: Run End-to-End cypher adhoc query test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        HOME : /home/graphscope/
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
+        export FLEX_DATA_DIR=${GS_TEST_DIR}/flex/ldbc-sf01-long-date
+        bash hqps_cypher_test.sh ${GS_TEST_DIR}
 
