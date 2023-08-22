@@ -184,12 +184,12 @@ class CollectionIter {
 template <typename T>
 class CollectionIter<std::tuple<T>> {
  public:
-  using ele_t = std::tuple<T>;
-  using data_tuple_t = std::tuple<ele_t>;
-  using inner_iter_t = typename std::vector<ele_t>::const_iterator;
-  using self_type_t = CollectionIter<ele_t>;
+  using element_type = std::tuple<T>;
+  using data_tuple_t = std::tuple<element_type>;
+  using inner_iter_t = typename std::vector<element_type>::const_iterator;
+  using self_type_t = CollectionIter<element_type>;
   using index_ele_tuple_t = std::tuple<size_t, T>;
-  CollectionIter(const std::vector<ele_t>& vec, size_t ind)
+  CollectionIter(const std::vector<element_type>& vec, size_t ind)
       : vec_(vec), ind_(ind) {}
 
   T GetElement() const { return std::get<0>(vec_[ind_]); }
@@ -218,12 +218,13 @@ class CollectionIter<std::tuple<T>> {
 
  private:
   size_t ind_;
-  const std::vector<ele_t>& vec_;
+  const std::vector<element_type>& vec_;
 };
 
 template <typename T>
 class Collection {
  public:
+  using element_type = T;
   using value_type = T;
   using iterator = CollectionIter<T>;
   using data_tuple_t = typename iterator::data_tuple_t;
@@ -768,6 +769,8 @@ class CollectionOfSetBuilder<
     T, GRAPH_INTERFACE, RowVertexSetImpl<LabelT, VID_T, OLD_T...>, tag_id> {
  public:
   using set_t = RowVertexSetImpl<LabelT, VID_T, OLD_T...>;
+  using index_ele_t = typename set_t::index_ele_tuple_t;
+  using set_ele_t = typename set_t::element_t;
   using graph_prop_getter_t =
       typename GRAPH_INTERFACE::template single_prop_getter_t<T>;
   using PROP_GETTER_T =

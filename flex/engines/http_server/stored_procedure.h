@@ -30,6 +30,7 @@
 
 #include <hiactor/util/data_type.hh>
 #include <seastar/core/print.hh>
+#include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/hqps_db/app/hqps_app_base.h"
 #include "flex/engines/hqps_db/database/mutable_csr_interface.h"
 #include "flex/utils/app_utils.h"
@@ -38,8 +39,7 @@
 
 namespace server {
 
-std::string load_and_run(int32_t job_id, const std::string& lib_path,
-                         int32_t shard_id);
+std::string load_and_run(int32_t job_id, const std::string& lib_path);
 
 // get the handle of the dynamic library, throw error if needed
 void* open_lib(const char* lib_path);
@@ -83,7 +83,7 @@ struct StoredProcedureMeta {
 std::vector<StoredProcedureMeta> parse_stored_procedures(
     const std::string& stored_procedure_yaml);
 std::vector<StoredProcedureMeta> parse_from_multiple_yamls(
-    const std::vector<std::string>& stored_procedure_yamls);
+    const std::string& plugin_dir, const std::vector<std::string>& stored_procedure_yamls);
 
 enum class StoredProcedureType {
   kCypher = 0,
@@ -140,7 +140,7 @@ class CypherStoredProcedure;
 // To support ad-hoc query, and reuse code.
 
 std::shared_ptr<BaseStoredProcedure> create_stored_procedure_impl(
-    int32_t procedure_id, const std::string& procedure_path, int32_t shard_id);
+    int32_t procedure_id, const std::string& procedure_path);
 
 std::vector<std::string> get_yaml_files(const std::string& plugin_dir);
 
@@ -150,25 +150,23 @@ class StoredProcedureManager {
   StoredProcedureManager() {}
 
   // expect multiple query.yaml under this directory.
-  void LoadFromPluginDir(const std::string& plugin_dir, int32_t shard_id) {
+  void LoadFromPluginDir(const std::string& plugin_dir) {
     auto yaml_files = get_yaml_files(plugin_dir);
-    auto stored_procedures = parse_from_multiple_yamls(yaml_files);
-    CreateStoredProcedures(stored_procedures, shard_id);
+    auto stored_procedures = parse_from_multiple_yamls(plugin_dir, yaml_files);
+    CreateStoredProcedures(stored_procedures);
   }
 
-  void LoadFromYaml(const std::string& stored_procedure_yaml,
-                    int32_t shard_id) {
+  void LoadFromYaml(const std::string& stored_procedure_yaml) {
     auto stored_procedures = parse_stored_procedures(stored_procedure_yaml);
-    CreateStoredProcedures(stored_procedures, shard_id);
+    CreateStoredProcedures(stored_procedures);
   }
 
   void CreateStoredProcedures(
-      const std::vector<StoredProcedureMeta>& stored_procedures,
-      int32_t shard_id) {
+      const std::vector<StoredProcedureMeta>& stored_procedures) {
     for (auto i = 0; i < stored_procedures.size(); ++i) {
-      stored_procedures_.emplace(stored_procedures[i].name,
-                                 server::create_stored_procedure_impl(
-                                     i, stored_procedures[i].path, shard_id));
+      stored_procedures_.emplace(
+          stored_procedures[i].name,
+          server::create_stored_procedure_impl(i, stored_procedures[i].path));
     }
 
     LOG(INFO) << "Load [" << stored_procedures_.size() << "] stored procedures";
@@ -219,14 +217,16 @@ class CypherStoredProcedure : public BaseStoredProcedure {
   static constexpr const char* DELETER_APP_FUNC_NAME = "DeleteApp";
 
   CypherStoredProcedure(int32_t procedure_id, std::string procedure_path,
-                        const GRAPH_TYPE& graph,
-                        gs::GraphStoreType graph_store_type)
+                        GRAPH_TYPE&& graph, gs::GraphStoreType graph_store_type)
       : BaseStoredProcedure(procedure_id, procedure_path),
         app_ptr_(nullptr),
         create_app_ptr_(nullptr),
         delete_app_ptr_(nullptr),
-        graph_(graph),
+        graph_(std::move(graph)),
         graph_store_type_(graph_store_type) {
+    LOG(INFO) << "creating stored procedure: v label num: "
+              << std::to_string(
+                     graph_.GetDBSession().schema().vertex_label_num());
     // get the func_ptr we need for cypher query.
     create_app_ptr_ = reinterpret_cast<CreateAppT*>(get_func_ptr(
         procedure_path_.c_str(), dl_handle_, CREATOR_APP_FUNC_NAME));
@@ -254,6 +254,8 @@ class CypherStoredProcedure : public BaseStoredProcedure {
   results::CollectiveResults Query(gs::Decoder& decoder) const override {
     CHECK(app_ptr_);
     LOG(INFO) << "Start to query with cypher stored procedure";
+    LOG(INFO) << "label num:"
+              << graph_.GetDBSession().schema().vertex_label_num();
     return app_ptr_->Query(graph_, decoder);
   }
 
@@ -272,7 +274,7 @@ class CypherStoredProcedure : public BaseStoredProcedure {
   }
 
  private:
-  const GRAPH_TYPE& graph_;
+  GRAPH_TYPE graph_;
   gs::GraphStoreType graph_store_type_;
   gs::HqpsAppBase<GRAPH_TYPE>* app_ptr_;
 
