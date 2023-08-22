@@ -589,20 +589,6 @@ impl From<(pb::EdgeExpand, pb::GetV)> for pb::path_expand::ExpandBase {
     }
 }
 
-impl pb::LogicalPlan {
-    pub fn append_root(&mut self, operator: pb::logical_plan::Operator) {
-        let root_node = pb::logical_plan::Node { opr: Some(operator), children: self.roots.clone() };
-        self.nodes.insert(0, root_node);
-        self.roots = vec![0];
-        // Edit node children
-        for node in self.nodes.iter_mut() {
-            for child in node.children.iter_mut() {
-                *child = *child + 1;
-            }
-        }
-    }
-}
-
 impl pb::QueryParams {
     // is_queryable doesn't consider tables as we assume that the table info can be inferred directly from current data.
     pub fn is_queryable(&self) -> bool {

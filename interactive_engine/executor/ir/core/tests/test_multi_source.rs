@@ -386,16 +386,16 @@ mod tests {
 
         let mut plan = LogicalPlan::default();
         let scan1_id = plan
-            .append_operator_as_node(scan_opr.clone().into(), vec![])
+            .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
         let scan2_id = plan
-            .append_operator_as_node(scan_opr.clone().into(), vec![])
+            .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
         let join1_id = plan
             .append_operator_as_node(join_opr.clone().into(), vec![scan1_id, scan2_id])
             .unwrap();
         let scan3_id = plan
-            .append_operator_as_node(scan_opr.clone().into(), vec![])
+            .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
         let join2_id = plan
             .append_operator_as_node(join_opr.clone().into(), vec![join1_id, scan3_id])
@@ -413,20 +413,5 @@ mod tests {
         println!("{:#?}", plan);
         // dummy, scan1, scan2,  join1, scan3, join2, sink
         assert_eq!(plan.len(), 7);
-    }
-
-    #[test]
-    fn test_multi_join_physical() {
-        let plan = multi_join_logical_plan();
-
-        let mut plan_meta = plan.get_plan_meta();
-        let mut builder = PlanBuilder::default();
-        let res = plan.add_job_builder(&mut builder, &mut plan_meta);
-        println!("res {:?}", res);
-        let physical_plan = builder.take();
-        println!("hello i'm physical plan");
-        println!("{:#?}", physical_plan);
-        // dummy, join1, join2, sink
-        assert_eq!(physical_plan.len(), 4);
     }
 }

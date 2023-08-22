@@ -168,7 +168,6 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
                 return Err(ParsePbError::EmptyFieldError("Node::opr".to_string()));
             }
         }
-        plan.clean_redundant_nodes();
         Ok(plan)
     }
 }
@@ -1347,34 +1346,34 @@ fn is_whole_graph(operator: &pb::logical_plan::Operator) -> bool {
 }
 
 fn is_params_all_labels(params: &pb::QueryParams) -> bool {
-    if let Ok(store_meta) = STORE_META.read() {
-        if let Some(schema) = store_meta.schema.as_ref() {
-            params.tables.is_empty() || {
-                let params_label_ids: BTreeSet<LabelId> = params
-                    .tables
-                    .iter()
-                    .filter_map(|name_or_id| {
-                        if let Some(ir_common::generated::common::name_or_id::Item::Id(id)) =
-                            name_or_id.item.as_ref()
-                        {
-                            Some(*id)
-                        } else {
-                            None
-                        }
-                    })
-                    .collect();
-                let meta_label_ids: BTreeSet<LabelId> = schema
-                    .entity_labels_iter()
-                    .map(|(_, label_id)| label_id)
-                    .collect();
-                params_label_ids.eq(&meta_label_ids)
-            }
+    params.tables.is_empty()
+        || if let Some(schema) = STORE_META
+            .read()
+            .ok()
+            .as_ref()
+            .and_then(|store_meta| store_meta.schema.as_ref())
+        {
+            let params_label_ids: BTreeSet<LabelId> = params
+                .tables
+                .iter()
+                .filter_map(|name_or_id| {
+                    if let Some(ir_common::generated::common::name_or_id::Item::Id(id)) =
+                        name_or_id.item.as_ref()
+                    {
+                        Some(*id)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            let meta_label_ids: BTreeSet<LabelId> = schema
+                .entity_labels_iter()
+                .map(|(_, label_id)| label_id)
+                .collect();
+            params_label_ids.eq(&meta_label_ids)
         } else {
             false
         }
-    } else {
-        false
-    }
 }
 
 fn is_node_dummy(node: &Node) -> bool {
@@ -1689,16 +1688,21 @@ mod test {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
+        let sink_opr = pb::logical_plan::Operator {
+            opr: Some(pb::logical_plan::operator::Opr::Sink(pb::Sink::default())),
+        };
         let root_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![1, 2] };
         let node1_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![2] };
-        let node2_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![] };
-        let plan_pb = pb::LogicalPlan { nodes: vec![root_pb, node1_pb, node2_pb], roots: vec![0] };
+        let node2_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![3] };
+        let sink_pb = pb::logical_plan::Node { opr: Some(sink_opr), children: vec![] };
+        let plan_pb = pb::LogicalPlan { nodes: vec![root_pb, node1_pb, node2_pb, sink_pb], roots: vec![0] };
 
         let plan = LogicalPlan::try_from(plan_pb).unwrap();
-        assert_eq!(plan.len(), 3);
+        assert_eq!(plan.len(), 4);
         let node0 = plan.get_node(1).unwrap();
         let node1 = plan.get_node(2).unwrap();
         let node2 = plan.get_node(3).unwrap();
+        let sink = plan.get_node(4).unwrap();
 
         let children = node0
             .borrow()
@@ -1724,6 +1728,14 @@ mod test {
             .collect::<Vec<NodeId>>();
         assert_eq!(parents, vec![1]);
 
+        let children = node2
+            .borrow()
+            .children
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<NodeId>>();
+        assert_eq!(children, vec![4]);
+
         let parents = node2
             .borrow()
             .parents
@@ -1731,6 +1743,14 @@ mod test {
             .map(|x| *x)
             .collect::<Vec<NodeId>>();
         assert_eq!(parents, vec![1, 2]);
+
+        let parents = sink
+            .borrow()
+            .parents
+            .iter()
+            .map(|x| *x)
+            .collect::<Vec<NodeId>>();
+        assert_eq!(parents, vec![3]);
     }
 
     #[test]
