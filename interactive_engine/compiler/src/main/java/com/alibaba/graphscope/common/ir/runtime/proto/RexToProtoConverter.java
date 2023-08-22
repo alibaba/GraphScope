@@ -18,7 +18,6 @@ package com.alibaba.graphscope.common.ir.runtime.proto;
 
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
-import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
@@ -79,23 +78,10 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
         SqlOperator operator = call.getOperator();
         RexNode operand = call.getOperands().get(0);
         switch (operator.getKind()) {
-                // convert IS_NULL to binary call: XX = NONE
-                // convert IS_NOT_NULL to XX != NONE
-            case IS_NULL:
-                return OuterExpression.Expression.newBuilder()
-                        .addAllOperators(operand.accept(this).getOperatorsList())
-                        .addOperators(getEqualsOperator(call))
-                        .addOperators(getValueNone())
-                        .build();
-            case IS_NOT_NULL:
-                return OuterExpression.Expression.newBuilder()
-                        .addAllOperators(operand.accept(this).getOperatorsList())
-                        .addOperators(getNotEqualsOperator(call))
-                        .addOperators(getValueNone())
-                        .build();
+            case NOT:
             default:
                 return OuterExpression.Expression.newBuilder()
-                        .addOperators(Utils.protoOperator(GraphStdOperatorTable.NOT))
+                        .addOperators(Utils.protoOperator(operator))
                         .addOperators(
                                 OuterExpression.ExprOpr.newBuilder()
                                         .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE))
@@ -105,26 +91,6 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                                         .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE))
                         .build();
         }
-    }
-
-    private OuterExpression.ExprOpr getValueNone() {
-        return OuterExpression.ExprOpr.newBuilder()
-                .setConst(Common.Value.newBuilder().setNone(Common.None.newBuilder()))
-                .setNodeType(
-                        DataType.IrDataType.newBuilder().setDataType(Common.DataType.NONE).build())
-                .build();
-    }
-
-    private OuterExpression.ExprOpr getEqualsOperator(RexCall call) {
-        return Utils.protoOperator(GraphStdOperatorTable.EQUALS).toBuilder()
-                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId))
-                .build();
-    }
-
-    private OuterExpression.ExprOpr getNotEqualsOperator(RexCall call) {
-        return Utils.protoOperator(GraphStdOperatorTable.NOT_EQUALS).toBuilder()
-                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId))
-                .build();
     }
 
     private OuterExpression.Expression visitBinaryOperator(RexCall call) {

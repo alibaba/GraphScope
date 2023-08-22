@@ -618,9 +618,7 @@ public class GraphBuilder extends RelBuilder {
                 || (sqlKind == SqlKind.MINUS_PREFIX)
                 || (sqlKind == SqlKind.CASE)
                 || (sqlKind == SqlKind.PROCEDURE_CALL)
-                || (sqlKind == SqlKind.NOT)
-                || sqlKind == SqlKind.IS_NULL
-                || sqlKind == SqlKind.IS_NOT_NULL;
+                || (sqlKind == SqlKind.NOT);
     }
 
     @Override

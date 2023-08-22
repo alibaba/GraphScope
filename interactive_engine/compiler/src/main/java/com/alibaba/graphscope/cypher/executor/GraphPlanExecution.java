@@ -20,12 +20,9 @@ import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
-import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
-import com.alibaba.graphscope.common.ir.tools.Utils;
 import com.alibaba.graphscope.cypher.result.CypherRecordParser;
 import com.alibaba.graphscope.cypher.result.CypherRecordProcessor;
 
-import org.apache.calcite.rel.type.RelDataType;
 import org.neo4j.fabric.stream.StatementResults;
 import org.neo4j.kernel.impl.query.QueryExecution;
 import org.neo4j.kernel.impl.query.QuerySubscriber;
@@ -55,20 +52,12 @@ public class GraphPlanExecution<C> implements StatementResults.SubscribableExecu
                             this.planSummary.getPhysicalBuilder());
             CypherRecordProcessor recordProcessor =
                     new CypherRecordProcessor(
-                            new CypherRecordParser(getOutputType(planSummary.getLogicalPlan())),
+                            new CypherRecordParser(planSummary.getLogicalPlan().getOutputType()),
                             querySubscriber);
             this.client.submit(request, recordProcessor, timeoutConfig);
             return recordProcessor;
         } catch (Exception e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private RelDataType getOutputType(LogicalPlan logicalPlan) {
-        if (logicalPlan.getRegularQuery() != null) {
-            return Utils.getOutputType(logicalPlan.getRegularQuery());
-        } else {
-            return logicalPlan.getProcedureCall().getType();
         }
     }
 }

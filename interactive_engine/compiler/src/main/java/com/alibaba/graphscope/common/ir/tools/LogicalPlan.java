@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalValues;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -91,5 +92,15 @@ public class LogicalPlan {
             inputs.addAll(cur.getInputs());
         }
         return false;
+    }
+
+    public @Nullable RelDataType getOutputType() {
+        if (regularQuery != null) {
+            return Utils.getOutputType(regularQuery);
+        } else if (procedureCall != null) {
+            return procedureCall.getType();
+        } else {
+            return null;
+        }
     }
 }

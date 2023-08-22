@@ -16,9 +16,14 @@
 
 package com.alibaba.graphscope.common.ir.rex.operator;
 
+import static org.apache.calcite.util.Static.RESOURCE;
+
+import static java.util.Objects.requireNonNull;
+
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.*;
@@ -29,9 +34,6 @@ import org.apache.calcite.sql.type.SqlTypeUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.util.Objects.requireNonNull;
-import static org.apache.calcite.util.Static.RESOURCE;
 
 public class CaseOperator extends SqlOperator {
 

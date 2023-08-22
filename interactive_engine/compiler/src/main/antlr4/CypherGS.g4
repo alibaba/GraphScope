@@ -244,12 +244,9 @@ oC_PartialComparisonExpression
                                ;
 
 oC_StringListNullPredicateExpression
-                         :  oC_AddOrSubtractExpression ( oC_NullPredicateExpression )? ;
+                                 :  oC_AddOrSubtractExpression ;
 
-oC_NullPredicateExpression
-                       :  ( SP IS SP NULL )
-                           | ( SP IS SP NOT SP NULL )
-                           ;
+IN : ( 'I' | 'i' ) ( 'N' | 'n' ) ;
 
 IS : ( 'I' | 'i' ) ( 'S' | 's' ) ;
 
