@@ -224,13 +224,11 @@ impl<'a> WorkerContext<'a> {
             None
         };
 
-        let keyed_resources = if !key_res.is_empty() {
+        let keyed_resources = {
             let reset = std::mem::replace(key_res, Default::default());
             let pre = crate::resource::replace_keyed_resources(reset);
             assert!(pre.is_empty());
             Some(key_res)
-        } else {
-            None
         };
         WorkerContext { resource, keyed_resources }
     }
