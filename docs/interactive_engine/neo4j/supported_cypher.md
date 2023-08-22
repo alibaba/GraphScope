@@ -96,6 +96,7 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | BitOpr  | Bit left shift | via function | << |  <input type="checkbox" disabled  />| planned |
 | BitOpr  | Bit right shift | via function | >> |  <input type="checkbox" disabled  />| planned |
 | Branch | Use with `Project` and `Return` | CASE WHEN  | CASE WHEN |  <input type="checkbox" disabled  />| planned |
+| List | Fold expressions into a single list | [] | ARRAY VALUE CONSTRUCTOR | <input type="checkbox" disabled checked /> |   |
 
 
 
