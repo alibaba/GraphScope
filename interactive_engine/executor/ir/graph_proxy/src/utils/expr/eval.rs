@@ -928,7 +928,6 @@ mod tests {
             "1 + @1.age * 1 1 - 1 - 5",
             "@2",
             "@0.not_exist",
-            "@1.hobbies == null",
         ];
         let ctxt = prepare_context();
 
@@ -944,7 +943,6 @@ mod tests {
             ExprEvalError::OtherErr("invalid expression".to_string()),
             ExprEvalError::OtherErr("invalid expression".to_string()),
             ExprEvalError::OtherErr("invalid expression".to_string()),
-            ExprEvalError::GetNoneFromContext,
             ExprEvalError::GetNoneFromContext,
             ExprEvalError::GetNoneFromContext,
         ];
@@ -976,7 +974,6 @@ mod tests {
             "!(@0.hobbies isNull)",              // true
             "@1.hobbies isNull",                 // true
             "!(@1.hobbies isNull)",              // false
-            "@0.hobbies == null",                // false
             "true isNull",                       // false
             "false isNull",                      // false
             "!true isNull",                      // i.e., !(true isNull), false
@@ -986,7 +983,6 @@ mod tests {
             object!(false),
             object!(true),
             object!(true),
-            object!(false),
             object!(false),
             object!(false),
             object!(false),

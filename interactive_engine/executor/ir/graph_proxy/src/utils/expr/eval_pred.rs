@@ -929,12 +929,11 @@ mod tests {
             "!(@0.hobbies isNull)",              // true
             "@1.hobbies isNull",                 // true
             "!(@1.hobbies isNull)",              // false
-            "@0.hobbies == null",                // false
             "true isNull",                       // false
             "false isNull",                      // false
             "@1.hobbies isNull && @1.age == 26", // true
         ];
-        let expected: Vec<bool> = vec![false, true, true, false, false, false, false, true];
+        let expected: Vec<bool> = vec![false, true, true, false, false, false, true];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval = PEvaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();

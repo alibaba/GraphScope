@@ -62,7 +62,6 @@ pub enum Token {
     StrArray(Vec<String>),   // a string array
     IdentArray(Vec<String>), // an identifier array
     IdentMap(Vec<String>),   // an identifier map
-    Null,                    // a null value
 }
 
 impl ExprToken for Token {
@@ -71,7 +70,7 @@ impl ExprToken for Token {
         use crate::expr_parse::token::Token::*;
         match self {
             Identifier(_) | Float(_) | Int(_) | Boolean(_) | String(_) | IntArray(_) | FloatArray(_)
-            | StrArray(_) | IdentArray(_) | IdentMap(_) | Null => true,
+            | StrArray(_) | IdentArray(_) | IdentMap(_) => true,
             _ => false,
         }
     }
@@ -364,8 +363,6 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
                     Some(Token::EndsWith)
                 } else if literal.to_lowercase().as_str() == "isnull" {
                     Some(Token::IsNull)
-                } else if literal.to_lowercase().as_str() == "null" {
-                    Some(Token::Null)
                 } else {
                     // To parse the float of the form `<coefficient>e{+,-}<exponent>`,
                     // for example [Literal("10e"), Minus, Literal("3")] => "1e-3".parse().
