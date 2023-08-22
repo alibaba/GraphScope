@@ -648,6 +648,17 @@ impl AsPhysical for LogicalPlan {
             if let Some(Apply(apply_opr)) = curr_node.borrow().opr.opr.as_ref() {
                 let mut sub_bldr = PlanBuilder::default();
                 if let Some(subplan) = self.extract_subplan(curr_node.clone()) {
+                    for (_, node) in &subplan.nodes {
+                        let operator = node.borrow().opr.clone();
+                        match operator.opr.as_ref() {
+                            // TODO(bingqing): remove this when engine supports.
+                            Some(pb::logical_plan::operator::Opr::Path(_)) => {
+                                Err(IrError::Unsupported("PathExpand in Apply".to_string()))?
+                            }
+                            _ => {}
+                        }
+                    }
+
                     let mut expand_degree_opt = None;
                     if subplan.len() <= 2 {
                         if subplan.len() == 1 {
