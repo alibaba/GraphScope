@@ -9,7 +9,7 @@ GIE works as the core component of GraphScope. Therefore, you should install Gra
 GraphScope requires the following software versions:
 
 - Python 3.9 ~ 3.11
-- Java 11 (both Java 8 and 20 have compatibility issues)
+- JDK 11 (Both JDK 8 and 20 have known compatibility issues)
 - gcc 7.1+ or Apple Clang
 
 
