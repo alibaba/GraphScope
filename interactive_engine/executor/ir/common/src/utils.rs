@@ -479,6 +479,12 @@ impl From<pb::Scan> for pb::logical_plan::Operator {
     }
 }
 
+impl From<pb::RootScan> for pb::logical_plan::Operator {
+    fn from(opr: pb::RootScan) -> Self {
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Root(opr)) }
+    }
+}
+
 impl From<pb::logical_plan::Operator> for Option<pb::Scan> {
     fn from(opr: pb::logical_plan::Operator) -> Self {
         if let Some(opr) = opr.opr {
