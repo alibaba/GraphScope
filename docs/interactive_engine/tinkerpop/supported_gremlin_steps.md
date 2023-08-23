@@ -504,8 +504,20 @@ Filter the object in the stream given a biased coin toss.
 Parameters: </br>
 probability - the probability that the object will pass through.
 ```bash
-g.V().coin(0.2) # range is [0, 1]
+g.V().coin(0.2) # range is [0.0, 1.0]
+g.V().out().coin(0.2)
 ```
+
+#### [sample()](https://tinkerpop.apache.org/docs/current/reference/#sample-step)
+Generate a certain number of sample results.
+
+Parameters: </br>
+number - allow specified number of objects to pass through the stream.
+```bash
+g.V().sample(10)
+g.V().out().sample(10)
+```
+
 ### Union
 #### [union()](https://tinkerpop.apache.org/docs/current/reference/#union-step)
 Merges the results of an arbitrary number of traversals.

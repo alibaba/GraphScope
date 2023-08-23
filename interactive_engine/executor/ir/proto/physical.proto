@@ -287,6 +287,7 @@ message PhysicalOpr {
       Intersect intersect = 13;
       Repartition repartition = 14;
       RootScan root = 16;
+      algebra.Sample sample = 17;
       // Saving the room for relational operators
       GetV vertex = 30;
       EdgeExpand edge = 31;
