@@ -58,9 +58,9 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
                         "downcast intersection entry in UnfoldOperator",
                     ))?;
                 let mut res = Vec::with_capacity(intersection.len());
-                for item in intersection.iter() {
+                for item in intersection.iter().cloned() {
                     let mut new_entry = input.clone();
-                    new_entry.append(Vertex::new(*item, None, DynDetails::default()), self.alias);
+                    new_entry.append(Vertex::new(item, None, DynDetails::default()), self.alias);
                     res.push(new_entry);
                 }
                 Ok(Box::new(res.into_iter()))
@@ -74,9 +74,9 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
                         "downcast collection entry in UnfoldOperator",
                     ))?;
                 let mut res = Vec::with_capacity(collection.len());
-                for item in collection.inner.iter() {
+                for item in collection.inner.iter().cloned() {
                     let mut new_entry = input.clone();
-                    new_entry.append(item.clone(), self.alias);
+                    new_entry.append(item, self.alias);
                     res.push(new_entry);
                 }
                 Ok(Box::new(res.into_iter()))
