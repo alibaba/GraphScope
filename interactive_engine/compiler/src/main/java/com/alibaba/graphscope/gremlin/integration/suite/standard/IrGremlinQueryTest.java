@@ -329,8 +329,10 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     public void g_V_sample_by_2() {
         final Traversal<Vertex, Vertex> traversal = get_g_V_sample_by_2();
+        this.printTraversalForm(traversal);
         int counter = 0;
         while (traversal.hasNext()) {
+            traversal.next();
             ++counter;
         }
         Assert.assertEquals(2, counter);
@@ -340,8 +342,10 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     public void g_V_sample_by_7() {
         final Traversal<Vertex, Vertex> traversal = get_g_V_sample_by_7();
+        this.printTraversalForm(traversal);
         int counter = 0;
         while (traversal.hasNext()) {
+            traversal.next();
             ++counter;
         }
         Assert.assertEquals(6, counter);
@@ -351,8 +355,10 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     public void g_V_coin_by_ratio() {
         final Traversal<Vertex, Vertex> traversal = get_g_V_coin_by_ratio();
+        this.printTraversalForm(traversal);
         int counter = 0;
         while (traversal.hasNext()) {
+            traversal.next();
             ++counter;
         }
         Assert.assertTrue(counter < 6);
@@ -362,8 +368,10 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @Test
     public void g_V_coin_by_ratio_1() {
         final Traversal<Vertex, Vertex> traversal = get_g_V_coin_by_ratio_1();
+        this.printTraversalForm(traversal);
         int counter = 0;
         while (traversal.hasNext()) {
+            traversal.next();
             ++counter;
         }
         Assert.assertEquals(6, counter);
