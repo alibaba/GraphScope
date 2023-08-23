@@ -146,7 +146,7 @@ struct GHash {
 template <>
 struct GHash<int64_t> {
   size_t operator()(const int64_t& val) const {
-    uint64_t x = static_cast<int64_t>(val);
+    uint64_t x = static_cast<uint64_t>(val);
     x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
     x = (x ^ (x >> 27)) * UINT64_C(0x94d049bb133111eb);
     x = x ^ (x >> 31);
@@ -206,7 +206,7 @@ class LFIndexer {
       } else if (keys_[ind] == oid) {
         return ind;
       } else {
-        index = (index + 1) % indices_size_;
+        index = (index + 1) % num_slots_minus_one_;
       }
     }
   }
@@ -685,24 +685,42 @@ void build_lf_indexer(const IdIndexer<int64_t, INDEX_T>& input,
   lf.num_elements_.store(size);
 
   lf.indices_.clear();
-  lf.indices_.resize_fill(input.indices_.size(),
+  lf.indices_.resize_fill(input.num_slots_minus_one_,
                           std::numeric_limits<INDEX_T>::max());
   lf.indices_size_ = input.indices_.size();
 
   lf.hash_policy_.set_mod_function_by_index(
       input.hash_policy_.get_mod_function_index());
   lf.num_slots_minus_one_ = input.num_slots_minus_one_;
-
+  std::vector<std::pair<int64_t,INDEX_T>> res;
   for (auto oid : input.keys_) {
     size_t index = input.hash_policy_.index_for_hash(
         input.hasher_(oid), input.num_slots_minus_one_);
     for (int8_t distance = 0; input.distances_[index] >= distance;
          ++distance, ++index) {
+      
       INDEX_T ret = input.indices_[index];
       if (input.keys_[ret] == oid) {
-        lf.indices_[index] = ret;
+        if(index >= input.num_slots_minus_one_){
+          res.emplace_back(oid, ret);
+        } else {
+          lf.indices_[index] = ret;
+        }
         break;
       }
+    }
+  }
+  static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
+
+  for(const auto& [oid, lid]: res){
+    size_t index = input.hash_policy_.index_for_hash(
+        input.hasher_(oid), input.num_slots_minus_one_);
+    while (true) {
+      if(lf.indices_[index] == sentinel){
+        lf.indices_[index] = lid;
+        break;
+      }
+      index = (index + 1) % input.num_slots_minus_one_;
     }
   }
 }
