@@ -11,6 +11,7 @@
    8. [Union](#union)
    9. [Match](#match)
    10. [Subgraph](#subgraph)
+   11. [Identity](#identity)
 3. [Syntactic Sugars](#syntactic-sugars)
    1. [PathExpand](#pathexpand)
    2. [Expression](#expression)
@@ -541,6 +542,17 @@ graphName - the name of the side-effect key that will hold the subgraph.
 g.E().subgraph("all")
 g.V().has('name', "marko").outE("knows").subgraph("partial")
 ```
+
+### Identity
+#### [identity()](https://tinkerpop.apache.org/docs/current/reference/#identity-step)
+The identity()-step maps the current object to itself.
+
+```bash
+g.V().identity().values("id")
+g.V().hasLabel("person").as("a").identity().values("id")
+g.V().has("name", "marko").union(identity(), out()).values("id")
+```
+
 ## Syntactic Sugars
 The following steps are extended to denote more complex situations.
 ### PathExpand
@@ -701,6 +713,7 @@ Expression(s) in project or filter:
     g.V().where(expr("@.name == \"marko\"")) # = g.V().has("name", "marko")
     g.V().where(expr("@.age > 10")) # = g.V().has("age", P.gt(10))
     g.V().as("a").out().where(expr("@.name == \"marko\" || (@a.age > 10)"))
+    g.V().where(expr("@.age isNull"))
     ```
 * project: select(expr("..."))
     ```bash
@@ -715,6 +728,14 @@ gremlin> g.V().as("a").where(expr("@a.name == \"marko\" || (@a.age > 10)"))
 ==>v[1]
 ==>v[4]
 ==>v[6]
+gremlin> g.V().where(expr("@.age isNull")).values("name")
+==>ripple
+==>lop
+gremlin>  g.V().where(expr("!(@.age isNull)")).values("name")
+==>marko
+==>vadas
+==>josh
+==>peter
 gremlin> g.V().select(expr("@.name"))
 ==>marko
 ==>vadas
@@ -758,12 +779,12 @@ Here we list steps which are unsupported yet. Some will be supported in the near
 
 ### To be Supported
 The following steps will be supported in the near future.
-#### identity()
+<!--#### identity()
 Map the current object to itself.
 ```bash
 g.V().identity()
 g.V().union(identity(), out().out())
-```
+```<-->
 #### path()
 Map the traverser to its path history.
 ```bash

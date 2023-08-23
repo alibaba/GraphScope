@@ -526,6 +526,7 @@ class KeyedRowVertexSetImpl {
   static constexpr bool is_collection = false;
   static constexpr bool is_general_set = false;
   static constexpr bool is_two_label_set = false;
+  static constexpr bool is_row_vertex_set = true;
 
   explicit KeyedRowVertexSetImpl(std::vector<key_t>&& keys,
                                  std::vector<lid_t>&& vids,
@@ -916,6 +917,12 @@ class KeyedRowVertexSetBuilderImpl {
       : label_(label), prop_names_(prop_names), ind_(0) {}
 
   KeyedRowVertexSetBuilderImpl(const RowVertexSet<LabelT, VID_T, T...>& old_set)
+      : label_(old_set.GetLabel()),
+        prop_names_(old_set.GetPropNames()),
+        ind_(0) {}
+
+  KeyedRowVertexSetBuilderImpl(
+      const KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, T...>& old_set)
       : label_(old_set.GetLabel()),
         prop_names_(old_set.GetPropNames()),
         ind_(0) {}

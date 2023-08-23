@@ -129,6 +129,16 @@ impl From<Partial> for Option<Predicates> {
                         cmp: cmp.unwrap(),
                         right: right.unwrap(),
                     }))
+                } else if right.is_none() {
+                    if cmp.unwrap() == common_pb::Logical::Isnull {
+                        Some(Predicates::Predicate(Predicate {
+                            left: left.unwrap(),
+                            cmp: cmp.unwrap(),
+                            right: Operand::Const(Object::None),
+                        }))
+                    } else {
+                        None
+                    }
                 } else {
                     None
                 }
@@ -323,6 +333,18 @@ impl EvalPred for Predicate {
             )?
             .as_bool()
             .unwrap_or(false)),
+            Logical::Isnull => {
+                let left = match self.left.eval(context) {
+                    Ok(left) => Ok(left),
+                    Err(err) => match err {
+                        ExprEvalError::GetNoneFromContext => Ok(Object::None),
+                        _ => Err(err),
+                    },
+                };
+                Ok(apply_logical(&self.cmp, left?.as_borrow_object(), None)?
+                    .as_bool()
+                    .unwrap_or(false))
+            }
             _ => Err(ExprEvalError::OtherErr(format!(
                 "invalid logical operator: {:?} in a predicate",
                 self.cmp
@@ -418,7 +440,8 @@ fn process_predicates(
                             | Logical::Within
                             | Logical::Without
                             | Logical::Startswith
-                            | Logical::Endswith => partial.cmp(logical)?,
+                            | Logical::Endswith
+                            | Logical::Isnull => partial.cmp(logical)?,
                             Logical::Not => is_not = true,
                             Logical::And | Logical::Or => {
                                 predicates = predicates.merge_partial(curr_cmp, partial, is_not)?;
@@ -894,5 +917,31 @@ mod tests {
         assert!(!p_eval
             .eval_bool::<_, Vertices>(Some(&context))
             .unwrap());
+    }
+
+    #[test]
+    fn test_eval_predicates_is_null() {
+        // [v0: id = 1, label = 9, age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]
+        // [v1: id = 2, label = 11, age = 26, name = Jimmy, birthday = 19950816]
+        let ctxt = prepare_context();
+        let cases: Vec<&str> = vec![
+            "@0.hobbies isNull",                 // false
+            "!(@0.hobbies isNull)",              // true
+            "@1.hobbies isNull",                 // true
+            "!(@1.hobbies isNull)",              // false
+            "true isNull",                       // false
+            "false isNull",                      // false
+            "@1.hobbies isNull && @1.age == 26", // true
+        ];
+        let expected: Vec<bool> = vec![false, true, true, false, false, false, true];
+
+        for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval = PEvaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
+            assert_eq!(
+                eval.eval_bool::<_, Vertices>(Some(&ctxt))
+                    .unwrap(),
+                expected
+            );
+        }
     }
 }

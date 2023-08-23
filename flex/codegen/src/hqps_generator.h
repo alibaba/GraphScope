@@ -26,6 +26,7 @@ limitations under the License.
 #include "flex/codegen/src/hqps/hqps_fold_builder.h"
 #include "flex/codegen/src/hqps/hqps_get_v_builder.h"
 #include "flex/codegen/src/hqps/hqps_join_utils.h"
+#include "flex/codegen/src/hqps/hqps_limit_builder.h"
 #include "flex/codegen/src/hqps/hqps_path_expand_builder.h"
 #include "flex/codegen/src/hqps/hqps_project_builder.h"
 #include "flex/codegen/src/hqps/hqps_scan_builder.h"
@@ -209,10 +210,7 @@ class QueryGenerator {
     if (param_vars.size() > 0) {
       sort(param_vars.begin(), param_vars.end(),
            [](const auto& a, const auto& b) { return a.id < b.id; });
-      // FIXME: ENable this line
-      // the dynamic params can be duplicate.
       CHECK(param_vars[0].id == 0);
-      ss << ",";
       for (auto i = 0; i < param_vars.size(); ++i) {
         if (i > 0 && param_vars[i].id == param_vars[i - 1].id) {
           // found duplicate
@@ -497,6 +495,14 @@ class QueryGenerator {
 
       case physical::PhysicalOpr::Operator::kRepartition: {
         LOG(INFO) << "Found a repartition operator, just ignore";
+        break;
+      }
+
+      case physical::PhysicalOpr::Operator::kLimit: {
+        LOG(INFO) << "Found a limit operator";
+        auto& limit_op = opr.limit();
+        std::string limit_code = BuildLimitOp(ctx_, limit_op);
+        ss << limit_code << std::endl;
         break;
       }
 

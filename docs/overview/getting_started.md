@@ -91,7 +91,7 @@ papers = interactive.execute( \
     "MATCH (n1:author)-[:writes]->(p:paper)<-[:writes]-(n2:author) \
         WHERE n1.id = 2 AND n2.id = 4307 \
         RETURN count(DISTINCT p)", \
-    lang="cypher", routing_=RoutingControl.READ)
+    lang="cypher")
 ```
 ````
 

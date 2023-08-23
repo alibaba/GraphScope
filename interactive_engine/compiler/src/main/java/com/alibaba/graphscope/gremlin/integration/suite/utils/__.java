@@ -71,6 +71,10 @@ public class __ {
                 ((IrCustomizedTraversal) start()).out(rangeTraversal, labels);
     }
 
+    public static GraphTraversal<?, Vertex> bothV() {
+        return start().bothV();
+    }
+
     public static GraphTraversal<?, Vertex> in(final String... edgeLabels) {
         return start().in(edgeLabels);
     }
@@ -117,5 +121,9 @@ public class __ {
 
     public static <A> GraphTraversal<?, ?> has(final String propertyKey, final Object value) {
         return start().has(propertyKey, value);
+    }
+
+    public static <A> GraphTraversal<?, ?> identity() {
+        return start().identity();
     }
 }
