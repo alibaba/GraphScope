@@ -4,8 +4,8 @@ grpcio-tools>=1.49
 kubernetes>=24.2.0
 protobuf>=4
 PyYAML
-vineyard>=0.16.1;sys_platform!="win32"
-vineyard-io>=0.16.1;sys_platform!="win32"
+vineyard>=0.16.3;sys_platform!="win32"
+vineyard-io>=0.16.3;sys_platform!="win32"
 prometheus-client>=0.14.1
 packaging
 tqdm

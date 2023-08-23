@@ -467,13 +467,17 @@ class Graph(_GraphBase):
             oid_type = utils.normalize_data_type_str(
                 utils.data_type_to_cpp(self._schema.oid_type)
             )
-            vid_type = self._schema.vid_type
+            vid_type = utils.normalize_data_type_str(
+                utils.data_type_to_cpp(self._schema.vid_type)
+            )
             s = f"vineyard::ArrowFragment<{oid_type},{vid_type}>"
         elif self._graph_type == graph_def_pb2.ARROW_FLATTENED:
             oid_type = utils.normalize_data_type_str(
                 utils.data_type_to_cpp(self._schema.oid_type)
             )
-            vid_type = self._schema.vid_type
+            vid_type = utils.normalize_data_type_str(
+                utils.data_type_to_cpp(self._schema.vid_type)
+            )
             vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
             edata_type = utils.data_type_to_cpp(self._schema.edata_type)
             s = f"gs::ArrowFlattenedFragment<{oid_type},{vid_type},{vdata_type},{edata_type}>"
@@ -481,7 +485,9 @@ class Graph(_GraphBase):
             oid_type = utils.normalize_data_type_str(
                 utils.data_type_to_cpp(self._schema.oid_type)
             )
-            vid_type = self._schema.vid_type
+            vid_type = utils.normalize_data_type_str(
+                utils.data_type_to_cpp(self._schema.vid_type)
+            )
             vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
             edata_type = utils.data_type_to_cpp(self._schema.edata_type)
             s = f"gs::ArrowProjectedFragment<{oid_type},{vid_type},{vdata_type},{edata_type}>"

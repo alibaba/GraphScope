@@ -90,6 +90,12 @@ class ILabeledFragmentWrapper : public IFragmentWrapper {
       const std::map<int, std::vector<int>>& vertices,
       const std::map<int, std::vector<int>>& edges) = 0;
 
+  virtual bl::result<std::shared_ptr<ILabeledFragmentWrapper>>
+  ConsolidateColumns(const grape::CommSpec& comm_spec,
+                     const std::string& dst_graph_name,
+                     const std::string& label, const std::string& columns,
+                     const std::string& result_column) = 0;
+
   virtual bl::result<std::shared_ptr<ILabeledFragmentWrapper>> AddColumn(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       std::shared_ptr<IContextWrapper>& ctx_wrapper,

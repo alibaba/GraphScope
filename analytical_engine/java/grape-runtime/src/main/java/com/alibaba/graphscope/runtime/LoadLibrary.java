@@ -16,11 +16,9 @@
 
 package com.alibaba.graphscope.runtime;
 
-import org.scijava.nativelib.NativeLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Vector;
 
 /**
@@ -32,11 +30,7 @@ public class LoadLibrary {
     private static Logger logger = LoggerFactory.getLogger(LoadLibrary.class);
 
     static {
-        try {
-            NativeLoader.loadLibrary("grape-jni");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        System.loadLibrary("grape-jni");
     }
 
     /**
@@ -46,11 +40,7 @@ public class LoadLibrary {
      */
     public static void invoke(String userLibrary) {
         logger.info("loading " + userLibrary);
-        try {
-            NativeLoader.loadLibrary(userLibrary);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        System.loadLibrary(userLibrary);
         logger.info("Load libary cl: " + LoadLibrary.class.getClassLoader());
         try {
             LIBRARIES = ClassLoader.class.getDeclaredField("loadedLibraryNames");

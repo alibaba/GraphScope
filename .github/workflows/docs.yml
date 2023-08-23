@@ -140,6 +140,7 @@ jobs:
       run: |
         echo "Checking formatting for $GITHUB_REPOSITORY"
         pip3 install -r coordinator/requirements-dev.txt
+        pip3 install -r python/requirements-dev.txt
         pushd python
         python3 -m isort --check --diff .
         python3 -m black --check --diff .
@@ -156,7 +157,6 @@ jobs:
         # Install pip dependencies, build builtin gar, and generate proto stuffs.
         sudo apt update
         sudo apt install -y doxygen graphviz
-        pip3 install furo
 
         # generate a taged version
         cd ${GITHUB_WORKSPACE}
@@ -255,6 +255,7 @@ jobs:
         fi
 
         rm -rf _build/
+        rm -rf ../flex/ || true
         rm -rf ../learning_engine/ || true
         rm -rf ../python || true
         rm -rf ../analytical_engine/java || true

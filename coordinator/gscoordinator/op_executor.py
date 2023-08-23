@@ -110,7 +110,7 @@ class OperationExecutor:
                 # TODO: make the stacktrace separated from normal error messages
                 # Too verbose.
                 if len(e.details()) > 3072:  # 3k bytes
-                    msg = f"{e.details()[:256]} ... [truncated]"
+                    msg = f"{e.details()[:1024]} ... [truncated]"
                 else:
                     msg = e.details()
                 raise AnalyticalEngineInternalError(msg)
@@ -130,7 +130,11 @@ class OperationExecutor:
             )
 
             # Handle op that depends on loader (data source)
-            if op.op == types_pb2.CREATE_GRAPH or op.op == types_pb2.ADD_LABELS:
+            if op.op in [
+                types_pb2.CREATE_GRAPH,
+                types_pb2.CONSOLIDATE_COLUMNS,
+                types_pb2.ADD_LABELS,
+            ]:
                 for key_of_parent_op in op.parents:
                     parent_op = self._key_to_op[key_of_parent_op]
                     if parent_op.op == types_pb2.DATA_SOURCE:
@@ -153,6 +157,7 @@ class OperationExecutor:
                 )
                 or op.op == types_pb2.TRANSFORM_GRAPH
                 or op.op == types_pb2.PROJECT_TO_SIMPLE
+                or op.op == types_pb2.CONSOLIDATE_COLUMNS
                 or op.op == types_pb2.ADD_LABELS
                 or op.op == types_pb2.ARCHIVE_GRAPH
             ):
@@ -187,6 +192,7 @@ class OperationExecutor:
             if op.op in (
                 types_pb2.CREATE_GRAPH,
                 types_pb2.PROJECT_GRAPH,
+                types_pb2.CONSOLIDATE_COLUMNS,
                 types_pb2.PROJECT_TO_SIMPLE,
                 types_pb2.TRANSFORM_GRAPH,
                 types_pb2.ADD_LABELS,

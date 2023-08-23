@@ -182,7 +182,7 @@ where
     L::Target: Clone + Send,
 {
     this.partition_by_key()
-        .binary("inner_join", other, |info| {
+        .binary("inner_join", other.partition_by_key(), |info| {
             let mut helper = Helper::<L, R>::new(info.scope_level);
             move |left, right, output| {
                 left.for_each_batch(|dataset| {
@@ -236,7 +236,7 @@ where
         _ => return Err(BuildJobError::from("wrong join type".to_string())),
     };
     this.partition_by_key()
-        .binary(format!("{:?}", join_type).as_str(), other, |info| {
+        .binary(format!("{:?}", join_type).as_str(), other.partition_by_key(), |info| {
             let mut helper = Helper::<L, R>::new(info.scope_level);
             move |left, right, output| {
                 left.for_each_batch(|dataset| {
@@ -308,7 +308,7 @@ where
         _ => return Err(BuildJobError::from("wrong join type".to_string())),
     };
     this.partition_by_key()
-        .binary(format!("{:?}", join_type).as_str(), other, |info| {
+        .binary(format!("{:?}", join_type).as_str(), other.partition_by_key(), |info| {
             let mut helper = Helper::<L, R>::new(info.scope_level);
             move |left, right, output| {
                 left.for_each_batch(|dataset| {

@@ -67,20 +67,6 @@ void ParseRecord(const char* line, std::vector<Any>& rec) {
   }
 }
 
-void ParseRecord(const char* line, int64_t& id, std::vector<Any>& rec) {
-  const char* cur = line;
-  {
-    const char* ptr = cur;
-    while (*ptr != '\0' && *ptr != '|') {
-      ++ptr;
-    }
-    std::string_view sv(cur, ptr - cur);
-    ParseInt64(sv, id);
-    cur = ptr + 1;
-  }
-  ParseRecord(cur, rec);
-}
-
 void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int& prop) {
 #ifdef __APPLE__
   sscanf(line, "%lld|%lld|%d", &src, &dst, &prop);

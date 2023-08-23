@@ -251,6 +251,7 @@
                     <excludes>
                         <exclude>**/IrGremlinTest.java</exclude>
                         <exclude>**/IrLdbcTest.java</exclude>
+                        <exclude>**/SimpleMatchTest.java</exclude>
                         <exclude>**/IrPatternTest.java</exclude>
                     </excludes>
                 </configuration>

@@ -60,6 +60,16 @@ public class OfflineBuildOdps {
 
         String columnMappingConfigStr =
                 properties.getProperty(DataLoadConfig.COLUMN_MAPPING_CONFIG);
+        // User could specify a list of `key=value` pairs in command line,
+        // to substitute variables like `${key}` in columnMappingConfigStr
+        for (int i = 1; i < args.length; ++i) {
+            String[] kv = args[i].split("=");
+            if (kv.length == 2) {
+                String key = "${" + kv[0] + "}";
+                columnMappingConfigStr = columnMappingConfigStr.replace(key, kv[1]);
+            }
+        }
+
         String graphEndpoint = properties.getProperty(DataLoadConfig.GRAPH_ENDPOINT);
         String username = properties.getProperty(DataLoadConfig.USER_NAME, "");
         String password = properties.getProperty(DataLoadConfig.PASS_WORD, "");

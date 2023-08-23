@@ -392,40 +392,18 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                     .expect("expect at least one entry as len = 1");
                 let target = self.route.route(x)? as usize;
                 if batch.get_seq() == 0 {
-                    // only one data scope;
-                    if end.peers().value() == 1 {
-                        for i in 0..self.pushes.len() {
-                            if i != target {
-                                let mut new_end = end.clone();
-                                new_end.total_send = 0;
-                                new_end.global_total_send = 1;
-                                self.pushes[i].push_end(new_end, DynPeers::single(target as u32))?;
-                            }
-                        }
-                        let mut new_end = end;
-                        new_end.total_send = 1;
-                        new_end.global_total_send = 1;
-                        new_end.update_peers(DynPeers::single(target as u32));
-                        batch.set_end(new_end);
-                        self.pushes[target as usize].push(batch)?;
-                    } else {
-                        // multi source;
-                        self.pushes[target].push(batch)?;
-                        let children = if end.tag.is_root() {
-                            DynPeers::all()
+                    // multi source;
+                    self.pushes[target].push(batch)?;
+                    let children = DynPeers::all();
+                    for i in 0..self.pushes.len() {
+                        let mut new_end = end.clone();
+                        if i != target {
+                            new_end.total_send = 0;
                         } else {
-                            DynPeers::single(target as u32)
-                        };
-                        for i in 0..self.pushes.len() {
-                            let mut new_end = end.clone();
-                            if i != target {
-                                new_end.total_send = 0;
-                            } else {
-                                new_end.total_send = 1;
-                            }
-                            new_end.global_total_send = 1;
-                            self.pushes[i].sync_end(end.clone(), children.clone())?;
+                            new_end.total_send = 1;
                         }
+                        new_end.global_total_send = 1;
+                        self.pushes[i].sync_end(end.clone(), children.clone())?;
                     }
                 } else {
                     // flush previous buffered data;

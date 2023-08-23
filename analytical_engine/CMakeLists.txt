@@ -494,6 +494,12 @@ if(ENABLE_JAVA_SDK)
     set(GAE_JAVA_RUNTIME_JAR "${GAE_JAVA_RUNTIME_DIR}/target/grape-runtime-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
     set(GAE_JAVA_GRAPHX_JAR "${GAE_JAVA_DIR}/grape-graphx/target/grape-graphx-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
     set(GAE_JAVA_GIRAPH_JAR "${GAE_JAVA_DIR}/grape-giraph/target/grape-giraph-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
+    # condiationally set grape-jni's name according to platform
+    if (APPLE)
+        set(GAE_JAVA_JNI_LIB "${GAE_JAVA_DIR}/grape-runtime/target/native/libgrape-jni.dylib")
+    else ()
+        set(GAE_JAVA_JNI_LIB "${GAE_JAVA_DIR}/grape-runtime/target/native/libgrape-jni.so")
+    endif()
 
     add_custom_command(
         OUTPUT "${GAE_JAVA_RUNTIME_JAR}"
@@ -510,6 +516,7 @@ if(ENABLE_JAVA_SDK)
     install(FILES "${GAE_JAVA_RUNTIME_JAR}" DESTINATION lib)
     install(FILES "${GAE_JAVA_GRAPHX_JAR}" DESTINATION lib)
     install(FILES "${GAE_JAVA_GIRAPH_JAR}" DESTINATION lib)
+    install(FILES "${GAE_JAVA_JNI_LIB}" DESTINATION lib)
     install(FILES "${GAE_JAVA_DIR}/grape_jvm_opts" DESTINATION conf)
     install(FILES "${GAE_JAVA_DIR}/run_graphx.sh" DESTINATION bin)
  endif()

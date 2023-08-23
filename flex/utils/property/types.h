@@ -394,8 +394,6 @@ struct AnyConverter<double> {
 
 void ParseRecord(const char* line, std::vector<Any>& rec);
 
-void ParseRecord(const char* line, int64_t& id, std::vector<Any>& rec);
-
 void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int& prop);
 
 void ParseRecordX(const char* line, int64_t& src, int64_t& dst, Date& prop);
