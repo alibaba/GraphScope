@@ -38,93 +38,57 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
     type Target = DynIter<Record>;
 
     fn exec(&self, mut input: Record) -> FnResult<Self::Target> {
-        // Consider 'take' the column since the collection won't be used anymore in most cases.
-        // e.g., in EdgeExpandIntersection case, we only set alias of the collection to give the hint of intersection.
-        let mut entry = input
-            .take(self.tag.as_ref())
+        let entry_type = input
+            .get(self.tag)
             .ok_or(FnExecError::get_tag_error(&format!(
                 "get tag {:?} from record in `Unfold` operator, the record is {:?}",
                 self.tag, input
-            )))?;
-        // take head in case that head entry is an arc clone of `self.tag`;
-        // besides, head will be replaced by the items in collections anyway.
-        input.take(None);
-        if let Some(entry) = entry.get_mut() {
-            match entry.get_type() {
-                EntryType::Collection => {
-                    let collection = entry
-                        .as_any_mut()
-                        .downcast_mut::<CollectionEntry>()
-                        .unwrap();
-                    let mut res = Vec::with_capacity(collection.len());
-                    for item in collection.inner.drain(..) {
-                        let mut new_entry = input.clone();
-                        new_entry.append(item, self.alias);
-                        res.push(new_entry);
-                    }
-                    Ok(Box::new(res.into_iter()))
+            )))?
+            .get_type();
+        match entry_type {
+            EntryType::Intersection => {
+                // Take the entry when it is EdgeExpandIntersection.
+                // The reason is that the alias of the collection is system-given, which is used as a hint of intersection,
+                // hence there's no need to preserve the collection anymore.
+                let entry = input.take(self.tag.as_ref()).unwrap();
+                let intersection = entry
+                    .as_any_ref()
+                    .downcast_ref::<IntersectionEntry>()
+                    .ok_or(FnExecError::unexpected_data_error(
+                        "downcast intersection entry in UnfoldOperator",
+                    ))?;
+                let mut res = Vec::with_capacity(intersection.len());
+                for item in intersection.iter() {
+                    let mut new_entry = input.clone();
+                    new_entry.append(Vertex::new(*item, None, DynDetails::default()), self.alias);
+                    res.push(new_entry);
                 }
-                EntryType::Intersection => {
-                    let intersection = entry
-                        .as_any_mut()
-                        .downcast_mut::<IntersectionEntry>()
-                        .unwrap();
-                    let mut res = Vec::with_capacity(intersection.len());
-                    for item in intersection.drain() {
-                        let mut new_entry = input.clone();
-                        new_entry.append(Vertex::new(item, None, DynDetails::default()), self.alias);
-                        res.push(new_entry);
-                    }
-                    Ok(Box::new(res.into_iter()))
-                }
-                EntryType::Path => Err(FnExecError::unsupported_error(&format!(
-                    "unfold path entry {:?} in UnfoldOperator",
-                    entry
-                )))?,
-                _ => Err(FnExecError::unexpected_data_error(&format!(
-                    "unfold entry {:?} in UnfoldOperator",
-                    entry
-                )))?,
+                Ok(Box::new(res.into_iter()))
             }
-        } else {
-            // Get mutable entry failed, which indicates that the folded entry is preserved with alias, while only unfold head;
-            // In this case, the folded entry would not be taken, instead, it would be saved in each record after flatmap.
-            match entry.get_type() {
-                EntryType::Collection => {
-                    let collection = entry
-                        .as_any_ref()
-                        .downcast_ref::<CollectionEntry>()
-                        .unwrap();
-                    let mut res = Vec::with_capacity(collection.len());
-                    for item in collection.inner.iter() {
-                        let mut new_entry = input.clone();
-                        new_entry.append(item.clone(), self.alias);
-                        res.push(new_entry);
-                    }
-                    Ok(Box::new(res.into_iter()))
+            EntryType::Collection => {
+                let entry = input.get(self.tag).unwrap();
+                let collection = entry
+                    .as_any_ref()
+                    .downcast_ref::<CollectionEntry>()
+                    .ok_or(FnExecError::unexpected_data_error(
+                        "downcast collection entry in UnfoldOperator",
+                    ))?;
+                let mut res = Vec::with_capacity(collection.len());
+                for item in collection.inner.iter() {
+                    let mut new_entry = input.clone();
+                    new_entry.append(item.clone(), self.alias);
+                    res.push(new_entry);
                 }
-                EntryType::Intersection => {
-                    let intersection = entry
-                        .as_any_ref()
-                        .downcast_ref::<IntersectionEntry>()
-                        .unwrap();
-                    let mut res = Vec::with_capacity(intersection.len());
-                    for item in intersection.iter() {
-                        let mut new_entry = input.clone();
-                        new_entry.append(Vertex::new(*item, None, DynDetails::default()), self.alias);
-                        res.push(new_entry);
-                    }
-                    Ok(Box::new(res.into_iter()))
-                }
-                EntryType::Path => Err(FnExecError::unsupported_error(&format!(
-                    "unfold path entry {:?} in UnfoldOperator",
-                    entry
-                )))?,
-                _ => Err(FnExecError::unexpected_data_error(&format!(
-                    "unfold entry {:?} in UnfoldOperator",
-                    entry
-                )))?,
+                Ok(Box::new(res.into_iter()))
             }
+            EntryType::Path => Err(FnExecError::unsupported_error(&format!(
+                "unfold path entry {:?} in UnfoldOperator",
+                input.get(self.tag),
+            )))?,
+            _ => Err(FnExecError::unexpected_data_error(&format!(
+                "unfold entry {:?} in UnfoldOperator",
+                input.get(self.tag)
+            )))?,
         }
     }
 }
@@ -203,6 +167,13 @@ mod tests {
             if let Some(v) = res.get(None).unwrap().as_vertex() {
                 result_ids.push(v.id());
             }
+            let collection = res
+                .get(Some(TAG_A))
+                .unwrap()
+                .as_any_ref()
+                .downcast_ref::<CollectionEntry>()
+                .unwrap();
+            assert!(collection.inner.len() == 2);
         }
         result_ids.sort();
         assert_eq!(result_ids, expected_result);
