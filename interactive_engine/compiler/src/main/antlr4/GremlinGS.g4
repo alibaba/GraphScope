@@ -80,6 +80,7 @@ traversalMethod
     | traversalMethod_otherV  // otherV()
     | traversalMethod_not  // not()
     | traversalMethod_union // union()
+    | traversalMethod_identity // identity()
     | traversalMethod_match // match()
     | traversalMethod_subgraph // subgraph()
     | traversalMethod_bothV // bothV()
@@ -455,6 +456,10 @@ traversalMethod_union
     ;
 
 // coin(0.5)
+traversalMethod_identity
+    : 'identity' LPAREN RPAREN
+    ;
+
 traversalMethod_coin
 	: 'coin' LPAREN floatLiteral RPAREN
 	;

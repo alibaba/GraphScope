@@ -704,6 +704,12 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
+    public Traversal visitTraversalMethod_identity(
+            final GremlinGSParser.TraversalMethod_identityContext ctx) {
+        return graphTraversal.identity();
+    }
+
+    @Override
     public Traversal visitTraversalMethod_match(GremlinGSParser.TraversalMethod_matchContext ctx) {
         if (ctx.nestedTraversalExpr() != null) {
             Traversal[] matchTraversals =

@@ -86,6 +86,12 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Vertex> get_g_V_coin_by_ratio_1();
 
+    public abstract Traversal<Vertex, Object> get_g_V_identity_values();
+
+    public abstract Traversal<Vertex, Object> get_g_V_haslabel_as_identity_values();
+
+    public abstract Traversal<Vertex, Object> get_g_V_has_union_identity_out_values();
+
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_group_by_by_dedup_count_test() {
@@ -363,6 +369,57 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals(6, counter);
     }
 
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_haslabel_identity() {
+        Traversal<Vertex, Object> traversal = this.get_g_V_identity_values();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+
+        List<String> expected = Arrays.asList("1", "2", "3", "4", "5", "6");
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            ++counter;
+        }
+        Assert.assertEquals(6, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_haslabel_as_identity_values() {
+        Traversal<Vertex, Object> traversal = this.get_g_V_haslabel_as_identity_values();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+
+        List<String> expected = Arrays.asList("1", "2", "4", "6");
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            ++counter;
+        }
+        Assert.assertEquals(4, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_haslabel_union_identity_out_values() {
+        Traversal<Vertex, Object> traversal = this.get_g_V_has_union_identity_out_values();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+
+        List<String> expected = Arrays.asList("1", "2", "3", "4");
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            ++counter;
+        }
+        Assert.assertEquals(4, counter);
+    }
+
     public static class Traversals extends IrGremlinQueryTest {
 
         @Override
@@ -494,6 +551,21 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         @Override
         public Traversal<Vertex, Vertex> get_g_V_coin_by_ratio_1() {
             return g.V().coin(1.0);
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_identity_values() {
+            return g.V().identity().values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_haslabel_as_identity_values() {
+            return g.V().hasLabel("person").as("a").identity().values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_has_union_identity_out_values() {
+            return g.V().has("name", "marko").union(identity(), out()).values("id");
         }
     }
 }
