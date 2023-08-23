@@ -22,6 +22,11 @@ import subprocess
 
 import click
 
+script_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scripts")
+install_deps_command = os.path.join(script_file, "install_deps_command.sh")
+make_command = os.path.join(script_file, "make_command.sh")
+make_image_command = os.path.join(script_file, "make_image_command.sh")
+
 
 def run_shell_cmd(cmd, workingdir):
     """wrapper function to run a shell command/scripts."""
@@ -38,7 +43,7 @@ class GSCtl(object):
     """
 
     def __init__(self, repo_home=None, debug=False):
-        self.home = os.path.abspath("../")
+        self.home = os.path.abspath(".")
         self.debug = debug
 
 
@@ -55,32 +60,19 @@ def cli(ctx, repo_home):
 
 
 @click.command()
-@click.pass_obj
-def install_deps():
-    """Install dependencies for building GraphScope."""
-    click.echo("install_deps")
-
-
-@click.command()
 @click.argument(
-    "component",
+    "type",
     type=click.Choice(
-        ["interactive", "analytical", "learning", "coordinator", "client"],
+        ["dev", "client"],
         case_sensitive=False,
     ),
     required=False,
 )
 @click.option(
-    "--clean",
+    "--cn",
     is_flag=True,
     default=False,
-    help="Flag indicating whether clean previous build.",
-)
-@click.option(
-    "--install",
-    is_flag=True,
-    default=False,
-    help="Flag indicating whether install after built binaries.",
+    help="Whether to use CN located mirrors to speed up download.",
 )
 @click.option(
     "--install-prefix",
@@ -90,28 +82,140 @@ def install_deps():
     help="Install built binaries to customized location.",
 )
 @click.option(
-    "--with-java",
+    "--from-local",
+    type=click.Path(),
+    default="/tmp/gs-local-deps",
+    show_default=True,
+    help="""Install dependency files to [prefix]. By default, './gs install-deps dev'
+    will install all the files in '/opt/graphscope/bin', '/opt/graphscope/lib'
+    etc. You can specify an installation prefix other than '/opt/graphscope'
+    using '--install-prefix', for instance '--install-prefix=$HOME'.""",
+)
+@click.option(
+    "--v6d-version",
+    default="main",
+    show_default=True,
+    help="v6d version to clone.",
+)
+@click.option(
+    "-j",
+    "--jobs",
+    default="${nproc}",
+    help="Concurrent jobs in building, i.e., -j argument passed to make.",
+)
+@click.option(
+    "--for-analytical",
     is_flag=True,
     default=False,
-    help="Whether build analytical engine with Java support.",
+    help="Only install analytical engine dependencies.",
+)
+@click.option(
+    "--no-v6d",
+    is_flag=True,
+    default=False,
+    help="Do not install v6d, for build base docker images, could only be used with '--for-analytical'",
+)
+@click.pass_obj
+def install_deps(
+    repo,
+    type,
+    cn,
+    install_prefix,
+    from_local,
+    v6d_version,
+    jobs,
+    for_analytical,
+    no_v6d,
+):
+    """Install dependencies for building GraphScope."""
+    click.echo("install_deps")
+    if type is None:
+        cmd = [
+            "bash",
+            install_deps_command,
+            "-t",
+            "dev",
+            "-c",
+            str(cn),
+            "-i",
+            install_prefix,
+            "-d",
+            from_local,
+            "-v",
+            str(v6d_version),
+            "-j",
+            str(jobs),
+            "-a",
+            str(for_analytical),
+            "-n",
+            str(no_v6d),
+        ]
+        run_shell_cmd(cmd, repo.home)
+        return
+
+    cmd = [
+        "bash",
+        install_deps_command,
+        "-t",
+        type,
+        "-c",
+        str(cn),
+        "-i",
+        install_prefix,
+        "-d",
+        from_local,
+        "-v",
+        str(v6d_version),
+        "-j",
+        str(jobs),
+        "-a",
+        str(for_analytical),
+        "-n",
+        str(no_v6d),
+    ]
+    run_shell_cmd(cmd, repo.home)
+    return
+
+
+@click.command()
+@click.argument(
+    "component",
+    type=click.Choice(
+        [
+            "interactive",
+            "interactive-install",
+            "analytical",
+            "analytical-java-install",
+            "analytical-install",
+            "learning",
+            "learning-install",
+            "coordinator",
+            "client",
+            "clean",
+            "all",
+        ],
+        case_sensitive=False,
+    ),
+    required=False,
+)
+@click.option(
+    "--install-prefix",
+    type=click.Path(),
+    default="/opt/graphscope",
+    show_default=True,
+    help="Install built binaries to customized location.",
 )
 @click.option(
     "--storage-type",
-    type=click.Choice(["experimental", "vineyard"], case_sensitive=False),
+    default="default",
     help="Make gie with specified storage type.",
 )
 @click.pass_obj
-def make(repo, component, clean, install, install_prefix, storage_type, with_java):
+def make(repo, component, install_prefix, storage_type):
     """Build executive binaries of COMPONENT. If not given a specific component, build all.
-
     \f
     TODO: maybe without make?
     """
-    if clean:
-        click.secho("Cleaning previous build.", fg="green")
-        cmd = ["make", "clean"]
-        run_shell_cmd(cmd, repo.home)
-        return
     click.secho(
         "Before making artifacts, please manually source ENVs from ~/.graphscope_env.",
         fg="yellow",
@@ -120,85 +224,70 @@ def make(repo, component, clean, install, install_prefix, storage_type, with_jav
         f"Begin the make command, to build components [{component}] of GraphScope, with repo = {repo.home}",
         fg="green",
     )
-    cmd = []
-    workingdir = repo.home
-    if component == "interactive":
-        click.secho("Building interactive engine.", fg="green")
-        if storage_type == "experimental":
-            cmd = ["make", "build", 'QUIET_OPT=""']
-            workingdir = os.path.join(repo.home, "interactive_engine", "compiler")
-        if storage_type == "vineyard":
-            cmd = [
-                "mvn",
-                "install",
-                "-DskipTests",
-                "-Drust.compile.mode=release",
-                "-P",
-                "graphscope,graphscope-assembly",
-            ]
-            workingdir = os.path.join(repo.home, "interactive_engine")
-            run_shell_cmd(cmd, workingdir)
-            cmd = ["tar", "xvzf", "graphscope.tar.gz"]
-            workingdir = os.path.join(
-                repo.home, "interactive_engine", "assembly", "target"
-            )
-            click.secho(f"Begin to extract, from {workingdir}.", fg="green")
-            run_shell_cmd(cmd, workingdir)
-            click.secho("GraphScope interactive engine has been built.", fg="green")
-        if install is True:
-            cmd = [
-                "make",
-                "interactive-install",
-                "INSTALL_PREFIX={}".format(install_prefix),
-            ]
-            run_shell_cmd(cmd, repo.home)
-            click.secho(
-                f"GraphScope interactive engine has been installed to {install_prefix}.",
-                fg="green",
-            )
-
-    if component == "analytical":
-        cmd = ["make", "analytical"]
-        if with_java:
-            cmd = ["make", "analytical-java"]
-        run_shell_cmd(cmd, repo.home)
-        click.secho("GraphScope analytical engine has been built.", fg="green")
-        if install is True:
-            cmd = [
-                "make",
-                "analytical-install",
-                "INSTALL_PREFIX={}".format(install_prefix),
-            ]
-            run_shell_cmd(cmd, repo.home)
-            click.secho(
-                f"GraphScope analytical engine has been installed to {install_prefix}.",
-                fg="green",
-            )
-
-    if component == "client":
-        cmd = ["make", "client"]
-        run_shell_cmd(cmd, repo.home)
-
-    if component == "coordinator":
-        cmd = ["make", "coordinator"]
-        run_shell_cmd(cmd, repo.home)
-
     if component is None:
-        click.secho("Building all components.", fg="green")
-        cmd = ["make", "all"]
-        if install is True:
-            cmd = ["make", "install", "INSTALL_PREFIX={}".format(install_prefix)]
+        cmd = ["bash", make_command, "-c", "all", "-i", install_prefix]
         run_shell_cmd(cmd, repo.home)
+        return
+
+    cmd = [
+        "bash",
+        make_command,
+        "-c",
+        component,
+        "-i",
+        install_prefix,
+        "-s",
+        storage_type,
+    ]
+    run_shell_cmd(cmd, repo.home)
 
 
 @click.command()
-def make_image():
+@click.argument(
+    "component",
+    type=click.Choice(
+        [
+            "all",
+            "graphscope-dev",
+            "coordinator",
+            "analytical",
+            "analytical-java",
+            "interactive",
+            "interactive-frontend",
+            "interactive-executor",
+            "learning,",
+            "vineyard-dev",
+            "vineyard-runtime",
+            "manylinux2014-ext",
+        ],
+        case_sensitive=False,
+    ),
+    required=False,
+)
+@click.option(
+    "--tag",
+    default="latest",
+    show_default=True,
+    help="image tag name to build",
+)
+@click.option(
+    "--registry",
+    default="registry.cn-hongkong.aliyuncs.com",
+    show_default=True,
+    help="registry name",
+)
+@click.pass_obj
+def make_image(repo, component, registry, tag):
     """Make docker images from source code for deployment.
-
     \f
     TODO: fulfill this.
     """
-    click.echo("make_image")
+    if component is None:
+        cmd = ["bash", make_image_command, "-c", "all", "-r", registry, "-t", tag]
+        run_shell_cmd(cmd, repo.home)
+        return
+    cmd = ["bash", make_image_command, "-c", component, "-r", registry, "-t", tag]
+    run_shell_cmd(cmd, repo.home)
 
 
 @click.command()
@@ -216,3 +305,6 @@ cli.add_command(install_deps)
 cli.add_command(make)
 cli.add_command(make_image)
 cli.add_command(test)
+
+if __name__ == "__main__":
+    cli()

@@ -41,6 +41,7 @@ RUN useradd -m graphscope -u 1001 \
 
 # Install jdk-11
 RUN yum install -y sudo vim && \
+    yum install python3-pip -y && \
     yum remove java-1.8.0-openjdk-devel java-1.8.0-openjdk java-1.8.0-openjdk-headless -y && \
     yum install java-11-openjdk-devel -y && \
     yum clean all -y --enablerepo='*' && \
@@ -51,9 +52,12 @@ RUN mkdir -p /opt/graphscope /opt/vineyard && chown -R graphscope:graphscope /op
 USER graphscope
 WORKDIR /home/graphscope
 
-COPY ./gs ./gs
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 ARG VINEYARD_VERSION=main
-RUN ./gs install-deps dev --v6d-version=$VINEYARD_VERSION -j 2 && \
+RUN cd /home/graphscope/GraphScope && \
+    sudo python3 -m pip install click && \ 
+    python3 gsctl.py install-deps dev --v6d-version=$VINEYARD_VERSION -j 2 && \
+    cd /home/graphscope && sudo rm -rf /home/graphscope/GraphScope && \
     sudo yum clean all -y && \
     sudo rm -fr /var/cache/yum
 RUN echo ". /home/graphscope/.graphscope_env" >> ~/.bashrc
