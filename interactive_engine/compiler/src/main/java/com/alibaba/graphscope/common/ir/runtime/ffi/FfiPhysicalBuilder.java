@@ -64,7 +64,6 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
         this.irMeta = irMeta;
         checkFfiResult(LIB.setSchema(irMeta.getSchema().schemaJson()));
         this.ptrPlan = LIB.initLogicalPlan();
-        this.lastIdx = -1;
         initialize();
     }
 
