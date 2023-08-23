@@ -42,7 +42,7 @@ public class HostsRpcChannelFetcher implements ChannelFetcher<RpcChannel> {
         List<RpcChannel> rpcChannels = new ArrayList<>();
         hostAddresses.forEach(
                 k -> {
-                    String[] host = k.split(":");
+                    String[] host = k.trim().split(":");
                     rpcChannels.add(new RpcChannel(host[0], Integer.valueOf(host[1])));
                 });
         return rpcChannels;

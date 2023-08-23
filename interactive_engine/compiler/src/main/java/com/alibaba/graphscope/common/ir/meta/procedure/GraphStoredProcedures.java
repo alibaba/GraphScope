@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.procedure;
+package com.alibaba.graphscope.common.ir.meta.procedure;
 
-import com.alibaba.graphscope.common.ir.procedure.reader.StoredProceduresReader;
+import com.alibaba.graphscope.common.ir.meta.reader.MetaDataReader;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -27,7 +27,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
-import java.net.URI;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,12 +37,11 @@ public class GraphStoredProcedures implements StoredProcedures {
     private final RelDataTypeFactory typeFactory;
     private final Map<String, StoredProcedureMeta> storedProcedureMetaMap;
 
-    public GraphStoredProcedures(StoredProceduresReader reader) throws IOException {
+    public GraphStoredProcedures(MetaDataReader reader) throws Exception {
         this.typeFactory = new JavaTypeFactoryImpl();
         this.storedProcedureMetaMap = Maps.newLinkedHashMap();
-        for (URI uri : reader.getAllProcedureUris()) {
-            StoredProcedureMeta createdMeta =
-                    createStoredProcedureMeta(reader.getProcedureMeta(uri));
+        for (InputStream inputStream : reader.getStoredProcedures()) {
+            StoredProcedureMeta createdMeta = createStoredProcedureMeta(inputStream);
             this.storedProcedureMetaMap.put(createdMeta.getName(), createdMeta);
         }
     }
@@ -51,9 +51,11 @@ public class GraphStoredProcedures implements StoredProcedures {
         return this.storedProcedureMetaMap.get(procedureName);
     }
 
-    private StoredProcedureMeta createStoredProcedureMeta(String procedureMeta) throws IOException {
+    private StoredProcedureMeta createStoredProcedureMeta(InputStream inputStream)
+            throws IOException {
         Yaml yaml = new Yaml();
-        Map<String, Object> config = yaml.load(procedureMeta);
+        Map<String, Object> config =
+                yaml.load(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8));
         String procedureName = (String) config.get("name");
         return new StoredProcedureMeta(
                 procedureName,

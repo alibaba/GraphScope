@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.config;
+package com.alibaba.graphscope.common.ir.meta.reader;
 
-public class GraphConfig {
-    public static final Config<String> GRAPH_SCHEMA = Config.stringConfig("graph.schema", ".");
-    public static final Config<String> GRAPH_STORE = Config.stringConfig("graph.store", "exp");
-    public static final Config<String> GRAPH_STORED_PROCEDURES =
-            Config.stringConfig("graph.stored.procedures", "");
+import java.io.InputStream;
+import java.util.List;
+
+// MetaDataReader is used to read meta data from a data source (can be a local file or
+// remote web service)
+public interface MetaDataReader {
+    List<InputStream> getStoredProcedures() throws Exception;
+
+    InputStream getGraphSchema() throws Exception;
 }
