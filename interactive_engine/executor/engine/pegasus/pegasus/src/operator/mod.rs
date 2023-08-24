@@ -30,6 +30,7 @@ use crate::errors::{IOResult, JobExecError};
 use crate::event::emitter::EventEmitter;
 use crate::graph::Port;
 use crate::progress::EndOfScope;
+use crate::resource::{KeyedResourceBar, ResourceBar};
 use crate::schedule::state::inbound::InputEndNotify;
 use crate::schedule::state::outbound::OutputCancelState;
 use crate::tag::tools::map::TidyTagMap;
@@ -237,6 +238,10 @@ impl<T: Send + 'static> Notifiable for DefaultNotifyOperator<T> {
 }
 
 pub trait OperatorCore: Send + 'static {
+    fn set_resource(&self, resource: Option<&ResourceBar>, keyed_resource: Option<&KeyedResourceBar>) {}
+
+    fn reset_resource(&self, resource: Option<&ResourceBar>, keyed_resource: Option<&KeyedResourceBar>) {}
+
     fn on_receive(
         &mut self, inputs: &[Box<dyn InputProxy>], outputs: &[Box<dyn OutputProxy>],
     ) -> Result<(), JobExecError>;
@@ -246,7 +251,18 @@ impl<T: ?Sized + OperatorCore> OperatorCore for Box<T> {
     fn on_receive(
         &mut self, inputs: &[Box<dyn InputProxy>], outputs: &[Box<dyn OutputProxy>],
     ) -> Result<(), JobExecError> {
-        (**self).on_receive(inputs, outputs)
+        let resource_bar = ResourceBar::constructor();
+        let keyed_resource_bar = KeyedResourceBar::constructor();
+        let resource_size = keyed_resource_bar
+            .data
+            .with(|store| store.borrow().len());
+        (**self).set_resource(Some(&resource_bar), Some(&keyed_resource_bar));
+        let res = (**self).on_receive(inputs, outputs);
+        (**self).reset_resource(Some(&resource_bar), Some(&keyed_resource_bar));
+        let resource_size = keyed_resource_bar
+            .data
+            .with(|store| store.borrow().len());
+        res
     }
 }
 
@@ -255,7 +271,20 @@ impl<T: OperatorCore> OperatorCore for DefaultNotifyOperator<T> {
     fn on_receive(
         &mut self, inputs: &[Box<dyn InputProxy>], outputs: &[Box<dyn OutputProxy>],
     ) -> Result<(), JobExecError> {
-        self.op.on_receive(inputs, outputs)
+        let resource_bar = ResourceBar::constructor();
+        let keyed_resource_bar = KeyedResourceBar::constructor();
+        let resource_size = keyed_resource_bar
+            .data
+            .with(|store| store.borrow().len());
+        self.op
+            .set_resource(Some(&resource_bar), Some(&keyed_resource_bar));
+        let res = self.op.on_receive(inputs, outputs);
+        self.op
+            .reset_resource(Some(&resource_bar), Some(&keyed_resource_bar));
+        let resource_size = keyed_resource_bar
+            .data
+            .with(|store| store.borrow().len());
+        res
     }
 }
 
@@ -426,12 +455,19 @@ pub struct OperatorBuilder {
     inputs_notify: Vec<Option<Box<dyn InputEndNotify>>>,
     outputs: Vec<Box<dyn OutputBuilder>>,
     core: GeneralOperator,
-    worker_id: WorkerId
+    worker_id: WorkerId,
 }
 
 impl OperatorBuilder {
     pub fn new(meta: OperatorInfo, core: GeneralOperator, worker_id: WorkerId) -> Self {
-        OperatorBuilder { info: meta, inputs: vec![], inputs_notify: vec![], outputs: vec![], core ,worker_id}
+        OperatorBuilder {
+            info: meta,
+            inputs: vec![],
+            inputs_notify: vec![],
+            outputs: vec![],
+            core,
+            worker_id,
+        }
     }
 
     pub fn index(&self) -> usize {

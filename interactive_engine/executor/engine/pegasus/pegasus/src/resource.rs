@@ -1,5 +1,6 @@
 use std::any::{Any, TypeId};
 use std::cell::{RefCell, UnsafeCell};
+use std::thread::LocalKey;
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -173,6 +174,30 @@ lazy_static! {
 thread_local! {
     static RESOURCES : RefCell<ResourceMap> = RefCell::new(ResourceMap::default());
     static KEYED_RESOURCES: RefCell<KeyedResources> = RefCell::new(KeyedResources::default());
+}
+
+pub struct ResourceBar {
+    // Visibility here changes what can see `foo`.
+    pub data: &'static LocalKey<RefCell<ResourceMap>>,
+}
+impl ResourceBar {
+    pub fn constructor() -> Self {
+        Self {
+            data: &RESOURCES,
+        }
+    }
+}
+
+pub struct KeyedResourceBar {
+    // Visibility here changes what can see `foo`.
+    pub data: &'static LocalKey<RefCell<KeyedResources>>,
+}
+impl KeyedResourceBar {
+    pub fn constructor() -> Self {
+        Self {
+            data: &KEYED_RESOURCES,
+        }
+    }
 }
 
 pub struct Resource<T> {

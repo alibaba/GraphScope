@@ -124,7 +124,6 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         let mut input = Source::new(root_builder.copy_data(), &dfb);
         let output = self.sink.clone();
         func(&mut input, output)?;
-        println!("Finished build dataflow");
         let mut sch = Schedule::new(event_emitter, rx);
         let df = dfb.build(&mut sch)?;
         self.task = WorkerTask::Dataflow(df, sch);
