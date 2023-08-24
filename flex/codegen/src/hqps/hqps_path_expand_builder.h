@@ -170,8 +170,9 @@ class PathExpandOpBuilder {
       physical::PhysicalOpr::MetaData meta_data;
       // pass an empty meta_data, since we need no meta_data for
       // edge_expand_opt.
-      std::tie(edge_expand_opt_name_, edge_expand_opt_) = BuildEdgeExpandOpt(
-          ctx_, direction_, params, dst_vertex_labels_, expand_opt, meta_data);
+      std::tie(edge_expand_opt_name_, edge_expand_opt_) =
+          BuildOneLabelEdgeExpandOpt(ctx_, direction_, params,
+                                     dst_vertex_labels_, expand_opt, meta_data);
       VLOG(10) << "edge_expand_opt_name_: " << edge_expand_opt_name_;
       VLOG(10) << "edge_expand_opt_: " << edge_expand_opt_;
     }

@@ -27,9 +27,9 @@
 #include <vector>
 
 #include "flex/engines/hqps_db/core/params.h"
-
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/property/column.h"
+#include "flex/utils/property/types.h"
 
 namespace gs {
 
@@ -43,6 +43,35 @@ std::string demangle(const T& t) {
   free(demangled);
   return ret;
 }
+
+// Get PropertyType from Cpp type
+template <typename T>
+struct CppTypeToPropertyType;
+
+template <>
+struct CppTypeToPropertyType<int32_t> {
+  static constexpr PropertyType value = PropertyType::kInt32;
+};
+
+template <>
+struct CppTypeToPropertyType<int64_t> {
+  static constexpr PropertyType value = PropertyType::kInt64;
+};
+
+template <>
+struct CppTypeToPropertyType<double> {
+  static constexpr PropertyType value = PropertyType::kDouble;
+};
+
+template <>
+struct CppTypeToPropertyType<std::string> {
+  static constexpr PropertyType value = PropertyType::kString;
+};
+
+template <>
+struct CppTypeToPropertyType<std::string_view> {
+  static constexpr PropertyType value = PropertyType::kString;
+};
 
 template <typename T>
 struct return_type;
@@ -470,16 +499,16 @@ auto transform_tuple(const std::tuple<T...>&& tuple, FUNC_T&& func) {
                               std::make_index_sequence<N>());
 }
 
-template <typename FUNC, typename... T>
-bool apply_on_tuple(const FUNC& func, const std::tuple<T...>& tuple) {
-  return apply_on_tuple_impl(func, tuple,
-                             std::make_index_sequence<sizeof...(T)>());
-}
-
 template <typename FUNC, typename... T, size_t... Is>
 bool apply_on_tuple_impl(const FUNC& func, const std::tuple<T...>& tuple,
                          std::index_sequence<Is...>) {
   return func(std::get<Is>(tuple)...);
+}
+
+template <typename FUNC, typename... T>
+bool apply_on_tuple(const FUNC& func, const std::tuple<T...>& tuple) {
+  return apply_on_tuple_impl(func, tuple,
+                             std::make_index_sequence<sizeof...(T)>());
 }
 
 template <typename T, size_t N, typename FUNC_T, size_t... Is,
@@ -586,6 +615,14 @@ auto make_getter_tuple(label_t label, std::tuple<ColMetas...>&& tuple,
   return std::make_tuple(std::get<Is>(tuple).CreateGetter(label)...);
 }
 
+template <typename GRAPH, typename T>
+struct GetAdjListArrayT;
+
+template <typename GRAPH, typename... T>
+struct GetAdjListArrayT<GRAPH, std::tuple<T...>> {
+  using type = typename GRAPH::template adj_list_array_t<T...>;
+};
+
 template <typename T>
 using ValueTypeOf = typename T::value_type;
 
@@ -671,6 +708,16 @@ enum class EntryType {
   kProjectedEdgeEntry = 5,
 };
 
+template <typename T, size_t N>
+std::vector<T> array_to_vec(const std::array<T, N>& array) {
+  std::vector<T> res;
+  res.reserve(N);
+  for (auto i = 0; i < N; ++i) {
+    res.emplace_back(array[i]);
+  }
+  return res;
+}
+
 template <typename PRIORITY_QUEUE_T>
 static typename PRIORITY_QUEUE_T::container_type priority_queue_to_vec(
     PRIORITY_QUEUE_T& pq, bool reversed = false) {
@@ -712,6 +759,20 @@ struct to_string_impl<std::array<T, N>> {
     for (auto i : empty) {
       ss << i << ",";
     }
+    return ss.str();
+  }
+};
+
+template <typename T, size_t M, size_t N>
+struct to_string_impl<std::array<std::array<T, N>, M>> {
+  static inline std::string to_string(
+      const std::array<std::array<T, N>, M>& empty) {
+    std::stringstream ss;
+    ss << "[";
+    for (auto i : empty) {
+      ss << to_string_impl<std::array<T, N>>::to_string(i) << ",";
+    }
+    ss << "]";
     return ss.str();
   }
 };

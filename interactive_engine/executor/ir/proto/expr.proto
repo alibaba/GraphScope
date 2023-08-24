@@ -77,6 +77,8 @@ enum Logical {
   OR = 11;
   // A unary logical not operator.
   NOT = 12;
+  // A unary logical isnull operator
+  ISNULL = 13;
 }
 
 enum Arithmetic {

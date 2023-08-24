@@ -505,8 +505,20 @@ Filter the object in the stream given a biased coin toss.
 Parameters: </br>
 probability - the probability that the object will pass through.
 ```bash
-g.V().coin(0.2) # range is [0, 1]
+g.V().coin(0.2) # range is [0.0, 1.0]
+g.V().out().coin(0.2)
 ```
+
+#### [sample()](https://tinkerpop.apache.org/docs/current/reference/#sample-step)
+Generate a certain number of sample results.
+
+Parameters: </br>
+number - allow specified number of objects to pass through the stream.
+```bash
+g.V().sample(10)
+g.V().out().sample(10)
+```
+
 ### Union
 #### [union()](https://tinkerpop.apache.org/docs/current/reference/#union-step)
 Merges the results of an arbitrary number of traversals.
@@ -720,6 +732,7 @@ Expression(s) in project or filter:
     g.V().where(expr("@.name == \"marko\"")) # = g.V().has("name", "marko")
     g.V().where(expr("@.age > 10")) # = g.V().has("age", P.gt(10))
     g.V().as("a").out().where(expr("@.name == \"marko\" || (@a.age > 10)"))
+    g.V().where(expr("@.age isNull"))
     ```
 * project: select(expr("..."))
     ```bash
@@ -734,6 +747,14 @@ gremlin> g.V().as("a").where(expr("@a.name == \"marko\" || (@a.age > 10)"))
 ==>v[1]
 ==>v[4]
 ==>v[6]
+gremlin> g.V().where(expr("@.age isNull")).values("name")
+==>ripple
+==>lop
+gremlin>  g.V().where(expr("!(@.age isNull)")).values("name")
+==>marko
+==>vadas
+==>josh
+==>peter
 gremlin> g.V().select(expr("@.name"))
 ==>marko
 ==>vadas

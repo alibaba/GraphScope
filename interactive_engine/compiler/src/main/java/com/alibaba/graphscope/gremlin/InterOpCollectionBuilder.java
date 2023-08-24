@@ -160,6 +160,12 @@ public class InterOpCollectionBuilder {
                 }
                 // System.out.println(unfoldOp.getUnfoldTag().get().getArg());
                 opList.add(unfoldOp);
+            } else if (Utils.equalClass(step, CoinStep.class)) {
+                opList.add(StepTransformFactory.COIN_STEP.apply(step));
+            } else if (Utils.equalClass(step, SampleGlobalStep.class)) {
+                opList.addAll(
+                        TraversalParentTransformFactory.SAMPLE_BY_STEP.apply(
+                                (TraversalParent) step));
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }

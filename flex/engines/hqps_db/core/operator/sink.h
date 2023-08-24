@@ -25,6 +25,7 @@
 #include "flex/engines/hqps_db/core/utils/props.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/flat_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/general_edge_set.h"
+#include "flex/engines/hqps_db/structures/multi_edge_set/untyped_edge_set.h"
 
 #include "proto_generated_gie/results.pb.h"
 
@@ -238,6 +239,73 @@ class SinkOp {
     return sink_col_impl_for_vertex_set<Ind, act_tag_id>(
         label, vids, results_vec, repeat_offsets, tag_id);
   }
+
+  // Sink two label vertex set, currently only print the id
+  template <size_t Ind, size_t act_tag_id, typename LabelT,
+            typename vertex_id_t>
+  static void sink_col_impl(
+      results::CollectiveResults& results_vec,
+      const TwoLabelVertexSetImpl<vertex_id_t, LabelT, grape::EmptyType>&
+          vertex_set,
+      const std::vector<size_t>& repeat_offsets, int32_t tag_id) {
+    auto labels = vertex_set.GetLabels();
+    auto& vids = vertex_set.GetVertices();
+    auto& bitset = vertex_set.GetBitset();
+    label_t label;
+    if (repeat_offsets.empty()) {
+      for (auto i = 0; i < vids.size(); ++i) {
+        auto row = results_vec.mutable_results(i);
+        CHECK(row->record().columns_size() == Ind);
+        auto record = row->mutable_record();
+        auto new_col = record->add_columns();
+        new_col->mutable_name_or_id()->set_id(tag_id);
+        new_col->mutable_entry()->mutable_element()->mutable_vertex()->set_id(
+            vids[i]);
+        if (bitset.get_bit(i)) {
+          label = labels[0];
+        } else {
+          label = labels[1];
+        }
+        new_col->mutable_entry()
+            ->mutable_element()
+            ->mutable_vertex()
+            ->mutable_label()
+            ->set_id(label);
+      }
+    } else {
+      CHECK(repeat_offsets.size() == vids.size());
+      {
+        int32_t num_rows = 0;
+        for (auto i : repeat_offsets) {
+          num_rows += i;
+        }
+        CHECK(num_rows == results_vec.results_size())
+            << num_rows << " " << results_vec.results_size();
+      }
+      size_t cur_ind = 0;
+      for (auto i = 0; i < vids.size(); ++i) {
+        if (bitset.get_bit(i)) {
+          label = labels[0];
+        } else {
+          label = labels[1];
+        }
+        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+          auto row = results_vec.mutable_results(cur_ind++);
+          auto record = row->mutable_record();
+          auto new_col = record->add_columns();
+          new_col->mutable_name_or_id()->set_id(tag_id);
+          new_col->mutable_entry()->mutable_element()->mutable_vertex()->set_id(
+              vids[i]);
+          new_col->mutable_entry()
+              ->mutable_element()
+              ->mutable_vertex()
+              ->mutable_label()
+              ->set_id(label);
+        }
+      }
+    }
+  }
+
   // sink row vertex set, if offsets is empty, we sink all vertices
   // if offsets is set, we use offset to repeat
   template <size_t Ind, size_t act_tag_id, typename LabelT,
@@ -268,7 +336,8 @@ class SinkOp {
         for (auto i : repeat_offsets) {
           num_rows += i;
         }
-        CHECK(num_rows == results_vec.results_size());
+        CHECK(num_rows == results_vec.results_size())
+            << num_rows << " " << results_vec.results_size();
       }
       size_t cur_ind = 0;
       for (auto i = 0; i < vids.size(); ++i) {
@@ -359,8 +428,7 @@ class SinkOp {
       size_t cur_ind = 0;
       for (auto i = 0; i < collection.Size(); ++i) {
         for (auto j = 0; j < repeat_offsets[i]; ++j) {
-          // auto& row = results_vec[cur_ind++];
-          auto row = results_vec.mutable_results(i);
+          auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
           new_col->mutable_name_or_id()->set_id(tag_id);
@@ -403,8 +471,7 @@ class SinkOp {
       size_t cur_ind = 0;
       for (auto i = 0; i < collection.Size(); ++i) {
         for (auto j = 0; j < repeat_offsets[i]; ++j) {
-          // auto& row = results_vec[cur_ind++];
-          auto row = results_vec.mutable_results(i);
+          auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
           new_col->mutable_name_or_id()->set_id(tag_id);
@@ -445,8 +512,7 @@ class SinkOp {
       size_t cur_ind = 0;
       for (auto i = 0; i < collection.Size(); ++i) {
         for (auto j = 0; j < repeat_offsets[i]; ++j) {
-          // auto& row = results_vec[cur_ind++];
-          auto row = results_vec.mutable_results(i);
+          auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
           new_col->mutable_name_or_id()->set_id(tag_id);
@@ -454,6 +520,163 @@ class SinkOp {
               new_col->mutable_entry()->mutable_collection();
           template_set_tuple_value(mutable_collection, collection.Get(i));
         }
+      }
+    }
+  }
+
+  // sink general vertex, we only return vertex ids.
+  template <size_t Ind, size_t act_tag_id, typename VID_T, typename LabelT>
+  static void sink_col_impl(results::CollectiveResults& results_vec,
+                            const GeneralVertexSet<VID_T, LabelT>& vertex_set,
+                            const std::vector<size_t>& repeat_offsets,
+                            int32_t tag_id) {
+    auto vertices_vec = vertex_set.GetVertices();
+    if (repeat_offsets.empty()) {
+      CHECK(vertex_set.Size() == results_vec.results_size())
+          << "size neq " << vertex_set.Size() << " "
+          << results_vec.results_size();
+
+      for (auto i = 0; i < vertices_vec.size(); ++i) {
+        // auto& row = results_vec[i];
+        auto row = results_vec.mutable_results(i);
+        CHECK(row->record().columns_size() == Ind)
+            << "record column size: " << row->record().columns_size()
+            << ", ind: " << Ind;
+        auto record = row->mutable_record();
+        auto new_col = record->add_columns();
+        new_col->mutable_name_or_id()->set_id(tag_id);
+        auto mutable_vertex =
+            new_col->mutable_entry()->mutable_element()->mutable_vertex();
+        mutable_vertex->set_id(vertices_vec[i]);
+        // todo: set properties.
+      }
+    } else {
+      CHECK(repeat_offsets.size() == vertices_vec.size());
+      size_t cur_ind = 0;
+      for (auto i = 0; i < vertices_vec.size(); ++i) {
+        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+          auto row = results_vec.mutable_results(cur_ind++);
+          auto record = row->mutable_record();
+          auto new_col = record->add_columns();
+          new_col->mutable_name_or_id()->set_id(tag_id);
+          auto mutable_vertex =
+              new_col->mutable_entry()->mutable_element()->mutable_vertex();
+          mutable_vertex->set_id(vertices_vec[i]);
+        }
+      }
+    }
+  }
+
+  template <size_t Ind, size_t act_tag_id, typename VID_T, typename LabelT,
+            typename CSR_ITER>
+  static void sink_col_impl(
+      results::CollectiveResults& results_vec,
+      const UnTypedEdgeSet<VID_T, LabelT, CSR_ITER>& edge_set,
+      const std::vector<size_t>& repeat_offsets, int32_t tag_id) {
+    if (repeat_offsets.empty()) {
+      CHECK(edge_set.Size() == results_vec.results_size())
+          << "size neq " << edge_set.Size() << " "
+          << results_vec.results_size();
+      auto iter = edge_set.begin();
+      auto end_iter = edge_set.end();
+      for (auto i = 0; i < results_vec.results_size(); ++i) {
+        // auto& row = results_vec[i];
+        auto row = results_vec.mutable_results(i);
+        CHECK(row->record().columns_size() == Ind)
+            << "record column size: " << row->record().columns_size()
+            << ", ind: " << Ind;
+        auto record = row->mutable_record();
+        auto new_col = record->add_columns();
+        new_col->mutable_name_or_id()->set_id(tag_id);
+        auto mutable_edge =
+            new_col->mutable_entry()->mutable_element()->mutable_edge();
+        CHECK(iter != end_iter);
+        mutable_edge->set_src_id(iter.GetSrc());
+        mutable_edge->set_dst_id(iter.GetDst());
+        ++iter;
+        // todo: set properties.
+      }
+    } else {
+      CHECK(repeat_offsets.size() == edge_set.Size());
+      size_t cur_ind = 0;
+      auto iter = edge_set.begin();
+      auto end_iter = edge_set.end();
+      for (auto i = 0; i < repeat_offsets.size(); ++i) {
+        CHECK(iter != end_iter);
+        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+          // auto& row = results_vec[i];
+          auto row = results_vec.mutable_results(cur_ind++);
+          CHECK(row->record().columns_size() == Ind)
+              << "record column size: " << row->record().columns_size()
+              << ", ind: " << Ind;
+          auto record = row->mutable_record();
+          auto new_col = record->add_columns();
+          new_col->mutable_name_or_id()->set_id(tag_id);
+          auto mutable_edge =
+              new_col->mutable_entry()->mutable_element()->mutable_edge();
+          mutable_edge->set_src_id(iter.GetSrc());
+          mutable_edge->set_dst_id(iter.GetDst());
+          // todo: set properties.
+        }
+        ++iter;
+      }
+    }
+  }
+
+  // sink for general edge set.
+  template <size_t Ind, size_t act_tag_id, size_t edge_label_num, typename GI,
+            typename VID_T, typename LabelT, typename... PROP_TUPLE>
+  static void sink_col_impl(
+      results::CollectiveResults& results_vec,
+      const GeneralEdgeSet<edge_label_num, GI, VID_T, LabelT, PROP_TUPLE...>&
+          edge_set,
+      const std::vector<size_t>& repeat_offsets, int32_t tag_id) {
+    if (repeat_offsets.empty()) {
+      CHECK(edge_set.Size() == results_vec.results_size())
+          << "size neq " << edge_set.Size() << " "
+          << results_vec.results_size();
+      auto iter = edge_set.begin();
+      auto end_iter = edge_set.end();
+      for (auto i = 0; i < results_vec.results_size(); ++i) {
+        // auto& row = results_vec[i];
+        auto row = results_vec.mutable_results(i);
+        CHECK(row->record().columns_size() == Ind)
+            << "record column size: " << row->record().columns_size()
+            << ", ind: " << Ind;
+        auto record = row->mutable_record();
+        auto new_col = record->add_columns();
+        new_col->mutable_name_or_id()->set_id(tag_id);
+        auto mutable_edge =
+            new_col->mutable_entry()->mutable_element()->mutable_edge();
+        CHECK(iter != end_iter);
+        mutable_edge->set_src_id(iter.GetSrc());
+        mutable_edge->set_dst_id(iter.GetDst());
+        ++iter;
+        // todo: set properties.
+      }
+    } else {
+      CHECK(repeat_offsets.size() == edge_set.Size());
+      size_t cur_ind = 0;
+      auto iter = edge_set.begin();
+      auto end_iter = edge_set.end();
+      for (auto i = 0; i < repeat_offsets.size(); ++i) {
+        CHECK(iter != end_iter);
+        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+          // auto& row = results_vec[i];
+          auto row = results_vec.mutable_results(cur_ind++);
+          CHECK(row->record().columns_size() == Ind)
+              << "record column size: " << row->record().columns_size()
+              << ", ind: " << Ind;
+          auto record = row->mutable_record();
+          auto new_col = record->add_columns();
+          new_col->mutable_name_or_id()->set_id(tag_id);
+          auto mutable_edge =
+              new_col->mutable_entry()->mutable_element()->mutable_edge();
+          mutable_edge->set_src_id(iter.GetSrc());
+          mutable_edge->set_dst_id(iter.GetDst());
+          // todo: set properties.
+        }
+        ++iter;
       }
     }
   }

@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
-import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.UnfoldOp;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;

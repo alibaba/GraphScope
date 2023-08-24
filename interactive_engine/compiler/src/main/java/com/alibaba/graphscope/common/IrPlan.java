@@ -31,6 +31,9 @@ import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.utils.ClassUtils;
+import com.alibaba.graphscope.gaia.proto.Common;
+import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
+import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
@@ -305,6 +308,98 @@ public class IrPlan implements Closeable {
                             irCoreLib.addDedupKey(ptrDedup, k);
                         });
                 return ptrDedup;
+            }
+        },
+        SAMPLE_OP {
+            @Override
+            public Pointer apply(InterOpBase baseOp) {
+                SampleOp sampleOp = (SampleOp) baseOp;
+                Pointer ptrSample = irCoreLib.initSampleOperator();
+                FfiResult.ByValue error1 =
+                        irCoreLib.setSampleType(
+                                ptrSample,
+                                new FfiPbPointer.ByValue(
+                                        createSampleType(sampleOp.getSampleType()).toByteArray()));
+                if (error1.code != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "sampleType", "setSampleType returns " + error1.msg);
+                }
+                FfiResult.ByValue error3 =
+                        irCoreLib.setSampleWeightVariable(
+                                ptrSample,
+                                new FfiPbPointer.ByValue(
+                                        createVariable(sampleOp.getVariable()).toByteArray()));
+                if (error3.code != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(),
+                            "variable",
+                            "setSampleWeightVariable returns " + error3.msg);
+                }
+                return ptrSample;
+            }
+
+            private GraphAlgebra.Sample.SampleType createSampleType(SampleOp.SampleType type) {
+                GraphAlgebra.Sample.SampleType.Builder builder =
+                        GraphAlgebra.Sample.SampleType.newBuilder();
+                if (type instanceof SampleOp.RatioType) {
+                    SampleOp.RatioType ratioType = (SampleOp.RatioType) type;
+                    builder.setSampleByRatio(
+                            GraphAlgebra.Sample.SampleByRatio.newBuilder()
+                                    .setRatio(ratioType.getRatio()));
+                } else if (type instanceof SampleOp.AmountType) {
+                    SampleOp.AmountType amountType = (SampleOp.AmountType) type;
+                    builder.setSampleByNum(
+                            GraphAlgebra.Sample.SampleByNum.newBuilder()
+                                    .setNum((int) amountType.getAmount()));
+                } else {
+                    throw new IllegalArgumentException("Illegal sample type " + type.getClass());
+                }
+                return builder.build();
+            }
+
+            private OuterExpression.Variable createVariable(FfiVariable.ByValue var) {
+                OuterExpression.Variable.Builder builder = OuterExpression.Variable.newBuilder();
+                if (var.tag != null && var.tag.opt != FfiNameIdOpt.None) {
+                    builder.setTag(createNameOrId(var.tag));
+                }
+                if (var.property != null && var.property.opt != FfiPropertyOpt.None) {
+                    builder.setProperty(createProperty(var.property));
+                }
+                return builder.build();
+            }
+
+            private Common.NameOrId createNameOrId(FfiNameOrId.ByValue nameOrId) {
+                switch (nameOrId.opt) {
+                    case Name:
+                        return Common.NameOrId.newBuilder().setName(nameOrId.name).build();
+                    case Id:
+                        return Common.NameOrId.newBuilder().setId(nameOrId.nameId).build();
+                    default:
+                        throw new IllegalArgumentException("Illegal name or id " + nameOrId.opt);
+                }
+            }
+
+            private OuterExpression.Property createProperty(FfiProperty.ByValue property) {
+                switch (property.opt) {
+                    case Key:
+                        return OuterExpression.Property.newBuilder()
+                                .setKey(createNameOrId(property.key))
+                                .build();
+                    case Id:
+                        return OuterExpression.Property.newBuilder()
+                                .setId(OuterExpression.IdKey.newBuilder())
+                                .build();
+                    case Label:
+                        return OuterExpression.Property.newBuilder()
+                                .setLabel(OuterExpression.LabelKey.newBuilder())
+                                .build();
+                    case Len:
+                        return OuterExpression.Property.newBuilder()
+                                .setLen(OuterExpression.LengthKey.newBuilder())
+                                .build();
+                    default:
+                        throw new IllegalArgumentException("Illegal property " + property.opt);
+                }
             }
         },
         SINK_OP {
@@ -780,6 +875,9 @@ public class IrPlan implements Closeable {
         } else if (ClassUtils.equalClass(base, AsNoneOp.class)) {
             Pointer ptrAs = TransformFactory.AS_NONE_OP.apply(base);
             error = irCoreLib.appendAsOperator(ptrPlan, ptrAs, oprId.getValue(), oprId);
+        } else if (ClassUtils.equalClass(base, SampleOp.class)) {
+            Pointer ptrSample = TransformFactory.SAMPLE_OP.apply(base);
+            error = irCoreLib.appendSampleOperator(ptrPlan, ptrSample, oprId.getValue(), oprId);
         } else {
             throw new InterOpUnsupportedException(base.getClass(), "unimplemented yet");
         }

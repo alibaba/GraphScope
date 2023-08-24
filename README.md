@@ -15,6 +15,7 @@
 [![Docs-zh](https://shields.io/badge/Docs-%E4%B8%AD%E6%96%87-blue?logo=Read%20The%20Docs)](https://graphscope.io/docs/zh/)
 [![FAQ-zh](https://img.shields.io/badge/-FAQ%E4%B8%AD%E6%96%87-blue?logo=Read%20The%20Docs)](https://graphscope.io/docs/zh/frequently_asked_questions.html)
 [![README-zh](https://shields.io/badge/README-%E4%B8%AD%E6%96%87-blue)](README-zh.md)
+[![ACM DL](https://img.shields.io/badge/ACM%20DL-10.14778%2F3476311.3476369-blue)](https://dl.acm.org/doi/10.14778/3476311.3476369)
 
 🎉 See our ongoing [GraphScope Flex](flex/): a LEGO-inspired, modular, and user-friendly GraphScope evolution. 🎉
 
@@ -414,6 +415,20 @@ GraphScope is released under [Apache License 2.0](https://www.apache.org/license
 - Wenfei Fan, Tao He, Longbin Lai, Xue Li, Yong Li, Zhao Li, Zhengping Qian, Chao Tian, Lei Wang, Jingbo Xu, Youyang Yao, Qiang Yin, Wenyuan Yu, Jingren Zhou, Diwen Zhu, Rong Zhu. [GraphScope: A Unified Engine For Big Graph Processing](http://vldb.org/pvldb/vol14/p2879-qian.pdf). The 47th International Conference on Very Large Data Bases (VLDB), industry, 2021.
 - Jingbo Xu, Zhanning Bai, Wenfei Fan, Longbin Lai, Xue Li, Zhao Li, Zhengping Qian, Lei Wang, Yanyan Wang, Wenyuan Yu, Jingren Zhou. [GraphScope: A One-Stop Large Graph Processing System](http://vldb.org/pvldb/vol14/p2703-xu.pdf). The 47th International Conference on Very Large Data Bases (VLDB), demo, 2021
 
+If you use this software, please cite our paper using the following metadata:
+
+```bibtex
+@article{fan2021graphscope,
+  title={GraphScope: a unified engine for big graph processing},
+  author={Fan, Wenfei and He, Tao and Lai, Longbin and Li, Xue and Li, Yong and Li, Zhao and Qian, Zhengping and Tian, Chao and Wang, Lei and Xu, Jingbo and others},
+  journal={Proceedings of the VLDB Endowment},
+  volume={14},
+  number={12},
+  pages={2879--2892},
+  year={2021},
+  publisher={VLDB Endowment}
+}
+```
 
 ## Contributing
 

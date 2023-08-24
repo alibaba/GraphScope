@@ -79,7 +79,9 @@ public class GremlinResultAnalyzer {
                     || Utils.equalClass(step, WherePredicateStep.class)
                     || Utils.equalClass(step, TraversalFilterStep.class)
                     || Utils.equalClass(step, WhereTraversalStep.class)
-                    || Utils.equalClass(step, NotStep.class)) {
+                    || Utils.equalClass(step, NotStep.class)
+                    || Utils.equalClass(step, CoinStep.class)
+                    || Utils.equalClass(step, SampleGlobalStep.class)) {
                 // do nothing;
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
