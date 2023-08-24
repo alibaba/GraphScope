@@ -204,7 +204,7 @@ public class GraphPlanner {
         if (!StringUtils.isEmpty(keyValues)) {
             String[] pairs = keyValues.split(",");
             for (String pair : pairs) {
-                String[] kv = pair.split(":");
+                String[] kv = pair.trim().split(":");
                 Preconditions.checkArgument(
                         kv.length == 2, "invalid key value pair: " + pair + " in " + keyValues);
                 keyValueMap.put(kv[0], kv[1]);

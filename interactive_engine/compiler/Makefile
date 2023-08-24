@@ -66,7 +66,7 @@ physical_plan:
 		-cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
 		-Djna.library.path=../executor/ir/target/release \
 		-Dgraph.schema=${graph.schema} \
-		com.alibaba.graphscope.common.ir.tools.GraphPlanner "${config.path}" "$(query)" "$(physical)" "$(procedure)" $(extra)
+		com.alibaba.graphscope.common.ir.tools.GraphPlanner "${config.path}" "$(query)" "$(physical)" "$(procedure)" "$(extra)"
 
 # start rpc server
 # make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json 
