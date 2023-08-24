@@ -20,30 +20,36 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.procedure.GraphStoredProcedures;
 import com.alibaba.graphscope.common.ir.procedure.reader.StoredProceduresReader;
-import com.alibaba.graphscope.common.ir.schema.GraphSchemaWrapper;
-import com.alibaba.graphscope.gremlin.Utils;
+import com.alibaba.graphscope.common.ir.schema.FileFormatType;
+import com.alibaba.graphscope.common.ir.schema.IrGraphSchema;
 
-import java.io.IOException;
+import java.io.FileInputStream;
 import java.util.Optional;
 
 public class ExperimentalMetaFetcher implements IrMetaFetcher {
     private final IrMeta meta;
 
-    public ExperimentalMetaFetcher(Configs configs) throws IOException {
-        String schemaFilePath = GraphConfig.GRAPH_SCHEMA.get(configs);
-        String schemaJson = Utils.readStringFromFile(schemaFilePath);
+    public ExperimentalMetaFetcher(Configs configs) throws Exception {
+        String schemaFile = GraphConfig.GRAPH_SCHEMA.get(configs);
         this.meta =
                 new IrMeta(
-                        new GraphSchemaWrapper(
-                                com.alibaba.graphscope.common.ir.schema.Utils.buildSchemaFromJson(
-                                        schemaJson),
-                                schemaJson,
-                                false),
+                        new IrGraphSchema(
+                                new FileInputStream(schemaFile), getFormatType(schemaFile)),
                         new GraphStoredProcedures(StoredProceduresReader.Factory.create(configs)));
     }
 
     @Override
     public Optional<IrMeta> fetch() {
         return Optional.of(this.meta);
+    }
+
+    private FileFormatType getFormatType(String schemaFile) {
+        if (schemaFile.endsWith(".yaml")) {
+            return FileFormatType.YAML;
+        } else if (schemaFile.endsWith(".json")) {
+            return FileFormatType.JSON;
+        } else {
+            throw new IllegalArgumentException("unsupported file format " + schemaFile);
+        }
     }
 }

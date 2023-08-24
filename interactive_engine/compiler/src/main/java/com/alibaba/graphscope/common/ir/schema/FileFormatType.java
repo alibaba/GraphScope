@@ -16,22 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.schema;
 
-import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
-
-import org.apache.calcite.schema.Statistic;
-
-import java.util.List;
-
-/**
- * Extends {@link GraphSchema} to add {@link Statistic}
- */
-public interface StatisticSchema extends GraphSchema {
-    // get meta for CBO
-    Statistic getStatistic(List<String> tableName);
-
-    // if the property name need to be converted to id
-    boolean isColumnId();
-
-    // schema json for ir core
-    String schemaJson();
+public enum FileFormatType {
+    YAML,
+    JSON
 }

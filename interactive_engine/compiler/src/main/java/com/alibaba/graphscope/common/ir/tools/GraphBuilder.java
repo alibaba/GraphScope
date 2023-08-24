@@ -32,7 +32,7 @@ import com.alibaba.graphscope.common.ir.rel.type.order.GraphRelCollations;
 import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
-import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
+import com.alibaba.graphscope.common.ir.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
@@ -232,7 +232,7 @@ public class GraphBuilder extends RelBuilder {
      * @param opt
      * @return
      */
-    private List<List<String>> getTableNames(GraphOpt.Source opt, StatisticSchema rootSchema) {
+    private List<List<String>> getTableNames(GraphOpt.Source opt, IrGraphSchema rootSchema) {
         switch (opt) {
             case VERTEX:
                 return rootSchema.getVertexList().stream()

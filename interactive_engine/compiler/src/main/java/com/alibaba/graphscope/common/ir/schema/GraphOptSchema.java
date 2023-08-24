@@ -24,7 +24,6 @@ import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.util.Static;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -37,9 +36,9 @@ import java.util.Objects;
  */
 public class GraphOptSchema implements RelOptSchema {
     private RelOptCluster optCluster;
-    private StatisticSchema rootSchema;
+    private IrGraphSchema rootSchema;
 
-    public GraphOptSchema(@Nullable RelOptCluster optCluster, StatisticSchema rootSchema) {
+    public GraphOptSchema(@Nullable RelOptCluster optCluster, IrGraphSchema rootSchema) {
         this.optCluster = optCluster;
         this.rootSchema = Objects.requireNonNull(rootSchema);
     }
@@ -57,15 +56,14 @@ public class GraphOptSchema implements RelOptSchema {
         String labelName = tableName.get(0);
         try {
             GraphElement element = rootSchema.getElement(labelName);
-            return createRelOptTable(tableName, element, rootSchema.getStatistic(tableName));
+            return createRelOptTable(tableName, element);
         } catch (GraphElementNotFoundException e) {
             throw Static.RESOURCE.tableNotFound(labelName).ex();
         }
     }
 
-    private RelOptTable createRelOptTable(
-            List<String> tableName, GraphElement element, Statistic statistic) {
-        return new GraphOptTable(this, tableName, element, statistic);
+    private RelOptTable createRelOptTable(List<String> tableName, GraphElement element) {
+        return new GraphOptTable(this, tableName, element);
     }
 
     /**
@@ -78,7 +76,7 @@ public class GraphOptSchema implements RelOptSchema {
         return this.optCluster.getTypeFactory();
     }
 
-    public StatisticSchema getRootSchema() {
+    public IrGraphSchema getRootSchema() {
         return this.rootSchema;
     }
 

@@ -21,15 +21,146 @@ import com.alibaba.graphscope.groot.common.schema.impl.*;
 import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import org.yaml.snakeyaml.Yaml;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public abstract class Utils {
+    /**
+     * build {@link GraphSchema} from schema yaml (in gs interactive format)
+     * @param schemaYaml
+     * @return
+     */
+    public static final GraphSchema buildSchemaFromYaml(String schemaYaml) {
+        Yaml yaml = new Yaml();
+        Map<String, Object> yamlAsMap = yaml.load(schemaYaml);
+        Map<String, Object> schemaMap =
+                (Map<String, Object>)
+                        Objects.requireNonNull(
+                                yamlAsMap.get("schema"), "schema not exist in yaml config");
+        Map<String, GraphVertex> vertexMap = Maps.newHashMap();
+        Map<String, GraphEdge> edgeMap = Maps.newHashMap();
+        Map<String, Integer> propNameToIdMap = Maps.newHashMap();
+        builderGraphElementFromYaml(
+                (List)
+                        Objects.requireNonNull(
+                                schemaMap.get("vertex_types"),
+                                "vertex_types not exist in yaml config"),
+                "VERTEX",
+                vertexMap,
+                edgeMap,
+                propNameToIdMap);
+        builderGraphElementFromYaml(
+                (List)
+                        Objects.requireNonNull(
+                                schemaMap.get("edge_types"), "edge_types not exist in yaml config"),
+                "EDGE",
+                vertexMap,
+                edgeMap,
+                propNameToIdMap);
+        return new DefaultGraphSchema(vertexMap, edgeMap, propNameToIdMap);
+    }
+
+    public static final void builderGraphElementFromYaml(
+            List elementList,
+            String type,
+            Map<String, GraphVertex> vertexMap,
+            Map<String, GraphEdge> edgeMap,
+            Map<String, Integer> propNameToIdMap) {
+        for (Object element : elementList) {
+            if (element instanceof Map) {
+                Map<String, Object> elementMap = (Map<String, Object>) element;
+                String label = (String) elementMap.get("type_name");
+                int labelId =
+                        (int)
+                                Objects.requireNonNull(
+                                        elementMap.get("type_id"),
+                                        "type_id not exist in yaml config");
+                List<GraphProperty> propertyList = Lists.newArrayList();
+                List propertyNodes = (List) elementMap.get("properties");
+                for (Object property : propertyNodes) {
+                    if (property instanceof Map) {
+                        Map<String, Object> propertyMap = (Map<String, Object>) property;
+                        String propertyName = (String) propertyMap.get("property_name");
+                        int propertyId = (int) propertyMap.get("property_id");
+                        propNameToIdMap.put(propertyName, propertyId);
+                        propertyList.add(
+                                new DefaultGraphProperty(
+                                        propertyId,
+                                        propertyName,
+                                        toDataType(propertyMap.get("property_type"))));
+                    }
+                }
+                List primaryKeyNodes = (List) elementMap.get("primary_keys");
+                List<String> primaryKeyList =
+                        (primaryKeyNodes == null)
+                                ? ImmutableList.of()
+                                : (List<String>)
+                                        primaryKeyNodes.stream()
+                                                .map(k -> k.toString())
+                                                .collect(Collectors.toList());
+                if (type.equals("EDGE")) {
+                    List<EdgeRelation> relations = Lists.newArrayList();
+                    List relationNodes = (List) elementMap.get("vertex_type_pair_relations");
+                    for (Object relation : relationNodes) {
+                        if (relation instanceof Map) {
+                            Map<String, Object> relationMap = (Map<String, Object>) relation;
+                            String sourceLabel = relationMap.get("source_vertex").toString();
+                            String dstLabel = relationMap.get("destination_vertex").toString();
+                            relations.add(
+                                    new DefaultEdgeRelation(
+                                            vertexMap.get(sourceLabel), vertexMap.get(dstLabel)));
+                        }
+                    }
+                    edgeMap.put(
+                            label, new DefaultGraphEdge(labelId, label, propertyList, relations));
+                } else if (type.equals("VERTEX")) {
+                    vertexMap.put(
+                            label,
+                            new DefaultGraphVertex(labelId, label, propertyList, primaryKeyList));
+                }
+            }
+        }
+    }
+
+    public static DataType toDataType(Object type) {
+        if (type instanceof Map) {
+            Map<String, Object> typeMap = (Map<String, Object>) type;
+            Object value;
+            if ((value = typeMap.get("primitive_type")) != null) {
+                switch (value.toString()) {
+                    case "DT_SIGNED_INT32":
+                        return DataType.INT;
+                    case "DT_SIGNED_INT64":
+                        return DataType.LONG;
+                    case "DT_BOOL":
+                        return DataType.BOOL;
+                    case "DT_FLOAT":
+                        return DataType.FLOAT;
+                    case "DT_DOUBLE":
+                        return DataType.DOUBLE;
+                    case "DT_STRING":
+                        return DataType.STRING;
+                    default:
+                        throw new UnsupportedOperationException(
+                                "unsupported primitive type: " + value);
+                }
+            } else {
+                throw new UnsupportedOperationException("unsupported type: " + type);
+            }
+        } else {
+            throw new UnsupportedOperationException("unsupported type: " + type);
+        }
+    }
+
     /**
      * build {@link GraphSchema} from schema json (in ir core format)
      * @param schemaJson

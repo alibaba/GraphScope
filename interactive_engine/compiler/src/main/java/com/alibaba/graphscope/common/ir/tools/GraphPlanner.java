@@ -26,7 +26,7 @@ import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
-import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
+import com.alibaba.graphscope.common.ir.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
@@ -101,7 +101,7 @@ public class GraphPlanner {
 
         public Summary plan() {
             // build logical plan from parsed query
-            StatisticSchema schema = irMeta.getSchema();
+            IrGraphSchema schema = irMeta.getSchema();
             GraphBuilder graphBuilder =
                     GraphBuilder.create(
                             null, this.optCluster, new GraphOptSchema(this.optCluster, schema));
