@@ -47,14 +47,13 @@ except ImportError:
     K8SApiException = None
     K8SConfigException = None
 
+from graphscope.config import Config
 from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_kubernetes_object_info
 from graphscope.deploy.kubernetes.utils import resolve_api_client
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_tempdir
 from graphscope.proto import types_pb2
-from graphscope.config import KubernetesConfig, SessionConfig, VineyardConfig
-from graphscope.config import EngineConfig, Config
 
 from gscoordinator.launcher import AbstractLauncher
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
@@ -65,7 +64,6 @@ from gscoordinator.utils import ResolveMPICmdPrefix
 from gscoordinator.utils import delegate_command_to_pod
 from gscoordinator.utils import parse_as_glog_level
 from gscoordinator.utils import run_kube_cp_command
-from gscoordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
 
@@ -84,28 +82,26 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._resource_object = ResourceManager(self._api_client)
 
         self._config: Config = config
-        session_config = config.session
-        vineyard_config = config.vineyard
         launcher_config = config.kubernetes_launcher
 
         # Session Config
-        self._num_workers = session_config.num_workers
-        self._glog_level = parse_as_glog_level(session_config.log_level)
-        self._instance_id = session_config.instance_id
-        self._timeout_seconds = session_config.timeout_seconds
-        self._retry_time_seconds = session_config.retry_time_seconds
+        self._num_workers = config.session.num_workers
+        self._glog_level = parse_as_glog_level(config.session.log_level)
+        self._instance_id = config.session.instance_id
+        self._timeout_seconds = config.session.timeout_seconds
+        self._retry_time_seconds = config.session.retry_time_seconds
 
         # Vineyard Config
-        self._vineyard_socket = vineyard_config.socket
-        self._vineyard_rpc_port = vineyard_config.rpc_port
-        self._vineyard_deployment = vineyard_config.deployment_name
+        self._vineyard_socket = config.vineyard.socket
+        self._vineyard_rpc_port = config.vineyard.rpc_port
+        self._vineyard_deployment = config.vineyard.deployment_name
 
         # Launcher Config
         self._namespace = launcher_config.namespace
         self._delete_namespace = launcher_config.delete_namespace
 
         # Coordinator Config
-        self._coordinator_name = launcher_config.coordinator.deployment_name
+        self._coordinator_name = config.coordinator.deployment_name
         self._coordinator_service_name = self._coordinator_name
 
         self._image_registry = launcher_config.image.registry
@@ -114,22 +110,18 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._image_pull_policy = launcher_config.image.pull_policy
         self._image_pull_secrets = launcher_config.image.pull_secrets
 
-        self._vineyard_image = launcher_config.image.vineyard_image
-
-        self._vineyard_resource = launcher_config.engine.vineyard.resource
+        self._vineyard_resource = config.vineyard.resource
 
         self._volumes = launcher_config.volumes
 
         self._owner_references = self.get_coordinator_owner_references()
 
-
         self._engine_pod_prefix = "gs-engine-"
 
-
-        self._vineyard_image = launcher_config.image.vineyard_image
-        self._vineyard_mem = launcher_config.engine.vineyard.resource.requests.memory
-        self._vineyard_cpu = launcher_config.engine.vineyard.resource.requests.cpu
-        self._vineyard_shared_mem = launcher_config.engine.gae.resource.requests.memory
+        self._vineyard_image = config.vineyard.image
+        self._vineyard_mem = config.vineyard.resource.requests.memory
+        self._vineyard_cpu = config.vineyard.resource.requests.cpu
+        self._vineyard_shared_mem = launcher_config.engine.gae_resource.requests.memory
 
         self._service_type = launcher_config.service_type
 
@@ -373,10 +365,18 @@ class KubernetesClusterLauncher(AbstractLauncher):
             self._engine_pod_prefix = f"gs-{engine_type}-" + (
                 f"{object_id}-" if object_id else ""
             ).replace("_", "-")
-            self._config.kubernetes_launcher.engine.enable_gae = engine_type == "analytical"
-            self._config.kubernetes_launcher.engine.enable_gae_java = engine_type == "analytical-java"
-            self._config.kubernetes_launcher.engine.enable_gie = engine_type == "interactive"
-            self._config.kubernetes_launcher.engine.enable_gle = engine_type == "learning"
+            self._config.kubernetes_launcher.engine.enable_gae = (
+                engine_type == "analytical"
+            )
+            self._config.kubernetes_launcher.engine.enable_gae_java = (
+                engine_type == "analytical-java"
+            )
+            self._config.kubernetes_launcher.engine.enable_gie = (
+                engine_type == "interactive"
+            )
+            self._config.kubernetes_launcher.engine.enable_gle = (
+                engine_type == "learning"
+            )
 
             self._engine_cluster = self._build_engine_cluster()
             response = self._create_engine_stateful_set()
@@ -413,6 +413,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         """delete the engine stateful set with the given object id.
 
         Args:
+            engine_type(str): the type of engine
             object_id (int): The object id of the engine to delete.
         """
         resource_object = getattr(self, f"_{engine_type}_resource_object")
@@ -1177,9 +1178,11 @@ class KubernetesClusterLauncher(AbstractLauncher):
         )
         vineyard_pods = self._core_api.list_namespaced_pod(
             self._namespace,
-            label_selector=f"app.kubernetes.io/instance={self._namespace}-{self._vineyard_deployment}"
+            label_selector=f"app.kubernetes.io/instance={self._namespace}-{self._vineyard_deployment}",
         )
-        self._vineyard_pod_name_list.extend([pod.metadata.name for pod in vineyard_pods.items])
+        self._vineyard_pod_name_list.extend(
+            [pod.metadata.name for pod in vineyard_pods.items]
+        )
 
     def start(self):
         if self._serving:

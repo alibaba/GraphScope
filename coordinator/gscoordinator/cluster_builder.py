@@ -26,11 +26,13 @@ try:
 except ImportError:
     kube_client = None
 
+from graphscope.config import Config
+from graphscope.config import KubernetesLauncherConfig
+from graphscope.config import SessionConfig
 from graphscope.deploy.kubernetes.resource_builder import ResourceBuilder
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
-from graphscope.config import Config, EngineConfig, KubernetesConfig, SessionConfig
-from gscoordinator.utils import parse_as_glog_level
 
+from gscoordinator.utils import parse_as_glog_level
 from gscoordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -59,9 +61,8 @@ class EngineCluster:
         engine_pod_prefix,
         learning_start_port,
     ):
-
         session_config: SessionConfig = config.session
-        launcher_config: KubernetesConfig = config.kubernetes_launcher
+        launcher_config: KubernetesLauncherConfig = config.kubernetes_launcher
 
         self._engine_resources = launcher_config.engine
 
@@ -101,16 +102,12 @@ class EngineCluster:
         image_prefix = f"{registry}/{repository}" if registry else repository
         self._analytical_image = f"{image_prefix}/analytical:{tag}"
         self._analytical_java_image = f"{image_prefix}/analytical-java:{tag}"
-        self._interactive_frontend_image = (
-            f"{image_prefix}/interactive-frontend:{tag}"
-        )
-        self._interactive_executor_image = (
-            f"{image_prefix}/interactive-executor:{tag}"
-        )
+        self._interactive_frontend_image = f"{image_prefix}/interactive-frontend:{tag}"
+        self._interactive_executor_image = f"{image_prefix}/interactive-executor:{tag}"
         self._learning_image = f"{image_prefix}/learning:{tag}"
         self._dataset_image = f"{image_prefix}/dataset:{tag}"
 
-        self._vineyard_image = launcher_config.image.vineyard_image
+        self._vineyard_image = config.vineyard.image
 
         self._image_pull_policy = launcher_config.image.pull_policy
         self._image_pull_secrets = launcher_config.image.pull_secrets
@@ -218,9 +215,7 @@ class EngineCluster:
 
         return volume, source_volume_mount, destination_volume_mount
 
-    def get_engine_container_helper(
-            self, name, image, args, volume_mounts, resource
-    ):
+    def get_engine_container_helper(self, name, image, args, volume_mounts, resource):
         container = kube_client.V1Container(
             name=name, image=image, args=args, volume_mounts=volume_mounts
         )
@@ -241,11 +236,7 @@ class EngineCluster:
         args = ["bash", "-c", self._get_tail_if_exists_cmd("/tmp/grape_engine.INFO")]
         resource = self._engine_resources.gae.resource
         container = self.get_engine_container_helper(
-            name,
-            image,
-            args,
-            volume_mounts,
-            resource
+            name, image, args, volume_mounts, resource
         )
 
         readiness_probe = kube_client.V1Probe()
@@ -269,11 +260,7 @@ class EngineCluster:
         ]
         resource = self._engine_resources.executor.resource
         container = self.get_engine_container_helper(
-            name,
-            image,
-            args,
-            volume_mounts,
-            resource
+            name, image, args, volume_mounts, resource
         )
         return container
 
@@ -283,11 +270,7 @@ class EngineCluster:
         args = ["tail", "-f", "/dev/null"]
         resource = self._engine_resources.gle.resource
         container = self.get_engine_container_helper(
-            name,
-            image,
-            args,
-            volume_mounts,
-            resource
+            name, image, args, volume_mounts, resource
         )
         container.ports = [
             kube_client.V1ContainerPort(container_port=p)
@@ -342,7 +325,9 @@ class EngineCluster:
             engine_volume_mounts.append(volume_mount)
 
         if self._volumes and self._volumes is not None:
-            volume, _, volume_mount = ResourceBuilder.get_user_defined_volumes(self._volumes)
+            volume, _, volume_mount = ResourceBuilder.get_user_defined_volumes(
+                self._volumes
+            )
             volumes.extend(volume)
             engine_volume_mounts.extend(volume_mount)
 
@@ -512,9 +497,7 @@ class EngineCluster:
         container.image_pull_policy = self._image_pull_policy
         resource = self._engine_resources.frontend.resource
         requests, limits = resource.get_requests(), resource.get_limits()
-        container.resources = ResourceBuilder.get_resources(
-            requests, limits
-        )
+        container.resources = ResourceBuilder.get_resources(requests, limits)
         return container
 
     def get_interactive_frontend_deployment(self, replicas=1):

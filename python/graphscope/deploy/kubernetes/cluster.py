@@ -28,6 +28,7 @@ from kubernetes import client as kube_client
 from kubernetes.client import CoreV1Api
 from kubernetes.client.rest import ApiException as K8SApiException
 
+from graphscope.config import Config
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.kubernetes.resource_builder import CoordinatorDeployment
 from graphscope.deploy.kubernetes.resource_builder import ResourceBuilder
@@ -37,7 +38,6 @@ from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.deploy.kubernetes.utils import try_to_read_namespace_from_context
 from graphscope.deploy.kubernetes.utils import wait_for_deployment_complete
 from graphscope.deploy.launcher import Launcher
-from graphscope.framework.errors import K8sError
 from graphscope.framework.utils import random_string
 from graphscope.version import __version__
 
@@ -64,59 +64,24 @@ class KubernetesClusterLauncher(Launcher):
 
     def __init__(
         self,
-        api_client=None,
-        k8s_namespace=None,
-        k8s_service_type=None,
-        num_workers=None,
-        preemptive=None,
-        k8s_image_registry=None,
-        k8s_image_repository=None,
-        k8s_image_tag=None,
-        k8s_image_pull_policy=None,
-        k8s_image_pull_secrets=None,
-        k8s_vineyard_image=None,
-        k8s_vineyard_deployment=None,
-        k8s_vineyard_cpu=None,
-        k8s_vineyard_mem=None,
-        vineyard_shared_mem=None,
-        k8s_engine_cpu=None,
-        k8s_engine_mem=None,
-        k8s_coordinator_cpu=None,
-        k8s_coordinator_mem=None,
-        k8s_mars_worker_cpu=None,
-        k8s_mars_worker_mem=None,
-        k8s_mars_scheduler_cpu=None,
-        k8s_mars_scheduler_mem=None,
-        k8s_coordinator_pod_node_selector=None,
-        k8s_engine_pod_node_selector=None,
-        with_mars=None,
-        enabled_engines=None,
-        k8s_volumes=None,
-        timeout_seconds=600,
-        dangling_timeout_seconds=None,
-        k8s_waiting_for_delete=False,
-        k8s_deploy_mode=None,
-        with_dataset=False,
-        **kwargs,
+        config: Config,
+        api_client: kube_client.ApiClient,
     ):
         super().__init__()
+        self._config = config
         self._api_client = api_client
         self._core_api = kube_client.CoreV1Api(api_client)
         self._app_api = kube_client.AppsV1Api(api_client)
         self._rbac_api = kube_client.RbacAuthorizationV1Api(api_client)
 
         self._saved_locals = locals()
-        self._service_type = k8s_service_type
-        self._namespace = k8s_namespace
-        self._registry = k8s_image_registry
-        self._repository = k8s_image_repository
-        self._tag = k8s_image_tag
-        self._image_pull_policy = k8s_image_pull_policy
-        self._image_pull_secrets = k8s_image_pull_secrets
-        if self._image_pull_secrets is None:
-            self._image_pull_secrets = []
-        elif not isinstance(self._image_pull_secrets, list):
-            self._image_pull_secrets = [self._image_pull_secrets]
+        self._service_type = config.kubernetes_launcher.service_type
+        self._namespace = config.kubernetes_launcher.namespace
+        self._registry = config.kubernetes_launcher.image.registry
+        self._repository = config.kubernetes_launcher.image.repository
+        self._tag = config.kubernetes_launcher.image.tag
+        self._image_pull_policy = config.kubernetes_launcher.image.pull_policy
+        self._image_pull_secrets = config.kubernetes_launcher.image.pull_secrets
 
         self._instance_id = random_string(6)
         self._role_name = self._role_name_prefix + self._instance_id
@@ -323,126 +288,16 @@ class KubernetesClusterLauncher(Launcher):
         self._resource_object.extend(targets)
 
     def base64_encode(self, string):
-        return base64.b64encode(string.encode("utf-8", errors="ignore")).decode(
-            "utf-8", errors="ignore"
-        )
+        return base64.b64encode(string.encode("utf-8")).decode("utf-8", errors="ignore")
 
     def _get_coordinator_args(self):
         args = [
             "python3",
             "-m",
             "gscoordinator",
-            "--cluster_type",
-            "k8s",
-            "--port",
-            str(self._random_coordinator_service_port),
-            "--num_workers",
-            str(self._saved_locals["num_workers"]),
-            "--preemptive",
-            str(self._saved_locals["preemptive"]),
-            "--instance_id",
-            self._instance_id,
-            "--log_level",
-            gs_config.log_level,
-            "--k8s_namespace",
-            self._namespace,
-            "--k8s_service_type",
-            self._service_type,
-            "--k8s_image_repository",
-            self._repository,
-            "--k8s_image_pull_policy",
-            self._image_pull_policy,
-            "--k8s_coordinator_name",
-            self._coordinator_name,
-            "--k8s_coordinator_service_name",
-            self._coordinator_service_name,
-            "--k8s_vineyard_image",
-            self._saved_locals["k8s_vineyard_image"],
-            "--k8s_vineyard_cpu",
-            str(self._saved_locals["k8s_vineyard_cpu"]),
-            "--k8s_vineyard_mem",
-            str(self._saved_locals["k8s_vineyard_mem"]),
-            "--vineyard_shared_mem",
-            str(self._saved_locals["vineyard_shared_mem"]),
-            "--k8s_engine_cpu",
-            str(self._saved_locals["k8s_engine_cpu"]),
-            "--k8s_engine_mem",
-            str(self._saved_locals["k8s_engine_mem"]),
-            "--k8s_mars_worker_cpu",
-            str(self._saved_locals["k8s_mars_worker_cpu"]),
-            "--k8s_mars_worker_mem",
-            str(self._saved_locals["k8s_mars_worker_mem"]),
-            "--k8s_mars_scheduler_cpu",
-            str(self._saved_locals["k8s_mars_scheduler_cpu"]),
-            "--k8s_mars_scheduler_mem",
-            str(self._saved_locals["k8s_mars_scheduler_mem"]),
-            "--k8s_with_mars",
-            str(self._saved_locals["with_mars"]),
-            "--k8s_enabled_engines",
-            str(self._saved_locals["enabled_engines"]),
-            "--k8s_with_dataset",
-            str(self._saved_locals["with_dataset"]),
-            "--timeout_seconds",
-            str(self._saved_locals["timeout_seconds"]),
-            "--dangling_timeout_seconds",
-            str(self._saved_locals["dangling_timeout_seconds"]),
-            "--waiting_for_delete",
-            str(self._saved_locals["k8s_waiting_for_delete"]),
-            "--k8s_delete_namespace",
-            str(self._delete_namespace),
+            "--config",
+            self.base64_encode(self._config.dumps_json()),
         ]
-        if self._registry:
-            args.extend(
-                [
-                    "--k8s_image_registry",
-                    self._registry,
-                ]
-            )
-        if self._tag:
-            args.extend(
-                [
-                    "--k8s_image_tag",
-                    self._tag,
-                ]
-            )
-        if self._image_pull_secrets:
-            args.extend(
-                [
-                    "--k8s_image_pull_secrets",
-                    ",".join(self._image_pull_secrets),
-                ]
-            )
-        volumes = self._saved_locals["k8s_volumes"]
-        if volumes:
-            args.extend(
-                [
-                    "--k8s_volumes",
-                    f"{self.base64_encode(json.dumps(volumes))}",
-                ]
-            )
-        if self._saved_locals["k8s_vineyard_deployment"] is not None:
-            args.extend(
-                [
-                    "--k8s_vineyard_deployment",
-                    str(self._saved_locals["k8s_vineyard_deployment"]),
-                ]
-            )
-
-        if self._saved_locals["k8s_engine_pod_node_selector"] is not None:
-            args.extend(
-                [
-                    "--k8s_engine_pod_node_selector",
-                    f"{self.base64_encode(json.dumps(self._saved_locals['k8s_engine_pod_node_selector']))}",
-                ]
-            )
-
-        if self._saved_locals["k8s_deploy_mode"] is not None:
-            args.extend(
-                [
-                    "--k8s_deploy_mode",
-                    str(self._saved_locals["k8s_deploy_mode"]),
-                ]
-            )
         print(args)
         return args
 
@@ -589,24 +444,15 @@ if __name__ == "__main__":
 
     kube_config.load_kube_config()
     client = kube_client.ApiClient()
-    namespace = "demo"
-    service_type = "NodePort"
-    num_workers = 2
-    k8s_image_registry = "registry-vpc.cn-hongkong.aliyuncs.com"
-    k8s_image_repository = "graphscope"
-    # k8s_image_tag = "0.17.0"
-    k8s_image_tag = "siyuan"
-    k8s_image_pull_policy = "IfNotPresent"
+
+    config = Config()
+    config.kubernetes_launcher.namespace = "demo"
+    config.kubernetes_launcher.service_type = "NodePort"
+    config.session.num_workers = 2
 
     launcher = KubernetesClusterLauncher(
+        config=config,
         api_client=client,
-        k8s_namespace=namespace,
-        k8s_service_type=service_type,
-        num_workers=num_workers,
-        k8s_image_registry=k8s_image_registry,
-        k8s_image_repository=k8s_image_repository,
-        k8s_image_tag=k8s_image_tag,
-        k8s_image_pull_policy=k8s_image_pull_policy,
     )
     launcher.start()
     print(launcher._get_coordinator_endpoint())

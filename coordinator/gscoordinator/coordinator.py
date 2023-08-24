@@ -20,6 +20,7 @@
 
 import argparse
 import atexit
+import base64
 import functools
 import json
 import logging
@@ -47,6 +48,7 @@ from gscoordinator.local_launcher import LocalLauncher
 sys.stdout = StdStreamWrapper(sys.stdout)
 sys.stderr = StdStreamWrapper(sys.stderr)
 
+from graphscope.config import Config
 from graphscope.framework.utils import PipeMerger
 from graphscope.framework.utils import i_to_attr
 from graphscope.framework.utils import s_to_attr
@@ -54,7 +56,6 @@ from graphscope.proto import coordinator_service_pb2_grpc
 from graphscope.proto import error_codes_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import types_pb2
-from graphscope.config import Config
 
 from gscoordinator.dag_manager import DAGManager
 from gscoordinator.dag_manager import GSEngine
@@ -67,7 +68,6 @@ from gscoordinator.op_executor import OperationExecutor
 from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
 from gscoordinator.utils import check_server_ready
 from gscoordinator.utils import create_single_op_dag
-from gscoordinator.utils import str2bool
 from gscoordinator.version import __version__
 
 
@@ -203,7 +203,7 @@ class CoordinatorServiceServicer(
         if self._launcher.analytical_engine_process is not None:
             engine_config = self._operation_executor.get_analytical_engine_config()
             engine_config.update(self._launcher.get_engine_config())
-            host_names = self._launcher.hosts.split(",")
+            host_names = self._launcher.hosts
         else:
             engine_config = {}
             host_names = []
@@ -661,15 +661,33 @@ class CoordinatorServiceServicer(
 
 
 def parse_sys_args():
-    config_file = sys.argv[1]
-    config = Config.load(config_file)
-    return config
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        help="The base64 encoded config in json format.",
+    )
+    parser.add_argument(
+        "--config-file", type=str, help="The config file path in yaml or json format"
+    )
+    return parser.parse_args()
 
 
 def launch_graphscope():
     args = parse_sys_args()
-    launcher = get_launcher(args)
-    start_server(launcher, args)
+    print(args)
+    if args.config:
+        config = Config.loads_json(
+            base64.b64decode(args.config).decode("utf-8", errors="ignore")
+        )
+    elif args.config_file:
+        config = Config.load(args.config_file)
+    else:
+        raise RuntimeError("Must specify a config or config-file")
+    launcher = get_launcher(config)
+    start_server(launcher, config)
 
 
 def get_launcher(config: Config):
@@ -677,17 +695,16 @@ def get_launcher(config: Config):
         launcher = LocalLauncher(config)
     elif config.launcher_type == "k8s":
         launcher = KubernetesClusterLauncher(config)
-
     else:
         raise RuntimeError("Expect hosts or k8s of cluster_type parameter")
     return launcher
 
 
-def start_server(launcher, args):
+def start_server(launcher, config: Config):
     coordinator_service_servicer = CoordinatorServiceServicer(
         launcher=launcher,
-        dangling_timeout_seconds=args.dangling_timeout_seconds,
-        log_level=args.log_level,
+        dangling_timeout_seconds=config.session.dangling_timeout_seconds,
+        log_level=config.session.log_level,
     )
 
     # register gRPC server
@@ -702,23 +719,26 @@ def start_server(launcher, args):
     coordinator_service_pb2_grpc.add_CoordinatorServiceServicer_to_server(
         coordinator_service_servicer, server
     )
-    server.add_insecure_port(f"0.0.0.0:{args.port}")
+    endpoint = f"0.0.0.0:{config.coordinator.service_port}"
+    server.add_insecure_port(endpoint)
 
-    logger.info("Start server with args %s", args)
+    logger.info("Start server with args \n%s", config.dumps_yaml())
 
-    logger.info("Coordinator server listen at 0.0.0.0:%d", args.port)
+    logger.info("Coordinator server listen at %s", endpoint)
 
     server.start()
 
-    if args.monitor:
+    if config.coordinator.monitor:
         try:
-            Monitor.startServer(args.monitor_port, "0.0.0.0")
+            Monitor.startServer(config.coordinator.monitor_port, "0.0.0.0")
             logger.info(
-                "Coordinator monitor server listen at 0.0.0.0:%d", args.monitor_port
+                "Coordinator monitor server listen at 0.0.0.0:%d",
+                config.coordinator.monitor_port,
             )
         except Exception:  # noqa: E722, pylint: disable=broad-except
             logger.exception(
-                "Failed to start monitor server 0.0.0.0:%d", args.monitor_port
+                "Failed to start monitor server 0.0.0.0:%d",
+                config.coordinator.monitor_port,
             )
 
     # handle SIGTERM signal

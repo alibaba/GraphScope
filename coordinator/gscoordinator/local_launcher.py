@@ -27,13 +27,13 @@ import sys
 import time
 from typing import List
 
+from graphscope.config import Config
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
 from graphscope.framework.utils import get_java_version
 from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
-from graphscope.config import Config
 
 from gscoordinator.launcher import AbstractLauncher
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
@@ -46,8 +46,8 @@ from gscoordinator.utils import get_timestamp
 from gscoordinator.utils import parse_as_glog_level
 from gscoordinator.utils import run_command
 
-
 logger = logging.getLogger("graphscope")
+
 
 class LocalLauncher(AbstractLauncher):
     def __init__(self, config):
@@ -68,10 +68,10 @@ class LocalLauncher(AbstractLauncher):
         # Vineyard Config
         self._vineyard_socket = vineyard_config.socket
         self._vineyard_rpc_port = vineyard_config.rpc_port
-    
+
         # Launcher Config
         self._hosts = launcher_config.hosts
-        self._external_etcd_addr = launcher_config.etcd.address
+        self._external_etcd_addr = launcher_config.etcd.endpoint
         self._etcd_listening_client_port = launcher_config.etcd.listening_client_port
         self._etcd_listening_peer_port = launcher_config.etcd.listening_peer_port
 
@@ -148,7 +148,9 @@ class LocalLauncher(AbstractLauncher):
 
         logger.info("Launch analytical engine with command: %s", " ".join(cmd))
 
-        process = self._popen_helper(cmd, cwd=os.getcwd(), env=env, stderr=subprocess.PIPE)
+        process = self._popen_helper(
+            cmd, cwd=os.getcwd(), env=env, stderr=subprocess.PIPE
+        )
 
         logger.info("Server is initializing analytical engine.")
         stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
@@ -245,9 +247,7 @@ class LocalLauncher(AbstractLauncher):
             )
         )
 
-        server_list = [
-            f"localhost:{get_free_port()}" for _ in range(self.num_workers)
-        ]
+        server_list = [f"localhost:{get_free_port()}" for _ in range(self.num_workers)]
         hosts = ",".join(server_list)
         handle["server"] = hosts
         handle = base64.b64encode(
@@ -277,7 +277,7 @@ class LocalLauncher(AbstractLauncher):
             logger.debug("launching learning server: %s", " ".join(cmd))
 
             proc = self._popen_helper(cmd, cwd=None, env=env)
-            stdout_watcher = PipeWatcher( proc.stdout, sys.stdout)
+            stdout_watcher = PipeWatcher(proc.stdout, sys.stdout)
             stdout_watcher.suppress(not logger.isEnabledFor(logging.DEBUG))
             setattr(proc, "stdout_watcher", stdout_watcher)
             self._learning_instance_processes[object_id].append(proc)
@@ -322,11 +322,13 @@ class LocalLauncher(AbstractLauncher):
             try:
                 local_hostname = socket.gethostname()
                 # make sure the hostname is dns-resolvable
-                socket.gethostbyname(local_hostname)  
+                socket.gethostbyname(local_hostname)
             except:  # noqa: E722
                 local_hostname = "127.0.0.1"  # fallback to a must-correct hostname
 
-        self._etcd_endpoint = f"http://{local_hostname}:{self._etcd_listening_client_port}"
+        self._etcd_endpoint = (
+            f"http://{local_hostname}:{self._etcd_listening_client_port}"
+        )
 
         env = os.environ.copy()
         env.update({"ETCD_MAX_TXN_OPS": "102400"})
@@ -380,9 +382,11 @@ class LocalLauncher(AbstractLauncher):
         ts = get_timestamp()
         self._vineyard_socket = os.path.join(get_tempdir(), f"vineyard.sock.{ts}")
         if not is_free_port(self._vineyard_rpc_port):
-            logger.warning("Vineyard rpc port %d is occupied, try to use another one.", self._vineyard_rpc_port)
+            logger.warning(
+                "Vineyard rpc port %d is occupied, try to use another one.",
+                self._vineyard_rpc_port,
+            )
             self._vineyard_rpc_port = get_free_port()
-
 
         hosts = [f"{host.split(':')[0]}:1" for host in self._hosts]
         if len(hosts) > 1:  # Use MPI to start multiple process
@@ -410,7 +414,7 @@ class LocalLauncher(AbstractLauncher):
 
         process = self._popen_helper(cmd, cwd=os.getcwd(), env=env)
 
-        stdout_watcher = PipeWatcher( process.stdout, sys.stdout, drop=False)
+        stdout_watcher = PipeWatcher(process.stdout, sys.stdout, drop=False)
         setattr(process, "stdout_watcher", stdout_watcher)
         self._vineyardd_process = process
 
@@ -436,7 +440,8 @@ class LocalLauncher(AbstractLauncher):
         stdout_watcher.suppress(not logger.isEnabledFor(logging.DEBUG))
         logger.info(
             "Vineyardd is ready, ipc socket is %s, rpc port is %s",
-            self._vineyard_socket, self._vineyard_rpc_port
+            self._vineyard_socket,
+            self._vineyard_rpc_port,
         )
 
     def close_etcd(self):
@@ -480,7 +485,7 @@ class LocalLauncher(AbstractLauncher):
         logger.info("etcd endpoint is %s", self._etcd_endpoint)
 
     def start(self):
-        try:                
+        try:
             # create vineyard
             self.launch_vineyard()
         except Exception:  # pylint: disable=broad-except
