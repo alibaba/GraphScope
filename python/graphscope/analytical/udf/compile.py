@@ -107,7 +107,7 @@ class GRAPECompiler(ast.NodeVisitor):
         self._program_model = program_model
 
         # store aggregate function indexed by name
-        self.__registed_aggregators = {}
+        self.__registered_aggregators = {}
         self.__globals = {}
         self.__func_params_name_list = []
         self.__pyx_header = LinesWrapper()
@@ -609,7 +609,7 @@ class GRAPECompiler(ast.NodeVisitor):
                 isinstance(args[1], ast.Attribute)
                 and args[1].value.id == "PregelAggregatorType"
             ):
-                self.__registed_aggregators[str(args[0].s)] = args[1].attr
+                self.__registered_aggregators[str(args[0].s)] = args[1].attr
             return SimpleCallNode(
                 self.loc(node),
                 function=self.visit(node.func),
@@ -620,13 +620,13 @@ class GRAPECompiler(ast.NodeVisitor):
             args = node.args
             if len(args) != 2:
                 raise ValueError("Params within aggregate incorrect.")
-            if str(args[0].s) not in self.__registed_aggregators.keys():
+            if str(args[0].s) not in self.__registered_aggregators.keys():
                 raise KeyError(
                     "Aggregator %s not exist, you may want to register first."
                     % str(args[0].s)
                 )
             ctype = PregelAggregatorType.extract_ctype(
-                self.__registed_aggregators[str(args[0].s)]
+                self.__registered_aggregators[str(args[0].s)]
             )
             return SimpleCallNode(
                 self.loc(node),
@@ -646,13 +646,13 @@ class GRAPECompiler(ast.NodeVisitor):
             args = node.args
             if len(args) != 1:
                 raise ValueError("Params within get_aggregated_value incorrect.")
-            if str(args[0].s) not in self.__registed_aggregators.keys():
+            if str(args[0].s) not in self.__registered_aggregators.keys():
                 raise KeyError(
                     "Aggregator %s not exist, you may want to register first."
                     % str(args[0].s)
                 )
             ctype = PregelAggregatorType.extract_ctype(
-                self.__registed_aggregators[str(args[0].s)]
+                self.__registered_aggregators[str(args[0].s)]
             )
             return SimpleCallNode(
                 self.loc(node),

@@ -13,18 +13,18 @@
  */
 package com.alibaba.graphscope.groot.dataload.databuild;
 
-import com.alibaba.graphscope.compiler.api.schema.*;
-import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
-import com.alibaba.graphscope.compiler.api.schema.GraphElement;
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
+import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
+import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
+import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
+import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
+import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
+import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
+import com.alibaba.graphscope.groot.common.util.UuidUtils;
 import com.alibaba.graphscope.groot.dataload.util.OSSFS;
 import com.alibaba.graphscope.groot.dataload.util.VolumeFS;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
-import com.alibaba.graphscope.proto.DataLoadTargetPb;
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
-import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
-import com.alibaba.graphscope.sdkcommon.util.UuidUtils;
+import com.alibaba.graphscope.proto.groot.DataLoadTargetPb;
 import com.aliyun.odps.Odps;
 import com.aliyun.odps.data.TableInfo;
 import com.aliyun.odps.mapred.JobClient;
@@ -60,6 +60,16 @@ public class OfflineBuildOdps {
 
         String columnMappingConfigStr =
                 properties.getProperty(DataLoadConfig.COLUMN_MAPPING_CONFIG);
+        // User could specify a list of `key=value` pairs in command line,
+        // to substitute variables like `${key}` in columnMappingConfigStr
+        for (int i = 1; i < args.length; ++i) {
+            String[] kv = args[i].split("=");
+            if (kv.length == 2) {
+                String key = "${" + kv[0] + "}";
+                columnMappingConfigStr = columnMappingConfigStr.replace(key, kv[1]);
+            }
+        }
+
         String graphEndpoint = properties.getProperty(DataLoadConfig.GRAPH_ENDPOINT);
         String username = properties.getProperty(DataLoadConfig.USER_NAME, "");
         String password = properties.getProperty(DataLoadConfig.PASS_WORD, "");

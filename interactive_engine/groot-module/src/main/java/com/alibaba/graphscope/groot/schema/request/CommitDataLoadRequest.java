@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.schema.request;
 
+import com.alibaba.graphscope.groot.common.util.DataLoadTarget;
 import com.alibaba.graphscope.groot.operation.OperationType;
-import com.alibaba.graphscope.proto.CommitDataLoadPb;
-import com.alibaba.graphscope.sdkcommon.common.DataLoadTarget;
+import com.alibaba.graphscope.proto.groot.CommitDataLoadPb;
 import com.google.protobuf.ByteString;
 
 public class CommitDataLoadRequest extends AbstractDdlRequest {

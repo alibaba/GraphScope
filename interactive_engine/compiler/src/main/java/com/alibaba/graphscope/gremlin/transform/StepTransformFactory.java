@@ -55,6 +55,7 @@ import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.javatuples.Pair;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -615,6 +616,26 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             projectOp.setExprWithAlias(
                     new OpArg(Collections.singletonList(Pair.with(expr, ArgUtils.asNoneAlias()))));
             return projectOp;
+        }
+    },
+
+    COIN_STEP {
+        @Override
+        public InterOpBase apply(Step step) {
+            CoinStep coinStep = (CoinStep) step;
+            double probability = Utils.getFieldValue(CoinStep.class, coinStep, "probability");
+            SampleOp sampleOp =
+                    new SampleOp(
+                            SampleOp.RatioType.create(probability),
+                            getSeed(coinStep),
+                            ArgUtils.asNoneVar());
+            return sampleOp;
+        }
+
+        private long getSeed(CoinStep step) {
+            Random random = Utils.getFieldValue(CoinStep.class, step, "random");
+            AtomicLong seed = Utils.getFieldValue(Random.class, random, "seed");
+            return seed.get();
         }
     };
 

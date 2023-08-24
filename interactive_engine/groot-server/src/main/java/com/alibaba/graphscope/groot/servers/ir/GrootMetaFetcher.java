@@ -20,10 +20,9 @@ import com.alibaba.graphscope.common.ir.schema.GraphSchemaWrapper;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.common.store.SnapshotId;
-import com.alibaba.graphscope.compiler.api.schema.*;
+import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
+import com.alibaba.graphscope.groot.common.schema.api.SchemaFetcher;
 import com.alibaba.graphscope.groot.common.util.IrSchemaParser;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.util.*;
@@ -39,12 +38,13 @@ public class GrootMetaFetcher implements IrMetaFetcher {
 
     @Override
     public Optional<IrMeta> fetch() {
-        Pair<GraphSchema, Long> pair = this.schemaFetcher.getSchemaSnapshotPair();
-        GraphSchema schema;
-        Long snapshotId;
-        if (pair != null
-                && (schema = pair.getLeft()) != null
-                && (snapshotId = pair.getRight()) != null) {
+        Map<Long, GraphSchema> pair = this.schemaFetcher.getSchemaSnapshotPair();
+
+        if (!pair.isEmpty()) {
+            Map.Entry<Long, GraphSchema> entry = pair.entrySet().iterator().next();
+            Long snapshotId = entry.getKey();
+            GraphSchema schema = entry.getValue();
+
             try {
                 return Optional.of(
                         new IrMeta(

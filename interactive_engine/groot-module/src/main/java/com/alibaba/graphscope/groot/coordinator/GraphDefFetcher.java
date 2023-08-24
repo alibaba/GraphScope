@@ -13,8 +13,8 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
+import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 
 public class GraphDefFetcher {
 

@@ -80,12 +80,14 @@ traversalMethod
     | traversalMethod_otherV  // otherV()
     | traversalMethod_not  // not()
     | traversalMethod_union // union()
+    | traversalMethod_identity // identity()
     | traversalMethod_match // match()
     | traversalMethod_subgraph // subgraph()
     | traversalMethod_bothV // bothV()
     | traversalMethod_aggregate_func
     | traversalMethod_hasNot // hasNot()
     | traversalMethod_coin  // coin()
+    | traversalMethod_sample    // sample()
     | traversalMethod_with  // with()
     | traversalMethod_id    // id()
     | traversalMethod_label // label()
@@ -453,9 +455,29 @@ traversalMethod_union
     : 'union' LPAREN nestedTraversalExpr RPAREN
     ;
 
+// coin(0.5)
+traversalMethod_identity
+    : 'identity' LPAREN RPAREN
+    ;
+
 traversalMethod_coin
 	: 'coin' LPAREN floatLiteral RPAREN
 	;
+
+// sample(100)
+// sample(100).by(T.id)
+// sample(100).by('name')
+// sample(100).by(select('a').by('name'))
+// sample(100).by(out().count())
+traversalMethod_sample
+    : 'sample' LPAREN integerLiteral RPAREN (DOT traversalMethod_sampleby) ?
+    ;
+
+traversalMethod_sampleby
+    : 'by' LPAREN traversalToken RPAREN
+    | 'by' LPAREN stringLiteral RPAREN
+    | 'by' LPAREN nestedTraversal RPAREN
+    ;
 
 nestedTraversalExpr
     : nestedTraversal (COMMA nestedTraversal)*

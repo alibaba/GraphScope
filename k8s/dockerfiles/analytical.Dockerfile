@@ -22,7 +22,7 @@ RUN cd /home/graphscope/GraphScope/ && \
         strip ${INSTALL_DIR}/lib/*.so; \
         sudo cp -rs ${INSTALL_DIR}/* ${GRAPHSCOPE_HOME}/; \
         python3 ./k8s/utils/precompile.py --graph --output_dir ${INSTALL_DIR}/builtin; \
-        strip ${INSTALL_DIR}/builtin/*/*.so; \
+        strip ${INSTALL_DIR}/builtin/*/*.so || true; \
     fi
 
 ############### RUNTIME: ANALYTICAL #######################
@@ -35,7 +35,7 @@ USER root
 
 COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
 COPY --from=builder /home/graphscope/install /opt/graphscope/
-RUN mkdir -p /tmp/gs && mv /opt/graphscope/builtin /tmp/gs/builtin && chown -R graphscope:graphscope /tmp/gs
+RUN mkdir -p /tmp/gs && (mv /opt/graphscope/builtin /tmp/gs/builtin || true) && chown -R graphscope:graphscope /tmp/gs
 RUN chmod +x /opt/graphscope/bin/grape_engine
 
 USER graphscope
@@ -58,7 +58,7 @@ RUN cd /home/graphscope/GraphScope/ && \
         strip ${INSTALL_DIR}/lib/*.so; \
         sudo cp -rs ${INSTALL_DIR}/* ${GRAPHSCOPE_HOME}/; \
         python3 ./k8s/utils/precompile.py --graph --output_dir ${INSTALL_DIR}/builtin; \
-        strip ${INSTALL_DIR}/builtin/*/*.so; \
+        strip ${INSTALL_DIR}/builtin/*/*.so || true; \
     fi
 
 ############### RUNTIME: ANALYTICAL-JAVA #######################
@@ -76,7 +76,7 @@ ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE
 USER root
 COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
 COPY --from=builder-java /home/graphscope/install /opt/graphscope/
-RUN mkdir -p /tmp/gs && mv /opt/graphscope/builtin /tmp/gs/builtin && chown -R graphscope:graphscope /tmp/gs
+RUN mkdir -p /tmp/gs && (mv /opt/graphscope/builtin /tmp/gs/builtin || true) && chown -R graphscope:graphscope /tmp/gs
 RUN chmod +x /opt/graphscope/bin/*
 
 USER graphscope

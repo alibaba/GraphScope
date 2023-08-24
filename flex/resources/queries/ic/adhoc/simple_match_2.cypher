@@ -1,0 +1,1 @@
+MATCH(p) RETURN COUNT(p);

@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 syntax = "proto3";
+package gs.rpc.groot;
 
-import "sdk/common.proto";
-
-option java_package = "com.alibaba.graphscope.proto";
+option java_package = "com.alibaba.graphscope.proto.groot";
 option java_multiple_files = true;
 
 // for Meta
@@ -174,4 +173,7 @@ message VersionedSchemaResp {
     SchemaProto schema                                 = 2;
 }
 
-
+message Response {
+    int32 errCode = 1;
+    string errMsg = 2;
+}

@@ -13,10 +13,10 @@
  */
 package com.alibaba.graphscope.groot.wal.kafka;
 
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.KafkaConfig;
+import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;

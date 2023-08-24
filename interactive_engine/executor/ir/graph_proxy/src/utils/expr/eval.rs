@@ -41,7 +41,7 @@ pub struct Evaluator {
     suffix_tree: Vec<InnerOpr>,
     /// A stack for evaluating the suffix-tree-based expression
     /// Wrap it in a `RefCell` to avoid conflict mutable reference
-    stack: RefCell<Vec<Object>>,
+    stack: RefCell<Vec<ExprEvalResult<Object>>>,
 }
 
 unsafe impl Sync for Evaluator {}
@@ -166,6 +166,8 @@ pub(crate) fn apply_logical<'a>(
     use common_pb::Logical::*;
     if logical == &Not {
         return Ok((!a.eval_bool::<(), NoneContext>(None)?).into());
+    } else if logical == &Isnull {
+        return Ok(a.eq(&BorrowObject::None).into());
     } else {
         if b_opt.is_some() {
             let b = b_opt.unwrap();
@@ -193,6 +195,7 @@ pub(crate) fn apply_logical<'a>(
                     .ends_with(b.as_str()?.as_ref())
                     .into()),
                 Not => unreachable!(),
+                Isnull => unreachable!(),
             }
         } else {
             Err(ExprEvalError::MissingOperands(InnerOpr::Logical(*logical).into()))
@@ -217,7 +220,14 @@ impl Evaluator {
             let first = _first.unwrap();
             let second = _second.unwrap();
             if let InnerOpr::Logical(logical) = second {
-                Ok(apply_logical(logical, first.eval(context)?.as_borrow(), None)?)
+                let first = match first.eval(context) {
+                    Ok(first) => Ok(first),
+                    Err(err) => match err {
+                        ExprEvalError::GetNoneFromContext => Ok(Object::None),
+                        _ => Err(err),
+                    },
+                };
+                Ok(apply_logical(logical, first?.as_borrow(), None)?)
             } else {
                 if !second.is_operand() {
                     Err(ExprEvalError::MissingOperands(second.into()))
@@ -229,8 +239,27 @@ impl Evaluator {
             let first = _first.unwrap();
             let second = _second.unwrap();
             let third = _third.unwrap();
-
             if let InnerOpr::Logical(logical) = third {
+                // to deal with two unary operators cases, e.g., !(!true), !(a isNull) etc.
+                if common_pb::Logical::Not.eq(logical) || common_pb::Logical::Isnull.eq(logical) {
+                    if let InnerOpr::Logical(inner_logical) = second {
+                        let mut inner_first = first.eval(context);
+                        if common_pb::Logical::Isnull.eq(inner_logical) {
+                            match inner_first {
+                                Err(ExprEvalError::GetNoneFromContext) => inner_first = Ok(Object::None),
+                                _ => {}
+                            }
+                        }
+                        let mut first = Ok(apply_logical(inner_logical, inner_first?.as_borrow(), None)?);
+                        if common_pb::Logical::Isnull.eq(logical) {
+                            match first {
+                                Err(ExprEvalError::GetNoneFromContext) => first = Ok(Object::None),
+                                _ => {}
+                            }
+                        }
+                        return Ok(apply_logical(logical, first?.as_borrow(), None)?);
+                    }
+                }
                 let a = first.eval(context)?;
                 let b = second.eval(context)?;
                 Ok(apply_logical(logical, a.as_borrow(), Some(b.as_borrow()))?)
@@ -307,38 +336,47 @@ impl Evaluate for Evaluator {
         stack.clear();
         for opr in &self.suffix_tree {
             if opr.is_operand() {
-                stack.push(opr.eval(context)?);
+                stack.push(opr.eval(context));
             } else {
                 if let Some(first) = stack.pop() {
-                    let first_borrow = first.as_borrow();
                     let rst = match opr {
                         InnerOpr::Logical(logical) => {
                             if logical == &common_pb::Logical::Not {
-                                apply_logical(logical, first_borrow, None)
+                                apply_logical(logical, first?.as_borrow(), None)
+                            } else if logical == &common_pb::Logical::Isnull {
+                                let first_obj = match first {
+                                    Ok(obj) => obj,
+                                    Err(err) => match err {
+                                        ExprEvalError::GetNoneFromContext => Object::None,
+                                        _ => return Err(err),
+                                    },
+                                };
+                                apply_logical(logical, first_obj.as_borrow(), None)
                             } else {
                                 if let Some(second) = stack.pop() {
-                                    apply_logical(logical, second.as_borrow(), Some(first_borrow))
+                                    apply_logical(logical, second?.as_borrow(), Some(first?.as_borrow()))
                                 } else {
                                     Err(ExprEvalError::OtherErr("invalid expression".to_string()))
                                 }
                             }
                         }
+
                         InnerOpr::Arith(arith) => {
                             if let Some(second) = stack.pop() {
-                                apply_arith(arith, second.as_borrow(), first_borrow)
+                                apply_arith(arith, second?.as_borrow(), first?.as_borrow())
                             } else {
                                 Err(ExprEvalError::OtherErr("invalid expression".to_string()))
                             }
                         }
                         _ => unreachable!(),
                     };
-                    stack.push((rst?).into());
+                    stack.push(rst);
                 }
             }
         }
 
         if stack.len() == 1 {
-            Ok(stack.pop().unwrap())
+            Ok(stack.pop().unwrap()?)
         } else {
             Err("invalid expression".into())
         }
@@ -662,6 +700,7 @@ mod tests {
             "1 << 2",         // 4
             "4 >> 2",         // 1
             "232 & 64 != 0",  // true
+            "!(!true)",       // true
         ];
 
         let expected: Vec<Object> = vec![
@@ -696,6 +735,7 @@ mod tests {
             object!(3),
             object!(4),
             object!(1),
+            object!(true),
             object!(true),
         ];
 
@@ -921,6 +961,38 @@ mod tests {
                 expected
             );
             is_context = true;
+        }
+    }
+
+    #[test]
+    fn test_eval_is_null() {
+        // [v0: id = 1, label = 9, age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]
+        // [v1: id = 2, label = 11, age = 26, name = Jimmy, birthday = 19950816]
+        let ctxt = prepare_context();
+        let cases: Vec<&str> = vec![
+            "@0.hobbies isNull",                 // false
+            "!(@0.hobbies isNull)",              // true
+            "@1.hobbies isNull",                 // true
+            "!(@1.hobbies isNull)",              // false
+            "true isNull",                       // false
+            "false isNull",                      // false
+            "!true isNull",                      // i.e., !(true isNull), false
+            "@1.hobbies isNull && @1.age == 26", // true
+        ];
+        let expected: Vec<Object> = vec![
+            object!(false),
+            object!(true),
+            object!(true),
+            object!(false),
+            object!(false),
+            object!(false),
+            object!(false),
+            object!(true),
+        ];
+
+        for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval = Evaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
+            assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
         }
     }
 }

@@ -1437,6 +1437,16 @@ impl AsLogical for pb::Join {
     }
 }
 
+impl AsLogical for pb::Sample {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if let Some(weight_var) = &mut self.sample_weight {
+            preprocess_var(weight_var, meta, plan_meta, false)?;
+            process_columns_meta(plan_meta, false)?;
+        }
+        Ok(())
+    }
+}
+
 impl AsLogical for pb::Sink {
     fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         for tag_key in self.tags.iter_mut() {
@@ -1519,6 +1529,7 @@ impl AsLogical for pb::logical_plan::Operator {
                 Opr::Sink(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Apply(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Pattern(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::Sample(opr) => opr.preprocess(meta, plan_meta)?,
                 _ => {}
             }
         }

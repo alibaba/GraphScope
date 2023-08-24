@@ -490,7 +490,7 @@ class Context {
 
   ~Context() {}
 
-  HEAD_T& GetHead() { return cur_; }
+  const HEAD_T& GetHead() const { return cur_; }
 
   HEAD_T& GetMutableHead() { return cur_; }
 
@@ -1147,7 +1147,7 @@ class Context<HEAD_T, cur_alias, base_tag, grape::EmptyType> {
 
   size_t AliasNum() const { return alias_num; }
 
-  HEAD_T& GetHead() { return cur_; }
+  const HEAD_T& GetHead() const { return cur_; }
 
   HEAD_T& GetMutableHead() { return cur_; }
 
@@ -1270,13 +1270,7 @@ class Context<HEAD_T, cur_alias, base_tag, grape::EmptyType> {
                  sub_task_start_tag_);
   }
 
-  // Created Empty grouped context.
-  // later we will insert into.
-  template <typename RES_T, typename AGG_T>
-  RES_T ToGrouped(AGG_T& agg) {
-    // create a empty keyed set.
-    return RES_T(std::move(cur_.CreatedKeyed(agg)), sub_task_start_tag_);
-  }
+  void merge_offset_with_back(std::vector<offset_t>& new_offset_array) {}
 
   template <int Is>
   typename std::enable_if<(Is == -1 || Is == 0)>::type UpdateChildNode(
@@ -1320,14 +1314,14 @@ class Context<HEAD_T, cur_alias, base_tag, grape::EmptyType> {
 template <int ind, typename HEAD_T, int cur_alias, int base_tag, typename... T,
           typename std::enable_if<(ind == -1)>::type* = nullptr>
 auto& Get(Context<HEAD_T, cur_alias, base_tag, T...>& ctx) {
-  return ctx.GetHead();
+  return ctx.GetMutableHead();
 }
 
 template <int ind, typename HEAD_T, int cur_alias, int base_tag, typename... T,
           typename std::enable_if<
               (ind != -1 && ind == base_tag + sizeof...(T))>::type* = nullptr>
 auto& Get(Context<HEAD_T, cur_alias, base_tag, T...>& ctx) {
-  return ctx.GetHead();
+  return ctx.GetMutableHead();
 }
 
 template <int ind, typename HEAD_T, int cur_alias, int base_tag, typename... T,

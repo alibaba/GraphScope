@@ -257,6 +257,7 @@ class FragmentWrapper<
   using fragment_t =
       vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T, COMPACT>;
   using label_id_t = typename fragment_t::label_id_t;
+  using prop_id_t = typename fragment_t::prop_id_t;
 
  public:
   FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
@@ -326,6 +327,67 @@ class FragmentWrapper<
     auto& meta = fragment_->meta();
     auto* client = dynamic_cast<vineyard::Client*>(meta.GetClient());
     BOOST_LEAF_AUTO(new_frag_id, fragment_->Project(*client, vertices, edges));
+    VINEYARD_CHECK_OK(client->Persist(new_frag_id));
+    BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
+                                       *client, new_frag_id, comm_spec));
+    auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
+        client->GetObject(frag_group_id));
+    auto new_frag = client->GetObject<fragment_t>(new_frag_id);
+
+    rpc::graph::GraphDefPb new_graph_def;
+
+    new_graph_def.set_key(dst_graph_name);
+    new_graph_def.set_compact_edges(new_frag->compact_edges());
+    new_graph_def.set_use_perfect_hash(new_frag->use_perfect_hash());
+
+    gs::rpc::graph::VineyardInfoPb vy_info;
+    if (graph_def_.has_extension()) {
+      graph_def_.extension().UnpackTo(&vy_info);
+    }
+    vy_info.set_vineyard_id(frag_group_id);
+    vy_info.clear_fragments();
+    for (auto const& item : fg->Fragments()) {
+      vy_info.add_fragments(item.second);
+    }
+    new_graph_def.mutable_extension()->PackFrom(vy_info);
+
+    set_graph_def(new_frag, new_graph_def);
+
+    auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
+        dst_graph_name, new_graph_def, new_frag);
+    return std::dynamic_pointer_cast<ILabeledFragmentWrapper>(wrapper);
+  }
+
+  bl::result<std::shared_ptr<ILabeledFragmentWrapper>> ConsolidateColumns(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
+      const std::string& label, const std::string& columns,
+      const std::string& result_column) override {
+    auto& schema = fragment_->schema();
+
+    label_id_t vertex_label_id = schema.GetVertexLabelId(label);
+    label_id_t edge_label_id = schema.GetEdgeLabelId(label);
+
+    std::vector<std::string> column_names;
+    boost::split(column_names, columns, boost::is_any_of(",;"));
+
+    if (vertex_label_id == -1 && edge_label_id == -1) {
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                      "Invalid vertex or edge label: " + label);
+    }
+
+    auto& meta = fragment_->meta();
+    auto* client = dynamic_cast<vineyard::Client*>(meta.GetClient());
+    vineyard::ObjectID new_frag_id = vineyard::InvalidObjectID();
+    if (vertex_label_id != -1) {
+      BOOST_LEAF_ASSIGN(new_frag_id, fragment_->ConsolidateVertexColumns(
+                                         *client, vertex_label_id, column_names,
+                                         result_column));
+    } else if (edge_label_id != -1) {
+      BOOST_LEAF_ASSIGN(new_frag_id, fragment_->ConsolidateEdgeColumns(
+                                         *client, edge_label_id, column_names,
+                                         result_column));
+    }
+
     VINEYARD_CHECK_OK(client->Persist(new_frag_id));
     BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
                                        *client, new_frag_id, comm_spec));

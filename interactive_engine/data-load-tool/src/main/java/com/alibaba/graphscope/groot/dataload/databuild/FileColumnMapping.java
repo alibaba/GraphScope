@@ -15,8 +15,8 @@
  */
 package com.alibaba.graphscope.groot.dataload.databuild;
 
-import com.alibaba.graphscope.compiler.api.exception.InvalidSchemaException;
-import com.alibaba.graphscope.compiler.api.schema.*;
+import com.alibaba.graphscope.groot.common.exception.InvalidSchemaException;
+import com.alibaba.graphscope.groot.common.schema.api.*;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -127,8 +127,6 @@
     }
   },
   "vertex_type_to_id": {
-    "UNIVERSITY": 12,
-    "CONTINENT": 10,
     "POST": 3,
     "FORUM": 4,
     "TAG": 7,
@@ -136,10 +134,7 @@
     "PERSON": 1,
     "PLACE": 0,
     "ORGANISATION": 5,
-    "TAGCLASS": 6,
-    "CITY": 9,
-    "COUNTRY": 8,
-    "COMPANY": 11
+    "TAGCLASS": 6
   },
   "edge_type_to_id": {
     "HASINTEREST": 10,
@@ -158,10 +153,7 @@
     "KNOWS": 12,
     "HASCREATOR": 0
   },
-  "vertex_type_hierarchy": {
-    "ORGANISATION": ["UNIVERSITY", "COMPANY"],
-    "PLACE": ["CONTINENT", "COUNTRY", "CITY"]
-  },
+  "vertex_type_hierarchy": {},
   "column_name_to_id": {},
   "vertex_columns": {
     "COMMENT": [
@@ -220,8 +212,8 @@
         true
       ],
       [
-        "~LABEL",
-        "LABEL",
+        "type",
+        "String",
         false
       ],
       [
@@ -294,8 +286,8 @@
         false
       ],
       [
-        "~LABEL",
-        "LABEL",
+        "type",
+        "String",
         false
       ]
     ],

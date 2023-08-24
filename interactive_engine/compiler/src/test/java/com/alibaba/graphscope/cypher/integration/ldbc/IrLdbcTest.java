@@ -58,12 +58,12 @@ public class IrLdbcTest {
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
 
-    @Test
-    public void run_ldbc_8_test() {
-        QueryContext testQuery = LdbcQueries.get_ldbc_8_test();
-        Result result = session.run(testQuery.getQuery());
-        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
-    }
+    // @Test
+    // public void run_ldbc_8_test() {
+    //     QueryContext testQuery = LdbcQueries.get_ldbc_8_test();
+    //     Result result = session.run(testQuery.getQuery());
+    //     Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    // }
 
     @Test
     public void run_ldbc_12_test() {

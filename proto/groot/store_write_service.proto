@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 syntax = "proto3";
+package gs.rpc.groot;
 
 option java_package = "com.alibaba.graphscope.proto.groot";
 option java_multiple_files = true;
 
-import "sdk/model.proto";
+import "groot/sdk/model.proto";
 
 service StoreWrite {
   rpc writeStore(WriteStoreRequest) returns (WriteStoreResponse);

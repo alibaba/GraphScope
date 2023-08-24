@@ -21,8 +21,6 @@ import com.alibaba.graphscope.graph.GiraphVertexIdManager;
 import com.alibaba.graphscope.serialization.FFIByteVectorInputStream;
 import com.alibaba.graphscope.serialization.FFIByteVectorOutputStream;
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
-
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 import org.apache.hadoop.io.WritableComparable;
 import org.slf4j.Logger;
@@ -30,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -54,7 +53,7 @@ public class GiraphVertexIdManagerImpl<
     private IFragment<GRAPE_OID_T, GRAPE_VID_T, GRAPE_VDATA_T, GRAPE_EDATA_T> fragment;
     private long vertexNum;
     private List<OID_T> vertexIdList;
-    private Object2ObjectArrayMap oid2lid;
+    private HashMap<WritableComparable, Long> oid2lid;
     private ImmutableClassesGiraphConfiguration<OID_T, ?, ?> conf;
     private int vid_t; // 0 for long, 1 for int
 
@@ -74,7 +73,7 @@ public class GiraphVertexIdManagerImpl<
         this.vertexNum = vertexNum;
         this.conf = conf;
         vertexIdList = new ArrayList<OID_T>((int) vertexNum);
-        oid2lid = new Object2ObjectArrayMap((int) vertexNum);
+        oid2lid = new HashMap<>((int) vertexNum);
 
         FFIByteVectorInputStream inputStream = generateVertexIdStream();
         try {
@@ -92,7 +91,7 @@ public class GiraphVertexIdManagerImpl<
                     WritableComparable oid = conf.createVertexId();
                     oid.readFields(inputStream);
                     vertexIdList.add((OID_T) oid);
-                    oid2lid.put(oid, i);
+                    oid2lid.put(oid, (long) i);
                 }
             }
 

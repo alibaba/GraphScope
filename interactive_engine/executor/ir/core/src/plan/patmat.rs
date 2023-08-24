@@ -1851,24 +1851,14 @@ mod test {
         assert_eq!(
             plan.nodes.get(8).unwrap().opr.clone().unwrap(),
             pb::Join {
-                left_keys: vec![common_pb::Variable {
-                    tag: Some("a".into()),
-                    property: None,
-                    node_type: None
-                },common_pb::Variable {
-                    tag: Some("c".into()),
-                    property: None,
-                    node_type: None
-                }],
-                right_keys: vec![common_pb::Variable {
-                    tag: Some("a".into()),
-                    property: None,
-                    node_type: None
-                },common_pb::Variable {
-                    tag: Some("c".into()),
-                    property: None,
-                    node_type: None
-                }],
+                left_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None, node_type: None },
+                    common_pb::Variable { tag: Some("c".into()), property: None, node_type: None }
+                ],
+                right_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None, node_type: None },
+                    common_pb::Variable { tag: Some("c".into()), property: None, node_type: None }
+                ],
                 kind: 5 // inner join
             }
             .into()

@@ -547,6 +547,12 @@ impl From<pb::Sink> for pb::logical_plan::Operator {
     }
 }
 
+impl From<pb::Sample> for pb::logical_plan::Operator {
+    fn from(opr: pb::Sample) -> Self {
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Sample(opr)) }
+    }
+}
+
 impl From<Object> for common_pb::Value {
     fn from(value: Object) -> Self {
         let item = match value {

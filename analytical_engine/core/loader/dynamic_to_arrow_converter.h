@@ -291,6 +291,7 @@ struct COOBuilder {};
 template <typename DST_FRAG_T>
 struct COOBuilder<DST_FRAG_T, int32_t> {
   using oid_t = int32_t;
+  using vid_t = typename DST_FRAG_T::vid_t;
   using src_fragment_t = DynamicFragment;
   using dst_fragment_t = DST_FRAG_T;
 
@@ -310,7 +311,7 @@ struct COOBuilder<DST_FRAG_T, int32_t> {
         continue;
       }
       auto u_oid = src_frag->GetId(u);
-      vineyard::property_graph_types::VID_TYPE u_gid;
+      vid_t u_gid;
 
       CHECK(dst_vm->GetGid(fid, 0, u_oid.GetInt(), u_gid));
 
@@ -320,7 +321,7 @@ struct COOBuilder<DST_FRAG_T, int32_t> {
           continue;
         }
         auto v_oid = src_frag->GetId(v);
-        vineyard::property_graph_types::VID_TYPE v_gid;
+        vid_t v_gid;
 
         CHECK(dst_vm->GetGid(0, v_oid.GetInt(), v_gid));
         ARROW_OK_OR_RAISE(src_builder.Append(u_gid));
@@ -331,7 +332,7 @@ struct COOBuilder<DST_FRAG_T, int32_t> {
           auto& v = e.neighbor;
           if (src_frag->IsOuterVertex(v)) {
             auto v_oid = src_frag->GetId(v);
-            vineyard::property_graph_types::VID_TYPE v_gid;
+            vid_t v_gid;
 
             CHECK(dst_vm->GetGid(0, v_oid.GetInt(), v_gid));
             ARROW_OK_OR_RAISE(src_builder.Append(v_gid));
@@ -355,6 +356,7 @@ struct COOBuilder<DST_FRAG_T, int32_t> {
 template <typename DST_FRAG_T>
 struct COOBuilder<DST_FRAG_T, int64_t> {
   using oid_t = int64_t;
+  using vid_t = typename DST_FRAG_T::vid_t;
   using src_fragment_t = DynamicFragment;
   using dst_fragment_t = DST_FRAG_T;
 
@@ -374,7 +376,7 @@ struct COOBuilder<DST_FRAG_T, int64_t> {
         continue;
       }
       auto u_oid = src_frag->GetId(u);
-      vineyard::property_graph_types::VID_TYPE u_gid;
+      vid_t u_gid;
 
       CHECK(dst_vm->GetGid(fid, 0, u_oid.GetInt64(), u_gid));
 
@@ -384,7 +386,7 @@ struct COOBuilder<DST_FRAG_T, int64_t> {
           continue;
         }
         auto v_oid = src_frag->GetId(v);
-        vineyard::property_graph_types::VID_TYPE v_gid;
+        vid_t v_gid;
 
         CHECK(dst_vm->GetGid(0, v_oid.GetInt64(), v_gid));
         ARROW_OK_OR_RAISE(src_builder.Append(u_gid));
@@ -395,7 +397,7 @@ struct COOBuilder<DST_FRAG_T, int64_t> {
           auto& v = e.neighbor;
           if (src_frag->IsOuterVertex(v)) {
             auto v_oid = src_frag->GetId(v);
-            vineyard::property_graph_types::VID_TYPE v_gid;
+            vid_t v_gid;
 
             CHECK(dst_vm->GetGid(0, v_oid.GetInt64(), v_gid));
             ARROW_OK_OR_RAISE(src_builder.Append(v_gid));
@@ -419,6 +421,7 @@ struct COOBuilder<DST_FRAG_T, int64_t> {
 template <typename DST_FRAG_T>
 struct COOBuilder<DST_FRAG_T, std::string> {
   using oid_t = int64_t;
+  using vid_t = typename DST_FRAG_T::vid_t;
   using src_fragment_t = DynamicFragment;
   using dst_fragment_t = DST_FRAG_T;
 
@@ -438,7 +441,7 @@ struct COOBuilder<DST_FRAG_T, std::string> {
         continue;
       }
       auto u_oid = src_frag->GetId(u);
-      vineyard::property_graph_types::VID_TYPE u_gid;
+      vid_t u_gid;
 
       CHECK(dst_vm->GetGid(fid, 0, u_oid.GetString(), u_gid));
 
@@ -448,7 +451,7 @@ struct COOBuilder<DST_FRAG_T, std::string> {
           continue;
         }
         auto v_oid = src_frag->GetId(v);
-        vineyard::property_graph_types::VID_TYPE v_gid;
+        vid_t v_gid;
 
         CHECK(dst_vm->GetGid(0, v_oid.GetString(), v_gid));
         ARROW_OK_OR_RAISE(src_builder.Append(u_gid));
@@ -459,7 +462,7 @@ struct COOBuilder<DST_FRAG_T, std::string> {
           auto& v = e.neighbor;
           if (src_frag->IsOuterVertex(v)) {
             auto v_oid = src_frag->GetId(v);
-            vineyard::property_graph_types::VID_TYPE v_gid;
+            vid_t v_gid;
 
             CHECK(dst_vm->GetGid(0, v_oid.GetString(), v_gid));
             ARROW_OK_OR_RAISE(src_builder.Append(v_gid));
@@ -606,14 +609,15 @@ class VertexMapConverter<vineyard::ArrowVertexMap<
  *
  * @tparam OID_T OID type
  */
-template <typename OID_T, typename VERTEX_MAP_T, bool COMPACT = false>
+template <typename OID_T, typename VID_T, typename VERTEX_MAP_T,
+          bool COMPACT = false>
 class DynamicToArrowConverter {
   using src_fragment_t = DynamicFragment;
   using oid_t = OID_T;
   using vid_t = typename src_fragment_t::vid_t;
   using vertex_map_t = VERTEX_MAP_T;
   using dst_fragment_t =
-      vineyard::ArrowFragment<oid_t, vid_t, vertex_map_t, COMPACT>;
+      vineyard::ArrowFragment<OID_T, VID_T, vertex_map_t, COMPACT>;
   using oid_array_t = typename vineyard::ConvertToArrowType<oid_t>::ArrayType;
 
  public:
@@ -769,7 +773,7 @@ class DynamicToArrowConverter {
     std::vector<std::shared_ptr<arrow::Field>> schema_vector = {
         std::make_shared<arrow::Field>("src", arrow::uint64()),
         std::make_shared<arrow::Field>("dst", arrow::uint64())};
-    COOBuilder<dst_fragment_t, oid_t> builder;
+    COOBuilder<dst_fragment_t, OID_T> builder;
     BOOST_LEAF_AUTO(src_dst_array, builder.Build(src_frag, dst_vm));
     std::shared_ptr<arrow::Array> src_array = src_dst_array.first,
                                   dst_array = src_dst_array.second;

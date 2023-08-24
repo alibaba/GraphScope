@@ -15,7 +15,7 @@
  */
 package com.alibaba.graphscope.groot.dataload.databuild;
 
-import com.alibaba.graphscope.sdkcommon.util.PartitionUtils;
+import com.alibaba.graphscope.groot.common.util.PartitionUtils;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.mapred.Partitioner;
 

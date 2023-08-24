@@ -90,29 +90,18 @@
           <execution>
             <id>sdk</id>
             <configuration>
-              <protoSourceRoot>../../proto/groot</protoSourceRoot>
-              <includes>
-                <include>sdk/*</include>
-              </includes>
-            </configuration>
-            <goals>
-              <goal>compile-custom</goal>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>graphscope</id>
-            <configuration>
               <protoSourceRoot>../../proto</protoSourceRoot>
               <includes>
+                <include>groot/sdk/*</include>
                 <include>graph_def.proto</include>
+                <include>schema_common.proto</include>
                 <include>ddl_service.proto</include>
-                <include>write_service.proto</include>
+                <include>write_service.proto</include>                
               </includes>
             </configuration>
             <goals>
-              <goal>compile</goal>
               <goal>compile-custom</goal>
+              <goal>compile</goal>
             </goals>
           </execution>
         </executions>
@@ -179,6 +168,23 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
       </plugin>
+
+      <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <executable>java</executable>
+                    <arguments>
+                        <argument>-classpath</argument>
+                        <classpath/>
+                        <argument>com.alibaba.graphscope.groot.sdk.example.RealtimeWrite</argument>
+                    </arguments>
+                    <mainClass>com.alibaba.graphscope.groot.sdk.example.RealtimeWrite</mainClass>
+                    <complianceLevel>1.11</complianceLevel>
+                    <killAfter>-1</killAfter>
+                </configuration>
+            </plugin>
     </plugins>
   </build>
 

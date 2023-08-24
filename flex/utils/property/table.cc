@@ -21,7 +21,7 @@ Table::Table() {}
 Table::~Table() {}
 
 void Table::init(const std::vector<std::string>& col_name,
-                 const std::vector<PropertyType>& types,
+                 const std::vector<PropertyType>& property_types,
                  const std::vector<StorageStrategy>& strategies_,
                  size_t max_row_num) {
   size_t col_num = col_name.size();
@@ -32,7 +32,7 @@ void Table::init(const std::vector<std::string>& col_name,
   for (size_t i = 0; i < col_num; ++i) {
     int col_id;
     col_id_indexer_.add(col_name[i], col_id);
-    columns_[col_id] = CreateColumn(types[i], strategies[i]);
+    columns_[col_id] = CreateColumn(property_types[i], strategies[i]);
     columns_[col_id]->init(max_row_num);
   }
   columns_.resize(col_id_indexer_.size());
@@ -141,6 +141,20 @@ void Table::insert(size_t index, const std::vector<Any>& values) {
   size_t col_num = columns_.size();
   for (size_t i = 0; i < col_num; ++i) {
     columns_[i]->set_any(index, values[i]);
+  }
+}
+
+// column_id_mapping is the mapping from the column id in the input table to the
+// column id in the current table
+void Table::insert(size_t index, const std::vector<Any>& values,
+                   const std::vector<int32_t>& col_ind_mapping) {
+  assert(values.size() == columns_.size() + 1);
+  CHECK_EQ(values.size(), columns_.size() + 1);
+  size_t col_num = columns_.size();
+  for (auto i = 0; i < values.size(); ++i) {
+    if (col_ind_mapping[i] != -1) {
+      columns_[col_ind_mapping[i]]->set_any(index, values[i]);
+    }
   }
 }
 

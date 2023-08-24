@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.schema;
 
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
+import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 
 import org.apache.calcite.schema.Statistic;
 

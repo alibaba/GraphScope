@@ -56,3 +56,27 @@ jobs:
         cmake .. && sudo make -j$(nproc)
         export FLEX_DATA_DIR=../../../../storages/rt_mutable_graph/modern_graph/
         ./run_grin_test
+
+    - name: Test Graph Loading on modern graph
+      env:
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/storages/rt_mutable_graph/modern_graph/
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=../storages/rt_mutable_graph/modern_graph/modern_graph.yaml
+        BULK_LOAD_FILE=../storages/rt_mutable_graph/modern_graph/bulk_load.yaml
+        GLOG_v=10 ./tests/rt_mutable_graph/test_graph_loading  ${SCHEMA_FILE} ${BULK_LOAD_FILE} /tmp/csr-data-dir/
+
+    - name: Test Graph Loading on LDBC SNB sf0.1
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest/
+        FLEX_DATA_DIR: ${{ github.workspace }}/gstest/flex/ldbc-sf01-long-date/
+      run: |
+        # remove modern graph indices
+        rm -rf /tmp/csr-data-dir/
+
+        git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
+
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${FLEX_DATA_DIR}/audit_graph_schema.yaml
+        BULK_LOAD_FILE=${FLEX_DATA_DIR}/audit_bulk_load.yaml
+        GLOG_v=10 ./tests/rt_mutable_graph/test_graph_loading  ${SCHEMA_FILE} ${BULK_LOAD_FILE} /tmp/csr-data-dir/ 2

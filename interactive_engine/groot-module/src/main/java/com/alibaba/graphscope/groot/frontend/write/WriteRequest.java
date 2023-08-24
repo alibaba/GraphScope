@@ -1,11 +1,11 @@
 package com.alibaba.graphscope.groot.frontend.write;
 
+import com.alibaba.graphscope.groot.common.util.EdgeRecordKey;
+import com.alibaba.graphscope.groot.common.util.VertexRecordKey;
 import com.alibaba.graphscope.groot.operation.OperationType;
-import com.alibaba.graphscope.proto.write.DataRecordPb;
-import com.alibaba.graphscope.proto.write.WriteRequestPb;
-import com.alibaba.graphscope.proto.write.WriteTypePb;
-import com.alibaba.graphscope.sdkcommon.common.EdgeRecordKey;
-import com.alibaba.graphscope.sdkcommon.common.VertexRecordKey;
+import com.alibaba.graphscope.proto.groot.DataRecordPb;
+import com.alibaba.graphscope.proto.groot.WriteRequestPb;
+import com.alibaba.graphscope.proto.groot.WriteTypePb;
 
 import java.util.Collections;
 import java.util.Map;

@@ -1008,7 +1008,7 @@ mod test {
     fn test_get_vertex_edge_by_id() {
         let data_dir = "data/small_data";
         let root_dir = "data/small_data";
-        let schema_file = "data/ldbc_metadata.json";
+        let schema_file = "data/ldbc_metadata_hierarchy.json";
         let mut loader = GraphLoader::<DefaultId, u32>::new(data_dir, root_dir, schema_file, 0, 1);
         // load whole graph
         loader.load().expect("Load graph error!");

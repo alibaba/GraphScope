@@ -7,3 +7,11 @@ In addition to the built-in algorithms, GraphScope also provides a way to run yo
 
 
 ## Aggregators
+
+## Local Vertex Map support
+
+These are list of application types that support be queried upon graphs with local vertex map enabled
+
+- C++
+- Python PIE
+- Python Pregel

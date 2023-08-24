@@ -480,6 +480,37 @@ impl AsPhysical for pb::Unfold {
     }
 }
 
+impl AsPhysical for pb::Sample {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if let Some(sample_type) = &self.sample_type {
+            let sample_type = sample_type
+                .inner
+                .as_ref()
+                .ok_or(IrError::MissingData("Sample::sample_type".to_string()))?;
+            match sample_type {
+                pb::sample::sample_type::Inner::SampleByNum(num) => {
+                    if num.num <= 0 {
+                        Err(IrError::ParsePbError("SampleByNum num should be > 0".into()))?
+                    }
+                }
+                pb::sample::sample_type::Inner::SampleByRatio(ratio) => {
+                    if ratio.ratio < 0.0 || ratio.ratio > 1.0 {
+                        Err(IrError::ParsePbError("SampleByRatio ratio should be in [0, 1]".into()))?
+                    }
+                }
+            }
+        }
+        let mut sample = self.clone();
+        sample.post_process(builder, plan_meta)?;
+        builder.sample(self.clone());
+        Ok(())
+    }
+    fn post_process(&mut self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        post_process_vars(builder, plan_meta, false)?;
+        Ok(())
+    }
+}
+
 impl AsPhysical for pb::Sink {
     fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut sink_opr = self.clone();
@@ -556,6 +587,7 @@ impl AsPhysical for pb::logical_plan::Operator {
                     builder.add_dummy_source();
                     Ok(())
                 }
+                Sample(sample) => sample.add_job_builder(builder, plan_meta),
                 _ => Err(IrError::Unsupported(format!("the operator {:?}", self))),
             }
         } else {
@@ -620,6 +652,17 @@ impl AsPhysical for LogicalPlan {
             if let Some(Apply(apply_opr)) = curr_node.borrow().opr.opr.as_ref() {
                 let mut sub_bldr = PlanBuilder::default();
                 if let Some(subplan) = self.extract_subplan(curr_node.clone()) {
+                    for (_, node) in &subplan.nodes {
+                        let operator = node.borrow().opr.clone();
+                        match operator.opr.as_ref() {
+                            // TODO(bingqing): remove this when engine supports.
+                            Some(pb::logical_plan::operator::Opr::Path(_)) => {
+                                Err(IrError::Unsupported("PathExpand in Apply".to_string()))?
+                            }
+                            _ => {}
+                        }
+                    }
+
                     let mut expand_degree_opt = None;
                     if subplan.len() <= 2 {
                         if subplan.len() == 1 {
