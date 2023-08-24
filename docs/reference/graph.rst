@@ -9,7 +9,7 @@ Graph object
 
 .. autoclass:: GraphDAGNode
    :special-members: __init__
-   :members: add_vertices, add_edges, add_column, project, unload
+   :members: add_vertices, add_edges, add_column, project, unload, consolidate_columns
 
 .. autoclass:: Graph
    :special-members: __init__

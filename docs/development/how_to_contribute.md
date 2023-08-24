@@ -109,7 +109,45 @@ Follow [our code style guide](./code_style_guide.md) to attain the proper code f
 
 ### Submitting Your Changes
 
-See [our guide on how to submit a pull request](./how_to_submit_pr.md).
+To submit your changes, you will need to open a pull request (PR) against the main repository. If you're new to GitHub, you can find instructions on how to do that in [GitHub's documentation](https://help.github.com/articles/creating-a-pull-request). GraphScope requires PR titles to follow a specific format (a.k.a., [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/)), depending on the type of change you're making. The format is as follows:
+
+**type(scope): brief desciption about the pr**
+
+Below are some examples of the valid PR titles:
+
+- fix: Correct typo
+- feat(interactive): Add support for g.V().outE().inV()
+- refactor!: Drop support for Python 3.8
+- feat(analytical): Add delta-version for PageRank
+
+````{note}
+Note that since pull request titles only have a single line, you have to use ! to indicate breaking changes.
+````
+
+The **type** must be one of the following:
+
+- build: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
+- ci: Changes to our CI configuration files and scripts
+- docs: Documentation only changes
+- feat: A new feature
+- fix: A bug fix
+- perf: A code change that improves performance
+- refactor: A code change that neither fixes a bug nor adds a feature
+- test: Adding missing tests or correcting existing tests
+- chore: A routine task of development
+
+The **scope** is optional. However, if it assigned, it must be one of the following:
+- core
+- python
+- k8s
+- coordinator
+- one
+- interactive
+- insight
+- analytical
+- learning
+
+In addtion to the conventional commit specification, we also require the PRs with feature update, (i.e., titled with feat:) should update the corresponding documentations. The repo depolyed a CI check to ensure this.
 
 ### Discussing and Keeping Your Pull Request Updated
 

@@ -502,13 +502,13 @@ def _unify_str_type(t):
         return graph_def_pb2.DataTypePb.STRING
     elif t == "bytes":
         return graph_def_pb2.DataTypePb.BYTES
-    elif t == "int_list":
+    elif t == "int_list" or t.startswith("fixedlistint"):
         return graph_def_pb2.DataTypePb.INT_LIST
-    elif t == "long_list":
+    elif t == "long_list" or t.startswith("fixedlistlong"):
         return graph_def_pb2.DataTypePb.LONG_LIST
-    elif t == "float_list":
+    elif t == "float_list" or t.startswith("fixedlistfloat"):
         return graph_def_pb2.DataTypePb.FLOAT_LIST
-    elif t == "double_list":
+    elif t == "double_list" or t.startswith("fixedlistdouble"):
         return graph_def_pb2.DataTypePb.DOUBLE_LIST
     elif t in ("empty", "grape::emptytype"):
         return graph_def_pb2.NULLVALUE
@@ -690,5 +690,15 @@ def deprecated(msg):
             return func(*args, **kwargs)
 
         return wrapper
+
+    return decorator
+
+
+def apply_docstring(fn):
+    """Apply the docstring of `fn` to annotated function."""
+
+    def decorator(func):
+        func.__doc__ = fn.__doc__
+        return func
 
     return decorator

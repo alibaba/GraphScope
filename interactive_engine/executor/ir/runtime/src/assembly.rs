@@ -26,7 +26,7 @@ use ir_common::generated::physical::physical_opr::operator::OpKind;
 use pegasus::api::function::*;
 use pegasus::api::{
     Collect, CorrelatedSubTask, Count, Dedup, EmitKind, Filter, Fold, FoldByKey, HasAny, IterCondition,
-    Iteration, Join, KeyBy, Limit, Map, Merge, PartitionByKey, Sink, SortBy, SortLimitBy,
+    Iteration, Join, KeyBy, Limit, Map, Merge, Sink, SortBy, SortLimitBy,
 };
 use pegasus::stream::Stream;
 use pegasus::{BuildJobError, Worker};
@@ -37,6 +37,7 @@ use prost::Message;
 use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::process::functions::{ApplyGen, CompareFunction, FoldGen, GroupGen, JoinKeyGen, KeyFunction};
 use crate::process::operator::accum::accumulator::Accumulator;
+use crate::process::operator::accum::{SampleAccum, SampleAccumFactoryGen};
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::operator::keyed::KeyFunctionGen;
@@ -158,6 +159,14 @@ impl<P: PartitionInfo, C: ClusterInfo> FnGenerator<P, C> {
         Ok(opr.gen_map()?)
     }
 
+    fn gen_coin(&self, opr: algebra_pb::Sample) -> FnGenResult<RecordFilter> {
+        Ok(opr.gen_filter()?)
+    }
+
+    fn gen_sample(&self, opr: algebra_pb::Sample) -> FnGenResult<SampleAccum> {
+        Ok(opr.gen_accum()?)
+    }
+
     fn gen_sink(&self, opr: pb::PhysicalOpr) -> FnGenResult<Sinker> {
         Ok(opr.gen_sink()?)
     }
@@ -248,6 +257,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                 .map(move |cnt| fold_map.exec(cnt))?
                                 .into_stream()?;
                         } else {
+                            // TODO: optimize this by fold_partiton + fold
                             let fold_accum = fold.gen_fold_accum()?;
                             stream = stream
                                 .fold(fold_accum, || {
@@ -380,14 +390,10 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     let (left_stream, right_stream) = stream.copied()?;
                     let left_stream = self
                         .install(left_stream, &left_task.plan[..])?
-                        .key_by(move |record| left_key_selector.get_kv(record))?
-                        // TODO(bingqing): remove this when new keyed-join in gaia-x is ready;
-                        .partition_by_key();
+                        .key_by(move |record| left_key_selector.get_kv(record))?;
                     let right_stream = self
                         .install(right_stream, &right_task.plan[..])?
-                        .key_by(move |record| right_key_selector.get_kv(record))?
-                        // TODO(bingqing): remove this when new keyed-join in gaia-x is ready;
-                        .partition_by_key();
+                        .key_by(move |record| right_key_selector.get_kv(record))?;
                     stream = match join_kind {
                         JoinKind::Inner => left_stream
                             .inner_join(right_stream)?
@@ -625,6 +631,51 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                         let scan_iter = udf_gen.gen_source(scan.clone().into()).unwrap();
                         Ok(scan_iter)
                     })?;
+                }
+                OpKind::Sample(sample) => {
+                    if let Some(sample_weight) = &sample.sample_weight {
+                        if sample_weight.tag.is_some() || sample_weight.property.is_some() {
+                            return Err(FnGenError::from(ParsePbError::ParseError(
+                                "sample_weight is not supported yet".to_string(),
+                            )))?;
+                        }
+                    }
+                    if let Some(sample_type) = &sample.sample_type {
+                        match &sample_type.inner {
+                            // the case of Coin
+                            Some(algebra_pb::sample::sample_type::Inner::SampleByRatio(_)) => {
+                                let func = self.udf_gen.gen_coin(sample)?;
+                                stream = stream.filter(move |input| func.test(input))?;
+                            }
+                            // the case of Sample
+                            Some(algebra_pb::sample::sample_type::Inner::SampleByNum(_)) => {
+                                let partial_sample_accum = self.udf_gen.gen_sample(sample)?;
+                                let sample_accum = partial_sample_accum.clone();
+                                stream = stream
+                                    .fold_partition(partial_sample_accum, move || {
+                                        move |mut sample_accum, next| {
+                                            sample_accum.accum(next)?;
+                                            Ok(sample_accum)
+                                        }
+                                    })?
+                                    .unfold(move |mut sample_accum| Ok(sample_accum.finalize()?))?
+                                    .fold(sample_accum, move || {
+                                        move |mut sample_accum, next| {
+                                            sample_accum.accum(next)?;
+                                            Ok(sample_accum)
+                                        }
+                                    })?
+                                    .unfold(move |mut sample_accum| Ok(sample_accum.finalize()?))?
+                            }
+                            None => Err(FnGenError::from(ParsePbError::EmptyFieldError(
+                                "pb::Sample::sample_type.inner".to_string(),
+                            )))?,
+                        }
+                    } else {
+                        Err(FnGenError::from(ParsePbError::EmptyFieldError(
+                            "pb::Sample::sample_type".to_string(),
+                        )))?;
+                    }
                 }
                 OpKind::Root(_) => {
                     // this would be processed in assemble, and can not be reached when install.

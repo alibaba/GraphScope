@@ -23,8 +23,10 @@ import warnings
 from abc import ABCMeta
 from abc import abstractmethod
 from copy import deepcopy
+from typing import Dict
 from typing import List
 from typing import Mapping
+from typing import Tuple
 from typing import Union
 
 try:
@@ -41,6 +43,7 @@ from graphscope.framework.graph_utils import EdgeLabel
 from graphscope.framework.graph_utils import EdgeSubLabel
 from graphscope.framework.graph_utils import VertexLabel
 from graphscope.framework.operation import Operation
+from graphscope.framework.utils import apply_docstring
 from graphscope.framework.utils import data_type_to_cpp
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import graph_def_pb2
@@ -58,6 +61,7 @@ class GraphInterface(metaclass=ABCMeta):
         self._generate_eid = True
         self._retain_oid = True
         self._oid_type = "int64"
+        self._vid_type = "uint64"
         self._vertex_map = graph_def_pb2.GLOBAL_VERTEX_MAP
         self._compact_edges = False
         self._use_perfect_hash = False
@@ -84,6 +88,15 @@ class GraphInterface(metaclass=ABCMeta):
         dst_label=None,
         src_field=0,
         dst_field=1,
+    ):
+        raise NotImplementedError
+
+    @abstractmethod
+    def consolidate_columns(
+        self,
+        label: str,
+        columns: Union[List[str], Tuple[str]],
+        result_column: str,
     ):
         raise NotImplementedError
 
@@ -196,7 +209,7 @@ class GraphInterface(metaclass=ABCMeta):
         config[types_pb2.GENERATE_EID] = utils.b_to_attr(self._generate_eid)
         config[types_pb2.RETAIN_OID] = utils.b_to_attr(self._retain_oid)
         config[types_pb2.OID_TYPE] = utils.s_to_attr(self._oid_type)
-        config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
+        config[types_pb2.VID_TYPE] = utils.s_to_attr(self._vid_type)
         config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(False)
         config[types_pb2.IS_FROM_GAR] = utils.b_to_attr(False)
         config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(self._vertex_map)
@@ -241,6 +254,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         session,
         incoming_data=None,
         oid_type="int64",
+        vid_type="uint64",
         directed=True,
         generate_eid=True,
         retain_oid=True,
@@ -261,6 +275,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
                 - :class:`vineyard.Object`, :class:`vineyard.ObjectId` or :class:`vineyard.ObjectName`
 
             oid_type: (str, optional): Type of vertex original id. Defaults to "int64".
+            vid_type: (str, optional): Type of vertex internal id. Defaults to "uint64".
             directed: (bool, optional): Directed graph or not. Defaults to True.
             generate_eid: (bool, optional): Generate id for each edge when set True. Defaults to True.
             retain_oid: (bool, optional): Keep original ID in vertex table when set True. Defaults to True.
@@ -277,7 +292,11 @@ class GraphDAGNode(DAGNode, GraphInterface):
         oid_type = utils.normalize_data_type_str(oid_type)
         if oid_type not in ("int32_t", "int64_t", "std::string"):
             raise ValueError("oid_type can only be int32_t, int64_t or string.")
+        vid_type = utils.normalize_data_type_str(vid_type)
+        if vid_type not in ("uint32_t", "uint64_t"):
+            raise ValueError("vid_type can only be uint32_t or uint64_t.")
         self._oid_type = oid_type
+        self._vid_type = vid_type
         self._directed = directed
         self._generate_eid = generate_eid
         self._retain_oid = retain_oid
@@ -341,6 +360,10 @@ class GraphDAGNode(DAGNode, GraphInterface):
     def oid_type(self):
         return utils.normalize_data_type_str(self._oid_type)
 
+    @property
+    def vid_type(self):
+        return utils.normalize_data_type_str(self._vid_type)
+
     def _project_to_simple(self, v_prop=None, e_prop=None):
         check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
         op = dag_utils.project_to_simple(self, str(v_prop), str(e_prop))
@@ -349,6 +372,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._session,
             op,
             self._oid_type,
+            self._vid_type,
             self._directed,
             self._generate_eid,
             self._retain_oid,
@@ -507,6 +531,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._session,
             op,
             self._oid_type,
+            self._vid_type,
             self._directed,
             self._generate_eid,
             self._retain_oid,
@@ -669,6 +694,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._session,
             op,
             self._oid_type,
+            self._vid_type,
             self._directed,
             self._generate_eid,
             self._retain_oid,
@@ -681,6 +707,54 @@ class GraphDAGNode(DAGNode, GraphInterface):
         graph_dag_node._e_relationships = relations
         graph_dag_node._unsealed_vertices_and_edges = unsealed_vertices_and_edges
         graph_dag_node._base_graph = parent
+        return graph_dag_node
+
+    def consolidate_columns(
+        self,
+        label: str,
+        columns: Union[List[str], Tuple[str]],
+        result_column: str,
+    ):
+        """Consolidate columns of given vertex / edge properties (of same type) into one column.
+
+        For example, if we have a graph with vertex label "person", and edge labels "knows"
+        and "follows", and we want to consolidate the "weight0", "weight1" properties of the
+        vertex and both edges into a new column "weight", we can do:
+
+        .. code:: python
+
+            >>> g = ...
+            >>> g = g.consolidate_columns("person", ["weight0", "weight1"], "weight")
+            >>> g = g.consolidate_columns("knows", ["weight0", "weight1"], "weight")
+            >>> g = g.consolidate_columns("follows", ["weight0", "weight1"], "weight")
+
+        Args:
+            label: the label of the vertex or edge.
+            columns (dict): the properties of given vertex or edge to be consolidated.
+            result_column: the name of the new column.
+
+        Returns:
+            :class:`graphscope.framework.graph.GraphDAGNode`:
+                A new graph with column consolidated, evaluated in eager mode.
+        """
+        check_argument(
+            isinstance(columns, (list, tuple)),
+            "columns must be a list or tuple of strings",
+        )
+        op = dag_utils.consolidate_columns(self, label, columns, result_column)
+        graph_dag_node = GraphDAGNode(
+            self._session,
+            op,
+            self._oid_type,
+            self._vid_type,
+            self._directed,
+            self._generate_eid,
+            self._retain_oid,
+            self._vertex_map,
+            self._compact_edges,
+            self._use_perfect_hash,
+        )
+        graph_dag_node._base_graph = self
         return graph_dag_node
 
     def _backtrack_graph_dag_node_by_op_key(self, key):
@@ -779,6 +853,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._session,
             op,
             self._oid_type,
+            self._vid_type,
             self._directed,
             self._generate_eid,
             self._retain_oid,
@@ -859,6 +934,7 @@ class Graph(GraphInterface):
         self._vineyard_id = vy_info.vineyard_id
         self._fragments = list(vy_info.fragments)
         self._oid_type = data_type_to_cpp(vy_info.oid_type)
+        self._vid_type = data_type_to_cpp(vy_info.vid_type)
         self._generate_eid = vy_info.generate_eid
         self._retain_oid = vy_info.retain_oid
 
@@ -915,10 +991,14 @@ class Graph(GraphInterface):
         return self._graph_node.oid_type
 
     @property
+    def vid_type(self):
+        return self._graph_node.vid_type
+
+    @property
     def template_str(self):
         # transform str/string to std::string
         oid_type = utils.normalize_data_type_str(self._oid_type)
-        vid_type = utils.data_type_to_cpp(self._schema._vid_type)
+        vid_type = utils.normalize_data_type_str(self._vid_type)
         vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
         edata_type = utils.data_type_to_cpp(self._schema.edata_type)
         vertex_map_type = utils.vertex_map_type_to_cpp(self._vertex_map)
@@ -1010,11 +1090,13 @@ class Graph(GraphInterface):
         except Exception:  # pylint: disable=broad-except
             pass
 
+    @apply_docstring(GraphDAGNode._project_to_simple)
     def _project_to_simple(self, v_prop=None, e_prop=None):
         return self._session._wrapper(
             self._graph_node._project_to_simple(v_prop, e_prop)
         )
 
+    @apply_docstring(GraphDAGNode.add_column)
     def add_column(self, results, selector):
         return self._session._wrapper(self._graph_node.add_column(results, selector))
 
@@ -1126,6 +1208,7 @@ class Graph(GraphInterface):
         """
         return self._session._wrapper(self._graph_node.archive(path))
 
+    @apply_docstring(GraphDAGNode.add_vertices)
     def add_vertices(
         self, vertices, label="_", properties=None, vid_field: Union[int, str] = 0
     ) -> Union["Graph", GraphDAGNode]:
@@ -1135,6 +1218,7 @@ class Graph(GraphInterface):
             self._graph_node.add_vertices(vertices, label, properties, vid_field)
         )
 
+    @apply_docstring(GraphDAGNode.add_edges)
     def add_edges(
         self,
         edges,
@@ -1153,6 +1237,20 @@ class Graph(GraphInterface):
             )
         )
 
+    @apply_docstring(GraphDAGNode.consolidate_columns)
+    def consolidate_columns(
+        self,
+        label: str,
+        columns: Union[List[str], Tuple[str]],
+        result_column: str,
+    ) -> Union["Graph", GraphDAGNode]:
+        if not self.loaded():
+            raise RuntimeError("The graph is not loaded")
+        return self._session._wrapper(
+            self._graph_node.consolidate_columns(label, columns, result_column)
+        )
+
+    @apply_docstring(GraphDAGNode.project)
     def project(
         self,
         vertices: Mapping[str, Union[List[str], None]],

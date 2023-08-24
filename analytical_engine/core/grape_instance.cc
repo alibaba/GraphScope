@@ -1179,6 +1179,35 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::addLabelsToGraph(
   return dst_wrapper->graph_def();
 }
 
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::consolidateColumns(
+    const rpc::GSParams& params) {
+  BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
+  BOOST_LEAF_AUTO(label,
+                  params.Get<std::string>(rpc::CONSOLIDATE_COLUMNS_LABEL));
+  BOOST_LEAF_AUTO(columns,
+                  params.Get<std::string>(rpc::CONSOLIDATE_COLUMNS_COLUMNS));
+  BOOST_LEAF_AUTO(result_column, params.Get<std::string>(
+                                     rpc::CONSOLIDATE_COLUMNS_RESULT_COLUMN));
+  BOOST_LEAF_AUTO(
+      src_wrapper,
+      object_manager_.GetObject<ILabeledFragmentWrapper>(src_graph_name));
+  if (src_wrapper->graph_def().graph_type() != rpc::graph::ARROW_PROPERTY) {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "ConsolidateColumns is only avaiable for ArrowFragment");
+  }
+  std::string dst_graph_name = "graph_" + generateId();
+
+  VLOG(1) << "Consolidate columns from " << src_graph_name
+          << ", graph name: " << dst_graph_name << ":"
+          << "\nlabel = " << label << "\ncolumns = " << columns
+          << "\nresult_column = " << result_column;
+  BOOST_LEAF_AUTO(dst_wrapper, src_wrapper->ConsolidateColumns(
+                                   comm_spec_, dst_graph_name, label, columns,
+                                   result_column));
+  BOOST_LEAF_CHECK(object_manager_.PutObject(dst_wrapper));
+  return dst_wrapper->graph_def();
+}
+
 bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::graphToNumpy(
     const rpc::GSParams& params) {
   std::pair<std::string, std::string> range;
@@ -1410,6 +1439,11 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::ADD_LABELS: {
     BOOST_LEAF_AUTO(graph_def, addLabelsToGraph(params));
+    r->set_graph_def(graph_def);
+    break;
+  }
+  case rpc::CONSOLIDATE_COLUMNS: {
+    BOOST_LEAF_AUTO(graph_def, consolidateColumns(params));
     r->set_graph_def(graph_def);
     break;
   }

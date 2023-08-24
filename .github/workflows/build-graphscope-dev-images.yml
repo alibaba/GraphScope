@@ -1,0 +1,95 @@
+name: Build GraphScope Development and Wheel Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      v6d_version:
+        description: 'Version for Vineyard (v6d)'
+        required: true
+        default: 'main'
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: registry.cn-hongkong.aliyuncs.com
+
+jobs:
+  build-wheel-image-x86-64:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - name: Build Image
+      run: |
+        # build graphscope-dev:wheel with specified v6d's version
+        cd ${GITHUB_WORKSPACE}/k8s
+        # output: graphscope/graphscope-dev:wheel-v0.16.1-x86_64
+        make dev-wheel VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
+
+    - name: Release Image
+      env:
+        docker_password: ${{ secrets.DOCKER_PASSWORD }}
+        docker_username: ${{ secrets.DOCKER_USER }}
+      run: |
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+        # x86_64
+        arch=$(uname -m)
+        # image tag
+        tag=wheel-${{ github.event.inputs.v6d_version }}-${arch}
+        # manylinux image
+        sudo docker tag graphscope/graphscope-dev:${tag} ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
+
+  build-wheel-image-aarch64:
+    runs-on: [self-hosted, Linux, ARM64]
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - name: Build Image
+      run: |
+        # build graphscope-dev:wheel with specified v6d's version
+        cd ${GITHUB_WORKSPACE}/k8s
+        # output: graphscope/graphscope-dev:wheel-v0.16.1-aarch64
+        make dev-wheel VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
+
+    - name: Release Image
+      env:
+        docker_password: ${{ secrets.DOCKER_PASSWORD }}
+        docker_username: ${{ secrets.DOCKER_USER }}
+      run: |
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+        # aarch64
+        arch=$(uname -m)
+        # image tag
+        tag=wheel-${{ github.event.inputs.v6d_version }}-${arch}
+        # manylinux image
+        sudo docker tag graphscope/graphscope-dev:${tag} ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
+
+  build-wheel-image-docker-manifest:
+    runs-on: ubuntu-20.04
+
+    needs: [build-wheel-image-x86-64, build-wheel-image-aarch64]
+
+    steps:
+    - name: Create and Push Docker Manifest
+      env:
+        docker_password: ${{ secrets.DOCKER_PASSWORD }}
+        docker_username: ${{ secrets.DOCKER_USER }}
+      run: |
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+        # create
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }} \
+          ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }}-aarch64
+        # push
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }}

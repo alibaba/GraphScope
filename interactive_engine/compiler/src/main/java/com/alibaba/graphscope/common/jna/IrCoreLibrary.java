@@ -251,4 +251,15 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue appendJoinOperator(
             Pointer plan, Pointer join, int leftParent, int rightParent, IntByReference oprIdx);
+
+    Pointer initSampleOperator();
+
+    FfiResult.ByValue setSampleType(Pointer sample, FfiPbPointer.ByValue sampleType);
+
+    FfiResult.ByValue setSampleSeed(Pointer sample, long seed);
+
+    FfiResult.ByValue setSampleWeightVariable(Pointer sample, FfiPbPointer.ByValue weightVariable);
+
+    FfiResult.ByValue appendSampleOperator(
+            Pointer plan, Pointer sample, int parent, IntByReference oprIdx);
 }

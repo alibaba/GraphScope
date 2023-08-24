@@ -57,8 +57,7 @@ fn join_test_key_by() {
         move |input, output| {
             let (src1, src2) = create_src(id, input)?;
             src1.key_by(|x| Ok((x, x)))?
-                .partition_by_key()
-                .inner_join(src2.key_by(|x| Ok((x, x)))?.partition_by_key())?
+                .inner_join(src2.key_by(|x| Ok((x, x)))?)?
                 .map(|(d1, d2)| Ok(((d1.key, d1.value), (d2.key, d2.value))))?
                 .collect::<Vec<((i32, i32), (i32, i32))>>()?
                 .sink_into(output)
@@ -79,12 +78,8 @@ fn join_test_keyed() {
         let id = pegasus::get_current_worker().index;
         move |input, output| {
             let (src1, src2) = create_src(id, input)?;
-            let src1 = src1
-                .map(|x| Ok(I32 { item: x }))?
-                .partition_by_key();
-            let src2 = src2
-                .map(|x| Ok(I32 { item: x }))?
-                .partition_by_key();
+            let src1 = src1.map(|x| Ok(I32 { item: x }))?;
+            let src2 = src2.map(|x| Ok(I32 { item: x }))?;
             src1.inner_join(src2)?
                 .collect::<Vec<(I32, I32)>>()?
                 .sink_into(output)
@@ -113,11 +108,7 @@ fn join_test_with_same_key() {
         move |input, output| {
             let (src1, src2) = input.input_from(0..1000 as i32)?.copied()?;
             src1.key_by(|x| Ok((1 as i32, x)))?
-                .partition_by_key()
-                .inner_join(
-                    src2.key_by(|x| Ok((1 as i32, x)))?
-                        .partition_by_key(),
-                )?
+                .inner_join(src2.key_by(|x| Ok((1 as i32, x)))?)?
                 .map(|(d1, d2)| Ok(((d1.key, d1.value), (d2.key, d2.value))))?
                 .collect::<Vec<((i32, i32), (i32, i32))>>()?
                 .sink_into(output)
@@ -174,8 +165,7 @@ fn join_test_empty_stream() {
             let (src1, src2) = create_src(id, input)?;
             let src2 = src2.filter_map(|_| Ok(None))?;
             src1.key_by(|x| Ok((x, x)))?
-                .partition_by_key()
-                .inner_join(src2.key_by(|x| Ok((x, x)))?.partition_by_key())?
+                .inner_join(src2.key_by(|x| Ok((x, x)))?)?
                 .map(|(d1, d2)| Ok(((d1.key, d1.value), (d2.key, d2.value))))?
                 .collect::<Vec<((i32, i32), (i32, i32))>>()?
                 .sink_into(output)
@@ -197,8 +187,7 @@ fn join_test_outer() {
         move |input, output| {
             let (src1, src2) = create_src(id, input)?;
             src1.key_by(|x| Ok((x, x)))?
-                .partition_by_key()
-                .full_outer_join(src2.key_by(|x| Ok((x, x)))?.partition_by_key())?
+                .full_outer_join(src2.key_by(|x| Ok((x, x)))?)?
                 .map(|(d1, d2)| Ok((d1.map(|x| (x.key, x.value)), d2.map(|x| (x.key, x.value)))))?
                 .collect::<Vec<(Option<(i32, i32)>, Option<(i32, i32)>)>>()?
                 .sink_into(output)
@@ -232,8 +221,7 @@ fn join_test_semi() {
         move |input, output| {
             let (src1, src2) = create_src(id, input)?;
             src1.key_by(|x| Ok((x, x)))?
-                .partition_by_key()
-                .semi_join(src2.key_by(|x| Ok((x, x)))?.partition_by_key())?
+                .semi_join(src2.key_by(|x| Ok((x, x)))?)?
                 .map(|d| Ok((d.key, d.value)))?
                 .collect::<Vec<(i32, i32)>>()?
                 .sink_into(output)
@@ -255,8 +243,7 @@ fn join_test_anti() {
         move |input, output| {
             let (src1, src2) = create_src(id, input)?;
             src1.key_by(|x| Ok((x, x)))?
-                .partition_by_key()
-                .anti_join(src2.key_by(|x| Ok((x, x)))?.partition_by_key())?
+                .anti_join(src2.key_by(|x| Ok((x, x)))?)?
                 .map(|d| Ok((d.key, d.value)))?
                 .collect::<Vec<(i32, i32)>>()?
                 .sink_into(output)
@@ -280,8 +267,8 @@ fn join_test_different_tag_outer() {
                 let src1 = src1.flat_map(|x| Ok((x * 10)..(x * 11)))?;
                 let (src1, src2) = src1.copied()?;
                 let src2 = src2.map(|x| Ok(x + 1))?;
-                let src1 = src1.key_by(|x| Ok((x, x)))?.partition_by_key();
-                let src2 = src2.key_by(|x| Ok((x, x)))?.partition_by_key();
+                let src1 = src1.key_by(|x| Ok((x, x)))?;
+                let src2 = src2.key_by(|x| Ok((x, x)))?;
                 src1.full_outer_join(src2)?.count()
             })?
             .collect::<Vec<(u64, u64)>>()?
@@ -307,8 +294,8 @@ fn join_test_different_tag_semi() {
                 let src1 = src1.flat_map(|x| Ok((x * 10)..(x * 11)))?;
                 let (src1, src2) = src1.copied()?;
                 let src2 = src2.map(|x| Ok(x + 1))?;
-                let src1 = src1.key_by(|x| Ok((x, x)))?.partition_by_key();
-                let src2 = src2.key_by(|x| Ok((x, x)))?.partition_by_key();
+                let src1 = src1.key_by(|x| Ok((x, x)))?;
+                let src2 = src2.key_by(|x| Ok((x, x)))?;
                 src1.semi_join(src2)?.count()
             })?
             .collect::<Vec<(u64, u64)>>()?

@@ -70,23 +70,6 @@ jobs:
           ~/.cache/sccache
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Build GraphScope Store With Column Filter Push Down
-      run: |
-        . ${HOME}/.graphscope_env
-        export SCCACHE_DIR=~/.cache/sccache
-        export RUSTC_WRAPPER=/usr/local/bin/sccache
-        sccache --start-server
-        cd ${GITHUB_WORKSPACE}/interactive_engine
-        mvn clean install -P groot -Drust.compile.mode=debug -DskipTests -Dgroot.compile.feature="column_filter_push_down" --quiet
-
-        sccache --show-stats
-
-    - name: Gremlin Tests with Column Filter Push Down
-      run: |
-        . ${HOME}/.graphscope_env
-        cd interactive_engine/groot-server
-        mvn test -P gremlin-test
-
     - name: Build GraphScope Store
       run: |
         . ${HOME}/.graphscope_env

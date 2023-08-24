@@ -52,9 +52,14 @@ jobs:
         . ~/.graphscope_env
         git clone https://github.com/google/glog.git
         cd glog
+
         cmake . -DWITH_TLS=OFF -DWITH_SYMBOLIZE=OFF -DWITH_UNWIND=OFF
         make -j
         sudo make install
+
+        # make delocate-wheel happy
+        sudo mkdir -p /usr/local/opt/glog/lib
+        sudo ln -s /usr/local/lib/libglog*.dylib /usr/local/opt/glog/lib/
 
     - name: Install latest libgrape-lite
       if: false
@@ -163,7 +168,7 @@ jobs:
       run: |
         . ~/.graphscope_env
         python3 -m pip install libclang
-        git clone --single-branch -b v0.16.1 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
+        git clone --single-branch -b v0.16.4 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
         cmake .  -DCMAKE_INSTALL_PREFIX=/usr/local \

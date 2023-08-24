@@ -23,25 +23,16 @@ limitations under the License.
 
 namespace python_grape {
 
-using Fragment = gs::PythonPIEFragment<vineyard::ArrowFragment<
-    _OID_TYPE, vineyard::property_graph_types::VID_TYPE>>;
+using FRAG_T = _GRAPH_TYPE;
+using Fragment = gs::PythonPIEFragment<FRAG_T>;
 
 template <typename VD_T, typename MD_T>
-using Context = gs::PythonPIEComputeContext<
-    vineyard::ArrowFragment<_OID_TYPE,
-                            vineyard::property_graph_types::VID_TYPE>,
-    VD_T, MD_T>;
-
-using vid_t = typename vineyard::ArrowFragment<
-    _OID_TYPE, vineyard::property_graph_types::VID_TYPE>::vid_t;
-using Vertex = typename vineyard::ArrowFragment<
-    _OID_TYPE, vineyard::property_graph_types::VID_TYPE>::vertex_t;
-using Nbr = typename vineyard::ArrowFragment<
-    _OID_TYPE, vineyard::property_graph_types::VID_TYPE>::nbr_t;
-using AdjList = typename gs::PIEAdjList<vineyard::ArrowFragment<
-    _OID_TYPE, vineyard::property_graph_types::VID_TYPE>>;
-using VertexRange = typename vineyard::ArrowFragment<
-    _OID_TYPE, vineyard::property_graph_types::VID_TYPE>::vertex_range_t;
+using Context = gs::PythonPIEComputeContext<FRAG_T, VD_T, MD_T>;
+using vid_t = typename FRAG_T::vid_t;
+using Vertex = typename FRAG_T::vertex_t;
+using Nbr = typename FRAG_T::nbr_t;
+using AdjList = typename gs::PIEAdjList<FRAG_T>;
+using VertexRange = typename FRAG_T::vertex_range_t;
 using VertexIterator = typename VertexRange::iterator;
 
 using grape::MessageStrategy;
