@@ -253,44 +253,70 @@ class GroupByOp {
 
  public:
   template <typename CTX_HEAD_T, int cur_alias, int base_tag,
-            typename... CTX_PREV, typename FOLD_OPT,
+            typename... CTX_PREV, typename... FOLD_OPT,
             typename RES_T = typename FoldResT<
                 Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
-                std::tuple<FOLD_OPT>>::result_t>
+                std::tuple<FOLD_OPT...>>::result_t>
   static RES_T GroupByWithoutKeyImpl(
       const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
-      std::tuple<FOLD_OPT>&& group_opt) {
+      std::tuple<FOLD_OPT...>&& group_opt) {
     VLOG(10) << "new result_t, base tag: " << RES_T::base_tag_id;
     // Currently we only support to to_count;
-    using agg_tuple_t = std::tuple<FOLD_OPT>;
+    using agg_tuple_t = std::tuple<FOLD_OPT...>;
     using CTX_T = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
     static constexpr size_t agg_num = std::tuple_size_v<agg_tuple_t>;
     static constexpr size_t grouped_value_num = std::tuple_size_v<agg_tuple_t>;
     // the result context must be one-to-one mapping.
 
-    if (ctx.get_sub_task_start_tag() == INVALID_TAG) {
-      LOG(FATAL) << "Not implemented now";
-    }
+    // if (ctx.get_sub_task_start_tag() == INVALID_TAG) {
+    //   LOG(FATAL) << "Not implemented now";
+    // }
 
-    int start_tag = ctx.get_sub_task_start_tag();
+    // int start_tag = ctx.get_sub_task_start_tag();
+    int start_tag = 0;
     VLOG(10) << "start tag: " << start_tag;
     auto& agg_tuple = group_opt;
 
     auto value_set_builder_tuple = create_keyed_value_set_builder_tuple(
-        graph, ctx.GetPrevCols(), ctx.GetHead(), agg_tuple,
-        std::make_index_sequence<grouped_value_num>());
+        graph, ctx, agg_tuple, std::make_index_sequence<grouped_value_num>());
     VLOG(10) << "Create value set builders";
 
-    for (auto iter : ctx) {
-      auto ele_tuple = iter.GetAllIndexElement();
-      auto data_tuple = iter.GetAllData();
-      auto start_tag_ind = iter.GetTagOffset(start_tag);
-      // indicate at which index the start_tag element is in.
-      auto key = start_tag_ind;
+    // if ctx has only element, and is COUNT, just return the size;
+    if constexpr (agg_num == 1 &&
+                  std::is_same_v<
+                      std::tuple_element_t<0, std::tuple<FOLD_OPT...>>,
+                      AggregateProp<
+                          AggFunc::COUNT,
+                          std::tuple<PropertySelector<grape::EmptyType>>,
+                          std::integer_sequence<int32_t, 0>>>) {
+      auto& builder = std::get<0>(value_set_builder_tuple);
+      auto size = ctx.GetHead().Size();
+      std::tuple<std::tuple<grape::EmptyType>> empty_tuple;
+      for (size_t i = 0; i < size; ++i) {
+        builder.insert(0, empty_tuple, empty_tuple);
+      }
+    } else {
+      size_t cnt = 0;
+      for (auto iter : ctx) {
+        auto ele_tuple = iter.GetAllIndexElement();
+        auto data_tuple = iter.GetAllData();
+        size_t start_tag_ind = 0;
 
-      insert_to_value_set_builder(value_set_builder_tuple, ele_tuple,
-                                  data_tuple, start_tag_ind);
+        if constexpr (sizeof...(CTX_PREV) == 1 &&
+                      std::is_same_v<
+                          std::tuple_element_t<0, std::tuple<CTX_PREV...>>,
+                          grape::EmptyType>) {
+          // if there is no previous context, we will use the first element as
+          // start_tag.
+          start_tag_ind = 0;
+        } else {
+          auto start_tag_ind = iter.GetTagOffset(start_tag);
+        }
+        // indicate at which index the start_tag element is in.
+        insert_to_value_set_builder(value_set_builder_tuple, ele_tuple,
+                                    data_tuple, start_tag_ind);
+      }
     }
     auto value_set_built =
         build_value_set_tuple(std::move(value_set_builder_tuple),
@@ -348,8 +374,7 @@ class GroupByOp {
 
     // VLOG(10) << "Create keyed set builder";
     auto value_set_builder_tuple = create_keyed_value_set_builder_tuple(
-        graph, ctx.GetPrevCols(), ctx.GetHead(), agg_tuple,
-        std::make_index_sequence<grouped_value_num>());
+        graph, ctx, agg_tuple, std::make_index_sequence<grouped_value_num>());
 
     // if group_key use property, we need property getter
     // else we just insert into key_set
@@ -426,8 +451,7 @@ class GroupByOp {
     auto key_set_ref_tuple = std::tie(gs::Get<KEY_ALIAS::col_id>(ctx)...);
 
     auto value_set_builder_tuple = create_keyed_value_set_builder_tuple(
-        graph, ctx.GetPrevCols(), ctx.GetHead(), aggs,
-        std::make_index_sequence<grouped_value_num>());
+        graph, ctx, aggs, std::make_index_sequence<grouped_value_num>());
     VLOG(10) << "Create value set builders";
 
     // create keyed_set_builder_tuple
@@ -512,13 +536,26 @@ class GroupByOp {
     return std::make_tuple(std::get<Is>(builder_tuple).Build()...);
   }
 
-  template <typename... SET_T, typename HEAD_T, typename... AGG_T, size_t... Is>
+  // Create value set builder from previous context.
+  template <typename... CTX_PREV, typename HEAD_T, int cur_alias, int base_tag,
+            typename... AGG_T, size_t... Is>
   static auto create_keyed_value_set_builder_tuple(
-      const GRAPH_INTERFACE& graph, const std::tuple<SET_T...>& prev,
-      const HEAD_T& head, std::tuple<AGG_T...>& agg_tuple,
-      std::index_sequence<Is...>) {
+      const GRAPH_INTERFACE& graph,
+      const Context<HEAD_T, cur_alias, base_tag, CTX_PREV...>& ctx,
+      std::tuple<AGG_T...>& agg_tuple, std::index_sequence<Is...>) {
     return std::make_tuple(create_keyed_value_set_builder(
-        graph, prev, head, std::get<Is>(agg_tuple))...);
+        graph, ctx.GetPrevCols(), ctx.GetHead(), std::get<Is>(agg_tuple))...);
+  }
+
+  // create for ctx with only one column
+  template <typename HEAD_T, int cur_alias, int base_tag, typename... AGG_T,
+            size_t... Is>
+  static auto create_keyed_value_set_builder_tuple(
+      const GRAPH_INTERFACE& graph,
+      Context<HEAD_T, cur_alias, base_tag, grape::EmptyType>& ctx,
+      std::tuple<AGG_T...>& agg_tuple, std::index_sequence<Is...>) {
+    return std::make_tuple(create_keyed_value_set_builder(
+        graph, ctx.GetHead(), std::get<Is>(agg_tuple))...);
   }
 
   // create tuple of keyed builders.
@@ -570,6 +607,18 @@ class GroupByOp {
       return KeyedT<HEAD_T, PropertySelector<KEY_PROP>>::create_unkeyed_builder(
           head, key_alias.selector_);
     }
+  }
+
+  template <typename... SET_T, typename HEAD_T, AggFunc _agg_func, typename T,
+            int tag_id>
+  static auto create_keyed_value_set_builder(
+      const GRAPH_INTERFACE& graph, const HEAD_T& head,
+      AggregateProp<_agg_func, std::tuple<PropertySelector<T>>,
+                    std::integer_sequence<int32_t, tag_id>>& agg) {
+    static_assert(tag_id == 0 || tag_id == -1);
+    return KeyedAggT<GRAPH_INTERFACE, HEAD_T, _agg_func, std::tuple<T>,
+                     std::integer_sequence<int32_t, tag_id>>::
+        create_agg_builder(head, graph, agg.selectors_);
   }
 
   // insert_to_key_set with respect to property type

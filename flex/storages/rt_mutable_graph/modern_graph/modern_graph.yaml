@@ -46,7 +46,7 @@ schema:
   edge_types:
     - type_name: knows
       x_csr_params:
-        incoming_edge_strategy: None
+        incoming_edge_strategy: Multiple
         outgoing_edge_strategy: Multiple
       vertex_type_pair_relations:
         source_vertex: person
@@ -59,7 +59,7 @@ schema:
             primitive_type: DT_DOUBLE
     - type_name: created
       x_csr_params:
-        incoming_edge_strategy: None
+        incoming_edge_strategy: Multiple
         outgoing_edge_strategy: Single
       vertex_type_pair_relations:
         source_vertex: person

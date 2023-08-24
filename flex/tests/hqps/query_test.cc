@@ -14,6 +14,8 @@
  */
 #include "flex/engines/hqps_db/core/sync_engine.h"
 #include "flex/engines/hqps_db/database/mutable_csr_interface.h"
+#include "flex/storages/rt_mutable_graph/loading_config.h"
+#include "flex/tests/hqps/match_query.h"
 #include "flex/tests/hqps/sample_query.h"
 
 int main(int argc, char** argv) {
@@ -29,22 +31,160 @@ int main(int argc, char** argv) {
 
   auto& db = gs::GraphDB::get();
   auto schema = gs::Schema::LoadFromYaml(graph_schema);
-  auto bulk_load_config =
+  auto loading_config =
       gs::LoadingConfig::ParseFromYaml(schema, bulk_load_yaml);
-  db.Init(schema, bulk_load_config, data_dir, 1);
+  db.Init(schema, loading_config, data_dir, 1);
   auto& sess = gs::GraphDB::get().GetSession(0);
 
-  gs::SampleQuery query;
-  std::vector<char> encoder_array;
-  gs::Encoder input_encoder(encoder_array);
-  input_encoder.put_long(19791209300143);
-  input_encoder.put_long(1354060800000);
-  std::vector<char> output_array;
-  gs::Encoder output(output_array);
-  gs::Decoder input(encoder_array.data(), encoder_array.size());
+  {
+    auto& graph = sess.graph();
+    auto max_v_num = graph.vertex_num(1);
+    std::vector<gs::MutableCSRInterface::vertex_id_t> vids(max_v_num);
+    for (gs::MutableCSRInterface::vertex_id_t i = 0; i < max_v_num; ++i) {
+      vids[i] = i;
+    }
+    gs::MutableCSRInterface interface(sess);
+    std::array<std::string, 1> prop_names{"creationDate"};
+    auto edges =
+        interface.GetEdges<int64_t>(1, 1, 8, vids, "Both", INT_MAX, prop_names);
+    double t = -grape::GetCurrentTime();
+    size_t cnt = 0;
+    for (auto i = 0; i < vids.size(); ++i) {
+      auto adj_list = edges.get(i);
+      for (auto iter : adj_list) {
+        VLOG(10) << iter.neighbor() << ", " << gs::to_string(iter.properties());
+        cnt += 1;
+      }
+    }
+    t += grape::GetCurrentTime();
+    LOG(INFO) << "visiting edges: cost: " << t << ", num edges: " << cnt;
 
-  gs::MutableCSRInterface graph(sess);
-  query.Query(graph, input);
+    // visiting vertices properties
+    auto vertex_prop =
+        interface.GetVertexPropsFromVid<int64_t>(1, vids, {"id"});
+    for (auto i = 0; i < 10; ++i) {
+      VLOG(10) << "vid: " << vids[i]
+               << ", prop: " << gs::to_string(vertex_prop[i]);
+    }
+  }
+
+  {
+    gs::SampleQuery query;
+    std::vector<char> encoder_array;
+    gs::Encoder input_encoder(encoder_array);
+    input_encoder.put_long(19791209300143);
+    input_encoder.put_long(1354060800000);
+    std::vector<char> output_array;
+    gs::Encoder output(output_array);
+    gs::Decoder input(encoder_array.data(), encoder_array.size());
+
+    gs::MutableCSRInterface graph(sess);
+    query.Query(graph, input);
+    LOG(INFO) << "Finish Sample query";
+  }
+  {
+    gs::MatchQuery query;
+    std::vector<char> encoder_array;
+    gs::Encoder input_encoder(encoder_array);
+    std::vector<char> output_array;
+    gs::Encoder output(output_array);
+    gs::Decoder input(encoder_array.data(), encoder_array.size());
+
+    gs::MutableCSRInterface graph(sess);
+    query.Query(graph, input);
+    LOG(INFO) << "Finish MatchQuery test";
+  }
+
+  {
+    gs::MatchQuery1 query;
+    std::vector<char> encoder_array;
+    gs::Encoder input_encoder(encoder_array);
+    std::vector<char> output_array;
+    gs::Encoder output(output_array);
+    gs::Decoder input(encoder_array.data(), encoder_array.size());
+
+    gs::MutableCSRInterface graph(sess);
+    auto res = query.Query(graph, input);
+    LOG(INFO) << "Finish MatchQuery1 test";
+  }
+
+  {
+    gs::MatchQuery2 query;
+    std::vector<char> encoder_array;
+    gs::Encoder input_encoder(encoder_array);
+    std::vector<char> output_array;
+    gs::Encoder output(output_array);
+    gs::Decoder input(encoder_array.data(), encoder_array.size());
+
+    gs::MutableCSRInterface graph(sess);
+    query.Query(graph, input);
+    LOG(INFO) << "Finish MatchQuery2 test";
+  }
+
+  {
+    gs::MatchQuery3 query;
+    std::vector<char> encoder_array;
+    gs::Encoder input_encoder(encoder_array);
+    std::vector<char> output_array;
+    gs::Encoder output(output_array);
+    gs::Decoder input(encoder_array.data(), encoder_array.size());
+
+    gs::MutableCSRInterface graph(sess);
+    query.Query(graph, input);
+    LOG(INFO) << "Finish MatchQuery3 test";
+  }
+
+  {
+    gs::MatchQuery4 query;
+    std::vector<char> encoder_array;
+    gs::Encoder input_encoder(encoder_array);
+    std::vector<char> output_array;
+    gs::Encoder output(output_array);
+    gs::Decoder input(encoder_array.data(), encoder_array.size());
+
+    gs::MutableCSRInterface graph(sess);
+    query.Query(graph, input);
+    LOG(INFO) << "Finish MatchQuery4 test";
+  }
+
+  {
+    gs::MatchQuery5 query;
+    std::vector<char> encoder_array;
+    gs::Encoder input_encoder(encoder_array);
+    std::vector<char> output_array;
+    gs::Encoder output(output_array);
+    gs::Decoder input(encoder_array.data(), encoder_array.size());
+
+    gs::MutableCSRInterface graph(sess);
+    query.Query(graph, input);
+    LOG(INFO) << "Finish MatchQuery5 test";
+  }
+
+  {
+    gs::MatchQuery7 query;
+    std::vector<char> encoder_array;
+    gs::Encoder input_encoder(encoder_array);
+    std::vector<char> output_array;
+    gs::Encoder output(output_array);
+    gs::Decoder input(encoder_array.data(), encoder_array.size());
+
+    gs::MutableCSRInterface graph(sess);
+    query.Query(graph, input);
+    LOG(INFO) << "Finish MatchQuery7 test";
+  }
+
+  {
+    gs::MatchQuery9 query;
+    std::vector<char> encoder_array;
+    gs::Encoder input_encoder(encoder_array);
+    std::vector<char> output_array;
+    gs::Encoder output(output_array);
+    gs::Decoder input(encoder_array.data(), encoder_array.size());
+
+    gs::MutableCSRInterface graph(sess);
+    query.Query(graph, input);
+    LOG(INFO) << "Finish MatchQuery9 test";
+  }
 
   LOG(INFO) << "Finish context test.";
 }
