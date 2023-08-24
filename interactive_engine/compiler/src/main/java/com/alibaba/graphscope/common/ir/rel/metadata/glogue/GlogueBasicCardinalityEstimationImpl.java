@@ -10,47 +10,46 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 
-import com.alibaba.graphscope.common.ir.rel.graph.pattern.PatternCode;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternOrdering;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirection;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.utils.Combinations;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 
 public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEstimation {
-    private Map<PatternCode, Double> patternCardinality;
+    // TODO: should use pattern code as key. PatternOrdering cannot identify a pattern for now.
+    private Map<PatternOrdering, Double> patternCardinality;
 
     public GlogueBasicCardinalityEstimationImpl() {
-        this.patternCardinality = new HashMap<PatternCode, Double>();
+        this.patternCardinality = new HashMap<PatternOrdering, Double>();
     }
 
     public GlogueBasicCardinalityEstimationImpl create(Glogue glogue, GlogueSchema schema) {
-        Deque<Pair<Pattern, PatternCode>> patternQueue = new ArrayDeque<>();
-        List<PatternCode> roots = glogue.getRoots();
-        for (PatternCode patternCode : roots) {
-            Pattern pattern = glogue.getPatternByCode(patternCode);
+        Deque<Pattern> patternQueue = new ArrayDeque<>();
+        List<Pattern> roots = glogue.getRoots();
+        for (Pattern pattern : roots) {
             if (pattern.getVertexSet().size() == 1) {
                 // single vertex pattern
                 Integer singleVertexPatternType = pattern.getVertexSet().iterator().next().getVertexTypeId();
                 Double singleVertexPatternCount = schema.getVertexTypeCardinality(singleVertexPatternType);
-                this.patternCardinality.put(patternCode, singleVertexPatternCount);
-                System.out.println("root vertex pattern: " + patternCode + ": " + singleVertexPatternCount);
+                this.patternCardinality.put(pattern.getPatternOrdering(), singleVertexPatternCount);
+                System.out.println("root vertex pattern: " + pattern + ": " + singleVertexPatternCount);
             }
             for (GlogueEdge edge : glogue.getOutEdges(pattern)) {
                 GlogueExtendIntersectEdge extendIntersectEdge = (GlogueExtendIntersectEdge) edge;
                 Pattern singleEdgePattern = extendIntersectEdge.getDstPattern();
-                PatternCode singleEdgePatternCode = singleEdgePattern.encoding();
                 // if it is already computed previously, then skip.
-                if (this.containsPatternCode(singleEdgePatternCode)) {
+                if (this.containsPatternCode(singleEdgePattern.getPatternOrdering())) {
+                    System.out.println("pattern already computed: " + singleEdgePattern);
                     continue;
                 }
                 if (singleEdgePattern.getEdgeSet().size() == 1) {
                     // single edge pattern
                     EdgeTypeId singleEdgePatternType = singleEdgePattern.getEdgeSet().iterator().next().getEdgeTypeId();
                     Double singleEdgePatternCount = schema.getEdgeTypeCardinality(singleEdgePatternType);
-                    this.patternCardinality.put(singleEdgePatternCode, singleEdgePatternCount);
-                    patternQueue.add(Pair.with(singleEdgePattern, singleEdgePatternCode));
-                    System.out.println("root edge pattern: " + singleEdgePatternCode + ": " + singleEdgePatternCount);
+                    this.patternCardinality.put(singleEdgePattern.getPatternOrdering(), singleEdgePatternCount);
+                    patternQueue.add(singleEdgePattern);
+                    System.out.println("root edge pattern: " + singleEdgePattern + ": " + singleEdgePatternCount);
                 } else {
                     System.out.println("TODO: root edge pattern with multiple edges " + singleEdgePattern);
                 }
@@ -58,22 +57,17 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
         }
 
         while (patternQueue.size() > 0) {
-            Pair<Pattern, PatternCode> patternInfo = patternQueue.pop();
+            Pattern pattern = patternQueue.pop();
             System.out.println("~~~~~~~~pop pattern in queue~~~~~~~~~~");
-            System.out.println("original pattern " + patternInfo.getValue0());
-            for (GlogueEdge edge : glogue.getOutEdges(patternInfo.getValue0())) {
+            System.out.println("original pattern " + pattern);
+            for (GlogueEdge edge : glogue.getOutEdges(pattern)) {
                 // each GlogueEdge extends to a new pattern
                 // initial as current pattern count
-                Double estimatedPatternCount = this.patternCardinality.get(patternInfo.getValue1());
+                Double estimatedPatternCount = this.patternCardinality.get(pattern.getPatternOrdering());
                 GlogueExtendIntersectEdge extendIntersectEdge = (GlogueExtendIntersectEdge) edge;
                 Pattern newPattern = extendIntersectEdge.getDstPattern();
-                PatternCode newPatternCode = newPattern.encoding();
-                // if it is already computed previously, then skip.
-                // TODO: we can also compute again, and update the previous count value, since
-                // maybe the previous count is not accurate;
-                // e.g., if the new value is smaller, we may update it with the smaller value.
-                // Or, they must be the same???
-                if (this.containsPatternCode(newPatternCode)) {
+                if (this.containsPatternCode(newPattern.getPatternOrdering())) {
+                    System.out.println("pattern already computed: " + newPattern);
                     continue;
                 }
                 ExtendStep extendStep = extendIntersectEdge.getExtendStep();
@@ -98,10 +92,9 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
                     estimatedPatternCount /= schema.getVertexTypeCardinality(commonTargetVertex);
                     count -= 1;
                 }
-
-                this.patternCardinality.put(newPatternCode, estimatedPatternCount);
-                patternQueue.add(Pair.with(newPattern, newPatternCode));
-                System.out.println("new pattern: " + newPatternCode + ": " + estimatedPatternCount);
+                this.patternCardinality.put(newPattern.getPatternOrdering(), estimatedPatternCount);
+                patternQueue.add(newPattern);
+                System.out.println("new pattern: " + newPattern + ": " + estimatedPatternCount);
             }
         }
 
@@ -128,22 +121,13 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
         return vertexTypeIdList;
     }
 
-    private boolean containsPatternCode(PatternCode patternCode) {
-        // TODO: should be based on pattern code, i.e.,
-        // return this.patternCardinality.containsKey(patternCode);
-        for (PatternCode key : this.patternCardinality.keySet()) {
-            // TODO: this validation is as expected. but directly validate by containsKey is
-            // not working.
-            if (key.equals(patternCode)) {
-                return true;
-            }
-        }
-        return false;
+    private boolean containsPatternCode(PatternOrdering patternCode) {
+        return this.patternCardinality.containsKey(patternCode);
     }
 
     @Override
-    public double getCardinality(PatternCode patternCode) {
-        throw new UnsupportedOperationException("Unimplemented method 'getCardinality'");
+    public double getCardinality(PatternOrdering patternCode) {
+        return this.patternCardinality.get(patternCode);
     }
 
     @Override

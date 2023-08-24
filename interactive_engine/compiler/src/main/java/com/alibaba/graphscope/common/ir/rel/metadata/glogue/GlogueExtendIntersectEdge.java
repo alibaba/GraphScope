@@ -6,16 +6,17 @@ import java.util.Map;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 
 public class GlogueExtendIntersectEdge extends GlogueEdge{
+    // a mapping from src pattern vertex id to target pattern vertex id
     private Map<Integer, Integer> srcToTargetIdMapping; 
     private ExtendStep extendStep;
     private Pattern srcPattern;
     private Pattern dstPattern;
 
-    public GlogueExtendIntersectEdge(Pattern srcPattern, Pattern dstPattern, ExtendStep extendStep) {
-        this.srcToTargetIdMapping = new HashMap<>();
+    public GlogueExtendIntersectEdge(Pattern srcPattern, Pattern dstPattern, ExtendStep extendStep, Map<Integer, Integer> srcToTargetIdMapping) {
         this.extendStep = extendStep;
         this.srcPattern = srcPattern;
         this.dstPattern = dstPattern;
+        this.srcToTargetIdMapping = srcToTargetIdMapping;
     }
 
     public Pattern getSrcPattern() {
@@ -32,6 +33,9 @@ public class GlogueExtendIntersectEdge extends GlogueEdge{
 
     @Override
     public String toString() {
-        return extendStep.toString();
+        return "ExtendIntersectEdge{" +
+                "extendStep=" + extendStep +
+                ", srcToTargetIdMapping=" + srcToTargetIdMapping +
+                '}';
     }
 }
