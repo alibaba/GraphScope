@@ -21,4 +21,6 @@ public class GraphConfig {
     public static final Config<String> GRAPH_STORE = Config.stringConfig("graph.store", "exp");
     public static final Config<String> GRAPH_STORED_PROCEDURES =
             Config.stringConfig("graph.stored.procedures", "");
+    public static final Config<String> GRAPH_STORED_PROCEDURES_ENABLE_LISTS =
+            Config.stringConfig("graph.stored.procedures.enable.lists", "");
 }

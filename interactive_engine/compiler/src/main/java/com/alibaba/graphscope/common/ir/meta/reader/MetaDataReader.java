@@ -22,6 +22,8 @@ import java.util.List;
 // MetaDataReader is used to read meta data from a data source (can be a local file or
 // remote web service)
 public interface MetaDataReader {
+
+    // if enableProcedures is null, return all stored procedures
     List<InputStream> getStoredProcedures() throws Exception;
 
     InputStream getGraphSchema() throws Exception;

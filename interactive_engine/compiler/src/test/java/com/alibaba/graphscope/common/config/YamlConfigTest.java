@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope;
+package com.alibaba.graphscope.common.config;
 
-import com.alibaba.graphscope.common.config.*;
+import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
+import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
+import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class YamlTest {
+public class YamlConfigTest {
     @Test
-    public void test() throws Exception {
-        YamlConfigs configs = new YamlConfigs("./gs_interactive.yaml", FileLoadType.RESOURCES);
+    public void config_test() throws Exception {
+        YamlConfigs configs = new YamlConfigs("config/gs_interactive.yaml", FileLoadType.RESOURCES);
         Assert.assertEquals(
                 "PlannerConfig{isOn=true, opt=RBO, rules=[FilterMatchRule]}",
                 PlannerConfig.create(configs).toString());
@@ -34,15 +36,32 @@ public class YamlTest {
         Assert.assertEquals(2048, (int) PegasusConfig.PEGASUS_BATCH_SIZE.get(configs));
         Assert.assertEquals(18, (int) PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(configs));
         Assert.assertEquals(
-                "/home/workspace/data/modern/plugins",
+                "./target/test-classes/config/modern/plugins",
                 GraphConfig.GRAPH_STORED_PROCEDURES.get(configs));
         Assert.assertEquals(
-                "/home/workspace/data/modern/graph.yaml", GraphConfig.GRAPH_SCHEMA.get(configs));
+                "ldbc_ic1, ldbc_ic2, ldbc_ic3",
+                GraphConfig.GRAPH_STORED_PROCEDURES_ENABLE_LISTS.get(configs));
+        Assert.assertEquals(
+                "./target/test-classes/config/modern/graph.yaml",
+                GraphConfig.GRAPH_SCHEMA.get(configs));
         Assert.assertEquals("pegasus", FrontendConfig.ENGINE_TYPE.get(configs));
         Assert.assertEquals(false, FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs));
         Assert.assertEquals(8003, (int) FrontendConfig.GREMLIN_SERVER_PORT.get(configs));
         Assert.assertEquals(false, FrontendConfig.NEO4J_BOLT_SERVER_DISABLED.get(configs));
         Assert.assertEquals(8002, (int) FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(configs));
         Assert.assertEquals(200, (int) FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(configs));
+    }
+
+    @Test
+    public void procedure_test() throws Exception {
+        YamlConfigs configs = new YamlConfigs("config/gs_interactive.yaml", FileLoadType.RESOURCES);
+        GraphStoredProcedures procedures =
+                new GraphStoredProcedures(new LocalMetaDataReader(configs));
+        StoredProcedureMeta meta = procedures.getStoredProcedure("ldbc_ic2");
+        Assert.assertEquals(
+                "StoredProcedureMeta{name='ldbc_ic2', returnType=RecordType(CHAR(1) name),"
+                        + " parameters=[Parameter{name='personId2', dataType=BIGINT},"
+                        + " Parameter{name='maxDate', dataType=BIGINT}]}",
+                meta.toString());
     }
 }

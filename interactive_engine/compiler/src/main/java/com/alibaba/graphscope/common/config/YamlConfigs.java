@@ -22,6 +22,7 @@ import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,10 +67,51 @@ public class YamlConfigs extends Configs {
                             String workspace = configs.get("directories.workspace");
                             String subdir = configs.get("directories.subdirs.data");
                             String graphName = configs.get("default_graph");
-                            if (workspace != null && subdir != null && graphName != null) {
-                                return Path.of(workspace, subdir, graphName, "plugins").toString();
-                            } else {
+                            try {
+                                if (workspace != null && subdir != null && graphName != null) {
+                                    File schemaFile =
+                                            new File(GraphConfig.GRAPH_SCHEMA.get(configs));
+                                    if (!schemaFile.exists()
+                                            || !schemaFile.getName().endsWith(".yaml")) {
+                                        return null;
+                                    }
+                                    Yaml yaml = new Yaml();
+                                    Map<String, Object> yamlAsMap =
+                                            yaml.load(new FileInputStream(schemaFile));
+                                    Object value;
+                                    if ((value = yamlAsMap.get("stored_procedures")) == null
+                                            || (value = ((Map) value).get("directory")) == null) {
+                                        return null;
+                                    }
+                                    String directory = value.toString();
+                                    return Path.of(workspace, subdir, graphName, directory)
+                                            .toString();
+                                } else {
+                                    return null;
+                                }
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        })
+                .put(
+                        "graph.stored.procedures.enable.lists",
+                        (Configs configs) -> {
+                            File schemaFile = new File(GraphConfig.GRAPH_SCHEMA.get(configs));
+                            if (!schemaFile.exists() || !schemaFile.getName().endsWith(".yaml")) {
                                 return null;
+                            }
+                            try {
+                                Yaml yaml = new Yaml();
+                                Map<String, Object> yamlAsMap =
+                                        yaml.load(new FileInputStream(schemaFile));
+                                Object value;
+                                if ((value = yamlAsMap.get("stored_procedures")) == null
+                                        || (value = ((Map) value).get("enable_lists")) == null) {
+                                    return null;
+                                }
+                                return value.toString().replace("[", "").replace("]", "");
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
                             }
                         })
                 .put(

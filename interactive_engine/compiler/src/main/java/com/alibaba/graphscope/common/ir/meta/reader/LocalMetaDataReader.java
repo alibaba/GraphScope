@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.meta.reader;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.GraphConfig;
+import com.alibaba.graphscope.common.config.Utils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -28,6 +29,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -49,10 +51,26 @@ public class LocalMetaDataReader implements MetaDataReader {
             logger.warn("procedure path {} not exist or not a directory", procedurePath);
             return ImmutableList.of();
         }
+        List<String> enableProcedureList =
+                Utils.convertDotString(
+                        GraphConfig.GRAPH_STORED_PROCEDURES_ENABLE_LISTS.get(configs));
         List<InputStream> procedureInputs = Lists.newArrayList();
-        for (File file : procedureDir.listFiles()) {
-            if (file.getName().endsWith(".yaml")) {
+        if (enableProcedureList.isEmpty()) {
+            for (File file : procedureDir.listFiles()) {
                 procedureInputs.add(new FileInputStream(file));
+            }
+        } else {
+            for (String enableProcedure : enableProcedureList) {
+                File procedureFile =
+                        new File(Paths.get(procedurePath, enableProcedure + ".yaml").toString());
+                if (!procedureFile.exists()) {
+                    logger.warn(
+                            "procedure {} not exist in directory {}",
+                            procedureFile.getName(),
+                            procedurePath);
+                } else {
+                    procedureInputs.add(new FileInputStream(procedureFile));
+                }
             }
         }
         return Collections.unmodifiableList(procedureInputs);

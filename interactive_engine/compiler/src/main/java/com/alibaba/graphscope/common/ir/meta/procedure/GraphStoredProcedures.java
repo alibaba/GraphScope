@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.meta.procedure;
 
 import com.alibaba.graphscope.common.ir.meta.reader.MetaDataReader;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -56,6 +57,7 @@ public class GraphStoredProcedures implements StoredProcedures {
         Yaml yaml = new Yaml();
         Map<String, Object> config =
                 yaml.load(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8));
+        Preconditions.checkArgument(config != null, "stored procedure meta data is null");
         String procedureName = (String) config.get("name");
         return new StoredProcedureMeta(
                 procedureName,

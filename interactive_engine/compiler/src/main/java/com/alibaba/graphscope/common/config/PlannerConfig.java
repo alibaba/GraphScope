@@ -1,7 +1,5 @@
 package com.alibaba.graphscope.common.config;
 
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -28,13 +26,7 @@ public class PlannerConfig {
         try {
             boolean isOn = GRAPH_PLANNER_IS_ON.get(configs);
             Opt type = Opt.valueOf(GRAPH_PLANNER_OPT.get(configs));
-            String[] ruleNames = GRAPH_PLANNER_RULES.get(configs).split(",");
-            List<String> ruleList = Lists.newArrayList();
-            if (ruleNames != null && ruleNames.length > 0) {
-                for (String ruleName : ruleNames) {
-                    ruleList.add(ruleName.trim());
-                }
-            }
+            List<String> ruleList = Utils.convertDotString(GRAPH_PLANNER_RULES.get(configs));
             return new PlannerConfig(isOn, type, ruleList);
         } catch (Exception e) {
             throw new RuntimeException(e);
