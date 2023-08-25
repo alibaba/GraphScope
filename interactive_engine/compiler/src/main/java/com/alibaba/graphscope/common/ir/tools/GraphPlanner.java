@@ -41,6 +41,8 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -51,6 +53,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * A unified structure to build {@link PlannerInstance} which can further build logical and physical plan from an antlr tree
  */
 public class GraphPlanner {
+    private static final Logger logger = LoggerFactory.getLogger(GraphPlanner.class);
     private final Configs graphConfig;
     private final PlannerConfig plannerConfig;
     private final RelOptPlanner optPlanner;
@@ -60,7 +63,7 @@ public class GraphPlanner {
     public GraphPlanner(Configs graphConfig) {
         this.graphConfig = graphConfig;
         this.plannerConfig = PlannerConfig.create(this.graphConfig);
-        System.out.println("planner config: " + this.plannerConfig);
+        logger.debug("planner config: " + this.plannerConfig);
         this.optPlanner = createRelOptPlanner(this.plannerConfig);
         this.rexBuilder = new GraphRexBuilder(new JavaTypeFactoryImpl());
         this.idGenerator = new AtomicLong(FrontendConfig.FRONTEND_SERVER_ID.get(graphConfig));
