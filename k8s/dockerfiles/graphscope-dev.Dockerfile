@@ -26,13 +26,13 @@ RUN mkdir -p /opt/graphscope /opt/vineyard && chown -R graphscope:graphscope /op
 USER graphscope
 WORKDIR /home/graphscope
 
-COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
+COPY --chown=graphscope:graphscope gsctl /home/graphscope/gsctl
 ARG VINEYARD_VERSION=main
-RUN cd /home/graphscope/GraphScope && \
+RUN cd /home/graphscope/gsctl && \
     python3 -m pip install click && \
     python3 gsctl.py install-deps dev --v6d-version=$VINEYARD_VERSION --cn -j $(nproc) && \
     cd /home/graphscope
 RUN echo ". /home/graphscope/.graphscope_env" >> ~/.bashrc
 RUN python3 -m pip --no-cache install pyyaml --user
-RUN rm -rf GraphScope
+RUN rm -rf gsctl
 

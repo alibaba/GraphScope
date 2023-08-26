@@ -19,13 +19,14 @@
 import io
 import os
 import subprocess
+import tempfile
 
 import click
 
-script_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scripts")
-install_deps_command = os.path.join(script_file, "install_deps_command.sh")
-make_command = os.path.join(script_file, "make_command.sh")
-make_image_command = os.path.join(script_file, "make_image_command.sh")
+scripts_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "scripts")
+install_deps_script = os.path.join(scripts_dir, "install_deps_command.sh")
+make_script = os.path.join(scripts_dir, "make_command.sh")
+make_image_script = os.path.join(scripts_dir, "make_image_command.sh")
 
 
 def run_shell_cmd(cmd, workingdir):
@@ -84,12 +85,9 @@ def cli(ctx, repo_home):
 @click.option(
     "--from-local",
     type=click.Path(),
-    default="/tmp/gs-local-deps",
-    show_default=True,
-    help="""Install dependency files to [prefix]. By default, './gs install-deps dev'
-    will install all the files in '/opt/graphscope/bin', '/opt/graphscope/lib'
-    etc. You can specify an installation prefix other than '/opt/graphscope'
-    using '--install-prefix', for instance '--install-prefix=$HOME'.""",
+    help="""Find raw dependencies of GraphScope from a local directory. The raw
+    dependencies would then be built and installed to [prefix]. If the directory
+    is empty or not exists, dependency files would be downloaded to [directory].""",
 )
 @click.option(
     "--v6d-version",
@@ -130,11 +128,15 @@ def install_deps(
     """Install dependencies for building GraphScope."""
     click.echo("install_deps")
     if type is None:
+        type = "dev"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        if from_local is None:
+            from_local = tmpdir
         cmd = [
             "bash",
-            install_deps_command,
+            install_deps_script,
             "-t",
-            "dev",
+            type,
             "-c",
             str(cn),
             "-i",
@@ -151,30 +153,6 @@ def install_deps(
             str(no_v6d),
         ]
         run_shell_cmd(cmd, repo.home)
-        return
-
-    cmd = [
-        "bash",
-        install_deps_command,
-        "-t",
-        type,
-        "-c",
-        str(cn),
-        "-i",
-        install_prefix,
-        "-d",
-        from_local,
-        "-v",
-        str(v6d_version),
-        "-j",
-        str(jobs),
-        "-a",
-        str(for_analytical),
-        "-n",
-        str(no_v6d),
-    ]
-    run_shell_cmd(cmd, repo.home)
-    return
 
 
 @click.command()
@@ -225,13 +203,11 @@ def make(repo, component, install_prefix, storage_type):
         fg="green",
     )
     if component is None:
-        cmd = ["bash", make_command, "-c", "all", "-i", install_prefix]
-        run_shell_cmd(cmd, repo.home)
-        return
+        component = "all"
 
     cmd = [
         "bash",
-        make_command,
+        make_script,
         "-c",
         component,
         "-i",
@@ -283,10 +259,9 @@ def make_image(repo, component, registry, tag):
     TODO: fulfill this.
     """
     if component is None:
-        cmd = ["bash", make_image_command, "-c", "all", "-r", registry, "-t", tag]
-        run_shell_cmd(cmd, repo.home)
-        return
-    cmd = ["bash", make_image_command, "-c", component, "-r", registry, "-t", tag]
+        component = "all"
+
+    cmd = ["bash", make_image_script, "-c", component, "-r", registry, "-t", tag]
     run_shell_cmd(cmd, repo.home)
 
 

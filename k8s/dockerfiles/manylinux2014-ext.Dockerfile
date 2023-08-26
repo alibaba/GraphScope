@@ -16,11 +16,11 @@ RUN yum install sudo -y && \
 ENV LC_ALL=en_US.utf-8
 ENV LANG=en_US.utf-8
 
-COPY . /home/graphscope/GraphScope
-RUN cd /home/graphscope/GraphScope && \
+COPY gsctl /home/graphscope/gsctl
+RUN cd /home/graphscope/gsctl && \
     python3 -m pip install click && \ 
     python3 gsctl.py install-deps dev --cn --for-analytical --no-v6d && \
-    cd /home/graphscope && sudo rm -rf /home/graphscope/GraphScope
+    cd /home/graphscope && sudo rm -rf /home/graphscope/gsctl
 
 
 # install hadoop for processing hadoop data source
