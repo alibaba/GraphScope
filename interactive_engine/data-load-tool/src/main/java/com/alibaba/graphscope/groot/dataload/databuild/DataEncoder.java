@@ -13,14 +13,14 @@
  */
 package com.alibaba.graphscope.groot.dataload.databuild;
 
-import com.alibaba.graphscope.compiler.api.exception.InvalidDataException;
-import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
-import com.alibaba.graphscope.compiler.api.schema.GraphElement;
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
-import com.alibaba.graphscope.compiler.api.schema.GraphVertex;
-import com.alibaba.graphscope.sdkcommon.schema.PropertyValue;
-import com.alibaba.graphscope.sdkcommon.util.PkHashUtils;
-import com.alibaba.graphscope.sdkcommon.util.SchemaUtils;
+import com.alibaba.graphscope.groot.common.exception.InvalidDataException;
+import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
+import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
+import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
+import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
+import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
+import com.alibaba.graphscope.groot.common.util.PkHashUtils;
+import com.alibaba.graphscope.groot.common.util.SchemaUtils;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;

@@ -404,6 +404,20 @@ def p2p_property_graph(graphscope_session):
 
 
 @pytest.fixture(scope="module")
+def p2p_multi_property_graph(graphscope_session):
+    g = graphscope_session.g(generate_eid=False, retain_oid=True, directed=True)
+    g = g.add_vertices(f"{property_dir}/p2p-31_multi_property_v_0", "person")
+    g = g.add_edges(
+        f"{property_dir}/p2p-31_multi_property_e_0",
+        label="knows",
+        src_label="person",
+        dst_label="person",
+    )
+    yield g
+    del g
+
+
+@pytest.fixture(scope="module")
 def p2p_graph_from_pandas(graphscope_session):
     # set chunk size to 1k
     os.environ["GS_GRPC_CHUNK_SIZE"] = str(1024 - 1)
@@ -436,6 +450,22 @@ def p2p_property_graph_string(graphscope_session):
 def p2p_property_graph_int32(graphscope_session):
     g = graphscope_session.g(
         oid_type="int32", generate_eid=False, retain_oid=True, directed=True
+    )
+    g = g.add_vertices(f"{property_dir}/p2p-31_property_v_0", "person")
+    g = g.add_edges(
+        f"{property_dir}/p2p-31_property_e_0",
+        label="knows",
+        src_label="person",
+        dst_label="person",
+    )
+    yield g
+    del g
+
+
+@pytest.fixture(scope="module")
+def p2p_property_graph_uint32_vid(graphscope_session):
+    g = graphscope_session.g(
+        vid_type="uint32", generate_eid=False, retain_oid=True, directed=True
     )
     g = g.add_vertices(f"{property_dir}/p2p-31_property_v_0", "person")
     g = g.add_edges(

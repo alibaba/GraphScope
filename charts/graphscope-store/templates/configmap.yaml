@@ -31,6 +31,8 @@ data:
 
     ## Frontend Config
     frontend.service.port=55556
+    frontend.server.id=INDEX
+    frontend.server.num={{ .Values.frontend.replicaCount }}
 
     ## Ingestor Config
     ingestor.queue.buffer.size={{ .Values.ingestorQueueBufferSize }}

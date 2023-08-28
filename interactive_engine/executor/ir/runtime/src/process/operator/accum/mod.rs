@@ -15,10 +15,16 @@
 
 mod accum;
 pub mod accumulator;
+pub mod sample;
 pub use accum::RecordAccumulator;
+pub use sample::SampleAccum;
 
 use crate::error::FnGenResult;
 
 pub trait AccumFactoryGen {
     fn gen_accum(self) -> FnGenResult<RecordAccumulator>;
+}
+
+pub trait SampleAccumFactoryGen {
+    fn gen_accum(self) -> FnGenResult<SampleAccum>;
 }

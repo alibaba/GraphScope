@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot;
 
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.GrootException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

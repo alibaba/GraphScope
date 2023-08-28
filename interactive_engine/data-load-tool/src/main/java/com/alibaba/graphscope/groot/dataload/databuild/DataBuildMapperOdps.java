@@ -15,11 +15,12 @@
  */
 package com.alibaba.graphscope.groot.dataload.databuild;
 
-import com.alibaba.graphscope.compiler.api.exception.PropertyDefNotFoundException;
-import com.alibaba.graphscope.compiler.api.schema.*;
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
-import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
-import com.alibaba.graphscope.sdkcommon.schema.PropertyValue;
+import com.alibaba.graphscope.groot.common.exception.PropertyDefNotFoundException;
+import com.alibaba.graphscope.groot.common.schema.api.*;
+import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
+import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
+import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.mapred.MapperBase;
 import com.fasterxml.jackson.core.type.TypeReference;

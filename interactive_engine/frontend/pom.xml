@@ -21,10 +21,6 @@
             <artifactId>interactive-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.alibaba.graphscope</groupId>
-            <artifactId>sdk-common</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.tinkerpop</groupId>
             <artifactId>gremlin-core</artifactId>
             <scope>test</scope>

@@ -243,4 +243,15 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue addPatternMeta(Pointer pattern, FfiPbPointer.ByValue meta);
 
     FfiResult.ByValue setUnfoldMeta(Pointer unfold, FfiPbPointer.ByValue meta);
+
+    Pointer initSampleOperator();
+
+    FfiResult.ByValue setSampleType(Pointer sample, FfiPbPointer.ByValue sampleType);
+
+    FfiResult.ByValue setSampleSeed(Pointer sample, long seed);
+
+    FfiResult.ByValue setSampleWeightVariable(Pointer sample, FfiPbPointer.ByValue weightVariable);
+
+    FfiResult.ByValue appendSampleOperator(
+            Pointer plan, Pointer sample, int parent, IntByReference oprIdx);
 }

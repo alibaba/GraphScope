@@ -302,7 +302,6 @@ mod test {
     // if define source, g.V().hasLabel('person').match(...)
     fn init_match_case1_request(define_source: bool) -> JobRequest {
         init_schema();
-
         let source = if define_source { get_person_scan() } else { pb::Scan::default() };
 
         let pattern = get_pattern_case1();
@@ -330,7 +329,6 @@ mod test {
     // if define source, g.V().hasLabel('person').match(...)
     fn init_match_case2_request(define_source: bool) -> JobRequest {
         init_schema();
-
         let source = if define_source { get_person_scan() } else { pb::Scan::default() };
 
         let pattern = get_pattern_case2();

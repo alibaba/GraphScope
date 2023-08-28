@@ -77,10 +77,6 @@
       <artifactId>scala-library</artifactId>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>org.scijava</groupId>
-      <artifactId>native-lib-loader</artifactId>
-    </dependency>
   </dependencies>
 
   <build>

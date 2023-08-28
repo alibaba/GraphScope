@@ -18,10 +18,12 @@
 
 #include "lgraph/common/check.h"
 #include "lgraph/common/types.h"
-#include "lgraph/proto/sdk/model.pb.h"
+#include "lgraph/proto/groot/sdk/model.pb.h"
 
 namespace LGRAPH_NAMESPACE {
 namespace log_subscription {
+
+using namespace gs::rpc::groot;
 
 class PropertyInfo {
 public:

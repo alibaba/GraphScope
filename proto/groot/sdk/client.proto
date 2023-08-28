@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 syntax = "proto3";
+package gs.rpc.groot;
 
-import "sdk/common.proto";
-import "sdk/model.proto";
+import "groot/sdk/model.proto";
 
 option java_package = "com.alibaba.graphscope.proto.groot";
 option java_multiple_files = true;
@@ -25,13 +25,13 @@ service Client {
   rpc getSchema(GetSchemaRequest) returns (GetSchemaResponse);
   rpc ingestData(IngestDataRequest) returns (IngestDataResponse);
   rpc getMetrics(GetMetricsRequest) returns (GetMetricsResponse);
-  rpc loadJsonSchema(LoadJsonSchemaRequest) returns(LoadJsonSchemaResponse);
-  rpc dropSchema(DropSchemaRequest) returns(DropSchemaResponse);
-  rpc prepareDataLoad(PrepareDataLoadRequest) returns(PrepareDataLoadResponse);
-  rpc commitDataLoad(CommitDataLoadRequest) returns(CommitDataLoadResponse);
-  rpc getPartitionNum(GetPartitionNumRequest) returns(GetPartitionNumResponse);
-  rpc getLoggerInfo(GetLoggerInfoRequest) returns(GetLoggerInfoResponse);
-  rpc clearIngest(ClearIngestRequest) returns(ClearIngestResponse);
+  rpc loadJsonSchema(LoadJsonSchemaRequest) returns (LoadJsonSchemaResponse);
+  rpc dropSchema(DropSchemaRequest) returns (DropSchemaResponse);
+  rpc prepareDataLoad(PrepareDataLoadRequest) returns (PrepareDataLoadResponse);
+  rpc commitDataLoad(CommitDataLoadRequest) returns (CommitDataLoadResponse);
+  rpc getPartitionNum(GetPartitionNumRequest) returns (GetPartitionNumResponse);
+  rpc getLoggerInfo(GetLoggerInfoRequest) returns (GetLoggerInfoResponse);
+  rpc clearIngest(ClearIngestRequest) returns (ClearIngestResponse);
 }
 
 message GetSchemaRequest {

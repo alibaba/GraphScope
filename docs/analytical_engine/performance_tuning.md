@@ -49,8 +49,8 @@ its property graphs. Basically, the `ArrowFragment` has the following members:
         first the neighbor vertex id and the second is the index points to the
         corresponding edge table.
 
-        By default, the type of `neighbor_vertex_id` is `uint64_t` and the type of
-        `edge_table_index` is `size_t`.
+        By default, the type of `neighbor_vertex_id` is `uint64_t` or `uint32_t` and
+        the type of `edge_table_index` is `size_t`.
 
         The size of the `indptr` array is `num_edges`.
 
@@ -70,8 +70,8 @@ its property graphs. Basically, the `ArrowFragment` has the following members:
         first the neighbor vertex id and the second is the index points to the
         corresponding edge table.
 
-        By default, the type of `neighbor_vertex_id` is `uint64_t` and the type of
-        `edge_table_index` is `size_t`.
+        By default, the type of `neighbor_vertex_id` is `uint64_t` or `uint32_t` and
+        the type of `edge_table_index` is `size_t`.
 
         The size of the `indptr` array is `num_edges`.
 
@@ -151,6 +151,15 @@ footprint as follows:
     `graphscope.load_from()` and repeatedly `add_vertices/edges()` are not supported.
 
 - Optimizing topologies:
+
+  - GraphScope uses `uint64_t` as the `VID_T` (internal vertex id) to support large-scale
+    graphs. However, from above analysis, the type of `VID_T` is one of the key factors
+    that affects the memory footprint of the topology part.
+
+    If you are sure your graph is fairly small (less than `10^8` of vertices, the absolute
+    value depends on number of labels and number of partitions), you can use `int32_t`
+    as the `VID_T` to optimize the memory usage, by `vid_type="int32_t"` option in
+    `graphscope.g()` and `graphscope.load_from()`.s
 
   - GraphScope supports options `compact_edges=True` in `graphscope.g()` and `graphscope.load_from()`
     to compact the `ie_lists` and `oe_lists` arrays using delta and varint encoding. Such compression

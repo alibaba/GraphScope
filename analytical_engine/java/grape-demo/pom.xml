@@ -122,7 +122,7 @@
                   <include>com.alibaba.graphscope:*</include>
                   <include>com.alibaba.fastffi:*</include>
                   <include>it.unimi.dsi:fastutil*</include>
-		  <include>org.apache.spark:*</include>
+                  <include>org.apache.spark:*</include>
                 </includes>
               </artifactSet>
               <filters>

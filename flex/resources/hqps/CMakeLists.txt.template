@@ -41,4 +41,4 @@ include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
 
 add_library(${QUERY_NAME} SHARED ${PROJECT_SOURCE_DIR}/${QUERY_NAME}.cc)
 target_include_directories(${QUERY_NAME} PUBLIC ${FLEX_INCLUDE_PREFIX} ${FLEX_INCLUDE_PREFIX}/flex/build/engines/hqps_db/)
-target_link_libraries(${QUERY_NAME} PUBLIC hqps_plan_proto flex_utils)
+target_link_libraries(${QUERY_NAME} PUBLIC)

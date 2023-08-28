@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
 
           BOOST_LEAF_AUTO(dynamic_frag, a2d_converter.Convert(arrow_frag));
           LOG(INFO) << "ArrowFragment->DynamicFragment done.";
-          gs::DynamicToArrowConverter<oid_t, vertex_map_t> d2a_converter(
+          gs::DynamicToArrowConverter<oid_t, vid_t, vertex_map_t> d2a_converter(
               comm_spec, client);
           BOOST_LEAF_AUTO(arrow_frag1, d2a_converter.Convert(dynamic_frag));
           LOG(INFO) << "DynamicFragment->ArrowFragment done.";

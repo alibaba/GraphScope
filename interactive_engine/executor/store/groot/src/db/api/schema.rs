@@ -9,9 +9,8 @@ use super::{GraphResult, PropertyId};
 use crate::db::api::property::Value;
 use crate::db::api::{EdgeKind, LabelId};
 use crate::db::common::bytes::util::parse_pb;
-use crate::db::proto::model::{
-    EdgeTableIdEntry, GraphDefPb, PropertyDefPb, TypeDefPb, TypeEnumPb, VertexTableIdEntry,
-};
+use crate::db::proto::model::{EdgeTableIdEntry, GraphDefPb, VertexTableIdEntry};
+use crate::db::proto::schema_common::{PropertyDefPb, TypeDefPb, TypeEnumPb};
 
 #[derive(Default, Clone)]
 pub struct GraphDef {
@@ -182,29 +181,29 @@ impl TypeDef {
     }
 
     pub fn from_proto(proto: &TypeDefPb) -> GraphResult<Self> {
-        let version_id = proto.get_versionId();
+        let version_id = proto.get_version_id();
         let label = proto.get_label();
-        let label_id = proto.get_labelId().get_id();
+        let label_id = proto.get_label_id().get_id();
         let mut properties = HashMap::new();
         for propertydef_pb in proto.get_props() {
             let property_def = PropDef::from_proto(propertydef_pb)?;
             properties.insert(property_def.id, property_def);
         }
-        let type_enum = proto.get_typeEnum();
+        let type_enum = proto.get_type_enum();
         Ok(Self::new(version_id, label.to_string(), label_id, properties, type_enum))
     }
 
     pub fn to_proto(&self) -> GraphResult<TypeDefPb> {
         let mut typedef_pb = TypeDefPb::new();
-        typedef_pb.set_versionId(self.version);
+        typedef_pb.set_version_id(self.version);
         typedef_pb.set_label(self.label.clone());
-        typedef_pb.mut_labelId().set_id(self.label_id);
+        typedef_pb.mut_label_id().set_id(self.label_id);
         for property_def in self.properties.values() {
             typedef_pb
                 .mut_props()
                 .push(property_def.to_proto()?);
         }
-        typedef_pb.set_typeEnum(self.type_enum);
+        typedef_pb.set_type_enum(self.type_enum);
         Ok(typedef_pb)
     }
 
@@ -329,10 +328,10 @@ impl PropDef {
 
     fn from_proto(proto: &PropertyDefPb) -> GraphResult<Self> {
         let id = proto.get_id();
-        let inner_id = proto.get_innerId();
+        let inner_id = proto.get_inner_id();
         let name = proto.get_name();
-        let value_type = ValueType::from_i32(proto.get_dataType().value())?;
-        let default_val = match Value::from_proto(proto.get_defaultValue()) {
+        let value_type = ValueType::from_i32(proto.get_data_type().value())?;
+        let default_val = match Value::from_proto(proto.get_default_value()) {
             Ok(v) => Some(v),
             Err(_) => None,
         };
@@ -344,11 +343,11 @@ impl PropDef {
     fn to_proto(&self) -> GraphResult<PropertyDefPb> {
         let mut pb = PropertyDefPb::new();
         pb.set_id(self.id);
-        pb.set_innerId(self.inner_id);
+        pb.set_inner_id(self.inner_id);
         pb.set_name(self.name.clone());
-        pb.set_dataType(self.r#type.to_proto()?);
+        pb.set_data_type(self.r#type.to_proto()?);
         if let Some(ref default_value) = self.default_value {
-            pb.set_defaultValue(default_value.to_proto()?);
+            pb.set_default_value(default_value.to_proto()?);
         }
         pb.set_pk(self.pk);
         pb.set_comment(self.comment.clone());

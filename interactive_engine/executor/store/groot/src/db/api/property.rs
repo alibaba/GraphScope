@@ -11,8 +11,7 @@ use crate::db::api::PropertyId;
 use crate::db::common::bytes::transform;
 use crate::db::common::bytes::util::{UnsafeBytesReader, UnsafeBytesWriter};
 use crate::db::common::numeric::*;
-use crate::db::proto::common::DataTypePb;
-use crate::db::proto::model::PropertyValuePb;
+use crate::db::proto::schema_common::{DataTypePb, PropertyValuePb};
 
 pub trait PropertyMap {
     fn get(&self, prop_id: PropertyId) -> Option<ValueRef>;
@@ -23,7 +22,7 @@ impl dyn PropertyMap {
     pub fn from_proto(pb: &HashMap<PropertyId, PropertyValuePb>) -> HashMap<PropertyId, ValueRef> {
         let mut m = HashMap::new();
         for (id, val_pb) in pb {
-            let val_type = ValueType::from_i32(val_pb.get_dataType().value()).unwrap();
+            let val_type = ValueType::from_i32(val_pb.get_data_type().value()).unwrap();
             m.insert(*id, ValueRef::new(val_type, val_pb.get_val()));
         }
         m
@@ -583,7 +582,7 @@ impl Value {
     }
 
     pub fn from_proto(pb: &PropertyValuePb) -> GraphResult<Self> {
-        let val_type = ValueType::from_i32(pb.get_dataType().value())?;
+        let val_type = ValueType::from_i32(pb.get_data_type().value())?;
         Ok(Value::new(val_type, Vec::from(pb.get_val())))
     }
 
@@ -593,7 +592,7 @@ impl Value {
 
     pub fn to_proto(&self) -> GraphResult<PropertyValuePb> {
         let mut pb = PropertyValuePb::new();
-        pb.set_dataType(self.r#type.to_proto()?);
+        pb.set_data_type(self.r#type.to_proto()?);
         pb.set_val(self.data.clone());
         Ok(pb)
     }

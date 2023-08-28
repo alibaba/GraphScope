@@ -105,6 +105,7 @@ enum OperationType {
   ARCHIVE_GRAPH = 24;  // archive graph
   SERIALIZE_GRAPH = 25; // serialize graph
   DESERIALIZE_GRAPH = 26; // desrialize graph
+  CONSOLIDATE_COLUMNS = 27; // consolidate property columns in the graph
 
   SUBGRAPH = 32;  // subgraph in interactive query
 
@@ -182,6 +183,9 @@ enum ParamKey {
   VERTEX_MAP_TYPE = 45;
   COMPACT_EDGES = 46;
   USE_PERFECT_HASH = 47;
+  CONSOLIDATE_COLUMNS_LABEL = 48;
+  CONSOLIDATE_COLUMNS_COLUMNS = 49;
+  CONSOLIDATE_COLUMNS_RESULT_COLUMN = 50;
 
   // project
   VERTEX_COLLECTIONS = 51;

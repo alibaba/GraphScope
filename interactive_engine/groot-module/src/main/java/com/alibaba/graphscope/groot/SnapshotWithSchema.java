@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot;
 
-import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
+import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 
 public class SnapshotWithSchema {
 

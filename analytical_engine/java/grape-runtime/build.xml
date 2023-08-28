@@ -24,6 +24,10 @@
       <os family="mac"/>
     </condition>
 
+    <condition property="platform" value="linux64">
+      <os arch="aarch64" family="unix"/>
+    </condition>
+    
     <exec executable="nproc" outputproperty="cores.count">
       <arg value="--all"/>
     </exec>
@@ -51,23 +55,6 @@
 
     <exec dir="${project.build.directory}/native" executable="strip" failonerror="true">
       <arg line="libgrape-jni.so"/>
-    </exec>
-
-    <mkdir dir="${project.build.directory}/classes/natives"/>
-    <exec dir="${project.build.directory}/classes/natives" executable="mkdir" failonerror="false" os="Linux">
-        <arg line="linux_64"/>
-    </exec>
-
-    <exec dir="${project.build.directory}/native" executable="cp" failonerror="true" os="Linux">
-      <arg line="libgrape-jni.so ${project.build.directory}/classes/natives/linux_64"/>
-    </exec>
-
-    <exec dir="${project.build.directory}/classes/natives" executable="mkdir" failonerror="false" os="Mac OS X">
-        <arg line="osx_64"/>
-    </exec>
-
-    <exec dir="${project.build.directory}/native" executable="cp" failonerror="true" os="Mac OS X">
-      <arg line="libgrape-jni.so ${project.build.directory}/classes/natives/osx_64"/>
     </exec>
   </target>
 </project>

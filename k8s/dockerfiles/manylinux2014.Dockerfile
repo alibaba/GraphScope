@@ -27,9 +27,9 @@ ENV JAVA_HOME=/usr/lib/jvm/java
 ENV RUST_BACKTRACE=1
 
 # install clang-11 with gold optimizer plugin, depends on header include/plugin-api.h
-#COPY --from=llvm /opt/llvm11.0.0 /opt/llvm11
-#ENV LLVM11_HOME=/opt/llvm11
-#ENV LIBCLANG_PATH=$LLVM11_HOME/lib LLVM_CONFIG_PATH=$LLVM11_HOME/bin/llvm-config
+# COPY --from=llvm /opt/llvm11.0.0 /opt/llvm11
+# ENV LLVM11_HOME=/opt/llvm11
+# ENV LIBCLANG_PATH=$LLVM11_HOME/lib LLVM_CONFIG_PATH=$LLVM11_HOME/bin/llvm-config
 
 # Copy the thirdparty c++ dependencies, maven, and hadoop
 COPY --from=ext /opt/graphscope /opt/graphscope
@@ -39,16 +39,25 @@ RUN chmod +x /opt/graphscope/bin/* /opt/openmpi/bin/*
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
+# Install jdk-11
 RUN yum install -y sudo vim && \
+    yum install python3-pip -y && \
+    yum remove java-1.8.0-openjdk-devel java-1.8.0-openjdk java-1.8.0-openjdk-headless -y && \
+    yum install java-11-openjdk-devel -y && \
     yum clean all -y --enablerepo='*' && \
     rm -rf /var/cache/yum
+
 RUN mkdir -p /opt/graphscope /opt/vineyard && chown -R graphscope:graphscope /opt/graphscope /opt/vineyard
+
 USER graphscope
 WORKDIR /home/graphscope
 
-COPY ./gs ./gs
+COPY --chown=graphscope:graphscope gsctl /home/graphscope/gsctl
 ARG VINEYARD_VERSION=main
-RUN ./gs install-deps dev --v6d-version=$VINEYARD_VERSION -j 2 && \
+RUN cd /home/graphscope/gsctl && \
+    sudo python3 -m pip install click && \ 
+    python3 gsctl.py install-deps dev --v6d-version=$VINEYARD_VERSION -j $(nproc) && \
+    cd /home/graphscope && sudo rm -rf /home/graphscope/gsctl && \
     sudo yum clean all -y && \
     sudo rm -fr /var/cache/yum
 RUN echo ". /home/graphscope/.graphscope_env" >> ~/.bashrc

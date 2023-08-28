@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 syntax = "proto3";
+package gs.rpc.groot;
 
-import "sdk/model.proto";
+import "groot/sdk/model.proto";
 
 option java_package = "com.alibaba.graphscope.proto.groot";
 option java_multiple_files = true;

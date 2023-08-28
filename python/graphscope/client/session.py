@@ -1251,6 +1251,7 @@ class Session(object):
         self,
         incoming_data=None,
         oid_type="int64",
+        vid_type="uint64",
         directed=True,
         generate_eid=True,
         retain_oid=True,
@@ -1258,6 +1259,26 @@ class Session(object):
         compact_edges=False,
         use_perfect_hash=False,
     ) -> Union[Graph, GraphDAGNode]:
+        """Construct a GraphScope graph object on the default session.
+
+        It will launch and set a session to default when there is no default session found.
+
+        See params detail in :class:`graphscope.framework.graph.GraphDAGNode`
+
+        Returns:
+            :class:`graphscope.framework.graph.GraphDAGNode`: Evaluated in eager mode.
+
+        Examples:
+
+        .. code:: python
+
+            >>> import graphscope
+            >>> g = graphscope.g()
+
+            >>> import graphscope
+            >>> sess = graphscope.session()
+            >>> g = sess.g() # creating graph on the session "sess"
+        """
         if (
             isinstance(incoming_data, vineyard.ObjectID)
             and repr(incoming_data) in self._vineyard_object_mapping_table
@@ -1270,6 +1291,7 @@ class Session(object):
                 self,
                 incoming_data,
                 oid_type,
+                vid_type,
                 directed,
                 generate_eid,
                 retain_oid,
@@ -1698,6 +1720,7 @@ _default_session_stack = _DefaultSessionStack()  # pylint: disable=protected-acc
 def g(
     incoming_data=None,
     oid_type="int64",
+    vid_type="uint64",
     directed=True,
     generate_eid=True,
     retain_oid=True,
@@ -1729,6 +1752,7 @@ def g(
     return get_default_session().g(
         incoming_data,
         oid_type,
+        vid_type,
         directed,
         generate_eid,
         retain_oid,

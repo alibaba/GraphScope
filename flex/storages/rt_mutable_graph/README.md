@@ -25,64 +25,88 @@ The configuration file ([modern graph example](./modern_graph/modern_graph.yaml)
 Here is an example of a configuration file:
 
 ```yaml
-graph:
-  graph_store: mutable_csr
-  vertex:
-    - label_name: person
-      properties:
-        - name: _ID
-          type: int64
-        - name: name
-          type: String
-        - name: age
-          type: int32
-      max_vertex_num: 100
-    - label_name: software
-      properties:
-        - name: _ID
-          type: int64
-        - name: name
-          type: String
-        - name: lang
-          type: String
-      max_vertex_num: 100
-  edge:
-    - src_label_name: person
-      dst_label_name: software
-      edge_label_name: created
-      properties:
-        - name: _SRC
-          type: int64
-        - name: _DST
-          type: int64
-        - name: weight
-          type: double
-      incoming_edge_strategy: None
-      outgoing_edge_strategy: Single
-    - src_label_name: person
-      dst_label_name: person
-      edge_label_name: knows
-      properties:
-        - name: _SRC
-          type: int64
-        - name: _DST
-          type: int64
-        - name: weight
-          type: double
-      incoming_edge_strategy: None
-      outgoing_edge_strategy: Multiple
-
+name: modern
+store_type: mutable_csr
 stored_procedures:
-  - libxxx.so
+  directory: plugins
+  enable_lists:
+    - libxxx.so
+schema:
+  vertex_types:
+    - type_name: person
+      x_csr_params:
+        max_vertex_num: 100
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_id: 1
+          property_name: name
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 2
+          property_name: age
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+      primary_keys:
+        - id
+    - type_name: software
+      x_csr_params:
+        max_vertex_num: 100
+      properties:
+        - property_id: 0
+          property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+          x_csr_params:
+        - property_id: 1
+          property_name: name
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 2
+          property_name: lang
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+  edge_types:
+    - type_name: knows
+      x_csr_params:
+        incoming_edge_strategy: None
+        outgoing_edge_strategy: Multiple
+      vertex_type_pair_relations:
+        source_vertex: person
+        destination_vertex: person
+        relation: MANY_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: weight
+          property_type:
+            primitive_type: DT_DOUBLE
+    - type_name: created
+      x_csr_params: 
+        incoming_edge_strategy: None
+        outgoing_edge_strategy: Single
+      vertex_type_pair_relations:
+        source_vertex: person
+        destination_vertex: software
+        relation: ONE_TO_MANY
+      properties:
+        - property_id: 0
+          property_name: weight
+          property_type:
+            primitive_type: DT_DOUBLE
 ```
 
 Notes:
 
-- `_ID`, `_SRC`, `_DST` are reserved words, they are the external id of vertices, only int64 type is supported.
-- `max_vertex_num` limit the number of vertices of this type:
+- Currently we only support one primary key, and the type has to be `DT_SIGNED_INT64`.
+- All implementation related configuration are put under x_csr_params.
+  - `max_vertex_num` limit the number of vertices of this type:
     - The limit number is used to `mmap` memory, so it only takes virtual memory before vertices are actually inserted.
     - If `max_vertex_num` is not set, a default large number (e.g.: 2^48) will be used.
-- `incoming/outgoing_edge_strategy` specifies the storing strategy of the incoming or outgoing edges of this type, there are 3 kinds of strategies
+  - `incoming/outgoing_edge_strategy` specifies the storing strategy of the incoming or outgoing edges of this type, there are 3 kinds of strategies
     - None: no edge will be stored
     - Single: only one edge will be stored
     - Multiple(default): multiple edges will be stored

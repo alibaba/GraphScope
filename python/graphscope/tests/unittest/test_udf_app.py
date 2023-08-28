@@ -1243,3 +1243,16 @@ def test_pregel_api(graphscope_session, ldbc_graph):
 def test_pie_api(graphscope_session, ldbc_graph_undirected):
     a1 = PIE_API_Test()
     a1(ldbc_graph_undirected, param1="graphscope", param2="graphscope2")
+
+
+def test_app_on_local_vm_graph(
+    p2p_property_graph_undirected_local_vm_string,
+    p2p_property_graph_undirected_local_vm_int32,
+):
+    a1 = Pregel_GetSchema()
+    a1(p2p_property_graph_undirected_local_vm_string)
+    a2 = PIE_GetSchema()
+    a2(p2p_property_graph_undirected_local_vm_int32)
+    # Comment out some base case to reduce the compile time.
+    # a1(p2p_property_graph_undirected_local_vm_string)
+    # a1(p2p_property_graph_undirected_local_vm_int32)

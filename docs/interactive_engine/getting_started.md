@@ -6,10 +6,12 @@ This guide gives you a quick start to use GraphScope for graph interactive tasks
 
 GIE works as the core component of GraphScope. Therefore, you should install GraphScope at first to use GIE.
 
-GraphScope provides python interface which requires:
+GraphScope requires the following software versions:
 
-- Python3.7 ~ 3.11
+- Python 3.9 ~ 3.11
+- JDK 11 (Both JDK 8 and 20 have known compatibility issues)
 - gcc 7.1+ or Apple Clang
+
 
 And it is tested on the following 64-bit operating systems:
 
@@ -75,7 +77,7 @@ q2 = g.execute('g.V().hasLabel(\'person\')')
 print(q2.all().result())  # should print [[v[2], v[3], v[0], v[1]]]
 
 # or `execute` any supported Cypher query, by passing `lang="cypher"`
-q3 = g.execute("MATCH (n:person) RETURN count(n)", lang="cypher", routing_=RoutingControl.READ)
+q3 = g.execute("MATCH (n) RETURN count(n)", lang="cypher")
 print(q3.records[0][0])  # should print 6
 ```
 

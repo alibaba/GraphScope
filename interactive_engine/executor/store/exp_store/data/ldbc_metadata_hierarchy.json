@@ -1,0 +1,586 @@
+{
+  "vertex_table_to_type": {
+    "comment_0_0.csv": "COMMENT",
+    "forum_0_0.csv": "FORUM",
+    "organisation_0_0.csv": "ORGANISATION",
+    "person_0_0.csv": "PERSON",
+    "place_0_0.csv": "PLACE",
+    "post_0_0.csv": "POST",
+    "tag_0_0.csv": "TAG",
+    "tagclass_0_0.csv": "TAGCLASS"
+  },
+  "edge_table_to_type": {
+    "comment_hasCreator_person_0_0.csv": {
+      "etype": "HASCREATOR",
+      "src_vertex_type": "COMMENT",
+      "dst_vertex_type": "PERSON"
+    },
+    "comment_hasTag_tag_0_0.csv": {
+      "etype": "HASTAG",
+      "src_vertex_type": "COMMENT",
+      "dst_vertex_type": "TAG"
+    },
+    "comment_isLocatedIn_place_0_0.csv": {
+      "etype": "ISLOCATEDIN",
+      "src_vertex_type": "COMMENT",
+      "dst_vertex_type": "PLACE"
+    },
+    "comment_replyOf_comment_0_0.csv": {
+      "etype": "REPLYOF",
+      "src_vertex_type": "COMMENT",
+      "dst_vertex_type": "COMMENT"
+    },
+    "comment_replyOf_post_0_0.csv": {
+      "etype": "REPLYOF",
+      "src_vertex_type": "COMMENT",
+      "dst_vertex_type": "POST"
+    },
+    "forum_containerOf_post_0_0.csv": {
+      "etype": "CONTAINEROF",
+      "src_vertex_type": "FORUM",
+      "dst_vertex_type": "POST"
+    },
+    "forum_hasMember_person_0_0.csv": {
+      "etype": "HASMEMBER",
+      "src_vertex_type": "FORUM",
+      "dst_vertex_type": "PERSON"
+    },
+    "forum_hasModerator_person_0_0.csv": {
+      "etype": "HASMODERATOR",
+      "src_vertex_type": "FORUM",
+      "dst_vertex_type": "PERSON"
+    },
+    "forum_hasTag_tag_0_0.csv": {
+      "etype": "HASTAG",
+      "src_vertex_type": "FORUM",
+      "dst_vertex_type": "TAG"
+    },
+    "organisation_isLocatedIn_place_0_0.csv": {
+      "etype": "ISLOCATEDIN",
+      "src_vertex_type": "ORGANISATION",
+      "dst_vertex_type": "PLACE"
+    },
+    "person_hasInterest_tag_0_0.csv": {
+      "etype": "HASINTEREST",
+      "src_vertex_type": "PERSON",
+      "dst_vertex_type": "TAG"
+    },
+    "person_isLocatedIn_place_0_0.csv": {
+      "etype": "ISLOCATEDIN",
+      "src_vertex_type": "PERSON",
+      "dst_vertex_type": "PLACE"
+    },
+    "person_knows_person_0_0.csv": {
+      "etype": "KNOWS",
+      "src_vertex_type": "PERSON",
+      "dst_vertex_type": "PERSON"
+    },
+    "person_likes_comment_0_0.csv": {
+      "etype": "LIKES",
+      "src_vertex_type": "PERSON",
+      "dst_vertex_type": "COMMENT"
+    },
+    "person_likes_post_0_0.csv": {
+      "etype": "LIKES",
+      "src_vertex_type": "PERSON",
+      "dst_vertex_type": "POST"
+    },
+    "person_studyAt_organisation_0_0.csv": {
+      "etype": "STUDYAT",
+      "src_vertex_type": "PERSON",
+      "dst_vertex_type": "ORGANISATION"
+    },
+    "person_workAt_organisation_0_0.csv": {
+      "etype": "WORKAT",
+      "src_vertex_type": "PERSON",
+      "dst_vertex_type": "ORGANISATION"
+    },
+    "place_isPartOf_place_0_0.csv": {
+      "etype": "ISPARTOF",
+      "src_vertex_type": "PLACE",
+      "dst_vertex_type": "PLACE"
+    },
+    "post_hasCreator_person_0_0.csv": {
+      "etype": "HASCREATOR",
+      "src_vertex_type": "POST",
+      "dst_vertex_type": "PERSON"
+    },
+    "post_hasTag_tag_0_0.csv": {
+      "etype": "HASTAG",
+      "src_vertex_type": "POST",
+      "dst_vertex_type": "TAG"
+    },
+    "post_isLocatedIn_place_0_0.csv": {
+      "etype": "ISLOCATEDIN",
+      "src_vertex_type": "POST",
+      "dst_vertex_type": "PLACE"
+    },
+    "tag_hasType_tagclass_0_0.csv": {
+      "etype": "HASTYPE",
+      "src_vertex_type": "TAG",
+      "dst_vertex_type": "TAGCLASS"
+    },
+    "tagclass_isSubClassOf_tagclass_0_0.csv": {
+      "etype": "ISSUBCLASSOF",
+      "src_vertex_type": "TAGCLASS",
+      "dst_vertex_type": "TAGCLASS"
+    }
+  },
+  "vertex_type_to_id": {
+    "UNIVERSITY": 12,
+    "CONTINENT": 10,
+    "POST": 3,
+    "FORUM": 4,
+    "TAG": 7,
+    "COMMENT": 2,
+    "PERSON": 1,
+    "PLACE": 0,
+    "ORGANISATION": 5,
+    "TAGCLASS": 6,
+    "CITY": 9,
+    "COUNTRY": 8,
+    "COMPANY": 11
+  },
+  "edge_type_to_id": {
+    "HASINTEREST": 10,
+    "HASMEMBER": 6,
+    "CONTAINEROF": 5,
+    "ISSUBCLASSOF": 22,
+    "STUDYAT": 15,
+    "LIKES": 13,
+    "ISPARTOF": 17,
+    "HASTYPE": 21,
+    "REPLYOF": 3,
+    "ISLOCATEDIN": 11,
+    "WORKAT": 16,
+    "HASMODERATOR": 7,
+    "HASTAG": 1,
+    "KNOWS": 12,
+    "HASCREATOR": 0
+  },
+  "vertex_type_hierarchy": {
+    "ORGANISATION": ["UNIVERSITY", "COMPANY"],
+    "PLACE": ["CONTINENT", "COUNTRY", "CITY"]
+  },
+  "column_name_to_id": {},
+  "vertex_columns": {
+    "COMMENT": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "creationDate",
+        "Date",
+        false
+      ],
+      [
+        "locationIP",
+        "String",
+        false
+      ],
+      [
+        "browserUsed",
+        "String",
+        false
+      ],
+      [
+        "content",
+        "String",
+        false
+      ],
+      [
+        "length",
+        "Integer",
+        false
+      ]
+    ],
+    "FORUM": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "title",
+        "String",
+        false
+      ],
+      [
+        "creationDate",
+        "Date",
+        false
+      ]
+    ],
+    "ORGANISATION": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "~LABEL",
+        "LABEL",
+        false
+      ],
+      [
+        "name",
+        "String",
+        false
+      ],
+      [
+        "url",
+        "String",
+        false
+      ]
+    ],
+    "PERSON": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "firstName",
+        "String",
+        false
+      ],
+      [
+        "lastName",
+        "String",
+        false
+      ],
+      [
+        "gender",
+        "String",
+        false
+      ],
+      [
+        "birthday",
+        "Date",
+        false
+      ],
+      [
+        "creationDate",
+        "Date",
+        false
+      ],
+      [
+        "locationIP",
+        "String",
+        false
+      ],
+      [
+        "browserUsed",
+        "String",
+        false
+      ]
+    ],
+    "PLACE": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "name",
+        "String",
+        false
+      ],
+      [
+        "url",
+        "String",
+        false
+      ],
+      [
+        "~LABEL",
+        "LABEL",
+        false
+      ]
+    ],
+    "POST": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "imageFile",
+        "String",
+        false
+      ],
+      [
+        "creationDate",
+        "Date",
+        false
+      ],
+      [
+        "locationIP",
+        "String",
+        false
+      ],
+      [
+        "browserUsed",
+        "String",
+        false
+      ],
+      [
+        "language",
+        "String",
+        false
+      ],
+      [
+        "content",
+        "String",
+        false
+      ],
+      [
+        "length",
+        "Integer",
+        false
+      ]
+    ],
+    "TAG": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "name",
+        "String",
+        false
+      ],
+      [
+        "url",
+        "String",
+        false
+      ]
+    ],
+    "TAGCLASS": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "name",
+        "String",
+        false
+      ],
+      [
+        "url",
+        "String",
+        false
+      ]
+    ]
+  },
+  "edge_columns": {
+    "CONTAINEROF": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "HASCREATOR": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "HASINTEREST": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "HASMEMBER": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ],
+      [
+        "joinDate",
+        "Date",
+        false
+      ]
+    ],
+    "HASMODERATOR": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "HASTAG": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "HASTYPE": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "ISLOCATEDIN": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "ISPARTOF": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "ISSUBCLASSOF": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "KNOWS": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ],
+      [
+        "creationDate",
+        "Date",
+        false
+      ]
+    ],
+    "LIKES": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ],
+      [
+        "creationDate",
+        "Date",
+        false
+      ]
+    ],
+    "REPLYOF": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "STUDYAT": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ],
+      [
+        "classYear",
+        "Integer",
+        false
+      ]
+    ],
+    "WORKAT": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ],
+      [
+        "workFrom",
+        "Integer",
+        false
+      ]
+    ]
+  }
+}

@@ -1,0 +1,90 @@
+name: PR-Check
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - edited
+      - synchronize
+    branches:
+      - main
+
+jobs:
+  conventional-pr-check:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+      with:
+        repository: ${{ github.event.pull_request.head.repo.full_name }}
+        ref: ${{ github.event.pull_request.head.ref }}
+        submodules: true
+        fetch-depth: 0
+
+    - uses: amannn/action-semantic-pull-request@v5
+      id: pr-convention
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+          # Types allowed (newline-delimited).
+          # Default: https://github.com/commitizen/conventional-commit-types
+          types: |
+            build
+            ci
+            docs
+            feat
+            fix
+            perf
+            refactor
+            test
+            chore
+          # Scopes allowed (newline-delimited).
+          scopes: |
+            core
+            python
+            k8s
+            coordinator
+            one
+            interactive
+            insight
+            analytical
+            learning
+            flex
+          # A scope can be not provided.
+          requireScope: false
+          disallowScopes: |
+            release
+            [A-Z]+
+          # If the PR contains one of these newline-delimited labels, the
+          # validation is skipped.
+          ignoreLabels: |
+            bot
+            ignore-semantic-pull-request
+
+  feature-docs-check:
+    runs-on: ubuntu-20.04
+    needs: conventional-pr-check
+    steps:
+    - uses: dorny/paths-filter@v2
+      id: doc-changes
+      with:
+        filters: |
+          src:
+            - 'docs/**'
+
+    - uses: actions-ecosystem/action-regex-match@v2
+      id: pr-regex-match
+      with:
+        text: ${{ github.event.pull_request.title }}
+        regex: 'feat.*'
+
+    - if: ${{ steps.pr-regex-match.outputs.match != '' && steps.doc-changes.outputs.src == 'false' }}
+      run: |
+        # echo "title=${{ github.event.pull_request.title }}"
+        # echo "steps.pr-regex-match.outputs.match=${{ steps.pr-regex-match.outputs.match }}"
+        # echo "steps.doc-changes.outputs.src=${{ steps.doc-changes.outputs.src }}"
+        echo " ❌ Uh oh! ❌ \n
+             We suggest that a PR with type @feat should has corresponding documentations. \n
+             If you believe this PR could be merged without documentation, please add @yecol as an extra reviewer for confirmation."
+        exit 1

@@ -15,8 +15,8 @@ package com.alibaba.graphscope.groot.tests.common.schema;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.alibaba.graphscope.compiler.api.schema.DataType;
-import com.alibaba.graphscope.sdkcommon.schema.SerdeUtils;
+import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
+import com.alibaba.graphscope.groot.common.schema.wrapper.SerdeUtils;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

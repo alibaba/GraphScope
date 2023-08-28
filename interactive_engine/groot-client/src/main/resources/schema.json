@@ -1,0 +1,142 @@
+{
+  "types": [
+    {
+      "id": 1,
+      "label": "person",
+      "type": "VERTEX",
+      "propertyDefList": [
+        {
+          "id": 1,
+          "name": "id",
+          "data_type": "LONG",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "id"
+        },
+        {
+          "id": 2,
+          "name": "name",
+          "data_type": "STRING",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "name"
+        },
+        {
+          "id": 3,
+          "name": "age",
+          "data_type": "INT",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "age"
+        }
+      ],
+      "indexes": [
+        {
+          "propertyNames": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "label": "software",
+      "type": "VERTEX",
+      "propertyDefList": [
+        {
+          "id": 1,
+          "name": "id",
+          "data_type": "LONG",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "id"
+        },
+        {
+          "id": 2,
+          "name": "name",
+          "data_type": "STRING",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "name"
+        },
+        {
+          "id": 3,
+          "name": "lang",
+          "data_type": "STRING",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "lang"
+        }
+      ],
+      "indexes": [
+        {
+          "propertyNames": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "label": "knows",
+      "type": "EDGE",
+      "propertyDefList": [
+        {
+          "id": 1,
+          "name": "id",
+          "data_type": "LONG",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "id"
+        },
+        {
+          "id": 2,
+          "name": "weight",
+          "data_type": "DOUBLE",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "weight"
+        }
+      ],
+      "comment": "",
+      "relationShips": [
+        {
+          "srcVertexLabel": "person",
+          "dstVertexLabel": "person",
+          "edgeLabel": "knows"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "label": "created",
+      "type": "EDGE",
+      "propertyDefList": [
+        {
+          "id": 1,
+          "name": "id",
+          "data_type": "LONG",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "id"
+        },
+        {
+          "id": 2,
+          "name": "weight",
+          "data_type": "DOUBLE",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "weight"
+        }
+      ],
+      "comment": "",
+      "relationShips": [
+        {
+          "srcVertexLabel": "person",
+          "dstVertexLabel": "software",
+          "edgeLabel": "created"
+        }
+      ]
+    }
+  ]
+}

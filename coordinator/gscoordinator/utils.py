@@ -80,52 +80,59 @@ try:
 except ModuleNotFoundError:
     COORDINATOR_HOME = os.path.abspath(os.path.join(__file__, "..", ".."))
 
-# template directory for codegen
-TEMPLATE_DIR = os.path.join(COORDINATOR_HOME, "gscoordinator", "template")
-
-# builtin app resource
-BUILTIN_APP_RESOURCE_PATH = os.path.join(
-    COORDINATOR_HOME, "gscoordinator", "builtin/app/builtin_app.gar"
-)
-# default config file in gar resource
-DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
-DEFAULT_GRAPHSCOPE_HOME = "/usr/local"
-
 # GRAPHSCOPE_HOME
 #   1) get from environment variable `GRAPHSCOPE_HOME`, if not exist,
 #   2) infer from COORDINATOR_HOME
 GRAPHSCOPE_HOME = os.environ.get("GRAPHSCOPE_HOME", None)
 
-# resolve from pip installed package
 if GRAPHSCOPE_HOME is None:
-    if os.path.isdir(os.path.join(COORDINATOR_HOME, "graphscope.runtime")):
-        GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "graphscope.runtime")
+    # Note: The order of locations matters
+    possible_locations = [
+        os.path.join(COORDINATOR_HOME, "graphscope.runtime"),  # installed by pip
+        "/opt/graphscope",  # installed by gs script
+        "/usr/local",  # a popular location
+    ]
 
-# find from DEFAULT_GRAPHSCOPE_HOME
-if GRAPHSCOPE_HOME is None:
-    if os.path.isdir(DEFAULT_GRAPHSCOPE_HOME):
-        GRAPHSCOPE_HOME = DEFAULT_GRAPHSCOPE_HOME
+    for location in possible_locations:
+        ANALYTICAL_ENGINE_PATH = os.path.join(location, "bin", "grape_engine")
+        if os.path.isfile(ANALYTICAL_ENGINE_PATH):
+            GRAPHSCOPE_HOME = location
+            break
 
-# resolve from develop source tree
-# Here the GRAPHSCOPE_HOME has been set to the root of the source tree,
-# So the engine location doesn't need to check again,
-# just rely on GRAPHSCOPE_HOME.
-if GRAPHSCOPE_HOME is None:
+if GRAPHSCOPE_HOME is not None:
+    ANALYTICAL_ENGINE_HOME = GRAPHSCOPE_HOME
+    ANALYTICAL_ENGINE_PATH = os.path.join(GRAPHSCOPE_HOME, "bin", "grape_engine")
+    INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
+else:
+    # resolve from develop source tree
+    # Here the GRAPHSCOPE_HOME has been set to the root of the source tree,
+    # So the engine location doesn't need to check again,
+    # just rely on GRAPHSCOPE_HOME.
     GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..")
+    ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME, "analytical_engine")
+    ANALYTICAL_ENGINE_PATH = os.path.join(
+        ANALYTICAL_ENGINE_HOME, "build", "grape_engine"
+    )
 
-# ANALYTICAL_ENGINE_HOME
-#   1) infer from GRAPHSCOPE_HOME
-ANALYTICAL_ENGINE_HOME = GRAPHSCOPE_HOME
-ANALYTICAL_ENGINE_PATH = os.path.join(ANALYTICAL_ENGINE_HOME, "bin", "grape_engine")
-if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
-    # try to get analytical engine from build dir
-    if os.path.isfile(
-        os.path.join(GRAPHSCOPE_HOME, "analytical_engine", "build", "grape_engine")
-    ):
-        ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME, "analytical_engine")
-        ANALYTICAL_ENGINE_PATH = os.path.join(
-            ANALYTICAL_ENGINE_HOME, "build", "grape_engine"
-        )
+    INTERACTIVE_ENGINE_SCRIPT = os.path.join(
+        GRAPHSCOPE_HOME,
+        "interactive_engine",
+        "assembly",
+        "src",
+        "bin",
+        "graphscope",
+        "giectl",
+    )
+
+# template directory for code generation
+TEMPLATE_DIR = os.path.join(COORDINATOR_HOME, "gscoordinator", "template")
+
+# builtin app resource
+BUILTIN_APP_RESOURCE_PATH = os.path.join(
+    COORDINATOR_HOME, "gscoordinator", "builtin", "app", "builtin_app.gar"
+)
+# default config file in gar resource
+DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 
 ANALYTICAL_BUILTIN_SPACE = os.path.join(GRAPHSCOPE_HOME, "precompiled", "builtin")
 
@@ -152,20 +159,6 @@ ANALYTICAL_ENGINE_JAVA_JVM_OPTS += (
 )
 
 
-# INTERACTIVE_ENGINE_SCRIPT
-INTERACTIVE_INSTANCE_TIMEOUT_SECONDS = 120  # 2 mins
-INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
-if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
-    if os.path.isfile(
-        os.path.join(GRAPHSCOPE_HOME, ".install_prefix", "bin", "giectl")
-    ):
-        INTERACTIVE_ENGINE_SCRIPT = os.path.join(
-            GRAPHSCOPE_HOME, ".install_prefix", "bin", "giectl"
-        )
-
-# default threads per worker configuration for GIE/GAIA
-INTERACTIVE_ENGINE_THREADS_PER_WORKER = 2
-
 # JAVA SDK related CONSTANTS
 LLVM4JNI_HOME = os.environ.get("LLVM4JNI_HOME", None)
 LLVM4JNI_USER_OUT_DIR_BASE = "user-llvm4jni-output"
@@ -177,8 +170,14 @@ GRAPE_PROCESSOR_JAR = os.path.join(
 
 GIRAPH_DRIVER_CLASS = "com.alibaba.graphscope.app.GiraphComputationAdaptor"
 
-# 2 GB
+# increase grpc max message size to 2 GB
 GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
+
+# INTERACTIVE_ENGINE_SCRIPT
+INTERACTIVE_INSTANCE_TIMEOUT_SECONDS = 120  # 2 mins
+
+# default threads per worker configuration for GIE/GAIA
+INTERACTIVE_ENGINE_THREADS_PER_WORKER = 2
 
 
 def get_timestamp() -> float:
@@ -205,7 +204,7 @@ def get_app_sha256(attr, java_class_path: str):
         java_jar_path,
         java_app_class,
     ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE, java_class_path)
-    graph_header, graph_type, _ = _codegen_graph_info(attr)
+    graph_header, graph_type, _, _ = _codegen_graph_info(attr)
     logger.info(
         "app type: %s (%s), graph type: %s (%s)",
         app_class,
@@ -241,7 +240,7 @@ def get_app_sha256(attr, java_class_path: str):
 
 
 def get_graph_sha256(attr):
-    _, graph_class, _ = _codegen_graph_info(attr)
+    _, graph_class, _, _ = _codegen_graph_info(attr)
     return hashlib.sha256(graph_class.encode("utf-8", errors="ignore")).hexdigest()
 
 
@@ -445,7 +444,7 @@ def compile_app(
         str(java_app_class),
     )
 
-    graph_header, graph_type, graph_oid_type = _codegen_graph_info(attr)
+    graph_header, graph_type, graph_oid_type, graph_vid_type = _codegen_graph_info(attr)
     if app_type == "java_pie":
         logger.info(
             "Check consistent between java app %s and graph %s",
@@ -556,6 +555,7 @@ def compile_app(
             _analytical_engine_home=ANALYTICAL_ENGINE_HOME,
             _frame_name=library_name,
             _oid_type=graph_oid_type,
+            _vid_type=graph_vid_type,
             _vd_type=vd_type,
             _md_type=md_type,
             _graph_type=graph_type,
@@ -599,7 +599,7 @@ def compile_graph_frame(
         None: for consistency with compile_app.
     """
     logger.info("Building graph library ...")
-    _, graph_class, _ = _codegen_graph_info(attr)
+    _, graph_class, _, _ = _codegen_graph_info(attr)
 
     library_dir = os.path.join(workspace, library_name)
     os.makedirs(library_dir, exist_ok=True)
@@ -674,6 +674,8 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
         _pre_process_for_bind_app_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.PROJECT_GRAPH:
         _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.CONSOLIDATE_COLUMNS:
+        _pre_process_for_consolidate_columns_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.PROJECT_TO_SIMPLE:
         _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.ADD_COLUMN:
@@ -780,7 +782,11 @@ def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op, **kwargs):
                     )
                 )
                 op.attr[types_pb2.VID_TYPE].CopyFrom(
-                    utils.s_to_attr(utils.data_type_to_cpp(vy_info.vid_type))
+                    utils.s_to_attr(
+                        utils.normalize_data_type_str(
+                            utils.data_type_to_cpp(vy_info.vid_type)
+                        )
+                    )
                 )
                 op.attr[types_pb2.V_DATA_TYPE].CopyFrom(
                     utils.s_to_attr(utils.data_type_to_cpp(vy_info.vdata_type))
@@ -1261,6 +1267,17 @@ def _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs):
     del op.attr[types_pb2.EDGE_COLLECTIONS]
 
 
+def _pre_process_for_consolidate_columns_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    # get parent graph schema
+    key_of_parent_op = op.parents[0]
+    r = op_result_pool[key_of_parent_op]
+    graph_name = r.graph_def.key
+    op.attr[types_pb2.GRAPH_NAME].CopyFrom(
+        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8", errors="ignore"))
+    )
+
+
 def _pre_process_for_archive_graph_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
@@ -1722,7 +1739,7 @@ def _codegen_graph_info(attr):
         raise ValueError(
             f"Unknown graph type: {graph_def_pb2.GraphTypePb.Name(graph_type)}"
         )
-    return graph_header, graph_fqn, oid_type()
+    return graph_header, graph_fqn, oid_type(), vid_type()
 
 
 def create_single_op_dag(op_type, config=None):

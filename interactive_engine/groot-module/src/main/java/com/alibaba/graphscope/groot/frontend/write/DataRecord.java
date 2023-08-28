@@ -1,7 +1,7 @@
 package com.alibaba.graphscope.groot.frontend.write;
 
-import com.alibaba.graphscope.sdkcommon.common.EdgeRecordKey;
-import com.alibaba.graphscope.sdkcommon.common.VertexRecordKey;
+import com.alibaba.graphscope.groot.common.util.EdgeRecordKey;
+import com.alibaba.graphscope.groot.common.util.VertexRecordKey;
 
 import java.util.Map;
 

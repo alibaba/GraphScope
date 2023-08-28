@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.groot.common.util;
 
-import com.alibaba.graphscope.compiler.api.schema.*;
-import com.alibaba.graphscope.sdkcommon.util.JSON;
+import com.alibaba.graphscope.groot.common.schema.api.*;
+import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.google.common.collect.ImmutableMap;
 
 import org.slf4j.Logger;
