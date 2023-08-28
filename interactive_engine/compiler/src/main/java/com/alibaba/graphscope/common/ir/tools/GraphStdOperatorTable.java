@@ -206,4 +206,13 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                 operandTypeChecker,
                 SqlFunctionCategory.USER_DEFINED_PROCEDURE);
     }
+
+    public static final SqlFunction EXTRACT =
+            new SqlFunction(
+                    "EXTRACT",
+                    SqlKind.EXTRACT,
+                    ReturnTypes.BIGINT_NULLABLE,
+                    null,
+                    GraphOperandTypes.INTERVALINTERVAL_INTERVALDATETIME,
+                    SqlFunctionCategory.SYSTEM);
 }

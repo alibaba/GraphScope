@@ -128,6 +128,12 @@ public abstract class Utils {
                 return DataType.DOUBLE_LIST;
             case 9:
                 return DataType.STRING_LIST;
+            case 12:
+                return DataType.DATE;
+            case 13:
+                return DataType.TIME;
+            case 14:
+                return DataType.DATETIME;
             default:
                 return DataType.UNKNOWN;
         }

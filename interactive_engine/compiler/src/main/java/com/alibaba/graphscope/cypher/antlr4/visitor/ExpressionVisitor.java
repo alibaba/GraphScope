@@ -17,11 +17,13 @@
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
+import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasIdGenerator;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.cypher.antlr4.visitor.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
@@ -29,8 +31,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import org.apache.calcite.avatica.util.TimeUnit;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -161,8 +167,16 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                 throw new IllegalArgumentException("cannot get property from an literal");
             } else {
                 String aliasName = ctx.oC_Atom().oC_Variable().getText();
+                RexGraphVariable variable = builder.variable(aliasName);
                 String propertyName = ctx.oC_PropertyLookup().oC_PropertyKeyName().getText();
-                return new ExprVisitorResult(builder.variable(aliasName, propertyName));
+                RexNode expr =
+                        (variable.getType() instanceof GraphSchemaType)
+                                ? builder.variable(aliasName, propertyName)
+                                : builder.call(
+                                        GraphStdOperatorTable.EXTRACT,
+                                        createIntervalLiteral(propertyName),
+                                        variable);
+                return new ExprVisitorResult(expr);
             }
         }
     }
@@ -318,5 +332,12 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     private ExprVisitorResult unaryCall(SqlOperator operator, ExprVisitorResult operand) {
         return new ExprVisitorResult(
                 operand.getAggCalls(), builder.call(operator, operand.getExpr()));
+    }
+
+    private RexLiteral createIntervalLiteral(String fieldName) {
+        TimeUnit timeUnit = TimeUnit.valueOf(fieldName.toUpperCase());
+        SqlIntervalQualifier intervalQualifier =
+                new SqlIntervalQualifier(timeUnit, null, SqlParserPos.ZERO);
+        return builder.getRexBuilder().makeIntervalLiteral(null, intervalQualifier);
     }
 }
