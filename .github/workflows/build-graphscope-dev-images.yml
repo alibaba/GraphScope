@@ -1,5 +1,9 @@
 name: Build GraphScope Development and Wheel Images
 
+# build images for:
+# 1) wheel: including all dependencies for graphscope's wheel package.
+# 2) graphscope-dev: including all dependencies for graphscope's development env.
+# 3) vineyard-dev: including all vineyard-related dependencies that could compile graphscope analytical engine.
 on:
   workflow_dispatch:
     inputs:
@@ -7,6 +11,11 @@ on:
         description: 'Version for Vineyard (v6d)'
         required: true
         default: 'main'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'python/graphscope/gsctl/**'
 
 concurrency:
   group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
@@ -16,9 +25,8 @@ env:
   REGISTRY: registry.cn-hongkong.aliyuncs.com
 
 jobs:
-  build-wheel-image-x86-64:
+  build-images-x86-64:
     runs-on: ubuntu-20.04
-
     steps:
     - uses: actions/checkout@v3
       with:
@@ -29,9 +37,22 @@ jobs:
         # build graphscope-dev:wheel with specified v6d's version
         cd ${GITHUB_WORKSPACE}/k8s
         # output: graphscope/graphscope-dev:wheel-v0.16.1-x86_64
-        make dev-wheel VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
-
+        VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
+        if [[ -n ${VINEYARD_VERSION} ]]; then
+          make dev-wheel VINEYARD_VERSION=${VINEYARD_VERSION}
+          make graphscope-dev VINEYARD_VERSION=${VINEYARD_VERSION}
+          make vineyard-dev VINEYARD_VERSION=${VINEYARD_VERSION}
+          make vineyard-runtime VINEYARD_VERSION=${VINEYARD_VERSION}
+        else
+          # pull_request: use default vineyard_version
+          make dev-wheel
+          make graphscope-dev
+          make vineyard-dev
+          make vineyard-runtime
+        fi
+        
     - name: Release Image
+      if: ${{ github.event_name == 'workflow_dispatch' }}
       env:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
         docker_username: ${{ secrets.DOCKER_USER }}
@@ -41,13 +62,18 @@ jobs:
         arch=$(uname -m)
         # image tag
         tag=wheel-${{ github.event.inputs.v6d_version }}-${arch}
-        # manylinux image
+        # dev-wheel image
+        sudo docker tag graphscope/graphscope-dev:wheel-${tag} ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
+        # graphscope-dev image
         sudo docker tag graphscope/graphscope-dev:${tag} ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
-
-  build-wheel-image-aarch64:
+        # vineyard-runtime image
+        sudo docker tag graphscope/vineyard-runtime:${tag} ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
+       
+  build-images-aarch64:
     runs-on: [self-hosted, Linux, ARM64]
-
     steps:
     - uses: actions/checkout@v3
       with:
@@ -58,9 +84,22 @@ jobs:
         # build graphscope-dev:wheel with specified v6d's version
         cd ${GITHUB_WORKSPACE}/k8s
         # output: graphscope/graphscope-dev:wheel-v0.16.1-aarch64
-        make dev-wheel VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
-
+        VINEYARD_VERSION=${{ github.event.inputs.v6d_version }}
+        if [[ -n ${VINEYARD_VERSION} ]]; then
+          make dev-wheel VINEYARD_VERSION=${VINEYARD_VERSION}
+          make graphscope-dev VINEYARD_VERSION=${VINEYARD_VERSION}
+          make vineyard-dev VINEYARD_VERSION=${VINEYARD_VERSION}
+          make vineyard-runtime VINEYARD_VERSION=${VINEYARD_VERSION}
+        else
+          # pull_request: use default vineyard_version
+          make dev-wheel
+          make graphscope-dev
+          make vineyard-dev
+          make vineyard-runtime
+        fi
+        
     - name: Release Image
+      if: ${{ github.event_name == 'workflow_dispatch' }}
       env:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
         docker_username: ${{ secrets.DOCKER_USER }}
@@ -70,17 +109,22 @@ jobs:
         arch=$(uname -m)
         # image tag
         tag=wheel-${{ github.event.inputs.v6d_version }}-${arch}
-        # manylinux image
+        # dev-wheel image
+        sudo docker tag graphscope/graphscope-dev:wheel-${tag} ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
+        # graphscope-dev image
         sudo docker tag graphscope/graphscope-dev:${tag} ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
-
-  build-wheel-image-docker-manifest:
+        # vineyard-runtime image
+        sudo docker tag graphscope/vineyard-runtime:${tag} ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
+       
+  build-images-docker-manifest:
     runs-on: ubuntu-20.04
-
-    needs: [build-wheel-image-x86-64, build-wheel-image-aarch64]
-
+    needs: [build-images-x86-64, build-images-aarch64]
     steps:
     - name: Create and Push Docker Manifest
+      if: ${{ github.event_name == 'workflow_dispatch' }}
       env:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
         docker_username: ${{ secrets.DOCKER_USER }}
@@ -91,5 +135,19 @@ jobs:
           ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }} \
           ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }}-x86_64 \
           ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }}-aarch64
-        # push
+        
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/graphscope-dev:${{ github.event.inputs.v6d_version }} \
+          ${{ env.REGISTRY }}/graphscope/graphscope-dev:${{ github.event.inputs.v6d_version }}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/graphscope-dev:${{ github.event.inputs.v6d_version }}-aarch64
+
+         sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${{ github.event.inputs.v6d_version }} \
+          ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${{ github.event.inputs.v6d_version }}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${{ github.event.inputs.v6d_version }}-aarch64
+        
+          # push
         sudo docker manifest push ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/graphscope-dev:${{ github.event.inputs.v6d_version }}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${{ github.event.inputs.v6d_version }}
+       

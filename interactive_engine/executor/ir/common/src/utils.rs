@@ -479,6 +479,12 @@ impl From<pb::Scan> for pb::logical_plan::Operator {
     }
 }
 
+impl From<pb::Root> for pb::logical_plan::Operator {
+    fn from(opr: pb::Root) -> Self {
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Root(opr)) }
+    }
+}
+
 impl From<pb::logical_plan::Operator> for Option<pb::Scan> {
     fn from(opr: pb::logical_plan::Operator) -> Self {
         if let Some(opr) = opr.opr {
@@ -592,27 +598,6 @@ impl From<pb::EdgeExpand> for pb::path_expand::ExpandBase {
 impl From<(pb::EdgeExpand, pb::GetV)> for pb::path_expand::ExpandBase {
     fn from(opr: (pb::EdgeExpand, pb::GetV)) -> Self {
         pb::path_expand::ExpandBase { edge_expand: Some(opr.0), get_v: Some(opr.1) }
-    }
-}
-
-impl pb::logical_plan::Operator {
-    pub fn is_whole_graph(&self) -> bool {
-        if let Some(opr) = &self.opr {
-            match opr {
-                pb::logical_plan::operator::Opr::Scan(scan) => {
-                    scan.idx_predicate.is_none()
-                        && scan.alias.is_none()
-                        && scan
-                            .params
-                            .as_ref()
-                            .map(|params| !params.is_queryable())
-                            .unwrap_or(true)
-                }
-                _ => false,
-            }
-        } else {
-            false
-        }
     }
 }
 

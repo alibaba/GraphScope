@@ -27,6 +27,7 @@ use ir_common::{KeyId, OneOrMany};
 use ir_common::{LabelId, NameOrId};
 
 use crate::error::{IrError, IrResult};
+use crate::glogue::DynIter;
 use crate::plan::logical::NodeId;
 use crate::JsonIO;
 
@@ -212,6 +213,20 @@ impl Schema {
 
     pub fn is_table_id(&self) -> bool {
         self.is_table_id
+    }
+
+    pub fn entity_labels_iter(&self) -> DynIter<(String, LabelId)> {
+        Box::new(
+            self.table_name_to_id
+                .iter()
+                .filter_map(|(name, (key_type, label_id))| {
+                    if let KeyType::Entity = key_type {
+                        Some((name.clone(), *label_id))
+                    } else {
+                        None
+                    }
+                }),
+        )
     }
 
     /// Check whether a given table contains a given column as a primary key.
