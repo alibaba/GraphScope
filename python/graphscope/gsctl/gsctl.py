@@ -19,7 +19,6 @@
 import io
 import os
 import subprocess
-import tempfile
 
 import click
 
@@ -326,7 +325,6 @@ def test(repo, type, testdata, local, storage_type, k8s, nx):
     click.echo("test")
     if type is None:
         type = ""
-
     cmd = [
         "bash",
         test_script,
