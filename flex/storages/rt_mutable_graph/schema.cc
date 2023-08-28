@@ -539,6 +539,17 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
 
   schema.add_vertex_label(label_name, property_types, property_names,
                           primary_keys, strategies, max_num);
+  // check the type_id equals to storage's label_id
+  int32_t type_id;
+  if (!get_scalar(node, "type_id", type_id)) {
+    LOG(ERROR) << "type_id is not set properly for type: " << label_name;
+    return false;
+  }
+  auto label_id = schema.get_vertex_label_id(label_name);
+  if (label_id != type_id) {
+    LOG(ERROR) << "type_id is not equal to label_id for type: " << label_name;
+    return false;
+  }
   return true;
 }
 
@@ -557,37 +568,12 @@ static bool parse_vertices_schema(YAML::Node node, Schema& schema) {
 }
 
 static bool parse_edge_schema(YAML::Node node, Schema& schema) {
-  std::string src_label_name, dst_label_name, edge_label_name;
+  std::string edge_label_name;
   if (!node["type_name"]) {
     LOG(ERROR) << "edge type_name is not set properly";
     return false;
   }
   edge_label_name = node["type_name"].as<std::string>();
-  // get vertex type pair relation
-  auto vertex_type_pair_node = node["vertex_type_pair_relations"];
-  if (!vertex_type_pair_node || !vertex_type_pair_node.IsMap()) {
-    LOG(ERROR) << "edge [vertex_type_pair_relations] is not set properly";
-    return false;
-  }
-
-  if (!get_scalar(vertex_type_pair_node, "source_vertex", src_label_name)) {
-    LOG(ERROR) << "Expect field source_vertex for edge [" << edge_label_name
-               << "] in vertex_type_pair_relations";
-    return false;
-  }
-  if (!get_scalar(vertex_type_pair_node, "destination_vertex",
-                  dst_label_name)) {
-    LOG(ERROR) << "Expect field destination_vertex for edge ["
-               << edge_label_name << "] in vertex_type_pair_relations";
-    return false;
-  }
-
-  // check whether edge triplet exists in current schema
-  if (schema.has_edge_label(src_label_name, dst_label_name, edge_label_name)) {
-    LOG(ERROR) << "Edge [" << edge_label_name << "] from [" << src_label_name
-               << "] to [" << dst_label_name << "] already exists";
-    return false;
-  }
 
   std::vector<PropertyType> property_types;
   std::vector<std::string> prop_names;
@@ -607,11 +593,57 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
       ie = StringToEdgeStrategy(ie_str);
     }
   }
-  VLOG(10) << "edge " << edge_label_name << " from " << src_label_name << " to "
-           << dst_label_name << " with " << property_types.size()
-           << " properties";
-  schema.add_edge_label(src_label_name, dst_label_name, edge_label_name,
-                        property_types, prop_names, oe, ie);
+
+  // get vertex type pair relation
+  auto vertex_type_pair_node = node["vertex_type_pair_relations"];
+  // vertex_type_pair_node can be a list or a map
+  if (!vertex_type_pair_node) {
+    LOG(ERROR) << "edge [vertex_type_pair_relations] is not set";
+    return false;
+  }
+  if (!vertex_type_pair_node.IsSequence()) {
+    LOG(ERROR) << "edge [vertex_type_pair_relations] should be a sequence";
+    return false;
+  }
+  for (auto i = 0; i < vertex_type_pair_node.size(); ++i) {
+    std::string src_label_name, dst_label_name;
+    auto cur_node = vertex_type_pair_node[i];
+    if (!get_scalar(cur_node, "source_vertex", src_label_name)) {
+      LOG(ERROR) << "Expect field source_vertex for edge [" << edge_label_name
+                 << "] in vertex_type_pair_relations";
+      return false;
+    }
+    if (!get_scalar(cur_node, "destination_vertex", dst_label_name)) {
+      LOG(ERROR) << "Expect field destination_vertex for edge ["
+                 << edge_label_name << "] in vertex_type_pair_relations";
+      return false;
+    }
+    // check whether edge triplet exists in current schema
+    if (schema.has_edge_label(src_label_name, dst_label_name,
+                              edge_label_name)) {
+      LOG(ERROR) << "Edge [" << edge_label_name << "] from [" << src_label_name
+                 << "] to [" << dst_label_name << "] already exists";
+      return false;
+    }
+    VLOG(10) << "edge " << edge_label_name << " from " << src_label_name
+             << " to " << dst_label_name << " with " << property_types.size()
+             << " properties";
+    schema.add_edge_label(src_label_name, dst_label_name, edge_label_name,
+                          property_types, prop_names, oe, ie);
+  }
+
+  // check the type_id equals to storage's label_id
+  int32_t type_id;
+  if (!get_scalar(node, "type_id", type_id)) {
+    LOG(ERROR) << "type_id is not set properly for type: " << edge_label_name;
+    return false;
+  }
+  auto label_id = schema.get_edge_label_id(edge_label_name);
+  if (label_id != type_id) {
+    LOG(ERROR) << "type_id is not equal to label_id for type: "
+               << edge_label_name;
+    return false;
+  }
   return true;
 }
 
