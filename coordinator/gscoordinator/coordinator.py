@@ -35,9 +35,10 @@ import sys
 import threading
 import traceback
 from concurrent import futures
-from simple_parsing import ArgumentParser
+
 import grpc
 from packaging import version
+from simple_parsing import ArgumentParser
 
 from gscoordinator.io_utils import StdStreamWrapper
 

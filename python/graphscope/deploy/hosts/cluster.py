@@ -16,12 +16,12 @@
 # limitations under the License.
 #
 import base64
+import copy
 import logging
 import os
 import signal
 import subprocess
 import sys
-import copy
 
 import graphscope
 from graphscope.config import Config

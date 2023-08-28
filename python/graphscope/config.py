@@ -37,7 +37,9 @@ class ResourceSpec:
     """Resource requirements for a container in kubernetes."""
 
     cpu: Union[str, float, None] = None  # CPU cores of container.
-    memory: Union[str, None] = None  # Memory of container, suffix with ['Mi', 'Gi', 'Ti'].
+    memory: Union[
+        str, None
+    ] = None  # Memory of container, suffix with ['Mi', 'Gi', 'Ti'].
 
     def as_dict(self):
         ret = {}
@@ -114,7 +116,9 @@ class EngineConfig:
     """Engine configuration"""
 
     enabled_engines: str = "gae,gie,gle"  # A set of engines to enable.
-    node_selector: Union[str, None] = None  # Node selector for engine pods, default is None.
+    node_selector: Union[
+        str, None
+    ] = None  # Node selector for engine pods, default is None.
 
     enable_gae: bool = True  # Enable or disable analytical engine.
     enable_gae_java: bool = (
@@ -210,8 +214,12 @@ class CoordinatorConfig:
     monitor_port: int = 9090  # Coordinator prometheus exporter service port.
 
     # Kubernetes related config
-    deployment_name: Union[str, None] = None  # Name of the coordinator deployment and service.
-    node_selector: Union[str, None] = None  # Node selector for coordinator pod in kubernetes
+    deployment_name: Union[
+        str, None
+    ] = None  # Name of the coordinator deployment and service.
+    node_selector: Union[
+        str, None
+    ] = None  # Node selector for coordinator pod in kubernetes
     resource: ResourceConfig = ResourceConfig.make_guaranteed(0.5, "512Mi")
     # Resource configuration of coordinator.
 
@@ -228,10 +236,10 @@ class HostsLauncherConfig:
 
     hosts: list[str] = list_field("localhost")
     # list of hostnames of graphscope engine workers.
-    etcd: EtcdConfig = EtcdConfig()  
+    etcd: EtcdConfig = EtcdConfig()
     # Etcd configuration. Only local session needs to configure etcd.
 
-    dataset_download_retries: int = 3 
+    dataset_download_retries: int = 3
     # The number of retries when downloading dataset from internet.
 
 
@@ -250,7 +258,7 @@ class KubernetesLauncherConfig:
     service_type: str = "NodePort"
     # Service type, choose from 'NodePort' or 'LoadBalancer'.
 
-    volumes: Union[str, None] = None  
+    volumes: Union[str, None] = None
     # A base64 encoded json string specifies the kubernetes volumes to mount.
 
     waiting_for_delete: bool = False
@@ -277,7 +285,7 @@ class SessionConfig:
     show_log: bool = False  # Show log or not.
     log_level: str = "info"  # Log level, choose from 'info' or 'debug'.
 
-    timeout_seconds: int = 600 
+    timeout_seconds: int = 600
     # The length of time to wait before giving up launching graphscope.
     dangling_timeout_seconds: int = 600
     # The length of time to wait starting from client disconnected before killing the graphscope instance.
