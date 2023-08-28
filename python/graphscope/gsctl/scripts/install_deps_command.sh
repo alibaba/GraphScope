@@ -5,6 +5,7 @@ source ${script_dir}/lib/colors.sh
 source ${script_dir}/lib/install_thirdparty_dependencies.sh
 source ${script_dir}/lib/install_vineyard.sh
 source ${script_dir}/lib/util.sh
+source ${script_dir}/initialize.sh
 
 
 while getopts ":t:c:i:d:v:j:a:n" opt; do
@@ -59,7 +60,7 @@ readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 
 log "Installing ${type} dependencies for GraphScope on ${OS}..."
 
-if [[ -n ${cn} ]]; then
+if [ "${cn}" == "True" ]; then
   log "Set to speed up downloading for CN locations."
   # export some mirror locations for CN, e.g., brew/docker...
   export HOMEBREW_BREW_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git"
@@ -380,14 +381,14 @@ install_deps_for_dev() {
   fi
 
   install_basic_packages_universal
-  if [[ -n ${for_analytical} ]]; then
+  if [ "${for_analytical}" == "True" ]; then
     install_dependencies_analytical_universal
-    if [[ -z ${no_v6d} ]]; then
+    if [ "${no_v6d}" == "False" ]; then
       install_grape_vineyard_universal
     fi
   else # for all
     install_dependencies_analytical_universal
-    if [[ -z ${no_v6d} ]]; then
+    if [ "${no_v6d}" == "False" ]; then
       install_grape_vineyard_universal
     fi
     install_java_maven_universal
