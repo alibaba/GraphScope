@@ -76,6 +76,8 @@ class FakeKubeResponse:
 class KubernetesClusterLauncher(AbstractLauncher):
     def __init__(self, config: Config):
         super().__init__()
+        self._serving = False
+
         self._api_client = resolve_api_client()
         self._core_api = kube_client.CoreV1Api(self._api_client)
         self._apps_api = kube_client.AppsV1Api(self._api_client)
@@ -121,12 +123,11 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._vineyard_image = config.vineyard.image
         self._vineyard_mem = config.vineyard.resource.requests.memory
         self._vineyard_cpu = config.vineyard.resource.requests.cpu
-        self._vineyard_shared_mem = launcher_config.engine.gae_resource.requests.memory
+        self._vineyard_shared_mem = launcher_config.engine.gae_resource.limits.memory
 
         self._service_type = launcher_config.service_type
 
         self._waiting_for_delete = launcher_config.waiting_for_delete
-        self._serving = False
 
         # check the validity of deploy mode
         self._deploy_mode = launcher_config.deployment_mode
@@ -753,16 +754,8 @@ class KubernetesClusterLauncher(AbstractLauncher):
         sts_name = (
             f"{self._engine_cluster.engine_stateful_set_name}-{self._instance_id}"
         )
-        owner_reference = [
-            {
-                "apiVersion": self._owner_references[0].api_version,
-                "kind": self._owner_references[0].kind,
-                "name": self._owner_references[0].name,
-                "uid": self._owner_references[0].uid,
-            }
-        ]
 
-        owner_reference_json = json.dumps(owner_reference)
+        owner_reference_json = self._get_owner_reference_as_json()
         # inject vineyard sidecar into the workload
         #
         # the name is used to specify the name of the sidecar container, which is also the
@@ -802,13 +795,13 @@ class KubernetesClusterLauncher(AbstractLauncher):
         logger.info("Creating engine pods...")
 
         stateful_set = self._engine_cluster.get_engine_stateful_set()
-        if self._vineyard_deployment is not None:
-            # schedule engine statefulset to the same node with vineyard deployment
-            stateful_set = self._add_pod_affinity_for_vineyard_deployment(
-                workload=stateful_set
-            )
-        else:
-            stateful_set = self._inject_vineyard_as_sidecar(stateful_set)
+        # if self._vineyard_deployment is not None:
+        #     # schedule engine statefulset to the same node with vineyard deployment
+        #     stateful_set = self._add_pod_affinity_for_vineyard_deployment(
+        #         workload=stateful_set
+        #     )
+        # else:
+        #     stateful_set = self._inject_vineyard_as_sidecar(stateful_set)
 
         response = self._apps_api.create_namespaced_stateful_set(
             self._namespace, stateful_set
@@ -1123,15 +1116,18 @@ class KubernetesClusterLauncher(AbstractLauncher):
                     time.sleep(self._retry_time_seconds)
 
     def _get_owner_reference_as_json(self):
-        owner_reference = [
-            {
-                "apiVersion": self._owner_references[0].api_version,
-                "kind": self._owner_references[0].kind,
-                "name": self._owner_references[0].name,
-                "uid": self._owner_references[0].uid,
-            }
-        ]
-        owner_reference_json = json.dumps(owner_reference)
+        if self._owner_references:
+            owner_reference = [
+                {
+                    "apiVersion": self._owner_references[0].api_version,
+                    "kind": self._owner_references[0].kind,
+                    "name": self._owner_references[0].name,
+                    "uid": self._owner_references[0].uid,
+                }
+            ]
+            owner_reference_json = json.dumps(owner_reference)
+        else:
+            owner_reference_json = json.dumps([])
         return owner_reference_json
 
     def _check_if_vineyard_deployment_exist(self):

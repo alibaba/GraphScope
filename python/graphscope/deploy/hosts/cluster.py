@@ -21,6 +21,7 @@ import os
 import signal
 import subprocess
 import sys
+import copy
 
 import graphscope
 from graphscope.config import Config
@@ -29,7 +30,6 @@ from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
 from graphscope.framework.utils import in_notebook
 from graphscope.framework.utils import is_free_port
-from graphscope.framework.utils import random_string
 
 try:
     import gscoordinator
@@ -49,8 +49,7 @@ class HostsClusterLauncher(Launcher):
     """Class for setting up GraphScope instance on hosts cluster"""
 
     def __init__(self, config: Config):
-        self._config = config
-        self._instance_id = random_string(6)
+        self._config = copy.deepcopy(config)
         self._proc = None
 
         port = config.coordinator.service_port

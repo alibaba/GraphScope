@@ -35,7 +35,7 @@ import sys
 import threading
 import traceback
 from concurrent import futures
-
+from simple_parsing import ArgumentParser
 import grpc
 from packaging import version
 
@@ -437,7 +437,7 @@ class CoordinatorServiceServicer(
             return message_pb2.CreateAnalyticalInstanceResponse()
         return message_pb2.CreateAnalyticalInstanceResponse(
             engine_config=json.dumps(engine_config),
-            host_names=self._launcher.hosts.split(","),
+            host_names=self._launcher.hosts,
         )
 
     def CreateInteractiveInstance(self, request, context):
@@ -661,9 +661,7 @@ class CoordinatorServiceServicer(
 
 
 def parse_sys_args():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
+    parser = ArgumentParser()
     parser.add_argument(
         "--config",
         type=str,
@@ -672,6 +670,7 @@ def parse_sys_args():
     parser.add_argument(
         "--config-file", type=str, help="The config file path in yaml or json format"
     )
+    parser.add_arguments(Config, dest="gs")
     return parser.parse_args()
 
 
@@ -679,9 +678,9 @@ def launch_graphscope():
     args = parse_sys_args()
     print(args)
     if args.config:
-        config = Config.loads_json(
-            base64.b64decode(args.config).decode("utf-8", errors="ignore")
-        )
+        config = base64.b64decode(args.config).decode("utf-8", errors="ignore")
+        config = Config.loads_json(config)
+        print(config.dumps_yaml())
     elif args.config_file:
         config = Config.load(args.config_file)
     else:

@@ -1894,27 +1894,21 @@ class ResolveMPICmdPrefix(object):
 
     @staticmethod
     def alloc(num_workers, hosts):
-        host_list = hosts
-        host_list_len = len(host_list)
-        assert host_list_len != 0
-
-        host_to_proc_num = {}
-        if num_workers >= host_list_len:
-            quotient = num_workers / host_list_len
-            residue = num_workers % host_list_len
-            for host in host_list:
+        length = len(hosts)
+        assert length != 0
+        proc_num = {}
+        if num_workers >= length:
+            quotient = num_workers / length
+            residue = num_workers % length
+            for host in hosts:
                 if residue > 0:
-                    host_to_proc_num[host] = quotient + 1
+                    proc_num[host] = quotient + 1
                     residue -= 1
                 else:
-                    host_to_proc_num[host] = quotient
+                    proc_num[host] = quotient
         else:
             raise RuntimeError("The number of hosts less then num_workers")
-
-        for i in range(host_list_len):
-            host_list[i] = f"{host_list[i]}:{host_to_proc_num[host_list[i]]}"
-
-        return ",".join(host_list)
+        return ",".join([f"{host}:{proc_num[host]}" for host in hosts])
 
     @staticmethod
     def find_mpi():

@@ -234,7 +234,7 @@ class EngineCluster:
         name = self.analytical_container_name
         image = self._analytical_image if not with_java else self._analytical_java_image
         args = ["bash", "-c", self._get_tail_if_exists_cmd("/tmp/grape_engine.INFO")]
-        resource = self._engine_resources.gae.resource
+        resource = self._engine_resources.gae_resource
         container = self.get_engine_container_helper(
             name, image, args, volume_mounts, resource
         )
@@ -258,7 +258,7 @@ class EngineCluster:
             "-c",
             self._get_tail_if_exists_cmd("/var/log/graphscope/current/executor.*.log"),
         ]
-        resource = self._engine_resources.executor.resource
+        resource = self._engine_resources.gie_executor_resource
         container = self.get_engine_container_helper(
             name, image, args, volume_mounts, resource
         )
@@ -268,7 +268,7 @@ class EngineCluster:
         name = self.learning_container_name
         image = self._learning_image
         args = ["tail", "-f", "/dev/null"]
-        resource = self._engine_resources.gle.resource
+        resource = self._engine_resources.gle_resource
         container = self.get_engine_container_helper(
             name, image, args, volume_mounts, resource
         )
@@ -495,7 +495,7 @@ class EngineCluster:
         ]
         container = kube_client.V1Container(name=name, image=image, args=args)
         container.image_pull_policy = self._image_pull_policy
-        resource = self._engine_resources.frontend.resource
+        resource = self._engine_resources.gie_frontend_resource
         requests, limits = resource.get_requests(), resource.get_limits()
         container.resources = ResourceBuilder.get_resources(requests, limits)
         return container

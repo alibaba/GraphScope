@@ -271,7 +271,6 @@ class Session(object):
         >>> s = graphscope.session(config={'k8s_engine_cpu': 5, 'k8s_engine_mem': '5Gi'})
     """
 
-    @set_defaults(gs_config)
     def __init__(
         self,
         config: Union[Config, str] = None,
@@ -520,7 +519,7 @@ class Session(object):
         self._api_client = api_client
         for key, value in kw.items():
             self._config.set_option(key, value)
-
+        self._config.session.instance_id = random_string(6)
         self._config.post_setup()  # Do some necessary operation to make sure it's valid
 
         # initial setting of cluster_type
@@ -958,9 +957,8 @@ class Session(object):
         if self._api_client is not None:
             return self._api_client
         try:
-            self._api_client = resolve_api_client(
-                self._config.kubernetes_launcher.config_file
-            )
+            config_file = self._config.kubernetes_launcher.config_file
+            self._api_client = resolve_api_client(config_file)
         except kube_config.ConfigException as e:
             raise RuntimeError(
                 "Kubernetes environment not found, you may want to"

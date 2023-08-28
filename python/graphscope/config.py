@@ -26,120 +26,18 @@ from typing import Union
 from simple_parsing import ArgumentParser
 from simple_parsing.helpers import Serializable
 from simple_parsing.helpers import list_field
-from simple_parsing.helpers.serialization import encode
-from simple_parsing.helpers.serialization import register_decoding_fn
 
 from graphscope.version import __version__
 
 registry = "registry.cn-hongkong.aliyuncs.com"
 
 
-class GSConfig(object):
-    # the coordinator endpoint of a pre-launched GraphScope instance.
-    addr = None
-
-    # "eager" or "lazy", defaults to "eager"
-    mode = "eager"
-
-    # "k8s" or "hosts"
-    cluster_type = "k8s"
-
-    k8s_namespace = None
-
-    # k8s image information
-    # GraphScope's component has a fixed name, use registry, repository and tag to
-    # uniquely identify the image. For example, the coordinator image would be
-    # ${registry}/${repository}/coordinator:${tag}
-    # The image names of all major components are:
-    #   - coordinator: The coordinator of GraphScope instance.
-    #   - analytical: The analytical engine of GraphScope instance.
-    #   - interactive: The interactive engine of GraphScope instance.
-    #   - learning: The learning engine of GraphScope instance.
-    # These are utility components for ease of use.
-    #   - dataset: A dataset container with example datasets
-    #   - jupyter: A jupyter notebook container with GraphScope client installed.
-    k8s_image_registry = "registry.cn-hongkong.aliyuncs.com"
-    k8s_image_repository = "graphscope"
-    k8s_image_tag = __version__
-
-    # image pull configuration
-    k8s_image_pull_policy = "IfNotPresent"
-    k8s_image_pull_secrets = []
-
-    # coordinator resource configuration
-    k8s_coordinator_cpu = 0.5
-    k8s_coordinator_mem = "512Mi"
-
-    # etcd resource configuration
-    etcd_addrs = None
-    etcd_listening_client_port = 2379
-    etcd_listening_peer_port = 2380
-
-    # vineyard resource configuration
-    # image for vineyard container
-    k8s_vineyard_image = "vineyardcloudnative/vineyardd:latest"
-    k8s_vineyard_deployment = None
-    k8s_vineyard_cpu = 0.5
-    k8s_vineyard_mem = "512Mi"
-
-    vineyard_shared_mem = ""  # dummy
-
-    # engine resource configuration
-    k8s_engine_cpu = 0.2
-    k8s_engine_mem = "1Gi"
-
-    # mars resource configuration
-    mars_worker_cpu = 0.2
-    mars_worker_mem = "4Mi"
-    mars_scheduler_cpu = 0.2
-    mars_scheduler_mem = "2Mi"
-
-    # the node selector can be a dict, see also: https://tinyurl.com/3nx6k7ph
-    k8s_coordinator_pod_node_selector = None
-    k8s_engine_pod_node_selector = None
-
-    # Enabled engines, default to all 3 engines
-    # Available options: analytical, analytical-java, interactive, learning
-    enabled_engines = "analytical,interactive,learning"
-
-    # launch graphscope with Mars
-    with_mars = False
-    # Demo dataset related
-    with_dataset = False
-
-    k8s_volumes = {}
-
-    k8s_service_type = "NodePort"
-
-    # support resource preemption or resource guarantee
-    preemptive = True
-
-    # the deployment mode of engines on the kubernetes cluster, default to eager.
-    # eager: create all engine pods at once
-    # lazy: create engine pods when called
-    k8s_deploy_mode = "eager"
-
-    k8s_waiting_for_delete = False
-    num_workers = 2
-    show_log = False
-    log_level = "INFO"
-
-    timeout_seconds = 600
-
-    # kill GraphScope instance after seconds of client disconnect
-    # disable dangling check by setting -1.
-    dangling_timeout_seconds = 600
-
-    # download_retries
-    dataset_download_retries = 3
-
-
 @dataclass
 class ResourceSpec:
     """Resource requirements for a container in kubernetes."""
 
-    cpu: Union[str, float] = None  # CPU cores of container.
-    memory: str = None  # Memory of container, suffix with ['Mi', 'Gi', 'Ti'].
+    cpu: Union[str, float, None] = None  # CPU cores of container.
+    memory: Union[str, None] = None  # Memory of container, suffix with ['Mi', 'Gi', 'Ti'].
 
     def as_dict(self):
         ret = {}
@@ -207,7 +105,7 @@ class DatasetConfig:
     """A Dataset container could be shipped with GraphScope in kubernetes."""
 
     enable: bool = False  # Mount the aliyun dataset bucket as a volume by ossfs.
-    proxy: str = None
+    proxy: Union[str, None] = None
     # A json string specifies the dataset proxy info. Available options of proxy: http_proxy, https_proxy, no_proxy.
 
 
@@ -216,7 +114,7 @@ class EngineConfig:
     """Engine configuration"""
 
     enabled_engines: str = "gae,gie,gle"  # A set of engines to enable.
-    node_selector: str = None  # Node selector for engine pods, default is None.
+    node_selector: Union[str, None] = None  # Node selector for engine pods, default is None.
 
     enable_gae: bool = True  # Enable or disable analytical engine.
     enable_gae_java: bool = (
@@ -268,7 +166,7 @@ class EngineConfig:
 class EtcdConfig:
     """Etcd configuration."""
 
-    endpoint: str = None
+    endpoint: Union[str, None] = None
     """The address of external etcd cluster, with formats like 'etcd01:port,etcd02:port,etcd03:port'.
     If address is set, all other etcd configurations are ignored.
     """
@@ -286,14 +184,13 @@ class EtcdConfig:
 class VineyardConfig:
     """Vineyard configuration"""
 
-    socket: str = None
+    socket: Union[str, None] = None
     # Vineyard IPC socket path, a socket suffixed by timestamp will be created in '/tmp' if not given.
     rpc_port: int = 9600  # Vineyard RPC port.
 
     # Kubernetes related config
-    deployment_name: str = (
-        None  # The name of vineyard deployment, it should exist as expected.
-    )
+    deployment_name: Union[str, None] = None
+    # The name of vineyard deployment, it should exist as expected.
 
     image: str = "vineyardcloudnative/vineyardd:latest"  # Image for vineyard container.
 
@@ -303,7 +200,7 @@ class VineyardConfig:
 
 @dataclass
 class CoordinatorConfig:
-    endpoint: str = None
+    endpoint: Union[str, None] = None
     """The address of existed coordinator service, with formats like 'ip:port'.
     If address is set, all other coordinator configurations are ignored.
     """
@@ -313,10 +210,16 @@ class CoordinatorConfig:
     monitor_port: int = 9090  # Coordinator prometheus exporter service port.
 
     # Kubernetes related config
-    deployment_name: str = None  # Name of the coordinator deployment and service.
-    node_selector: str = None  # Node selector for coordinator pod in kubernetes
+    deployment_name: Union[str, None] = None  # Name of the coordinator deployment and service.
+    node_selector: Union[str, None] = None  # Node selector for coordinator pod in kubernetes
     resource: ResourceConfig = ResourceConfig.make_guaranteed(0.5, "512Mi")
     # Resource configuration of coordinator.
+
+    # For GraphScope operator
+    operator_mode: bool = False
+    # Launch coordinator only, do not let coordinator launch resources or delete resources.
+    # It would try to find existing resources and connect to it.
+    gae_endpoint: str = ""
 
 
 @dataclass
@@ -325,39 +228,33 @@ class HostsLauncherConfig:
 
     hosts: list[str] = list_field("localhost")
     # list of hostnames of graphscope engine workers.
-    etcd: EtcdConfig = (
-        EtcdConfig()
-    )  # Etcd configuration. Only local session needs to configure etcd.
+    etcd: EtcdConfig = EtcdConfig()  
+    # Etcd configuration. Only local session needs to configure etcd.
 
-    dataset_download_retries: int = (
-        3  # The number of retries when downloading dataset from internet.
-    )
+    dataset_download_retries: int = 3 
+    # The number of retries when downloading dataset from internet.
 
 
 @dataclass
 class KubernetesLauncherConfig:
     """Kubernetes cluster configuration."""
 
-    namespace: str = (
-        "default"  # The namespace to create all resource, which must exist in advance.
-    )
-    delete_namespace: bool = True  # Delete the namespace that created by graphscope.
+    namespace: Union[str, None] = None
+    # The namespace to create all resource, which must exist in advance.
+    delete_namespace: bool = False  # Delete the namespace that created by graphscope.
 
-    config_file: str = None  # kube config file path
+    config_file: Union[str, None] = None  # kube config file path
 
     deployment_mode = "eager"  # The deployment mode of engines on the kubernetes cluster, choose from 'eager' or 'lazy'.
 
-    service_type: str = (
-        "NodePort"  # Service type, choose from 'NodePort' or 'LoadBalancer'.
-    )
+    service_type: str = "NodePort"
+    # Service type, choose from 'NodePort' or 'LoadBalancer'.
 
-    volumes: str = (
-        None  # A base64 encoded json string specifies the kubernetes volumes to mount.
-    )
+    volumes: Union[str, None] = None  
+    # A base64 encoded json string specifies the kubernetes volumes to mount.
 
-    waiting_for_delete: bool = (
-        False  # Wait until the graphscope instance has been deleted successfully.
-    )
+    waiting_for_delete: bool = False
+    # Wait until the graphscope instance has been deleted successfully.
 
     image: ImageConfig = ImageConfig()  # Image configuration.
 
@@ -375,20 +272,18 @@ class SessionConfig:
     num_workers: int = 2  # The number of graphscope engine workers.
 
     reconnect: bool = False  # Connect to an existed GraphScope Cluster
-    instance_id: str = None  # Unique id for each GraphScope instance.
+    instance_id: Union[str, None] = None  # Unique id for each GraphScope instance.
 
     show_log: bool = False  # Show log or not.
     log_level: str = "info"  # Log level, choose from 'info' or 'debug'.
 
-    timeout_seconds: int = (
-        600  # The length of time to wait before giving up launching graphscope.
-    )
+    timeout_seconds: int = 600 
+    # The length of time to wait before giving up launching graphscope.
     dangling_timeout_seconds: int = 600
     # The length of time to wait starting from client disconnected before killing the graphscope instance.
 
-    retry_time_seconds: int = (
-        1  # The length of time to wait before retrying to launch graphscope.
-    )
+    retry_time_seconds: int = 1
+    # The length of time to wait before retrying to launch graphscope.
 
     execution_mode: str = "eager"  # The deploying mode of graphscope, eager or lazy.
 
@@ -503,10 +398,15 @@ class Config(Serializable):
 
 gs_config = Config()
 
+
 if __name__ == "__main__":
     config = Config()
-    print(config.dumps_yaml())
+    config.coordinator.resource.requests = None
+    # print(config.dumps_yaml())
     print(config.dumps_json())
+    s = config.dumps_json()
+    config3 = Config.loads_json(s)
+    print(config3)
 
     parser = ArgumentParser()
     parser.add_arguments(Config, dest="gs")

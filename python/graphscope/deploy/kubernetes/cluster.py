@@ -17,7 +17,7 @@
 #
 
 import base64
-import json
+import copy
 import logging
 import os
 import queue
@@ -29,7 +29,6 @@ from kubernetes.client import CoreV1Api
 from kubernetes.client.rest import ApiException as K8SApiException
 
 from graphscope.config import Config
-from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.kubernetes.resource_builder import CoordinatorDeployment
 from graphscope.deploy.kubernetes.resource_builder import ResourceBuilder
 from graphscope.deploy.kubernetes.utils import KubernetesPodWatcher
@@ -68,22 +67,20 @@ class KubernetesClusterLauncher(Launcher):
         api_client: kube_client.ApiClient,
     ):
         super().__init__()
-        self._config = config
+        self._config = copy.deepcopy(config)
         self._api_client = api_client
         self._core_api = kube_client.CoreV1Api(api_client)
         self._app_api = kube_client.AppsV1Api(api_client)
         self._rbac_api = kube_client.RbacAuthorizationV1Api(api_client)
 
-        self._saved_locals = locals()
         self._service_type = config.kubernetes_launcher.service_type
-        self._namespace = config.kubernetes_launcher.namespace
         self._registry = config.kubernetes_launcher.image.registry
         self._repository = config.kubernetes_launcher.image.repository
         self._tag = config.kubernetes_launcher.image.tag
         self._image_pull_policy = config.kubernetes_launcher.image.pull_policy
         self._image_pull_secrets = config.kubernetes_launcher.image.pull_secrets
 
-        self._instance_id = random_string(6)
+        self._instance_id = config.session.instance_id
         self._role_name = self._role_name_prefix + self._instance_id
         self._role_binding_name = self._role_binding_name_prefix + self._instance_id
         self._cluster_role_name = ""
@@ -95,13 +92,20 @@ class KubernetesClusterLauncher(Launcher):
         self._coordinator_name = self._coordinator_name_prefix + self._instance_id
         self._coordinator_service_name = self._coordinator_name
 
+        self._config.coordinator.deployment_name = self._coordinator_name
+
+        self._namespace = config.kubernetes_launcher.namespace
+        if self._namespace is None:
+            self._namespace = try_to_read_namespace_from_context()
+            # Doesn't have any namespace info in kube context.
+            if self._namespace is None:
+                self._namespace = self._get_free_namespace()
+            self._config.kubernetes_launcher.namespace = self._namespace
         self._closed = False
 
         # pods watcher
         self._coordinator_pods_watcher = None
         self._logs = []
-
-        self._delete_namespace = False
 
         self._labels = {
             "app.kubernetes.io/name": "graphscope",
@@ -165,15 +169,10 @@ class KubernetesClusterLauncher(Launcher):
         )
 
     def _create_namespace(self):
-        if self._namespace is None:
-            self._namespace = try_to_read_namespace_from_context()
-            # Doesn't have any namespace info in kube context.
-            if self._namespace is None:
-                self._namespace = self._get_free_namespace()
         if not self._namespace_exist(self._namespace):
             namespace = ResourceBuilder.get_namespace(self._namespace)
             self._core_api.create_namespace(namespace)
-            self._delete_namespace = True
+            self._config.kubernetes_launcher.delete_namespace = True
 
     def _create_role_and_binding(self):
         self._cluster_role_name = self._cluster_role_name_prefix + self._namespace
@@ -207,7 +206,7 @@ class KubernetesClusterLauncher(Launcher):
             )
             targets.append(ret)
 
-        if self._delete_namespace:
+        if self._config.kubernetes_launcher.delete_namespace:
             # Create clusterRole to delete namespace.
             if not self._cluster_role_exist(cluster_role=self._cluster_role_name):
                 cluster_role = ResourceBuilder.get_cluster_role(
@@ -253,9 +252,9 @@ class KubernetesClusterLauncher(Launcher):
         image = f"{image_prefix}/coordinator:{self._tag}"
         args = self._get_coordinator_args()
 
-        image_pull_policy = self._saved_locals["k8s_image_pull_policy"]
+        image_pull_policy = self._config.kubernetes_launcher.image.pull_policy
         host_network = "ENABLE_HOST_NETWORK" in os.environ
-        node_selector = self._saved_locals["k8s_coordinator_pod_node_selector"]
+        node_selector = self._config.coordinator.node_selector
         port = self._random_coordinator_service_port
 
         coordinator = CoordinatorDeployment(
@@ -298,7 +297,8 @@ class KubernetesClusterLauncher(Launcher):
             "--config",
             self.base64_encode(self._config.dumps_json()),
         ]
-        print(args)
+        print(self._config.dumps_yaml())
+        print(" ".join(args))
         return args
 
     def _create_services(self):
@@ -330,7 +330,7 @@ class KubernetesClusterLauncher(Launcher):
             namespace=self._namespace,
             name=self._coordinator_name,
             pods_watcher=self._coordinator_pods_watcher,
-            timeout_seconds=self._saved_locals["timeout_seconds"],
+            timeout_seconds=self._config.session.timeout_seconds,
         ):
             self._coordinator_pods_watcher.stop()
 
@@ -346,7 +346,7 @@ class KubernetesClusterLauncher(Launcher):
             except K8SApiException:
                 pass
             time.sleep(1)
-            if time.time() - start_time > self._saved_locals["timeout_seconds"]:
+            if time.time() - start_time > self._config.session.timeout_seconds:
                 raise TimeoutError("Get coordinator service from configmap timeout")
 
     def _get_coordinator_endpoint(self):
@@ -368,13 +368,12 @@ class KubernetesClusterLauncher(Launcher):
         # Dump failed status even show_log is False
         if self._coordinator_pods_watcher is None:
             return
-        if not gs_config.show_log:
-            while True:
-                try:
-                    message = self._coordinator_pods_watcher.poll(timeout_seconds=3)
-                    logger.error(message, extra={"simple": True})
-                except queue.Empty:
-                    break
+        while True:
+            try:
+                message = self._coordinator_pods_watcher.poll(timeout_seconds=3)
+                logger.error(message, extra={"simple": True})
+            except queue.Empty:
+                break
         self._coordinator_pods_watcher.stop()
         self._coordinator_pods_watcher = None
 
@@ -421,16 +420,16 @@ class KubernetesClusterLauncher(Launcher):
             delete_kubernetes_object(
                 api_client=self._api_client,
                 target=target,
-                wait=self._saved_locals["k8s_waiting_for_delete"],
-                timeout_seconds=self._saved_locals["timeout_seconds"],
+                wait=self._config.kubernetes_launcher.waiting_for_delete,
+                timeout_seconds=self._config.session.timeout_seconds,
             )
         self._resource_object = []
-        if self._delete_namespace:
+        if self._config.kubernetes_launcher.delete_namespace:
             # delete namespace
             api = CoreV1Api(self._api_client)
             try:
                 api.delete_namespace(self._namespace)
-                self._delete_namespace = False
+                self._config.kubernetes_launcher.delete_namespace = False
             except K8SApiException as e:
                 if e.status == 404:  # namespace already deleted.
                     pass
