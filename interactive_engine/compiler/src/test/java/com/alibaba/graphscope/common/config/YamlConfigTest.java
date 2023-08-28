@@ -25,8 +25,30 @@ import org.junit.Test;
 
 public class YamlConfigTest {
     @Test
-    public void config_test() throws Exception {
-        YamlConfigs configs = new YamlConfigs("config/gs_interactive.yaml", FileLoadType.RESOURCES);
+    public void hiactor_config_test() throws Exception {
+        YamlConfigs configs =
+                new YamlConfigs("config/gs_interactive_hiactor.yaml", FileLoadType.RESOURCES);
+        Assert.assertEquals("localhost:8001", HiactorConfig.HIACTOR_HOSTS.get(configs));
+    }
+
+    @Test
+    public void procedure_config_test() throws Exception {
+        YamlConfigs configs =
+                new YamlConfigs("config/gs_interactive_hiactor.yaml", FileLoadType.RESOURCES);
+        GraphStoredProcedures procedures =
+                new GraphStoredProcedures(new LocalMetaDataReader(configs));
+        StoredProcedureMeta meta = procedures.getStoredProcedure("ldbc_ic2");
+        Assert.assertEquals(
+                "StoredProcedureMeta{name='ldbc_ic2', returnType=RecordType(CHAR(1) name),"
+                        + " parameters=[Parameter{name='personId2', dataType=BIGINT},"
+                        + " Parameter{name='maxDate', dataType=BIGINT}]}",
+                meta.toString());
+    }
+
+    @Test
+    public void pegasus_config_test() throws Exception {
+        YamlConfigs configs =
+                new YamlConfigs("config/gs_interactive_pegasus.yaml", FileLoadType.RESOURCES);
         Assert.assertEquals(
                 "PlannerConfig{isOn=true, opt=RBO, rules=[FilterMatchRule]}",
                 PlannerConfig.create(configs).toString());
@@ -50,18 +72,5 @@ public class YamlConfigTest {
         Assert.assertEquals(false, FrontendConfig.NEO4J_BOLT_SERVER_DISABLED.get(configs));
         Assert.assertEquals(8002, (int) FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(configs));
         Assert.assertEquals(200, (int) FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(configs));
-    }
-
-    @Test
-    public void procedure_test() throws Exception {
-        YamlConfigs configs = new YamlConfigs("config/gs_interactive.yaml", FileLoadType.RESOURCES);
-        GraphStoredProcedures procedures =
-                new GraphStoredProcedures(new LocalMetaDataReader(configs));
-        StoredProcedureMeta meta = procedures.getStoredProcedure("ldbc_ic2");
-        Assert.assertEquals(
-                "StoredProcedureMeta{name='ldbc_ic2', returnType=RecordType(CHAR(1) name),"
-                        + " parameters=[Parameter{name='personId2', dataType=BIGINT},"
-                        + " Parameter{name='maxDate', dataType=BIGINT}]}",
-                meta.toString());
     }
 }
