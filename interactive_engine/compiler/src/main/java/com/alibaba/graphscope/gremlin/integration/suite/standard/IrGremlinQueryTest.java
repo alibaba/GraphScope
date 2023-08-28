@@ -96,6 +96,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Object> get_g_V_fold_a_unfold_values();
 
+    public abstract Traversal<Vertex, Object> get_g_V_fold_a_unfold_select_a_unfold_values();
+
     public abstract Traversal<Vertex, Object> get_g_V_has_select_unfold_values();
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
@@ -470,6 +472,26 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
+    public void g_V_fold_a_unfold_select_a_unfold_values() {
+        Traversal<Vertex, Object> traversal = this.get_g_V_fold_a_unfold_select_a_unfold_values();
+        this.printTraversalForm(traversal);
+
+        List<String> expected = Arrays.asList("1", "2", "3", "4", "5", "6");
+        int counter[] = {6, 6, 6, 6, 6, 6};
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            int index = Integer.valueOf(result.toString());
+            counter[index - 1] -= 1;
+        }
+        for (int i = 0; i < 6; ++i) {
+            Assert.assertEquals(counter[i], 0);
+        }
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
     public void g_V_has_select_unfold_values() {
         Traversal<Vertex, Object> traversal = this.get_g_V_has_select_unfold_values();
         this.printTraversalForm(traversal);
@@ -641,6 +663,11 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         @Override
         public Traversal<Vertex, Object> get_g_V_fold_a_unfold_values() {
             return g.V().fold().as("a").unfold().values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_fold_a_unfold_select_a_unfold_values() {
+            return g.V().fold().as("a").unfold().select("a").unfold().values("id");
         }
 
         @Override
