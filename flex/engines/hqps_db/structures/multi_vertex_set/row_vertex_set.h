@@ -1444,7 +1444,7 @@ auto make_row_vertex_set(std::vector<VID_T>&& lids, LabelT label,
 }
 
 template <typename VID_T, typename LabelT>
-auto MakeDefaultRowVertexSet(std::vector<VID_T>&& lids, LabelT label) {
+auto make_default_row_vertex_set(std::vector<VID_T>&& lids, LabelT label) {
   return DefaultRowVertexSet<LabelT, VID_T>(std::move(lids), label);
 }
 

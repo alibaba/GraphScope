@@ -52,7 +52,7 @@ impl DerefMut for PlanBuilder {
 
 impl PlanBuilder {
     pub fn add_dummy_source(&mut self) -> &mut Self {
-        let op = pb::physical_opr::operator::OpKind::Root(pb::RootScan {});
+        let op = pb::physical_opr::operator::OpKind::Root(pb::Root {});
         self.plan.push(op.into());
         self
     }
@@ -305,6 +305,11 @@ impl PlanBuilder {
         self
     }
 
+    pub fn sample(&mut self, sample: algebra_pb::Sample) {
+        let op = pb::physical_opr::operator::OpKind::Sample(sample);
+        self.plan.push(op.into());
+    }
+
     pub fn sink(&mut self, sink: algebra_pb::Sink) {
         let op = pb::physical_opr::operator::OpKind::Sink(sink.into());
         self.plan.push(op.into());
@@ -501,6 +506,10 @@ impl JobBuilder {
     pub fn path_expand(&mut self, path: algebra_pb::PathExpand) -> &mut Self {
         self.plan.path_expand(path);
         self
+    }
+
+    pub fn sample(&mut self, sample: algebra_pb::Sample) {
+        self.plan.sample(sample);
     }
 
     pub fn sink(&mut self, sink: algebra_pb::Sink) {

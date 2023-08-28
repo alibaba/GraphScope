@@ -288,6 +288,11 @@ void MutablePropertyFragment::initEdges(
                << " dst label: " << dst_label_name
                << " edge label: " << edge_label_name;
   }
+  if (filenames.size() <= 0) {
+    LOG(FATAL) << "No edge files found for src label: " << src_label_name
+               << " dst label: " << dst_label_name
+               << " edge label: " << edge_label_name;
+  }
   VLOG(10) << "Init edges src label: " << src_label_name
            << " dst label: " << dst_label_name
            << " edge label: " << edge_label_name

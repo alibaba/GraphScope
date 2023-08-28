@@ -19,6 +19,9 @@ limitations under the License.
 #include <array>
 #include <string>
 
+#include "grape/utils/bitset.h"
+
+#include "flex/engines/hqps_db/structures/multi_vertex_set/general_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/row_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/two_label_vertex_set.h"
 
@@ -42,8 +45,19 @@ class Scan {
     auto expr = filter.expr_;
     auto selectors = filter.selectors_;
     auto gids = scan_vertex_with_selector(graph, v_label_id, expr, selectors);
-    return MakeDefaultRowVertexSet<vertex_id_t, label_id_t>(std::move(gids),
-                                                            v_label_id);
+    return make_default_row_vertex_set<vertex_id_t, label_id_t>(std::move(gids),
+                                                                v_label_id);
+  }
+
+  template <typename EXPR, typename... SELECTOR, size_t num_labels>
+  static GeneralVertexSet<vertex_id_t, label_id_t> ScanMultiLabelVertex(
+      const GRAPH_INTERFACE& graph,
+      const std::array<label_id_t, num_labels>& labels,
+      Filter<EXPR, SELECTOR...>&& filter) {
+    auto expr = filter.expr_;
+    auto selectors = filter.selectors_;
+    return scan_multi_label_vertex_with_selector(graph, labels, expr,
+                                                 selectors);
   }
 
   /// @brief Scan Vertex from two labels.
@@ -53,11 +67,10 @@ class Scan {
   /// @param e_label_id
   /// @param func
   /// @return
-  template <size_t N, typename EXPR, typename... SELECTOR>
+  template <typename EXPR, typename... SELECTOR>
   static two_label_set_t ScanVertex(const GRAPH_INTERFACE& graph,
-                                    std::array<label_id_t, N>&& labels,
+                                    std::array<label_id_t, 2>&& labels,
                                     Filter<EXPR, SELECTOR...>&& filter) {
-    static_assert(N == 2, "ScanVertex only support two labels");
     auto expr = filter.expr_;
     auto selectors = filter.selectors_;
     auto gids0 = scan_vertex_with_selector(graph, labels[0], expr, selectors);
@@ -88,10 +101,39 @@ class Scan {
                                         int64_t oid) {
     std::vector<vertex_id_t> gids;
     gids.emplace_back(graph.ScanVerticesWithOid(v_label_id, oid));
-    return MakeDefaultRowVertexSet(std::move(gids), v_label_id);
+    return make_default_row_vertex_set(std::move(gids), v_label_id);
   }
 
  private:
+  template <typename EXPR, typename... SELECTOR, size_t num_labels>
+  static GeneralVertexSet<vertex_id_t, label_id_t>
+  scan_multi_label_vertex_with_selector(
+      const GRAPH_INTERFACE& graph,
+      const std::array<label_id_t, num_labels>& labels, const EXPR& expr,
+      const std::tuple<SELECTOR...>& selectors) {
+    std::vector<vertex_id_t> gids;
+    std::vector<size_t> cur_cnt;
+    for (auto i = 0; i < num_labels; ++i) {
+      cur_cnt.emplace_back(gids.size());
+      auto gids_i =
+          scan_vertex_with_selector(graph, labels[i], expr, selectors);
+      gids.insert(gids.end(), gids_i.begin(), gids_i.end());
+    }
+    cur_cnt.emplace_back(gids.size());
+    std::vector<grape::Bitset> bitsets(num_labels);
+    CHECK(cur_cnt.size() == num_labels + 1);
+    for (auto i = 0; i < num_labels; ++i) {
+      bitsets[i].init(cur_cnt.back());
+      VLOG(10) << "Scan label " << std::to_string(labels[i])
+               << ", vertices cnt: " << cur_cnt[i + 1] - cur_cnt[i];
+      for (auto j = cur_cnt[i]; j < cur_cnt[i + 1]; ++j) {
+        bitsets[i].set_bit(j);
+      }
+    }
+    auto labels_vec = array_to_vec(labels);
+    return make_general_set(std::move(gids), labels_vec, std::move(bitsets));
+  }
+
   template <typename FUNC, typename... PropT>
   static std::vector<vertex_id_t> scan_vertex1_impl(
       const GRAPH_INTERFACE& graph, const label_id_t& v_label_id,

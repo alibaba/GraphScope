@@ -526,6 +526,7 @@ class KeyedRowVertexSetImpl {
   static constexpr bool is_collection = false;
   static constexpr bool is_general_set = false;
   static constexpr bool is_two_label_set = false;
+  static constexpr bool is_row_vertex_set = true;
 
   explicit KeyedRowVertexSetImpl(std::vector<key_t>&& keys,
                                  std::vector<lid_t>&& vids,

@@ -187,6 +187,23 @@ auto make_aggregate_prop(std::tuple<PropertySelector<T>...>&& selectors,
 template <typename... T>
 using PropNameArray =
     std::array<std::string, std::tuple_size_v<std::tuple<T...>>>;
+
+template <typename T>
+struct PropTupleArray;
+
+template <typename... T>
+struct PropTupleArray<std::tuple<T...>> {
+  using prop_name_array_t = PropNameArray<T...>;
+};
+
+template <>
+struct PropTupleArray<grape::EmptyType> {
+  using prop_name_array_t = PropNameArray<grape::EmptyType>;
+};
+
+template <typename T>
+using PropTupleArrayT = typename PropTupleArray<T>::prop_name_array_t;
+
 template <typename T, int _tag_id = -1>
 struct NamedProperty {
   using prop_t = T;
@@ -298,6 +315,8 @@ struct TruePredicate {
   bool operator()(T& t) const {
     return true;
   }
+
+  bool operator()() const { return true; }
 };
 
 struct TrueFilter {
@@ -398,6 +417,25 @@ struct EdgeExpandEMultiLabelOpt<num_labels, LabelT, EDGE_FILTER_FUNC,
   EDGE_FILTER_FUNC edge_filter_;
 };
 
+// EdgeExpandE with multiple edge triplet pairs.
+template <size_t num_pairs, typename LabelT, typename FILTER_T,
+          typename... PropTuple>
+struct EdgeExpandMultiEOpt {
+  EdgeExpandMultiEOpt(
+      Direction dir,
+      std::array<std::array<LabelT, 3>, num_pairs>&& edge_label_triplets,
+      std::tuple<PropNameArray<PropTuple>...>&& prop_names,
+      FILTER_T&& edge_filter)
+      : dir_(dir),
+        edge_label_triplets_(std::move(edge_label_triplets)),
+        prop_names_(std::move(prop_names)),
+        edge_filter_(std::move(edge_filter)) {}
+  Direction dir_;
+  std::array<std::array<LabelT, 3>, num_pairs> edge_label_triplets_;
+  std::tuple<PropNameArray<PropTuple>...> prop_names_;
+  FILTER_T edge_filter_;
+};
+
 template <typename... T, typename LabelT, typename EDGE_FILTER_FUNC,
           typename... SELECTOR>
 auto make_edge_expande_opt(PropNameArray<T...>&& prop_names, Direction dir,
@@ -428,6 +466,31 @@ auto make_edge_expande_opt(Direction dir, LabelT edge_label,
                            std::array<LabelT, N> other_labels) {
   return EdgeExpandEMultiLabelOpt<N, LabelT, TruePredicate, std::tuple<>>(
       dir, edge_label, other_labels, Filter<TruePredicate>());
+}
+
+// make edge expand with multiple labels
+template <typename LabelT, typename FILTER_T, typename... PropTuple>
+auto make_edge_expand_multie_opt(
+    Direction dir,
+    std::array<std::array<LabelT, 3>, sizeof...(PropTuple)>&&
+        edge_label_triplets,
+    std::tuple<PropTupleArrayT<PropTuple>...>&& prop_names, FILTER_T&& func) {
+  return EdgeExpandMultiEOpt<sizeof...(PropTuple), LabelT, FILTER_T,
+                             PropTuple...>(dir, std::move(edge_label_triplets),
+                                           std::move(prop_names),
+                                           std::move(func));
+}
+
+template <typename LabelT, typename... PropTuple>
+auto make_edge_expand_multie_opt(
+    Direction dir,
+    std::array<std::array<LabelT, 3>, sizeof...(PropTuple)>&&
+        edge_label_triplets,
+    std::tuple<PropTupleArrayT<PropTuple>...>&& prop_names) {
+  return EdgeExpandMultiEOpt<sizeof...(PropTuple), LabelT,
+                             Filter<TruePredicate>, PropTuple...>(
+      dir, std::move(edge_label_triplets), std::move(prop_names),
+      Filter<TruePredicate>());
 }
 
 // For edge expand with multiple labels.
@@ -734,10 +797,10 @@ message ShortestPathExpand {
     }
     // This optional expression defines how to calculate the weight on each
 edge. In the expression,
-    // one can directly write start, end to indicate the start/edge vertices of
-the edge.
-    // e.g. the expression: "start.value + end.value * weight" defines that the
-weight of each edge
+    // one can directly write start, end to indicate the start/edge vertices
+of the edge.
+    // e.g. the expression: "start.value + end.value * weight" defines that
+the weight of each edge
     // is calculated by multiplying the edge vertex's value with the edge's
 weight and then summing
     // it with the start vertex's value.

@@ -1,0 +1,1 @@
+MATCH(a:PERSON)-[:KNOWS]-(p:PERSON {id : 6597069767117}) return COUNT(p);

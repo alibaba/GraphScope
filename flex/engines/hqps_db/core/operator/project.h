@@ -25,6 +25,7 @@ limitations under the License.
 #include "flex/engines/hqps_db/core/utils/keyed.h"
 
 #include "flex/engines/hqps_db/structures/collection.h"
+#include "flex/engines/hqps_db/structures/multi_edge_set/untyped_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/general_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/two_label_vertex_set.h"
 
@@ -377,13 +378,15 @@ class ProjectOp {
   }
 
   // general vertex set.
-  template <typename T, typename VID_T, typename LabelT, size_t N>
+  template <typename T, typename VID_T, typename LabelT>
   static auto apply_single_project_impl(
-      const GRAPH_INTERFACE& graph, GeneralVertexSet<VID_T, LabelT, N>& node,
+      const GRAPH_INTERFACE& graph, GeneralVertexSet<VID_T, LabelT>& node,
       const std::string& prop_name_, const std::vector<size_t>& repeat_array) {
     VLOG(10) << "start fetching properties";
-    auto tmp_prop_vec =
-        get_property_tuple_general<T>(graph, node, {prop_name_});
+    auto tmp_prop_vec = get_property_tuple_general<T>(
+        graph, node, std::array<std::string, 1>{prop_name_});
+    VLOG(10) << "Got properties for general vertex set: "
+             << gs::to_string(tmp_prop_vec);
     std::vector<T> res_prop_vec;
     // make_repeat;
     size_t sum = 0;
@@ -399,10 +402,10 @@ class ProjectOp {
         // convert tmp_prop_vec to vector.
         res_prop_vec.reserve(tmp_prop_vec.size());
         for (auto& ele : tmp_prop_vec) {
-          res_prop_vec.push_back(ele);
+          res_prop_vec.push_back(std::get<0>(ele));
         }
       }
-      return Collection<T>(std::move(tmp_prop_vec));
+      return Collection<T>(std::move(res_prop_vec));
     } else {
       res_prop_vec.reserve(sum);
       for (auto i = 0; i < repeat_array.size(); ++i) {
@@ -442,6 +445,22 @@ class ProjectOp {
     }
 
     return Collection<T>(std::move(res_prop_vec));
+  }
+
+  /// Apply project on untyped edge set.
+  template <typename T, typename VID_T, typename LabelT, typename SUB_GRAPH_T>
+  static auto apply_single_project_impl(
+      const GRAPH_INTERFACE& graph,
+      UnTypedEdgeSet<VID_T, LabelT, SUB_GRAPH_T>& node,
+      const std::string& prop_name, const std::vector<size_t>& repeat_array) {
+    VLOG(10) << "Finish fetching properties";
+
+    // We assume edge properties are already got in getEdges.
+    std::array<std::string, 1> prop_array{prop_name};
+    std::vector<T> tmp_prop_vec =
+        node.template getProperties<T>(prop_array, repeat_array);
+
+    return Collection<T>(std::move(tmp_prop_vec));
   }
 
   // evaluate expression in project op

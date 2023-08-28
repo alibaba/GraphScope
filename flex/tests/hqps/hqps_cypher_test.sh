@@ -21,7 +21,7 @@ GIE_HOME=${FLEX_HOME}/../interactive_engine/
 # 
 if [ $# -lt 1 ]; then
   echo "only receives: $# args, need 1"
-  "echo Usage: $0 <GS_TEST_DIR>"
+  echo "Usage: $0 <GS_TEST_DIR>"
   exit 1
 fi
 
@@ -130,10 +130,20 @@ start_compiler_service(){
 run_ldbc_test() {
   echo "run ldbc test"
   pushd ${GIE_HOME}/compiler
-  cmd="make ldbc_test"
+  cmd="mvn test -Dtest=com.alibaba.graphscope.cypher.integration.ldbc.IrLdbcTest"
   echo "Start ldbc test: ${cmd}"
   ${cmd}
   info "Finish ldbc test"
+  popd
+}
+
+run_simple_test(){
+  echo "run simple test"
+  pushd ${GIE_HOME}/compiler
+  cmd="mvn test -Dtest=com.alibaba.graphscope.cypher.integration.ldbc.SimpleMatchTest"
+  echo "Start simple test: ${cmd}"
+  ${cmd}
+  info "Finish simple test"
   popd
 }
 
@@ -142,6 +152,7 @@ create_ir_conf
 start_engine_service
 start_compiler_service
 run_ldbc_test
+run_simple_test
 kill_service
 
 
