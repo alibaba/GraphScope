@@ -27,6 +27,7 @@ scripts_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "scripts
 install_deps_script = os.path.join(scripts_dir, "install_deps_command.sh")
 make_script = os.path.join(scripts_dir, "make_command.sh")
 make_image_script = os.path.join(scripts_dir, "make_image_command.sh")
+test_script = os.path.join(scripts_dir, "test_command.sh")
 
 
 def run_shell_cmd(cmd, workingdir):
@@ -267,14 +268,82 @@ def make_image(repo, component, registry, tag):
 
 
 @click.command()
+@click.argument(
+    "type",
+    type=click.Choice(
+        [
+            "analytical",
+            "analytical-java",
+            "interactive",
+            "learning",
+            "local-e2e",
+            "k8s-e2e",
+            "groot",
+        ],
+        case_sensitive=False,
+    ),
+    required=False,
+)
+@click.option(
+    "--testdata",
+    type=click.Path(),
+    default="/tmp/gstest",
+    show_default=True,
+    help="""assign a custom test data location. This could be cloned from
+    https://github.com/graphscope/gstest""",
+)
+@click.option(
+    "--local",
+    is_flag=True,
+    default=False,
+    help="Run local tests",
+)
+@click.option(
+    "--storage-type",
+    default="default",
+    show_default=True,
+    help="test gie with specified storage type",
+)
+@click.option(
+    "--k8s",
+    is_flag=True,
+    default=False,
+    help="Run local tests",
+)
+@click.option(
+    "--nx",
+    is_flag=True,
+    default=False,
+    help="Run nx tests",
+)
 @click.pass_obj
-def test(repo):
+def test(repo, type, testdata, local, storage_type, k8s, nx):
     """Trigger tests on built artifacts.
 
     \f
     TODO: fulfill this."""
     click.secho(f"repo.home = {repo.home}", fg="green")
     click.echo("test")
+    if type is None:
+        type = ""
+
+    cmd = [
+        "bash",
+        test_script,
+        "-t",
+        type,
+        "-d",
+        testdata,
+        "-l",
+        str(local),
+        "-s",
+        storage_type,
+        "-k",
+        str(k8s),
+        "-n",
+        str(nx),
+    ]
+    run_shell_cmd(cmd, repo.home)
 
 
 cli.add_command(install_deps)

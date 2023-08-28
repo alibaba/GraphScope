@@ -338,7 +338,7 @@ write_env_config() {
       echo "export CC=${homebrew_prefix}/opt/llvm/bin/clang"
       echo "export CXX=${homebrew_prefix}/opt/llvm/bin/clang++"
       echo "export CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=${CC}"
-      if [ -z "${JAVA_HOME}" ]; then
+      if [ "${JAVA_HOME}" == "False" ]; then
         echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
       fi
       echo "export OPENSSL_ROOT_DIR=${homebrew_prefix}/opt/openssl"
@@ -350,7 +350,7 @@ write_env_config() {
 
   elif [[ "${OS_PLATFORM}" == *"Ubuntu"* ]]; then
     {
-      if [ -z "${JAVA_HOME}" ]; then
+      if [ "${JAVA_HOME}" == "False" ]; then
         echo "export JAVA_HOME=/usr/lib/jvm/default-java"
       fi
     } >>"${OUTPUT_ENV_FILE}"
@@ -362,7 +362,7 @@ write_env_config() {
         echo "source /opt/rh/llvm-toolset-7.0/enable || true"
         echo "export LIBCLANG_PATH=/opt/rh/llvm-toolset-7.0/root/usr/lib64/"
       fi
-      if [ -z "${JAVA_HOME}" ]; then
+      if [ "${JAVA_HOME}" == "False" ]; then
         echo "export JAVA_HOME=/usr/lib/jvm/jre-openjdk"
       fi
       echo "export OPENSSL_ROOT_DIR=${install_prefix}"
