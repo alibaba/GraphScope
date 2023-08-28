@@ -469,6 +469,9 @@ message SinkVineyard {
   schema.Schema graph_schema = 2;
 }
 
+// A dummy node to delegate a source opr for multiple scan cases.
+message Root {}
+
 // A logical plan of graph relation algebra forms a DAG, where each node is an operator and the
 // edge indicates the execution flow.
 message LogicalPlan {
@@ -489,7 +492,8 @@ message LogicalPlan {
       As as = 14;
       Intersect intersect = 15;
       Sink sink = 16;
-      Sample sample = 17;
+      Root root = 17;
+      Sample sample = 18;
       // Saving the room for relational operators
       GetV vertex = 30;
       EdgeExpand edge = 31;
