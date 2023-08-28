@@ -423,7 +423,7 @@ mod tests {
             idx_predicate: None,
             meta_data: None,
         };
-        let dummy_opr = pb::RootScan {};
+        let dummy_opr = pb::Root {};
         let join_opr = pb::Join {
             kind: 0,
             left_keys: vec![common_pb::Variable { tag: None, property: None, node_type: None }],

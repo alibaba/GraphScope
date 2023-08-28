@@ -479,8 +479,8 @@ impl From<pb::Scan> for pb::logical_plan::Operator {
     }
 }
 
-impl From<pb::RootScan> for pb::logical_plan::Operator {
-    fn from(opr: pb::RootScan) -> Self {
+impl From<pb::Root> for pb::logical_plan::Operator {
+    fn from(opr: pb::Root) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Root(opr)) }
     }
 }

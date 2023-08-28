@@ -64,6 +64,20 @@ impl Node {
     pub fn add_parent(&mut self, parent_id: NodeId) {
         self.parents.insert(parent_id);
     }
+
+    pub fn is_root(&self) -> bool {
+        match self.opr.opr.as_ref() {
+            Some(pb::logical_plan::operator::Opr::Root(_dummy)) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_scan(&self) -> bool {
+        match self.opr.opr.as_ref() {
+            Some(pb::logical_plan::operator::Opr::Scan(_scan)) => true,
+            _ => false,
+        }
+    }
 }
 
 pub(crate) type NodeType = Rc<RefCell<Node>>;
@@ -83,7 +97,7 @@ pub struct LogicalPlan {
 
 impl Default for LogicalPlan {
     fn default() -> Self {
-        let dummy_opr = pb::logical_plan::operator::Opr::Root(pb::RootScan {});
+        let dummy_opr = pb::logical_plan::operator::Opr::Root(pb::Root {});
         let dummy_root = Node::new(0, pb::logical_plan::Operator { opr: Some(dummy_opr) });
         LogicalPlan::with_root(dummy_root)
     }
@@ -512,7 +526,7 @@ impl LogicalPlan {
         let mut scan_ids_to_clean = vec![];
         for (_, node) in self.nodes.iter() {
             // Empty Children Scan nodes
-            if is_node_scan(&node.borrow()) && node.borrow().children.len() == 0 {
+            if node.borrow().is_scan() && node.borrow().children.len() == 0 {
                 let empty_child_scan_id = node.borrow().id;
                 scan_ids_to_clean.push(empty_child_scan_id);
             }
@@ -522,7 +536,7 @@ impl LogicalPlan {
         }
         // Remove dummy node with single child
         if let Some(node) = self.get_first_node() {
-            if is_node_dummy(&node.borrow()) && node.borrow().children.len() <= 1 {
+            if node.borrow().is_root() && node.borrow().children.len() <= 1 {
                 let single_child_dummy_id = node.borrow().id;
                 self.remove_node(single_child_dummy_id);
             }
@@ -548,7 +562,7 @@ impl LogicalPlan {
             for c in &n.borrow().children {
                 if let Some(child) = self.get_node(*c) {
                     child.borrow_mut().parents.remove(&id);
-                    if child.borrow().parents.is_empty() && !is_node_dummy(&n.borrow()) {
+                    if child.borrow().parents.is_empty() && !n.borrow().is_root() {
                         // Recursively remove the child
                         let _ = self.remove_node(*c);
                     }
@@ -1377,20 +1391,6 @@ fn is_params_all_labels(params: &pb::QueryParams) -> bool {
         } else {
             false
         }
-}
-
-fn is_node_dummy(node: &Node) -> bool {
-    match node.opr.opr.as_ref() {
-        Some(pb::logical_plan::operator::Opr::Root(_dummy)) => true,
-        _ => false,
-    }
-}
-
-fn is_node_scan(node: &Node) -> bool {
-    match node.opr.opr.as_ref() {
-        Some(pb::logical_plan::operator::Opr::Scan(_scan)) => true,
-        _ => false,
-    }
 }
 
 impl AsLogical for pb::OrderBy {
