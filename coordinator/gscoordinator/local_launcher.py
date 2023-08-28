@@ -122,6 +122,10 @@ class LocalLauncher(AbstractLauncher):
     def vineyard_socket(self) -> str:
         return self._vineyard_socket
 
+    @property
+    def vineyard_endpoint(self) -> str:
+        return f"{self._hosts[0]}:{self._vineyard_rpc_port}"
+
     def create_analytical_instance(self):
         mpi_resolver = ResolveMPICmdPrefix()
         cmd, mpi_env = mpi_resolver.resolve(self._num_workers, self._hosts)

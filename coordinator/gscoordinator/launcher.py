@@ -77,8 +77,9 @@ class AbstractLauncher(metaclass=ABCMeta):
         self._instance_id: str = None
         self._num_workers: int = None
         self._hosts: list[str] = []
-        self._analytical_engine_process = None
         self._analytical_engine_endpoint: str = None
+        self._vineyard_endpoint: str = None
+        self._vineyard_socket: str = None
         self._session_workspace: str = None
         configure_environ()
 
@@ -141,12 +142,16 @@ class AbstractLauncher(metaclass=ABCMeta):
         pass
 
     @property
-    def analytical_engine_endpoint(self) -> str:
-        return self._analytical_engine_endpoint
+    def vineyard_endpoint(self) -> str:
+        return self._vineyard_endpoint
 
     @property
-    def analytical_engine_process(self):
-        return self._analytical_engine_process
+    def vineyard_socket(self) -> str:
+        return self._vineyard_socket
+
+    @property
+    def analytical_engine_endpoint(self) -> str:
+        return self._analytical_engine_endpoint
 
     @property
     def num_workers(self) -> int:

@@ -214,12 +214,10 @@ class CoordinatorConfig:
     monitor_port: int = 9090  # Coordinator prometheus exporter service port.
 
     # Kubernetes related config
-    deployment_name: Union[
-        str, None
-    ] = None  # Name of the coordinator deployment and service.
-    node_selector: Union[
-        str, None
-    ] = None  # Node selector for coordinator pod in kubernetes
+    deployment_name: Union[str, None] = None
+    # Name of the coordinator deployment and service.
+    node_selector: Union[str, None] = None
+    # Node selector for coordinator pod in kubernetes
     resource: ResourceConfig = ResourceConfig.make_guaranteed(0.5, "512Mi")
     # Resource configuration of coordinator.
 
@@ -227,7 +225,6 @@ class CoordinatorConfig:
     operator_mode: bool = False
     # Launch coordinator only, do not let coordinator launch resources or delete resources.
     # It would try to find existing resources and connect to it.
-    gae_endpoint: str = ""
 
 
 @dataclass
@@ -274,6 +271,13 @@ class KubernetesLauncherConfig:
 
 
 @dataclass
+class OperatorLauncherConfig:
+    namespace: str = "default"
+    gae_endpoint: str = ""
+    hosts: list[str] = list_field()
+
+
+@dataclass
 class SessionConfig:
     """Session configuration"""
 
@@ -298,18 +302,22 @@ class SessionConfig:
 
 @dataclass
 class Config(Serializable):
-    launcher_type: str = "hosts"  # Launcher type, choose from 'k8s' or 'hosts'.
+    launcher_type: str = (
+        "hosts"  # Launcher type, choose from 'hosts', 'k8s' or 'operator'.
+    )
     session: SessionConfig = SessionConfig()
 
     coordinator: CoordinatorConfig = CoordinatorConfig()  # Coordinator configuration.
     vineyard: VineyardConfig = VineyardConfig()  # Vineyard configuration.
 
-    hosts_launcher: HostsLauncherConfig = (
-        HostsLauncherConfig()
-    )  # Local cluster configuration.
-    kubernetes_launcher: KubernetesLauncherConfig = (
-        KubernetesLauncherConfig()
-    )  # Kubernetes cluster configuration.
+    hosts_launcher: HostsLauncherConfig = HostsLauncherConfig()
+    # Local cluster configuration.
+
+    kubernetes_launcher: KubernetesLauncherConfig = KubernetesLauncherConfig()
+    # Kubernetes cluster configuration.
+
+    operator_launcher: OperatorLauncherConfig = OperatorLauncherConfig()
+    # Launcher used in operator mode.
 
     def post_setup(self):
         self.kubernetes_launcher.engine.post_setup()
@@ -410,8 +418,8 @@ gs_config = Config()
 if __name__ == "__main__":
     config = Config()
     config.coordinator.resource.requests = None
-    # print(config.dumps_yaml())
-    print(config.dumps_json())
+    print(config.dumps_yaml())
+    # print(config.dumps_json())
     s = config.dumps_json()
     config3 = Config.loads_json(s)
     print(config3)

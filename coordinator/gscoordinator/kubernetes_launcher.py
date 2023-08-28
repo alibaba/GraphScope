@@ -55,6 +55,9 @@ from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_tempdir
 from graphscope.proto import types_pb2
 
+from gscoordinator.constants import ANALYTICAL_CONTAINER_NAME
+from gscoordinator.constants import INTERACTIVE_EXECUTOR_CONTAINER_NAME
+from gscoordinator.constants import LEARNING_CONTAINER_NAME
 from gscoordinator.launcher import AbstractLauncher
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
 from gscoordinator.utils import GRAPHSCOPE_HOME
@@ -266,11 +269,12 @@ class KubernetesClusterLauncher(AbstractLauncher):
         return self._namespace
 
     def get_vineyard_stream_info(self):
-        hosts = [f"{self._namespace}:{host}" for host in self._pod_name_list]
         if self._vineyard_deployment is not None:
             hosts = [
                 f"{self._namespace}:{host}" for host in self._vineyard_pod_name_list
             ]
+        else:
+            hosts = [f"{self._namespace}:{host}" for host in self._pod_name_list]
         return "kubernetes", hosts
 
     def set_session_workspace(self, session_id):
@@ -292,10 +296,17 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def hosts_list(self):
         return self._get_analytical_hosts()
 
+    @property
+    def vineyard_endpoint(self) -> str:
+        if self._check_if_vineyard_deployment_exist():
+            return self._vineyard_service_endpoint
+        else:
+            return self._vineyard_internal_endpoint
+
     def distribute_file(self, path):
         pod_name_list, _, _ = self._allocate_analytical_engine()
         for pod in pod_name_list:
-            container = self._engine_cluster.analytical_container_name
+            container = ANALYTICAL_CONTAINER_NAME
             try:
                 # The library may exist in the analytical pod.
                 test_cmd = f"test -f {path}"
@@ -503,7 +514,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         """
         env = os.environ.copy()
         env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
-        container = self._engine_cluster.interactive_executor_container_name
+        container = INTERACTIVE_EXECUTOR_CONTAINER_NAME
 
         params = "\n".join([f"{k}={v}" for k, v in params.items()])
         params = base64.b64encode(params.encode("utf-8")).decode("utf-8")
@@ -568,7 +579,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         hosts = ",".join(pod_name_list)
         env = os.environ.copy()
         env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
-        container = self._engine_cluster.interactive_executor_container_name
+        container = INTERACTIVE_EXECUTOR_CONTAINER_NAME
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "close_gremlin_instance_on_k8s",
@@ -1009,7 +1020,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             for i, pod_ip in enumerate(pod_ip_list):
                 f.write(f"{pod_ip} {pod_name_list[i]}\n")
 
-        container = self._engine_cluster.analytical_container_name
+        container = ANALYTICAL_CONTAINER_NAME
         for pod in pod_name_list:
             logger.debug(
                 run_kube_cp_command(hosts, "/tmp/hosts_of_nodes", pod, container, True)
@@ -1276,7 +1287,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         # launch the server
         self._learning_instance_processes[object_id] = []
         for pod_index, pod in enumerate(self._pod_name_list):
-            container = self._engine_cluster.learning_container_name
+            container = LEARNING_CONTAINER_NAME
             sub_cmd = f"python3 -m gscoordinator.learning {handle} {config} {pod_index}"
             cmd = f"kubectl -n {self._namespace} exec -it -c {container} {pod} -- {sub_cmd}"
             logger.debug("launching learning server: %s", " ".join(cmd))

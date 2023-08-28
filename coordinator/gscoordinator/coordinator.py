@@ -45,6 +45,7 @@ from gscoordinator.io_utils import StdStreamWrapper
 # capture system stdout
 from gscoordinator.launcher import AbstractLauncher
 from gscoordinator.local_launcher import LocalLauncher
+from gscoordinator.operator_launcher import OperatorLauncher
 
 sys.stdout = StdStreamWrapper(sys.stdout)
 sys.stderr = StdStreamWrapper(sys.stderr)
@@ -159,6 +160,8 @@ class CoordinatorServiceServicer(
     ):
         config_logging(log_level)
 
+        self._operator_mode = False
+
         self._object_manager = ObjectManager()
 
         # only one connection is allowed at the same time
@@ -178,8 +181,9 @@ class CoordinatorServiceServicer(
         self._poll_timeout_seconds = 2
         self._dangling_detecting_timer = None
         self._cleanup_instance = False
-
-        self._session_id = self._generate_session_id()
+        self._session_id = (
+            f"session_{''.join(random.choices(string.ascii_letters, k=8))}"
+        )
         self._launcher.set_session_workspace(self._session_id)
         if not self._launcher.start():
             raise RuntimeError("Coordinator launching instance failed.")
@@ -201,7 +205,7 @@ class CoordinatorServiceServicer(
 
     @Monitor.connectSession
     def ConnectSession(self, request, context):
-        if self._launcher.analytical_engine_process is not None:
+        if self._launcher.analytical_engine_endpoint is not None:
             engine_config = self._operation_executor.get_analytical_engine_config()
             engine_config.update(self._launcher.get_engine_config())
             host_names = self._launcher.hosts
@@ -266,7 +270,11 @@ class CoordinatorServiceServicer(
         """
         Disconnect session, note that it won't clean up any resources if self._cleanup_instance is False.
         """
-        if not self._check_session_consistency(request, context):
+        if request.session_id != self._session_id:
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details(
+                f"Session handle not matched, {request.session_id} versus {self._session_id}"
+            )
             return message_pb2.CloseSessionResponse()
 
         self._connected = False
@@ -622,12 +630,6 @@ class CoordinatorServiceServicer(
         if cleanup_instance:
             self._launcher.stop(is_dangling=is_dangling)
 
-    @staticmethod
-    def _generate_session_id():
-        return "session_" + "".join(
-            [random.choice(string.ascii_lowercase) for _ in range(8)]
-        )
-
     def _set_dangling_timer(self, cleanup_instance: bool):
         if self._dangling_timeout_seconds > 0:
             self._dangling_detecting_timer = threading.Timer(
@@ -649,16 +651,6 @@ class CoordinatorServiceServicer(
         if reset:
             self._cancel_dangling_timer()
             self._set_dangling_timer(cleanup_instance)
-
-    def _check_session_consistency(self, request, context):
-        if request.session_id != self._session_id:
-            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
-            context.set_details(
-                f"Session handle not matched, {request.session_id} versus {self._session_id}"
-            )
-            return False
-        else:
-            return True
 
 
 def parse_sys_args():
@@ -695,8 +687,10 @@ def get_launcher(config: Config):
         launcher = LocalLauncher(config)
     elif config.launcher_type == "k8s":
         launcher = KubernetesClusterLauncher(config)
+    elif config.launcher_type == "operator":
+        launcher = OperatorLauncher(config)
     else:
-        raise RuntimeError("Expect hosts or k8s of cluster_type parameter")
+        raise RuntimeError("Expect hosts, k8s or operator of launcher_type parameter")
     return launcher
 
 

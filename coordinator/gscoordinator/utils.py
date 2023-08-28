@@ -52,6 +52,7 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
 
+from gscoordinator.constants import ANALYTICAL_CONTAINER_NAME
 from gscoordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -330,7 +331,7 @@ def compile_library(commands, workdir, output_name, launcher):
             workdir,
             output_name,
             launcher.hosts_list[0],
-            launcher._engine_cluster.analytical_container_name,
+            ANALYTICAL_CONTAINER_NAME,
         )
     elif launcher.type() == types_pb2.HOSTS:
         return _compile_on_local(commands, workdir, output_name)

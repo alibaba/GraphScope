@@ -22,6 +22,7 @@ import "google/protobuf/any.proto";
 enum ClusterType {
   HOSTS = 0;
   K8S  = 1;
+  OPERATOR = 2;
 
   UNDEFINED = 100;
 };

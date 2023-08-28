@@ -32,6 +32,11 @@ from graphscope.config import SessionConfig
 from graphscope.deploy.kubernetes.resource_builder import ResourceBuilder
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
 
+from gscoordinator.constants import ANALYTICAL_CONTAINER_NAME
+from gscoordinator.constants import DATASET_CONTAINER_NAME
+from gscoordinator.constants import INTERACTIVE_EXECUTOR_CONTAINER_NAME
+from gscoordinator.constants import INTERACTIVE_FRONTEND_CONTAINER_NAME
+from gscoordinator.constants import LEARNING_CONTAINER_NAME
 from gscoordinator.utils import parse_as_glog_level
 from gscoordinator.version import __version__
 
@@ -139,15 +144,6 @@ class EngineCluster:
         self._service_type = launcher_config.service_type
         self._vineyard_service_port = config.vineyard.rpc_port
 
-        # This must be same with v6d:modules/io/python/drivers/io/kube_ssh.sh
-        self.analytical_container_name = "engine"
-        self.interactive_frontend_container_name = "frontend"
-        self.interactive_executor_container_name = "executor"
-        self.learning_container_name = "learning"
-        self.dataset_container_name = "dataset"
-        self.mars_container_name = "mars"
-        self.vineyard_container_name = "vineyard"
-
     @property
     def vineyard_ipc_socket(self):
         return self._sock
@@ -231,7 +227,7 @@ class EngineCluster:
         )
 
     def get_analytical_container(self, volume_mounts, with_java=False):
-        name = self.analytical_container_name
+        name = ANALYTICAL_CONTAINER_NAME
         image = self._analytical_image if not with_java else self._analytical_java_image
         args = ["bash", "-c", self._get_tail_if_exists_cmd("/tmp/grape_engine.INFO")]
         resource = self._engine_resources.gae_resource
@@ -251,7 +247,7 @@ class EngineCluster:
         return container
 
     def get_interactive_executor_container(self, volume_mounts):
-        name = self.interactive_executor_container_name
+        name = INTERACTIVE_EXECUTOR_CONTAINER_NAME
         image = self._interactive_executor_image
         args = [
             "bash",
@@ -265,7 +261,7 @@ class EngineCluster:
         return container
 
     def get_learning_container(self, volume_mounts):
-        name = self.learning_container_name
+        name = LEARNING_CONTAINER_NAME
         image = self._learning_image
         args = ["tail", "-f", "/dev/null"]
         resource = self._engine_resources.gle_resource
@@ -282,7 +278,7 @@ class EngineCluster:
         pass
 
     def get_dataset_container(self, volume_mounts):
-        name = self.dataset_container_name
+        name = DATASET_CONTAINER_NAME
         container = kube_client.V1Container(name=name)
         container.image = self._dataset_image
         container.image_pull_policy = self._image_pull_policy
@@ -373,7 +369,7 @@ class EngineCluster:
     def get_engine_pod_template_spec(self):
         spec = self.get_engine_pod_spec()
         if self._with_analytical or self._with_analytical_java:
-            default_container = self.analytical_container_name
+            default_container = ANALYTICAL_CONTAINER_NAME
         else:
             default_container = None
         return ResourceBuilder.get_pod_template_spec(
@@ -486,7 +482,7 @@ class EngineCluster:
         raise RuntimeError("Get graphlearn service endpoint failed.")
 
     def get_interactive_frontend_container(self):
-        name = self.interactive_frontend_container_name
+        name = INTERACTIVE_FRONTEND_CONTAINER_NAME
         image = self._interactive_frontend_image
         args = [
             "bash",
