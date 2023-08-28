@@ -40,6 +40,7 @@ public class UnfoldOpTest {
         Assert.assertEquals(FileUtils.readJsonFromResource("unfold.json"), actual);
     }
 
+    @Test
     public void UnfoldOpTestA() throws IOException {
         UnfoldOp op = new UnfoldOp();
         op.setUnfoldTag(new OpArg<>(ArgUtils.asAlias("a", true)));
@@ -47,7 +48,7 @@ public class UnfoldOpTest {
         irPlan = DedupOpTest.getTestIrPlan(op);
         String actual = irPlan.getPlanAsJson();
 
-        Assert.assertEquals(FileUtils.readJsonFromResource("unfold.json"), actual);
+        Assert.assertEquals(FileUtils.readJsonFromResource("unfold_tag_a.json"), actual);
     }
 
     @After
