@@ -85,4 +85,7 @@ enum DataType {
   STRING_ARRAY = 9;
   PAIR_ARRAY = 10;
   NONE = 11;
+  DATE = 12; // iso: YYYY_MM_DD
+  TIME = 13; // iso: HH:MM:SS
+  DATETIME = 14; // iso: YYYY_MM_DD HH:MM:SS
 }
