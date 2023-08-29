@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.cypher.result;
 
-import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
@@ -26,7 +25,6 @@ import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.commons.lang3.ArrayUtils;
@@ -91,17 +89,16 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     }
 
     protected AnyValue parseElement(IrResult.Element element, @Nullable RelDataType dataType) {
-        if (dataType instanceof GraphSchemaType) {
-            GraphSchemaType schemaType = (GraphSchemaType) dataType;
-            if (schemaType.getScanOpt() == GraphOpt.Source.VERTEX) { // vertex
+        switch (element.getInnerCase()) {
+            case VERTEX:
                 return parseVertex(element.getVertex(), dataType);
-            } else { // edge
+            case EDGE:
                 return parseEdge(element.getEdge(), dataType);
-            }
-        } else if (dataType instanceof GraphPathType) { // path
-            return parseGraphPath(element.getGraphPath(), dataType);
-        } else { // common value
-            return parseValue(element.getObject(), dataType);
+            case GRAPH_PATH:
+                return parseGraphPath(element.getGraphPath(), dataType);
+            case OBJECT:
+            default:
+                return parseValue(element.getObject(), dataType);
         }
     }
 
@@ -147,20 +144,14 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     }
 
     protected NodeValue parseVertex(IrResult.Vertex vertex, @Nullable RelDataType dataType) {
-        Preconditions.checkArgument(
-                dataType instanceof GraphSchemaType,
-                "data type of vertex should be " + GraphSchemaType.class);
         return VirtualValues.nodeValue(
                 vertex.getId(),
                 Values.stringArray(
-                        getLabelName(vertex.getLabel(), getLabelTypes((GraphSchemaType) dataType))),
+                        getLabelName(vertex.getLabel(), getLabelTypes(dataType))),
                 MapValue.EMPTY);
     }
 
     protected RelationshipValue parseEdge(IrResult.Edge edge, @Nullable RelDataType dataType) {
-        Preconditions.checkArgument(
-                dataType instanceof GraphSchemaType,
-                "data type of edge should be " + GraphSchemaType.class);
         return VirtualValues.relationshipValue(
                 edge.getId(),
                 VirtualValues.nodeValue(
@@ -168,23 +159,21 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         Values.stringArray(
                                 getSrcLabelName(
                                         edge.getSrcLabel(),
-                                        getLabelTypes((GraphSchemaType) dataType))),
+                                        getLabelTypes(dataType))),
                         MapValue.EMPTY),
                 VirtualValues.nodeValue(
                         edge.getDstId(),
                         Values.stringArray(
                                 getDstLabelName(
                                         edge.getDstLabel(),
-                                        getLabelTypes((GraphSchemaType) dataType))),
+                                        getLabelTypes(dataType))),
                         MapValue.EMPTY),
                 Values.stringValue(
-                        getLabelName(edge.getLabel(), getLabelTypes((GraphSchemaType) dataType))),
+                        getLabelName(edge.getLabel(), getLabelTypes(dataType))),
                 MapValue.EMPTY);
     }
 
     protected AnyValue parseGraphPath(IrResult.GraphPath path, @Nullable RelDataType dataType) {
-        Preconditions.checkArgument(dataType instanceof GraphPathType);
-        GraphPathType.ElementType elementType = ((GraphPathType) dataType).getComponentType();
         List<NodeValue> nodes = Lists.newArrayList();
         List<RelationshipValue> relationships = Lists.newArrayList();
         path.getPathList()
@@ -193,11 +182,11 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                             switch (k.getInnerCase()) {
                                 case VERTEX:
                                     nodes.add(
-                                            parseVertex(k.getVertex(), elementType.getGetVType()));
+                                            parseVertex(k.getVertex(), getVertexType(dataType)));
                                     break;
                                 case EDGE:
                                     relationships.add(
-                                            parseEdge(k.getEdge(), elementType.getExpandType()));
+                                            parseEdge(k.getEdge(), getEdgeType(dataType)));
                                     break;
                             }
                         });
@@ -234,6 +223,8 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                                 .toArray());
             case STR_ARRAY:
                 return Values.stringArray(value.getStrArray().getItemList().toArray(String[]::new));
+            case NONE:
+                return Values.NO_VALUE;
             default:
                 throw new NotImplementedException(value.getItemCase() + " is unsupported yet");
         }
@@ -252,11 +243,8 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                     }
                     labelIds.add(labelType.getLabelId());
                 }
-                throw new IllegalArgumentException(
-                        "label id="
-                                + nameOrId.getId()
-                                + " not found, expected ids are "
-                                + labelIds);
+                logger.warn("label id={} not found, expected ids are {}", nameOrId.getId(), labelIds);
+                return String.valueOf(nameOrId.getId());
         }
     }
 
@@ -272,11 +260,8 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         return labelType.getSrcLabel();
                     }
                 }
-                throw new IllegalArgumentException(
-                        "src label id="
-                                + nameOrId.getId()
-                                + " not found, expected ids are "
-                                + labelIds);
+                logger.warn("src label id={} not found, expected ids are {}", nameOrId.getId(), labelIds);
+                return String.valueOf(nameOrId.getId());
         }
     }
 
@@ -292,25 +277,30 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         return labelType.getDstLabel();
                     }
                 }
-                throw new IllegalArgumentException(
-                        "dst label id="
-                                + nameOrId.getId()
-                                + " not found, expected ids are "
-                                + labelIds);
+                logger.warn("dst label id={} not found, expected ids are {}", nameOrId.getId(), labelIds);
+                return String.valueOf(nameOrId.getId());
         }
     }
 
-    private List<GraphLabelType> getLabelTypes(GraphSchemaType dataType) {
-        List<GraphLabelType> labelTypes = new ArrayList<>();
+    private List<GraphLabelType> getLabelTypes(RelDataType dataType) {
+        List<GraphLabelType> labelTypes = Lists.newArrayList();
         if (dataType instanceof GraphSchemaTypeList) {
             ((GraphSchemaTypeList) dataType)
                     .forEach(
                             k -> {
                                 labelTypes.add(k.getLabelType());
                             });
-        } else {
-            labelTypes.add(dataType.getLabelType());
+        } else if (dataType instanceof GraphSchemaType) {
+            labelTypes.add(((GraphSchemaType) dataType).getLabelType());
         }
         return labelTypes;
+    }
+
+    private RelDataType getVertexType(RelDataType graphPathType) {
+        return (graphPathType instanceof GraphPathType) ? ((GraphPathType) graphPathType).getComponentType().getGetVType() : graphPathType;
+    }
+
+    private RelDataType getEdgeType(RelDataType graphPathType) {
+        return (graphPathType instanceof GraphPathType) ? ((GraphPathType) graphPathType).getComponentType().getExpandType() : graphPathType;
     }
 }
