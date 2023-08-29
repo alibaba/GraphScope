@@ -246,7 +246,7 @@ public abstract class Utils {
             case MULTISET:
             case ARRAY:
                 RelDataType elementType = dataType.getComponentType();
-                if (elementType instanceof GraphPxdElementType
+                if (elementType instanceof GraphPathType.ElementType
                         || elementType instanceof GraphSchemaType) {
                     // todo: support array of graph element types in pb
                     return DataType.IrDataType.newBuilder().build();

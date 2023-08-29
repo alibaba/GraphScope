@@ -16,25 +16,29 @@
 
 package com.alibaba.graphscope.cypher.result;
 
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
-import com.alibaba.graphscope.common.ir.type.GraphPxdElementType;
+import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
 import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.sql.type.ArraySqlType;
-import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.neo4j.values.AnyValue;
 import org.neo4j.values.storable.BooleanValue;
 import org.neo4j.values.storable.Values;
-import org.neo4j.values.virtual.*;
+import org.neo4j.values.virtual.MapValue;
+import org.neo4j.values.virtual.NodeValue;
+import org.neo4j.values.virtual.RelationshipValue;
+import org.neo4j.values.virtual.VirtualValues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +56,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
 
     @Override
     public List<AnyValue> parseFrom(IrResult.Record record) {
+        logger.debug("record {}", record);
         Preconditions.checkArgument(
                 record.getColumnsCount() == outputType.getFieldCount(),
                 "column size of results "
@@ -70,6 +75,75 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     @Override
     public RelDataType schema() {
         return this.outputType;
+    }
+
+    protected AnyValue parseEntry(IrResult.Entry entry, @Nullable RelDataType dataType) {
+        if (dataType instanceof GraphPathType) {
+            return parseElement(entry.getElement(), dataType);
+        }
+        switch (dataType.getSqlTypeName()) {
+            case MULTISET:
+            case ARRAY:
+                return parseCollection(entry.getCollection(), dataType.getComponentType());
+            default:
+                return parseElement(entry.getElement(), dataType);
+        }
+    }
+
+    protected AnyValue parseElement(IrResult.Element element, @Nullable RelDataType dataType) {
+        if (dataType instanceof GraphSchemaType) {
+            GraphSchemaType schemaType = (GraphSchemaType) dataType;
+            if (schemaType.getScanOpt() == GraphOpt.Source.VERTEX) { // vertex
+                return parseVertex(element.getVertex(), dataType);
+            } else { // edge
+                return parseEdge(element.getEdge(), dataType);
+            }
+        } else if (dataType instanceof GraphPathType) { // path
+            return parseGraphPath(element.getGraphPath(), dataType);
+        } else { // common value
+            return parseValue(element.getObject(), dataType);
+        }
+    }
+
+    protected AnyValue parseCollection(
+            IrResult.Collection collection, @Nullable RelDataType componentType) {
+        switch (componentType.getSqlTypeName()) {
+            case BOOLEAN:
+                Boolean[] boolObjs =
+                        collection.getCollectionList().stream()
+                                .map(k -> k.getObject().getBoolean())
+                                .toArray(Boolean[]::new);
+                return Values.booleanArray(ArrayUtils.toPrimitive(boolObjs));
+            case INTEGER:
+                return Values.intArray(
+                        collection.getCollectionList().stream()
+                                .mapToInt(k -> k.getObject().getI32())
+                                .toArray());
+            case BIGINT:
+                return Values.longArray(
+                        collection.getCollectionList().stream()
+                                .mapToLong(k -> k.getObject().getI64())
+                                .toArray());
+            case DOUBLE:
+                return Values.doubleArray(
+                        collection.getCollectionList().stream()
+                                .mapToDouble(k -> k.getObject().getF64())
+                                .toArray());
+            case CHAR:
+                return Values.stringArray(
+                        collection.getCollectionList().stream()
+                                .map(k -> k.getObject().getStr())
+                                .toArray(String[]::new));
+            case ROW:
+            case ANY:
+                return VirtualValues.fromList(
+                        collection.getCollectionList().stream()
+                                .map(k -> parseElement(k, componentType))
+                                .collect(Collectors.toList()));
+            default:
+                throw new NotImplementedException(
+                        componentType.getSqlTypeName() + " is unsupported yet");
+        }
     }
 
     protected NodeValue parseVertex(IrResult.Vertex vertex, @Nullable RelDataType dataType) {
@@ -109,12 +183,26 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     }
 
     protected AnyValue parseGraphPath(IrResult.GraphPath path, @Nullable RelDataType dataType) {
-        Preconditions.checkArgument(dataType.getSqlTypeName() == SqlTypeName.ARRAY);
-        ArraySqlType arrayType = (ArraySqlType) dataType;
-        Preconditions.checkArgument(arrayType.getComponentType() instanceof GraphPxdElementType);
-        // todo: support path expand result
-        GraphPxdElementType elementType = (GraphPxdElementType) arrayType.getComponentType();
-        throw new NotImplementedException("type " + PathValue.class + " is not implemented yet");
+        Preconditions.checkArgument(dataType instanceof GraphPathType);
+        GraphPathType.ElementType elementType = ((GraphPathType) dataType).getComponentType();
+        List<NodeValue> nodes = Lists.newArrayList();
+        List<RelationshipValue> relationships = Lists.newArrayList();
+        path.getPathList()
+                .forEach(
+                        k -> {
+                            switch (k.getInnerCase()) {
+                                case VERTEX:
+                                    nodes.add(
+                                            parseVertex(k.getVertex(), elementType.getGetVType()));
+                                    break;
+                                case EDGE:
+                                    relationships.add(
+                                            parseEdge(k.getEdge(), elementType.getExpandType()));
+                                    break;
+                            }
+                        });
+        return VirtualValues.path(
+                nodes.toArray(NodeValue[]::new), relationships.toArray(RelationshipValue[]::new));
     }
 
     protected AnyValue parseValue(Common.Value value, @Nullable RelDataType dataType) {
@@ -129,80 +217,25 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                 return Values.doubleValue(value.getF64());
             case STR:
                 return Values.stringValue(value.getStr());
+            case I32_ARRAY:
+                return Values.intArray(
+                        value.getI32Array().getItemList().stream()
+                                .mapToInt(k -> k.intValue())
+                                .toArray());
+            case I64_ARRAY:
+                return Values.longArray(
+                        value.getI64Array().getItemList().stream()
+                                .mapToLong(k -> k.longValue())
+                                .toArray());
+            case F64_ARRAY:
+                return Values.doubleArray(
+                        value.getF64Array().getItemList().stream()
+                                .mapToDouble(k -> k.doubleValue())
+                                .toArray());
+            case STR_ARRAY:
+                return Values.stringArray(value.getStrArray().getItemList().toArray(String[]::new));
             default:
                 throw new NotImplementedException(value.getItemCase() + " is unsupported yet");
-        }
-    }
-
-    protected AnyValue parseCollection(
-            IrResult.Collection collection, @Nullable RelDataType dataType) {
-        // multiset is the data type of aggregate function collect
-        // array is the data type of path collection
-        Preconditions.checkArgument(
-                dataType.getSqlTypeName() == SqlTypeName.MULTISET
-                        || dataType.getSqlTypeName() == SqlTypeName.ARRAY);
-        switch (dataType.getComponentType().getSqlTypeName()) {
-            case BOOLEAN:
-                return Values.booleanArray(
-                        convert(
-                                collection.getCollectionList().stream()
-                                        .map(k -> k.getObject().getBoolean())
-                                        .collect(Collectors.toList())));
-            case INTEGER:
-                return Values.intArray(
-                        collection.getCollectionList().stream()
-                                .mapToInt(k -> k.getObject().getI32())
-                                .toArray());
-            case BIGINT:
-                return Values.longArray(
-                        collection.getCollectionList().stream()
-                                .mapToLong(k -> k.getObject().getI64())
-                                .toArray());
-            case DOUBLE:
-                return Values.doubleArray(
-                        collection.getCollectionList().stream()
-                                .mapToDouble(k -> k.getObject().getF64())
-                                .toArray());
-            case CHAR:
-                return Values.stringArray(
-                        collection.getCollectionList().stream()
-                                .map(k -> k.getObject().getStr())
-                                .toArray(String[]::new));
-            default:
-                throw new NotImplementedException(
-                        dataType.getComponentType().getSqlTypeName() + " is unsupported yet");
-        }
-    }
-
-    private boolean[] convert(List<Boolean> values) {
-        boolean[] result = new boolean[values.size()];
-        for (int i = 0; i < values.size(); i++) {
-            result[i] = values.get(i);
-        }
-        return result;
-    }
-
-    protected AnyValue parseEntry(IrResult.Entry entry, @Nullable RelDataType dataType) {
-        switch (entry.getInnerCase()) {
-            case ELEMENT:
-                return parseElement(entry.getElement(), dataType);
-            case COLLECTION:
-            default:
-                return parseCollection(entry.getCollection(), dataType);
-        }
-    }
-
-    protected AnyValue parseElement(IrResult.Element element, @Nullable RelDataType dataType) {
-        switch (element.getInnerCase()) {
-            case VERTEX:
-                return parseVertex(element.getVertex(), dataType);
-            case EDGE:
-                return parseEdge(element.getEdge(), dataType);
-            case GRAPH_PATH:
-                return parseGraphPath(element.getGraphPath(), dataType);
-            case OBJECT:
-            default:
-                return parseValue(element.getObject(), dataType);
         }
     }
 

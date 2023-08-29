@@ -35,6 +35,7 @@ import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
+import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gremlin.Utils;
@@ -53,7 +54,6 @@ import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
@@ -333,12 +333,12 @@ public class GraphBuilder extends RelBuilder {
         String varName = AliasInference.SIMPLE_NAME(alias) + AliasInference.DELIMITER + property;
         RelDataTypeField aliasField = getAliasField(alias);
         if (property.equals(GraphProperty.LEN_KEY)) {
-            if (!(aliasField.getType() instanceof ArraySqlType)) {
+            if (!(aliasField.getType() instanceof GraphPathType)) {
                 throw new ClassCastException(
                         "cannot get property='len' from type class ["
                                 + aliasField.getType().getClass()
                                 + "], should be ["
-                                + ArraySqlType.class
+                                + GraphPathType.class
                                 + "]");
             } else {
                 return RexGraphVariable.of(
@@ -353,7 +353,7 @@ public class GraphBuilder extends RelBuilder {
                     "cannot get property=['id', 'label', 'all', 'key'] from type class ["
                             + aliasField.getType().getClass()
                             + "], should be ["
-                            + GraphOptSchema.class
+                            + GraphSchemaType.class
                             + "]");
         }
         if (property.equals(GraphProperty.LABEL_KEY)) {
