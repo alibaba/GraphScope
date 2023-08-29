@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Graph types" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Graph types" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="reference/networkx/graphs.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Graph Transformation" href="transformation.html" /><link rel="prev" title="NetworkX-style API" href="index.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Graph types - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo-h.png" alt="Logo"/>
@@ -664,16 +665,10 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="graph-types">
+          <section id="graph-types">
 <span id="graphs"></span><h1>Graph types<a class="headerlink" href="#graph-types" title="Permalink to this heading">#</a></h1>
 <div class="table-wrapper docutils container">
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 22%" />
-<col style="width: 17%" />
-<col style="width: 28%" />
-<col style="width: 33%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Class</p></th>
 <th class="head"><p>Type</p></th>
@@ -696,7 +691,7 @@ MathJax = {
 </table>
 </div>
 <p>Notice that graphscope.nx not support MultiGraph and MultiDiGraph.</p>
-<div class="section" id="graph">
+<section id="graph">
 <h2>Graph<a class="headerlink" href="#graph" title="Permalink to this heading">#</a></h2>
 <p>Undirected graphs with self loops</p>
 <dl class="py class">
@@ -716,7 +711,7 @@ key/value attributes.</p>
 <p>Graph support node label if it’s created from a GraphScope graph object.
 nodes are identified by <cite>(label, id)</cite> tuple.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>incoming_graph_data</strong> (<em>input graph</em><em> (</em><em>optional</em><em>, </em><em>default: None</em><em>)</em>) – Data to initialize graph. If None (default) an empty
 graph is created.  The data can be any format that is supported
@@ -889,13 +884,13 @@ Views exist for <cite>nodes</cite>, <cite>edges</cite>, <cite>neighbors()</cite>
 <span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.__getitem__" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns a dict of neighbors of node n.  Use: ‘G[n]’.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>node</em>) – A node in the graph.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>adj_dict</strong> – The adjacency dictionary for nodes connected to n.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dictionary</p>
 </dd>
 </dl>
@@ -915,7 +910,7 @@ Views exist for <cite>nodes</cite>, <cite>edges</cite>, <cite>neighbors()</cite>
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_graph_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Initialize a graph with graph, edges, name, or graph attributes</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>incoming_graph_data</strong> (<em>input graph</em><em> (</em><em>optional</em><em>, </em><em>default: None</em><em>)</em>) – Data to initialize graph. If None (default) an empty
 graph is created. The data can be an edge list, any
@@ -959,10 +954,10 @@ need to use <cite>(label, id)</cite> to access.</p></li>
 <span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.__iter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.__iter__" title="Permalink to this definition">#</a></dt>
 <dd><p>Iterate over the nodes. Use: ‘for n in G’.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>niter</strong> – An iterator over all nodes in the graph.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>iterator</p>
 </dd>
 </dl>
@@ -981,10 +976,10 @@ need to use <cite>(label, id)</cite> to access.</p></li>
 <span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.__len__" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the number of nodes in the graph. Use: ‘len(G)’.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>nnodes</strong> – The number of nodes in the graph.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>int</p>
 </dd>
 </dl>
@@ -1009,7 +1004,7 @@ not already in the graph.</p>
 <p>Edge attributes can be specified with keywords or by directly
 accessing the edge’s attribute dictionary. See examples below.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> (<em>nodes</em>) – Nodes can be, for example, strings or numbers.
 Nodes must be int/string/float/tuple/bool hashable Python objects.</p></li>
@@ -1058,7 +1053,7 @@ an edge attribute (by default <cite>weight</cite>) to hold a numerical value.</p
 <span class="sig-name descname"><span class="pre">add_edges_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ebunch_to_add</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.add_edges_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.add_edges_from" title="Permalink to this definition">#</a></dt>
 <dd><p>Add all the edges in ebunch_to_add.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ebunch_to_add</strong> (<em>container</em><em> of </em><em>edges</em>) – Each edge given in the container will be added to the
 graph. The edges must be given as as 2-tuples (u, v) or
@@ -1101,7 +1096,7 @@ attributes specified via keyword arguments.</p>
 <span class="sig-name descname"><span class="pre">add_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_for_adding</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.add_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.add_node" title="Permalink to this definition">#</a></dt>
 <dd><p>Add a single node <cite>node_for_adding</cite> and update node attributes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>node_for_adding</strong> (<em>node</em>) – A node can be int, float, str, tuple or bool object.</p></li>
 <li><p><strong>attr</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – Set or change node attributes using key=value.</p></li>
@@ -1134,7 +1129,7 @@ attributes specified via keyword arguments.</p>
 <span class="sig-name descname"><span class="pre">add_nodes_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes_for_adding</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.add_nodes_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.add_nodes_from" title="Permalink to this definition">#</a></dt>
 <dd><p>Add multiple nodes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nodes_for_adding</strong> (<em>iterable container</em>) – A container of nodes (list, dict, set, etc.).
 OR
@@ -1181,7 +1176,7 @@ precedence over attributes specified via keyword arguments.</p></li>
 <span class="sig-name descname"><span class="pre">add_weighted_edges_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ebunch_to_add</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'weight'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.add_weighted_edges_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.add_weighted_edges_from" title="Permalink to this definition">#</a></dt>
 <dd><p>Add weighted edges in <cite>ebunch_to_add</cite> with specified weight attr</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ebunch_to_add</strong> (<em>container</em><em> of </em><em>edges</em>) – Each edge given in the list or container will be added
 to the graph. The edges must be given as 3-tuples (u, v, w)
@@ -1231,11 +1226,11 @@ So <cite>for nbr, foovalue in G[node].data(‘foo’, default=1):</cite> works.<
 <dd><p>Returns an iterator over (node, adjacency dict) tuples for all nodes.</p>
 <p>For directed graphs, only outgoing neighbors/adjacencies are included.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>adj_iter</strong> – An iterator over (node, adjacency dictionary) for all nodes in
 the graph.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>iterator</p>
 </dd>
 </dl>
@@ -1318,14 +1313,14 @@ attributes. Fresh copies are not enabled. Instead use:</p>
 versions of the original graph, providing a copy of the original
 structure without requiring any memory for copying the information.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>as_view</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=False</em><em>)</em>) – If True, the returned graph-view provides a read-only view
 of the original graph without actually copying any data.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>G</strong> – A copy of the graph.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
@@ -1353,7 +1348,7 @@ edges incident to that node.</p>
 <p>This object provides an iterator for (node, degree) as well as
 lookup for the degree for a single node.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nbunch</strong> (<em>single node</em><em>, </em><em>container</em><em>, or </em><em>all nodes</em><em> (</em><em>default= all nodes</em><em>)</em>) – The view will only report edges incident to these nodes.</p></li>
 <li><p><strong>weight</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – The name of an edge attribute that holds the numerical value used
@@ -1361,7 +1356,7 @@ as a weight.  If None, then each edge has weight 1.
 The degree is the sum of the edge weights adjacent to the node.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><em>If a single node is requested</em></p></li>
 <li><p><strong>deg</strong> (<em>int</em>) – Degree of the node</p></li>
@@ -1394,14 +1389,14 @@ The degree is the sum of the edge weights adjacent to the node.</p></li>
 <p>The induced subgraph contains each edge in <cite>edges</cite> and each
 node incident to any one of those edges.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>edges</strong> (<em>iterable</em>) – An iterable of edges in this graph.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>G</strong> – An edge-induced subgraph of this graph with the same edge
 attributes.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
@@ -1433,7 +1428,7 @@ attribute for edge <cite>(u, v)</cite> while
 iterates through all the edges yielding the color attribute
 with default <cite>‘red’</cite> if no color attribute exists.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nbunch</strong> (<em>single node</em><em>, </em><em>container</em><em>, or </em><em>all nodes</em><em> (</em><em>default= all nodes</em><em>)</em>) – The view will only report edges incident to these nodes.</p></li>
 <li><p><strong>data</strong> (<em>string</em><em> or </em><em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=False</em><em>)</em>) – The edge attribute returned in 3-tuple (u, v, ddict[data]).
@@ -1443,12 +1438,12 @@ If False, return 2-tuple (u, v).</p></li>
 Only relevant if data is not True or False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>edges</strong> – A view of edge attributes, usually it iterates over (u, v)
 or (u, v, d) tuples of edges, but can also be used for
 attribute lookup as <cite>edges[u, v][‘foo’]</cite>.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>EdgeView</p>
 </dd>
 </dl>
@@ -1479,17 +1474,17 @@ For directed graphs this returns the out-edges.</p>
 <p>This is identical to <cite>G[u][v]</cite> except the default is returned
 instead of an exception if the edge doesn’t exist.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> (<em>nodes</em>) – </p></li>
 <li><p><strong>v</strong> (<em>nodes</em>) – </p></li>
 <li><p><strong>default</strong> (<em>any Python object</em><em> (</em><em>default=None</em><em>)</em>) – Value to return if the edge (u, v) is not found.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>edge_dict</strong> – The edge attribute dictionary.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dictionary</p>
 </dd>
 </dl>
@@ -1537,10 +1532,10 @@ But it is safe to assign attributes <cite>G[u][v][‘foo’]</cite></p>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">graph_type</span></span><a class="headerlink" href="#graphscope.nx.Graph.graph_type" title="Permalink to this definition">#</a></dt>
 <dd><p>The type of the graph object.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the type of the graph.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>type (<cite>types_pb2.GraphType</cite>)</p>
 </dd>
 </dl>
@@ -1552,7 +1547,7 @@ But it is safe to assign attributes <cite>G[u][v][‘foo’]</cite></p>
 <dd><p>Returns True if the edge (u, v) is in the graph.</p>
 <p>This is the same as <cite>v in G[u]</cite> without KeyError exceptions.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> (<em>nodes</em>) – Nodes can be, for example, strings or numbers.
 Nodes must be int, str, float, tuple, bool  hashable Python objects.</p></li>
@@ -1560,10 +1555,10 @@ Nodes must be int, str, float, tuple, bool  hashable Python objects.</p></li>
 Nodes must be int, str, float, tuple, bool  hashable Python objects.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>edge_ind</strong> – True if edge is in the graph, False otherwise.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -1594,7 +1589,7 @@ Nodes must be int, str, float, tuple, bool  hashable Python objects.</p></li>
 <dd><p>Returns True if the graph contains the node n.</p>
 <p>Identical to <cite>n in G</cite></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>node</em>) – </p>
 </dd>
 </dl>
@@ -1646,17 +1641,17 @@ also in the graph.</p>
 <p>The nodes in nbunch are checked for membership in the graph
 and if not are silently ignored.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>nbunch</strong> (<em>single node</em><em>, </em><em>container</em><em>, or </em><em>all nodes</em><em> (</em><em>default= all nodes</em><em>)</em>) – The view will only report edges incident to these nodes.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>niter</strong> – An iterator over nodes in nbunch that are also in the graph.
 If nbunch is None, iterate over all nodes in the graph.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>iterator</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NetworkXError</strong> – If nbunch is not a node or sequence of nodes.
     If a node in nbunch is not hashable.</p>
 </dd>
@@ -1681,16 +1676,16 @@ nbunch is not hashable, a <code class="xref py py-exc docutils literal notransla
 <dd><p>Returns an iterator over all neighbors of node n.</p>
 <p>This is identical to <cite>iter(G[n])</cite></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>node</em>) – A node in the graph</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>neighbors</strong> – An iterator over all neighbors of node n</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>iterator</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NetworkXError</strong> – If the node n is not in the graph.</p>
 </dd>
 </dl>
@@ -1739,7 +1734,7 @@ a view <cite>G.nodes.data(‘foo’)</cite> provides a dict-like interface to th
 <cite>foo</cite> attribute of each node. <cite>G.nodes.data(‘foo’, default=1)</cite>
 provides a default for nodes that do not have attribute <cite>foo</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> (<em>string</em><em> or </em><em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=False</em><em>)</em>) – The node attribute returned in 2-tuple (n, ddict[data]).
 If True, return entire node attribute dict as (n, ddict).
@@ -1748,7 +1743,7 @@ If False, return just the nodes n.</p></li>
 Only relevant if data is not True or False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>Allows set-like operations over the nodes as well as node
 attribute dict lookup and calling to get a NodeDataView.
 A NodeDataView iterates over <cite>(n, data)</cite> and has no set operations.
@@ -1760,7 +1755,7 @@ If data is True then the attribute becomes the
 entire data dictionary.</p>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>NodeView</p>
 </dd>
 </dl>
@@ -1822,7 +1817,7 @@ to guarantee the value is never None:</p>
 <span class="sig-name descname"><span class="pre">number_of_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.number_of_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.number_of_edges" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the number of edges between two nodes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> (<em>nodes</em><em>, </em><em>optional</em><em> (</em><em>default=all edges</em><em>)</em>) – If u and v are specified, return the number of edges between
 u and v. Otherwise return the total number of all edges.</p></li>
@@ -1830,13 +1825,13 @@ u and v. Otherwise return the total number of all edges.</p></li>
 u and v. Otherwise return the total number of all edges.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>nedges</strong> – The number of edges in the graph.  If nodes <cite>u</cite> and <cite>v</cite> are
 specified return the number of edges between those nodes. If
 the graph is directed, this only returns the number of edges
 from <cite>u</cite> to <cite>v</cite>.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1874,10 +1869,10 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 <span class="sig-name descname"><span class="pre">number_of_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.number_of_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.number_of_nodes" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the number of nodes in the graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>nnodes</strong> – The number of nodes in the graph.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>int</p>
 </dd>
 </dl>
@@ -1904,10 +1899,10 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 <span class="sig-name descname"><span class="pre">order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.order" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the number of nodes in the graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>nnodes</strong> – The number of nodes in the graph.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>int</p>
 </dd>
 </dl>
@@ -1928,13 +1923,13 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 <span class="sig-name descname"><span class="pre">remove_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.remove_edge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.remove_edge" title="Permalink to this definition">#</a></dt>
 <dd><p>Remove the edge between u and v.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> (<em>nodes</em>) – Remove the edge between nodes u and v.</p></li>
 <li><p><strong>v</strong> (<em>nodes</em>) – Remove the edge between nodes u and v.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NetworkXError</strong> – If there is not an edge between u and v.</p>
 </dd>
 </dl>
@@ -1961,7 +1956,7 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 <span class="sig-name descname"><span class="pre">remove_edges_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ebunch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.remove_edges_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.remove_edges_from" title="Permalink to this definition">#</a></dt>
 <dd><p>Remove all edges specified in ebunch.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ebunch</strong> (<em>list</em><em> or </em><em>container</em><em> of </em><em>edge tuples</em>) – <p>Each edge given in the list or container will be removed
 from the graph. The edges can be:</p>
 <blockquote>
@@ -1997,10 +1992,10 @@ from the graph. The edges can be:</p>
 <p>Removes the node n and all adjacent edges.
 Attempting to remove a non-existent node will raise an exception.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>node</em>) – A node in the graph</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NetworkXError</strong> – If n is not in the graph.</p>
 </dd>
 </dl>
@@ -2024,7 +2019,7 @@ Attempting to remove a non-existent node will raise an exception.</p>
 <span class="sig-name descname"><span class="pre">remove_nodes_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes_for_removing</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.remove_nodes_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.remove_nodes_from" title="Permalink to this definition">#</a></dt>
 <dd><p>Remove multiple nodes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>nodes_for_removing</strong> (<em>iterable container</em>) – A container of nodes (list, dict, set, etc.).  If a node
 in the container is not in the graph it is silently
 ignored.</p>
@@ -2051,10 +2046,10 @@ ignored.</p>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">schema</span></span><a class="headerlink" href="#graphscope.nx.Graph.schema" title="Permalink to this definition">#</a></dt>
 <dd><p>Schema of the graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the schema of the graph</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphSchema</span></code></p>
 </dd>
 </dl>
@@ -2065,7 +2060,7 @@ ignored.</p>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">session</span></span><a class="headerlink" href="#graphscope.nx.Graph.session" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the session of graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Return session that the graph belongs to.</p>
 </dd>
 </dl>
@@ -2076,10 +2071,10 @@ ignored.</p>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">session_id</span></span><a class="headerlink" href="#graphscope.nx.Graph.session_id" title="Permalink to this definition">#</a></dt>
 <dd><p>Get session’s id of graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Return session id that the graph belongs to.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
 </dd>
 </dl>
@@ -2090,7 +2085,7 @@ ignored.</p>
 <span class="sig-name descname"><span class="pre">set_edge_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.set_edge_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.set_edge_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Set edge data of edge (u, v).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> (<em>nodes</em>) – Nodes can be int, str, float, tuple, bool hashable Python objects.</p></li>
 <li><p><strong>v</strong> (<em>nodes</em>) – Nodes can be int, str, float, tuple, bool hashable Python objects.</p></li>
@@ -2123,7 +2118,7 @@ ignored.</p>
 <span class="sig-name descname"><span class="pre">set_node_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.set_node_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.set_node_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Set data of node.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>n</strong> (<em>node</em>) – node can be int, str, float, tuple, bool hashable Python object which is existed in graph.</p></li>
 <li><p><strong>data</strong> (<em>dict</em>) – data to set to n</p></li>
@@ -2161,18 +2156,18 @@ ignored.</p>
 <span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.size" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the number of edges or total of all edge weights.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>weight</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – The edge attribute that holds the numerical value used
 as a weight. If None, then each edge has weight 1.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p><strong>size</strong> – The number of edges or
 (if weight keyword is provided) the total weight sum.</p>
 <p>If weight is None, returns an int. Otherwise a float
 (or more general numeric if the weights are more general).</p>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numeric</p>
 </dd>
 </dl>
@@ -2204,13 +2199,13 @@ as a weight. If None, then each edge has weight 1.</p>
 <p>The induced subgraph of the graph contains the nodes in <cite>nodes</cite>
 and the edges between those nodes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>nodes</strong> (<em>list</em><em>, </em><em>iterable</em>) – A container of nodes which will be iterated through once.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>G</strong> – A subgraph of the graph.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
@@ -2230,15 +2225,15 @@ and the edges between those nodes.</p>
 <span class="sig-name descname"><span class="pre">to_directed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">as_view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.to_directed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.to_directed" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns a directed representation of the graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>as_view</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=False</em><em>)</em>) – If True return a view of the original directed graph.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>G</strong> – A directed graph with the same name, same nodes, and with
 each edge (u, v, data) replaced by two directed edges
 (u, v, data) and (v, u, data).</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.DiGraph" title="graphscope.nx.DiGraph">DiGraph</a></p>
 </dd>
 </dl>
@@ -2269,13 +2264,13 @@ all of the data and references.</p>
 <span class="sig-name descname"><span class="pre">to_undirected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">as_view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.to_undirected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.to_undirected" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns an undirected copy of the graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>as_view</strong> (<em>bool</em><em> (</em><em>optional</em><em>, </em><em>default=False</em><em>)</em>) – If True return a view of the original undirected graph.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>G</strong> – A deepcopy of the graph.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
@@ -2319,7 +2314,7 @@ To specify only nodes the keyword <cite>nodes</cite> must be used.</p>
 the add_edges_from/add_nodes_from methods. When iterated, they
 should yield 2-tuples (u, v) or 3-tuples (u, v, datadict).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>edges</strong> (<em>Graph object</em><em>, </em><em>collection</em><em> of </em><em>edges</em><em>, or </em><em>None</em>) – The first parameter can be a graph or some edges. If it has
 attributes <cite>nodes</cite> and <cite>edges</cite>, then it is taken to be a
@@ -2361,8 +2356,8 @@ If the first parameter is a Graph, then <cite>nodes</cite> is ignored.</p></li>
 
 </dd></dl>
 
-</div>
-<div class="section" id="digraph">
+</section>
+<section id="digraph">
 <h2>DiGraph<a class="headerlink" href="#digraph" title="Permalink to this heading">#</a></h2>
 <p>Directed graphs with self loops</p>
 <dl class="py class">
@@ -2382,7 +2377,7 @@ key/value attributes.</p>
 <p>DiGraph support node label if it’s created from a GraphScope graph object.
 nodes are identified by <cite>(label, id)</cite> tuple.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>incoming_graph_data</strong> (<em>input graph</em><em> (</em><em>optional</em><em>, </em><em>default: None</em><em>)</em>) – Data to initialize graph. If None (default) an empty
 graph is created.  The data can be any format that is supported
@@ -2555,13 +2550,13 @@ Views exist for <cite>nodes</cite>, <cite>edges</cite>, <cite>neighbors()</cite>
 <span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.__getitem__" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns a dict of neighbors of node n.  Use: ‘G[n]’.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>node</em>) – A node in the graph.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>adj_dict</strong> – The adjacency dictionary for nodes connected to n.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dictionary</p>
 </dd>
 </dl>
@@ -2581,7 +2576,7 @@ Views exist for <cite>nodes</cite>, <cite>edges</cite>, <cite>neighbors()</cite>
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_graph_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.DiGraph.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Initialize a graph with graph, edges, name, or graph attributes</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>incoming_graph_data</strong> (<em>input graph</em><em> (</em><em>optional</em><em>, </em><em>default: None</em><em>)</em>) – Data to initialize graph. If None (default) an empty
 graph is created. The data can be an edge list, any
@@ -2625,10 +2620,10 @@ need to use <cite>(label, id)</cite> to access.</p></li>
 <span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.__iter__" title="Permalink to this definition">#</a></dt>
 <dd><p>Iterate over the nodes. Use: ‘for n in G’.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>niter</strong> – An iterator over all nodes in the graph.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>iterator</p>
 </dd>
 </dl>
@@ -2647,10 +2642,10 @@ need to use <cite>(label, id)</cite> to access.</p></li>
 <span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.__len__" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the number of nodes in the graph. Use: ‘len(G)’.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>nnodes</strong> – The number of nodes in the graph.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>int</p>
 </dd>
 </dl>
@@ -2675,7 +2670,7 @@ not already in the graph.</p>
 <p>Edge attributes can be specified with keywords or by directly
 accessing the edge’s attribute dictionary. See examples below.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> (<em>nodes</em>) – Nodes can be, for example, strings or numbers.
 Nodes must be int/string/float/tuple/bool hashable Python objects.</p></li>
@@ -2724,7 +2719,7 @@ an edge attribute (by default <cite>weight</cite>) to hold a numerical value.</p
 <span class="sig-name descname"><span class="pre">add_edges_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ebunch_to_add</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.add_edges_from" title="Permalink to this definition">#</a></dt>
 <dd><p>Add all the edges in ebunch_to_add.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ebunch_to_add</strong> (<em>container</em><em> of </em><em>edges</em>) – Each edge given in the container will be added to the
 graph. The edges must be given as as 2-tuples (u, v) or
@@ -2767,7 +2762,7 @@ attributes specified via keyword arguments.</p>
 <span class="sig-name descname"><span class="pre">add_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_for_adding</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.add_node" title="Permalink to this definition">#</a></dt>
 <dd><p>Add a single node <cite>node_for_adding</cite> and update node attributes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>node_for_adding</strong> (<em>node</em>) – A node can be int, float, str, tuple or bool object.</p></li>
 <li><p><strong>attr</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – Set or change node attributes using key=value.</p></li>
@@ -2800,7 +2795,7 @@ attributes specified via keyword arguments.</p>
 <span class="sig-name descname"><span class="pre">add_nodes_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes_for_adding</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.add_nodes_from" title="Permalink to this definition">#</a></dt>
 <dd><p>Add multiple nodes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nodes_for_adding</strong> (<em>iterable container</em>) – A container of nodes (list, dict, set, etc.).
 OR
@@ -2847,7 +2842,7 @@ precedence over attributes specified via keyword arguments.</p></li>
 <span class="sig-name descname"><span class="pre">add_weighted_edges_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ebunch_to_add</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'weight'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.add_weighted_edges_from" title="Permalink to this definition">#</a></dt>
 <dd><p>Add weighted edges in <cite>ebunch_to_add</cite> with specified weight attr</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ebunch_to_add</strong> (<em>container</em><em> of </em><em>edges</em>) – Each edge given in the list or container will be added
 to the graph. The edges must be given as 3-tuples (u, v, w)
@@ -2897,11 +2892,11 @@ So <cite>for nbr, foovalue in G[node].data(‘foo’, default=1):</cite> works.<
 <dd><p>Returns an iterator over (node, adjacency dict) tuples for all nodes.</p>
 <p>For directed graphs, only outgoing neighbors/adjacencies are included.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>adj_iter</strong> – An iterator over (node, adjacency dictionary) for all nodes in
 the graph.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>iterator</p>
 </dd>
 </dl>
@@ -2984,14 +2979,14 @@ attributes. Fresh copies are not enabled. Instead use:</p>
 versions of the original graph, providing a copy of the original
 structure without requiring any memory for copying the information.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>as_view</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=False</em><em>)</em>) – If True, the returned graph-view provides a read-only view
 of the original graph without actually copying any data.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>G</strong> – A copy of the graph.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
@@ -3019,7 +3014,7 @@ edges incident to that node.</p>
 <p>This object provides an iterator for (node, degree) as well as
 lookup for the degree for a single node.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nbunch</strong> (<em>single node</em><em>, </em><em>container</em><em>, or </em><em>all nodes</em><em> (</em><em>default= all nodes</em><em>)</em>) – The view will only report edges incident to these nodes.</p></li>
 <li><p><strong>weight</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – The name of an edge attribute that holds the numerical value used
@@ -3027,7 +3022,7 @@ as a weight.  If None, then each edge has weight 1.
 The degree is the sum of the edge weights adjacent to the node.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><em>If a single node is requested</em></p></li>
 <li><p><strong>deg</strong> (<em>int</em>) – Degree of the node</p></li>
@@ -3065,14 +3060,14 @@ The degree is the sum of the edge weights adjacent to the node.</p></li>
 <p>The induced subgraph contains each edge in <cite>edges</cite> and each
 node incident to any one of those edges.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>edges</strong> (<em>iterable</em>) – An iterable of edges in this graph.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>G</strong> – An edge-induced subgraph of this graph with the same edge
 attributes.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
@@ -3104,7 +3099,7 @@ attribute for edge <cite>(u, v)</cite> while
 iterates through all the edges yielding the color attribute
 with default <cite>‘red’</cite> if no color attribute exists.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nbunch</strong> (<em>single node</em><em>, </em><em>container</em><em>, or </em><em>all nodes</em><em> (</em><em>default= all nodes</em><em>)</em>) – The view will only report edges incident to these nodes.</p></li>
 <li><p><strong>data</strong> (<em>string</em><em> or </em><em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=False</em><em>)</em>) – The edge attribute returned in 3-tuple (u, v, ddict[data]).
@@ -3114,12 +3109,12 @@ If False, return 2-tuple (u, v).</p></li>
 Only relevant if data is not True or False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>edges</strong> – A view of edge attributes, usually it iterates over (u, v)
 or (u, v, d) tuples of edges, but can also be used for
 attribute lookup as <cite>edges[u, v][‘foo’]</cite>.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>OutEdgeView</p>
 </dd>
 </dl>
@@ -3155,17 +3150,17 @@ For directed graphs this returns the out-edges.</p>
 <p>This is identical to <cite>G[u][v]</cite> except the default is returned
 instead of an exception if the edge doesn’t exist.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> (<em>nodes</em>) – </p></li>
 <li><p><strong>v</strong> (<em>nodes</em>) – </p></li>
 <li><p><strong>default</strong> (<em>any Python object</em><em> (</em><em>default=None</em><em>)</em>) – Value to return if the edge (u, v) is not found.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>edge_dict</strong> – The edge attribute dictionary.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dictionary</p>
 </dd>
 </dl>
@@ -3213,10 +3208,10 @@ But it is safe to assign attributes <cite>G[u][v][‘foo’]</cite></p>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">graph_type</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.graph_type" title="Permalink to this definition">#</a></dt>
 <dd><p>The type of the graph object.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the type of the graph.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>type (<cite>types_pb2.GraphType</cite>)</p>
 </dd>
 </dl>
@@ -3228,7 +3223,7 @@ But it is safe to assign attributes <cite>G[u][v][‘foo’]</cite></p>
 <dd><p>Returns True if the edge (u, v) is in the graph.</p>
 <p>This is the same as <cite>v in G[u]</cite> without KeyError exceptions.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> (<em>nodes</em>) – Nodes can be, for example, strings or numbers.
 Nodes must be int, str, float, tuple, bool  hashable Python objects.</p></li>
@@ -3236,10 +3231,10 @@ Nodes must be int, str, float, tuple, bool  hashable Python objects.</p></li>
 Nodes must be int, str, float, tuple, bool  hashable Python objects.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>edge_ind</strong> – True if edge is in the graph, False otherwise.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -3270,7 +3265,7 @@ Nodes must be int, str, float, tuple, bool  hashable Python objects.</p></li>
 <dd><p>Returns True if the graph contains the node n.</p>
 <p>Identical to <cite>n in G</cite></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>node</em>) – </p>
 </dd>
 </dl>
@@ -3311,7 +3306,7 @@ edges incident to that node.</p>
 <p>This object provides an iteration over (node, in_degree) as well as
 lookup for the degree for a single node.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nbunch</strong> (<em>single node</em><em>, </em><em>container</em><em>, or </em><em>all nodes</em><em> (</em><em>default= all nodes</em><em>)</em>) – The view will only report edges incident to these nodes.</p></li>
 <li><p><strong>weight</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – The name of an edge attribute that holds the numerical value used
@@ -3319,7 +3314,7 @@ as a weight.  If None, then each edge has weight 1.
 The degree is the sum of the edge weights adjacent to the node.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><em>If a single node is requested</em></p></li>
 <li><p><strong>deg</strong> (<em>int</em>) – In-degree of the node</p></li>
@@ -3350,7 +3345,7 @@ The degree is the sum of the edge weights adjacent to the node.</p></li>
 <dd><p>An InEdgeView of the Graph as G.in_edges or G.in_edges().</p>
 <p>in_edges(self, nbunch=None, data=False, default=None):</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nbunch</strong> (<em>single node</em><em>, </em><em>container</em><em>, or </em><em>all nodes</em><em> (</em><em>default= all nodes</em><em>)</em>) – The view will only report edges incident to these nodes.</p></li>
 <li><p><strong>data</strong> (<em>string</em><em> or </em><em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=False</em><em>)</em>) – The edge attribute returned in 3-tuple (u, v, ddict[data]).
@@ -3360,12 +3355,12 @@ If False, return 2-tuple (u, v).</p></li>
 Only relevant if data is not True or False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>in_edges</strong> – A view of edge attributes, usually it iterates over (u, v)
 or (u, v, d) tuples of edges, but can also be used for
 attribute lookup as <cite>edges[u, v][‘foo’]</cite>.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>InEdgeView</p>
 </dd>
 </dl>
@@ -3410,17 +3405,17 @@ also in the graph.</p>
 <p>The nodes in nbunch are checked for membership in the graph
 and if not are silently ignored.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>nbunch</strong> (<em>single node</em><em>, </em><em>container</em><em>, or </em><em>all nodes</em><em> (</em><em>default= all nodes</em><em>)</em>) – The view will only report edges incident to these nodes.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>niter</strong> – An iterator over nodes in nbunch that are also in the graph.
 If nbunch is None, iterate over all nodes in the graph.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>iterator</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NetworkXError</strong> – If nbunch is not a node or sequence of nodes.
     If a node in nbunch is not hashable.</p>
 </dd>
@@ -3446,10 +3441,10 @@ nbunch is not hashable, a <code class="xref py py-exc docutils literal notransla
 <p>A successor of n is a node m such that there exists a directed
 edge from n to m.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>node</em>) – A node in the graph</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NetworkXError</strong> – If n is not in the graph.</p>
 </dd>
 </dl>
@@ -3487,7 +3482,7 @@ a view <cite>G.nodes.data(‘foo’)</cite> provides a dict-like interface to th
 <cite>foo</cite> attribute of each node. <cite>G.nodes.data(‘foo’, default=1)</cite>
 provides a default for nodes that do not have attribute <cite>foo</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> (<em>string</em><em> or </em><em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=False</em><em>)</em>) – The node attribute returned in 2-tuple (n, ddict[data]).
 If True, return entire node attribute dict as (n, ddict).
@@ -3496,7 +3491,7 @@ If False, return just the nodes n.</p></li>
 Only relevant if data is not True or False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>Allows set-like operations over the nodes as well as node
 attribute dict lookup and calling to get a NodeDataView.
 A NodeDataView iterates over <cite>(n, data)</cite> and has no set operations.
@@ -3508,7 +3503,7 @@ If data is True then the attribute becomes the
 entire data dictionary.</p>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>NodeView</p>
 </dd>
 </dl>
@@ -3570,7 +3565,7 @@ to guarantee the value is never None:</p>
 <span class="sig-name descname"><span class="pre">number_of_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.number_of_edges" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the number of edges between two nodes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> (<em>nodes</em><em>, </em><em>optional</em><em> (</em><em>default=all edges</em><em>)</em>) – If u and v are specified, return the number of edges between
 u and v. Otherwise return the total number of all edges.</p></li>
@@ -3578,13 +3573,13 @@ u and v. Otherwise return the total number of all edges.</p></li>
 u and v. Otherwise return the total number of all edges.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>nedges</strong> – The number of edges in the graph.  If nodes <cite>u</cite> and <cite>v</cite> are
 specified return the number of edges between those nodes. If
 the graph is directed, this only returns the number of edges
 from <cite>u</cite> to <cite>v</cite>.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -3622,10 +3617,10 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 <span class="sig-name descname"><span class="pre">number_of_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.number_of_nodes" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the number of nodes in the graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>nnodes</strong> – The number of nodes in the graph.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>int</p>
 </dd>
 </dl>
@@ -3652,10 +3647,10 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 <span class="sig-name descname"><span class="pre">order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.order" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the number of nodes in the graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>nnodes</strong> – The number of nodes in the graph.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>int</p>
 </dd>
 </dl>
@@ -3681,7 +3676,7 @@ edges incident to that node.</p>
 <p>This object provides an iterator over (node, out_degree) as well as
 lookup for the degree for a single node.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nbunch</strong> (<em>single node</em><em>, </em><em>container</em><em>, or </em><em>all nodes</em><em> (</em><em>default= all nodes</em><em>)</em>) – The view will only report edges incident to these nodes.</p></li>
 <li><p><strong>weight</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – The name of an edge attribute that holds the numerical value used
@@ -3689,7 +3684,7 @@ as a weight.  If None, then each edge has weight 1.
 The degree is the sum of the edge weights adjacent to the node.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><em>If a single node is requested</em></p></li>
 <li><p><strong>deg</strong> (<em>int</em>) – Out-degree of the node</p></li>
@@ -3729,7 +3724,7 @@ attribute for edge <cite>(u, v)</cite> while
 iterates through all the edges yielding the color attribute
 with default <cite>‘red’</cite> if no color attribute exists.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>nbunch</strong> (<em>single node</em><em>, </em><em>container</em><em>, or </em><em>all nodes</em><em> (</em><em>default= all nodes</em><em>)</em>) – The view will only report edges incident to these nodes.</p></li>
 <li><p><strong>data</strong> (<em>string</em><em> or </em><em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=False</em><em>)</em>) – The edge attribute returned in 3-tuple (u, v, ddict[data]).
@@ -3739,12 +3734,12 @@ If False, return 2-tuple (u, v).</p></li>
 Only relevant if data is not True or False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>edges</strong> – A view of edge attributes, usually it iterates over (u, v)
 or (u, v, d) tuples of edges, but can also be used for
 attribute lookup as <cite>edges[u, v][‘foo’]</cite>.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>OutEdgeView</p>
 </dd>
 </dl>
@@ -3794,10 +3789,10 @@ A default can be set via a <cite>default</cite> argument to the <cite>data</cite
 <p>A predecessor of n is a node m such that there exists a directed
 edge from m to n.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>node</em>) – A node in the graph</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NetworkXError</strong> – If n is not in the graph.</p>
 </dd>
 </dl>
@@ -3812,13 +3807,13 @@ edge from m to n.</p>
 <span class="sig-name descname"><span class="pre">remove_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.remove_edge" title="Permalink to this definition">#</a></dt>
 <dd><p>Remove the edge between u and v.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> (<em>nodes</em>) – Remove the edge between nodes u and v.</p></li>
 <li><p><strong>v</strong> (<em>nodes</em>) – Remove the edge between nodes u and v.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NetworkXError</strong> – If there is not an edge between u and v.</p>
 </dd>
 </dl>
@@ -3845,7 +3840,7 @@ edge from m to n.</p>
 <span class="sig-name descname"><span class="pre">remove_edges_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ebunch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.remove_edges_from" title="Permalink to this definition">#</a></dt>
 <dd><p>Remove all edges specified in ebunch.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ebunch</strong> (<em>list</em><em> or </em><em>container</em><em> of </em><em>edge tuples</em>) – <p>Each edge given in the list or container will be removed
 from the graph. The edges can be:</p>
 <blockquote>
@@ -3881,10 +3876,10 @@ from the graph. The edges can be:</p>
 <p>Removes the node n and all adjacent edges.
 Attempting to remove a non-existent node will raise an exception.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>node</em>) – A node in the graph</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NetworkXError</strong> – If n is not in the graph.</p>
 </dd>
 </dl>
@@ -3908,7 +3903,7 @@ Attempting to remove a non-existent node will raise an exception.</p>
 <span class="sig-name descname"><span class="pre">remove_nodes_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes_for_removing</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.remove_nodes_from" title="Permalink to this definition">#</a></dt>
 <dd><p>Remove multiple nodes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>nodes_for_removing</strong> (<em>iterable container</em>) – A container of nodes (list, dict, set, etc.).  If a node
 in the container is not in the graph it is silently
 ignored.</p>
@@ -3937,7 +3932,7 @@ ignored.</p>
 <p>The reverse is a graph with the same nodes and edges
 but with the directions of the edges reversed.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>copy</strong> (<em>bool optional</em><em> (</em><em>default=True</em><em>)</em>) – If True, return a new DiGraph holding the reversed edges.
 If False, the reverse graph is created using a view of
 the original graph.</p>
@@ -3950,10 +3945,10 @@ the original graph.</p>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">schema</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.schema" title="Permalink to this definition">#</a></dt>
 <dd><p>Schema of the graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the schema of the graph</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphSchema</span></code></p>
 </dd>
 </dl>
@@ -3964,7 +3959,7 @@ the original graph.</p>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">session</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.session" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the session of graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Return session that the graph belongs to.</p>
 </dd>
 </dl>
@@ -3975,10 +3970,10 @@ the original graph.</p>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">session_id</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.session_id" title="Permalink to this definition">#</a></dt>
 <dd><p>Get session’s id of graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Return session id that the graph belongs to.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
 </dd>
 </dl>
@@ -3989,7 +3984,7 @@ the original graph.</p>
 <span class="sig-name descname"><span class="pre">set_edge_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.set_edge_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Set edge data of edge (u, v).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>u</strong> (<em>nodes</em>) – Nodes can be int, str, float, tuple, bool hashable Python objects.</p></li>
 <li><p><strong>v</strong> (<em>nodes</em>) – Nodes can be int, str, float, tuple, bool hashable Python objects.</p></li>
@@ -4022,7 +4017,7 @@ the original graph.</p>
 <span class="sig-name descname"><span class="pre">set_node_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.set_node_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Set data of node.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>n</strong> (<em>node</em>) – node can be int, str, float, tuple, bool hashable Python object which is existed in graph.</p></li>
 <li><p><strong>data</strong> (<em>dict</em>) – data to set to n</p></li>
@@ -4060,18 +4055,18 @@ the original graph.</p>
 <span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.size" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the number of edges or total of all edge weights.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>weight</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – The edge attribute that holds the numerical value used
 as a weight. If None, then each edge has weight 1.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p><strong>size</strong> – The number of edges or
 (if weight keyword is provided) the total weight sum.</p>
 <p>If weight is None, returns an int. Otherwise a float
 (or more general numeric if the weights are more general).</p>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numeric</p>
 </dd>
 </dl>
@@ -4103,13 +4098,13 @@ as a weight. If None, then each edge has weight 1.</p>
 <p>The induced subgraph of the graph contains the nodes in <cite>nodes</cite>
 and the edges between those nodes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>nodes</strong> (<em>list</em><em>, </em><em>iterable</em>) – A container of nodes which will be iterated through once.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>G</strong> – A subgraph of the graph.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
@@ -4146,10 +4141,10 @@ So <cite>for nbr, foovalue in G[node].data(‘foo’, default=1):</cite> works.<
 <p>A successor of n is a node m such that there exists a directed
 edge from n to m.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>node</em>) – A node in the graph</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NetworkXError</strong> – If n is not in the graph.</p>
 </dd>
 </dl>
@@ -4166,15 +4161,15 @@ edge from n to m.</p>
 <span class="sig-name descname"><span class="pre">to_directed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">as_view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.to_directed" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns a directed representation of the graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>as_view</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=False</em><em>)</em>) – If True return a view of the original directed graph.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>G</strong> – A directed graph with the same name, same nodes, and with
 each edge (u, v, data) replaced by two directed edges
 (u, v, data) and (v, u, data).</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.DiGraph" title="graphscope.nx.DiGraph">DiGraph</a></p>
 </dd>
 </dl>
@@ -4205,13 +4200,13 @@ all of the data and references.</p>
 <span class="sig-name descname"><span class="pre">to_undirected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">as_view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.to_undirected" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns an undirected copy of the graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>as_view</strong> (<em>bool</em><em> (</em><em>optional</em><em>, </em><em>default=False</em><em>)</em>) – If True return a view of the original undirected graph.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>G</strong> – A deepcopy of the graph.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.nx.Graph" title="graphscope.nx.Graph">Graph</a></p>
 </dd>
 </dl>
@@ -4255,7 +4250,7 @@ To specify only nodes the keyword <cite>nodes</cite> must be used.</p>
 the add_edges_from/add_nodes_from methods. When iterated, they
 should yield 2-tuples (u, v) or 3-tuples (u, v, datadict).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>edges</strong> (<em>Graph object</em><em>, </em><em>collection</em><em> of </em><em>edges</em><em>, or </em><em>None</em>) – The first parameter can be a graph or some edges. If it has
 attributes <cite>nodes</cite> and <cite>edges</cite>, then it is taken to be a
@@ -4297,8 +4292,8 @@ If the first parameter is a Graph, then <cite>nodes</cite> is ignored.</p></li>
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -4505,14 +4500,11 @@ If the first parameter is a Graph, then <cite>nodes</cite> is ignored.</p></li>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
-    <script src="../../_static/scripts/furo.js"></script>
-    <script src="../../_static/clipboard.min.js"></script>
-    <script src="../../_static/copybutton.js"></script>
+</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

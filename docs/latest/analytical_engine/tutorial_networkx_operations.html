@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Tutorial: Graph Operations with NetowrkX APIs" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Tutorial: Graph Operations with NetowrkX APIs" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/tutorial_networkx_operations.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tutorial: Graph Algorithms with NetowrkX APIs" href="tutorial_networkx_algorithms.html" /><link rel="prev" title="Tutorial: Running Builtin Algorithms" href="tutorial_run_builtin_algo.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Tutorial: Graph Operations with NetowrkX APIs - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,10 +665,10 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="tutorial-graph-operations-with-netowrkx-apis">
+          <section class="tex2jax_ignore mathjax_ignore" id="tutorial-graph-operations-with-netowrkx-apis">
 <h1>Tutorial: Graph Operations with NetowrkX APIs<a class="headerlink" href="#tutorial-graph-operations-with-netowrkx-apis" title="Permalink to this heading">#</a></h1>
 <p><a class="reference external" href="https://networkx.org/">NetworkX</a> is a Python package for the manipulation and functions for graph data on a single machine. However, it lacks the capability of handling large-scale graphs on a distributed environment. Fortunately, GraphScope is compatible with NetworkX APIs, and thus a program written with NetworkX can directly run on GraphScope with only some small changes. In this tutorial, we will first introduce how to manipulate graph data with NetworkX APIs.</p>
-<div class="section" id="creating-an-empty-graph">
+<section id="creating-an-empty-graph">
 <h2>Creating an Empty Graph<a class="headerlink" href="#creating-an-empty-graph" title="Permalink to this heading">#</a></h2>
 <p>To create an empty graph with no nodes and no edges, we only need to simply new a <code class="docutils literal notranslate"><span class="pre">Graph</span></code> object.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import the graphscope and graphscope networkx module.</span>
@@ -677,8 +678,8 @@ MathJax = {
 <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="adding-nodes">
+</section>
+<section id="adding-nodes">
 <h2>Adding Nodes<a class="headerlink" href="#adding-nodes" title="Permalink to this heading">#</a></h2>
 <p>The nodes of graph <code class="docutils literal notranslate"><span class="pre">G</span></code> can be added in several ways. In <code class="docutils literal notranslate"><span class="pre">graphscope.nx</span></code>, nodes can be some hashable Python objects, including <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">str</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">tuple</span></code>, <code class="docutils literal notranslate"><span class="pre">bool</span></code> objects. To get started though, we’ll look at simple manipulations and start from an empty graph. You can add one node at a time,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -709,8 +710,8 @@ MathJax = {
 <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">data</span><span class="p">())</span>  <span class="c1"># shows the node attributes</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="adding-edges">
+</section>
+<section id="adding-edges">
 <h2>Adding Edges<a class="headerlink" href="#adding-edges" title="Permalink to this heading">#</a></h2>
 <p>The edges of <code class="docutils literal notranslate"><span class="pre">G</span></code> can also be grown by adding one edge at a time,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
@@ -756,8 +757,8 @@ MathJax = {
 <span class="n">G</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="examining-elements-of-a-graph">
+</section>
+<section id="examining-elements-of-a-graph">
 <h2>Examining Elements of a Graph<a class="headerlink" href="#examining-elements-of-a-graph" title="Permalink to this heading">#</a></h2>
 <p>Now we can examine the nodes and edges. Four basic graph properties facilitate reporting: <code class="docutils literal notranslate"><span class="pre">G.nodes</span></code>, <code class="docutils literal notranslate"><span class="pre">G.edges</span></code>, <code class="docutils literal notranslate"><span class="pre">G.adj</span></code> and <code class="docutils literal notranslate"><span class="pre">G.degree</span></code>. These are set-like views of the nodes, edges, neighbors (adjacencies), and degrees of nodes in a graph. They offer a continually updated read-only view into the graph structure. They are also dict-like in that you can look up node and edge data attributes via the views and iterate with data attributes using methods <code class="docutils literal notranslate"><span class="pre">.items()</span></code> and <code class="docutils literal notranslate"><span class="pre">.data('span')</span></code>. If you want a specific container type instead of a view, you can specify one. Here we use lists, though sets, dicts, tuples and other containers may be better in other contexts.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
@@ -767,8 +768,8 @@ MathJax = {
 </pre></div>
 </div>
 <p>One can specify to report the edges and degree from a subset of all nodes using an <em>nbunch</em>. An <em>nbunch</em> is any of: <code class="docutils literal notranslate"><span class="pre">None</span></code> (meaning all nodes), a node, or an iterable container of nodes that is not itself a node in the graph.</p>
-</div>
-<div class="section" id="removing-elements-from-a-graph">
+</section>
+<section id="removing-elements-from-a-graph">
 <h2>Removing Elements from a Graph<a class="headerlink" href="#removing-elements-from-a-graph" title="Permalink to this heading">#</a></h2>
 <p>One can remove nodes and edges from the graph in a similar fashion to adding nodes/edges. One can use methods <code class="docutils literal notranslate"><span class="pre">Graph.remove_node()</span></code>, <code class="docutils literal notranslate"><span class="pre">Graph.remove_nodes_from()</span></code>, <code class="docutils literal notranslate"><span class="pre">Graph.remove_edge()</span></code> and <code class="docutils literal notranslate"><span class="pre">Graph.remove_edges_from()</span></code>, e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">G</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
@@ -781,8 +782,8 @@ MathJax = {
 <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="using-graph-constructors">
+</section>
+<section id="using-graph-constructors">
 <h2>Using Graph Constructors<a class="headerlink" href="#using-graph-constructors" title="Permalink to this heading">#</a></h2>
 <p>Graph objects do not have to be built up incrementally - data specifying graph structure can be passed directly to the constructors of the various graph classes. When creating a graph structure by instantiating one of the graph classes you can specify data in several formats.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
@@ -794,8 +795,8 @@ MathJax = {
 <span class="nb">list</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="accessing-edges-and-neighbors">
+</section>
+<section id="accessing-edges-and-neighbors">
 <h2>Accessing Edges and Neighbors<a class="headerlink" href="#accessing-edges-and-neighbors" title="Permalink to this heading">#</a></h2>
 <p>In addition to the views <code class="docutils literal notranslate"><span class="pre">Graph.edges</span></code> and <code class="docutils literal notranslate"><span class="pre">Graph.adj</span></code>, one can access edges and neighbors of a node using subscript notation.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">([(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;yellow&quot;</span><span class="p">})])</span>
@@ -829,12 +830,12 @@ MathJax = {
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">u</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">wt</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="adding-attributes-to-graphs-nodes-and-edges">
+</section>
+<section id="adding-attributes-to-graphs-nodes-and-edges">
 <h2>Adding Attributes to Graphs, Nodes and Edges<a class="headerlink" href="#adding-attributes-to-graphs-nodes-and-edges" title="Permalink to this heading">#</a></h2>
 <p>Attributes such as weights, labels, colors, can be attached to graphs, nodes, or edges.</p>
 <p>Each graph, node, and edge can hold key/value attribute. By default these are empty, but attributes can be added or changed by using <code class="docutils literal notranslate"><span class="pre">add_edge()</span></code>, <code class="docutils literal notranslate"><span class="pre">add_node()</span></code> or direct manipulation of the attribute dictionaries named <code class="docutils literal notranslate"><span class="pre">G.graph</span></code>, <code class="docutils literal notranslate"><span class="pre">G.nodes</span></code>, and <code class="docutils literal notranslate"><span class="pre">G.edges</span></code> for a graph <code class="docutils literal notranslate"><span class="pre">G</span></code>.</p>
-<div class="section" id="graph-attributes">
+<section id="graph-attributes">
 <h3>Graph Attributes<a class="headerlink" href="#graph-attributes" title="Permalink to this heading">#</a></h3>
 <p>One can assign graph attributes when creating a new graph</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="s2">&quot;Friday&quot;</span><span class="p">)</span>
@@ -846,8 +847,8 @@ MathJax = {
 <span class="n">G</span><span class="o">.</span><span class="n">graph</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="node-attributes">
+</section>
+<section id="node-attributes">
 <h3>Node Attributes<a class="headerlink" href="#node-attributes" title="Permalink to this heading">#</a></h3>
 <p>One can add node attributes using <code class="docutils literal notranslate"><span class="pre">add_node()</span></code>, <code class="docutils literal notranslate"><span class="pre">add_nodes_from()</span></code>, or <code class="docutils literal notranslate"><span class="pre">G.nodes</span></code></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="s2">&quot;5pm&quot;</span><span class="p">)</span>
@@ -859,8 +860,8 @@ MathJax = {
 </pre></div>
 </div>
 <p>Note that adding a node to <code class="docutils literal notranslate"><span class="pre">G.nodes</span></code> does not add it to the graph, use<code class="docutils literal notranslate"> <span class="pre">G.add_node()</span></code> to add new nodes. Similarly for edges.</p>
-</div>
-<div class="section" id="edge-attributes">
+</section>
+<section id="edge-attributes">
 <h3>Edge Attributes<a class="headerlink" href="#edge-attributes" title="Permalink to this heading">#</a></h3>
 <p>One can add/change edge attributes using <code class="docutils literal notranslate"><span class="pre">add_edge()</span></code>, <code class="docutils literal notranslate"><span class="pre">add_edges_from()</span></code>, or subscript notation.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">4.7</span><span class="p">)</span>
@@ -873,9 +874,9 @@ MathJax = {
 </pre></div>
 </div>
 <p>The special attribute <code class="docutils literal notranslate"><span class="pre">weight</span></code> should be numeric as it is used by algorithms requiring weighted edges.</p>
-</div>
-</div>
-<div class="section" id="induce-deepcopy-subgraph-and-edge-subgraph">
+</section>
+</section>
+<section id="induce-deepcopy-subgraph-and-edge-subgraph">
 <h2>Induce deepcopy <code class="docutils literal notranslate"><span class="pre">subgraph</span></code> and <code class="docutils literal notranslate"><span class="pre">edge_subgraph</span></code><a class="headerlink" href="#induce-deepcopy-subgraph-and-edge-subgraph" title="Permalink to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">graphscope.nx</span></code> supports to induce a <code class="docutils literal notranslate"><span class="pre">deepcopy</span></code> subgraph by given node set or edge set.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
@@ -892,8 +893,8 @@ MathJax = {
 </pre></div>
 </div>
 <p>Note that different from <code class="docutils literal notranslate"><span class="pre">subgraph</span></code>/<code class="docutils literal notranslate"><span class="pre">edge_subgraph</span></code> APIs in NetworkX which return a view, <code class="docutils literal notranslate"><span class="pre">graphscope.nx</span></code> returns a deepcopy of <code class="docutils literal notranslate"><span class="pre">subgraph</span></code>/<code class="docutils literal notranslate"><span class="pre">edge_subgraph</span></code>.</p>
-</div>
-<div class="section" id="making-copies">
+</section>
+<section id="making-copies">
 <h2>Making Copies<a class="headerlink" href="#making-copies" title="Permalink to this heading">#</a></h2>
 <p>One can use <code class="docutils literal notranslate"><span class="pre">to_directed</span></code> to return a directed representaion of the graph.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DG</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">to_directed</span><span class="p">()</span>  <span class="c1"># here would return a &quot;deepcopy&quot; directed representation of G.</span>
@@ -922,8 +923,8 @@ MathJax = {
 </pre></div>
 </div>
 <p>Note that <code class="docutils literal notranslate"><span class="pre">graphscope.nx</span></code> does not support shallow copy of the graph.</p>
-</div>
-<div class="section" id="directed-graphs">
+</section>
+<section id="directed-graphs">
 <h2>Directed Graphs<a class="headerlink" href="#directed-graphs" title="Permalink to this heading">#</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">DiGraph</span></code> class provides additional methods and properties specific to directed edges, e.g., <code class="docutils literal notranslate"><span class="pre">DiGraph.out_edges</span></code>, <code class="docutils literal notranslate"><span class="pre">DiGraph.in_degree</span></code>, <code class="docutils literal notranslate"><span class="pre">DiGraph.predecessors()</span></code> and <code class="docutils literal notranslate"><span class="pre">DiGraph.successors()</span></code>. To allow algorithms to work with both directed and undirected classes easily, the directed versions of <code class="docutils literal notranslate"><span class="pre">neighbors()</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">successors()</span></code>, while <code class="docutils literal notranslate"><span class="pre">degree</span></code> reports the sum of <code class="docutils literal notranslate"><span class="pre">in_degree</span></code> and <code class="docutils literal notranslate"><span class="pre">out_degree</span></code> even though that may feel inconsistent at times.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DG</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
@@ -953,8 +954,8 @@ MathJax = {
 <span class="nb">list</span><span class="p">(</span><span class="n">K</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="analyzing-graphs">
+</section>
+<section id="analyzing-graphs">
 <h2>Analyzing Graphs<a class="headerlink" href="#analyzing-graphs" title="Permalink to this heading">#</a></h2>
 <p>The structure of <code class="docutils literal notranslate"><span class="pre">G</span></code> can be analyzed using various graph-theoretic functions such as:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
@@ -966,8 +967,8 @@ MathJax = {
 </pre></div>
 </div>
 <p>In <code class="docutils literal notranslate"><span class="pre">graphscope.nx,</span></code> we support some builtin algorithms for analyzing graph, see <a class="reference external" href="https://graphscope.io/docs/reference/networkx/builtin.html">builtin algorithm</a> for more details on graph algorithms supported.</p>
-</div>
-<div class="section" id="create-graph-from-graphscope-graph-object">
+</section>
+<section id="create-graph-from-graphscope-graph-object">
 <h2>Create graph from GraphScope Graph Object<a class="headerlink" href="#create-graph-from-graphscope-graph-object" title="Permalink to this heading">#</a></h2>
 <p>In addition, we can create a graph in the GraphScope way, which is created from GraphScope graph object.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># we load a GraphScope graph with load_ldbc</span>
@@ -979,8 +980,8 @@ MathJax = {
 <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="transform-to-graphscope-graph-object">
+</section>
+<section id="transform-to-graphscope-graph-object">
 <h2>Transform to GraphScope Graph Object<a class="headerlink" href="#transform-to-graphscope-graph-object" title="Permalink to this heading">#</a></h2>
 <p>As <code class="docutils literal notranslate"><span class="pre">graphscope.nx</span></code> graph can create from GraphScope graph, the <code class="docutils literal notranslate"><span class="pre">graphscope.nx</span></code> graph can also transform to GraphScope graph, e.g,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">nodes</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;foo&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;foo&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;foo&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})]</span>
@@ -992,8 +993,8 @@ MathJax = {
 <span class="n">g</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -1084,14 +1085,11 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

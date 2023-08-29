@@ -111,54 +111,55 @@ $(function() {
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                          <span class="keyword">const</span> V&amp; value) {</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  V got;</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  <span class="keywordflow">if</span> (!<a class="code" href="namespacegs_1_1config__parsing.html#ac209f94a566405352ce94d8072e4e721">get_scalar</a>(root, key, got)) {</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Expect key: &quot;</span> &lt;&lt; key &lt;&lt; <span class="stringliteral">&quot;set to &quot;</span> &lt;&lt; value &lt;&lt; <span class="stringliteral">&quot; but not set&quot;</span>;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  }</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  <span class="keywordflow">if</span> (got != value) {</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Expect key: &quot;</span> &lt;&lt; key &lt;&lt; <span class="stringliteral">&quot;set to &quot;</span> &lt;&lt; value &lt;&lt; <span class="stringliteral">&quot; but got &quot;</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;               &lt;&lt; got;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  }</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;}</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="comment">// When file_path is absolute path, try to find the file in the absolute path.</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="comment">// When data_location is give, try to find the file in data_location first.</span></div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="comment">// When data_location is not given, try to find the file Under FLEX_DATA_DIR</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="comment">// When FLEX_DATA_DIR is not set, try to find the file under current path.</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
-<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="namespacegs_1_1config__parsing.html#ae1790fe1d454c47a5600be19c5f596e2">   71</a></span>&#160;<span class="keyword">static</span> <span class="keywordtype">bool</span> <a class="code" href="namespacegs_1_1config__parsing.html#ae1790fe1d454c47a5600be19c5f596e2">access_file</a>(<span class="keyword">const</span> std::string data_location,</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;                        std::string&amp; file_path) {</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="keywordflow">if</span> (file_path.size() == 0) {</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  }</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  <span class="keywordflow">if</span> (file_path[0] == <span class="charliteral">&#39;/&#39;</span>) {</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    std::filesystem::path path(file_path);</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keywordflow">return</span> std::filesystem::exists(path);</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  }</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  std::string real_location;</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  <span class="keywordflow">if</span> (!data_location.empty()) {</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    real_location = data_location;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (std::getenv(<span class="stringliteral">&quot;FLEX_DATA_DIR&quot;</span>) != NULL) {</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    real_location = std::string(std::getenv(<span class="stringliteral">&quot;FLEX_DATA_DIR&quot;</span>));</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    real_location = std::filesystem::current_path().generic_string();</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  }</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160; </div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  file_path = real_location + <span class="stringliteral">&quot;/&quot;</span> + file_path;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  std::filesystem::path path(file_path);</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="keywordflow">return</span> std::filesystem::exists(path);</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;}</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; </div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;}  <span class="comment">// namespace config_parsing</span></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;}  <span class="comment">// namespace gs</span></div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="preprocessor">#endif  // UTILS_YAML_UTILS_H_</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Expect key: &quot;</span> &lt;&lt; key &lt;&lt; <span class="stringliteral">&quot; set to &quot;</span> &lt;&lt; value</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;               &lt;&lt; <span class="stringliteral">&quot; but not set&quot;</span>;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  }</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  <span class="keywordflow">if</span> (got != value) {</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    LOG(ERROR) &lt;&lt; <span class="stringliteral">&quot;Expect key: &quot;</span> &lt;&lt; key &lt;&lt; <span class="stringliteral">&quot; set to &quot;</span> &lt;&lt; value &lt;&lt; <span class="stringliteral">&quot; but got &quot;</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;               &lt;&lt; got;</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  }</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;}</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="comment">// When file_path is absolute path, try to find the file in the absolute path.</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="comment">// When data_location is give, try to find the file in data_location first.</span></div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="comment">// When data_location is not given, try to find the file Under FLEX_DATA_DIR</span></div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="comment">// When FLEX_DATA_DIR is not set, try to find the file under current path.</span></div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160; </div>
+<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="namespacegs_1_1config__parsing.html#ae1790fe1d454c47a5600be19c5f596e2">   72</a></span>&#160;<span class="keyword">static</span> <span class="keywordtype">bool</span> <a class="code" href="namespacegs_1_1config__parsing.html#ae1790fe1d454c47a5600be19c5f596e2">access_file</a>(<span class="keyword">const</span> std::string data_location,</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;                        std::string&amp; file_path) {</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  <span class="keywordflow">if</span> (file_path.size() == 0) {</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  }</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <span class="keywordflow">if</span> (file_path[0] == <span class="charliteral">&#39;/&#39;</span>) {</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    std::filesystem::path path(file_path);</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keywordflow">return</span> std::filesystem::exists(path);</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  }</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160; </div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  std::string real_location;</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="keywordflow">if</span> (!data_location.empty()) {</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    real_location = data_location;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (std::getenv(<span class="stringliteral">&quot;FLEX_DATA_DIR&quot;</span>) != NULL) {</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    real_location = std::string(std::getenv(<span class="stringliteral">&quot;FLEX_DATA_DIR&quot;</span>));</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    real_location = std::filesystem::current_path().generic_string();</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  }</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160; </div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  file_path = real_location + <span class="stringliteral">&quot;/&quot;</span> + file_path;</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  std::filesystem::path path(file_path);</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  <span class="keywordflow">return</span> std::filesystem::exists(path);</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;}</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;}  <span class="comment">// namespace config_parsing</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;}  <span class="comment">// namespace gs</span></div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160; </div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor">#endif  // UTILS_YAML_UTILS_H_</span></div>
 </div><!-- fragment --></div><!-- contents -->
 <div class="ttc" id="anamespacegs_1_1config__parsing_html_ac209f94a566405352ce94d8072e4e721"><div class="ttname"><a href="namespacegs_1_1config__parsing.html#ac209f94a566405352ce94d8072e4e721">gs::config_parsing::get_scalar</a></div><div class="ttdeci">bool get_scalar(YAML::Node node, const std::string &amp;key, T &amp;value)</div><div class="ttdef"><b>Definition:</b> yaml_utils.h:27</div></div>
 <div class="ttc" id="anamespacegs_html"><div class="ttname"><a href="namespacegs.html">gs</a></div><div class="ttdef"><b>Definition:</b> loading_config.cc:23</div></div>
 <div class="ttc" id="anamespacegs_1_1config__parsing_html_ab9813e2aefc96edf50ac6dbfae1c9f56"><div class="ttname"><a href="namespacegs_1_1config__parsing.html#ab9813e2aefc96edf50ac6dbfae1c9f56">gs::config_parsing::get_sequence</a></div><div class="ttdeci">bool get_sequence(YAML::Node node, const std::string &amp;key, std::vector&lt; T &gt; &amp;seq)</div><div class="ttdef"><b>Definition:</b> yaml_utils.h:37</div></div>
-<div class="ttc" id="anamespacegs_1_1config__parsing_html_ae1790fe1d454c47a5600be19c5f596e2"><div class="ttname"><a href="namespacegs_1_1config__parsing.html#ae1790fe1d454c47a5600be19c5f596e2">gs::config_parsing::access_file</a></div><div class="ttdeci">static bool access_file(const std::string data_location, std::string &amp;file_path)</div><div class="ttdef"><b>Definition:</b> yaml_utils.h:71</div></div>
+<div class="ttc" id="anamespacegs_1_1config__parsing_html_ae1790fe1d454c47a5600be19c5f596e2"><div class="ttname"><a href="namespacegs_1_1config__parsing.html#ae1790fe1d454c47a5600be19c5f596e2">gs::config_parsing::access_file</a></div><div class="ttdeci">static bool access_file(const std::string data_location, std::string &amp;file_path)</div><div class="ttdef"><b>Definition:</b> yaml_utils.h:72</div></div>
 <div class="ttc" id="anamespacegs_1_1config__parsing_html_abcf51dcf04aa241dad99960053285108"><div class="ttname"><a href="namespacegs_1_1config__parsing.html#abcf51dcf04aa241dad99960053285108">gs::config_parsing::expect_config</a></div><div class="ttdeci">static bool expect_config(YAML::Node root, const std::string &amp;key, const V &amp;value)</div><div class="ttdef"><b>Definition:</b> yaml_utils.h:52</div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

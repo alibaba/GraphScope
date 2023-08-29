@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Vertex-Centric Model" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Vertex-Centric Model" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/vertex_centric_models.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Programming Model: PIE" href="programming_model_pie.html" /><link rel="prev" title="Key Concepts" href="key_concepts.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Vertex-Centric Model - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,7 +665,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="vertex-centric-model">
+          <section class="tex2jax_ignore mathjax_ignore" id="vertex-centric-model">
 <h1>Vertex-Centric Model<a class="headerlink" href="#vertex-centric-model" title="Permalink to this heading">#</a></h1>
 <p>In a single machine environment, developers can easily implement graph analytics algorithms as they have a global view of the graph and can freely iterate through all vertices and edges. When the size of graph data grows beyond the memory capacity of a single machine, graph data must be partitioned to distributed memory, leading to the indivisibility of the whole graph structure.</p>
 <p>To allow developers to succinctly express graph analytics algorithms under such environment, the <em>vertex-centric programming model</em> have been developed, with the philosophy of “think like a vertex”. Specifically, a graph analytics algorithm iteratively executes a user-defined program over vertices of a graph. The user-defined vertex program
@@ -675,16 +676,18 @@ satisfied. As opposed to <em>global</em> perspective of the graph, vertex-centri
 employ a <em>local, vertex-oriented</em> perspective.</p>
 <p>The philosophy of vertex-centric model encourages many programming models, including the <a class="reference external" href="https://research.google/pubs/pub37252/">Pregel model</a> proposed by Google and the <a class="reference external" href="https://www.usenix.org/conference/osdi12/technical-sessions/presentation/gonzalez">GAS model</a>. These programming models
 have widely applied in various graph processing systems, such as Giraph, GraphX and PowerGraph.</p>
-<div class="section" id="pregel-model">
+<section id="pregel-model">
 <h2>Pregel Model<a class="headerlink" href="#pregel-model" title="Permalink to this heading">#</a></h2>
 <p>Pregel was first introduced in a <a class="reference external" href="https://dl.acm.org/doi/10.1145/1807167.1807184">SIGMOD paper</a> published by Google in 2010. A graph analytics algorithm with the Pregel model consists of a sequence of iterations (called <em>supersteps</em>).</p>
 <blockquote>
 <div><p>“During a superstep the framework invokes a user-defined function for each vertex, conceptually in parallel. The function specifies behavior at a single vertex <em>V</em> and a single superstep <em>S</em>. It can read messages sent to <em>V</em> in superstep <em>S − 1</em>, send messages to other vertices that will be received at superstep <em>S + 1</em>, and modify the state of <em>V</em> and its outgoing edges. Messages are typically sent along outgoing edges, but a message may be sent to any vertex whose identifier is known.”</p>
 </div></blockquote>
-<div class="figure align-default" id="id1">
+<figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="../_images/pregel.png"><img alt="The Pregel model" src="../_images/pregel.png" style="width: 80%;" /></a>
-<p class="caption"><span class="caption-text">The Pregel model.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">The Pregel model.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>As shown in the following figure, in each iteration, the state of a vertex becomes <em>inactive</em> if there are no messages sent to it. Once it receives messages, its state will become <em>active</em> again.<br />
 The iterations terminate until no messages are sent from any vertex, indicating a <em>halt</em>.</p>
 <p>The vertex function can be invoked at each vertex in parallel, since individual vertices communicate via message-passing.</p>
@@ -703,16 +706,18 @@ The iterations terminate until no messages are sent from any vertex, indicating 
 <span class="p">}</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="gas-model">
+</section>
+<section id="gas-model">
 <h2>GAS Model<a class="headerlink" href="#gas-model" title="Permalink to this heading">#</a></h2>
 <p>However, the performance of Pregel drops dramatically when facing natural graphs which follow a power-law distribution. To solve this problem, <a class="reference external" href="https://www.usenix.org/conference/osdi12/technical-sessions/presentation/gonzalez">PowerGraph</a> proposed the GAS (Gather-Apply-Scatter) programming model for the vertex-cut graph partitioning strategy. The <em>Gather</em> function runs locally on each partition and then one accumulator is sent from each mirror to the master. The master runs the <em>Apply</em> function and then sends the updated vertex data to all mirrors. Finally, the <em>Scatter</em> phase is run in parallel on mirrors to update the data on adjacent edges.</p>
-<div class="figure align-default" id="id2">
+<figure class="align-default" id="id2">
 <a class="reference internal image-reference" href="../_images/gas.png"><img alt="The GAS model" src="../_images/gas.png" style="width: 50%;" /></a>
-<p class="caption"><span class="caption-text">The GAS model.</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
-</div>
-</div>
-<div class="section" id="simulation-of-pregel-model-in-analytical-engine">
+<figcaption>
+<p><span class="caption-text">The GAS model.</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="simulation-of-pregel-model-in-analytical-engine">
 <h2>Simulation of Pregel Model in Analytical Engine<a class="headerlink" href="#simulation-of-pregel-model-in-analytical-engine" title="Permalink to this heading">#</a></h2>
 <p>As we proved in this <a class="reference external" href="https://dl.acm.org/doi/pdf/10.1145/3035918.3035942">paper</a>, the analytical engine of GraphScope is able to simulate the vertex centric models. We have implemented the support for Pregel model in the analytical engine, and you can use the Pregel APIs to write your own algorithms. In addition, if you already have your graph applications implemented in Giraph or GraphX, you can run them on GraphScope directly. Better still, the analytical engine can achieve better performance than Giraph and GraphX.</p>
 <p>Please refer to related tutorials.</p>
@@ -720,8 +725,8 @@ The iterations terminate until no messages are sent from any vertex, indicating 
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/tutorial_run_giraph_apps.html">Tutorial: Run Giraph Applications on GraphScope</a></p></li>
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/tutorial_run_graphx_apps.html">Tutorial: Run GraphX Applications on GraphScope</a></p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -796,14 +801,11 @@ The iterations terminate until no messages are sent from any vertex, indicating 
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

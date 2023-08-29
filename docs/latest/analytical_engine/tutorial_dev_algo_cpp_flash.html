@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Tutorial: Develop Your Algorithms in C++ with FLASH Model" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Tutorial: Develop Your Algorithms in C++ with FLASH Model" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/tutorial_dev_algo_cpp_flash.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tutorial: Develop algorithms in Python" href="tutorial_dev_algo_python.html" /><link rel="prev" title="Tutorial: Develop your Algorithm in C++ with PIE Model" href="tutorial_dev_algo_cpp_pie.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Tutorial: Develop Your Algorithms in C++ with FLASH Model - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,12 +665,12 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="tutorial-develop-your-algorithms-in-c-with-flash-model">
+          <section class="tex2jax_ignore mathjax_ignore" id="tutorial-develop-your-algorithms-in-c-with-flash-model">
 <h1>Tutorial: Develop Your Algorithms in C++ with FLASH Model<a class="headerlink" href="#tutorial-develop-your-algorithms-in-c-with-flash-model" title="Permalink to this heading">#</a></h1>
 <p>We have implemented over 70 graph algorithms with FLASH for over 40 different common problems. These algorithms cover various areas such as clustering, centrality, traversal, matching, mining, etc. We continuously add more algorithms to the FLASH library and encourage users to develop their algorithms using the FLASH model if the built-in algorithms do not meet their requirements.</p>
-<div class="section" id="developing-algorithms-with-flash-model">
+<section id="developing-algorithms-with-flash-model">
 <h2>Developing Algorithms with FLASH Model<a class="headerlink" href="#developing-algorithms-with-flash-model" title="Permalink to this heading">#</a></h2>
-<div class="section" id="defining-a-flash-application">
+<section id="defining-a-flash-application">
 <h3>Defining A FLASH Application<a class="headerlink" href="#defining-a-flash-application" title="Permalink to this heading">#</a></h3>
 <p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/flash.html">FLASH</a> is a programming model specifically designed for writing distributed graph processing algorithms. It follows the Bulk Synchronous Parallel (BSP) computing paradigm and provides primary functions like <em>VSize</em>, <em>VertexMap</em>, and <em>EdgeMap</em>, which are defined on the <em>VertexSubset</em> structure, and a series of auxiliary functions like set operations. The FLASH model provides strong expressiveness and makes it possible to program more advanced algorithms than existing vertex-centric algorithms.</p>
 <p>To implement your algorithms using the FLASH model, you need to define a FLASH application first, by  fulfilling an APP class in C++. If the result of the algorithm is a value on each vertex, the class looks like:</p>
@@ -710,8 +711,8 @@ MathJax = {
 <span class="p">};</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="implementing-the-run-function">
+</section>
+<section id="implementing-the-run-function">
 <h3>Implementing the Run Function<a class="headerlink" href="#implementing-the-run-function" title="Permalink to this heading">#</a></h3>
 <p>After that, a user can implement a distributed graph processing algorithm through utilizing various FLASH APIs in the Run Function of the application. Let’s take BFS as an example, an user-defined application may be like this in file <code class="docutils literal notranslate"><span class="pre">GraphScope/analytical_engine/apps/flash/traversal/bfs.h</span></code>:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">FRAG_T</span><span class="o">&gt;</span>
@@ -743,8 +744,8 @@ MathJax = {
 </pre></div>
 </div>
 <p>As shown in this code, to implement a BFS algorithm, users only need to design and implement processing operations on the <em>VertexSubset</em>, rather than considering communication, message passing and graph partitioning in a distributed setting. This reduces the burden of programming various kinds of algorithms.</p>
-</div>
-<div class="section" id="integrating-with-the-python-client-of-graphscope">
+</section>
+<section id="integrating-with-the-python-client-of-graphscope">
 <h3>Integrating with the Python Client of GraphScope<a class="headerlink" href="#integrating-with-the-python-client-of-graphscope" title="Permalink to this heading">#</a></h3>
 <p>To run your FLASH algorithms from the Python client of GraphScope, one needs to provide a corresponding Python function defined for this algorithm. For example, to integrate the above BFS algorithm, one can define a function as follows in the file <code class="docutils literal notranslate"><span class="pre">GraphScope/python/graphscope/analytical/app/flash/traversal.py</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@project_to_simple</span>
@@ -773,8 +774,8 @@ MathJax = {
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gs::ArrowProjectedFragment</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="running-the-flash-algorithms">
+</section>
+<section id="running-the-flash-algorithms">
 <h3>Running the FLASH Algorithms<a class="headerlink" href="#running-the-flash-algorithms" title="Permalink to this heading">#</a></h3>
 <p>To run your own FLASH algorithms, you may trigger it from the client of GraphScope once you have installed and deployed GAE. At first, a property graph will be loaded into GraphScope.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import the graphscope module.</span>
@@ -806,9 +807,9 @@ In this case, the results represent the distance from the source node. We use th
 <span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
         </article>
       </div>
@@ -887,14 +888,11 @@ In this case, the results represent the distance from the source node. We use th
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

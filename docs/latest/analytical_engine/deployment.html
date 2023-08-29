@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Deployment for GAE" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Deployment for GAE" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/deployment.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Design of Analytical Engine" href="design_of_gae.html" /><link rel="prev" title="Getting Started" href="getting_started.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Deployment for GAE - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,13 +665,13 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="deployment-for-gae">
+          <section class="tex2jax_ignore mathjax_ignore" id="deployment-for-gae">
 <h1>Deployment for GAE<a class="headerlink" href="#deployment-for-gae" title="Permalink to this heading">#</a></h1>
 <p>We have already <a class="reference internal" href="../deployment/install_on_local.html"><span class="std std-doc">presented</span></a> you that how to deploy GraphScope on a Local machine, and how to take advantage of 3 engines (GAE, GIE and GLE) to address different and complex problems that related to graphs.</p>
 <p>We also have <a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html"><span class="std std-doc">showed</span></a> you that how to deploy GraphScope on Kubernetes cluster.</p>
 <p>However, such scenarios are also quite common, where users intend to run graph analysis algorithms on offline graph data every day and export the results to the data warehouse, without any need for real-time graph querying or sampling. In such cases, it is unnecessary for users to deploy both GIE and GLE. Hence, we provide the capability to deploy GAE independently.</p>
 <p>In this document, we will walk you through the process of standalone deployment of GAE on a self-managed k8s cluster.</p>
-<div class="section" id="prerequisites">
+<section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Kubernetes Cluster</p></li>
@@ -678,11 +679,11 @@ MathJax = {
 </ul>
 <p>To get started, you need to install graphscope-client and prepare a Kubernetes Cluster to continue.</p>
 <p>Incase you doesn’t have one, you could refer to the <a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html#install-graphscope-client"><span class="std std-ref">Install graphscope-client</span></a> and <a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html#prepare-a-kubernetes-cluster"><span class="std std-ref">create kubernetes cluster</span></a> to get them.</p>
-</div>
-<div class="section" id="deployment-gae-only">
+</section>
+<section id="deployment-gae-only">
 <h2>Deployment GAE only<a class="headerlink" href="#deployment-gae-only" title="Permalink to this heading">#</a></h2>
 <p>We offer two distinct methods for standalone installation of GAE. It is entirely at your discretion to utilize either of the aforementioned methods as per your preference.</p>
-<div class="section" id="deployment-with-python-sdk">
+<section id="deployment-with-python-sdk">
 <h3>Deployment with Python SDK<a class="headerlink" href="#deployment-with-python-sdk" title="Permalink to this heading">#</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">Session</span></code> class has options to control which subset of engines containers to be created upon launching. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
@@ -692,8 +693,8 @@ MathJax = {
 <span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="deployment-with-helm">
+</section>
+<section id="deployment-with-helm">
 <h3>Deployment with Helm<a class="headerlink" href="#deployment-with-helm" title="Permalink to this heading">#</a></h3>
 <p>You could customize options on the command line parameters passed to the <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">install</span></code>. For example:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># helm install &lt;release-name&gt; graphscope/graphscope</span>
@@ -708,8 +709,8 @@ helm<span class="w"> </span>install<span class="w"> </span>my-gs<span class="w">
 <span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="execute-graph-analytical-algorithms">
+</section>
+<section id="execute-graph-analytical-algorithms">
 <h3>Execute graph analytical algorithms<a class="headerlink" href="#execute-graph-analytical-algorithms" title="Permalink to this heading">#</a></h3>
 <p>You may execute graph analytical algorithms in the same manner as you would with previous settings. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">wcc_result</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">wcc</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
@@ -720,14 +721,14 @@ helm<span class="w"> </span>install<span class="w"> </span>my-gs<span class="w">
 <div><p><strong>Tip:</strong> If you encounter the error <strong>Failed to project to simple graph as no vertex exists in this graph.</strong>, it means that the graph is empty. You can import the loading method as <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">graphscope.dataset</span> <span class="pre">import</span> <span class="pre">load_modern_graph</span></code> , then load the modern graph with current session, e.g. <code class="docutils literal notranslate"><span class="pre">g</span> <span class="pre">=</span> <span class="pre">load_modern_graph(sess,</span> <span class="pre">&quot;path/to/your/graph&quot;)</span></code>, the “path/to/your/graph” is the path where the graph data is stored in the pod.</p>
 </div></blockquote>
 <p>The only difference is the elimination of extraneous resources, resulting in less complexity, fewer inconveniences, fewer resources required, and equivalent functionality.</p>
-</div>
-</div>
-<div class="section" id="uninstall-deployment">
+</section>
+</section>
+<section id="uninstall-deployment">
 <h2>Uninstall deployment<a class="headerlink" href="#uninstall-deployment" title="Permalink to this heading">#</a></h2>
 <p>When deployed with Python SDK, you need to use <code class="docutils literal notranslate"><span class="pre">sess.close()</span></code> to close the session and free the resources.</p>
 <p>When deployed with helm, you would use <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">uninstall</span> <span class="pre">my-gs</span></code> to delete the release and free the resources.</p>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -807,14 +808,11 @@ helm<span class="w"> </span>install<span class="w"> </span>my-gs<span class="w">
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

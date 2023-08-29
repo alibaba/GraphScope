@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Tutorial: LDBC Gremlin" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Tutorial: LDBC Gremlin" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="interactive_engine/tinkerpop/tutorial_ldbc_gremlin.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Supported Gremlin Steps" href="supported_gremlin_steps.html" /><link rel="prev" title="Guide and Examples" href="guide_and_examples.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Tutorial: LDBC Gremlin - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo-h.png" alt="Logo"/>
@@ -664,7 +665,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="tutorial-ldbc-gremlin">
+          <section class="tex2jax_ignore mathjax_ignore" id="tutorial-ldbc-gremlin">
 <h1>Tutorial: LDBC Gremlin<a class="headerlink" href="#tutorial-ldbc-gremlin" title="Permalink to this heading">#</a></h1>
 <p>Prior to beginning, it is important to note that <a class="reference external" href="https://ldbcouncil.org/">LDBC</a> is a highly
 regarded organization in the realm of graph databases/systems benchmark standards and audit testing.
@@ -676,7 +677,7 @@ workloads and business intelligence workloads.</p>
 social network utilized in SNB. By the conclusion of this tutorial, we are confident that
 you will be proficient in constructing Gremlin queries that are just as intricate as the
 business intelligence workloads found in SNB.</p>
-<div class="section" id="load-the-ldbc-graph">
+<section id="load-the-ldbc-graph">
 <h2>Load the LDBC Graph<a class="headerlink" href="#load-the-ldbc-graph" title="Permalink to this heading">#</a></h2>
 <p>For this tutorial, we will use the <a class="reference external" href="https://ldbcouncil.org/">LDBC social network</a> as the graph data, which has the following entities:</p>
 <ul class="simple">
@@ -684,10 +685,12 @@ business intelligence workloads found in SNB.</p>
 <li><p>connections and relationships among labels</p></li>
 <li><p>properties related all kinds of labels</p></li>
 </ul>
-<div class="figure align-default" id="id2">
+<figure class="align-default" id="id2">
 <a class="reference internal image-reference" href="../../_images/LDBC_Schema.png"><img alt="The schema of the LDBC graph" src="../../_images/LDBC_Schema.png" style="width: 65%;" /></a>
-<p class="caption"><span class="caption-text">Figure 1. The schema of the LDBC graph (referred to LDBC <a class="reference external" href="https://ldbcouncil.org/benchmarks/snb/">SNB</a>).</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 1. The schema of the LDBC graph (referred to LDBC <a class="reference external" href="https://ldbcouncil.org/benchmarks/snb/">SNB</a>).</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>LDBC graph is one of the built-in dataset of GraphScope, so it can be easily loaded through:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.dataset.ldbc</span> <span class="kn">import</span> <span class="n">load_ldbc</span>
 
@@ -727,11 +730,11 @@ After loading the LDBC graph and initializing the engine, we can submit Gremlin 
 </pre></div>
 </div>
 <p>It suggests that there are 190376 vertices and 787074 edges in the LDBC sf1 graph.</p>
-</div>
-<div class="section" id="basic-vertex-edge-query">
+</section>
+<section id="basic-vertex-edge-query">
 <h2>Basic Vertex/Edge Query<a class="headerlink" href="#basic-vertex-edge-query" title="Permalink to this heading">#</a></h2>
 <p>It is very common to use SQL sentences to retrieve data from relational databases. In graph, vertices can be regarded as entities, and edges can be regarded as the connecting relationship among entities. Similarly, we can easily retrieve data from graph with GIE and corresponding graph query sentences.</p>
-<div class="section" id="retrieve-vertices-and-edges">
+<section id="retrieve-vertices-and-edges">
 <h3>Retrieve Vertices and Edges<a class="headerlink" href="#retrieve-vertices-and-edges" title="Permalink to this heading">#</a></h3>
 <p>As shown in the last tutorial, we can easily retrieve vertices and edges from graph through <code class="docutils literal notranslate"><span class="pre">g.V()</span></code> and <code class="docutils literal notranslate"><span class="pre">g.E()</span></code> Gremlin steps.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># then `execute` any supported gremlin query.</span>
@@ -755,8 +758,8 @@ After loading the LDBC graph and initializing the engine, we can submit Gremlin 
 <p>When it comes to graph storage, all kinds of vertices and edges are stored together. If it still uses local id to locate vertices and edges, there will be many conflicts. Therefore, every vertex and edge needs a specific global identifier, called <em>global id</em>, to distinguish it from others.</p>
 <p>GIE uses <em>global id</em> to identify very vertex and edge. The ids look so large mainly because the underlying storage generates vertex’s  <em>global id</em> from its  <em>local id</em> and <em>label</em> by some bit operations(shift and plus). After all, the <em>global ids</em> are just identifiers, and we don’t need to worry too much about what it looks like.</p>
 <p>For edges, still the number inside the first <code class="docutils literal notranslate"><span class="pre">[]</span></code> represents its id. The content inside the second <code class="docutils literal notranslate"><span class="pre">[]</span></code> is of the format <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">vertex</span> <span class="pre">id</span> <span class="pre">-edge</span> <span class="pre">label(type)-&gt;</span> <span class="pre">destination</span> <span class="pre">vertex</span> <span class="pre">id</span></code>，indicating the edge’s two end vertices’ id and the connection type (edge label).</p>
-</div>
-<div class="section" id="apply-some-filters">
+</section>
+<section id="apply-some-filters">
 <h3>Apply Some Filters<a class="headerlink" href="#apply-some-filters" title="Permalink to this heading">#</a></h3>
 <p>In most cases, we don’t need to retrieve all the vertices and edges from the graph, as we may only care about a small portion of them. Therefore, GIE with Gremlin provides you with some filtering operations to help find the data you are interested in.</p>
 <p>If you only want to extract a vertex/edge with the given id, you can write Gremlin sentence <code class="docutils literal notranslate"><span class="pre">g.V(id)</span></code> in GIE. (<code class="docutils literal notranslate"><span class="pre">g.E(id)</span></code> will be supported in the future)</p>
@@ -828,8 +831,8 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>Here are more <a class="reference external" href="https://tinkerpop.apache.org/docs/3.6.2/reference/#has-step">references</a> about <code class="docutils literal notranslate"><span class="pre">has(...)</span></code> step in Gremlin.</p>
-</div>
-<div class="section" id="extract-property-values">
+</section>
+<section id="extract-property-values">
 <h3>Extract Property Values<a class="headerlink" href="#extract-property-values" title="Permalink to this heading">#</a></h3>
 <p>Sometimes, you may more curious about the property values of the vertices/edges. With GIE, you can easily  use <code class="docutils literal notranslate"><span class="pre">values(PROPERTY_NAME)</span></code> Gremlin step to extract the vertices/edges’ property value.</p>
 <p>For example, you have already known that vertex(id=38416) is a comment, and you are interested in its content, then you can write the following codes in GIE:</p>
@@ -843,8 +846,8 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="o">[</span><span class="s1">&#39;maybe&#39;</span><span class="o">]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="real-applications">
+</section>
+<section id="real-applications">
 <h3>Real Applications<a class="headerlink" href="#real-applications" title="Permalink to this heading">#</a></h3>
 <p>Since GIE provides python interface, it is very convenient to do some further data analytics on the retrieved data.</p>
 <p>Here is an example about the statistics of the comment content’s length (word count) in the LDBC Graph.</p>
@@ -872,10 +875,12 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="figure align-default" id="id3">
+<figure class="align-default" id="id3">
 <a class="reference internal image-reference" href="../../_images/comments_length_histogram.png"><img alt="The_histogram" src="../../_images/comments_length_histogram.png" style="width: 65%;" /></a>
-<p class="caption"><span class="caption-text">Figure 2. The histogram of the comments’ length in the ldbc social network.</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 2. The histogram of the comments’ length in the ldbc social network.</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>We can also draw a pie chart about the gender ratio in the social network.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
@@ -905,18 +910,20 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="figure align-default" id="id4">
+<figure class="align-default" id="id4">
 <a class="reference internal image-reference" href="../../_images/gender_ratio.png"><img alt="The_pie_chart" src="../../_images/gender_ratio.png" style="width: 60%;" /></a>
-<p class="caption"><span class="caption-text">Figure 3. The pie chart of person’s gender in the ldbc social network.</span><a class="headerlink" href="#id4" title="Permalink to this image">#</a></p>
-</div>
-</div>
-</div>
-<div class="section" id="basic-traversal-query">
+<figcaption>
+<p><span class="caption-text">Figure 3. The pie chart of person’s gender in the ldbc social network.</span><a class="headerlink" href="#id4" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+<section id="basic-traversal-query">
 <h2>Basic Traversal Query<a class="headerlink" href="#basic-traversal-query" title="Permalink to this heading">#</a></h2>
 <p>The main difference between Property Graph and Relational Database is that Property Graph treats the relationship(edges) among entities(vertices) at the first class. Therefore, it is easy to walk through vertices and edges in the Property Graph according to some pre-defined paths.</p>
 <p>In GIE, we call such walk as  <strong>Graph Traversal</strong>: This type of workload involves traversing the graph from a set of source vertices while satisfying the constraints on the vertices and edges that the traversal passes. Graph traversal differs from the <a class="reference external" href="https://graphscope.io/docs/latest/graph_analytics_workloads.html">analytics</a> workload as it typically accesses a small portion of the graph rather than the whole graph.</p>
 <p>In this tutorial, we would like to discuss how to use Gremlin steps to traverse the Property Graph. Furthermore, we will show some examples about how to apply graph traversals in real world data analytics.</p>
-<div class="section" id="expansion">
+<section id="expansion">
 <h3>Expansion<a class="headerlink" href="#expansion" title="Permalink to this heading">#</a></h3>
 <p>The most basic unit in Graph Traversal is Expansion, which means starting from a vertex/edge and reaching its adjacencies. GIE currently supports the following expansion steps in Gremlin:</p>
 <ul class="simple">
@@ -932,11 +939,13 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <li><p><code class="docutils literal notranslate"><span class="pre">bothV():</span></code>Map the edge to its incident vertices.</p></li>
 </ul>
 <p>Here is a local subgraph extracted from the LDBC Graph, which is formed by a center person vertex (id=216172782113784483) and all of its adjacent edges and vertices. Then we will use this subgraph to explain all of the expansion steps.</p>
-<div class="figure align-default" id="id5">
+<figure class="align-default" id="id5">
 <a class="reference internal image-reference" href="../../_images/loacal_graph_example.png"><img alt="loacal_graph_example" src="../../_images/loacal_graph_example.png" style="width: 33%;" /></a>
-<p class="caption"><span class="caption-text">Figure 5. A local graph around a given person vertex.</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
-</div>
-<div class="section" id="out-in-and-both">
+<figcaption>
+<p><span class="caption-text">Figure 5. A local graph around a given person vertex.</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<section id="out-in-and-both">
 <h4>out(), in() and both()<a class="headerlink" href="#out-in-and-both" title="Permalink to this heading">#</a></h4>
 <p>All of these three steps start traverse from source vertices to their adjacent vertices. The differences between them are:</p>
 <ul class="simple">
@@ -957,10 +966,12 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>This figure illustrates the execution process of <code class="docutils literal notranslate"><span class="pre">q1</span></code>, <code class="docutils literal notranslate"><span class="pre">q2</span></code> and <code class="docutils literal notranslate"><span class="pre">q3</span></code>:</p>
-<div class="figure align-default" id="id6">
+<figure class="align-default" id="id6">
 <a class="reference internal image-reference" href="../../_images/out_in_both.png"><img alt="out_in_both" src="../../_images/out_in_both.png" style="width: 95%;" /></a>
-<p class="caption"><span class="caption-text">Figure 6. The examples of <code class="docutils literal notranslate"><span class="pre">out</span></code>/<code class="docutils literal notranslate"><span class="pre">in</span></code>/<code class="docutils literal notranslate"><span class="pre">both</span></code> steps.</span><a class="headerlink" href="#id6" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 6. The examples of <code class="docutils literal notranslate"><span class="pre">out</span></code>/<code class="docutils literal notranslate"><span class="pre">in</span></code>/<code class="docutils literal notranslate"><span class="pre">both</span></code> steps.</span><a class="headerlink" href="#id6" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>Therefore, the output of the above codes should be like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># q1: vertex&#39;s adjacent vertices through outgoing edges</span>
 <span class="o">[</span>v<span class="o">[</span><span class="m">432345564227569033</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">288230376151712472</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">144115188075856168</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">144115188075860911</span><span class="o">]]</span>
@@ -983,10 +994,12 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>This figure illustrates the execution process of <code class="docutils literal notranslate"><span class="pre">q1</span></code>, <code class="docutils literal notranslate"><span class="pre">q2</span></code> and <code class="docutils literal notranslate"><span class="pre">q3</span></code>:</p>
-<div class="figure align-default" id="id7">
+<figure class="align-default" id="id7">
 <a class="reference internal image-reference" href="../../_images/out_in_both_labels.png"><img alt="out_in_both_labels" src="../../_images/out_in_both_labels.png" style="width: 95%;" /></a>
-<p class="caption"><span class="caption-text">Figure 7. The examples of <code class="docutils literal notranslate"><span class="pre">out</span></code>/<code class="docutils literal notranslate"><span class="pre">in</span></code>/<code class="docutils literal notranslate"><span class="pre">both</span></code> steps from given labels.</span><a class="headerlink" href="#id7" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 7. The examples of <code class="docutils literal notranslate"><span class="pre">out</span></code>/<code class="docutils literal notranslate"><span class="pre">in</span></code>/<code class="docutils literal notranslate"><span class="pre">both</span></code> steps from given labels.</span><a class="headerlink" href="#id7" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>Therefore, the output of the above codes should be like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># q1: vertex&#39;s adjacent vertices through incoming &#39;hasModerator&#39; edges</span>
 <span class="o">[</span>v<span class="o">[</span><span class="m">72057594037934114</span><span class="o">]]</span>
@@ -996,8 +1009,8 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="o">[</span>v<span class="o">[</span><span class="m">288230376151712472</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">72057594037934114</span><span class="o">]]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="oute-ine-and-bothe">
+</section>
+<section id="oute-ine-and-bothe">
 <h4>outE(), inE() and bothE()<a class="headerlink" href="#oute-ine-and-bothe" title="Permalink to this heading">#</a></h4>
 <p>All of these three steps start traverse from source vertices to their <strong>adjacent edges</strong>. Similar to <code class="docutils literal notranslate"><span class="pre">out()</span></code>, <code class="docutils literal notranslate"><span class="pre">in()</span></code> and <code class="docutils literal notranslate"><span class="pre">both()</span></code>, the differences between them are:</p>
 <ul class="simple">
@@ -1018,10 +1031,12 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>This figure illustrates the execution process of <code class="docutils literal notranslate"><span class="pre">q1</span></code>, <code class="docutils literal notranslate"><span class="pre">q2</span></code> and <code class="docutils literal notranslate"><span class="pre">q3</span></code>:</p>
-<div class="figure align-default" id="id8">
+<figure class="align-default" id="id8">
 <a class="reference internal image-reference" href="../../_images/outE_inE_bothE.png"><img alt="The current states of graph queries" src="../../_images/outE_inE_bothE.png" style="width: 95%;" /></a>
-<p class="caption"><span class="caption-text">Figure 8. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code>/<code class="docutils literal notranslate"><span class="pre">inE</span></code>/<code class="docutils literal notranslate"><span class="pre">bothE</span></code> steps.</span><a class="headerlink" href="#id8" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 8. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code>/<code class="docutils literal notranslate"><span class="pre">inE</span></code>/<code class="docutils literal notranslate"><span class="pre">bothE</span></code> steps.</span><a class="headerlink" href="#id8" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>Therefore, the output of the above codes should be like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># q1: vertex&#39;s incident outgoing edges</span>
 <span class="o">[</span>e<span class="o">[</span><span class="m">432345564227582847</span><span class="o">][</span><span class="m">216172782113784483</span>-hasInterest-&gt;432345564227569033<span class="o">]</span>,<span class="w"> </span>e<span class="o">[</span><span class="m">504403158265496227</span><span class="o">][</span><span class="m">216172782113784483</span>-isLocatedIn-&gt;288230376151712472<span class="o">]</span>,<span class="w"> </span>e<span class="o">[</span><span class="m">864691128455136658</span><span class="o">][</span><span class="m">216172782113784483</span>-workAt-&gt;144115188075856168<span class="o">]</span>,<span class="w"> </span>e<span class="o">[</span><span class="m">1008806316530991636</span><span class="o">][</span><span class="m">216172782113784483</span>-studyAt-&gt;144115188075860911<span class="o">]]</span>
@@ -1044,10 +1059,12 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>This figure illustrates the execution process of <code class="docutils literal notranslate"><span class="pre">q1</span></code>, <code class="docutils literal notranslate"><span class="pre">q2</span></code> and <code class="docutils literal notranslate"><span class="pre">q3</span></code>:</p>
-<div class="figure align-default" id="id9">
+<figure class="align-default" id="id9">
 <a class="reference internal image-reference" href="../../_images/outE_inE_bothE_labels.png"><img alt="outE_inE_bothE_labels" src="../../_images/outE_inE_bothE_labels.png" style="width: 95%;" /></a>
-<p class="caption"><span class="caption-text">Figure 9. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code>/<code class="docutils literal notranslate"><span class="pre">inE</span></code>/<code class="docutils literal notranslate"><span class="pre">bothE</span></code> steps from given labels.</span><a class="headerlink" href="#id9" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 9. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code>/<code class="docutils literal notranslate"><span class="pre">inE</span></code>/<code class="docutils literal notranslate"><span class="pre">bothE</span></code> steps from given labels.</span><a class="headerlink" href="#id9" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>Therefore, the output of the above codes should like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># q1: vertex&#39;s incident incoming &#39;hasModerator&#39; edges</span>
 <span class="o">[</span>e<span class="o">[</span><span class="m">360287970189645858</span><span class="o">][</span><span class="m">72057594037934114</span>-hasModerator-&gt;216172782113784483<span class="o">]]</span>
@@ -1057,14 +1074,16 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="o">[</span>e<span class="o">[</span><span class="m">360287970189645858</span><span class="o">][</span><span class="m">72057594037934114</span>-hasModerator-&gt;216172782113784483<span class="o">]</span>,<span class="w"> </span>e<span class="o">[</span><span class="m">504403158265496227</span><span class="o">][</span><span class="m">216172782113784483</span>-isLocatedIn-&gt;288230376151712472<span class="o">]]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="outv-inv-bothv-and-otherv">
+</section>
+<section id="outv-inv-bothv-and-otherv">
 <h4>outV(), inV(), bothV() and otherV()<a class="headerlink" href="#outv-inv-bothv-and-otherv" title="Permalink to this heading">#</a></h4>
 <p>When reaching an edge during the traversal, you may be interested in its incident vertices. Therefore, GIE supports Gremlin steps that traverse from source edges to their incident vertices.</p>
-<div class="figure align-default" id="id10">
+<figure class="align-default" id="id10">
 <a class="reference internal image-reference" href="../../_images/out_in_vertices.png"><img alt="out_in_vertices" src="../../_images/out_in_vertices.png" style="width: 50%;" /></a>
-<p class="caption"><span class="caption-text">Figure 10. The examples of outgoing/incoming vertex of an edge.</span><a class="headerlink" href="#id10" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 10. The examples of outgoing/incoming vertex of an edge.</span><a class="headerlink" href="#id10" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>For en edge <code class="docutils literal notranslate"><span class="pre">e1</span></code> whose direction is from <code class="docutils literal notranslate"><span class="pre">v1</span></code> to <code class="docutils literal notranslate"><span class="pre">v2</span></code>, we call <code class="docutils literal notranslate"><span class="pre">v1</span></code> as ‘outgoing vertex’ and <code class="docutils literal notranslate"><span class="pre">v2</span></code> as ‘incoming’ vertices.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">outV()</span></code>: traverse from source edges to the outgoing vertices</p></li>
@@ -1085,10 +1104,12 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>This figure illustrates the execution process of <code class="docutils literal notranslate"><span class="pre">q1</span></code>, <code class="docutils literal notranslate"><span class="pre">q2</span></code> and <code class="docutils literal notranslate"><span class="pre">q3</span></code>:</p>
-<div class="figure align-default" id="id11">
+<figure class="align-default" id="id11">
 <a class="reference internal image-reference" href="../../_images/outV_inV_bothV.png"><img alt="outV_inV_bothV" src="../../_images/outV_inV_bothV.png" style="width: 95%;" /></a>
-<p class="caption"><span class="caption-text">Figure 11. The examples of outV/inV/bothV steps.</span><a class="headerlink" href="#id11" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 11. The examples of outV/inV/bothV steps.</span><a class="headerlink" href="#id11" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>Therefore, the output of the above codes should like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># q1: the edge&#39;s outgoing vertex</span>
 <span class="o">[</span>v<span class="o">[</span><span class="m">216172782113784483</span><span class="o">]]</span>
@@ -1109,15 +1130,17 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="o">[</span>v<span class="o">[</span><span class="m">288230376151712472</span><span class="o">]]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="multiple-expansion-steps">
+</section>
+<section id="multiple-expansion-steps">
 <h4>Multiple Expansion Steps<a class="headerlink" href="#multiple-expansion-steps" title="Permalink to this heading">#</a></h4>
 <p>You may have already noticed that graph traversal supports multiple expansion steps. For example, in Gremlin sentence<code class="docutils literal notranslate"><span class="pre">g.V(216172782113784483).outE('isLocatedIn').inV()</span></code>, <code class="docutils literal notranslate"><span class="pre">outE('isLocatedIn')</span></code> is first expansion and <code class="docutils literal notranslate"><span class="pre">inV()</span></code> is the second expansion.</p>
 <p>The figure illustrates the execution process of this Gremlin sentence:</p>
-<div class="figure align-default" id="id12">
+<figure class="align-default" id="id12">
 <a class="reference internal image-reference" href="../../_images/outE_then_inV.png"><img alt="outE_then_inV" src="../../_images/outE_then_inV.png" style="width: 70%;" /></a>
-<p class="caption"><span class="caption-text">Figure 12. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code> followed by <code class="docutils literal notranslate"><span class="pre">inV</span></code>.</span><a class="headerlink" href="#id12" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 12. The examples of <code class="docutils literal notranslate"><span class="pre">outE</span></code> followed by <code class="docutils literal notranslate"><span class="pre">inV</span></code>.</span><a class="headerlink" href="#id12" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>During the traversal, it firstly start from the source vertex ‘person’, and get to the ‘isLocatedIn’ edge. Then it starts from the ‘isLocatedIn’ edge, and get to the ‘place’ vertex. Thus the traversal ends, the ‘place’ vertex is the end of this traversal, and the ‘isLocatedIn’ edge can be regarded as the intermediate process of the traversal.</p>
 <p>When GIE handle continuous multiple expansion steps during the traversal, the next expansion step will use the its previous expansion step’s output as its starting points. According to this property, we can summarize the following equivalent rules:</p>
 <ul class="simple">
@@ -1132,10 +1155,12 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>This figure illustrates the execution process:</p>
-<div class="figure align-default" id="id13">
+<figure class="align-default" id="id13">
 <a class="reference internal image-reference" href="../../_images/out_out_predicate.png"><img alt="out_out_predicate" src="../../_images/out_out_predicate.png" style="width: 40%;" /></a>
-<p class="caption"><span class="caption-text">Figure 13. The examples of two-hop outgoing vertices.</span><a class="headerlink" href="#id13" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 13. The examples of two-hop outgoing vertices.</span><a class="headerlink" href="#id13" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>Therefore, the output of the Gremlin sentence should be like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># The larger place(country) that the person is located in</span>
 <span class="o">[</span>v<span class="o">[</span><span class="m">288230376151711797</span><span class="o">]]</span>
@@ -1159,15 +1184,17 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[{</span><span class="s1">&#39;a&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784483</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;b&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">288230376151712472</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;c&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">288230376151711797</span><span class="o">]}]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="expansion-from-many-starting-points">
+</section>
+<section id="expansion-from-many-starting-points">
 <h4>Expansion from many starting points<a class="headerlink" href="#expansion-from-many-starting-points" title="Permalink to this heading">#</a></h4>
 <p>Currently, we only discuss the expansion from only one vertex/edges. However, it is very common to write Gremlin sentence like <code class="docutils literal notranslate"><span class="pre">g.V().out()</span></code> in GIE. In previous tutorials we have known that <code class="docutils literal notranslate"><span class="pre">g.V()</span></code> will get all the vertices in the graph. Then how to understand the meaning of <code class="docutils literal notranslate"><span class="pre">g.V().out()</span></code>?</p>
 <p>The explain it more clear, let’s firstly look at a much simpler situation: starting from only two vertices. This is a subgraph of LDBC Graph formed by two person vertices’ local graphs, where the two person vertices’ ids are 216172782113784483 and 216172782113784555.</p>
-<div class="figure align-default" id="id14">
+<figure class="align-default" id="id14">
 <a class="reference internal image-reference" href="../../_images/two_local_graphs.png"><img alt="two_local_graphs" src="../../_images/two_local_graphs.png" style="width: 80%;" /></a>
-<p class="caption"><span class="caption-text">Figure 14. The examples of two local graphs.</span><a class="headerlink" href="#id14" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 14. The examples of two local graphs.</span><a class="headerlink" href="#id14" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>In addition, we further limit the starting points of the traversal to be exactly the two person vertices. Therefore, we can write the following Gremlin sentence in GIE:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Traverse from the two source vertices to their adjacent vertices through their incident outgoing edges</span>
 <span class="n">q1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;g.V(216172782113784483, 216172782113784555).out()&#39;</span><span class="p">)</span>
@@ -1175,10 +1202,12 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>The figure illustrates the execution process of <code class="docutils literal notranslate"><span class="pre">q1</span></code>:</p>
-<div class="figure align-default" id="id15">
+<figure class="align-default" id="id15">
 <a class="reference internal image-reference" href="../../_images/out_two_starting_points.png"><img alt="two_local_graphs" src="../../_images/out_two_starting_points.png" style="width: 80%;" /></a>
-<p class="caption"><span class="caption-text">Figure 15. The results of outgoing neighbors from two given vertices.</span><a class="headerlink" href="#id15" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 15. The results of outgoing neighbors from two given vertices.</span><a class="headerlink" href="#id15" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>The traversal starts from the two person vertices, and then the <code class="docutils literal notranslate"><span class="pre">out()</span></code> step map the two source vertices both to their outgoing adjacent vertices. Therefore, the output should be like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span>v<span class="o">[</span><span class="m">432345564227569033</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">288230376151712472</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">144115188075856168</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">144115188075860911</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">432345564227569357</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">432345564227570524</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">288230376151712984</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">144115188075861043</span><span class="o">]]</span>
 </pre></div>
@@ -1210,20 +1239,24 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <li><p>Finally, <code class="docutils literal notranslate"><span class="pre">in()</span></code> maps every traverser (vertex) to its incoming adjacent vertices, and these incoming adjacent vertices form the next series of traversers, and it is the final output of the Gremlin sentence.</p></li>
 </ul>
 <p>This figure illustrates the overview of the traverser transformation during the traversal of <code class="docutils literal notranslate"><span class="pre">g.V().out().in()</span></code>.</p>
-<div class="figure align-default" id="id16">
+<figure class="align-default" id="id16">
 <a class="reference internal image-reference" href="../../_images/traversers_transformation_overview.png"><img alt="traversers_transformation_overview" src="../../_images/traversers_transformation_overview.png" style="width: 50%;" /></a>
-<p class="caption"><span class="caption-text">Figure 16. The overview of traversers’ transformation.</span><a class="headerlink" href="#id16" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 16. The overview of traversers’ transformation.</span><a class="headerlink" href="#id16" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>In addition, this figure shows the details of the traverser’s change after every expansion step and <code class="docutils literal notranslate"><span class="pre">as(TAG)</span></code> step during the execution of Gremlin sentence <code class="docutils literal notranslate"><span class="pre">g.V().as('a').out().as('b').in().as('c')</span></code>.</p>
-<div class="figure align-default" id="id17">
+<figure class="align-default" id="id17">
 <a class="reference internal image-reference" href="../../_images/traversers_transformation_details.png"><img alt="traversers_transformation_details" src="../../_images/traversers_transformation_details.png" style="width: 70%;" /></a>
-<p class="caption"><span class="caption-text">Figure 17. The mapping details of the above traversers’ transformation.</span><a class="headerlink" href="#id17" title="Permalink to this image">#</a></p>
-</div>
-</div>
-</div>
-<div class="section" id="filter-expansion">
+<figcaption>
+<p><span class="caption-text">Figure 17. The mapping details of the above traversers’ transformation.</span><a class="headerlink" href="#id17" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+<section id="filter-expansion">
 <h3>Filter &amp; Expansion<a class="headerlink" href="#filter-expansion" title="Permalink to this heading">#</a></h3>
-<div class="section" id="apply-filters-after-expansion">
+<section id="apply-filters-after-expansion">
 <h4>Apply filters after expansion<a class="headerlink" href="#apply-filters-after-expansion" title="Permalink to this heading">#</a></h4>
 <p>In last tutorial, we have discussed that we can use <code class="docutils literal notranslate"><span class="pre">has(...)</span></code> series of steps to apply filters to the extracted vertices and edges. Actually, these steps can be applied after expansion steps either that filter on the current traversers.</p>
 <p>Still using <code class="docutils literal notranslate"><span class="pre">g.V().out().in()</span></code> as the example, if we hope that:</p>
@@ -1270,8 +1303,8 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[{</span><span class="s1">&#39;a&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">360287970189700805</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;b&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">59465</span><span class="o">]}</span>,<span class="w"> </span>...,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;a&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">33403</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;b&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">33411</span><span class="o">]}]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="expansion-as-filters">
+</section>
+<section id="expansion-as-filters">
 <h4>Expansion as filters<a class="headerlink" href="#expansion-as-filters" title="Permalink to this heading">#</a></h4>
 <p>In addition, not only can we add filters after expansion steps, but also we can use expansion step as the filtering predicate with <code class="docutils literal notranslate"><span class="pre">where(...)</span></code> step. For example, if we want to extract all the vertices having at least 5 outgoing incident edges, we can write a Gremlin sentence with <code class="docutils literal notranslate"><span class="pre">where(...)</span></code> step as following:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Retrieve vertices having at least 5 outgoing incident edges</span>
@@ -1279,9 +1312,9 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="nb">print</span><span class="p">(</span><span class="n">q1</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="path-expansion-syntactic-sugar">
+</section>
+</section>
+<section id="path-expansion-syntactic-sugar">
 <h3>Path Expansion (Syntactic Sugar)<a class="headerlink" href="#path-expansion-syntactic-sugar" title="Permalink to this heading">#</a></h3>
 <p>Until now, we can use expansion steps, filter steps and auxiliary steps like <code class="docutils literal notranslate"><span class="pre">as(TAG)</span></code> to write complicated Gremlin sentences to traverse the graph. However, there are still two shortcomings:</p>
 <ul class="simple">
@@ -1296,12 +1329,14 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <li><p><code class="docutils literal notranslate"><span class="pre">RESULT_OPT</span></code>: Sometimes, you may be interested in all the vertices in the path, but sometimes you may be only interested in the last vertex of the path. Therefore, when the <code class="docutils literal notranslate"><span class="pre">RESULT_OPT</span></code> is set to <code class="docutils literal notranslate"><span class="pre">ALL_V</span></code>, all the vertices in the path will be kept to the output. Instead, when the <code class="docutils literal notranslate"><span class="pre">RESULT_OPT</span></code> is set to <code class="docutils literal notranslate"><span class="pre">END_V</span></code>, only the last vertex of the path will be kept.</p></li>
 </ul>
 <p>At last, we would like to introduce <code class="docutils literal notranslate"><span class="pre">endV()</span></code> step in path expansion. Since a path may contain many vertices, all kept vertices are stored in a path collection by default. Therefore, <code class="docutils literal notranslate"><span class="pre">endV()</span></code> is used to unfold the path collection. For example, if the traversers after path expansion is <code class="docutils literal notranslate"><span class="pre">[[v[1],</span> <span class="pre">v[2],</span> <span class="pre">v[3]]</span></code>, where the inner <code class="docutils literal notranslate"><span class="pre">[v[1],</span> <span class="pre">v[2],</span> <span class="pre">v[3]]</span></code> is the path collection.   With the <code class="docutils literal notranslate"><span class="pre">endV()</span></code>, <code class="docutils literal notranslate"><span class="pre">v[1]</span></code>, <code class="docutils literal notranslate"><span class="pre">v[2]</span></code> and <code class="docutils literal notranslate"><span class="pre">v[3]</span></code> are picked out from the path collection, and the traversers becomes <code class="docutils literal notranslate"><span class="pre">[v[1],</span> <span class="pre">v[2],</span> <span class="pre">v[3]]</span></code></p>
-<div class="figure align-default" id="id18">
+<figure class="align-default" id="id18">
 <a class="reference internal image-reference" href="../../_images/path_expansion_explanation.png"><img alt="path_expansion_explanation" src="../../_images/path_expansion_explanation.png" style="width: 70%;" /></a>
-<p class="caption"><span class="caption-text">Figure 18. The examples of path expansion.</span><a class="headerlink" href="#id18" title="Permalink to this image">#</a></p>
-</div>
-</div>
-<div class="section" id="id1">
+<figcaption>
+<p><span class="caption-text">Figure 18. The examples of path expansion.</span><a class="headerlink" href="#id18" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="id1">
 <h3>Real Applications<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
 <p>Graph traversal enables us to conduct more complicated data analytics on the graph.</p>
 <p>For example, the path <code class="docutils literal notranslate"><span class="pre">comment-hasCreator-&gt;person-&gt;isLocatedIn-&gt;city-isPartOf-&gt;country</span></code> can help to determine the nationality of <code class="docutils literal notranslate"><span class="pre">comments</span></code>. Therefore,  we can calculate the histogram of comment length for comments from China easily with GIE:</p>
@@ -1328,10 +1363,12 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="figure align-default" id="id19">
+<figure class="align-default" id="id19">
 <a class="reference internal image-reference" href="../../_images/comments_length_histogram_china.png"><img alt="comments_length_histogram_china" src="../../_images/comments_length_histogram_china.png" style="width: 50%;" /></a>
-<p class="caption"><span class="caption-text">Figure 19. Comments length histogram in China.</span><a class="headerlink" href="#id19" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 19. Comments length histogram in China.</span><a class="headerlink" href="#id19" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>Or we can estimate the browser market share in Japan:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
@@ -1357,13 +1394,15 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="figure align-default" id="id20">
+<figure class="align-default" id="id20">
 <a class="reference internal image-reference" href="../../_images/estimated_japan_brower_market_share.png"><img alt="estimated_japan_brower_market_share" src="../../_images/estimated_japan_brower_market_share.png" style="width: 50%;" /></a>
-<p class="caption"><span class="caption-text">Figure 20. Estimated Japan Browser Market Share</span><a class="headerlink" href="#id20" title="Permalink to this image">#</a></p>
-</div>
-</div>
-</div>
-<div class="section" id="pattern-match">
+<figcaption>
+<p><span class="caption-text">Figure 20. Estimated Japan Browser Market Share</span><a class="headerlink" href="#id20" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+<section id="pattern-match">
 <h2>Pattern Match<a class="headerlink" href="#pattern-match" title="Permalink to this heading">#</a></h2>
 <p>Suppose you want to find two <code class="docutils literal notranslate"><span class="pre">persons</span></code> and the <code class="docutils literal notranslate"><span class="pre">universities</span></code> they <code class="docutils literal notranslate"><span class="pre">studyAt</span></code> in the graph that:</p>
 <ol class="arabic simple">
@@ -1425,21 +1464,27 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <li><p>“Find two <code class="docutils literal notranslate"><span class="pre">persons</span></code> and the <code class="docutils literal notranslate"><span class="pre">universities</span></code> they <code class="docutils literal notranslate"><span class="pre">studyAt</span></code> in the graph that the two <code class="docutils literal notranslate"><span class="pre">person</span></code> <code class="docutils literal notranslate"><span class="pre">know</span></code> each other and the two <code class="docutils literal notranslate"><span class="pre">person</span></code> <code class="docutils literal notranslate"><span class="pre">studyAt</span></code> the same <code class="docutils literal notranslate"><span class="pre">university</span></code>”</p></li>
 </ul>
 <p>or can be illustrated as a graph pattern as shown in the following.</p>
-<div class="figure align-default" id="id21">
+<figure class="align-default" id="id21">
 <a class="reference internal image-reference" href="../../_images/pattern_person_person_university.png"><img alt="pattern_person_person_university" src="../../_images/pattern_person_person_university.png" style="width: 35%;" /></a>
-<p class="caption"><span class="caption-text">Figure 21. Pattern: two person know each other and study at the same university.</span><a class="headerlink" href="#id21" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 21. Pattern: two person know each other and study at the same university.</span><a class="headerlink" href="#id21" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>Then you aim to find all the matched subgraphs that are <a class="reference external" href="https://en.wikipedia.org/wiki/Graph_isomorphism">isomorphic</a> to the pattern. Under graph isomorphism, a subgraph and the pattern are matched if, when there is an edge between vertices in the pattern, there is an equivalent edge between two matched vertices in the subgraph. In addition, a vertex in the subgraph cannot match multiple pattern vertices.</p>
 <p>For example, this is a local graph of university vertex(id = 144115188075858884) in the LDBC Graph:</p>
-<div class="figure align-default" id="id22">
+<figure class="align-default" id="id22">
 <a class="reference internal image-reference" href="../../_images/local_person_person_university.png"><img alt="local_person_person_university" src="../../_images/local_person_person_university.png" style="width: 50%;" /></a>
-<p class="caption"><span class="caption-text">Figure 22. Local graph of a university vertex.</span><a class="headerlink" href="#id22" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 22. Local graph of a university vertex.</span><a class="headerlink" href="#id22" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>and here are the matched subgraphs in this local graph:</p>
-<div class="figure align-default" id="id23">
+<figure class="align-default" id="id23">
 <a class="reference internal image-reference" href="../../_images/matched_person_person_university.png"><img alt="matched_person_person_university" src="../../_images/matched_person_person_university.png" style="width: 50%;" /></a>
-<p class="caption"><span class="caption-text">Figure 23. Three matched subgraphs in the local graph.</span><a class="headerlink" href="#id23" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 23. Three matched subgraphs in the local graph.</span><a class="headerlink" href="#id23" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>The matched instances in the local graph are:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">{person1:</span> <span class="pre">v[216172782113784192],</span> <span class="pre">person2:</span> <span class="pre">v[216172782113784107],</span> <span class="pre">university:</span> <span class="pre">v[144115188075858884]}</span></code></p></li>
@@ -1511,10 +1556,12 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <li><p><code class="docutils literal notranslate"><span class="pre">person</span></code> A creates a <code class="docutils literal notranslate"><span class="pre">message</span></code>, which is replied to by a <code class="docutils literal notranslate"><span class="pre">comment</span></code> created by <code class="docutils literal notranslate"><span class="pre">person</span></code> B</p></li>
 </ul>
 <p>This figure illustrates the pattern:</p>
-<div class="figure align-default" id="id24">
+<figure class="align-default" id="id24">
 <a class="reference internal image-reference" href="../../_images/bi19_right_lower_corner.png"><img alt="bi19_right_lower_corner" src="../../_images/bi19_right_lower_corner.png" style="width: 50%;" /></a>
-<p class="caption"><span class="caption-text">Figure 24. Pattern: two person know each other, and one person creates a comment replying a message created by the other.</span><a class="headerlink" href="#id24" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 24. Pattern: two person know each other, and one person creates a comment replying a message created by the other.</span><a class="headerlink" href="#id24" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>We can easily match this pattern with Gremlin <code class="docutils literal notranslate"><span class="pre">match(...)</span></code> step:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># pA and pB know each other</span>
 <span class="c1"># pB create a comment that reply a message created by pA</span>
@@ -1543,13 +1590,13 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[{</span><span class="s1">&#39;pA&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783812</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;pB&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783882</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;c&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">36</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;m&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">360287970189640010</span><span class="o">]}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;pA&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783812</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;pB&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783882</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;c&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">37</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;m&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">360287970189640010</span><span class="o">]}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;pA&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783812</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;pB&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784105</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;c&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">38</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;m&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">360287970189640010</span><span class="o">]}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;pA&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783812</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;pB&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783882</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;c&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">41</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;m&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">360287970189640010</span><span class="o">]}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;pA&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784105</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;pB&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783882</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;c&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">43</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;m&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">42</span><span class="o">]}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;pA&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783814</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;pB&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783962</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;c&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">50</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;m&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">360287970189640135</span><span class="o">]}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;pA&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783814</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;pB&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784171</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;c&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">52</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;m&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">360287970189640135</span><span class="o">]}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;pA&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784481</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;pB&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784199</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;c&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">54</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;m&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">49</span><span class="o">]}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;pA&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783814</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;pB&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784038</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;c&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">56</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;m&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">360287970189640135</span><span class="o">]}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;pA&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783816</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;pB&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784144</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;c&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">175</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;m&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">360287970189640462</span><span class="o">]</span>,<span class="w"> </span>......,<span class="w"> </span><span class="o">}]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="relational-operations">
+</section>
+<section id="relational-operations">
 <h2>Relational Operations<a class="headerlink" href="#relational-operations" title="Permalink to this heading">#</a></h2>
 <p>Then we would like to introduce more relational operations of Gremlin steps that GIE supports.</p>
-<div class="section" id="filter-steps">
+<section id="filter-steps">
 <h3>Filter Steps<a class="headerlink" href="#filter-steps" title="Permalink to this heading">#</a></h3>
-<div class="section" id="hasid">
+<section id="hasid">
 <h4><code class="docutils literal notranslate"><span class="pre">hasId()</span></code><a class="headerlink" href="#hasid" title="Permalink to this heading">#</a></h4>
 <p>In previous tutorial, we have introduced that you can use <code class="docutils literal notranslate"><span class="pre">g.V(id)</span></code> to pick out the vertex having specific required global id from the graph. But, what if we want to apply filters based on global id during the traversal?</p>
 <p>You can use the <code class="docutils literal notranslate"><span class="pre">hasId(id)</span></code> step to achieve the purpose. For example, if you want the expanded vertex exactly having global id 144115188075861858, you can write the following codes in GIE:</p>
@@ -1575,8 +1622,8 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>which are all the vertices whose local id is 0.</p>
-</div>
-<div class="section" id="where">
+</section>
+<section id="where">
 <h4><code class="docutils literal notranslate"><span class="pre">where()</span></code><a class="headerlink" href="#where" title="Permalink to this heading">#</a></h4>
 <p>In previous tutorial, we have introduced that <code class="docutils literal notranslate"><span class="pre">where()</span></code> step in Gremlin sentences having <code class="docutils literal notranslate"><span class="pre">as()</span></code> steps can be used to filter traversers based on the tagged values:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># vertex tagged as &#39;a&#39; should be the same as vertex &#39;tagged&#39; as b</span>
@@ -1614,8 +1661,8 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="o">[</span>v<span class="o">[</span><span class="m">216172782113783808</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783808</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783808</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784171</span><span class="o">]]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="dedup">
+</section>
+<section id="dedup">
 <h4><code class="docutils literal notranslate"><span class="pre">dedup()</span></code><a class="headerlink" href="#dedup" title="Permalink to this heading">#</a></h4>
 <p>Suppose that you are interested in how many forums having members from India, and you may write the following Gremlin sentence in GIE:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Aim to count how may forums have members from India</span>
@@ -1664,11 +1711,11 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>The output should be <code class="docutils literal notranslate"><span class="pre">[432]</span></code>.</p>
-</div>
-</div>
-<div class="section" id="project-steps">
+</section>
+</section>
+<section id="project-steps">
 <h3>Project Steps<a class="headerlink" href="#project-steps" title="Permalink to this heading">#</a></h3>
-<div class="section" id="id-and-label">
+<section id="id-and-label">
 <h4><code class="docutils literal notranslate"><span class="pre">id()</span></code> and <code class="docutils literal notranslate"><span class="pre">label()</span></code><a class="headerlink" href="#id-and-label" title="Permalink to this heading">#</a></h4>
 <p>In previous tutorial, we have taught to use <code class="docutils literal notranslate"><span class="pre">values(PROPERTY)</span></code> to project an entity (vertex or edge) to its property’s value. However, to extract the global id and label, we may need to separate steps: <code class="docutils literal notranslate"><span class="pre">id()</span></code> and <code class="docutils literal notranslate"><span class="pre">label()</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get vertex(id=72057594037927936) ’s id</span>
@@ -1694,8 +1741,8 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>The output is <code class="docutils literal notranslate"><span class="pre">[0]</span></code></p>
-</div>
-<div class="section" id="constant">
+</section>
+<section id="constant">
 <h4><code class="docutils literal notranslate"><span class="pre">constant()</span></code><a class="headerlink" href="#constant" title="Permalink to this heading">#</a></h4>
 <p>The <code class="docutils literal notranslate"><span class="pre">constant()</span></code> step is meant to map any object to a fixed object value. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Map all the vertinces to 1</span>
@@ -1718,8 +1765,8 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="o">[</span><span class="m">1</span>.0,<span class="w"> </span>...,<span class="w"> </span><span class="m">1</span>.0<span class="o">]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="valuemap">
+</section>
+<section id="valuemap">
 <h4><code class="docutils literal notranslate"><span class="pre">valueMap()</span></code><a class="headerlink" href="#valuemap" title="Permalink to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">value(PROPERTY)</span></code> step can only map an entity(vertex or edge) to one of its property’s value. What if we want to extract many properties’s value at the same time?</p>
 <p><code class="docutils literal notranslate"><span class="pre">valueMap(PROPERTY1,</span> <span class="pre">PROPERTI2,</span> <span class="pre">...)</span></code> step provides such ability. For example, the following code extracts <code class="docutils literal notranslate"><span class="pre">person</span></code> vertices’ <code class="docutils literal notranslate"><span class="pre">firstName</span></code> and <code class="docutils literal notranslate"><span class="pre">lastName</span></code> together by <code class="docutils literal notranslate"><span class="pre">valueMap(...)</span></code> step.</p>
@@ -1734,8 +1781,8 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 ,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;lastName&#39;</span>:<span class="w"> </span><span class="o">[</span><span class="s1">&#39;Costa&#39;</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;firstName&#39;</span>:<span class="w"> </span><span class="o">[</span><span class="s1">&#39;Carlos&#39;</span><span class="o">]}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;lastName&#39;</span>:<span class="w"> </span><span class="o">[</span><span class="s1">&#39;Khan&#39;</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;firstName&#39;</span>:<span class="w"> </span><span class="o">[</span><span class="s1">&#39;Meera&#39;</span><span class="o">]}]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="select">
+</section>
+<section id="select">
 <h4><code class="docutils literal notranslate"><span class="pre">select()</span></code><a class="headerlink" href="#select" title="Permalink to this heading">#</a></h4>
 <p>As introduced previously, for a Gremlin sentence containing <code class="docutils literal notranslate"><span class="pre">as()</span></code> step, we can use <code class="docutils literal notranslate"><span class="pre">select(TAG1,</span> <span class="pre">TAG2,</span> <span class="pre">...)</span></code> step to extract the tagged entities we want. Just as <code class="docutils literal notranslate"><span class="pre">where()</span></code> and <code class="docutils literal notranslate"><span class="pre">dedup()</span></code> step, we can add a <code class="docutils literal notranslate"><span class="pre">by(...)</span></code> step after it to further extract the property’s value of the tagged entities.</p>
 <p>For example, the following Gremlin sentence picked the tagged ‘a’ vertex’s <code class="docutils literal notranslate"><span class="pre">firstName</span></code>.</p>
@@ -1790,11 +1837,11 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[{</span><span class="s1">&#39;a&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783808</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;b&#39;</span>:<span class="w"> </span><span class="s1">&#39;David&#39;</span><span class="o">}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;a&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783809</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;b&#39;</span>:<span class="w"> </span><span class="s1">&#39;Silva&#39;</span><span class="o">}</span>,<span class="w"> </span><span class="o">{</span><span class="s1">&#39;a&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783809</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;b&#39;</span>:<span class="w"> </span><span class="s1">&#39;Guliyev&#39;</span><span class="o">}</span>,...,<span class="w"> </span><span class="o">]</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="aggregate-steps">
+</section>
+</section>
+<section id="aggregate-steps">
 <h3>Aggregate Steps<a class="headerlink" href="#aggregate-steps" title="Permalink to this heading">#</a></h3>
-<div class="section" id="fold">
+<section id="fold">
 <h4><code class="docutils literal notranslate"><span class="pre">fold()</span></code><a class="headerlink" href="#fold" title="Permalink to this heading">#</a></h4>
 <p>Gremlin sentences always generate output containing many traversers. <code class="docutils literal notranslate"><span class="pre">fold()</span></code> step can roll up these traversers into an aggregate list. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Roll up the TagClass vertices into an aggregate list</span>
@@ -1806,8 +1853,8 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[[</span>v<span class="o">[</span><span class="m">504403158265495552</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495553</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495554</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495555</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495556</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495557</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495558</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495559</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495560</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495561</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495562</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495563</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495564</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495565</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495566</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495567</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495568</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495569</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495570</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495571</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495572</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495573</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495574</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495575</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495576</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495577</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495578</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495579</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495580</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495581</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495582</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495583</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495584</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495585</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495586</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495587</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495588</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495589</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495590</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495591</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495592</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495593</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495594</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495595</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495596</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495597</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495598</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495599</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495600</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495601</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495602</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495603</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495604</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495605</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495606</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495607</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495608</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495609</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495610</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495611</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495612</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495613</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495614</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495615</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495616</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495617</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495618</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495619</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495620</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495621</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">504403158265495622</span><span class="o">]]]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="sum-min-max-and-mean">
+</section>
+<section id="sum-min-max-and-mean">
 <h4><code class="docutils literal notranslate"><span class="pre">sum()</span></code>, <code class="docutils literal notranslate"><span class="pre">min()</span></code>, <code class="docutils literal notranslate"><span class="pre">max()</span></code> and  <code class="docutils literal notranslate"><span class="pre">mean()</span></code><a class="headerlink" href="#sum-min-max-and-mean" title="Permalink to this heading">#</a></h4>
 <p>Assume you have already projected the traversers into a series of numbers, you can use <code class="docutils literal notranslate"><span class="pre">sum()</span></code>, <code class="docutils literal notranslate"><span class="pre">min()</span></code>, <code class="docutils literal notranslate"><span class="pre">max()</span></code> and <code class="docutils literal notranslate"><span class="pre">mean()</span></code> step to conduct some further analysis on these values. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the sum of all vertex&#39;s out degree</span>
@@ -1832,8 +1879,8 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="o">[</span><span class="m">4</span>.134313148716225<span class="o">]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="group">
+</section>
+<section id="group">
 <h4><code class="docutils literal notranslate"><span class="pre">group()</span></code><a class="headerlink" href="#group" title="Permalink to this heading">#</a></h4>
 <p>It is a very common need to divide traversers into different groups according to some values or conditions, called group keys.  Gremlin provides <code class="docutils literal notranslate"><span class="pre">group()</span></code> step to achieve this purpose.</p>
 <p>The group key should be contained in the <code class="docutils literal notranslate"><span class="pre">by()</span></code> step following the <code class="docutils literal notranslate"><span class="pre">group()</span></code> step. The group key can be either a:</p>
@@ -1874,8 +1921,8 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 </pre></div>
 </div>
 <p>Therefore, it is strongly suggested to add meaningful group key in the <code class="docutils literal notranslate"><span class="pre">by()</span></code> step following <code class="docutils literal notranslate"><span class="pre">group()</span></code> step.</p>
-</div>
-<div class="section" id="groupcount">
+</section>
+<section id="groupcount">
 <h4><code class="docutils literal notranslate"><span class="pre">groupCount()</span></code><a class="headerlink" href="#groupcount" title="Permalink to this heading">#</a></h4>
 <p>Sometimes, we only care about there are how many entities in the group. Therefore, it is unnecessary to use <code class="docutils literal notranslate"><span class="pre">group()</span></code> step to get the complete group with every entities inside it.</p>
 <p>We can simply use <code class="docutils literal notranslate"><span class="pre">groupCount()</span></code> step to achieve this purpose. The usage of <code class="docutils literal notranslate"><span class="pre">groupCount()</span></code> step is almost the same as <code class="docutils literal notranslate"><span class="pre">group()</span></code> step, but it will return the count instead of the complete group. For example, the following code calculates there are how many males and females in the graph.</p>
@@ -1888,9 +1935,9 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[{</span><span class="s1">&#39;male&#39;</span>:<span class="w"> </span><span class="m">449</span>,<span class="w"> </span><span class="s1">&#39;female&#39;</span>:<span class="w"> </span><span class="m">454</span><span class="o">}]</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="order-step">
+</section>
+</section>
+<section id="order-step">
 <h3>Order Step<a class="headerlink" href="#order-step" title="Permalink to this heading">#</a></h3>
 <p>By default, the output of Gremlin’s sentence in GIE is not ordered. Therefore, Gremlin provides <code class="docutils literal notranslate"><span class="pre">order()</span></code> step to order all the objects in the traversal up to this point and then emit them one-by-one in their ordered sequence.</p>
 <p>As the same as <code class="docutils literal notranslate"><span class="pre">group()</span></code> step, the order key should be placed in the <code class="docutils literal notranslate"><span class="pre">by()</span></code> step following <code class="docutils literal notranslate"><span class="pre">order()</span></code> step. If there’s no <code class="docutils literal notranslate"><span class="pre">by()</span></code> step or the content of <code class="docutils literal notranslate"><span class="pre">by()</span></code> step is empty, it will use the default setting of order:</p>
@@ -1937,8 +1984,8 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <span class="o">[</span>v<span class="o">[</span><span class="m">216172782113784315</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784374</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784601</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784431</span><span class="o">]</span>,<span class="w"> </span>...,<span class="w"> </span><span class="o">]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="limit-step">
+</section>
+<section id="limit-step">
 <h3>Limit Step<a class="headerlink" href="#limit-step" title="Permalink to this heading">#</a></h3>
 <p>Gremlin sentences always generate a lot of traversers, but sometimes we only need some of them. Therefore, Gremlin provides <code class="docutils literal notranslate"><span class="pre">limit()</span></code> step to filter the objects in the traversal by the number of them to pass through the stream, where only the first n objects are allowed as defined by the limit argument.</p>
 <p>For example, if you want to extract 10 person vertices from the graph, you can write:</p>
@@ -1961,8 +2008,8 @@ v<span class="o">[</span><span class="m">360287970189718653</span><span class="o
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span>v<span class="o">[</span><span class="m">216172782113784601</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784315</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784011</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784374</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783971</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784431</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784333</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784154</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784381</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783933</span><span class="o">]]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="expression-syntax-sugar">
+</section>
+<section id="expression-syntax-sugar">
 <h3>Expression(Syntax Sugar)<a class="headerlink" href="#expression-syntax-sugar" title="Permalink to this heading">#</a></h3>
 <p>Currently, it is still kind of complicated when we need to apply many predicates together to the traversers.</p>
 <p>For example, if you want to find all <code class="docutils literal notranslate"><span class="pre">male</span></code> <code class="docutils literal notranslate"><span class="pre">persons</span></code> that are <code class="docutils literal notranslate"><span class="pre">created</span></code> after <code class="docutils literal notranslate"><span class="pre">2012-01-01</span></code>, you may need two <code class="docutils literal notranslate"><span class="pre">has(...)</span></code> steps. The first <code class="docutils literal notranslate"><span class="pre">has()</span></code> step keeps all the <code class="docutils literal notranslate"><span class="pre">persons</span></code> whose <code class="docutils literal notranslate"><span class="pre">gender</span></code> property has value <code class="docutils literal notranslate"><span class="pre">male</span></code>, and the second <code class="docutils literal notranslate"><span class="pre">has()</span></code> step filters out all the <code class="docutils literal notranslate"><span class="pre">persons</span></code> whose <code class="docutils literal notranslate"><span class="pre">creationDate</span></code> property has value earlier than <code class="docutils literal notranslate"><span class="pre">2012-01-01</span></code>.</p>
@@ -2045,17 +2092,19 @@ print<span class="o">(</span>q1.all<span class="o">()</span>.result<span class="
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span>v<span class="o">[</span><span class="m">216172782113783813</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783819</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783826</span><span class="o">]</span>,<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113783836</span><span class="o">]</span>,<span class="w"> </span>...,<span class="w"> </span><span class="o">]</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="complex-queries">
+</section>
+</section>
+<section id="complex-queries">
 <h2>Complex Queries<a class="headerlink" href="#complex-queries" title="Permalink to this heading">#</a></h2>
 <p>In this tutorial, we will mainly discuss how to use GIE with Gremlin sentences to make some complex queries. The queries we choose are mainly from LDBC BI Workload.</p>
-<div class="section" id="ldbc-bi2">
+<section id="ldbc-bi2">
 <h3>LDBC BI2<a class="headerlink" href="#ldbc-bi2" title="Permalink to this heading">#</a></h3>
-<div class="figure align-default" id="id25">
+<figure class="align-default" id="id25">
 <a class="reference internal image-reference" href="../../_images/bi2.png"><img alt="bi2" src="../../_images/bi2.png" style="width: 80%;" /></a>
-<p class="caption"><span class="caption-text">Figure 25. LDBC BI Query2.</span><a class="headerlink" href="#id25" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 25. LDBC BI Query2.</span><a class="headerlink" href="#id25" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>This figure illustrates LDBC BI2 query. This query aims to find the <code class="docutils literal notranslate"><span class="pre">Tags</span></code> under a given <code class="docutils literal notranslate"><span class="pre">TagClass</span></code> that were used in <code class="docutils literal notranslate"><span class="pre">Messages</span></code> during in the 100-day time window starting at date and compare it with the 100-day time window that follows. For the <code class="docutils literal notranslate"><span class="pre">Tags</span></code> and for both time windows, compute the count of <code class="docutils literal notranslate"><span class="pre">Messages</span></code>.</p>
 <p>The key to this query is creating two sub execution branches to count the two windows separately. We can use Gremlin’s <code class="docutils literal notranslate"><span class="pre">by()</span></code> step to achieve the purpose. Assume the <code class="docutils literal notranslate"><span class="pre">TagClass's</span> <span class="pre">name='Actor'</span></code> <code class="docutils literal notranslate"><span class="pre">$date='2012-01-01'</span></code>, <code class="docutils literal notranslate"><span class="pre">$date+100='2012-04-09'$</span></code> and <code class="docutils literal notranslate"><span class="pre">$date+200='2012-07-18'</span></code>:</p>
 <ol class="arabic">
@@ -2097,13 +2146,15 @@ print<span class="o">(</span>q1.all<span class="o">()</span>.result<span class="
 <span class="w"> </span><span class="o">{</span><span class="s1">&#39;count1&#39;</span>:<span class="w"> </span><span class="m">4</span>,<span class="w"> </span><span class="s1">&#39;count2&#39;</span>:<span class="w"> </span><span class="m">7</span>,<span class="w"> </span><span class="s1">&#39;tag&#39;</span>:<span class="w"> </span><span class="s1">&#39;Jackie_Chan&#39;</span><span class="o">}]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="ldbc-bi3">
+</section>
+<section id="ldbc-bi3">
 <h3>LDBC BI3<a class="headerlink" href="#ldbc-bi3" title="Permalink to this heading">#</a></h3>
-<div class="figure align-default" id="id26">
+<figure class="align-default" id="id26">
 <a class="reference internal image-reference" href="../../_images/bi3.png"><img alt="bi3" src="../../_images/bi3.png" style="width: 65%;" /></a>
-<p class="caption"><span class="caption-text">Figure 26. LDBC BI Query3.</span><a class="headerlink" href="#id26" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 26. LDBC BI Query3.</span><a class="headerlink" href="#id26" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>This figure illustrates LDBC BI3 query. Given a <code class="docutils literal notranslate"><span class="pre">TagClass</span></code> and <code class="docutils literal notranslate"><span class="pre">Country</span></code>, this query aims to find all the <code class="docutils literal notranslate"><span class="pre">Forums</span></code> created in the given <code class="docutils literal notranslate"><span class="pre">Country</span></code>, containing at least one <code class="docutils literal notranslate"><span class="pre">Message</span></code> with <code class="docutils literal notranslate"><span class="pre">Tags</span></code> belonging directly to the given <code class="docutils literal notranslate"><span class="pre">TagClass</span></code>, and count the <code class="docutils literal notranslate"><span class="pre">Messages</span></code> by the <code class="docutils literal notranslate"><span class="pre">Forum</span></code> which contains them.</p>
 <p>The location of a <code class="docutils literal notranslate"><span class="pre">Forum</span></code> is identified by the location of the Forum’s moderator. Here comes another question, how to determine whether the forum contains a message directly related to the given <code class="docutils literal notranslate"><span class="pre">TagClass</span></code> or not? We assume that a message is contained by a forum if:</p>
 <ul class="simple">
@@ -2157,13 +2208,15 @@ print<span class="o">(</span>q1.all<span class="o">()</span>.result<span class="
 <span class="w"> </span>...<span class="o">]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="ldbc-bi4-left-part">
+</section>
+<section id="ldbc-bi4-left-part">
 <h3>LDBC BI4(Left Part)<a class="headerlink" href="#ldbc-bi4-left-part" title="Permalink to this heading">#</a></h3>
-<div class="figure align-default" id="id27">
+<figure class="align-default" id="id27">
 <a class="reference internal image-reference" href="../../_images/bi4(left_part).png"><img alt="bi4(left_part)" src="../../_images/bi4%28left_part%29.png" style="width: 30%;" /></a>
-<p class="caption"><span class="caption-text">Figure 27. LDBC BI Query4(Left Part).</span><a class="headerlink" href="#id27" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 27. LDBC BI Query4(Left Part).</span><a class="headerlink" href="#id27" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>This figure illustrates the left part of the LDBC BI4 query. The query aims to find the top 100 forum of every country based on the memberCount, and the forum should be created after the given date.</p>
 <p>Since GIE doesn’t provide global storage currently, we cannot pick out the top 100 forums of every country using Gremlin sentence directly. We can retrieve a tuple of <code class="docutils literal notranslate"><span class="pre">(country,</span> <span class="pre">forum,</span> <span class="pre">country_count)</span></code> at first.</p>
 <p>Assume <code class="docutils literal notranslate"><span class="pre">Forum's</span> <span class="pre">creationDate</span> <span class="pre">&gt;</span> <span class="pre">'2012-01-01'</span></code>, we can write in GIE as</p>
@@ -2230,13 +2283,15 @@ print<span class="o">(</span>q1.all<span class="o">()</span>.result<span class="
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">{</span>v<span class="o">[</span><span class="m">288230376151711797</span><span class="o">]</span>:<span class="w"> </span><span class="o">[(</span>v<span class="o">[</span><span class="m">72057594037935702</span><span class="o">]</span>,<span class="w"> </span><span class="m">7</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930685</span><span class="o">]</span>,<span class="w"> </span><span class="m">7</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932114</span><span class="o">]</span>,<span class="w"> </span><span class="m">6</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934231</span><span class="o">]</span>,<span class="w"> </span><span class="m">5</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935703</span><span class="o">]</span>,<span class="w"> </span><span class="m">5</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935730</span><span class="o">]</span>,<span class="w"> </span><span class="m">5</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935734</span><span class="o">]</span>,<span class="w"> </span><span class="m">5</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932509</span><span class="o">]</span>,<span class="w"> </span><span class="m">4</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935707</span><span class="o">]</span>,<span class="w"> </span><span class="m">4</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935708</span><span class="o">]</span>,<span class="w"> </span><span class="m">4</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935711</span><span class="o">]</span>,<span class="w"> </span><span class="m">4</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935714</span><span class="o">]</span>,<span class="w"> </span><span class="m">4</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935719</span><span class="o">]</span>,<span class="w"> </span><span class="m">4</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935729</span><span class="o">]</span>,<span class="w"> </span><span class="m">4</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935731</span><span class="o">]</span>,<span class="w"> </span><span class="m">4</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935724</span><span class="o">]</span>,<span class="w"> </span><span class="m">4</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929560</span><span class="o">]</span>,<span class="w"> </span><span class="m">4</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931546</span><span class="o">]</span>,<span class="w"> </span><span class="m">4</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931545</span><span class="o">]</span>,<span class="w"> </span><span class="m">4</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932479</span><span class="o">]</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932485</span><span class="o">]</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932505</span><span class="o">]</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932511</span><span class="o">]</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935710</span><span class="o">]</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935722</span><span class="o">]</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929246</span><span class="o">]</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037928266</span><span class="o">]</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935713</span><span class="o">]</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934308</span><span class="o">]</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934313</span><span class="o">]</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934302</span><span class="o">]</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930430</span><span class="o">]</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934303</span><span class="o">]</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932503</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932482</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935147</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935148</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935157</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037927973</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929386</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934315</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932501</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935005</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935720</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935015</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934300</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930861</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934319</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931542</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929583</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037933324</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929182</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929739</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934829</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935658</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935660</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935674</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935682</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935683</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935672</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037927978</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935163</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935014</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931544</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934297</span><span class="o">]</span>,<span class="w"> </span><span class="m">2</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037927979</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932473</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932474</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934384</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932639</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934380</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935146</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935152</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934804</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037928134</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037928674</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929248</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931240</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931247</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931256</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930958</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930963</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931259</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931260</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931262</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929365</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929419</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929421</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929431</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929434</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929437</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929446</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929447</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929449</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929450</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935166</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929519</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929451</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929452</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935046</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932339</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932481</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934294</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932389</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932976</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930870</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931266</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037928092</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037928495</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929510</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929517</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929961</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929965</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930242</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930248</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930250</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930313</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931547</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935686</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929052</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929053</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929055</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929057</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929060</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934811</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934813</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934816</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934821</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934822</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934823</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934828</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934835</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934837</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934975</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934976</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935032</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935038</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935045</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935664</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935673</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935678</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935685</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931549</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931550</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931552</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931554</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931557</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931560</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931566</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935671</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935670</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934977</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931543</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037929518</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935679</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931575</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932438</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932878</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932886</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932888</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037927982</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930526</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930535</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930546</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930976</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930536</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931358</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930366</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931574</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932435</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935020</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037935864</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037933861</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932440</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037927981</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931349</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931366</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932885</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037927980</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930529</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037930532</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037931304</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932433</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037932441</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)</span>,<span class="w"> </span><span class="o">(</span>v<span class="o">[</span><span class="m">72057594037934547</span><span class="o">]</span>,<span class="w"> </span><span class="m">1</span><span class="o">)]</span>,<span class="w"> </span>......
 </pre></div>
 </div>
-</div>
-<div class="section" id="ldbc-bi11">
+</section>
+<section id="ldbc-bi11">
 <h3>LDBC BI11<a class="headerlink" href="#ldbc-bi11" title="Permalink to this heading">#</a></h3>
-<div class="figure align-default" id="id28">
+<figure class="align-default" id="id28">
 <a class="reference internal image-reference" href="../../_images/bi11.png"><img alt="bi11" src="../../_images/bi11.png" style="width: 80%;" /></a>
-<p class="caption"><span class="caption-text">Figure 28. LDBC BI Query11.</span><a class="headerlink" href="#id28" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 28. LDBC BI Query11.</span><a class="headerlink" href="#id28" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>This figure illustrates LDBC BI11 query. This query aims to find three persons tagged as a, b, c, where:</p>
 <ul class="simple">
 <li><p>a, b, c know each other</p></li>
@@ -2267,13 +2322,15 @@ print<span class="o">(</span>q1.all<span class="o">()</span>.result<span class="
 <span class="w"> </span><span class="o">{</span><span class="s1">&#39;a&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784403</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;b&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784537</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;c&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784122</span><span class="o">]}]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="ldbc-bi14">
+</section>
+<section id="ldbc-bi14">
 <h3>LDBC BI14<a class="headerlink" href="#ldbc-bi14" title="Permalink to this heading">#</a></h3>
-<div class="figure align-default" id="id29">
+<figure class="align-default" id="id29">
 <a class="reference internal image-reference" href="../../_images/bi14.png"><img alt="bi14" src="../../_images/bi14.png" style="width: 80%;" /></a>
-<p class="caption"><span class="caption-text">Figure 29. LDBC BI Query14.</span><a class="headerlink" href="#id29" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Figure 29. LDBC BI Query14.</span><a class="headerlink" href="#id29" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>This figure illustrates LDBC BI14 query. Here is its purpose:</p>
 <p>Consider all pairs of people (<code class="docutils literal notranslate"><span class="pre">person1</span></code>, <code class="docutils literal notranslate"><span class="pre">person2</span></code>) such that</p>
 <ol class="arabic simple">
@@ -2322,9 +2379,9 @@ print<span class="o">(</span>q1.all<span class="o">()</span>.result<span class="
 <span class="w"> </span><span class="o">{</span><span class="s1">&#39;p1&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784481</span><span class="o">]</span>,<span class="w"> </span><span class="s1">&#39;score&#39;</span>:<span class="w"> </span><span class="m">16</span>,<span class="w"> </span><span class="s1">&#39;p2&#39;</span>:<span class="w"> </span>v<span class="o">[</span><span class="m">216172782113784100</span><span class="o">]}]</span>
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
         </article>
       </div>
@@ -2457,15 +2514,12 @@ print<span class="o">(</span>q1.all<span class="o">()</span>.result<span class="
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
-    <script src="../../_static/scripts/furo.js"></script>
-    <script src="../../_static/clipboard.min.js"></script>
-    <script src="../../_static/copybutton.js"></script>
+</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>

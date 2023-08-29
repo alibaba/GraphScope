@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Graph Learning Workloads" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Graph Learning Workloads" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="overview/graph_learning_workloads.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Design of GraphScope" href="design_of_graphscope.html" /><link rel="prev" title="Graph Interactive Workloads" href="graph_interactive_workloads.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Graph Learning Workloads - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,9 +665,9 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="graph-learning-workloads">
+          <section class="tex2jax_ignore mathjax_ignore" id="graph-learning-workloads">
 <h1>Graph Learning Workloads<a class="headerlink" href="#graph-learning-workloads" title="Permalink to this heading">#</a></h1>
-<div class="section" id="what-is-graph-neural-network">
+<section id="what-is-graph-neural-network">
 <h2>What is Graph Neural Network<a class="headerlink" href="#what-is-graph-neural-network" title="Permalink to this heading">#</a></h2>
 <p>Graph neural networks (GNNs) are a type of neural network designed to work with
 graph data structures, consisting of nodes and edges. GNNs learn to represent
@@ -715,8 +716,8 @@ such as search recommendation, network security and knowledge graphs.</p>
 introduce the model paradigms of **GLE**, 
 and walk through a quick-start tutorial on how to build 
 a user-defined GNN model using **GLE**. -->
-</div>
-<div class="section" id="typical-gnn-models">
+</section>
+<section id="typical-gnn-models">
 <h2>Typical GNN Models<a class="headerlink" href="#typical-gnn-models" title="Permalink to this heading">#</a></h2>
 <p>First, let’s briefly rewind the concept of GNN.
 Given a graph <span class="math notranslate nohighlight">\(G = (V,E)\)</span>, where each vertex is associated with a vector
@@ -744,8 +745,8 @@ neighborhood information and scalable to large graphs.</p></li>
 Networks (GIN), Relational Graph Convolutional Network (R-GCN), and many more.
 The choice of GNN model depends on the specific task and the characteristics
 of the input graph data.</p>
-</div>
-<div class="section" id="paradigm-of-model-training">
+</section>
+<section id="paradigm-of-model-training">
 <h2>Paradigm of Model Training<a class="headerlink" href="#paradigm-of-model-training" title="Permalink to this heading">#</a></h2>
 <p>In general, there are two ways to train a GNN model: (1) whole graph
 training and (2) mini-batch training. Whole graph training is to compute
@@ -758,7 +759,7 @@ is used to generate mini-batches, allowing sampling-based GNN models to
 handle unseen vertices. GraphSAGE is a typical example of mini-batch
 training. The following figure illustrates the workflow of 2-hop GraphSAGE training.</p>
 <p><img alt="The workflow of 2-hop GraphSAGE training." src="../_images/graphsage.png" /></p>
-<div class="section" id="steps-of-model-training">
+<section id="steps-of-model-training">
 <h3>Steps of Model Training<a class="headerlink" href="#steps-of-model-training" title="Permalink to this heading">#</a></h3>
 <p>The process of training a GNN involves several steps, which are described below.</p>
 <ul class="simple">
@@ -791,8 +792,8 @@ data to measure its performance on unseen data. Various evaluation metrics such
 as accuracy, precision, recall, and F1 score can be used to assess the
 performance of the model.</p></li>
 </ul>
-</div>
-<div class="section" id="subgraph-sampling">
+</section>
+<section id="subgraph-sampling">
 <h3>Subgraph Sampling<a class="headerlink" href="#subgraph-sampling" title="Permalink to this heading">#</a></h3>
 <p>In practical industrial applications, the size of
 the graph is often relatively large and the features on the nodes and edges of the graph
@@ -809,9 +810,9 @@ of row index and column index of edges), generally using full neighbor. The conv
 based on SubGraph generally uses the sparse NN operator. The examples of EgoGraph and
 SubGraph are shown in the following figure.</p>
 <p><img alt="The examples of EgoGraph." src="../_images/ego_sub.png" /></p>
-</div>
-</div>
-<div class="section" id="challenges-of-applying-gnns-on-large-graphs">
+</section>
+</section>
+<section id="challenges-of-applying-gnns-on-large-graphs">
 <h2>Challenges of Applying GNNs on Large Graphs<a class="headerlink" href="#challenges-of-applying-gnns-on-large-graphs" title="Permalink to this heading">#</a></h2>
 <p>Based on our experience, applying GNN to industrial-scale large graphs requires
 addressing the following challenges:</p>
@@ -835,8 +836,8 @@ perceive and adapt to these changes in time.</p></li>
 <p>Overall, the application of GNN in industrial scenarios has many challenges and
 requires research and optimization of algorithms, computation, storage, and
 data, etc., in order to better meet practical application needs.</p>
-</div>
-<div class="section" id="what-can-graphscope-do">
+</section>
+<section id="what-can-graphscope-do">
 <h2>What can GraphScope Do<a class="headerlink" href="#what-can-graphscope-do" title="Permalink to this heading">#</a></h2>
 <p>In GraphScope, Graph Learning Engine (GLE) addresses the aforementioned
 challenges in the following ways:</p>
@@ -868,8 +869,8 @@ is organized to provide a detailed, step-by-step tutorial specifically
 demonstrating the use of GLE for offline training and online inference.</p>
 </li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -950,15 +951,12 @@ demonstrating the use of GLE for offline training and online inference.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>

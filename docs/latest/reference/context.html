@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Context" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Context" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="reference/context.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Selector" href="selector.html" /><link rel="prev" title="graphscope.framework.app.load_app" href="generated/graphscope.framework.app.load_app.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Context - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,9 +665,9 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="context">
+          <section id="context">
 <span id="id1"></span><h1>Context<a class="headerlink" href="#context" title="Permalink to this heading">#</a></h1>
-<div class="section" id="context-object">
+<section id="context-object">
 <h2>Context object<a class="headerlink" href="#context-object" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.framework.context.BaseContextDAGNode">
@@ -729,7 +730,7 @@ in eager mode and return a instance of <a class="reference internal" href="#grap
 <span class="sig-name descname"><span class="pre">to_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContextDAGNode.to_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.context.BaseContextDAGNode.to_dataframe" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the context data as a pandas DataFrame.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>selector</strong> – dict
 The key is column name in dataframe, and the value describes how to select
@@ -742,10 +743,10 @@ Only the sub-ranges of vertices data will be retrieved.
 Note the comparision is not based on numeric order, but on alphabetic order.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A result holds the <cite>pandas.DataFrame</cite>, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.context.ResultDAGNode" title="graphscope.framework.context.ResultDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.ResultDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -756,7 +757,7 @@ Note the comparision is not based on numeric order, but on alphabetic order.</p>
 <span class="sig-name descname"><span class="pre">to_numpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContextDAGNode.to_numpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.context.BaseContextDAGNode.to_numpy" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the context data as a numpy array.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>selector</strong> (<em>str</em>) – Describes how to select values of context.
 See more details in derived context DAG node class.</p></li>
@@ -770,10 +771,10 @@ Note the comparision is not based on numeric order, but on alphabetic order.</p>
 <li><p><strong>axis</strong> (<em>int</em>) – optional, default to 0.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A result holds the <cite>numpy.ndarray</cite>, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.context.ResultDAGNode" title="graphscope.framework.context.ResultDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.ResultDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -784,7 +785,7 @@ Note the comparision is not based on numeric order, but on alphabetic order.</p>
 <span class="sig-name descname"><span class="pre">to_vineyard_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContextDAGNode.to_vineyard_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.context.BaseContextDAGNode.to_vineyard_dataframe" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the context data as a vineyard dataframe and return the vineyard object id.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>selector</strong> – dict
 Key is used as column name of the dataframe, and the value describes how to
@@ -796,10 +797,10 @@ identical with vertices’ oid type.
 Only the sub-ranges of vertices data will be retrieved.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A result hold the object id of vineyard dataframe, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.context.ResultDAGNode" title="graphscope.framework.context.ResultDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.ResultDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -810,10 +811,10 @@ Only the sub-ranges of vertices data will be retrieved.</p></li>
 <span class="sig-name descname"><span class="pre">to_vineyard_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContextDAGNode.to_vineyard_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.context.BaseContextDAGNode.to_vineyard_tensor" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the context data as a vineyard tensor and return the vineyard object id.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A result hold the object id of vineyard tensor, evaluated in eager mode.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#graphscope.framework.context.ResultDAGNode" title="graphscope.framework.context.ResultDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.ResultDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1009,8 +1010,8 @@ A vertex has a single value as results.</p>
 <p>In GraphScope, result node is always a leaf node in a DAG.</p>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -1100,14 +1101,11 @@ A vertex has a single value as results.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

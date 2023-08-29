@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Analytical Engine API Reference" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Analytical Engine API Reference" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="reference/analytical_engine_index.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Java Reference (javadoc)" href="gae_java/index.html" /><link rel="prev" title="Reading graphs" href="networkx/io.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Analytical Engine API Reference - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,9 +665,9 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="analytical-engine-api-reference">
+          <section id="analytical-engine-api-reference">
 <span id="reference"></span><h1>Analytical Engine API Reference<a class="headerlink" href="#analytical-engine-api-reference" title="Permalink to this heading">#</a></h1>
-<div class="contents this-will-duplicate-information-and-it-is-still-useful-here local topic" id="contents">
+<nav class="contents this-will-duplicate-information-and-it-is-still-useful-here local" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#analytical-engine" id="id1">Analytical Engine</a></p></li>
 <li><p><a class="reference internal" href="#fragments-in-graphscope" id="id2">Fragments in GraphScope</a></p></li>
@@ -674,9 +675,9 @@ MathJax = {
 <li><p><a class="reference internal" href="#analytical-workers" id="id4">Analytical Workers</a></p></li>
 <li><p><a class="reference internal" href="#app-s-context" id="id5">App’s Context</a></p></li>
 </ul>
-</div>
-<div class="section" id="analytical-engine">
-<h2><a class="toc-backref" href="#id1">Analytical Engine</a><a class="headerlink" href="#analytical-engine" title="Permalink to this heading">#</a></h2>
+</nav>
+<section id="analytical-engine">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Analytical Engine</a><a class="headerlink" href="#analytical-engine" title="Permalink to this heading">#</a></h2>
 <dl class="cpp class">
 <dt class="sig sig-object cpp" id="_CPPv4N2gs11GrapeEngineE">
 <span id="_CPPv3N2gs11GrapeEngineE"></span><span id="_CPPv2N2gs11GrapeEngineE"></span><span id="gs::GrapeEngine"></span><span class="target" id="classgs_1_1_grape_engine"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">GrapeEngine</span></span></span><a class="headerlink" href="#_CPPv4N2gs11GrapeEngineE" title="Permalink to this definition">#</a><br /></dt>
@@ -688,7 +689,7 @@ MathJax = {
 <span id="_CPPv3N2gs11GrapeEngine11GrapeEngineENSt6stringEi"></span><span id="_CPPv2N2gs11GrapeEngine11GrapeEngineENSt6stringEi"></span><span id="gs::GrapeEngine::GrapeEngine__ss.i"></span><span class="target" id="classgs_1_1_grape_engine_1ae8cbfdd97c06f2a854403e7f3ccb5aa6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">GrapeEngine</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">host</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">port</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N2gs11GrapeEngine11GrapeEngineENSt6stringEi" title="Permalink to this definition">#</a><br /></dt>
 <dd><p>Construct a new <a class="reference internal" href="#classgs_1_1_grape_engine"><span class="std std-ref">GrapeEngine</span></a> object in service mode, listening at the host:port for incoming rpc requests. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>host</strong> – </p></li>
 <li><p><strong>port</strong> – </p></li>
@@ -702,7 +703,7 @@ MathJax = {
 <span id="_CPPv3N2gs11GrapeEngine11GrapeEngineENSt6stringE"></span><span id="_CPPv2N2gs11GrapeEngine11GrapeEngineENSt6stringE"></span><span id="gs::GrapeEngine::GrapeEngine__ss"></span><span class="target" id="classgs_1_1_grape_engine_1aa3ff9fd1624fdc5856177c1b2ecbe6c0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">GrapeEngine</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dag_file</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N2gs11GrapeEngine11GrapeEngineENSt6stringE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p>Construct a new <a class="reference internal" href="#classgs_1_1_grape_engine"><span class="std std-ref">GrapeEngine</span></a> object in job mode, processing the workflow defined in the dagfile. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>dag_file</strong> – </p>
 </dd>
 </dl>
@@ -1005,7 +1006,7 @@ MathJax = {
 <span id="_CPPv3N2gs14DispatchResult13set_graph_defERKN3rpc5graph10GraphDefPbE15AggregatePolicy"></span><span id="_CPPv2N2gs14DispatchResult13set_graph_defERKN3rpc5graph10GraphDefPbE15AggregatePolicy"></span><span id="gs::DispatchResult::set_graph_def__rpc::graph::GraphDefPbCR.AggregatePolicy"></span><span class="target" id="classgs_1_1_dispatch_result_1a718af15685c84d3b428a168dfeb5ff2b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_graph_def</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">rpc</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">graph</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">GraphDefPb</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">graph_def</span></span>, <a class="reference internal" href="#_CPPv4N2gs14DispatchResult15AggregatePolicyE" title="gs::DispatchResult::AggregatePolicy"><span class="n"><span class="pre">AggregatePolicy</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">policy</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N2gs14DispatchResult15AggregatePolicyE" title="gs::DispatchResult::AggregatePolicy"><span class="n"><span class="pre">AggregatePolicy</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N2gs14DispatchResult15AggregatePolicy14kMergeGraphDefE" title="gs::DispatchResult::AggregatePolicy::kMergeGraphDef"><span class="n"><span class="pre">kMergeGraphDef</span></span></a><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N2gs14DispatchResult13set_graph_defERKN3rpc5graph10GraphDefPbE15AggregatePolicy" title="Permalink to this definition">#</a><br /></dt>
 <dd><p>Set the graph metadata. The meta should be kept consistent among all workers. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>graph_def</strong> – </p>
 </dd>
 </dl>
@@ -1044,15 +1045,15 @@ MathJax = {
 </div>
 </dd></dl>
 
-</div>
-<div class="section" id="fragments-in-graphscope">
-<h2><a class="toc-backref" href="#id2">Fragments in GraphScope</a><a class="headerlink" href="#fragments-in-graphscope" title="Permalink to this heading">#</a></h2>
+</section>
+<section id="fragments-in-graphscope">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Fragments in GraphScope</a><a class="headerlink" href="#fragments-in-graphscope" title="Permalink to this heading">#</a></h2>
 <dl class="cpp class">
 <dt class="sig sig-object cpp" id="_CPPv4I0EN2gs15FragmentWrapperE">
 <span id="_CPPv3I0EN2gs15FragmentWrapperE"></span><span id="_CPPv2I0EN2gs15FragmentWrapperE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FRAG_T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_fragment_wrapper"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FragmentWrapper</span></span></span><a class="headerlink" href="#_CPPv4I0EN2gs15FragmentWrapperE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p>This is a fragment wrapper, which means a series of methods are provided to serialize/transform the data attached to the fragment. An AddColumn method is provided to add properties to create a new fragment from the original one. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>FRAG_T</strong> – </p>
 </dd>
 </dl>
@@ -1063,7 +1064,7 @@ MathJax = {
 <span id="_CPPv3I00000_bEN2gs22ArrowProjectedFragmentE"></span><span id="_CPPv2I00000_bEN2gs22ArrowProjectedFragmentE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">OID_T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">VID_T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">VDATA_T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">EDATA_T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">VERTEX_MAP_T</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ArrowVertexMap</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">InternalType</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00000_bEN2gs22ArrowProjectedFragmentE" title="gs::ArrowProjectedFragment::OID_T"><span class="n"><span class="pre">OID_T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00000_bEN2gs22ArrowProjectedFragmentE" title="gs::ArrowProjectedFragment::VID_T"><span class="n"><span class="pre">VID_T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">COMPACT</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_arrow_projected_fragment"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ArrowProjectedFragment</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">gs</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ArrowProjectedFragmentBase</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">BareRegistered</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00000_bEN2gs22ArrowProjectedFragmentE" title="gs::ArrowProjectedFragment"><span class="n"><span class="pre">ArrowProjectedFragment</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00000_bEN2gs22ArrowProjectedFragmentE" title="gs::ArrowProjectedFragment::OID_T"><span class="n"><span class="pre">OID_T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00000_bEN2gs22ArrowProjectedFragmentE" title="gs::ArrowProjectedFragment::VID_T"><span class="n"><span class="pre">VID_T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00000_bEN2gs22ArrowProjectedFragmentE" title="gs::ArrowProjectedFragment::VDATA_T"><span class="n"><span class="pre">VDATA_T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00000_bEN2gs22ArrowProjectedFragmentE" title="gs::ArrowProjectedFragment::EDATA_T"><span class="n"><span class="pre">EDATA_T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ArrowVertexMap</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">InternalType</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00000_bEN2gs22ArrowProjectedFragmentE" title="gs::ArrowProjectedFragment::OID_T"><span class="n"><span class="pre">OID_T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00000_bEN2gs22ArrowProjectedFragmentE" title="gs::ArrowProjectedFragment::VID_T"><span class="n"><span class="pre">VID_T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I00000_bEN2gs22ArrowProjectedFragmentE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p>This class represents the fragment projected from ArrowFragment which contains only one vertex label and edge label. The fragment has no label and property. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>OID_T</strong> – OID type </p></li>
 <li><p><strong>VID_T</strong> – VID type </p></li>
@@ -1631,7 +1632,7 @@ MathJax = {
 <span id="_CPPv3I000EN2gs23ArrowProjectedVertexMapE"></span><span id="_CPPv2I000EN2gs23ArrowProjectedVertexMapE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">OID_T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">VID_T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">VERTEX_MAP_T</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ArrowVertexMap</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I000EN2gs23ArrowProjectedVertexMapE" title="gs::ArrowProjectedVertexMap::OID_T"><span class="n"><span class="pre">OID_T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I000EN2gs23ArrowProjectedVertexMapE" title="gs::ArrowProjectedVertexMap::VID_T"><span class="n"><span class="pre">VID_T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_arrow_projected_vertex_map"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ArrowProjectedVertexMap</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Registered</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I000EN2gs23ArrowProjectedVertexMapE" title="gs::ArrowProjectedVertexMap"><span class="n"><span class="pre">ArrowProjectedVertexMap</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I000EN2gs23ArrowProjectedVertexMapE" title="gs::ArrowProjectedVertexMap::OID_T"><span class="n"><span class="pre">OID_T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I000EN2gs23ArrowProjectedVertexMapE" title="gs::ArrowProjectedVertexMap::VID_T"><span class="n"><span class="pre">VID_T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ArrowVertexMap</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I000EN2gs23ArrowProjectedVertexMapE" title="gs::ArrowProjectedVertexMap::OID_T"><span class="n"><span class="pre">OID_T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I000EN2gs23ArrowProjectedVertexMapE" title="gs::ArrowProjectedVertexMap::VID_T"><span class="n"><span class="pre">VID_T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I000EN2gs23ArrowProjectedVertexMapE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p>This class represents the mapping between oid and vid. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>OID_T</strong> – OID type </p></li>
 <li><p><strong>VID_T</strong> – VID type </p></li>
@@ -1716,7 +1717,7 @@ MathJax = {
 <span id="_CPPv3I00I00E0EN2gs19ArrowFragmentLoaderE"></span><span id="_CPPv2I00I00E0EN2gs19ArrowFragmentLoaderE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">OID_T</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">property_graph_types</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">OID_TYPE</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">VID_T</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">property_graph_types</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">VID_TYPE</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="n"><span class="pre">OID_T_</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">InternalType</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00I00E0EN2gs19ArrowFragmentLoaderE" title="gs::ArrowFragmentLoader::OID_T"><span class="n"><span class="pre">OID_T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="n"><span class="pre">VID_T_</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00I00E0EN2gs19ArrowFragmentLoaderE" title="gs::ArrowFragmentLoader::VID_T"><span class="n"><span class="pre">VID_T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">VERTEX_MAP_T</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ArrowVertexMap</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_arrow_fragment_loader"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ArrowFragmentLoader</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ArrowFragmentLoader</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">property_graph_types</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">OID_TYPE</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">vineyard</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">property_graph_types</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">VID_TYPE</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I00I00E0EN2gs19ArrowFragmentLoaderE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p>This loader can load a ArrowFragment from the data source including local file, oss, numpy, pandas and vineyard. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>OID_T</strong> – OID type </p></li>
 <li><p><strong>VID_T</strong> – VID type </p></li>
@@ -1787,16 +1788,16 @@ MathJax = {
 <p class="admonition-title">Warning</p>
 <p>doxygenclass: Cannot find class “gs::ArrowFragmentAppender” in doxygen xml output for project “GraphScope” from directory: /home/runner/work/GraphScope/GraphScope/docs/_build/doxygen/xml</p>
 </div>
-</div>
-<div class="section" id="analytical-apps">
-<h2><a class="toc-backref" href="#id3">Analytical Apps</a><a class="headerlink" href="#analytical-apps" title="Permalink to this heading">#</a></h2>
+</section>
+<section id="analytical-apps">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Analytical Apps</a><a class="headerlink" href="#analytical-apps" title="Permalink to this heading">#</a></h2>
 <dl class="cpp class">
 <dt class="sig sig-object cpp" id="_CPPv4I00EN2gs7AppBaseE">
 <span id="_CPPv3I00EN2gs7AppBaseE"></span><span id="_CPPv2I00EN2gs7AppBaseE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FRAG_T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CONTEXT_T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_app_base"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">AppBase</span></span></span><a class="headerlink" href="#_CPPv4I00EN2gs7AppBaseE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p><a class="reference internal" href="#classgs_1_1_app_base"><span class="std std-ref">AppBase</span></a> is the base class for applications. </p>
 <p>It contains an grape::DefaultMessageManager to process messages during execution of application. Apps derived from this class need to process messages explicitly.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>FRAG_T</strong> – Fragment class </p></li>
 <li><p><strong>CONTEXT_T</strong> – App context class </p></li>
@@ -1832,7 +1833,7 @@ MathJax = {
 <p>: This pure virtual function works as an interface, instructing users to implement in the specific app. The PEval in the inherited apps would be invoked directly, not via virtual functions.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> – </p></li>
 <li><p><strong>context</strong> – </p></li>
@@ -1851,7 +1852,7 @@ MathJax = {
 <p>: This pure virtual function works as an interface, instructing users to implement in the specific app. The IncEval in the inherited apps would be invoked directly, not via virtual functions.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> – </p></li>
 <li><p><strong>context</strong> – </p></li>
@@ -1888,7 +1889,7 @@ MathJax = {
 <dd><p><a class="reference internal" href="#classgs_1_1_property_app_base"><span class="std std-ref">PropertyAppBase</span></a> is the base class for applications on property graphs. </p>
 <p>It contains an PropertyMessageManager to process messages during execution of application. Apps derived from this class need to process messages explicitly.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>FRAG_T</strong> – </p></li>
 <li><p><strong>CONTEXT_T</strong> – </p></li>
@@ -1924,7 +1925,7 @@ MathJax = {
 <p>: This pure virtual function works as an interface, instructing users to implement in the specific app. The PEval in the inherited apps would be invoked directly, not via virtual functions.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> – </p></li>
 <li><p><strong>context</strong> – </p></li>
@@ -1943,7 +1944,7 @@ MathJax = {
 <p>: This pure virtual function works as an interface, instructing users to implement in the specific app. The IncEval in the inherited apps would be invoked directly, not via virtual functions.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> – </p></li>
 <li><p><strong>context</strong> – </p></li>
@@ -1979,7 +1980,7 @@ MathJax = {
 <span id="_CPPv3I00EN2gs19PropertyAutoAppBaseE"></span><span id="_CPPv2I00EN2gs19PropertyAutoAppBaseE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FRAG_T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CONTEXT_T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_property_auto_app_base"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PropertyAutoAppBase</span></span></span><a class="headerlink" href="#_CPPv4I00EN2gs19PropertyAutoAppBaseE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p><a class="reference internal" href="#classgs_1_1_property_auto_app_base"><span class="std std-ref">PropertyAutoAppBase</span></a> is the base class for applications on property graph, with an PropertyAutoMessageManager to process messages during execution of application. Apps derived from this class do not need to process messages explicitly. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>FRAG_T</strong> – </p></li>
 <li><p><strong>CONTEXT_T</strong> – </p></li>
@@ -2007,7 +2008,7 @@ MathJax = {
 <p>: This pure virtual function works as an interface, instructing users to implement in the specific app. The PEval in the inherited apps would be invoked directly, not via virtual functions.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> – </p></li>
 <li><p><strong>context</strong> – </p></li>
@@ -2026,7 +2027,7 @@ MathJax = {
 <p>: This pure virtual function works as an interface, instructing users to implement in the specific app. The IncEval in the inherited apps would be invoked directly, not via virtual functions.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> – </p></li>
 <li><p><strong>context</strong> – </p></li>
@@ -2062,7 +2063,7 @@ MathJax = {
 <span id="_CPPv3I0EN2gs13DefaultWorkerE"></span><span id="_CPPv2I0EN2gs13DefaultWorkerE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">APP_T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_default_worker"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DefaultWorker</span></span></span><a class="headerlink" href="#_CPPv4I0EN2gs13DefaultWorkerE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p>DefaultWorker manages the computation cycle. DefaultWorker is a kind of serial worker for apps derived from <a class="reference internal" href="#classgs_1_1_app_base"><span class="std std-ref">AppBase</span></a>. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>APP_T</strong> – </p>
 </dd>
 </dl>
@@ -2129,7 +2130,7 @@ MathJax = {
 <span id="_CPPv3I0EN2gs22ParallelPropertyWorkerE"></span><span id="_CPPv2I0EN2gs22ParallelPropertyWorkerE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">APP_T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_parallel_property_worker"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ParallelPropertyWorker</span></span></span><a class="headerlink" href="#_CPPv4I0EN2gs22ParallelPropertyWorkerE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p>A parallel worker for labeled fragment. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>APP_T</strong> – </p>
 </dd>
 </dl>
@@ -2196,7 +2197,7 @@ MathJax = {
 <span id="_CPPv3I0EN2gs18PropertyAutoWorkerE"></span><span id="_CPPv2I0EN2gs18PropertyAutoWorkerE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">APP_T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_property_auto_worker"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PropertyAutoWorker</span></span></span><a class="headerlink" href="#_CPPv4I0EN2gs18PropertyAutoWorkerE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p>A Worker manages the computation cycle. PropertyAutoWorker is a kind of worker for apps derived from <a class="reference internal" href="#classgs_1_1_property_auto_app_base"><span class="std std-ref">PropertyAutoAppBase</span></a>. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>APP_T</strong> – </p>
 </dd>
 </dl>
@@ -2298,7 +2299,7 @@ MathJax = {
 <span id="_CPPv3I0EN2gs12ArgsUnpackerE"></span><span id="_CPPv2I0EN2gs12ArgsUnpackerE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="structgs_1_1_args_unpacker"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ArgsUnpacker</span></span></span><a class="headerlink" href="#_CPPv4I0EN2gs12ArgsUnpackerE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p><a class="reference internal" href="#structgs_1_1_args_unpacker"><span class="std std-ref">ArgsUnpacker</span></a> is an util to unpack the Any type of proto to C++ datatype. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>T</strong> – The destination type </p>
 </dd>
 </dl>
@@ -2309,15 +2310,15 @@ MathJax = {
 <span id="_CPPv3I_NSt6size_tE0EN2gs9ArgTypeAtE"></span><span id="_CPPv2I_NSt6size_tE0EN2gs9ArgTypeAtE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">index</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FunctionType</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="structgs_1_1_arg_type_at"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ArgTypeAt</span></span></span><a class="headerlink" href="#_CPPv4I_NSt6size_tE0EN2gs9ArgTypeAtE" title="Permalink to this definition">#</a><br /></dt>
 <dd></dd></dl>
 
-</div>
-<div class="section" id="analytical-workers">
-<h2><a class="toc-backref" href="#id4">Analytical Workers</a><a class="headerlink" href="#analytical-workers" title="Permalink to this heading">#</a></h2>
+</section>
+<section id="analytical-workers">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Analytical Workers</a><a class="headerlink" href="#analytical-workers" title="Permalink to this heading">#</a></h2>
 <dl class="cpp class">
 <dt class="sig sig-object cpp">
 <span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">APP_T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_default_worker"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DefaultWorker</span></span></span><br /></dt>
 <dd><p>DefaultWorker manages the computation cycle. DefaultWorker is a kind of serial worker for apps derived from <a class="reference internal" href="#classgs_1_1_app_base"><span class="std std-ref">AppBase</span></a>. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>APP_T</strong> – </p>
 </dd>
 </dl>
@@ -2384,7 +2385,7 @@ MathJax = {
 <span id="_CPPv3I0EN2gs21DefaultPropertyWorkerE"></span><span id="_CPPv2I0EN2gs21DefaultPropertyWorkerE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">APP_T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_default_property_worker"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DefaultPropertyWorker</span></span></span><a class="headerlink" href="#_CPPv4I0EN2gs21DefaultPropertyWorkerE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p>A Worker manages the computation cycle. <a class="reference internal" href="#classgs_1_1_default_property_worker"><span class="std std-ref">DefaultPropertyWorker</span></a> is a kind of worker for apps derived from <a class="reference internal" href="#classgs_1_1_app_base"><span class="std std-ref">AppBase</span></a>. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>APP_T</strong> – </p>
 </dd>
 </dl>
@@ -2451,7 +2452,7 @@ MathJax = {
 <span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">APP_T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_parallel_property_worker"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ParallelPropertyWorker</span></span></span><br /></dt>
 <dd><p>A parallel worker for labeled fragment. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>APP_T</strong> – </p>
 </dd>
 </dl>
@@ -2518,7 +2519,7 @@ MathJax = {
 <span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">APP_T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_property_auto_worker"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PropertyAutoWorker</span></span></span><br /></dt>
 <dd><p>A Worker manages the computation cycle. PropertyAutoWorker is a kind of worker for apps derived from <a class="reference internal" href="#classgs_1_1_property_auto_app_base"><span class="std std-ref">PropertyAutoAppBase</span></a>. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>APP_T</strong> – </p>
 </dd>
 </dl>
@@ -2580,15 +2581,15 @@ MathJax = {
 </div>
 </dd></dl>
 
-</div>
-<div class="section" id="app-s-context">
-<h2><a class="toc-backref" href="#id5">App’s Context</a><a class="headerlink" href="#app-s-context" title="Permalink to this heading">#</a></h2>
+</section>
+<section id="app-s-context">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">App’s Context</a><a class="headerlink" href="#app-s-context" title="Permalink to this heading">#</a></h2>
 <dl class="cpp struct">
 <dt class="sig sig-object cpp" id="_CPPv4I00EN2gs17CtxWrapperBuilderE">
 <span id="_CPPv3I00EN2gs17CtxWrapperBuilderE"></span><span id="_CPPv2I00EN2gs17CtxWrapperBuilderE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CTX_T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="structgs_1_1_ctx_wrapper_builder"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CtxWrapperBuilder</span></span></span><a class="headerlink" href="#_CPPv4I00EN2gs17CtxWrapperBuilderE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p>This is a utility to build kinds of ContextWrapper instances. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>CTX_T</strong> – </p>
 </dd>
 </dl>
@@ -2599,7 +2600,7 @@ MathJax = {
 <span id="_CPPv3I0EN2gs21VertexPropertyContextE"></span><span id="_CPPv2I0EN2gs21VertexPropertyContextE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FRAG_T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_vertex_property_context"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">VertexPropertyContext</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">ContextBase</span></span><a class="headerlink" href="#_CPPv4I0EN2gs21VertexPropertyContextE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p><a class="reference internal" href="#classgs_1_1_vertex_property_context"><span class="std std-ref">VertexPropertyContext</span></a> can hold any number of columns. The context is designed for labeled fragment - ArrowFragment. Compared with LabeledVertexDataContext, the data type and column count can be determined at runtime. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>FRAG_T</strong> – The fragment class (non-labeled fragment only) </p>
 </dd>
 </dl>
@@ -2681,7 +2682,7 @@ MathJax = {
 <span id="_CPPv3I00EN2gs24VertexDataContextWrapperE"></span><span id="_CPPv2I00EN2gs24VertexDataContextWrapperE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FRAG_T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DATA_T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_vertex_data_context_wrapper"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">VertexDataContextWrapper</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">gs</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">IVertexDataContextWrapper</span></span><a class="headerlink" href="#_CPPv4I00EN2gs24VertexDataContextWrapperE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p>This is the wrapper class for VertexDataContext. A series of methods are provided to transform the data hold by the context. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>FRAG_T</strong> – The fragment class (Non-labeled fragment only) </p></li>
 <li><p><strong>DATA_T</strong> – The Data type hold by context </p></li>
@@ -2738,7 +2739,7 @@ MathJax = {
 <span id="_CPPv3I00EN2gs13TensorContextE"></span><span id="_CPPv2I00EN2gs13TensorContextE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FRAG_T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DATA_T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_tensor_context"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">TensorContext</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">ContextBase</span></span><a class="headerlink" href="#_CPPv4I00EN2gs13TensorContextE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p><a class="reference internal" href="#classgs_1_1_tensor_context"><span class="std std-ref">TensorContext</span></a> is designed for holding a bunch of computation results. The <a class="reference internal" href="#classgs_1_1_tensor_context"><span class="std std-ref">TensorContext</span></a> should be used if the number of elements are not related to the number of the vertex. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>FRAG_T</strong> – </p></li>
 <li><p><strong>DATA_T</strong> – </p></li>
@@ -2798,7 +2799,7 @@ MathJax = {
 <span id="_CPPv3I000EN2gs20TensorContextWrapperE"></span><span id="_CPPv2I000EN2gs20TensorContextWrapperE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FRAG_T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DATA_T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classgs_1_1_tensor_context_wrapper"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">TensorContextWrapper</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">gs</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ITensorContextWrapper</span></span><a class="headerlink" href="#_CPPv4I000EN2gs20TensorContextWrapperE" title="Permalink to this definition">#</a><br /></dt>
 <dd><p><a class="reference internal" href="#classgs_1_1_tensor_context_wrapper"><span class="std std-ref">TensorContextWrapper</span></a> is the wrapper class for <a class="reference internal" href="#classgs_1_1_tensor_context"><span class="std std-ref">TensorContext</span></a>. </p>
 <dl class="field-list simple">
-<dt class="field-odd">Template Parameters</dt>
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>FRAG_T</strong> – </p></li>
 <li><p><strong>DATA_T</strong> – </p></li>
@@ -2850,8 +2851,8 @@ MathJax = {
 </div>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -2928,14 +2929,11 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

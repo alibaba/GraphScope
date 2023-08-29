@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Deploy GraphScope with helm" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Deploy GraphScope with helm" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="deployment/deploy_graphscope_with_helm.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Install GraphScope in offline environment" href="install_in_offline_env.html" /><link rel="prev" title="Persistent storage of graphs on the Kubernetes cluster" href="persistent_storage_of_graphs_on_k8s.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Deploy GraphScope with helm - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,11 +665,11 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="deploy-graphscope-with-helm">
+          <section class="tex2jax_ignore mathjax_ignore" id="deploy-graphscope-with-helm">
 <h1>Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code><a class="headerlink" href="#deploy-graphscope-with-helm" title="Permalink to this heading">#</a></h1>
 <p>This guide provides instructions for deploying GraphScope using <a class="reference external" href="https://helm.sh/">helm</a>, a popular package manager for Kubernetes.</p>
 <p>This method is ideal for developers who are already familiar with helm and want to automate the deployment process, as well as for those who need better support for versioning and managing the deployment of GraphScope.</p>
-<div class="section" id="prerequisites">
+<section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">#</a></h2>
 <p>Before deploying GraphScope with helm, you will need the following:</p>
 <ul class="simple">
@@ -677,8 +678,8 @@ MathJax = {
 </ul>
 <p>If you do not have a Kubernetes cluster, you can follow the instructions in <a class="reference internal" href="deploy_graphscope_on_self_managed_k8s.html"><span class="std std-doc">deploy_graphscope_on_self_managed_k8s</span></a> to create one.</p>
 <p>If you do not have helm installed, you can install it by following the instructions in <a class="reference external" href="https://helm.sh/docs/intro/install/">Installing Helm</a>.</p>
-</div>
-<div class="section" id="installation">
+</section>
+<section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h2>
 <p>We have published a <a class="reference external" href="https://artifacthub.io/packages/helm/graphscope/graphscope">chart</a> to the artifact hub, which you can easily obtain by running the following commands:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>repo<span class="w"> </span>add<span class="w"> </span>graphscope<span class="w"> </span>https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
@@ -710,8 +711,8 @@ You could also get the endpoints of GraphScope by</p>
 <span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;GraphScope service listen on </span><span class="si">${</span><span class="nv">NODE_IP</span><span class="si">}</span><span class="s2">:</span><span class="si">${</span><span class="nv">NODE_PORT</span><span class="si">}</span><span class="s2">&quot;</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="connect-to-graphscope">
+</section>
+<section id="connect-to-graphscope">
 <h2>Connect to GraphScope<a class="headerlink" href="#connect-to-graphscope" title="Permalink to this heading">#</a></h2>
 <p>You’ll need <code class="docutils literal notranslate"><span class="pre">graphscope-client</span></code> package to <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">graphscope</span></code>.</p>
 <p>Since the GraphScope has been running in the cluster, you only need to <strong>connect</strong> to it.
@@ -741,16 +742,16 @@ The close only disconnect current session from the backend.</p>
 </pre></div>
 </div>
 <p>See <a class="reference external" href="https://graphscope.io/docs/reference/session.html"><em>create a session</em></a> for command documentation.</p>
-</div>
-<div class="section" id="uninstall-the-release">
+</section>
+<section id="uninstall-the-release">
 <h2>Uninstall the release<a class="headerlink" href="#uninstall-the-release" title="Permalink to this heading">#</a></h2>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>uninstall<span class="w"> </span>my-gs
 </pre></div>
 </div>
 <p>This removes all the Kubernetes components associated with the chart and deletes the release.
 See <a class="reference external" href="https://helm.sh/docs/helm/helm_uninstall/"><em>helm uninstall</em></a> for <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">uninstall</span></code> command documentation.</p>
-</div>
-<div class="section" id="configuration">
+</section>
+<section id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading">#</a></h2>
 <p>See <a class="reference external" href="https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing"><em>Customizing the Chart Before Installing</em></a>.</p>
 <p>To see all configurable options with detailed comments, visit the chart’s <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/charts/graphscope/values.yaml">values.yaml</a>, or run these configuration commands:</p>
@@ -758,8 +759,8 @@ See <a class="reference external" href="https://helm.sh/docs/helm/helm_uninstall
 </pre></div>
 </div>
 <p>And you could see more details in the <a class="reference external" href="https://artifacthub.io/packages/helm/graphscope/graphscope">homepage</a> of graphscope charts.</p>
-</div>
-<div class="section" id="offline-installation">
+</section>
+<section id="offline-installation">
 <h2>Offline Installation<a class="headerlink" href="#offline-installation" title="Permalink to this heading">#</a></h2>
 <p>While it’s convenient to install graphscope by querying the remote repository, users may want to use it in some environment that doesn’t have internet access.
 Or user may want to make some customization of the charts before installation.</p>
@@ -783,8 +784,8 @@ helm<span class="w"> </span>install<span class="w"> </span>my-gs<span class="w">
 helm<span class="w"> </span>install<span class="w"> </span>my-gs<span class="w"> </span>./graphscope
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -862,14 +863,11 @@ helm<span class="w"> </span>install<span class="w"> </span>my-gs<span class="w">
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

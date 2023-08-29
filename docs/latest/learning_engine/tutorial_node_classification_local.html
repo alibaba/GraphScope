@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Tutorial: Training a Node Classification Model on Your Local Machine" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Tutorial: Training a Node Classification Model on Your Local Machine" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="learning_engine/tutorial_node_classification_local.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tutorial: Training a Node Classification Model on K8s Cluster" href="tutorial_node_classification_k8s.html" /><link rel="prev" title="Guide and Examples" href="guide_and_examples.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Tutorial: Training a Node Classification Model on Your Local Machine - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,7 +665,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="tutorial-training-a-node-classification-model-on-your-local-machine">
+          <section class="tex2jax_ignore mathjax_ignore" id="tutorial-training-a-node-classification-model-on-your-local-machine">
 <h1>Tutorial: Training a Node Classification Model on Your Local Machine<a class="headerlink" href="#tutorial-training-a-node-classification-model-on-your-local-machine" title="Permalink to this heading">#</a></h1>
 <p>This tutorial presents an end-to-end example that illustrates how GraphScope
 trains the EgoGraphSAGE model for a node classification task. To demonstrate
@@ -678,7 +679,7 @@ information to classify papers. Specifically, in the graph, each paper node
 features a 128-dimensional word2vec vector that represents its content. This
 vector is obtained by averaging the embeddings of words in the paper’s title
 and abstract. It’s worth noting that the embeddings of individual words are pre-trained.</p>
-<div class="section" id="load-graph">
+<section id="load-graph">
 <h2>Load Graph<a class="headerlink" href="#load-graph" title="Permalink to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
     <span class="c1"># https://www.tensorflow.org/guide/migrate</span>
@@ -703,8 +704,8 @@ and abstract. It’s worth noting that the embeddings of individual words are pr
 <span class="nb">print</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="define-the-training-process-for-the-egographsage-model">
+</section>
+<section id="define-the-training-process-for-the-egographsage-model">
 <h2>Define the Training Process for the EgoGraphSAGE Model<a class="headerlink" href="#define-the-training-process-for-the-egographsage-model" title="Permalink to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node_type</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">,</span> <span class="n">class_num</span><span class="p">,</span> <span class="n">features_num</span><span class="p">,</span>
               <span class="n">hops_num</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">nbrs_num</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
@@ -750,8 +751,8 @@ and abstract. It’s worth noting that the embeddings of individual words are pr
     <span class="n">trainer</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">test_data</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">test_acc</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="launch-the-learning-engine">
+</section>
+<section id="launch-the-learning-engine">
 <h2>Launch the Learning Engine<a class="headerlink" href="#launch-the-learning-engine" title="Permalink to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define the features for learning, we chose the original 128-dimension feature</span>
 <span class="n">i_features</span> <span class="o">=</span> <span class="p">[]</span>
@@ -771,8 +772,8 @@ and abstract. It’s worth noting that the embeddings of individual words are pr
 <span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="train-the-model">
+</section>
+<section id="train-the-model">
 <h2>Train the Model<a class="headerlink" href="#train-the-model" title="Permalink to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train</span><span class="p">(</span><span class="n">lg</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="n">edge_type</span><span class="o">=</span><span class="s2">&quot;cites&quot;</span><span class="p">,</span>
       <span class="n">class_num</span><span class="o">=</span><span class="mi">349</span><span class="p">,</span>  <span class="c1"># output dimension</span>
@@ -780,8 +781,8 @@ and abstract. It’s worth noting that the embeddings of individual words are pr
       <span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -857,14 +858,11 @@ and abstract. It’s worth noting that the embeddings of individual words are pr
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

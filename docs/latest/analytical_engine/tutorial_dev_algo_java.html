@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Tutorial: Develop your Algorithm in Java with PIE Model" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Tutorial: Develop your Algorithm in Java with PIE Model" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/tutorial_dev_algo_java.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tutorial: Run Giraph Applications on GraphScope" href="tutorial_run_giraph_apps.html" /><link rel="prev" title="Tutorial: Develop algorithms in Python" href="tutorial_dev_algo_python.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Tutorial: Develop your Algorithm in Java with PIE Model - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,11 +665,11 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="tutorial-develop-your-algorithm-in-java-with-pie-model">
+          <section class="tex2jax_ignore mathjax_ignore" id="tutorial-develop-your-algorithm-in-java-with-pie-model">
 <h1>Tutorial: Develop your Algorithm in Java with PIE Model<a class="headerlink" href="#tutorial-develop-your-algorithm-in-java-with-pie-model" title="Permalink to this heading">#</a></h1>
 <p>GraphScope provides sufficient support for <code class="docutils literal notranslate"><span class="pre">java</span> <span class="pre">programmers</span></code> to implement graph algorithms and run it on GraphScope Analytical Engine.
 In this tutorial, you will first try to explore GraphScope JavaSDK with some example algorithms, then implement your own algorithm, finally submit to GraphScope.</p>
-<div class="section" id="run-example-algorithms-with-example-jar">
+<section id="run-example-algorithms-with-example-jar">
 <h2>Run example algorithms with example jar<a class="headerlink" href="#run-example-algorithms-with-example-jar" title="Permalink to this heading">#</a></h2>
 <p>An example jar which contains implementation of several graph algorithms(i.e. PageRank, SSSP, BFS) is provided in
 <a class="reference external" href="https://graphscope.oss-cn-beijing.aliyuncs.com/jar/grape-demo-0.19.0-shaded.jar">grape-demo.jar</a>. You can run the graph algorithms provided in this jar by submitting the downloaded jar to GraphScope.</p>
@@ -697,11 +698,11 @@ In this tutorial, you will first try to explore GraphScope JavaSDK with some exa
 </pre></div>
 </div>
 <p>For more info about GraphScope Python client, please refer to <a class="reference external" href="https://graphscope.io/docs/latest/reference/python_index.html">GraphScope Python Doc</a>.</p>
-</div>
-<div class="section" id="implement-your-own-algorithms-in-java">
+</section>
+<section id="implement-your-own-algorithms-in-java">
 <h2>Implement your own algorithms in Java.<a class="headerlink" href="#implement-your-own-algorithms-in-java" title="Permalink to this heading">#</a></h2>
 <p>To implement java graph algorithms runnable on GraphScope, all you need is <code class="docutils literal notranslate"><span class="pre">GRAPE-jdk</span></code>, which provide a PIE programming interface.</p>
-<div class="section" id="prepare-grape-jdk">
+<section id="prepare-grape-jdk">
 <h3>Prepare <strong>GRAPE-jdk</strong><a class="headerlink" href="#prepare-grape-jdk" title="Permalink to this heading">#</a></h3>
 <p>You can include <code class="docutils literal notranslate"><span class="pre">GRAPE-jdk</span></code> as a dependency in your maven project by adding following configuration.</p>
 <div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;dependency&gt;</span>
@@ -721,8 +722,8 @@ include runtime jars in your fat-jar.</p>
 <span class="nt">&lt;/plugin&gt;</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="implement-your-algorithm">
+</section>
+<section id="implement-your-algorithm">
 <h3>Implement your algorithm<a class="headerlink" href="#implement-your-algorithm" title="Permalink to this heading">#</a></h3>
 <p>Different from the <em>pregel</em> interface provided by <strong>Apache Giraph</strong> and <strong>Spark GraphX</strong>, <code class="docutils literal notranslate"><span class="pre">GRAPE-jdk</span></code> provides user with <strong>PIE</strong> programming interface. Unlike <em>pregel</em>’s <code class="docutils literal notranslate"><span class="pre">vertex-centric</span></code> interface, <strong>PIE</strong>
 models graph computing in a <code class="docutils literal notranslate"><span class="pre">subgraph-centric</span></code> manner.
@@ -799,8 +800,8 @@ results, init configuration in this class. The <code class="docutils literal not
 </pre></div>
 </div>
 <p>For more detail usages of <code class="docutils literal notranslate"><span class="pre">GRAPE-jdk</span></code>, you can check <a class="reference external" href="https://graphscope.io/docs/reference/gae_java/index.html">GRAPE-jdk JavaDoc</a>. For more example apps, please refer <a class="reference external" href="https://github.com/GraphScope/gs-algos">GraphScope/gs-algos</a>.</p>
-</div>
-<div class="section" id="submit-to-graphscope">
+</section>
+<section id="submit-to-graphscope">
 <h3>Submit to GraphScope<a class="headerlink" href="#submit-to-graphscope" title="Permalink to this heading">#</a></h3>
 <p>To run your algorithm on GraphScope, your first need to obtain a fat-jar which contains your implementation.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mvn</span> <span class="n">package</span>
@@ -830,13 +831,13 @@ parameters.</p>
 </pre></div>
 </div>
 <p>After computation, you can obtain the results stored in context with the help of <a class="reference external" href="https://graphscope.io/docs/reference/context.html#context"><code class="docutils literal notranslate"><span class="pre">Context</span></code></a>.</p>
-</div>
-</div>
-<div class="section" id="graphscope-javasdk-with-github-template">
+</section>
+</section>
+<section id="graphscope-javasdk-with-github-template">
 <h2>GraphScope JavaSDK with Github Template<a class="headerlink" href="#graphscope-javasdk-with-github-template" title="Permalink to this heading">#</a></h2>
 <p>If you don’t bother creating new project to try <code class="docutils literal notranslate"><span class="pre">GRAPE-jdk</span></code>, we provide a template project <a class="reference external" href="https://github.com/zhanglei1949/GraphScope-Java-template">GraphScope-Java-template</a>. By click <strong>Use this template</strong>, you can create a new repository with same files and structure of the template repository. You can then try developing your own algorithms in this project.</p>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -916,14 +917,11 @@ parameters.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

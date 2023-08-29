@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Persistent storage of graphs on the Kubernetes cluster" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Persistent storage of graphs on the Kubernetes cluster" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="deployment/persistent_storage_of_graphs_on_k8s.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Deploy GraphScope with helm" href="deploy_graphscope_with_helm.html" /><link rel="prev" title="Deploy with Existing Vineyard Cluster" href="deploy_with_existing_vineyard_cluster.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Persistent storage of graphs on the Kubernetes cluster - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,17 +665,17 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="persistent-storage-of-graphs-on-the-kubernetes-cluster">
+          <section class="tex2jax_ignore mathjax_ignore" id="persistent-storage-of-graphs-on-the-kubernetes-cluster">
 <h1>Persistent storage of graphs on the Kubernetes cluster<a class="headerlink" href="#persistent-storage-of-graphs-on-the-kubernetes-cluster" title="Permalink to this heading">#</a></h1>
 <p>If you want to persistently store specific graphs that have been calculated over a long period of time on the Kubernetes cluster and restore them later, this document provides step-by-step instructions on how to do this with the Kubernetes PersistentVolumes.</p>
-<div class="section" id="prerequisites">
+<section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
 <li><p>You have a Kubernetes cluster on hand. If you don’t have a Kubernetes cluster, please refer to <a class="reference internal" href="deploy_graphscope_on_self_managed_k8s.html#prepare-a-kubernetes-cluster"><span class="std std-ref">Prepare a Kubernetes cluster</span></a> for details.</p></li>
 <li><p>You have the <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> Python library installed. If you don’t have installed it, please refer to <a class="reference internal" href="deploy_graphscope_on_self_managed_k8s.html#install-graphscope-client"><span class="std std-ref">Install GraphScope Client</span></a> for details.</p></li>
 </ul>
-</div>
-<div class="section" id="create-a-pv-and-pvc">
+</section>
+<section id="create-a-pv-and-pvc">
 <h2>Create a pv and pvc<a class="headerlink" href="#create-a-pv-and-pvc" title="Permalink to this heading">#</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>kubectl<span class="w"> </span>create<span class="w"> </span>namespace<span class="w"> </span>graphscope-system
 </pre></div>
@@ -718,8 +719,8 @@ MathJax = {
 <span class="s">EOF</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="store-graphs-to-the-pvc">
+</section>
+<section id="store-graphs-to-the-pvc">
 <h2>Store graphs to the pvc<a class="headerlink" href="#store-graphs-to-the-pvc" title="Permalink to this heading">#</a></h2>
 <p>After the above preparations are completed, you can deploy the graphscope cluster as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
@@ -825,8 +826,8 @@ MathJax = {
 <span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="retore-graphs-from-the-pvc">
+</section>
+<section id="retore-graphs-from-the-pvc">
 <h2>Retore graphs from the pvc<a class="headerlink" href="#retore-graphs-from-the-pvc" title="Permalink to this heading">#</a></h2>
 <p>Remember the vineyard ids printed above and the pvc name and then you can restore the graphs from the pvc as follows.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
@@ -890,16 +891,16 @@ MathJax = {
 <span class="c1"># Relations: [Relation(source=&#39;person&#39;, destination=&#39;person&#39;)]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="clean-up">
+</section>
+<section id="clean-up">
 <h2>Clean up<a class="headerlink" href="#clean-up" title="Permalink to this heading">#</a></h2>
 <p>If you don’t need the graphs anymore, you can delete the pvc and pv as follows.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> </span>pvc<span class="w"> </span>graphscope-pvc<span class="w"> </span>-n<span class="w"> </span>graphscope-system
 $<span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> </span>pv<span class="w"> </span>graphscope-pv
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -976,14 +977,11 @@ $<span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> <
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

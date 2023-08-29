@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Graph Sampling" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Graph Sampling" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="learning_engine/graph_sampling.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Guide and Examples" href="guide_and_examples.html" /><link rel="prev" title="Design of GLE" href="design_of_gle.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Graph Sampling - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,7 +665,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="graph-sampling">
+          <section class="tex2jax_ignore mathjax_ignore" id="graph-sampling">
 <h1>Graph Sampling<a class="headerlink" href="#graph-sampling" title="Permalink to this heading">#</a></h1>
 <p>Graph sampling is an effective technique for managing large graphs and is widely used in programming paradigms represented by the GraphSAGE framework. Sampling reduces data size and facilitates efficient processing by Tensor-Based computing frameworks through data alignment.</p>
 <p>Before sampling, we are required to provide seeds, which can be either nodes or edges. Correspondingly, GLE provides graph traversal operators to prepare the seeds for batch-sampling:</p>
@@ -681,18 +682,18 @@ MathJax = {
 <p>Neighborhood Sampling involves selecting one-hop or multi-hop neighboring vertices based on the input vertex to construct the perceptual field in GCN theory. Input for neighborhood sampling can be from the graph traversal output or other external data sources.</p>
 <p>Subgraph Sampling involves vertices of one-hop or multi-hop and all edges with src and dst vertices already sampled, which form a subgraph. This sampling method becomes more and more important as the research in GNN expressivity advances.</p>
 <p>Negative Sampling selects vertices that are not directly connected to the input vertices, and it is commonly used in unsupervised learning.</p>
-<div class="section" id="graph-traversal">
+<section id="graph-traversal">
 <h2>Graph Traversal<a class="headerlink" href="#graph-traversal" title="Permalink to this heading">#</a></h2>
 <p>Graph traversal, in GNN, has a different semantics than classical graph computation. The training model of mainstream deep learning algorithms iterates by batch. To meet this requirement, the data has to be accessible by batch, and we call this data access pattern traversal. In GNN algorithms, the data source is the graph, and the training samples usually consist of the vertices and edges of the graph. Graph traversal refers to providing the algorithm with the ability to access vertices, edges or subgraphs by batch.</p>
 <p>Currently GLE supports batch traversal of vertices and edges. This random traversal can be either putback-free or putback. In a no-replay traversal, gl.OutOfRangeError is triggered every time an epoch ends. The data source being traversed is partitioned, i.e. the current worker (in the case of distributed TF) only traverses the data on the Server corresponding to it.</p>
 <p>For usage and interfaces of graph traversal, please check <a class="reference external" href="https://graph-learn.readthedocs.io/en/latest/en/gl/graph/graph_operator/graph_traverse.html">the traversal part of GLE</a> for more details.</p>
-</div>
-<div class="section" id="neighborhood-sampling">
+</section>
+<section id="neighborhood-sampling">
 <h2>Neighborhood Sampling<a class="headerlink" href="#neighborhood-sampling" title="Permalink to this heading">#</a></h2>
 <p>Different implementation strategies such as random and edge-weight are available for each sampling operation. We have accumulated over 10 sampling operators through practical production and have made the operator programming interface open to allow user customization to keep up with the ever-evolving GNN.</p>
 <p>For sampling strategies, GLE currently has support for the following sampling strategies, corresponding to the <code class="docutils literal notranslate"><span class="pre">strategy</span></code> parameters when generating <code class="docutils literal notranslate"><span class="pre">NeighborSampler</span></code> objects.</p>
 <div class="table-wrapper colwidths-auto docutils container">
-<table class="colwidths-auto docutils align-default">
+<table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>strategy</p></th>
 <th class="head"><p>description</p></th>
@@ -736,19 +737,19 @@ MathJax = {
 </pre></div>
 </div>
 <p>For usage and interfaces of neighborhood sampling, please check <a class="reference external" href="https://graph-learn.readthedocs.io/en/latest/en/gl/graph/graph_operator/graph_sampling.html">the sampling part of GLE</a> for more details.</p>
-</div>
-<div class="section" id="subgraph-sampling">
+</section>
+<section id="subgraph-sampling">
 <h2>Subgraph Sampling<a class="headerlink" href="#subgraph-sampling" title="Permalink to this heading">#</a></h2>
 <p>Unlike EgoGraph, SubGraph contains the edge_index of the graph topology, so the message passing path (forward computation path) can be determined directly by the edge_index, and the implementation of the conv layer can be done directly by the edge_index and the nodes/edges data. In addition, SubGraph is fully compatible with the Data in PyG, so the model part of PyG can be reused.</p>
 <p>Subgraph Sampling involves vertices of one-hop or multi-hop and all edges with src and dst vertices already sampled, which form a subgraph.</p>
 <p>This sampling method becomes more and more important as the research in GNN expressivity advances.</p>
-</div>
-<div class="section" id="negative-sampling">
+</section>
+<section id="negative-sampling">
 <h2>Negative Sampling<a class="headerlink" href="#negative-sampling" title="Permalink to this heading">#</a></h2>
 <p><strong>Negative sampling</strong> refers to sampling vertices that have no direct edge relationship with a given vertex. Similar to neighbor sampling, negative sampling has different implementation strategies, such as random, in-degree of nodes, etc. As a common operator of GNN, negative sampling supports extensions and scenario-oriented customization. In addition, GLE provides the ability to negative sampling by specified attribute condition.</p>
 <p>GLE currently supports the following negative sampling strategies, corresponding to the strategy argument when generating NegativeSampler objects.</p>
 <div class="table-wrapper colwidths-auto docutils container">
-<table class="colwidths-auto docutils align-default">
+<table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>strategy</p></th>
 <th class="head"><p>description</p></th>
@@ -782,8 +783,8 @@ MathJax = {
 </pre></div>
 </div>
 <p>For usage and interfaces of negative sampling, please check <a class="reference external" href="https://graph-learn.readthedocs.io/en/latest/en/gl/graph/graph_operator/negative_sampling.html">the negative sampling part of GLE</a> for more details.</p>
-</div>
-<div class="section" id="gsl">
+</section>
+<section id="gsl">
 <h2>GSL<a class="headerlink" href="#gsl" title="Permalink to this heading">#</a></h2>
 <p>GLE abstracts sampling operations into a set of interfaces, called GSL (Graph Sampling Language). Generally, graph sampling consists of several categories as follows.</p>
 <ul class="simple">
@@ -795,8 +796,8 @@ MathJax = {
 <p><code class="docutils literal notranslate"><span class="pre">g.V(&quot;user&quot;).batch(64).outV(&quot;click&quot;).sample(10).by(&quot;edge_weight&quot;)</span> </code></p>
 <p>GSL covers support for oversized graphs, heterogeneous graphs, and attribute graphs considering the characteristics of the actual graph data, and the syntax is designed close to the Gremlin form for easy understanding.</p>
 <p>For more details, please check <a class="reference external" href="https://graph-learn.readthedocs.io/en/latest/en/gl/graph/gsl.html">the GSL part of GLE</a>.</p>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -873,14 +874,11 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

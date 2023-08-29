@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Graph Analytics Workloads" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Graph Analytics Workloads" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="overview/graph_analytics_workloads.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Graph Interactive Workloads" href="graph_interactive_workloads.html" /><link rel="prev" title="Getting Started" href="getting_started.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Graph Analytics Workloads - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,39 +665,49 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="graph-analytics-workloads">
+          <section class="tex2jax_ignore mathjax_ignore" id="graph-analytics-workloads">
 <h1>Graph Analytics Workloads<a class="headerlink" href="#graph-analytics-workloads" title="Permalink to this heading">#</a></h1>
-<div class="section" id="what-is-graph-analytics">
+<section id="what-is-graph-analytics">
 <h2>What is Graph Analytics<a class="headerlink" href="#what-is-graph-analytics" title="Permalink to this heading">#</a></h2>
 <p>A graph is a data structure composed of vertices (or nodes) connected by edges. Graphs can represent many real-world data, such as social networks, transportation networks, and protein interaction networks, as shown in the following figure.</p>
-<div class="figure align-default" id="id1">
+<figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="../_images/graph_examples.png"><img alt="Examples of graphs" src="../_images/graph_examples.png" style="width: 80%;" /></a>
-<p class="caption"><span class="caption-text">Examples of graphs.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Examples of graphs.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>In general, any computation on graph data can be considered graph analytics. The objective of graph analytics is to uncover and utilize the structure of graphs, providing insights into the relationships and connections between different elements in graphs. Computation patterns in graph analytics can vary significantly: some involve only a small number of vertices/edges, while others access a large portion or even all vertices/edges of a graph. In GraphScope, we refer to the former as <em>graph traversal</em> and the latter as <em>graph analytics</em>, unless specified otherwise.</p>
 <p>There are various types of graph analytics algorithms, which typically iterate over a large portion or all vertices/edges of a graph to discover hidden insights within the graph data. Common graph analytics algorithms include general analytics algorithms (e.g., PageRank, shortest path, and maximum flow), community detection algorithms (e.g., maximum clique/bi-clique, connected components, Louvain, and label propagation), and graph mining algorithms (e.g., frequent structure mining and graph pattern discovery). Below, we provide several examples to illustrate how graph analytics algorithms operate.</p>
 <p>The <a class="reference external" href="https://en.wikipedia.org/wiki/PageRank">PageRank</a> algorithm measures the importance of each vertex in a graph by iteratively counting the number and importance of its neighbors. This helps determine a rough estimate of a vertex’s importance. Specifically, the PageRank computation consists of multiple iterations, with each vertex initially assigned a value indicating its importance. During each iteration, vertices sum the values of their neighbors pointing to them and update their own values accordingly.</p>
-<div class="figure align-default" id="id2">
+<figure class="align-default" id="id2">
 <a class="reference internal image-reference" href="../_images/pagerank.png"><img alt="PageRank algorithm" src="../_images/pagerank.png" style="width: 40%;" /></a>
-<p class="caption"><span class="caption-text">PageRank algorithm (<a class="reference external" href="https://snap-stanford.github.io/cs224w-notes/network-methods/pagerank">https://snap-stanford.github.io/cs224w-notes/network-methods/pagerank</a>).</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">PageRank algorithm (<a class="reference external" href="https://snap-stanford.github.io/cs224w-notes/network-methods/pagerank">https://snap-stanford.github.io/cs224w-notes/network-methods/pagerank</a>).</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p><a class="reference external" href="https://en.wikipedia.org/wiki/Shortest_path_problem">The shortest path problem</a> aims to find the most efficient path between two vertices by minimizing the sum of the weights of its constituent edges. Several well-known algorithms, such as Dijkstra’s algorithm and Bellman–Ford algorithm, have been proposed to solve this problem. For instance, Dijkstra’s algorithm selects a single vertex as the “source” vertex and attempts to find the shortest paths from the source to all other vertices in the graph. The computation of Dijkstra’s algorithm involves multiple iterations. In each iteration, a vertex with a known shortest path to the source is selected, and the shortest path values of its neighbors are updated, as demonstrated in the following <a class="reference external" href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">figure</a>.</p>
-<div class="figure align-default" id="id3">
+<figure class="align-default" id="id3">
 <a class="reference internal image-reference" href="../_images/sssp.gif"><img alt="Dijkstra's algorithm" src="../_images/sssp.gif" style="width: 40%;" /></a>
-<p class="caption"><span class="caption-text">Dijkstra’s algorithm (<a class="reference external" href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">https://en.wikipedia.org/wiki/Dijkstra’s_algorithm</a>).</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Dijkstra’s algorithm (<a class="reference external" href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">https://en.wikipedia.org/wiki/Dijkstra’s_algorithm</a>).</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p><a class="reference external" href="https://en.wikipedia.org/wiki/Community_structure">Community detection algorithms</a> (e.g., Louvain) aim to identify groups of vertices that are more densely connected internally than with other vertices in the graph. These algorithms work by having each vertex repeatedly send its label to its neighbors and update its own label based on specific rules after receiving labels from its neighbors. After multiple iterations, vertices that are densely connected internally will have the same or similar labels.</p>
-<div class="figure align-default" id="id4">
+<figure class="align-default" id="id4">
 <a class="reference internal image-reference" href="../_images/comm_detection.png"><img alt="Community detection algorithm" src="../_images/comm_detection.png" style="width: 40%;" /></a>
-<p class="caption"><span class="caption-text">Community detection algorithm (<a class="reference external" href="https://towardsdatascience.com/community-detection-algorithms-9bd8951e7dae">https://towardsdatascience.com/community-detection-algorithms-9bd8951e7dae</a>).</span><a class="headerlink" href="#id4" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Community detection algorithm (<a class="reference external" href="https://towardsdatascience.com/community-detection-algorithms-9bd8951e7dae">https://towardsdatascience.com/community-detection-algorithms-9bd8951e7dae</a>).</span><a class="headerlink" href="#id4" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>The examples above demonstrate how graph analytics algorithms analyze properties of vertices and edges within a graph. In real-world applications, many problems can be modeled as graph analytics problems. For instance, Google Search represents websites and their interconnections as a graph, applying the PageRank algorithm to identify the most important websites on the Internet. Similarly, a city’s road map can be modeled as a graph, with the shortest path algorithm assisting in path planning for logistics and delivery services. By considering social media users as a graph, community detection techniques (e.g., Louvain) can help discover users with shared interests and maintain strong connections between them.</p>
-<div class="figure align-default" id="id5">
+<figure class="align-default" id="id5">
 <a class="reference internal image-reference" href="../_images/analytics_examples.png"><img alt="Applications of graph analytics" src="../_images/analytics_examples.png" style="width: 80%;" /></a>
-<p class="caption"><span class="caption-text">Applications of graph analytics.</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
-</div>
-</div>
-<div class="section" id="challenges-of-graph-analytics-on-large-graphs">
+<figcaption>
+<p><span class="caption-text">Applications of graph analytics.</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="challenges-of-graph-analytics-on-large-graphs">
 <h2>Challenges of Graph Analytics on Large Graphs<a class="headerlink" href="#challenges-of-graph-analytics-on-large-graphs" title="Permalink to this heading">#</a></h2>
 <p>Based on our experience, processing graph data and utilizing frameworks (systems) for graph data processing present the following challenges:</p>
 <ul>
@@ -710,8 +721,8 @@ MathJax = {
 <p>The efficiency and scalability of processing large graphs remain limited. While current systems have significantly benefited from years of optimization work, they still encounter efficiency and/or scalability issues. Achieving superior performance when dealing with large-scale graph data is highly sought after.</p>
 </li>
 </ul>
-</div>
-<div class="section" id="what-can-graphscope-do">
+</section>
+<section id="what-can-graphscope-do">
 <h2>What can GraphScope Do<a class="headerlink" href="#what-can-graphscope-do" title="Permalink to this heading">#</a></h2>
 <p>In GraphScope, the Graph Analytics Engine (GAE) tackles the aforementioned challenges by managing graph analytics algorithms in the following manner:</p>
 <ul>
@@ -726,8 +737,8 @@ MathJax = {
 <p>GAE achieves high performance through an optimized analytical runtime, employing techniques such as pull/push dynamic switching, cache-efficient memory layout, and pipelining. We have compared GraphScope with state-of-the-art graph processing systems on the LDBC Graph Analytics Benchmark, and the <a class="reference external" href="https://graphscope.io/docs/latest/performance_and_benchmark.html">results</a> show that GraphScope outperforms other graph systems.</p>
 </li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -802,14 +813,11 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

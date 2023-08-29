@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="How to Find logs" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="How to Find logs" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="utilities/how_to_find_logs.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Command-line Utility gsctl" href="gs.html" /><link rel="prev" title="GART: Bridging the Gap between Relational OLTP and Graph Workloads" href="../storage_engine/gart.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>How to Find logs - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,7 +665,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="how-to-find-logs">
+          <section class="tex2jax_ignore mathjax_ignore" id="how-to-find-logs">
 <h1>How to Find logs<a class="headerlink" href="#how-to-find-logs" title="Permalink to this heading">#</a></h1>
 <p>By default, GraphScope is running in a silent mode following the convention of Python applications.
 To enable verbose logging, turn it on by this command after importing <code class="docutils literal notranslate"><span class="pre">graphscope</span></code>.</p>
@@ -672,7 +673,7 @@ To enable verbose logging, turn it on by this command after importing <code clas
 <span class="gp">&gt;&gt;&gt; </span><span class="n">graphscope</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="section" id="find-logs-in-k8s">
+<section id="find-logs-in-k8s">
 <h2>Find logs in k8s<a class="headerlink" href="#find-logs-in-k8s" title="Permalink to this heading">#</a></h2>
 <p>If you are running GraphScope in k8s, you can use <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#describe">kubectl describe</a> and <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#logs">kubectl logs</a> to check the log/status of the cluster.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># list graphscope pods</span>
@@ -690,7 +691,7 @@ $<span class="w"> </span>kubectl<span class="w"> </span>describe<span class="w">
 $<span class="w"> </span>kubectl<span class="w"> </span>logs<span class="w"> </span>-f<span class="w"> </span>&lt;pod_name&gt;
 </pre></div>
 </div>
-<div class="section" id="find-logs-for-graphscope-analytical-engine-gae">
+<section id="find-logs-for-graphscope-analytical-engine-gae">
 <h3>Find logs for GraphScope Analytical Engine (GAE)<a class="headerlink" href="#find-logs-for-graphscope-analytical-engine-gae" title="Permalink to this heading">#</a></h3>
 <p>Within the k8s environment, all logs for the analytical engine (GAE) are consolidated into the coordinator pod. Therefore, you can view GAE logs by using the command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>kubectl<span class="w"> </span>logs<span class="w"> </span>-f<span class="w"> </span>coordinator-syoove-79b44f7b58-ctmqb
@@ -701,8 +702,8 @@ $<span class="w"> </span>kubectl<span class="w"> </span>logs<span class="w"> </s
 $<span class="w"> </span>cat<span class="w"> </span>/tmp/grape_engine.INFO
 </pre></div>
 </div>
-</div>
-<div class="section" id="find-logs-for-graph-interactive-engine-gie">
+</section>
+<section id="find-logs-for-graph-interactive-engine-gie">
 <h3>Find logs for Graph Interactive Engine (GIE)<a class="headerlink" href="#find-logs-for-graph-interactive-engine-gie" title="Permalink to this heading">#</a></h3>
 <p>When using the Graph Interactive Engine (GIE):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># g is a property graph in session</span>
@@ -727,8 +728,8 @@ $<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/var/
 $<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/var/log/graphscope/15334625083466732<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>tail<span class="w"> </span>-f<span class="w"> </span>executor.0.log
 </pre></div>
 </div>
-</div>
-<div class="section" id="find-logs-for-graph-learning-engine-gle">
+</section>
+<section id="find-logs-for-graph-learning-engine-gle">
 <h3>Find logs for Graph Learning Engine (GLE)<a class="headerlink" href="#find-logs-for-graph-learning-engine-gle" title="Permalink to this heading">#</a></h3>
 <p>When using the Graph Learning Engine (GLE):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># g is a property graph in session</span>
@@ -740,9 +741,9 @@ $<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/var/
 $<span class="w"> </span>cat<span class="w"> </span>/home/graphscope/graphlearn.INFO
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="find-logs-for-groot">
+</section>
+</section>
+<section id="find-logs-for-groot">
 <h2>Find logs for Groot<a class="headerlink" href="#find-logs-for-groot" title="Permalink to this heading">#</a></h2>
 <p>It is common to find the logs of Frontend and Store roles. When debugging, it is often necessary to find the logs of Coordinator and Ingestor as well. The logs of Frontend include the logs of the Compiler that generates the logical query plan, while the logs of Store include the logs of the query engine execution. You can find the logs of each Pod using the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands">kubectl command</a> <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">${POD_NAME}</span></code>. For example,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>pod
@@ -765,8 +766,8 @@ $<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/var/
 graphscope-store.2023-03-11.0.log<span class="w">  </span>graphscope-store.2023-03-19.0.log<span class="w">  </span>graphscope-store.log<span class="w"> </span>...
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -845,14 +846,11 @@ graphscope-store.2023-03-11.0.log<span class="w">  </span>graphscope-store.2023-
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Tutorial: Graph Algorithms with NetowrkX APIs" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Tutorial: Graph Algorithms with NetowrkX APIs" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/tutorial_networkx_algorithms.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tutorial: Develop your Algorithm in C++ with PIE Model" href="tutorial_dev_algo_cpp_pie.html" /><link rel="prev" title="Tutorial: Graph Operations with NetowrkX APIs" href="tutorial_networkx_operations.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Tutorial: Graph Algorithms with NetowrkX APIs - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,10 +665,10 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="tutorial-graph-algorithms-with-netowrkx-apis">
+          <section class="tex2jax_ignore mathjax_ignore" id="tutorial-graph-algorithms-with-netowrkx-apis">
 <h1>Tutorial: Graph Algorithms with NetowrkX APIs<a class="headerlink" href="#tutorial-graph-algorithms-with-netowrkx-apis" title="Permalink to this heading">#</a></h1>
 <p>In the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/tutorial_networkx_operations.html">previous tutorial</a>, we have introduced how to manipulate graph data with NetworkX APIs. In this tutorial, we will show how to use GraphScope to perform graph analysis like Networkx.</p>
-<div class="section" id="how-does-networkx-perform-graph-analysis">
+<section id="how-does-networkx-perform-graph-analysis">
 <h2>How does Networkx Perform Graph Analysis?<a class="headerlink" href="#how-does-networkx-perform-graph-analysis" title="Permalink to this heading">#</a></h2>
 <p>Usually, the graph analysis process of NetworkX starts with the construction of a graph.</p>
 <p>In the following example, we create an empty graph first, and then expand the data through the graph manipulation interfaces of NetworkX.</p>
@@ -699,8 +700,8 @@ MathJax = {
 <span class="n">networkx</span><span class="o">.</span><span class="n">clustering</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="how-to-perform-graph-analysis-with-networkx-apis-from-graphscope">
+</section>
+<section id="how-to-perform-graph-analysis-with-networkx-apis-from-graphscope">
 <h2>How to Perform Graph Analysis with NetworkX APIs from GraphScope<a class="headerlink" href="#how-to-perform-graph-analysis-with-networkx-apis-from-graphscope" title="Permalink to this heading">#</a></h2>
 <p>To use NetworkX APIs from GraphScope, we just need to replace <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">networkx</span> <span class="pre">as</span> <span class="pre">nx</span></code> with <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">graphscope.nx</span> <span class="pre">as</span> <span class="pre">nx</span></code>.</p>
 <p>According to the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/tutorial_networkx_operations.html">previous tutorial</a>, we use create a graph <code class="docutils literal notranslate"><span class="pre">nx.Graph()</span></code> first.</p>
@@ -732,7 +733,7 @@ MathJax = {
 <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="mf">3.1415</span><span class="p">})])</span>
 </pre></div>
 </div>
-<div class="section" id="graph-analysis">
+<section id="graph-analysis">
 <h3>Graph Analysis<a class="headerlink" href="#graph-analysis" title="Permalink to this heading">#</a></h3>
 <p>The interface of graph analysis module in GraphScope is also compatible with NetworkX.</p>
 <p>With the above created graph in place, we use <code class="docutils literal notranslate"><span class="pre">connected_components</span></code> to analyze the connected components of the graph, use <code class="docutils literal notranslate"><span class="pre">clustering</span></code> to get the clustering coefficient of each vertex, and <code class="docutils literal notranslate"><span class="pre">all_pairs_shortest_path</span></code> to compute the shortest path between any two vertices.</p>
@@ -747,8 +748,8 @@ MathJax = {
 <span class="n">sp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="graph-display">
+</section>
+<section id="graph-display">
 <h3>Graph Display<a class="headerlink" href="#graph-display" title="Permalink to this heading">#</a></h3>
 <p>Like NetworkX, you can draw a graph by <code class="docutils literal notranslate"><span class="pre">draw</span></code> interface, which relies on the drawing function of <code class="docutils literal notranslate"><span class="pre">Matplotlib</span></code>.</p>
 <p>You should install <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code> first,</p>
@@ -759,8 +760,8 @@ MathJax = {
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">font_weight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="the-performance-speed-up-of-graphscope-over-networkx">
+</section>
+<section id="the-performance-speed-up-of-graphscope-over-networkx">
 <h3>The Performance Speed-up of GraphScope over NetworkX<a class="headerlink" href="#the-performance-speed-up-of-graphscope-over-networkx" title="Permalink to this heading">#</a></h3>
 <p>Let’s see how much performance can be improved by GraphScope over NetworkX, compared with NetworkX, by running the <code class="docutils literal notranslate"><span class="pre">clustering</span></code> algorithm on <a class="reference external" href="https://snap.stanford.edu/data/ego-Twitter.html">Twitter dataset</a>.</p>
 <p>Download dataset if it is not in environment:</p>
@@ -796,9 +797,9 @@ MathJax = {
 <span class="n">ret_gs</span> <span class="o">==</span> <span class="n">ret_nx</span>
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
         </article>
       </div>
@@ -877,14 +878,11 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

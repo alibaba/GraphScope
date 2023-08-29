@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Key Features" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Key Features" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="key_features.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Key Features - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="_static/logo-h.png" alt="Logo"/>
@@ -664,41 +665,41 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="key-features">
+          <section class="tex2jax_ignore mathjax_ignore" id="key-features">
 <h1>Key Features<a class="headerlink" href="#key-features" title="Permalink to this heading">#</a></h1>
-<div class="section" id="ease-of-use-python-interface">
+<section id="ease-of-use-python-interface">
 <h2>Ease-of-use: Python Interface<a class="headerlink" href="#ease-of-use-python-interface" title="Permalink to this heading">#</a></h2>
 <p>The <a class="reference external" href="https://graphscope.io/docs/latest/reference/python_index.html">Python interface</a> of GraphScope offers an intuitive and user-friendly way for data scientists to develop, test and deploy complex graph computation workflows quickly and correctly. The <a class="reference external" href="https://graphscope.io/docs/latest/reference/session.html#session-object">session</a> abstraction encapsulates the environment where data manipulation and graph computation operations are executed or evaluated. The Python clients interact with the GraphScope graph computation service cluster via sessions.</p>
 <p>GraphScope also provides <a class="reference external" href="https://graphscope.io/docs/reference/networkx/index.html">NetworkX-compatible APIs</a> to support the creation, manipulation, query and analysis of graphs, offering an easy transition for users with prior experiences in the NetworkX library. The built-in graph analysis algorithms in GraphScope have compatible interfaces with the corresponding NetworkX counterparts, and can be well parallelized with a performance boost of several orders of magnitudes.</p>
-</div>
-<div class="section" id="graph-traversal-support-in-gremlin-and-cypher">
+</section>
+<section id="graph-traversal-support-in-gremlin-and-cypher">
 <h2>Graph Traversal Support, in Gremlin and Cypher<a class="headerlink" href="#graph-traversal-support-in-gremlin-and-cypher" title="Permalink to this heading">#</a></h2>
 <p>GraphScope Interactive Engine(GIE) leverages Gremlin, a graph traversal language developed by <a class="reference external" href="https://tinkerpop.apache.org/">Apache TinkerPop</a>, to offer a powerful and intuitive way of querying graphs interactively, and supports automatic query parallelization. GIE implements TinkerPop’s <a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/#gremlin-server">Gremlin Server</a> interface such that the system can seamlessly interact with the TinkerPop ecosystem, including development tools such as <a class="reference external" href="https://tinkerpop.apache.org/docs/current/tutorials/the-gremlin-console/">Gremlin Console</a> and language wrappers such as <a class="reference external" href="https://pypi.org/project/gremlinpython/">Gremlin-Python</a> and <a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/#gremlin-java">Gremlin-Java</a>.</p>
 <p><a class="reference external" href="https://neo4j.com/developer/cypher/">Cypher</a> is a declarative programming language for graph queries. It is designed to make it easy for users to specify the graph patterns they are interested in. We are currently working on adding support for the Cypher language to provide users with more flexibility and options on graph queries.</p>
-</div>
-<div class="section" id="high-performant-built-in-algorithms">
+</section>
+<section id="high-performant-built-in-algorithms">
 <h2>High Performant Built-in Algorithms<a class="headerlink" href="#high-performant-built-in-algorithms" title="Permalink to this heading">#</a></h2>
 <p>GraphScope is equipped with various built-in graph algorithms, consisting of 20 graph analytics algorithms and 8 GNN models. The built-in algorithms are highly optimized, and offer superior performance. For example, we have performed a comparison with state-of-the-art graph processing systems on LDBC Graph Analytics Benchmark, and the results show GraphScope outperforms other graph systems (see more detailed results <a class="reference internal" href="#%5Bhttps://graphscope.io/docs/latest/performance_and_benchmark.html"><span class="xref myst">here</span></a>).</p>
-</div>
-<div class="section" id="extensible-algorithm-library-for-graph-analytics">
+</section>
+<section id="extensible-algorithm-library-for-graph-analytics">
 <h2>Extensible Algorithm Library for Graph Analytics<a class="headerlink" href="#extensible-algorithm-library-for-graph-analytics" title="Permalink to this heading">#</a></h2>
 <p>GraphScope Analytical Engine(GAE) provides a rich set of commonly used algorithms, including connectivity and path analysis, community detection and centrality computations. This <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/analytical_engine/apps">directory</a> includes a full list of the built-in algorithms, which is continuously growing.</p>
 <p>GAE also provides developers the flexibility to customize their own algorithms with different programming models and programming languages. Currently, the programing models that GAE supports include the sub-graph based <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">PIE</a> model and the vertex-centric <a class="reference external" href="https://dl.acm.org/doi/10.1145/1807167.1807184">Pregel</a> model. Meanwhile, GAE provides a multi-language SDK, and users can choose to write their own algorithms in C++, Java or Python.</p>
-</div>
-<div class="section" id="gnn-training-inference">
+</section>
+<section id="gnn-training-inference">
 <h2>GNN Training &amp; Inference<a class="headerlink" href="#gnn-training-inference" title="Permalink to this heading">#</a></h2>
 <p>GraphScope Learning Engine (GLE) offers users an easy-to-use approach to take advantage of high-performance GNN training and inference on large-scale graphs. GLE provides multiple commonly-used (negative)sampling operators to facilitate graph sampling, and allows users to define graph queries (e.g., N-hop sampling queries) in a Gremlin-style Graph Query Language (<a class="reference external" href="https://graph-learn.readthedocs.io/en/latest/zh_CN/gl/graph/gsl.html">GSL</a>). It also comes with a wide range of GNN models, like GCN, GAT, GraphSAGE, and SEAL, and includes commonly-utilized algorithm modules (e.g., DeepWalk and TransE). Furthermore, GLE provides a set of paradigms and processes to ease the development of customized models. GLE is compatible with <a class="reference external" href="https://github.com/pyg-team/pytorch_geometric">PyG</a>, e.g., this <a class="reference external" href="https://github.com/alibaba/graph-learn/tree/66229a6dcf7b45a340a39ff9d0796ec11bf78d79/graphlearn/examples/pytorch/gcn">example</a> shows that a PyG model can be trained using GLE with very minor modifications. Users can flexibly choose <a class="reference external" href="https://github.com/tensorflow/tensorflow">TensorFlow</a> or <a class="reference external" href="https://github.com/pytorch/pytorch">PyTorch</a> as the training backend.</p>
 <p>To support online inference on dynamic graphs, we propose Dynamic Graph Service (<a class="reference external" href="https://graph-learn.readthedocs.io/en/latest/en/dgs/intro.html">DGS</a>) in GLE to facilitate real-time sampling on dynamic graphs. The sampled subgraph can be fed into the serving modules (e.g., <a class="reference external" href="https://github.com/tensorflow/serving">TensorFlow Serving</a>) to obtain the inference results. This <a class="reference external" href="https://graph-learn.readthedocs.io/en/latest/en/dgs/tutorial.html#prepare-data">document</a> is organized to provide a detailed, step-by-step tutorial specifically demonstrating the use of GLE for offline training and online inference.</p>
-</div>
-<div class="section" id="cloud-native-design">
+</section>
+<section id="cloud-native-design">
 <h2>Cloud Native Design<a class="headerlink" href="#cloud-native-design" title="Permalink to this heading">#</a></h2>
 <p>Cloud native is the software approach of building, deploying, and managing modern applications in cloud computing environments. GraphScope provides a set of Dockerfiles and users could easily build docker images of GraphScope. In addition, users could deploy GraphScope on a Kubernetes (k8s) cluster, or on managed Kubernetes service of cloud service providers (e.g., EKS for AWS and ACK for Alibaba Cloud). GraphScope also provides essential tools to allow users to handling situations like monitoring, failover, scaling and rolling update.</p>
-</div>
-<div class="section" id="across-engine-workflow-orchestration">
+</section>
+<section id="across-engine-workflow-orchestration">
 <h2>Across-Engine Workflow Orchestration<a class="headerlink" href="#across-engine-workflow-orchestration" title="Permalink to this heading">#</a></h2>
 <p>GraphScope allows users to orchestrate complex graph computation workflows that combine tasks of various workloads, such as graph query, graph analytics and graph learning. With Vineyard that offers efficient in-memory data management, graph computation tasks backed up by different engines (GAE, GIE and GLE) can be seamlessly orchestrated into customized workflows. Users only need to concentrate on the workflow logics, complex operations such as storing and transferring intermediate results, computation parallelization and workflow pipelining in a distributed cluster are automatically handled by GraphScope. This <a class="reference external" href="https://nbviewer.org/github/alibaba/GraphScope/blob/main/tutorials/01_node_classification_on_citation.ipynb">tutorial</a> demonstrates an example of across-engine workflow orchestration in GraphScope.</p>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -759,14 +760,11 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/furo.js"></script>
-    <script src="_static/clipboard.min.js"></script>
-    <script src="_static/copybutton.js"></script>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

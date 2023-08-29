@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="FAQs for GIE Gremlin Usage" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="FAQs for GIE Gremlin Usage" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="interactive_engine/tinkerpop/faq.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Neo4j Ecosystem" href="../neo4j_eco.html" /><link rel="prev" title="Supported Gremlin Steps" href="supported_gremlin_steps.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>FAQs for GIE Gremlin Usage - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo-h.png" alt="Logo"/>
@@ -664,9 +665,9 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="faqs-for-gie-gremlin-usage">
+          <section class="tex2jax_ignore mathjax_ignore" id="faqs-for-gie-gremlin-usage">
 <h1>FAQs for GIE Gremlin Usage<a class="headerlink" href="#faqs-for-gie-gremlin-usage" title="Permalink to this heading">#</a></h1>
-<div class="section" id="compatibility-with-tinkerpop">
+<section id="compatibility-with-tinkerpop">
 <h2>Compatibility with TinkerPop<a class="headerlink" href="#compatibility-with-tinkerpop" title="Permalink to this heading">#</a></h2>
 <p>GIE supports the property graph model and Gremlin traversal language defined by Apache TinkerPop,
 and provides a Gremlin Websockets server that supports TinkerPop version 3.4.
@@ -684,8 +685,8 @@ more succinct expression. However, because of the distributed nature and practic
 </li>
 <li><p>Gremlin Steps: See <a class="reference internal" href="supported_gremlin_steps.html"><span class="std std-doc">here</span></a> for a complete supported/unsupported list of Gremlin.</p></li>
 </ul>
-</div>
-<div class="section" id="property-graph-constraints">
+</section>
+<section id="property-graph-constraints">
 <h2>Property Graph Constraints<a class="headerlink" href="#property-graph-constraints" title="Permalink to this heading">#</a></h2>
 <p>The current release of GIE supports two graph stores: one leverages <a class="reference external" href="https://v6d.io/">Vineyard</a> to supply an in-memory store for immutable
 graph data, and the other, called <a class="reference internal" href="#../storage_engine/groot.md"><span class="xref myst">groot</span></a>, is developed on top of <a class="reference external" href="https://rocksdb.org/">RocksDB</a> that also provides real-time write and data consistency via <a class="reference external" href="https://en.wikipedia.org/wiki/Snapshot_isolation">snapshot isolation</a>. Both stores support graph data being partitioned across multiple servers. By design, the following constraints are introduced (on both stores):</p>
@@ -697,8 +698,8 @@ as well as user-defined primary keys (for vertex).</p></li>
 <li><p>Each vertex or edge property can be of the following data types: <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">long</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">double</span></code>,
 <code class="docutils literal notranslate"><span class="pre">String</span></code>, <code class="docutils literal notranslate"><span class="pre">List&lt;int&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">List&lt;long&gt;</span></code>, and <code class="docutils literal notranslate"><span class="pre">List&lt;String&gt;</span></code>.</p></li>
 </ul>
-</div>
-<div class="section" id="whats-the-difference-between-inner-id-and-property-id">
+</section>
+<section id="whats-the-difference-between-inner-id-and-property-id">
 <h2>What’s the difference between Inner ID and Property ID ?<a class="headerlink" href="#whats-the-difference-between-inner-id-and-property-id" title="Permalink to this heading">#</a></h2>
 <p>The main difference between Inner ID and Property ID is that Inner ID is a system-assigned identifier used internally by the graph engine for efficient data storage and retrieval, while Property ID is a user-defined property within a specific entity type.</p>
 <p>For example, in the LDBC (Linked Data Benchmark Council) schema, we have an entity type called ‘PERSON’, which has its own list of properties, consisting of ‘id’, ‘name’ and ‘birthday’. In the actual storage, we maintain key-value pairs for each instance of entity type ‘PERSON’, and internally maintain a unique ID to differentiate each such instance. The unique ID in this context is referred to as the Inner ID, and the ‘id’ in the attribute list is the Property ID.</p>
@@ -718,8 +719,8 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 <li><p>Firstly, Inner ID is internally maintained by the system and should not be exposed to users by default.</p></li>
 <li><p>Secondly, a single edge instance may not be uniquely identified by Inner ID alone, as it typically requires a triplet such as &lt;src, dst, edge&gt;.</p></li>
 </ul>
-</div>
-<div class="section" id="how-to-use-path-expand-in-gie-gremlin">
+</section>
+<section id="how-to-use-path-expand-in-gie-gremlin">
 <h2>How to use path expand in GIE Gremlin ?<a class="headerlink" href="#how-to-use-path-expand-in-gie-gremlin" title="Permalink to this heading">#</a></h2>
 <p>With path_expand, users can define their desired path pattern concretely and further define corresponding characteristics based on that path. For example, if an entity of type ‘PERSON’ wants to find instances that can be reached by 3-hops, in traditional Gremlin, it can only be represented as <code class="docutils literal notranslate"><span class="pre">g.V().hasLabel('PERSON').both().both().both()</span></code>. With path_expand, it can be represented more concisely as <code class="docutils literal notranslate"><span class="pre">g.V().hasLabel('PERSON').both('3..4').endV()</span></code>, where <code class="docutils literal notranslate"><span class="pre">both('3..4')</span></code> represents the path pattern, and <code class="docutils literal notranslate"><span class="pre">'3..4'</span></code> specifies the range of hops as [3, 4).</p>
 <p>We can further define characteristics of the path pattern using path_expand. For example, if an entity of type ‘PERSON’ wants to find instances that can be reached by 3-hops, while ensuring that the path is a simple path (no repeated vertices or edges), it can be represented as:</p>
@@ -727,8 +728,8 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 </pre></div>
 </div>
 <p>You can refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/supported_gremlin_steps.md#pathexpand">PathExpand</a> for more examples and usage of path_expand.</p>
-</div>
-<div class="section" id="how-to-filter-data-in-gie-gremlin-like-sql">
+</section>
+<section id="how-to-filter-data-in-gie-gremlin-like-sql">
 <h2>How to filter data in GIE Gremlin like SQL ?<a class="headerlink" href="#how-to-filter-data-in-gie-gremlin-like-sql" title="Permalink to this heading">#</a></h2>
 <p>With <code class="docutils literal notranslate"><span class="pre">expr</span></code>, We can support SQL-like expressions in GIE Gremlin. For example, if we want to find all ‘PERSON’ instances with either the name ‘marko’ or the age ‘27’, we can represent it as follows:</p>
 <div class="highlight-scss notranslate"><div class="highlight"><pre><span></span><span class="nt">g</span><span class="nc">.V</span><span class="o">()</span><span class="nc">.hasLabel</span><span class="o">(</span><span class="s1">&#39;PERSON&#39;</span><span class="o">)</span><span class="nc">.where</span><span class="o">(</span><span class="nt">expr</span><span class="o">(</span><span class="s1">&#39;@.name=\&quot;marko\&quot; || @.age = 27&#39;</span><span class="o">))</span>
@@ -750,11 +751,11 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 <li><p>On the other hand, <code class="docutils literal notranslate"><span class="pre">HasStep</span></code> in Gremlin for complex expressions may not be as intuitive as in SQL.</p></li>
 </ul>
 <p>We have addressed the limitations and shortcomings of Gremlin in filter expression by using <code class="docutils literal notranslate"><span class="pre">expr</span></code>, for more usage, please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/supported_gremlin_steps.md#expression">Expression</a>.</p>
-</div>
-<div class="section" id="how-to-aggregate-data-in-gie-gremlin-like-sql">
+</section>
+<section id="how-to-aggregate-data-in-gie-gremlin-like-sql">
 <h2>How to aggregate data in GIE Gremlin like SQL?<a class="headerlink" href="#how-to-aggregate-data-in-gie-gremlin-like-sql" title="Permalink to this heading">#</a></h2>
 <p>We further extend the <code class="docutils literal notranslate"><span class="pre">group</span></code> operator in Gremlin to support multi-column grouping operations, similar to those in SQL.</p>
-<div class="section" id="group-by-multiple-keys">
+<section id="group-by-multiple-keys">
 <h3>group by multiple keys<a class="headerlink" href="#group-by-multiple-keys" title="Permalink to this heading">#</a></h3>
 <div class="highlight-scss notranslate"><div class="highlight"><pre><span></span><span class="nt">g</span><span class="nc">.V</span><span class="o">()</span><span class="nc">.hasLabel</span><span class="o">(</span><span class="s1">&#39;PERSON&#39;</span><span class="o">)</span><span class="nc">.groupCount</span><span class="o">()</span><span class="nc">.by</span><span class="o">(</span><span class="s1">&#39;name&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;age&#39;</span><span class="o">)</span>
 </pre></div>
@@ -771,8 +772,8 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 <span class="w">  </span><span class="nt">PERSON</span><span class="nc">.age</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="group-by-multiple-values">
+</section>
+<section id="group-by-multiple-values">
 <h3>group by multiple values:<a class="headerlink" href="#group-by-multiple-values" title="Permalink to this heading">#</a></h3>
 <div class="highlight-scss notranslate"><div class="highlight"><pre><span></span><span class="nt">g</span><span class="nc">.V</span><span class="o">()</span>
 <span class="w">  </span><span class="nc">.hasLabel</span><span class="o">(</span><span class="s1">&#39;PERSON&#39;</span><span class="o">)</span>
@@ -793,11 +794,11 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 </pre></div>
 </div>
 <p>Please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/supported_gremlin_steps.md#aggregate-group">Aggregate</a> for more usage.</p>
-</div>
-</div>
-<div class="section" id="how-to-optimize-gremlin-queries-for-performance-in-gie">
+</section>
+</section>
+<section id="how-to-optimize-gremlin-queries-for-performance-in-gie">
 <h2>How to optimize Gremlin queries for performance in GIE?<a class="headerlink" href="#how-to-optimize-gremlin-queries-for-performance-in-gie" title="Permalink to this heading">#</a></h2>
-<div class="section" id="use-appropriate-indexing">
+<section id="use-appropriate-indexing">
 <h3>Use appropriate indexing<a class="headerlink" href="#use-appropriate-indexing" title="Permalink to this heading">#</a></h3>
 <p>GIE supports various indexing options such as vertex label index, primary key index, and edge label index. Properly defining and using indexes can significantly improve query performance.</p>
 <p>For example, in the LDBC schema, we define the property ID as the primary key for the entity type ‘PERSON’ and maintain the corresponding primary key index in the storage. This allows us to directly index specific ‘PERSON’ instances using &lt;Label, Property ID&gt;, without scanning all vertices and filtering based on property key-value. This can be expressed in a Gremlin query as follows:</p>
@@ -805,9 +806,9 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 </pre></div>
 </div>
 <p>Where ‘id’ is the property ID, and ‘propertyIdValue’ is the value of the property key. By directly using the primary key index, query performance can be significantly improved, avoiding full table scans and property value filtering, thereby optimizing query performance.</p>
-</div>
-</div>
-<div class="section" id="how-to-use-subgraph-in-gie-gremlin">
+</section>
+</section>
+<section id="how-to-use-subgraph-in-gie-gremlin">
 <h2>How to use subgraph in GIE Gremlin ?<a class="headerlink" href="#how-to-use-subgraph-in-gie-gremlin" title="Permalink to this heading">#</a></h2>
 <p>Subgraph in GIE is edge-induced, which means it is formed by selecting a subset of edges from a larger graph, along with their incident vertices.</p>
 <p>Therefore, You can only perform subgraph operations after edge-output operators like E(), outE(), inE() or bothE(). Here’s an example:</p>
@@ -815,8 +816,8 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 </pre></div>
 </div>
 <p>Please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/supported_gremlin_steps.md#subgraph">Subgraph</a> for more usage.</p>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -903,14 +904,11 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
-    <script src="../../_static/scripts/furo.js"></script>
-    <script src="../../_static/clipboard.min.js"></script>
-    <script src="../../_static/copybutton.js"></script>
+</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

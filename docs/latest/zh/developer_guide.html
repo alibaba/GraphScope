@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="开发者指南" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="开发者指南" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="zh/developer_guide.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="prev" title="常见问题" href="frequently_asked_questions.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>开发者指南 - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -383,11 +384,11 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="id1">
+          <section id="id1">
 <h1>开发者指南<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h1>
 <p><a class="reference external" href="https://github.com/alibaba/GraphScope">GraphScope</a> 的背后有一群活跃的工程人员和研究人员团队来推进日常的开发和维护。我们热忱欢迎来自开源社区的、为改善该项目所做的任何贡献！</p>
 <p>GraphScope 遵循 Apache License 2.0 的开源协议。</p>
-<div class="section" id="docker-graphscope">
+<section id="docker-graphscope">
 <h2>基于 Docker 环境构建并测试 GraphScope<a class="headerlink" href="#docker-graphscope" title="Permalink to this heading">#</a></h2>
 <p>构建 GraphScope 需要一些第三方的工具和依赖。为了让开发者更容易上手，我们提供了安装了所需依赖的 docker 镜像。</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>docker<span class="w"> </span>pull<span class="w"> </span>registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest
@@ -416,8 +417,8 @@ git<span class="w"> </span>clone<span class="w"> </span>https://github.com/Graph
 make<span class="w"> </span>client
 </pre></div>
 </div>
-</div>
-<div class="section" id="kubernetes-graphscope">
+</section>
+<section id="kubernetes-graphscope">
 <h2>基于 Kubernetes 环境构建并测试 GraphScope<a class="headerlink" href="#kubernetes-graphscope" title="Permalink to this heading">#</a></h2>
 <p>开发者需要通过 <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> 的命令从我们的开源代码库 <a class="reference external" href="https://github.com/alibaba/GraphScope">repo</a> 中获得最新版的代码,
 在此基础上做开发或代码的更改，然后通过如下命令构建 GraphScope 镜像。</p>
@@ -441,10 +442,10 @@ python3<span class="w"> </span>setup.py<span class="w"> </span>install
 <span class="c1"># ...</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="python-wheels">
+</section>
+<section id="python-wheels">
 <h2>构建 Python Wheels<a class="headerlink" href="#python-wheels" title="Permalink to this heading">#</a></h2>
-<div class="section" id="linux">
+<section id="linux">
 <h3>Linux<a class="headerlink" href="#linux" title="Permalink to this heading">#</a></h3>
 <p>Linux 下的 <a class="reference external" href="https://pypi.org/project/graphscope">Wheel</a> 分发包是基于 manylinux2014 环境下构建的。</p>
 <ul class="simple">
@@ -461,8 +462,8 @@ make<span class="w"> </span>graphscope-py3-package<span class="w"> </span><span 
 make<span class="w"> </span>graphscope-client-py3-package
 </pre></div>
 </div>
-</div>
-<div class="section" id="macos">
+</section>
+<section id="macos">
 <h3>macOS<a class="headerlink" href="#macos" title="Permalink to this heading">#</a></h3>
 <p>由于 macOS 下的构建过程是在本地(非docker container)中进行，因此需要本地事先安装 GraphScope 的依赖。</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>GraphScope/k8s/internal
@@ -485,15 +486,15 @@ make<span class="w"> </span>graphscope-client-py3-package
 </pre></div>
 </div>
 <p>需要注意的是，如果你需要该分发包能支持不同的 Python 版本，你可能需要通过 <cite>conda</cite> 或者 <cite>pyenv</cite> 安装多个 Python 的版本</p>
-</div>
-</div>
-<div class="section" id="id3">
+</section>
+</section>
+<section id="id3">
 <h2>代码风格<a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h2>
 <p>GraphScope 遵循 <a class="reference external" href="https://google.github.io/styleguide/cppguide.html">Google C++ 代码风格</a>
 和 <a class="reference external" href="https://github.com/psf/black#the-black-code-style">black Python 风格</a> 。</p>
 <p>如果你的代码没有通过CI的风格检查，你可以使用 <code class="docutils literal notranslate"><span class="pre">clang-format</span></code> 或 <code class="docutils literal notranslate"><span class="pre">black</span></code> 格式化你的代码。</p>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -565,14 +566,11 @@ make<span class="w"> </span>graphscope-client-py3-package
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

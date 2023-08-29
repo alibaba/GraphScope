@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Builtin algorithms" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Builtin algorithms" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="reference/networkx/builtin.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -13,18 +14,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Functions" href="functions.html" /><link rel="prev" title="Graph Transformation" href="transformation.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Builtin algorithms - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -198,7 +199,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo-h.png" alt="Logo"/>
@@ -662,7 +663,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="builtin-algorithms">
+          <section id="builtin-algorithms">
 <span id="builtin"></span><h1>Builtin algorithms<a class="headerlink" href="#builtin-algorithms" title="Permalink to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.hits">
@@ -672,7 +673,7 @@ MathJax = {
 Authorities estimates the node value based on the incoming links.
 Hubs estimates the node value based on outgoing links.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph</p></li>
 <li><p><strong>max_iter</strong> (<em>integer</em><em>, </em><em>optional</em>) – Maximum number of iterations in power method.</p></li>
@@ -681,14 +682,14 @@ Hubs estimates the node value based on outgoing links.</p>
 <li><p><strong>normalized</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – Normalize results by the sum of all of the values.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>(hubs,authorities)</strong> – Two dictionaries keyed by node containing the hub and authority
 values.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>two-tuple of dictionaries</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>PowerIterationFailedConvergence</strong> – If the algorithm fails to converge to the specified tolerance
     within the specified number of iterations of the power iteration
     method.</p>
@@ -708,20 +709,22 @@ number_of_nodes(G)*tol has been reached.</p>
 algorithm does not check if the input graph is directed and will
 execute on undirected graphs.</p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id1"><span class="brackets">1</span></dt>
-<dd><p>A. Langville and C. Meyer,
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id1" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>A. Langville and C. Meyer,
 “A survey of eigenvector methods of web information retrieval.”
 <a class="reference external" href="http://citeseer.ist.psu.edu/713792.html">http://citeseer.ist.psu.edu/713792.html</a></p>
-</dd>
-<dt class="label" id="id2"><span class="brackets">2</span></dt>
-<dd><p>Jon Kleinberg,
+</aside>
+<aside class="footnote brackets" id="id2" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<p>Jon Kleinberg,
 Authoritative sources in a hyperlinked environment
 Journal of the ACM 46 (5): 604-32, 1999.
 doi:10.1145/324133.324140.
 http://www.cs.cornell.edu/home/kleinber/auth.pdf.</p>
-</dd>
-</dl>
+</aside>
+</aside>
 </dd></dl>
 
 <dl class="py function">
@@ -731,13 +734,13 @@ http://www.cs.cornell.edu/home/kleinber/auth.pdf.</p>
 <p>The degree centrality for a node v is the fraction of nodes it
 is connected to.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with degree centrality as the value.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dictionary</p>
 </dd>
 </dl>
@@ -760,16 +763,16 @@ are possible.</p>
 <p>The in-degree centrality for a node v is the fraction of nodes its
 incoming edges are connected to.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with in-degree centrality as values.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dictionary</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NetworkXNotImplemented</strong> – If G is undirected.</p>
 </dd>
 </dl>
@@ -792,16 +795,16 @@ are possible.</p>
 <p>The out-degree centrality for a node v is the fraction of nodes its
 outgoing edges are connected to.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with out-degree centrality as values.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dictionary</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NetworkXNotImplemented</strong> – If G is undirected.</p>
 </dd>
 </dl>
@@ -833,7 +836,7 @@ $lambda$. By virtue of the Perron–Frobenius theorem, there is a unique
 solution $x$, all of whose entries are positive, if $lambda$ is the
 largest eigenvalue of the adjacency matrix $A$ (<a href="#id23"><span class="problematic" id="id3">[2]_</span></a>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p></li>
 <li><p><strong>max_iter</strong> (<em>integer</em><em>, </em><em>optional</em><em> (</em><em>default=100</em><em>)</em>) – Maximum number of iterations in power method.</p></li>
@@ -844,10 +847,10 @@ Otherwise holds the name of the edge attribute used as weight.
 In this measure the weight is interpreted as the connection strength.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with eigenvector centrality as the value.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dictionary</p>
 </dd>
 </dl>
@@ -859,7 +862,7 @@ In this measure the weight is interpreted as the connection strength.</p></li>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Raises</dt>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>NetworkXPointlessConcept</strong> – If the graph <cite>G</cite> is the null graph.</p></li>
 <li><p><strong>NetworkXError</strong> – If each value in <cite>nstart</cite> is zero.</p></li>
@@ -887,19 +890,21 @@ multiple dominant eigenvalues.</p>
 to the in-edges in the graph. For out-edges eigenvector centrality
 first reverse the graph with <code class="docutils literal notranslate"><span class="pre">G.reverse()</span></code>.</p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id6"><span class="brackets">1</span></dt>
-<dd><p>Phillip Bonacich.
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id6" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>Phillip Bonacich.
 “Power and Centrality: A Family of Measures.”
 <em>American Journal of Sociology</em> 92(5):1170–1182, 1986
 &lt;<a class="reference external" href="http://www.leonidzhukov.net/hse/2014/socialnetworks/papers/Bonacich-Centrality.pdf">http://www.leonidzhukov.net/hse/2014/socialnetworks/papers/Bonacich-Centrality.pdf</a>&gt;</p>
-</dd>
-<dt class="label" id="id7"><span class="brackets">2</span></dt>
-<dd><p>Mark E. J. Newman.
+</aside>
+<aside class="footnote brackets" id="id7" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<p>Mark E. J. Newman.
 <em>Networks: An Introduction.</em>
 Oxford University Press, USA, 2010, pp. 169.</p>
-</dd>
-</dl>
+</aside>
+</aside>
 </dd></dl>
 
 <dl class="py function">
@@ -930,7 +935,7 @@ should be strictly less than the inverse largest eigenvalue of the
 adjacency matrix in order for the Katz centrality to be computed
 correctly. More information is provided in <a href="#id26"><span class="problematic" id="id8">[1]_</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em>) – Attenuation factor</p></li>
@@ -945,13 +950,13 @@ Otherwise holds the name of the edge attribute used as weight.
 In this measure the weight is interpreted as the connection strength.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with Katz centrality as the value.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dictionary</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>NetworkXError</strong> – If the parameter <cite>beta</cite> is not a scalar but lacks a value for at least
     one node</p></li>
@@ -994,19 +999,21 @@ as eigenvector centrality.</p>
 to the in-edges in the graph. For out-edges Katz centrality
 first reverse the graph with <code class="docutils literal notranslate"><span class="pre">G.reverse()</span></code>.</p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id10"><span class="brackets">1</span></dt>
-<dd><p>Mark E. J. Newman:
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id10" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>Mark E. J. Newman:
 Networks: An Introduction.
 Oxford University Press, USA, 2010, p. 720.</p>
-</dd>
-<dt class="label" id="id11"><span class="brackets">2</span></dt>
-<dd><p>Leo Katz:
+</aside>
+<aside class="footnote brackets" id="id11" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<p>Leo Katz:
 A New Status Index Derived from Sociometric Index.
 Psychometrika 18(1):39–43, 1953
 <a class="reference external" href="https://link.springer.com/content/pdf/10.1007/BF02289026.pdf">https://link.springer.com/content/pdf/10.1007/BF02289026.pdf</a></p>
-</dd>
-</dl>
+</aside>
+</aside>
 </dd></dl>
 
 <dl class="py function">
@@ -1014,7 +1021,7 @@ Psychometrika 18(1):39–43, 1953
 <span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">has_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.has_path" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns <em>True</em> if <em>G</em> has a path from <em>source</em> to <em>target</em>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>G</strong> (<em>NetworkX graph</em>) – </p></li>
 <li><p><strong>source</strong> (<em>node</em>) – Starting node for path</p></li>
@@ -1037,7 +1044,7 @@ Psychometrika 18(1):39–43, 1953
 <cite>d(s, t)</cite> is the shortest path from <cite>s</cite> to <cite>t</cite>,
 and <cite>n</cite> is the number of nodes in <cite>G</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>G</strong> (<em>NetworkX graph</em>) – </p></li>
 <li><p><strong>weight</strong> (<em>None</em><em>, </em><em>string</em><em> or </em><em>function</em><em>, </em><em>optional</em><em> (</em><em>default = None</em><em>)</em>) – If None, every edge has weight/distance/cost 1.
@@ -1056,7 +1063,7 @@ The default method is ‘unweighted’ if <cite>weight</cite> is None,
 otherwise the default method is ‘dijkstra’.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>NetworkXPointlessConcept</strong> – If <cite>G</cite> is the null graph (that is, the graph on zero nodes).</p></li>
 <li><p><strong>NetworkXError</strong> – If <cite>G</cite> is not connected (or not weakly connected, in the case
@@ -1087,7 +1094,7 @@ length for each component</p>
 <span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">bfs_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.bfs_edges" title="Permalink to this definition">#</a></dt>
 <dd><p>edges in a breadth-first-search starting at source.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>G</strong> (<em>networkx graph</em>) – </p></li>
 <li><p><strong>source</strong> (<em>node</em>) – Specify starting node for breadth-first search; this function
@@ -1096,10 +1103,10 @@ this node.</p></li>
 <li><p><strong>depth_limit</strong> (<em>int</em><em>, </em><em>optional</em><em>(</em><em>default=len</em><em>(</em><em>G</em><em>)</em><em>)</em>) – Specify the maximum search depth</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>edges</strong> – A list of edges in the breadth-first-search.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list</p>
 </dd>
 </dl>
@@ -1120,13 +1127,13 @@ this node.</p></li>
 <dd><p>Returns the k-core of G.</p>
 <p>A k-core is a maximal subgraph that contains nodes of degree k or more.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>G</strong> (<em>networkx graph</em>) – A graph or directed graph</p></li>
 <li><p><strong>k</strong> (<em>int</em><em>, </em><em>optional</em>) – The order of the core. If not specified return the main core.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>:class:`VertexDataContext`</strong> (<em>A context with each vertex assigned with a boolean:</em>)</p></li>
 <li><p><em>1 if the vertex satisfies k-core, otherwise 0.</em></p></li>
@@ -1135,13 +1142,14 @@ this node.</p></li>
 </dd>
 </dl>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id12"><span class="brackets">1</span></dt>
-<dd><p>An O(m) Algorithm for Cores Decomposition of Networks
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id12" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>An O(m) Algorithm for Cores Decomposition of Networks
 Vladimir Batagelj and Matjaz Zaversnik,  2003.
 <a class="reference external" href="https://arxiv.org/abs/cs.DS/0310049">https://arxiv.org/abs/cs.DS/0310049</a></p>
-</dd>
-</dl>
+</aside>
+</aside>
 </dd></dl>
 
 <dl class="py function">
@@ -1167,10 +1175,10 @@ as the geometric average of the subgraph edge weights <a href="#id29"><span clas
 <p>The edge weights <span class="math notranslate nohighlight">\(\hat{w}_{uv}\)</span> are normalized by the maximum weight
 in the network <span class="math notranslate nohighlight">\(\hat{w}_{uv} = w_{uv}/\max(w)\)</span>.</p>
 <p>The value of <span class="math notranslate nohighlight">\(c_u\)</span> is assigned to 0 if <span class="math notranslate nohighlight">\(deg(u) &lt; 2\)</span>.</p>
-<p>Additionally, this weighted definition has been generalized to support negative edge weights <a class="footnote-reference brackets" href="#id19" id="id15">3</a>.</p>
+<p>Additionally, this weighted definition has been generalized to support negative edge weights <a class="footnote-reference brackets" href="#id19" id="id15" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a>.</p>
 <p>For directed graphs, the clustering is similarly defined as the fraction
 of all possible directed triangles or geometric average of the subgraph
-edge weights for unweighted and weighted directed graph respectively <a class="footnote-reference brackets" href="#id20" id="id16">4</a>.</p>
+edge weights for unweighted and weighted directed graph respectively <a class="footnote-reference brackets" href="#id20" id="id16" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>.</p>
 <div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[c_u = \frac{2}{deg^{tot}(u)(deg^{tot}(u)-1) - 2deg^{\leftrightarrow}(u)}
@@ -1181,7 +1189,7 @@ edge weights for unweighted and weighted directed graph respectively <a class="f
 <span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(deg^{\leftrightarrow}(u)\)</span> is the reciprocal degree of
 <span class="math notranslate nohighlight">\(u\)</span>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>G</strong> (<em>graph</em>) – </p></li>
 <li><p><strong>nodes</strong> (<em>container</em><em> of </em><em>nodes</em><em>, </em><em>optional</em><em> (</em><em>default=all nodes in G</em><em>)</em>) – Compute clustering for nodes in this container.</p></li>
@@ -1189,10 +1197,10 @@ edge weights for unweighted and weighted directed graph respectively <a class="f
 If None, then each edge has weight 1.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>out</strong> – Clustering coefficient at specified nodes</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float, or dictionary</p>
 </dd>
 </dl>
@@ -1207,27 +1215,31 @@ If None, then each edge has weight 1.</p></li>
 <p class="rubric">Notes</p>
 <p>Self loops are ignored.</p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id17"><span class="brackets">1</span></dt>
-<dd><p>Generalizations of the clustering coefficient to weighted
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id17" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>Generalizations of the clustering coefficient to weighted
 complex networks by J. Saramäki, M. Kivelä, J.-P. Onnela,
 K. Kaski, and J. Kertész, Physical Review E, 75 027105 (2007).
 <a class="reference external" href="http://jponnela.com/web_documents/a9.pdf">http://jponnela.com/web_documents/a9.pdf</a></p>
-</dd>
-<dt class="label" id="id18"><span class="brackets">2</span></dt>
-<dd><p>Intensity and coherence of motifs in weighted complex
+</aside>
+<aside class="footnote brackets" id="id18" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<p>Intensity and coherence of motifs in weighted complex
 networks by J. P. Onnela, J. Saramäki, J. Kertész, and K. Kaski,
 Physical Review E, 71(6), 065103 (2005).</p>
-</dd>
-<dt class="label" id="id19"><span class="brackets"><a class="fn-backref" href="#id15">3</a></span></dt>
-<dd><p>Generalization of Clustering Coefficients to Signed Correlation Networks
+</aside>
+<aside class="footnote brackets" id="id19" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id15">3</a><span class="fn-bracket">]</span></span>
+<p>Generalization of Clustering Coefficients to Signed Correlation Networks
 by G. Costantini and M. Perugini, PloS one, 9(2), e88669 (2014).</p>
-</dd>
-<dt class="label" id="id20"><span class="brackets"><a class="fn-backref" href="#id16">4</a></span></dt>
-<dd><p>Clustering in complex directed networks by G. Fagiolo,
+</aside>
+<aside class="footnote brackets" id="id20" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id16">4</a><span class="fn-bracket">]</span></span>
+<p>Clustering in complex directed networks by G. Fagiolo,
 Physical Review E, 76(2), 026107 (2007).</p>
-</dd>
-</dl>
+</aside>
+</aside>
 </dd></dl>
 
 <dl class="py function">
@@ -1236,16 +1248,16 @@ Physical Review E, 76(2), 026107 (2007).</p>
 <dd><p>Compute the number of triangles.</p>
 <p>Finds the number of triangles that include a node as one vertex.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p></li>
 <li><p><strong>nodes</strong> (<em>container</em><em> of </em><em>nodes</em><em>, </em><em>optional</em><em> (</em><em>default= all nodes in G</em><em>)</em>) – Compute triangles for nodes in this container.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>out</strong> – Number of triangles keyed by node label.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dictionary</p>
 </dd>
 </dl>
@@ -1275,7 +1287,7 @@ three times, once at each node.  Self loops are ignored.</p>
 </div>
 <p>where <span class="math notranslate nohighlight">\(n\)</span> is the number of nodes in <cite>G</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>G</strong> (<em>graph</em>) – </p></li>
 <li><p><strong>nodes</strong> (<em>container</em><em> of </em><em>nodes</em><em>, </em><em>optional</em><em> (</em><em>default=all nodes in G</em><em>)</em>) – Compute average clustering for nodes in this container.</p></li>
@@ -1284,10 +1296,10 @@ If None, then each edge has weight 1.</p></li>
 <li><p><strong>count_zeros</strong> (<em>bool</em>) – If False include only the nodes with nonzero clustering in the average.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>avg</strong> – Average clustering</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -1302,22 +1314,24 @@ If None, then each edge has weight 1.</p></li>
 to use the clustering function to get a list and then take the average.</p>
 <p>Self loops are ignored.</p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id21"><span class="brackets">1</span></dt>
-<dd><p>Generalizations of the clustering coefficient to weighted
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id21" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>Generalizations of the clustering coefficient to weighted
 complex networks by J. Saramäki, M. Kivelä, J.-P. Onnela,
 K. Kaski, and J. Kertész, Physical Review E, 75 027105 (2007).
 <a class="reference external" href="http://jponnela.com/web_documents/a9.pdf">http://jponnela.com/web_documents/a9.pdf</a></p>
-</dd>
-<dt class="label" id="id22"><span class="brackets">2</span></dt>
-<dd><p>Marcus Kaiser,  Mean clustering coefficients: the role of isolated
+</aside>
+<aside class="footnote brackets" id="id22" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<p>Marcus Kaiser,  Mean clustering coefficients: the role of isolated
 nodes and leafs on clustering measures for small-world networks.
 <a class="reference external" href="https://arxiv.org/abs/0802.2512">https://arxiv.org/abs/0802.2512</a></p>
-</dd>
-</dl>
+</aside>
+</aside>
 </dd></dl>
 
-</div>
+</section>
 
         </article>
       </div>
@@ -1402,15 +1416,12 @@ nodes and leafs on clustering measures for small-world networks.
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
-    <script src="../../_static/scripts/furo.js"></script>
-    <script src="../../_static/clipboard.min.js"></script>
-    <script src="../../_static/copybutton.js"></script>
+</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>

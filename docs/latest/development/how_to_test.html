@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="How to Test" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="How to Test" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="development/how_to_test.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="How to Contribute" href="how_to_contribute.html" /><link rel="prev" title="Code Style Guide" href="code_style_guide.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>How to Test - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,7 +665,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="how-to-test">
+          <section class="tex2jax_ignore mathjax_ignore" id="how-to-test">
 <h1>How to Test<a class="headerlink" href="#how-to-test" title="Permalink to this heading">#</a></h1>
 <p>GraphScope is comprised of three engines targeting for different business scenario, and a coordinator that could bring them together, and a client for users to connect and perform various tasks.</p>
 <p>We already covered how to test for engines in</p>
@@ -674,65 +675,67 @@ MathJax = {
 <li><p><a class="reference internal" href="../interactive_engine/dev_and_test.html#how-to-test"><span class="std std-ref">Build and test learning engine</span></a></p></li>
 </ul>
 <p>Here in this guide we will focus on how to do the e2e test, where multiple engines will working together.</p>
-<div class="section" id="test-graphscope-on-local">
+<section id="test-graphscope-on-local">
 <h2>Test GraphScope on local<a class="headerlink" href="#test-graphscope-on-local" title="Permalink to this heading">#</a></h2>
-<div class="section" id="dev-environment">
+<section id="dev-environment">
 <h3>Dev Environment<a class="headerlink" href="#dev-environment" title="Permalink to this heading">#</a></h3>
 <p>Here we would use a prebuilt docker image with necessary dependencies installed.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--name<span class="w"> </span>dev<span class="w"> </span>-it<span class="w"> </span>--shm-size<span class="o">=</span>4096m<span class="w"> </span>registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest
 </pre></div>
 </div>
 <p>Please refer to <a class="reference internal" href="dev_guide.html#dev-environment"><span class="std std-ref">Dev Environment</span></a> to find more options to get a dev environment.</p>
-</div>
-<div class="section" id="build-all-targets-for-graphscope">
+</section>
+<section id="build-all-targets-for-graphscope">
 <h3>Build All Targets for GraphScope<a class="headerlink" href="#build-all-targets-for-graphscope" title="Permalink to this heading">#</a></h3>
 <p>With <code class="docutils literal notranslate"><span class="pre">gs</span></code> command-line utility, you can build all targets for GraphScope with a single command.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>install
 </pre></div>
 </div>
-</div>
-<div class="section" id="run-tests">
+</section>
+<section id="run-tests">
 <h3>Run tests<a class="headerlink" href="#run-tests" title="Permalink to this heading">#</a></h3>
 <p>Run a bunch of test cases that involves 3 engines</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span><span class="nb">test</span><span class="w"> </span>e2e<span class="w"> </span>--local
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="test-graphscope-on-kubernetes-cluster">
+</section>
+</section>
+<section id="test-graphscope-on-kubernetes-cluster">
 <h2>Test GraphScope on Kubernetes cluster<a class="headerlink" href="#test-graphscope-on-kubernetes-cluster" title="Permalink to this heading">#</a></h2>
 <p>Make sure you have <a class="reference external" href="https://www.docker.com">docker</a> installed.</p>
-<div class="section" id="build-images">
+<section id="build-images">
 <h3>Build images<a class="headerlink" href="#build-images" title="Permalink to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make-image<span class="w"> </span>all
 </pre></div>
 </div>
 <p>Executing this command will generate the corresponding images for each component.</p>
 <p>It would produce a couple of images like this</p>
-<div class="figure align-default" id="id2">
+<figure class="align-default" id="id2">
 <a class="reference internal image-reference" href="../_images/gs-images.png"><img alt="GraphScope Images" src="../_images/gs-images.png" style="width: 80%;" /></a>
-<p class="caption"><span class="caption-text">Images of GraphScope</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Images of GraphScope</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>Or you could choose to generate image for a specific component. For example</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make-image<span class="w"> </span>analytical
 </pre></div>
 </div>
 <p>Try <code class="docutils literal notranslate"><span class="pre">./gs</span> <span class="pre">make-image</span> <span class="pre">-h</span></code> for more available options.</p>
-</div>
-<div class="section" id="prepare-a-kubernetes-cluster">
+</section>
+<section id="prepare-a-kubernetes-cluster">
 <h3>Prepare a Kubernetes cluster<a class="headerlink" href="#prepare-a-kubernetes-cluster" title="Permalink to this heading">#</a></h3>
 <p>Please refer to <a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html#prepare-a-kubernetes-cluster"><span class="std std-ref">Prepare a kubernetes cluster</span></a> to get a cluster if you doesn’t have one.</p>
-</div>
-<div class="section" id="id1">
+</section>
+<section id="id1">
 <h3>Run tests<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
 <p>The tests would launch a couple of pods on your cluster, so you need to set appropriate environment variables to let it use your newly built image.</p>
 <p>Take our previous built image for example, which has an empty registry (or you could say it’s <code class="docutils literal notranslate"><span class="pre">docker.io</span></code> by default), and tagged <code class="docutils literal notranslate"><span class="pre">latest</span></code></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span><span class="nb">test</span><span class="w"> </span>e2e<span class="w"> </span>--k8s<span class="w"> </span>--registry<span class="o">=</span><span class="s2">&quot;docker.io&quot;</span><span class="w"> </span>--tag<span class="o">=</span><span class="s2">&quot;latest&quot;</span>
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
         </article>
       </div>
@@ -816,14 +819,11 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

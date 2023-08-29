@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Cython SDK API" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Cython SDK API" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="reference/cython_sdk.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="graphscope.Vertex" href="generated/graphscope.Vertex.html" /><link rel="prev" title="graphscope.framework.dag_utils.gremlin_to_subgraph" href="generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Cython SDK API - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,20 +665,20 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="cython-sdk-api">
+          <section id="cython-sdk-api">
 <span id="cython-sdk"></span><h1>Cython SDK API<a class="headerlink" href="#cython-sdk-api" title="Permalink to this heading">#</a></h1>
-<div class="section" id="pregel">
+<section id="pregel">
 <h2>Pregel<a class="headerlink" href="#pregel" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">Vertex[VD_TYPE,</span> <span class="pre">MD_TYPE]</span></span></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.analytical.app.pregel.</span></span><span class="sig-name descname"><span class="pre">Vertex</span></span><span class="sig-paren">[</span><em class="sig-param"><span class="n"><span class="pre">VD_TYPE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MD_TYPE</span></span></em><span class="sig-paren">]</span></dt>
 <dd><blockquote>
 <div><p>Class which holds vertex id, data and edges.</p>
 <p>VD_TYPE: vertex data type
 MD_TYPE: message type</p>
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex id.</p>
 </div></blockquote>
@@ -685,7 +686,7 @@ MD_TYPE: message type</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">label</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">label</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex label.</p>
 </div></blockquote>
@@ -693,7 +694,7 @@ MD_TYPE: message type</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">label_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">label_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex label id.</p>
 </div></blockquote>
@@ -701,7 +702,7 @@ MD_TYPE: message type</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">properties</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">vector</span><span class="p"><span class="pre">[</span></span><span class="pre">pair</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-name descname"><span class="pre">properties</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">vector</span><span class="p"><span class="pre">[</span></span><span class="pre">pair</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><blockquote>
 <div><p>Get list of vertex properties, which consisting of property name and property type.
 Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
@@ -710,7 +711,7 @@ Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">set_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">VD_TYPE</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">set_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">VD_TYPE</span></span></em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>Set the vertex data, immediately visible in current round.</p>
 </div></blockquote>
@@ -718,7 +719,7 @@ Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">VD_TYPE</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">VD_TYPE</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get the vertex value, which data stored with vertex.</p>
 </div></blockquote>
@@ -726,7 +727,7 @@ Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">get_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">property_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">property_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex str data by property id.</p>
 </div></blockquote>
@@ -734,7 +735,7 @@ Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">get_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">property_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">property_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex str data by property name.</p>
 </div></blockquote>
@@ -742,7 +743,7 @@ Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">get_double</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">property_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_double</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">property_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex str data by property id.</p>
 </div></blockquote>
@@ -750,7 +751,7 @@ Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">get_double</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">property_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_double</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">property_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex double data by property_name.</p>
 </div></blockquote>
@@ -758,7 +759,7 @@ Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">get_int</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">property_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_int</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">property_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex int data by property id.</p>
 </div></blockquote>
@@ -766,7 +767,7 @@ Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">get_int</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">property_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_int</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">property_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex int data by property_name.</p>
 </div></blockquote>
@@ -774,7 +775,7 @@ Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">outgoing_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AdjList</span><span class="p"><span class="pre">[</span></span><span class="pre">VD_TYPE</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MD_TYPE</span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-name descname"><span class="pre">outgoing_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AdjList</span><span class="p"><span class="pre">[</span></span><span class="pre">VD_TYPE</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MD_TYPE</span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><blockquote>
 <div><p>Get a iterable of outgoing edges by edge label id of this vertex.</p>
 </div></blockquote>
@@ -782,7 +783,7 @@ Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">outgoing_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AdjList</span><span class="p"><span class="pre">[</span></span><span class="pre">VD_TYPE</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MD_TYPE</span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-name descname"><span class="pre">outgoing_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AdjList</span><span class="p"><span class="pre">[</span></span><span class="pre">VD_TYPE</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MD_TYPE</span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><blockquote>
 <div><p>Get a iterable of outgoing edges by edge label name of this vertex.</p>
 </div></blockquote>
@@ -790,7 +791,7 @@ Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">incoming_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AdjList</span><span class="p"><span class="pre">[</span></span><span class="pre">VD_TYPE</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MD_TYPE</span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-name descname"><span class="pre">incoming_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AdjList</span><span class="p"><span class="pre">[</span></span><span class="pre">VD_TYPE</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MD_TYPE</span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><blockquote>
 <div><p>Get a iterable of incoming edges by edge label id of this vertex.</p>
 </div></blockquote>
@@ -798,7 +799,7 @@ Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">incoming_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AdjList</span><span class="p"><span class="pre">[</span></span><span class="pre">VD_TYPE</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MD_TYPE</span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-name descname"><span class="pre">incoming_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AdjList</span><span class="p"><span class="pre">[</span></span><span class="pre">VD_TYPE</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MD_TYPE</span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><blockquote>
 <div><p>Get a iterable of incoming edges by edge label name of this vertex.</p>
 </div></blockquote>
@@ -806,7 +807,7 @@ Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Vertex</span><span class="p"><span class="pre">[</span></span><span class="pre">VD_TYPE</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MD_TYPE</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MD_TYPE</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Vertex</span><span class="p"><span class="pre">[</span></span><span class="pre">VD_TYPE</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MD_TYPE</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MD_TYPE</span></span></em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>Send a message to target vertex.</p>
 </div></blockquote>
@@ -814,7 +815,7 @@ Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Vertex.</span></span><span class="sig-name descname"><span class="pre">vote_to_halt</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">vote_to_halt</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>After this method is called, the <cite>compute()</cite> code will no longer called with this
 vertex util receive messages. The application will finish only when all vertices
@@ -827,11 +828,11 @@ vote to halt.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">Neighbor[VD_TYPE,</span> <span class="pre">MD_TYPE]</span></span></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.analytical.app.pregel.</span></span><span class="sig-name descname"><span class="pre">Neighbor</span></span><span class="sig-paren">[</span><em class="sig-param"><span class="n"><span class="pre">VD_TYPE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MD_TYPE</span></span></em><span class="sig-paren">]</span></dt>
 <dd><blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Neighbor.</span></span><span class="sig-name descname"><span class="pre">vertex</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Vertex</span><span class="p"><span class="pre">[</span></span><span class="pre">VD_TYPE</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MD_TYPE</span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-name descname"><span class="pre">vertex</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Vertex</span><span class="p"><span class="pre">[</span></span><span class="pre">VD_TYPE</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MD_TYPE</span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><blockquote>
 <div><p>Get neighbor vertex.</p>
 </div></blockquote>
@@ -839,7 +840,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Neighbor.</span></span><span class="sig-name descname"><span class="pre">get_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get edge str data by column id.</p>
 </div></blockquote>
@@ -847,7 +848,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Neighbor.</span></span><span class="sig-name descname"><span class="pre">get_int</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_int</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get edge int data by column id.</p>
 </div></blockquote>
@@ -855,7 +856,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Neighbor.</span></span><span class="sig-name descname"><span class="pre">get_double</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_double</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get edge double data by column id.</p>
 </div></blockquote>
@@ -866,11 +867,11 @@ vote to halt.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">AdjList[VD_TYPE,</span> <span class="pre">MD_TYPE]</span></span></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.analytical.app.pregel.</span></span><span class="sig-name descname"><span class="pre">AdjList</span></span><span class="sig-paren">[</span><em class="sig-param"><span class="n"><span class="pre">VD_TYPE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MD_TYPE</span></span></em><span class="sig-paren">]</span></dt>
 <dd><blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">AdjList.</span></span><span class="sig-name descname"><span class="pre">begin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Neighbor</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">begin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Neighbor</span></span></span></dt>
 <dd><blockquote>
 <div><p>Return begin addr of the iterator.</p>
 </div></blockquote>
@@ -878,7 +879,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">AdjList.</span></span><span class="sig-name descname"><span class="pre">end</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Neighbor</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">end</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Neighbor</span></span></span></dt>
 <dd><blockquote>
 <div><p>Return end addr of the iterator.</p>
 </div></blockquote>
@@ -886,7 +887,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">AdjList.</span></span><span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">size_t</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">size_t</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get the size of adj list.</p>
 </div></blockquote>
@@ -897,12 +898,12 @@ vote to halt.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">Context[VD_TYPE,</span> <span class="pre">MD_TYPE]</span></span></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.analytical.app.pregel.</span></span><span class="sig-name descname"><span class="pre">Context</span></span><span class="sig-paren">[</span><em class="sig-param"><span class="n"><span class="pre">VD_TYPE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MD_TYPE</span></span></em><span class="sig-paren">]</span></dt>
 <dd><blockquote>
 <div><p>Class which holds current step, aggregator info, query args and other util function.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get a value with specific key, or “” with key not exist.</p>
 </div></blockquote>
@@ -910,7 +911,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">register_aggregator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PregelAggregatorType</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">register_aggregator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PregelAggregatorType</span></span></em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>Register a aggregator with specific type, naming by <cite>name</cite>.</p>
 </div></blockquote>
@@ -918,7 +919,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">Context.aggregate[AGGR_TYPE](name:</span> <span class="pre">str,</span> <span class="pre">value:</span> <span class="pre">AGGR_TYPE)</span></span></dt>
+<span class="sig-name descname"><span class="pre">aggregate</span></span><span class="sig-paren">[</span><em class="sig-param"><span class="n"><span class="pre">AGGR_TYPE</span></span></em><span class="sig-paren">]</span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AGGR_TYPE</span></span></em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>Add a new value to aggregator.</p>
 </div></blockquote>
@@ -926,7 +927,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">Context.get_aggregated_value[AGGR_TYPE](name:</span> <span class="pre">str)</span> <span class="pre">-&gt;</span> <span class="pre">AGGR_TYPE</span></span></dt>
+<span class="sig-name descname"><span class="pre">get_aggregated_value</span></span><span class="sig-paren">[</span><em class="sig-param"><span class="n"><span class="pre">AGGR_TYPE</span></span></em><span class="sig-paren">]</span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AGGR_TYPE</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get value from a aggregator.</p>
 </div></blockquote>
@@ -934,7 +935,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">superstep</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">superstep</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get current superstep, begin with 0.</p>
 </div></blockquote>
@@ -942,7 +943,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_total_vertices_num</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">size_t</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_total_vertices_num</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">size_t</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get total vertex number.</p>
 </div></blockquote>
@@ -950,7 +951,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">vertex_label_num</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">vertex_label_num</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex label number.</p>
 </div></blockquote>
@@ -958,7 +959,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">edge_label_num</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">edge_label_num</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get edge label number.</p>
 </div></blockquote>
@@ -966,7 +967,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">vertex_property_num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">vertex_property_num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex property number by vertex label name.</p>
 </div></blockquote>
@@ -974,7 +975,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">vertex_property_num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">vertex_property_num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex property number by vertex label id.</p>
 </div></blockquote>
@@ -982,7 +983,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">edge_property_num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">edge_property_num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get edge property number by edge label name.</p>
 </div></blockquote>
@@ -990,7 +991,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">edge_property_num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">edge_property_num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex property number by edge label id.</p>
 </div></blockquote>
@@ -998,7 +999,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">vertex_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">vector</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-name descname"><span class="pre">vertex_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">vector</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><blockquote>
 <div><p>Get list of vertex label.</p>
 </div></blockquote>
@@ -1006,7 +1007,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">edge_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">vector</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-name descname"><span class="pre">edge_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">vector</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><blockquote>
 <div><p>Get list of edge label.</p>
 </div></blockquote>
@@ -1014,7 +1015,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_vertex_label_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_vertex_label_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex label name by label id.</p>
 </div></blockquote>
@@ -1022,7 +1023,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_vertex_label_id_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_vertex_label_id_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex label id by name.</p>
 </div></blockquote>
@@ -1030,7 +1031,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_edge_label_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_edge_label_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get edge label name by label id.</p>
 </div></blockquote>
@@ -1038,7 +1039,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_edge_label_id_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_edge_label_id_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get edge label id by name.</p>
 </div></blockquote>
@@ -1046,7 +1047,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">vertex_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">vector</span><span class="p"><span class="pre">[</span></span><span class="pre">pair</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-name descname"><span class="pre">vertex_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">vector</span><span class="p"><span class="pre">[</span></span><span class="pre">pair</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><blockquote>
 <div><p>Get list of vertex properties by label id.</p>
 </div></blockquote>
@@ -1054,7 +1055,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">vertex_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">vector</span><span class="p"><span class="pre">[</span></span><span class="pre">pair</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-name descname"><span class="pre">vertex_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">vector</span><span class="p"><span class="pre">[</span></span><span class="pre">pair</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><blockquote>
 <div><p>Get list of vertex properties by label name.</p>
 </div></blockquote>
@@ -1062,7 +1063,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">edge_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">vector</span><span class="p"><span class="pre">[</span></span><span class="pre">pair</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-name descname"><span class="pre">edge_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">vector</span><span class="p"><span class="pre">[</span></span><span class="pre">pair</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><blockquote>
 <div><p>Get list of edge properties by label id.</p>
 </div></blockquote>
@@ -1070,7 +1071,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">edge_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">vector</span><span class="p"><span class="pre">[</span></span><span class="pre">pair</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-name descname"><span class="pre">edge_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">vector</span><span class="p"><span class="pre">[</span></span><span class="pre">pair</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><blockquote>
 <div><p>Get list of edge properties by label name.</p>
 </div></blockquote>
@@ -1078,7 +1079,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_vertex_property_id_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_property_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_vertex_property_id_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_property_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex property id by property name.</p>
 </div></blockquote>
@@ -1086,7 +1087,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_vertex_property_id_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_property_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_vertex_property_id_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_property_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex property id by property name.</p>
 </div></blockquote>
@@ -1094,7 +1095,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_vertex_property_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_property_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_vertex_property_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_property_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex property name by property id.</p>
 </div></blockquote>
@@ -1102,7 +1103,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_vertex_property_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_property_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_vertex_property_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertex_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_property_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex property name by property id.</p>
 </div></blockquote>
@@ -1110,7 +1111,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_edge_property_id_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_property_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_edge_property_id_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_property_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get edge property id by property name.</p>
 </div></blockquote>
@@ -1118,7 +1119,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_edge_property_id_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_property_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_edge_property_id_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_property_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get edge property id by property name.</p>
 </div></blockquote>
@@ -1126,7 +1127,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_edge_property_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_property_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_edge_property_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_property_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get edge property name by property id.</p>
 </div></blockquote>
@@ -1134,7 +1135,7 @@ vote to halt.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_edge_property_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_property_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_edge_property_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_property_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get edge property name by property id.</p>
 </div></blockquote>
@@ -1145,11 +1146,11 @@ vote to halt.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">MessageIterator[MD_TYPE]</span></span></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.analytical.app.pregel.</span></span><span class="sig-name descname"><span class="pre">MessageIterator</span></span><span class="sig-paren">[</span><em class="sig-param"><span class="n"><span class="pre">MD_TYPE</span></span></em><span class="sig-paren">]</span></dt>
 <dd><blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">MessageIterator.</span></span><span class="sig-name descname"><span class="pre">empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span></dt>
 <dd><blockquote>
 <div><p>Return True if there is no message in queue.</p>
 </div></blockquote>
@@ -1285,8 +1286,8 @@ non-deterministic.</p>
 </div></blockquote>
 </dd></dl>
 
-</div>
-<div class="section" id="pie">
+</section>
+<section id="pie">
 <h2>PIE<a class="headerlink" href="#pie" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py">
@@ -1377,10 +1378,10 @@ non-deterministic.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">VertexArray[T]</span></span></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.analytical.app.pie.</span></span><span class="sig-name descname"><span class="pre">VertexArray</span></span><span class="sig-paren">[</span><em class="sig-param"><span class="n"><span class="pre">T</span></span></em><span class="sig-paren">]</span></dt>
 <dd><dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">VertexArray.</span></span><span class="sig-name descname"><span class="pre">VertexArray</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">VertexArray</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>A list of vertex, which also contain a vertex data.</p>
 </div></blockquote>
@@ -1388,7 +1389,7 @@ non-deterministic.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">VertexArray.</span></span><span class="sig-name descname"><span class="pre">Init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">VertexRange</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">Init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">VertexRange</span></span></em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>Init VertexArray with default value.</p>
 </div></blockquote>
@@ -1396,7 +1397,7 @@ non-deterministic.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">VertexArray.</span></span><span class="sig-name descname"><span class="pre">Init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">range:</span> <span class="pre">VertexRange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">const</span> <span class="pre">T&amp;</span> <span class="pre">value</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">Init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">range:</span> <span class="pre">VertexRange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">const</span> <span class="pre">T&amp;</span> <span class="pre">value</span></span></em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>Init VertexArray with specify value.</p>
 </div></blockquote>
@@ -1404,7 +1405,7 @@ non-deterministic.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">VertexArray.operator[](v:</span> <span class="pre">Vertex)</span> <span class="pre">-&gt;</span> <span class="pre">T</span></span></dt>
+<span class="sig-name descname"><span class="pre">operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Vertex</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">T</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get vertex data.</p>
 </div></blockquote>
@@ -1860,15 +1861,15 @@ non-deterministic.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">Context[VD_TYPE,</span> <span class="pre">MD_TYPE]</span></span></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.analytical.app.pie.</span></span><span class="sig-name descname"><span class="pre">Context</span></span><span class="sig-paren">[</span><em class="sig-param"><span class="n"><span class="pre">VD_TYPE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MD_TYPE</span></span></em><span class="sig-paren">]</span></dt>
 <dd><dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">Context</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">Context</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">superstep</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">superstep</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get current superstep.</p>
 </div></blockquote>
@@ -1876,7 +1877,7 @@ non-deterministic.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get a value with specific key, or “” with key not exist.</p>
 </div></blockquote>
@@ -1884,7 +1885,7 @@ non-deterministic.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">init_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">VertexRange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MD_TYPE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PIEAggregateType</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">init_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">VertexRange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MD_TYPE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PIEAggregateType</span></span></em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>Init vertex range with value and type aggregator.</p>
 </div></blockquote>
@@ -1892,7 +1893,7 @@ non-deterministic.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">register_sync_buffer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MessageStrategy</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">register_sync_buffer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v_label_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MessageStrategy</span></span></em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>Set auto parallel message strategy.</p>
 </div></blockquote>
@@ -1900,7 +1901,7 @@ non-deterministic.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">set_node_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Vertex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">VD_TYPE</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">set_node_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Vertex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">VD_TYPE</span></span></em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>Set the value of vertex.</p>
 </div></blockquote>
@@ -1908,7 +1909,7 @@ non-deterministic.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">Context.</span></span><span class="sig-name descname"><span class="pre">get_node_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Vertex</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">VD_TYPE</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">get_node_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Vertex</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">VD_TYPE</span></span></span></dt>
 <dd><blockquote>
 <div><p>Get the value of vertex.</p>
 </div></blockquote>
@@ -1974,15 +1975,11 @@ non-deterministic.</p>
 
 </dd></dl>
 
-</div>
-<div class="section" id="graphscope-types">
+</section>
+<section id="graphscope-types">
 <h2>GraphScope types<a class="headerlink" href="#graphscope-types" title="Permalink to this heading">#</a></h2>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.Vertex.html#graphscope.Vertex" title="graphscope.Vertex"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.Vertex</span></code></a></p></td>
 <td><p></p></td>
@@ -1990,15 +1987,11 @@ non-deterministic.</p>
 </tbody>
 </table>
 </div>
-</div>
-<div class="section" id="functions">
+</section>
+<section id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">#</a></h2>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.declare.html#graphscope.declare" title="graphscope.declare"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.declare</span></code></a>(graphscope_type, variable)</p></td>
 <td><p>Declare a GraphScope data type.</p></td>
@@ -2006,8 +1999,8 @@ non-deterministic.</p>
 </tbody>
 </table>
 </div>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -2083,14 +2076,11 @@ non-deterministic.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

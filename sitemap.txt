@@ -12,6 +12,7 @@ https://graphscope.io/docs/latest/zh/
 https://slack.graphscope.io
 
 https://graphscope.io/blog/
+https://graphscope.io/blog/tech/2023/08/16/FLASH-A-Programming-Model-for-Distributed-Graph-Algorithms
 https://graphscope.io/blog/tech/2023/08/08/Empowering-Graph-Analysis-Tasks-with-GPU-Acceleration
 https://graphscope.io/blog/tech/2023/08/06/Dynamic-Graph-Sampling-Service-for-Realtime-GNN-Inference-at-Scale
 https://graphscope.io/blog/tech/2023/07/23/Developing-and-Running-Customized-Analytical-Algorithms-for-GraphScope

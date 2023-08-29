@@ -6,7 +6,7 @@ This guide will walk you through the process of installing GraphScope on your lo
 
 - Ubuntu 20.04 or later, CentOS 7 or later, or macOS 11 (Intel) / macOS 12 (Apple silicon) or later
 - Python 3.7 ~ 3.11, and pip >= 19.3
-- OpenJDK 8 or later (If you want to use GIE)
+- JDK 11 (If you want to use GIE, both JDK 8 and 20 have known compatibility issues)
 
 ## Install from packages
 GraphScope is distributed via [Python wheels](https://pypi.org/project/graphscope), and could be installed by [pip](https://pip.pypa.io/en/stable/) directly.
@@ -74,7 +74,7 @@ cd graphscope
 
 ### Use dev image with all dependencies installed
 
-To make our life easier, we provide a pre-built docker image with all the dependencies installed. 
+To make our life easier, we provide a pre-built docker image with all the dependencies installed.
 You can use pull it and work in a container with this image to build GraphScope.
 
 ```bash
@@ -87,7 +87,7 @@ git clone https://github.com/alibaba/graphscope
 
 ### Build and install
 
-After the dependencies are installed on your local or in the container, 
+After the dependencies are installed on your local or in the container,
 you can build and install GraphScope in root directory of the source code.
 
 ```bash
@@ -96,7 +96,7 @@ make install
 ```
 
 ````{note}
-Analytical engine(GAE) may require on-the-fly compilation, which needs clang or g++. Hence additional setup steps may in need to install build-essentials. e.g., on ubuntu: 
+Analytical engine(GAE) may require on-the-fly compilation, which needs clang or g++. Hence additional setup steps may in need to install build-essentials. e.g., on ubuntu:
 
 ```bash
 apt update -y &&

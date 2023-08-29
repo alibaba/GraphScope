@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Cypher Support" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Cypher Support" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="interactive_engine/neo4j/supported_cypher.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Design of GIE" href="../design_of_gie.html" /><link rel="prev" title="GIE for Cypher" href="cypher_sdk.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Cypher Support - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../../_static/logo-h.png" alt="Logo"/>
@@ -664,7 +665,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="cypher-support">
+          <section class="tex2jax_ignore mathjax_ignore" id="cypher-support">
 <h1>Cypher Support<a class="headerlink" href="#cypher-support" title="Permalink to this heading">#</a></h1>
 <p>This document outlines the current capabilities of GIE in supporting Neo4j’s Cypher queries and
 compares them to the <a class="reference external" href="https://neo4j.com/docs/cypher-manual/current/syntax/">syntax</a> specified in Neo4j.
@@ -674,22 +675,22 @@ Therefore, functionalities associated with writing, such as adding vertices/edge
 <p>We provide in-depth details regarding Cypher’s support in GIE, mainly including data types, operators and clauses.
 We further highlight planned features that we intend to offer in the near future.
 While all terminologies, including data types, operators, and keywords in clauses, are case-insensitive in this document, we use capital and lowercase letters for the terminologies of Neo4j and GIE, respectively, to ensure clarity.</p>
-<div class="section" id="data-types">
+<section id="data-types">
 <h2>Data Types<a class="headerlink" href="#data-types" title="Permalink to this heading">#</a></h2>
 <p>As <a class="reference external" href="https://neo4j.com/docs/cypher-manual/current/values-and-types">Neo4j</a>, we have provided support for
 data value of types in the categories of <strong>property</strong>, <strong>structural</strong> and <strong>constructed</strong>.
 However, the specific data types that we support are slightly modified from those in Cypher to ensure compatibility with our storage system. Further details will be elaborated upon.</p>
-<div class="section" id="property-types">
+<section id="property-types">
 <h3>Property Types<a class="headerlink" href="#property-types" title="Permalink to this heading">#</a></h3>
 <p>The available data types stored in the vertices (equivalent of nodes in Cypher) and edges (equivalent of relationships in Cypher), known as property types, are divided into several categories including Boolean, Integer, Float, String, Bytes, Placeholder and Temporal. These property types are extensively utilized and can be commonly utilized in queries and as parameters – making them the most commonly used data types.</p>
 <div class="table-wrapper colwidths-auto docutils container">
-<table class="colwidths-auto docutils align-default">
+<table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="text-left head"><p>Category</p></th>
-<th class="text-left head"><p>Cypher Type</p></th>
-<th class="text-left head"><p>GIE Type</p></th>
-<th class="text-center head"><p>Supported</p></th>
-<th class="text-left head"><p>Todo</p></th>
+<tr class="row-odd"><th class="head text-left"><p>Category</p></th>
+<th class="head text-left"><p>Cypher Type</p></th>
+<th class="head text-left"><p>GIE Type</p></th>
+<th class="head text-center"><p>Supported</p></th>
+<th class="head text-left"><p>Todo</p></th>
 </tr>
 </thead>
 <tbody>
@@ -750,8 +751,8 @@ However, the specific data types that we support are slightly modified from thos
 </tbody>
 </table>
 </div>
-</div>
-<div class="section" id="structural-types">
+</section>
+<section id="structural-types">
 <h3>Structural types<a class="headerlink" href="#structural-types" title="Permalink to this heading">#</a></h3>
 <p>In a graph, Structural Types are the first-class citizens and are comprised of the following:</p>
 <ul class="simple">
@@ -760,13 +761,13 @@ However, the specific data types that we support are slightly modified from thos
 <li><p>Path: It encodes the alternating sequence of vertices and conceivably edges while traversing the graph.</p></li>
 </ul>
 <div class="table-wrapper colwidths-auto docutils container">
-<table class="colwidths-auto docutils align-default">
+<table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="text-left head"><p>Category</p></th>
-<th class="text-left head"><p>Cypher Type</p></th>
-<th class="text-left head"><p>GIE Type</p></th>
-<th class="text-center head"><p>Supported</p></th>
-<th class="text-left head"><p>Todo</p></th>
+<tr class="row-odd"><th class="head text-left"><p>Category</p></th>
+<th class="head text-left"><p>Cypher Type</p></th>
+<th class="head text-left"><p>GIE Type</p></th>
+<th class="head text-center"><p>Supported</p></th>
+<th class="head text-left"><p>Todo</p></th>
 </tr>
 </thead>
 <tbody>
@@ -791,18 +792,18 @@ However, the specific data types that we support are slightly modified from thos
 </tbody>
 </table>
 </div>
-</div>
-<div class="section" id="constructed-types">
+</section>
+<section id="constructed-types">
 <h3>Constructed Types<a class="headerlink" href="#constructed-types" title="Permalink to this heading">#</a></h3>
 <p>Constructed types mainly include the categories of Array and Map.</p>
 <div class="table-wrapper colwidths-auto docutils container">
-<table class="colwidths-auto docutils align-default">
+<table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="text-left head"><p>Category</p></th>
-<th class="text-left head"><p>Cypher Type</p></th>
-<th class="text-left head"><p>GIE Type</p></th>
-<th class="text-center head"><p>Supported</p></th>
-<th class="text-left head"><p>Todo</p></th>
+<tr class="row-odd"><th class="head text-left"><p>Category</p></th>
+<th class="head text-left"><p>Cypher Type</p></th>
+<th class="head text-left"><p>GIE Type</p></th>
+<th class="head text-center"><p>Supported</p></th>
+<th class="head text-left"><p>Todo</p></th>
 </tr>
 </thead>
 <tbody>
@@ -821,9 +822,9 @@ However, the specific data types that we support are slightly modified from thos
 </tbody>
 </table>
 </div>
-</div>
-</div>
-<div class="section" id="operators">
+</section>
+</section>
+<section id="operators">
 <h2>Operators<a class="headerlink" href="#operators" title="Permalink to this heading">#</a></h2>
 <p>We list GIE’s support of the operators in the categories of Aggregation, Property, Mathematical,
 Comparison, String and Boolean. Examples and functionalities of these operators are the same
@@ -831,14 +832,14 @@ as in <a class="reference external" href="https://neo4j.com/docs/cypher-manual/c
 Note that some Aggregator operators, such as <code class="docutils literal notranslate"><span class="pre">max()</span></code>, we listed here are implemented in Neo4j as
 <a class="reference external" href="https://neo4j.com/docs/cypher-manual/current/functions/">functions</a>. We have not introduced functions at this moment.</p>
 <div class="table-wrapper colwidths-auto docutils container">
-<table class="colwidths-auto docutils align-default">
+<table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="text-left head"><p>Category</p></th>
-<th class="text-left head"><p>Description</p></th>
-<th class="text-left head"><p>Cypher Operation</p></th>
-<th class="text-left head"><p>GIE Operation</p></th>
-<th class="text-center head"><p>Supported</p></th>
-<th class="text-left head"><p>Todo</p></th>
+<tr class="row-odd"><th class="head text-left"><p>Category</p></th>
+<th class="head text-left"><p>Description</p></th>
+<th class="head text-left"><p>Cypher Operation</p></th>
+<th class="head text-left"><p>GIE Operation</p></th>
+<th class="head text-center"><p>Supported</p></th>
+<th class="head text-left"><p>Todo</p></th>
 </tr>
 </thead>
 <tbody>
@@ -1104,8 +1105,8 @@ Note that some Aggregator operators, such as <code class="docutils literal notra
 </tbody>
 </table>
 </div>
-</div>
-<div class="section" id="clause">
+</section>
+<section id="clause">
 <h2>Clause<a class="headerlink" href="#clause" title="Permalink to this heading">#</a></h2>
 <p>A notable limitation for now is that we do not
 allow specifying multiple <code class="docutils literal notranslate"><span class="pre">MATCH</span></code> clauses in <strong>one</strong> query. For example,
@@ -1117,12 +1118,12 @@ RETURN a, b;
 </pre></div>
 </div>
 <div class="table-wrapper colwidths-auto docutils container">
-<table class="colwidths-auto docutils align-default">
+<table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="text-left head"><p>Keyword</p></th>
+<tr class="row-odd"><th class="head text-left"><p>Keyword</p></th>
 <th class="head"><p>Comments</p></th>
-<th class="text-center head"><p>Supported</p></th>
-<th class="text-left head"><p>Todo</p></th>
+<th class="head text-center"><p>Supported</p></th>
+<th class="head text-left"><p>Todo</p></th>
 </tr>
 </thead>
 <tbody>
@@ -1169,8 +1170,8 @@ RETURN a, b;
 </tbody>
 </table>
 </div>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -1250,14 +1251,11 @@ RETURN a, b;
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
-    <script src="../../_static/scripts/furo.js"></script>
-    <script src="../../_static/clipboard.min.js"></script>
-    <script src="../../_static/copybutton.js"></script>
+</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Getting Started" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Getting Started" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="interactive_engine/getting_started.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Standalone Deployment for GIE" href="deployment.html" /><link rel="prev" title="Dev and Test" href="../analytical_engine/dev_and_test.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Getting Started - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,15 +665,16 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="getting-started">
+          <section class="tex2jax_ignore mathjax_ignore" id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">#</a></h1>
 <p>This guide gives you a quick start to use GraphScope for graph interactive tasks on your local machine.</p>
-<div class="section" id="installation">
+<section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h2>
 <p>GIE works as the core component of GraphScope. Therefore, you should install GraphScope at first to use GIE.</p>
-<p>GraphScope provides python interface which requires:</p>
+<p>GraphScope requires the following software versions:</p>
 <ul class="simple">
-<li><p>Python3.7 ~ 3.11</p></li>
+<li><p>Python 3.9 ~ 3.11</p></li>
+<li><p>JDK 11 (Both JDK 8 and 20 have known compatibility issues)</p></li>
 <li><p>gcc 7.1+ or Apple Clang</p></li>
 </ul>
 <p>And it is tested on the following 64-bit operating systems:</p>
@@ -707,15 +709,14 @@ python3.9
 &gt;&gt;&gt;<span class="w"> </span>......
 </pre></div>
 </div>
-</div>
-<div class="section" id="running-graphscope-interactive-engine-on-local">
+</section>
+<section id="running-graphscope-interactive-engine-on-local">
 <h2>Running GraphScope Interactive Engine on Local<a class="headerlink" href="#running-graphscope-interactive-engine-on-local" title="Permalink to this heading">#</a></h2>
 <p>It’s fairly straightforward to run interactive queries using the <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> package on
 your local machine. First of all, you import <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> in a Python session, and load
 the modern graph, which has been widely used in <a class="reference external" href="https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/">Tinkerpop</a> demos.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
 <span class="kn">from</span> <span class="nn">graphscope.dataset.modern_graph</span> <span class="kn">import</span> <span class="n">load_modern_graph</span>
-<span class="kn">from</span> <span class="nn">neo4j</span> <span class="kn">import</span> <span class="n">GraphDatabase</span><span class="p">,</span> <span class="n">RoutingControl</span>
 
 <span class="n">gs</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -732,7 +733,7 @@ the modern graph, which has been widely used in <a class="reference external" hr
 <span class="nb">print</span><span class="p">(</span><span class="n">q2</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>  <span class="c1"># should print [[v[2], v[3], v[0], v[1]]]</span>
 
 <span class="c1"># or `execute` any supported Cypher query, by passing `lang=&quot;cypher&quot;`</span>
-<span class="n">q3</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;MATCH (n) RETURN count(n)&quot;</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;cypher&quot;</span><span class="p">,</span> <span class="n">routing_</span><span class="o">=</span><span class="n">RoutingControl</span><span class="o">.</span><span class="n">READ</span><span class="p">)</span>
+<span class="n">q3</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;MATCH (n) RETURN count(n)&quot;</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;cypher&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">q3</span><span class="o">.</span><span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># should print 6</span>
 </pre></div>
 </div>
@@ -746,16 +747,16 @@ the modern graph, which has been widely used in <a class="reference external" hr
 </pre></div>
 </div>
 <p>The number 6 is printed, which is the number of vertices in modern graph.</p>
-<div class="section" id="customize-configurations-for-gie-instance">
+<section id="customize-configurations-for-gie-instance">
 <h3>Customize Configurations for GIE instance<a class="headerlink" href="#customize-configurations-for-gie-instance" title="Permalink to this heading">#</a></h3>
 <p>You could pass additional key-value pairs to customize the startup configuration of GIE, for example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the timeout value to 10 min</span>
 <span class="n">g</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;query.execution.timeout.ms&#39;</span><span class="p">:</span> <span class="mi">600000</span><span class="p">})</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="whats-the-next">
+</section>
+</section>
+<section id="whats-the-next">
 <h2>What’s the Next<a class="headerlink" href="#whats-the-next" title="Permalink to this heading">#</a></h2>
 <p>As shown in the above example, it is very easy to use GraphScope to interactively query a graph using both the Gremlin and Cypher query language on your local machine.</p>
 <p>In addition to the above local-machine entr’ee, we have prepared the following topics for your reference.</p>
@@ -765,8 +766,8 @@ the modern graph, which has been widely used in <a class="reference external" hr
 <li><p>GIE has been designed to <a class="reference internal" href="neo4j/cypher_sdk.html"><span class="std std-doc">integrate with the Neo4j ecosystem</span></a>.</p></li>
 <li><p>Learn more about the <a class="reference internal" href="design_of_gie.html"><span class="doc std std-doc">design of GIE</span></a>.</p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -844,14 +845,11 @@ the modern graph, which has been widely used in <a class="reference external" hr
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

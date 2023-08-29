@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Development Guide" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Development Guide" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="development/dev_guide.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Code Style Guide" href="code_style_guide.html" /><link rel="prev" title="Error Codes" href="../utilities/error_codes.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Development Guide - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,10 +665,10 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="development-guide">
+          <section class="tex2jax_ignore mathjax_ignore" id="development-guide">
 <h1>Development Guide<a class="headerlink" href="#development-guide" title="Permalink to this heading">#</a></h1>
 <p>This document describes how to build GraphScope from source code.</p>
-<div class="section" id="dev-environment">
+<section id="dev-environment">
 <h2>Dev Environment<a class="headerlink" href="#dev-environment" title="Permalink to this heading">#</a></h2>
 <p>To build GraphScope from source code, you need to prepare a development environment with many dependencies and
 build toolchains. You using the following ways to prepare the development environment</p>
@@ -676,7 +677,7 @@ build toolchains. You using the following ways to prepare the development enviro
 <li><p>Install all tools and dependencies on your local machine</p></li>
 </ul>
 <p>We strongly recommend you to use the dev containers to develop and test.</p>
-<div class="section" id="develop-with-dev-containers">
+<section id="develop-with-dev-containers">
 <h3>Develop with dev containers.<a class="headerlink" href="#develop-with-dev-containers" title="Permalink to this heading">#</a></h3>
 <p>We provided a docker image <code class="docutils literal notranslate"><span class="pre">graphscope-dev</span></code> with all tools and dependencies included.
 Additionally, the <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/.devcontainer/devcontainer.json">devcontainer.json</a> allows to quickly setup
@@ -693,8 +694,8 @@ making it easier to collaborate with others and maintain a stable development en
 <li><p>Once the container is built, you can open a terminal within Visual Studio Code.</p></li>
 <li><p>You could customize the <code class="docutils literal notranslate"><span class="pre">devcontainer.json</span></code> to suit your own needs. Once you have made your changes, you could rebuild the container with your customizations.</p></li>
 </ol>
-</div>
-<div class="section" id="install-deps-on-local">
+</section>
+<section id="install-deps-on-local">
 <h3>Install deps on local<a class="headerlink" href="#install-deps-on-local" title="Permalink to this heading">#</a></h3>
 <p>To install all dependencies on your local, use the GraphScope command-line utility <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/gs">gs</a> with the subcommand <code class="docutils literal notranslate"><span class="pre">install-deps</span></code> like this</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>install-deps<span class="w"> </span>dev
@@ -704,9 +705,9 @@ making it easier to collaborate with others and maintain a stable development en
 </pre></div>
 </div>
 <p>You could download the <code class="docutils literal notranslate"><span class="pre">gs</span></code> directly or clone the <a class="reference external" href="https://github.com/alibaba/GraphScope">GraphScope</a> to local, the <code class="docutils literal notranslate"><span class="pre">gs</span></code> is located in the root directory of GraphScope.</p>
-</div>
-</div>
-<div class="section" id="build-all-targets-for-graphscope">
+</section>
+</section>
+<section id="build-all-targets-for-graphscope">
 <h2>Build All Targets for GraphScope<a class="headerlink" href="#build-all-targets-for-graphscope" title="Permalink to this heading">#</a></h2>
 <p>With <code class="docutils literal notranslate"><span class="pre">gs</span></code> command-line utility, you can build all targets for GraphScope with a single command.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>all
@@ -724,11 +725,11 @@ You may found the built artifacts in several places according to each components
 </pre></div>
 </div>
 <p>By default it would install all artifacts to <code class="docutils literal notranslate"><span class="pre">/opt/graphscope</span></code>, and you could specify another location by assigning the value of <code class="docutils literal notranslate"><span class="pre">--prefix</span></code>.</p>
-</div>
-<div class="section" id="build-components-individually">
+</section>
+<section id="build-components-individually">
 <h2>Build Components Individually<a class="headerlink" href="#build-components-individually" title="Permalink to this heading">#</a></h2>
 <p>GraphScope is composed of several components, and you can build each of them separately. If you only changed some codes in one component or intend to use GraphScope in a disaggregated manner, you can build the affected components alone.</p>
-<div class="section" id="build-and-test-engines">
+<section id="build-and-test-engines">
 <h3>Build and Test Engines<a class="headerlink" href="#build-and-test-engines" title="Permalink to this heading">#</a></h3>
 <p>You may find the guides for building and testing each engine as below.</p>
 <ul class="simple">
@@ -736,8 +737,8 @@ You may found the built artifacts in several places according to each components
 <li><p><a class="reference internal" href="../interactive_engine/dev_and_test.html"><span class="std std-doc">Build and test interactive engine</span></a></p></li>
 <li><p><a class="reference internal" href="../learning_engine/dev_and_test.html"><span class="std std-doc">Build and test learning engine</span></a></p></li>
 </ul>
-</div>
-<div class="section" id="build-coordinator">
+</section>
+<section id="build-coordinator">
 <h3>Build Coordinator<a class="headerlink" href="#build-coordinator" title="Permalink to this heading">#</a></h3>
 <p>The gscoordinator package is responsible for launching engines, circulating and propagating messages and errors, and scheduling the workload operations.</p>
 <p>This will install coordinator package, thus make <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">gscoordinator</span></code> work</p>
@@ -748,8 +749,8 @@ You may found the built artifacts in several places according to each components
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>coordinator
 </pre></div>
 </div>
-</div>
-<div class="section" id="build-python-client">
+</section>
+<section id="build-python-client">
 <h3>Build Python Client<a class="headerlink" href="#build-python-client" title="Permalink to this heading">#</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> package is the entrypoint for playing with GraphScope.</p>
 <p>This will install the graphscope-client package, thus make <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">graphscope</span></code> work.</p>
@@ -760,9 +761,9 @@ You may found the built artifacts in several places according to each components
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>client
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
         </article>
       </div>
@@ -846,14 +847,11 @@ You may found the built artifacts in several places according to each components
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

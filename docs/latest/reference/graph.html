@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Graph" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Graph" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="reference/graph.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Analytical App" href="app.html" /><link rel="prev" title="graphscope.graphlearn" href="generated/graphscope.graphlearn.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Graph - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,13 +665,13 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="graph">
+          <section id="graph">
 <span id="id1"></span><h1>Graph<a class="headerlink" href="#graph" title="Permalink to this heading">#</a></h1>
-<div class="section" id="graph-object">
+<section id="graph-object">
 <h2>Graph object<a class="headerlink" href="#graph-object" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.graph.</span></span><span class="sig-name descname"><span class="pre">GraphDAGNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uint64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_oid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compact_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_perfect_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.graph.</span></span><span class="sig-name descname"><span class="pre">GraphDAGNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uint64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_oid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compact_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_perfect_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode" title="Permalink to this definition">#</a></dt>
 <dd><p>A class represents a graph node in a DAG.</p>
 <p>In GraphScope, all operations that generate a new graph will return
 a instance of <a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDAGNode</span></code></a>, which will be automatically
@@ -696,10 +697,10 @@ executed by <code class="xref py py-meth docutils literal notranslate"><span cla
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uint64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_oid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compact_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_perfect_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uint64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_oid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compact_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_perfect_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Construct a <a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDAGNode</span></code></a> object.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>session</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code>) – A graphscope session instance.</p></li>
 <li><p><strong>incoming_data</strong> – <p>Graph can be initialized through various type of sources,
@@ -732,7 +733,7 @@ at most 10%~20% performance degeneration in some algorithms. Defaults to False.<
 <span class="sig-name descname"><span class="pre">add_column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selector</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_column" title="Permalink to this definition">#</a></dt>
 <dd><p>Add the results as a column to the graph. Modification rules are given by the selector.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>results</strong> – A instance of concrete class derive from (<a class="reference internal" href="context.html#graphscope.framework.context.BaseContextDAGNode" title="graphscope.framework.context.BaseContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.BaseContextDAGNode</span></code></a>):
 A context that created by doing an app query on a graph, and holds the corresponding results.</p></li>
@@ -740,10 +741,10 @@ A context that created by doing an app query on a graph, and holds the correspon
 Format is similar to selectors in <a class="reference internal" href="context.html#graphscope.framework.context.Context" title="graphscope.framework.context.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.Context</span></code></a></p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A new graph with new columns, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -751,7 +752,7 @@ Format is similar to selectors in <a class="reference internal" href="context.ht
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode.add_edges">
-<span class="sig-name descname"><span class="pre">add_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_e'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_edges" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">add_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_e'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_edges" title="Permalink to this definition">#</a></dt>
 <dd><p>Add edges to the graph, and return a new graph.
 Here the src_label and dst_label must be both specified or both unspecified,</p>
 <ol class="lowerroman">
@@ -772,7 +773,7 @@ Here the src_label and dst_label must be both specified or both unspecified,</p>
 <div><p>We deduce missing vertex labels from edge tables.</p>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>edges</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><em>Loader</em></a><em>]</em>) – Edge data source.</p></li>
 <li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – Edge label name. Defaults to “_e”.</p></li>
@@ -783,13 +784,13 @@ Here the src_label and dst_label must be both specified or both unspecified,</p>
 <li><p><strong>dst_field</strong> (<em>int</em><em>, </em><em>optional</em>) – Column index or name used as dst field. Defaults to 1.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If the given value is invalid or conflict with current graph.</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A new graph with edge added, evaluated in eager mode.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -797,10 +798,10 @@ Here the src_label and dst_label must be both specified or both unspecified,</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode.add_vertices">
-<span class="sig-name descname"><span class="pre">add_vertices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_vertices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_vertices" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">add_vertices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_vertices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_vertices" title="Permalink to this definition">#</a></dt>
 <dd><p>Add vertices to the graph, and return a new graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>vertices</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><em>Loader</em></a><em>]</em>) – Vertex data source.</p></li>
 <li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – Vertex label name. Defaults to “_”.</p></li>
@@ -808,13 +809,13 @@ Here the src_label and dst_label must be both specified or both unspecified,</p>
 <li><p><strong>vid_field</strong> (<em>int</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – Column index or property name used as id field. Defaults to 0.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If the given value is invalid or conflict with current graph.</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A new graph with vertex added, evaluated in eager mode.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -822,7 +823,7 @@ Here the src_label and dst_label must be both specified or both unspecified,</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode.consolidate_columns">
-<span class="sig-name descname"><span class="pre">consolidate_columns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.consolidate_columns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.consolidate_columns" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">consolidate_columns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.consolidate_columns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.consolidate_columns" title="Permalink to this definition">#</a></dt>
 <dd><p>Consolidate columns of given vertex / edge properties (of same type) into one column.</p>
 <p>For example, if we have a graph with vertex label “person”, and edge labels “knows”
 and “follows”, and we want to consolidate the “weight0”, “weight1” properties of the
@@ -834,17 +835,17 @@ vertex and both edges into a new column “weight”, we can do:</p>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>label</strong> – the label of the vertex or edge.</p></li>
 <li><p><strong>columns</strong> (<em>dict</em>) – the properties of given vertex or edge to be consolidated.</p></li>
 <li><p><strong>result_column</strong> – the name of the new column.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A new graph with column consolidated, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -852,11 +853,11 @@ vertex and both edges into a new column “weight”, we can do:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode.project">
-<span class="sig-name descname"><span class="pre">project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.project" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.project" title="Permalink to this definition">#</a></dt>
 <dd><p>Project a subgraph from the property graph, and return a new graph.
 A graph produced by project just like a normal property graph, and can be projected further.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>vertices</strong> (<em>dict</em>) – key is the vertex label name, the value is a list of str, which represents the
 name of properties. Specifically, it will select all properties if value is None.
@@ -865,10 +866,10 @@ Note that, the label of the vertex in all edges you want to project should be in
 name of properties. Specifically, it will select all properties if value is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A new graph projected from the property graph, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -906,7 +907,7 @@ In other words, the graph object holds nothing but metadata.</p>
 <span class="sig-name descname"><span class="pre">add_column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selector</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.add_column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.add_column" title="Permalink to this definition">#</a></dt>
 <dd><p>Add the results as a column to the graph. Modification rules are given by the selector.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>results</strong> – A instance of concrete class derive from (<a class="reference internal" href="context.html#graphscope.framework.context.BaseContextDAGNode" title="graphscope.framework.context.BaseContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.BaseContextDAGNode</span></code></a>):
 A context that created by doing an app query on a graph, and holds the corresponding results.</p></li>
@@ -914,10 +915,10 @@ A context that created by doing an app query on a graph, and holds the correspon
 Format is similar to selectors in <a class="reference internal" href="context.html#graphscope.framework.context.Context" title="graphscope.framework.context.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.Context</span></code></a></p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A new graph with new columns, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -925,7 +926,7 @@ Format is similar to selectors in <a class="reference internal" href="context.ht
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.graph.Graph.add_edges">
-<span class="sig-name descname"><span class="pre">add_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><span class="pre">GraphDAGNode</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.add_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.add_edges" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">add_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><span class="pre">GraphDAGNode</span></a></span></span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.add_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.add_edges" title="Permalink to this definition">#</a></dt>
 <dd><p>Add edges to the graph, and return a new graph.
 Here the src_label and dst_label must be both specified or both unspecified,</p>
 <ol class="lowerroman">
@@ -946,7 +947,7 @@ Here the src_label and dst_label must be both specified or both unspecified,</p>
 <div><p>We deduce missing vertex labels from edge tables.</p>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>edges</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><em>Loader</em></a><em>]</em>) – Edge data source.</p></li>
 <li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – Edge label name. Defaults to “_e”.</p></li>
@@ -957,13 +958,13 @@ Here the src_label and dst_label must be both specified or both unspecified,</p>
 <li><p><strong>dst_field</strong> (<em>int</em><em>, </em><em>optional</em>) – Column index or name used as dst field. Defaults to 1.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If the given value is invalid or conflict with current graph.</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A new graph with edge added, evaluated in eager mode.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -971,10 +972,10 @@ Here the src_label and dst_label must be both specified or both unspecified,</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.graph.Graph.add_vertices">
-<span class="sig-name descname"><span class="pre">add_vertices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><span class="pre">GraphDAGNode</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.add_vertices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.add_vertices" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">add_vertices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><span class="pre">GraphDAGNode</span></a></span></span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.add_vertices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.add_vertices" title="Permalink to this definition">#</a></dt>
 <dd><p>Add vertices to the graph, and return a new graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>vertices</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><em>Loader</em></a><em>]</em>) – Vertex data source.</p></li>
 <li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – Vertex label name. Defaults to “_”.</p></li>
@@ -982,13 +983,13 @@ Here the src_label and dst_label must be both specified or both unspecified,</p>
 <li><p><strong>vid_field</strong> (<em>int</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – Column index or property name used as id field. Defaults to 0.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If the given value is invalid or conflict with current graph.</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A new graph with vertex added, evaluated in eager mode.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1001,7 +1002,7 @@ Here the src_label and dst_label must be both specified or both unspecified,</p>
 The meta and data of graph is dumped to specified location,
 and can be restored by <cite>Graph.deserialize</cite> in other sessions.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – the graph info file path.</p>
 </dd>
 </dl>
@@ -1009,7 +1010,7 @@ and can be restored by <cite>Graph.deserialize</cite> in other sessions.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.graph.Graph.consolidate_columns">
-<span class="sig-name descname"><span class="pre">consolidate_columns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><span class="pre">GraphDAGNode</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.consolidate_columns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.consolidate_columns" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">consolidate_columns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><span class="pre">GraphDAGNode</span></a></span></span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.consolidate_columns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.consolidate_columns" title="Permalink to this definition">#</a></dt>
 <dd><p>Consolidate columns of given vertex / edge properties (of same type) into one column.</p>
 <p>For example, if we have a graph with vertex label “person”, and edge labels “knows”
 and “follows”, and we want to consolidate the “weight0”, “weight1” properties of the
@@ -1021,17 +1022,17 @@ vertex and both edges into a new column “weight”, we can do:</p>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>label</strong> – the label of the vertex or edge.</p></li>
 <li><p><strong>columns</strong> (<em>dict</em>) – the properties of given vertex or edge to be consolidated.</p></li>
 <li><p><strong>result_column</strong> – the name of the new column.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A new graph with column consolidated, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1059,21 +1060,21 @@ It will read all serialization files, which is dumped by
 <cite>Graph.serialize</cite>.
 If any serialize file doesn’t exists or broken, will error out.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>path</strong> (<em>str</em>) – Path contains the serialization files.</p></li>
 <li><p><strong>sess</strong> (<cite>graphscope.Session</cite>) – The target session
 that the graph will be construct in</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>A new graph object. Schema and data is supposed to be</dt><dd><p>identical with the one that called serialized method.</p>
 </dd>
 </dl>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><cite>Graph</cite></p>
 </dd>
 </dl>
@@ -1087,11 +1088,11 @@ that the graph will be construct in</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.graph.Graph.project">
-<span class="sig-name descname"><span class="pre">project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><span class="pre">GraphDAGNode</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.project" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><span class="pre">GraphDAGNode</span></a></span></span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.project" title="Permalink to this definition">#</a></dt>
 <dd><p>Project a subgraph from the property graph, and return a new graph.
 A graph produced by project just like a normal property graph, and can be projected further.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>vertices</strong> (<em>dict</em>) – key is the vertex label name, the value is a list of str, which represents the
 name of properties. Specifically, it will select all properties if value is None.
@@ -1100,10 +1101,10 @@ Note that, the label of the vertex in all edges you want to project should be in
 name of properties. Specifically, it will select all properties if value is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A new graph projected from the property graph, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1126,10 +1127,10 @@ a <cite>path_{worker_id}</cite> file to storage.
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">schema</span></span><a class="headerlink" href="#graphscope.framework.graph.Graph.schema" title="Permalink to this definition">#</a></dt>
 <dd><p>Schema of the graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the schema of the graph</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphSchema</span></code></p>
 </dd>
 </dl>
@@ -1140,10 +1141,10 @@ a <cite>path_{worker_id}</cite> file to storage.
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">schema_path</span></span><a class="headerlink" href="#graphscope.framework.graph.Graph.schema_path" title="Permalink to this definition">#</a></dt>
 <dd><p>Path that Coordinator will write interactive schema path to.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The path contains the schema. for interactive engine.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
 </dd>
 </dl>
@@ -1154,10 +1155,10 @@ a <cite>path_{worker_id}</cite> file to storage.
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">session_id</span></span><a class="headerlink" href="#graphscope.framework.graph.Graph.session_id" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the currrent session_id.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Return session id that the graph belongs to.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
 </dd>
 </dl>
@@ -1168,13 +1169,13 @@ a <cite>path_{worker_id}</cite> file to storage.
 <span class="sig-name descname"><span class="pre">to_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.to_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.to_dataframe" title="Permalink to this definition">#</a></dt>
 <dd><p>Select some elements of the graph and output as a pandas.DataFrame</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>selector</strong> (<em>dict</em>) – Select some portions of graph.</p></li>
 <li><p><strong>vertex_range</strong> (<em>dict</em><em>, </em><em>optional</em>) – Slice vertices. Defaults to None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><cite>pandas.DataFrame</cite></p>
 </dd>
 </dl>
@@ -1185,14 +1186,14 @@ a <cite>path_{worker_id}</cite> file to storage.
 <span class="sig-name descname"><span class="pre">to_directed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.to_directed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.to_directed" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns a directed representation of the graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><dl class="simple">
 <dt>A directed graph with the same name, same nodes, and</dt><dd><p>with each edge (u, v, data) replaced by two directed edges (u, v, data) and (v, u, data).</p>
 </dd>
 </dl>
 </p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a></p>
 </dd>
 </dl>
@@ -1203,13 +1204,13 @@ a <cite>path_{worker_id}</cite> file to storage.
 <span class="sig-name descname"><span class="pre">to_numpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.to_numpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.to_numpy" title="Permalink to this definition">#</a></dt>
 <dd><p>Select some elements of the graph and output to numpy.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>selector</strong> (<em>str</em>) – Select a portion of graph as a numpy.ndarray.</p></li>
 <li><p><strong>vertex_range</strong> (<em>dict</em><em>, </em><em>optional</em>) – Slice vertices. Defaults to None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><cite>numpy.ndarray</cite></p>
 </dd>
 </dl>
@@ -1220,7 +1221,7 @@ a <cite>path_{worker_id}</cite> file to storage.
 <span class="sig-name descname"><span class="pre">to_undirected</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.to_undirected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.to_undirected" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns an undirected representation of the digraph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><dl class="simple">
 <dt>An undirected graph with the same name and nodes and</dt><dd><p>with edge (u, v, data) if either (u, v, data) or (v, u, data) is in the digraph.
 If both edges exist in digraph, they will both be preserved.
@@ -1229,7 +1230,7 @@ You must check and correct for this manually if desired.</p>
 </dl>
 </p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a></p>
 </dd>
 </dl>
@@ -1240,10 +1241,10 @@ You must check and correct for this manually if desired.</p>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vineyard_id</span></span><a class="headerlink" href="#graphscope.framework.graph.Graph.vineyard_id" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the vineyard object_id of this graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>return vineyard id of this graph</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
 </dd>
 </dl>
@@ -1251,8 +1252,8 @@ You must check and correct for this manually if desired.</p>
 
 </dd></dl>
 
-</div>
-<div class="section" id="loader-object">
+</section>
+<section id="loader-object">
 <h2>Loader object<a class="headerlink" href="#loader-object" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.framework.loader.Loader">
@@ -1266,7 +1267,7 @@ Loader can take various data sources, and assemble necessary information into a 
 Note: Loader cannot be reused since it may change inner state when constructing
 information for loading a graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>source</strong> (<em>str</em><em> or </em><em>value</em>) – <p>The data source to be load, which could be one of the followings:</p>
 <blockquote>
@@ -1302,12 +1303,12 @@ See more additional info in <cite>Loading Graph</cite> section of Docs, and impl
 
 </dd></dl>
 
-</div>
-<div class="section" id="graph-functions">
+</section>
+<section id="graph-functions">
 <h2>Graph Functions<a class="headerlink" href="#graph-functions" title="Permalink to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.framework.graph_builder.load_from">
-<span class="sig-prename descclassname"><span class="pre">graphscope.framework.graph_builder.</span></span><span class="sig-name descname"><span class="pre">load_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">Loader</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Object</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ObjectID</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ObjectName</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">Loader</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Object</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ObjectID</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ObjectName</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">Loader</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Object</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ObjectID</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ObjectName</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">Loader</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Object</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ObjectID</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ObjectName</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64_t'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uint64_t'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_oid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vformat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eformat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compact_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_perfect_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a></span></span><a class="reference internal" href="../_modules/graphscope/framework/graph_builder.html#load_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph_builder.load_from" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.framework.graph_builder.</span></span><span class="sig-name descname"><span class="pre">load_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">Loader</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Object</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ObjectID</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ObjectName</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">Loader</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Object</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ObjectID</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ObjectName</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">Loader</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Object</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ObjectID</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ObjectName</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">Loader</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Object</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ObjectID</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ObjectName</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64_t'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uint64_t'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_oid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vformat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eformat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compact_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_perfect_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a></span></span><a class="reference internal" href="../_modules/graphscope/framework/graph_builder.html#load_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph_builder.load_from" title="Permalink to this definition">#</a></dt>
 <dd><p>Load a Arrow property graph using a list of vertex/edge specifications.</p>
 <div class="deprecated">
 <p><span class="versionmodified deprecated">Deprecated since version version: </span>0.3
@@ -1396,7 +1397,7 @@ makes it more understandable.</p>
 </li>
 </ul>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>edges</strong> – Edge configuration of the graph</p></li>
 <li><p><strong>vertices</strong> (<em>optional</em>) – Vertices configurations of the graph. Defaults to None.
@@ -1423,8 +1424,8 @@ Defaults to False.</p></li>
 </dl>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -1542,14 +1543,11 @@ Defaults to False.</p></li>
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

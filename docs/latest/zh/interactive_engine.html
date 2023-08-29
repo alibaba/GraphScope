@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="图交互式分析引擎" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="图交互式分析引擎" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="zh/interactive_engine.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="图学习引擎" href="learning_engine.html" /><link rel="prev" title="图分析引擎" href="analytics_engine.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>图交互式分析引擎 - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -383,14 +384,14 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="id1">
+          <section id="id1">
 <h1>图交互式分析引擎<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h1>
 <p>GraphScope的交互查询引擎（简称GIE）是一个分布式系统，它为不同经验的用户提供了一个易用的交互式环境，支持海量复杂图数据上的 <em>实时分析与交互探索</em> 。该引擎支持 <a class="reference external" href="http://tinkerpop.apache.org/">Gremlin</a> 语言表达的交互图查询，并提供了自动化和用户透明的分布式并行执行。</p>
-<div class="section" id="apache-tinkerpop">
+<section id="apache-tinkerpop">
 <h2>Apache TinkerPop<a class="headerlink" href="#apache-tinkerpop" title="Permalink to this heading">#</a></h2>
 <p><a class="reference external" href="http://tinkerpop.apache.org/">Apache TinkerPop</a> 是基于Gremlin语言开发交互式图应用的一个开源框架和事实标准。GIE通过TinkerPop提供的 <a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/#gremlin-server">Gremlin Server</a> 接口，实现了与TinkerPop生态无缝集成，从而用户可以直接采用诸如 <a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/#gremlin-console">Gremlin Console</a> 的开发工具或通过Java和Python等多种语言接口编写应用逻辑。</p>
-</div>
-<div class="section" id="python-gremlin-graphscope">
+</section>
+<section id="python-gremlin-graphscope">
 <h2>利用Python（Gremlin）连接GraphScope<a class="headerlink" href="#python-gremlin-graphscope" title="Permalink to this heading">#</a></h2>
 <p>如下所示，用户可以很简单的通过Python连上一个载入GraphScope系统的图并发起Gremlin查询。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
@@ -417,12 +418,12 @@ MathJax = {
 </pre></div>
 </div>
 <p>有了这一URL信息，用户也可以直接采用Gremlin-Python访问图数据，具体可以参考 <a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/#gremlin-python">官方文档</a> 。</p>
-</div>
-<div class="section" id="java-gremlin-graphscope">
+</section>
+<section id="java-gremlin-graphscope">
 <h2>利用Java（Gremlin）连接GraphScope<a class="headerlink" href="#java-gremlin-graphscope" title="Permalink to this heading">#</a></h2>
 <p>TinkerPop同时支持Java语言按类似方式访问，详见Gremlin-Java的 <a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/#gremlin-java">官方文档</a> 。</p>
-</div>
-<div class="section" id="id5">
+</section>
+<section id="id5">
 <h2>Gremlin Console（开发控制台）<a class="headerlink" href="#id5" title="Permalink to this heading">#</a></h2>
 <p><a class="reference external" href="https://tinkerpop.apache.org/docs/current/tutorials/the-gremlin-console/">Gremlin Console</a> 为开发者提供了一个与GraphScope存储的图数据进行交互的控制台，也叫做REPL环境（read-evaluate-print loop）。下面描述如何利用上文获得的URL，安装和配置Gremlin Console以连接GraphScope的步骤：</p>
 <p>1.安装Gremlin Console依赖的Java运行时环境，版本需要满足[8, 12)。</p>
@@ -457,24 +458,24 @@ MathJax = {
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>:exit
 </pre></div>
 </div>
-</div>
-<div class="section" id="gremlin-101">
+</section>
+<section id="gremlin-101">
 <h2>Gremlin编程入门–101<a class="headerlink" href="#gremlin-101" title="Permalink to this heading">#</a></h2>
 <p>GIE以忠实保留Gremlin编程模型为设计目标，从而让已有的应用只需最小化的修改就可以扩展到大规模计算集群。在此我们提供一个Gremlin的总体介绍，特别是其中包含的图数据模型和查询语言等关键概念。更详细和完整的介绍，请参考 <a class="reference external" href="https://tinkerpop.apache.org/docs/current/reference/">TinkerPop reference</a> 。</p>
-<div class="section" id="id8">
+<section id="id8">
 <h3>图数据模型<a class="headerlink" href="#id8" title="Permalink to this heading">#</a></h3>
 <p>Gremlin允许用户在属性图模型上定义特设（ad-hoc）遍历查询。一个属性图是一个有向图，其中的顶点和边可以拥有一组属性。图中的每个对象（点或边）都有一个唯一标识（<code class="docutils literal notranslate"><span class="pre">ID</span></code>）和一个类别名称（<code class="docutils literal notranslate"><span class="pre">label</span></code>）指定其类型或角色。每个属性是一个包含属性名和属性值的（键-值）对，其所属对象的 <code class="docutils literal notranslate"><span class="pre">ID</span></code> 加上属性名可以唯一确定属性值。</p>
 <a class="reference internal image-reference" href="../_images/property_graph.png"><img alt="电商属性图模型示例。" class="align-center" src="../_images/property_graph.png" style="width: 400px;" /></a>
 <p>上图展示了一个属性图模型示例。它包含 <code class="docutils literal notranslate"><span class="pre">user</span></code> （用户）、 <code class="docutils literal notranslate"><span class="pre">product</span></code> （商品）和 <code class="docutils literal notranslate"><span class="pre">address</span></code> （地址）三类点，它们通过 <code class="docutils literal notranslate"><span class="pre">order</span></code> （购买）、 <code class="docutils literal notranslate"><span class="pre">deliver</span></code> （递送）、 <code class="docutils literal notranslate"><span class="pre">belongs_to</span></code> （属于）和 <code class="docutils literal notranslate"><span class="pre">home_of</span></code> （家庭地址）四类边相互关联。图中虚线展示的一条（从起点到终点的）路径1–&gt;2–&gt;3，代表了一个用户（买家）”Tom”购买了一个卖家”Jack”提供的标价”$99”的商品”gift”。</p>
-</div>
-<div class="section" id="id9">
+</section>
+<section id="id9">
 <h3>查询语言<a class="headerlink" href="#id9" title="Permalink to this heading">#</a></h3>
 <p>一个Gremlin查询或图遍历的执行，可以用一组 <em>遍历器</em> （traversers）标识。它们依据Gremlin查询提供的用户指令在输入图中游走，最终所有停止的遍历器集合（包含它们的位置）代表了查询的结果。一个遍历器是Gremlin引擎处理的最小数据单元。每个遍历器都维护它对应的图中的当前位置，可以是被访问的点、边或属性。同时，可选的它也可以包含走过的完整路径历史甚至应用状态。</p>
 <p>Gremlin语言丰富灵活的表达能力主要来自于它对 <em>嵌套遍历</em> 的支持，它允许一个（子）查询或遍历被包含在另一个操作中，作为一个可调用的函数被包裹操作用于处理其每一个输入。函数的声明和作用都由包裹操作的语义决定。</p>
 <p>例如， <code class="docutils literal notranslate"><span class="pre">where</span></code> （过滤）操作可以包含一个嵌套查询，作为过滤条件谓词。而 <code class="docutils literal notranslate"><span class="pre">select</span></code> （映射）或 <code class="docutils literal notranslate"><span class="pre">order</span></code> （排序）操作各自可以通过嵌套查询讲每一个输入单独映射到从它开始的子遍历得到的结果，或依据结果值作为排序依据。</p>
 <p>嵌套遍历的另一个重要应用是表达循环，在Gremlin中通过 <code class="docutils literal notranslate"><span class="pre">repeat</span></code> （循环）操作和随后的 <code class="docutils literal notranslate"><span class="pre">until/times</span></code> （终止条件）表达。 <code class="docutils literal notranslate"><span class="pre">repeat</span></code> 操作包含一个嵌套遍历作为循环体，每一个输入都会重复送入这一子查询，直到终止条件满足。 <code class="docutils literal notranslate"><span class="pre">until</span></code> （条件终止）操作类似 <code class="docutils literal notranslate"><span class="pre">where</span></code> ，可以表达一个条件谓词，它被独立应用于循环体的每一个输出遍历器，满足条件的遍历器就会离开循环。另一个常用的 <code class="docutils literal notranslate"><span class="pre">times</span></code> （迭代轮次终止）操作可以利用一个整型常量 <code class="docutils literal notranslate"><span class="pre">k</span></code> 表达固定迭代轮次后终止循环。</p>
-</div>
-<div class="section" id="id10">
+</section>
+<section id="id10">
 <h3>一个例子<a class="headerlink" href="#id10" title="Permalink to this heading">#</a></h3>
 <p>下面展示了一个完整的Gremlin示例，它尝试从一个给定账户（account）点开始找到长度为 <code class="docutils literal notranslate"><span class="pre">k</span></code> 的有向环路。</p>
 <div class="highlight-java notranslate"><div class="highlight"><pre><span></span>g.V(&#39;account&#39;).has(&#39;id&#39;,&#39;2&#39;).as(&#39;s&#39;)
@@ -486,12 +487,12 @@ MathJax = {
 </pre></div>
 </div>
 <p>首先，输入图操作 <code class="docutils literal notranslate"><span class="pre">V</span></code> （包含一个 <code class="docutils literal notranslate"><span class="pre">has</span></code> 表达的简单过滤）返回图中满足条件的 <code class="docutils literal notranslate"><span class="pre">account</span></code> 点（即唯一标识为 <code class="docutils literal notranslate"><span class="pre">2</span></code> 的点）。紧随其后的 <code class="docutils literal notranslate"><span class="pre">as</span></code> 操作是一个 <em>修饰符</em> ，它不改变输入遍历器集合，但对其中每一个遍历器的当前位置，打上一个有名标签（这个例子中的 <code class="docutils literal notranslate"><span class="pre">s</span></code> ），从而今后可以引用。接下来，查询沿着 <code class="docutils literal notranslate"><span class="pre">transfer</span></code> 类型的出边循环游走 <code class="docutils literal notranslate"><span class="pre">k-1</span></code> 次（输出hops在[k-1, k)范围内的邻点），且每一次都过滤或跳过路径中的重复点（通过在 <code class="docutils literal notranslate"><span class="pre">with</span></code> 内配置 <code class="docutils literal notranslate"><span class="pre">SIMPLE</span></code> 选项实现）。最后， <code class="docutils literal notranslate"><span class="pre">where</span></code> 操作检查此时遍历路径的下一跳是否可以回到起点（用 <code class="docutils literal notranslate"><span class="pre">s</span></code> 指代），从而形成一个长度为 <code class="docutils literal notranslate"><span class="pre">k</span></code> 的环。对于检测到的环，查询还通过 <code class="docutils literal notranslate"><span class="pre">path</span></code> 操作展示每个遍历器的完成路径信息。 <code class="docutils literal notranslate"><span class="pre">limit</span></code> 操作类似SQL中的top K，它表达了查询结果仅需要包含一个这样的路径（如果有的话）。</p>
-</div>
-</div>
-<div class="section" id="gremlin-tinkerpop">
+</section>
+</section>
+<section id="gremlin-tinkerpop">
 <h2>Gremlin兼容性（对比TinkerPop）<a class="headerlink" href="#gremlin-tinkerpop" title="Permalink to this heading">#</a></h2>
 <p>GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实现了一个与TinkerPop 3.3和3.4版本兼容的 <em>Websockets</em> 服务接口。除此之外，我们扩展了一些语法糖来进一步引入一些简洁明了的expression表示。下面我们列出当前实现和Apache TinkerPop规范的主要差一点（其中一些差异会有机会消除、另一些是目前GraphScope定位的场景差异造成的不同设计选择）。</p>
-<div class="section" id="id11">
+<section id="id11">
 <h3>属性图模型约束<a class="headerlink" href="#id11" title="Permalink to this heading">#</a></h3>
 <p>目前的 GAIA 技术预览版利用了 <a class="reference external" href="https://github.com/v6d-io/v6d">Vineyard</a> 项目提供的分布式内存存储作为输入图，它支持一次载入 <em>不可修改</em> 的图模型数据，和图分片存储在分布式集群。当前设计有下面的一些限制：</p>
 <ul class="simple">
@@ -499,8 +500,8 @@ MathJax = {
 <li><p>主键约束：每个顶点类型需要包含一个用户可自定义的主键（属性），同时系统会为每个点和边对象，自动分配产生一个字符串类型的唯一标识（ID）。对于点来说，ID编码了类型（label）和用户自定义主键信息。</p></li>
 <li><p>每个点或边的属性，可以包含下列类型的属性值：<code class="docutils literal notranslate"><span class="pre">int</span></code>、<code class="docutils literal notranslate"><span class="pre">long</span></code>、<code class="docutils literal notranslate"><span class="pre">float</span></code>、<code class="docutils literal notranslate"><span class="pre">double</span></code>、<code class="docutils literal notranslate"><span class="pre">String</span></code>、<code class="docutils literal notranslate"><span class="pre">List&lt;int&gt;</span></code>、<code class="docutils literal notranslate"><span class="pre">List&lt;long&gt;</span></code> 和 <code class="docutils literal notranslate"><span class="pre">List&lt;String&gt;</span></code> 。</p></li>
 </ul>
-</div>
-<div class="section" id="id12">
+</section>
+<section id="id12">
 <h3>尚不支持的功能特性<a class="headerlink" href="#id12" title="Permalink to this heading">#</a></h3>
 <p>因为系统的全分布式可扩展架构，当前定位的场景和实现不支持下列功能：</p>
 <ul class="simple">
@@ -510,8 +511,8 @@ MathJax = {
 <li><p>事务。</p></li>
 <li><p>二级索引目前尚未支持（用户定义的主键会被自动索引）。</p></li>
 </ul>
-</div>
-<div class="section" id="id13">
+</section>
+<section id="id13">
 <h3>支持的Gremlin操作<a class="headerlink" href="#id13" title="Permalink to this heading">#</a></h3>
 <p>当前GraphScope支持下列Gremlin操作（和示例用法）：</p>
 <ul class="simple">
@@ -691,8 +692,8 @@ g.V().valueMap(&quot;name&quot;, &quot;age&quot;)
 <ul class="simple">
 <li><p>Limit（top K，即取前k个结果）。</p></li>
 </ul>
-</div>
-<div class="section" id="id14">
+</section>
+<section id="id14">
 <h3>已知限制<a class="headerlink" href="#id14" title="Permalink to this heading">#</a></h3>
 <p>GraphScope暂时不支持下列Gremlin操作（会逐步支持）：</p>
 <ul class="simple">
@@ -707,9 +708,9 @@ g.V().valueMap(&quot;name&quot;, &quot;age&quot;)
 <li><p>Cap（访问自定义状态）</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">GraphComputer</span></code> 接口（例如PageRank和ShortestPath）；这部分功能GraphScope通过图分析引擎和NetworkX兼容接口提供。</p></li>
 </ul>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
         </article>
       </div>
@@ -798,14 +799,11 @@ g.V().valueMap(&quot;name&quot;, &quot;age&quot;)
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

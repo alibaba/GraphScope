@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Design of GAE" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Design of GAE" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="design_of_gae.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Design of GAE - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="_static/logo-h.png" alt="Logo"/>
@@ -664,32 +665,32 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="design-of-gae">
+          <section class="tex2jax_ignore mathjax_ignore" id="design-of-gae">
 <h1>Design of GAE<a class="headerlink" href="#design-of-gae" title="Permalink to this heading">#</a></h1>
 <p>In GraphScope, Graph Analytics Engine (GAE) is responsible for handling various graph analytics algorithms. GAE in GraphScope derives from <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">GRAPE</a>, a graph processing system proposed on SIGMOD-2017. GRAPE differs from prior systems in its ability to parallelize sequential graph algorithms as a whole. Different from other parallel graph processing systems which need to recast the entire algorithm into a new model, in GRAPE, sequential algorithms can be easily “plugged into” with only minor changes and get parallelized to handle large graphs efficiently. In addition to the ease of programming, GRAPE is designed to be highly efficient and flexible, to cope the scale, variety and complexity from real-life graph applications.</p>
 <p>GAE has three main components: graph storage, execution framework and algorithm library. Next, we give an overview to each of them below.</p>
-<div class="section" id="graph-storage">
+<section id="graph-storage">
 <h2>Graph Storage<a class="headerlink" href="#graph-storage" title="Permalink to this heading">#</a></h2>
 <p>GAE as well as other execution engines of GraphScope work on top of a unified graph storage. The graph storage consists of different graph formats with different features, e.g., some support real time graph update while others treat graph data as immutable data once created; some store graph data in memory for better performance, while others support persistent storage. Although there exist diverse types of graph storage, GraphScope offers a unified interfaces for graph storage, and thus GAE does not care about how each type of graph storage is implemented. Please check out <a class="reference external" href="https://graphscope.io/docs/latest/unified_interfaces.html">our introduction for various graph storage</a> for more details.</p>
-</div>
-<div class="section" id="execution-framework">
+</section>
+<section id="execution-framework">
 <h2>Execution Framework<a class="headerlink" href="#execution-framework" title="Permalink to this heading">#</a></h2>
 <p>At the core of GAE is its execution framework, which has the following features in order to handle efficient graph analytics execution over distributed and large-scale graph data.</p>
-<div class="section" id="flexible-programming-models">
+<section id="flexible-programming-models">
 <h3>Flexible programming models<a class="headerlink" href="#flexible-programming-models" title="Permalink to this heading">#</a></h3>
 <p>There exist many programming models in various graph analytics systems, and GAE supports both PIE model vertex-centric model (Pregel). Different from other programming models which need to recast the entire algorithm into a new model, in PIE, the execution of existing sequential algorithms can be automatically parallelized with only minor changes. To be more specific, as shown in the following figure, in the PIE model, users only need to provide three functions, (1) PEval, a function for given a query, computes the answer on a local graph; (2) IncEval, an incremental function, computes changes to the old output by treating incoming messages as updates; and (3) Assemble, which collects partial answers, and combines them into a complete answer. After that, GAE auto-parallelizes the graph analytics tasks across a cluster of workers. More details of the PIE model can refer to <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">this</a>.</p>
 <p><img alt="Workflow of PIE" src="_images/pie.png" /></p>
-</div>
-<div class="section" id="multi-language-sdks">
+</section>
+<section id="multi-language-sdks">
 <h3>Multi-language SDKs<a class="headerlink" href="#multi-language-sdks" title="Permalink to this heading">#</a></h3>
 <p>Multi-language SDKs are provided by GAE. Users choose to write their own algorithms in either C++, Java or Python. With Python, users can still expect a high performance. GAE integrated a compiler built with Cython. It can generate efficient native code from Python algorithms behind the scenes, and dispatch the code to the GraphScope cluster for execution. The SDKs further lower the total cost of ownership of graph analytics.</p>
-</div>
-<div class="section" id="high-performance-runtime">
+</section>
+<section id="high-performance-runtime">
 <h3>High-performance runtime<a class="headerlink" href="#high-performance-runtime" title="Permalink to this heading">#</a></h3>
 <p>GAE achieves high performance through a highly optimized analytical runtime based on libgrape-lite. Many optimization techniques, such as pull/push dynamic switching, cache-efficient memory layout, and pipelining were employed in the runtime. It performs well in LDBC Graph Analytics Benchmark, and outperforms other state-of-the-art graph systems. GAE is designed to be highly efficient and flexible, to cope with the scale, variety and complexity from real-life graph analytics applications.</p>
-</div>
-</div>
-<div class="section" id="algorithm-library">
+</section>
+</section>
+<section id="algorithm-library">
 <h2>Algorithm Library<a class="headerlink" href="#algorithm-library" title="Permalink to this heading">#</a></h2>
 <p>GAE of GraphScope provides 20 graph analytics algorithms as built-in algorithms, and users can directly invoke them. The full lists of build-in algorithms are:</p>
 <ul class="simple">
@@ -715,8 +716,8 @@ MathJax = {
 <li><p><code class="docutils literal notranslate"><span class="pre">sampling_path()</span></code></p></li>
 </ul>
 <p>In addition, GraphScope is compatible with NetworkX APIs, and thus diverse kinds of <a class="reference external" href="https://networkx.org/documentation/stable/reference/algorithms/index.html">built-in algorithms in NetworkX</a> can also be directly invoked by users. In total, over 100 build-in graph analytical algorithms can be directly executed over GraphScope, without any developing effort.</p>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -778,14 +779,11 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/furo.js"></script>
-    <script src="_static/clipboard.min.js"></script>
-    <script src="_static/copybutton.js"></script>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

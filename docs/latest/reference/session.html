@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Session" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Session" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="reference/session.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="graphscope.session" href="generated/graphscope.session.html" /><link rel="prev" title="Python API Reference" href="python_index.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Session - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,9 +665,9 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="session">
+          <section id="session">
 <span id="id1"></span><h1>Session<a class="headerlink" href="#session" title="Permalink to this heading">#</a></h1>
-<div class="section" id="session-object">
+<section id="session-object">
 <h2>Session object<a class="headerlink" href="#session-object" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.Session">
@@ -746,7 +747,7 @@ close the session and release the resources, ignore all exceptions in close().</
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">addr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'eager'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'k8s'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preemptive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_namespace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_service_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'NodePort'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_registry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'registry.cn-hongkong.aliyuncs.com'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'graphscope'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'0.24.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_pull_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'IfNotPresent'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_pull_secrets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_coordinator_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_coordinator_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'512Mi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etcd_addrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etcd_listening_client_port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2379</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etcd_listening_peer_port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2380</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_vineyard_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vineyardcloudnative/vineyardd:latest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_vineyard_deployment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_vineyard_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_vineyard_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'512Mi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vineyard_shared_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_engine_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_engine_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1Gi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_mars_worker_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_mars_worker_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'4Mi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_mars_scheduler_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_mars_scheduler_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2Mi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_coordinator_pod_node_selector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_engine_pod_node_selector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_volumes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_waiting_for_delete</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_deploy_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'eager'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout_seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dangling_timeout_seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enabled_engines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'analytical,interactive,learning'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_mars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reconnect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hosts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['localhost']</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Construct a new GraphScope session.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> (<em>dict</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – The configuration dict or file about how to launch the GraphScope instance.
 For str, it will identify it as a path and read the configuration file to build a
@@ -934,7 +935,7 @@ to ensure there’s no such an active client.</p>
 </p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>TypeError</strong> – If the given argument combination is invalid and cannot be used to create
     a GraphScope session.</p>
 </dd>
@@ -954,10 +955,10 @@ to ensure there’s no such an active client.</p>
 <p>This method is used when a Session is constructed, which will immediately
 install self as a default session.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Raises</dt>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – If default session exist in current context.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context manager using this session as the default session.</p>
 </dd>
 </dl>
@@ -986,15 +987,15 @@ install self as a default session.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.g">
-<span class="sig-name descname"><span class="pre">g</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uint64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_oid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compact_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_perfect_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><span class="pre">GraphDAGNode</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.g"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.g" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">g</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uint64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_oid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compact_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_perfect_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><span class="pre">GraphDAGNode</span></a></span></span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.g"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.g" title="Permalink to this definition">#</a></dt>
 <dd><p>Construct a GraphScope graph object on the default session.</p>
 <p>It will launch and set a session to default when there is no default session found.</p>
 <p>See params detail in <a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Evaluated in eager mode.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1029,7 +1030,7 @@ on the kubernetes cluster.</p>
 <span class="sig-name descname"><span class="pre">graphlearn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.graphlearn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.graphlearn" title="Permalink to this definition">#</a></dt>
 <dd><p>Start a graph learning engine.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a>) – The graph to create learning instance.</p></li>
 <li><p><strong>nodes</strong> (<em>list</em><em>, </em><em>optional</em>) – list of node types that will be used for GNN
@@ -1096,22 +1097,22 @@ GNN training. The detail is explained in the examples below.</p></li>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a>) – The graph to create interactive instance.</p></li>
 <li><p><strong>params</strong> – A dict consists of configurations of GIE instance.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>InvalidArgumentError</strong> – <ul class="simple">
 <li><p><code class="code docutils literal notranslate"><span class="pre">graph</span></code> is not a property graph.</p></li>
 </ul>
 </p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>InteractiveQuery to execute gremlin and cypher queries.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="interactive.html#graphscope.interactive.query.InteractiveQuery" title="graphscope.interactive.query.InteractiveQuery"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.interactive.query.InteractiveQuery</span></code></a></p>
 </dd>
 </dl>
@@ -1138,13 +1139,13 @@ See more information in <code class="xref py py-meth docutils literal notranslat
 Notice, before calling this function, the KUBECONFIG environment variable
 should be set to the path of your kubeconfig file.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>path</strong> – The path in the pv to which the pvc is bound.</p></li>
 <li><p><strong>pvc_name</strong> – The name of the PVC.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>RuntimeError</strong> – If the cluster type is not Kubernetes.</p>
 </dd>
 </dl>
@@ -1170,7 +1171,7 @@ graphs.</p>
 the selected graphs. For more information, see the vineyardctl documentation.</p>
 <p><a class="reference external" href="https://github.com/v6d-io/v6d/tree/main/k8s/cmd#vineyardctl-deploy-backup-job">https://github.com/v6d-io/v6d/tree/main/k8s/cmd#vineyardctl-deploy-backup-job</a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph_ids</strong> – The list of graph IDs to store.
 Supported types:
@@ -1179,7 +1180,7 @@ Supported types:
 <li><p><strong>pvc_name</strong> – The name of the PVC.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>RuntimeError</strong> – If the cluster type is not Kubernetes.</p>
 </dd>
 </dl>
@@ -1187,15 +1188,11 @@ Supported types:
 
 </dd></dl>
 
-</div>
-<div class="section" id="session-functions">
+</section>
+<section id="session-functions">
 <h2>Session Functions<a class="headerlink" href="#session-functions" title="Permalink to this heading">#</a></h2>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.session.html#graphscope.session" title="graphscope.session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.session</span></code></a></p></td>
 <td><p>alias of <a class="reference internal" href="#graphscope.Session" title="graphscope.client.session.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></a></p></td>
@@ -1224,8 +1221,8 @@ Supported types:
 </tbody>
 </table>
 </div>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -1323,14 +1320,11 @@ Supported types:
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

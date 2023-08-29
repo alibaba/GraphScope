@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Glossary" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Glossary" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="overview/glossary.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Frequently Asked Questions" href="../frequently_asked_questions.html" /><link rel="prev" title="Positioning of GraphScope" href="positioning.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Glossary - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,63 +665,63 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="glossary">
+          <section class="tex2jax_ignore mathjax_ignore" id="glossary">
 <h1>Glossary<a class="headerlink" href="#glossary" title="Permalink to this heading">#</a></h1>
 <p>This page lists all the glossary used in the GraphScope project.</p>
-<div class="section" id="flash">
+<section id="flash">
 <h2>FLASH<a class="headerlink" href="#flash" title="Permalink to this heading">#</a></h2>
 <p>FLASH is a distributed programming model for programming a broad spectrum of graph algorithms, including clustering, centrality, traversal, matching, mining, etc. FLASH follows the vertex-centric philosophy, but it moves a step further for stronger expressiveness by providing flexible control flow, the operations on arbitrary vertex sets and beyond-neighborhood communication. FLASH makes diverse complex graph algorithms easy to write at the distributed runtime. The algorithms expressed in FLASH take only a few lines of code, and provide a satisfactory performance.</p>
 <p>FLASH is planned to be integrated to GraphScope, as a module in the analytical engine(GAE).</p>
 <p>Learn more: <a class="reference internal" href="#"><span class="xref myst">Paper on ICDE2023</span></a>, <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/flash.html">Doc</a></p>
-</div>
-<div class="section" id="grape">
+</section>
+<section id="grape">
 <h2>GRAPE<a class="headerlink" href="#grape" title="Permalink to this heading">#</a></h2>
 <p>the code name of analytical engine in GraphScope. It was first indroduced in the SIGMOD2017 paper, represents <u>GRA</u>ph <u>P</u>arallel processing <u>E</u>ngine. The analytical engine inherits the design proposed in this paper.</p>
 <p>The core part of GRAPE is opensourced at <a class="reference external" href="https://github.com/alibaba/libgrape-lite">https://github.com/alibaba/libgrape-lite</a>, which is a dependency and serves as the analytical engine in GraphScope.</p>
 <p>Read more: <a class="reference external" href="https://homepages.inf.ed.ac.uk/wenfei/papers/sigmod17-GRAPE.pdf">Best Paper on SIGMOD2017</a>, <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/design_of_gae.html">Design of GAE</a></p>
-</div>
-<div class="section" id="gae">
+</section>
+<section id="gae">
 <h2>GAE<a class="headerlink" href="#gae" title="Permalink to this heading">#</a></h2>
 <p>GAE is short for GraphScope Analytical Engine, a.k.a., GRAPE.</p>
-</div>
-<div class="section" id="gart">
+</section>
+<section id="gart">
 <h2>GART<a class="headerlink" href="#gart" title="Permalink to this heading">#</a></h2>
 <p>GART is short for <u>G</u>raph <u>A</u>nalysis and <u>R</u>elational <u>T</u>ransactions. It is a loosely-coupled framework that can be deployed to bridge an existing relational OLTP system (e.g., MySQL) with the graph-specific system GraphScope. In a nutshell, GART exploits the high availability mechanism of modern OLTP systems, and leverages write-ahead logs (WALs) of OLTP systems to extract graphs on which to perform graph-related workloads over execution engines of GraphScope. Instead of offline data migration, GART reuses WALs to replay graph data online with multi-version support.</p>
 <p>GART is planned to be integrated to GraphScope, in the storage layer.</p>
-</div>
-<div class="section" id="grin">
+</section>
+<section id="grin">
 <h2>GRIN<a class="headerlink" href="#grin" title="Permalink to this heading">#</a></h2>
 <p>GRIN is a proposed standard <u>G</u>raph <u>R</u>etrieval <u>IN</u>terface in GraphScope. The goal of GRIN is to provide a common way for the graph computing engines to retrieve graph data stored in different storage engines in GraphScope, and to simplify the integration of these engines with each other.</p>
 <p>GRIN is defined in C, which makes it portable to systems written in different programming languages, such as C++, Rust and Java. It provides a set of common operations and data structure handlers that can be used to access graph data, regardless of the underlying storage engine.</p>
 <p>Repo: <a class="reference external" href="https://github.com/graphscope/grin">https://github.com/graphscope/grin</a></p>
-</div>
-<div class="section" id="graphar">
+</section>
+<section id="graphar">
 <h2>GraphAr<a class="headerlink" href="#graphar" title="Permalink to this heading">#</a></h2>
 <p>GraphAr (short for <u>Graph</u> <u>Ar</u>chive) is a project that aims to make it easier for diverse applications and systems (in-memory and out-of-core storages, databases, graph computing systems, and interactive graph query frameworks) to build and access graph data conveniently and efficiently.</p>
 <p>Repo: <a class="reference external" href="https://github.com/alibaba/GraphAr">https://github.com/alibaba/GraphAr</a></p>
-</div>
-<div class="section" id="groot">
+</section>
+<section id="groot">
 <h2>Groot<a class="headerlink" href="#groot" title="Permalink to this heading">#</a></h2>
 <p>Groot is the code name of the persistent storage in GraphScope. It was named after the tree Groot in the movie “Guardians of the Galaxy”. The name “g-root” also indicates the fundamental role of the storage component in the graph system.</p>
 <p><a class="reference external" href="https://graphscope.io/docs/latest/storage_engine/groot.html">Read more</a></p>
-</div>
-<div class="section" id="gum">
+</section>
+<section id="gum">
 <h2>GUM<a class="headerlink" href="#gum" title="Permalink to this heading">#</a></h2>
 <p>GUM is a highly efficient multi-GPU graph analytics engine that employs a work-stealing mechanism to tackle both dynamic load imbalances and long-tail issues. It does so by utilizing the high-speed NVLinks found in modern multi-GPU servers. Additionally, GUM is acutely aware of the asymmetric topology of GPU connections and generates an optimal task-stealing plan from a holistic perspective during each iteration. With this innovative approach, GUM can offer a significant order-of-magnitude improvement in performance.</p>
 <p>GUM serves as an GPU-speedup module for GRAPE when applicable.</p>
 <p>Read more: <a class="reference internal" href="#"><span class="xref myst">Paper on ICDE2023</span></a>, <a class="reference external" href="https://github.com/alibaba/libgrape-lite/tree/gum">Code</a></p>
-</div>
-<div class="section" id="maxgraph-deprecated">
+</section>
+<section id="maxgraph-deprecated">
 <h2>MaxGraph (deprecated)<a class="headerlink" href="#maxgraph-deprecated" title="Permalink to this heading">#</a></h2>
 <p>MaxGraph is the deprecated interactive engine in GraphScope. It was replaced by a new designed engine GAIA with multiple query language (e.g., Gremlin/Cypher…) support.</p>
-</div>
-<div class="section" id="vineyard-or-v6d">
+</section>
+<section id="vineyard-or-v6d">
 <h2>Vineyard, or v6d<a class="headerlink" href="#vineyard-or-v6d" title="Permalink to this heading">#</a></h2>
 <p>Vineyard is the code name of the immutable memory management. Its name suggests it was a underlying component of GRAPE.</p>
 <p>Vineyard (v6d) is an innovative in-memory immutable data manager that offers out-of-the-box high-level abstractions and zero-copy in-memory sharing for distributed data in various big data tasks, such as graph analytics (e.g., GraphScope), numerical computing (e.g., Mars), and machine learning. It is a CNCF sandbox project.</p>
 <p>Repo: <a class="reference external" href="https://github.com/v6d-io/v6d">https://github.com/v6d-io/v6d</a></p>
-</div>
-<div class="section" id="gie">
+</section>
+<section id="gie">
 <h2>GIE<a class="headerlink" href="#gie" title="Permalink to this heading">#</a></h2>
 <p>GraphScope Interactive Engine, or GIE for short, utilizes Gaia (or Pegasus) to enable parallel execution in distribution.
 It offers storage options consisting of the immutable, in-memory <a class="reference internal" href="../interactive_engine/deployment.html"><span class="std std-doc">v6d</span></a>
@@ -729,8 +730,8 @@ and the mutable, persistent <a class="reference internal" href="../storage_engin
 <a class="reference external" href="https://opencypher.org/">Neo4j’s openCypher</a> to come soon. The capabilities of GIE are amplified by
 a sophisticated <a class="reference internal" href="../interactive_engine/design_of_gie.html"><span class="std std-doc">Intermediate Representation (IR) Layer</span></a> that
 dissociates the query languages from the computing engines and stores.</p>
-</div>
-<div class="section" id="gaia">
+</section>
+<section id="gaia">
 <h2>GAIA<a class="headerlink" href="#gaia" title="Permalink to this heading">#</a></h2>
 <p>Gaia is a distributed data-parallel compute engine based on the cyclic dataflow computation model, which
 has been employed by GIE to support large-scale interactive graph queries.
@@ -742,22 +743,22 @@ completely hidden from the users. Scope is a unique concept of Gaia to handle co
 such as loop and conditional. In addition, it is also the key to many application-level primitives,
 e.g. correlated subtask, as well as advanced scheduling techniques, e.g. early-stop mechanism.</p>
 <p>Read more: <a class="reference external" href="https://www.usenix.org/system/files/nsdi21-qian.pdf">Paper on NSDI 2021</a></p>
-</div>
-<div class="section" id="pegasus">
+</section>
+<section id="pegasus">
 <h2>Pegasus<a class="headerlink" href="#pegasus" title="Permalink to this heading">#</a></h2>
 <p>A legacy name of Gaia, for which we use Gaia and Pegasus interchangeably in the project.</p>
-</div>
-<div class="section" id="ingress">
+</section>
+<section id="ingress">
 <h2>Ingress<a class="headerlink" href="#ingress" title="Permalink to this heading">#</a></h2>
 <p>Ingress is an automated system for incremental graph processing. It is able to incrementalize batch vertex-centric algorithms into their incremental counterparts as a whole, without the need of redesigned logic or data structures from users. Underlying Ingress is an automated incrementalization framework equipped with four different memoization policies, to support all kinds of vertex-centric computations with optimized memory utilization.</p>
 <p>Ingress is planned to be integrated into GraphScope, as an incrementalization module in the analytical engine(GAE).</p>
 <p>Read more: <a class="reference external" href="http://vldb.org/pvldb/vol14/p1613-gong.pdf">Paper on VLDB2021</a></p>
-</div>
-<div class="section" id="pie-model">
+</section>
+<section id="pie-model">
 <h2>PIE-model<a class="headerlink" href="#pie-model" title="Permalink to this heading">#</a></h2>
 <p>The subgraph centric programming model proposed in GRAPE, which is short for <u>P</u>artial evaluation, <u>I</u>ncremental evaluation and assembl<u>E</u>, the three core functions to fulfill in GRAPE.</p>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -844,14 +845,11 @@ e.g. correlated subtask, as well as advanced scheduling techniques, e.g. early-s
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

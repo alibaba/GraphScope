@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="GRIN: Graph Retrieval INterface" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="GRIN: Graph Retrieval INterface" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="storage_engine/grin.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Groot: Persistent Graph Store" href="groot.html" /><link rel="prev" title="Dev and Test" href="../learning_engine/dev_and_test.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>GRIN: Graph Retrieval INterface - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,7 +665,7 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="grin-graph-retrieval-interface">
+          <section class="tex2jax_ignore mathjax_ignore" id="grin-graph-retrieval-interface">
 <h1>GRIN: Graph Retrieval INterface<a class="headerlink" href="#grin-graph-retrieval-interface" title="Permalink to this heading">#</a></h1>
 <p>GRIN is a proposed standard graph retrieval interface in GraphScope. Its goal is to provide a common way for graph computing engines to retrieve graph data stored in different storage engines within GraphScope, and to simplify the integration of these engines with each other.</p>
 <p>GRIN is defined in C, making it portable to systems written in different programming languages, such as C++, Rust, and Java. It provides a set of common operations and data structure handlers that can be used to access graph data, regardless of the underlying storage engine.</p>
@@ -675,7 +676,7 @@ MathJax = {
 </ul>
 <p>The latest version of headers can be found in <a class="reference external" href="https://github.com/GraphScope/GRIN">GRIN</a>.
 A Vineyard implementation for both computing and storage can be found in <a class="reference external" href="https://github.com/v6d-io/v6d/tree/dev/grin/modules/graph/grin">Vineyard</a>.</p>
-<div class="section" id="motivations">
+<section id="motivations">
 <h2>Motivations<a class="headerlink" href="#motivations" title="Permalink to this heading">#</a></h2>
 <p>The motivations behind GRIN are driven by the need for a common standard for accessing graph data for the computing engines of GraphScope. There are several factors that have contributed to this need:</p>
 <ol class="arabic simple">
@@ -684,8 +685,8 @@ A Vineyard implementation for both computing and storage can be found in <a clas
 <li><p>Growing demand for large-scale graph processing: As the volume of data being generated increases, there is a growing demand for graph processing systems that can efficiently analyze large-scale graph data. A common standard for accessing graph data could help accelerate the development of new features for engines in GraphScope.</p></li>
 </ol>
 <p>By defining the GRIN interfaces in C, it can be easily integrated with various programming languages, including Java, Python, and Rust, using foreign function interfaces (FFIs) that enable these languages to call C functions. Moreover, GRIN becomes a language-agnostic standard that can be utilized across different programming environments without requiring each environment to have its own implementation of the standard. This greatly simplifies the development and maintenance of graph computing systems relying on GRIN, as it allows developers to use their preferred programming languages and tools while still being able to access and process graph data using a common standard.</p>
-</div>
-<div class="section" id="unified-graph-retrieval">
+</section>
+<section id="unified-graph-retrieval">
 <h2>Unified Graph Retrieval<a class="headerlink" href="#unified-graph-retrieval" title="Permalink to this heading">#</a></h2>
 <p>As previously mentioned, GRIN offers computing engines a consistent method for accessing graphs stored in various storage engines through a set of common operations for graph traversal, data retrieval, and conditional filtering. These operations are defined as C functions, and their return values and parameters are typically handlers for graph concepts, such as vertices and edges.</p>
 <p>Here is an example showing how to handle a graph query using GRIN APIs. The data types with the prefix <code class="docutils literal notranslate"><span class="pre">GRIN_</span></code> are handlers, while the functions with the prefix <code class="docutils literal notranslate"><span class="pre">grin_</span></code> are the APIs in GRIN. Moreover, macros that start with <code class="docutils literal notranslate"><span class="pre">GRIN_</span></code> are provided by GRIN to reflect storage features. Each storage engine that implements GRIN APIs can set up these macros based on their own features, such as graph partition strategies and list retrieval styles. The storage provider for this example is Vineyard.</p>
@@ -760,11 +761,11 @@ A Vineyard implementation for both computing and storage can be found in <a clas
 <span class="w">    </span><span class="p">}</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="grin-concepts">
+</section>
+<section id="grin-concepts">
 <h2>GRIN Concepts<a class="headerlink" href="#grin-concepts" title="Permalink to this heading">#</a></h2>
 <p>This section explains the key concepts in GRIN to help users understand GRIN APIs more easily.</p>
-<div class="section" id="predefined-macros">
+<section id="predefined-macros">
 <h3>Predefined Macros<a class="headerlink" href="#predefined-macros" title="Permalink to this heading">#</a></h3>
 <p>GRIN provides a set of predefined C macros for storage engines to describe their features. When a storage engine implements the GRIN APIs, it should first set up the macros to present its features such as partition strategies and enabled indices.</p>
 <p>The benefit is two-fold:</p>
@@ -786,11 +787,11 @@ A Vineyard implementation for both computing and storage can be found in <a clas
 <li><p>GRIN provides different APIs under different assumptions. Suppose only 3 is defined; it means that vertices of certain types have all the properties locally complete, regardless of whether the vertex is master or mirror. In this case, GRIN provides an API to return these locally complete vertex types.</p></li>
 <li><p>In the case that none of these four macros is defined, GRIN will provide a per-vertex API to tell whether the vertex property is locally complete.</p></li>
 </ul>
-</div>
-<div class="section" id="partition-strategy">
+</section>
+<section id="partition-strategy">
 <h3>Partition Strategy<a class="headerlink" href="#partition-strategy" title="Permalink to this heading">#</a></h3>
 <p>GRIN provides two types (i.e., edge-cut and vertex-cut) of predefined partition strategies. Each strategy can be seen as a set of granular predefined macros based on the common understanding of the partition strategy. For storages using hybrid partition strategy, developers can set up the granular macros one after another.</p>
-<div class="section" id="edge-cut-partition-strategy">
+<section id="edge-cut-partition-strategy">
 <h4>Edge-cut Partition Strategy<a class="headerlink" href="#edge-cut-partition-strategy" title="Permalink to this heading">#</a></h4>
 <ul class="simple">
 <li><p>Vertex data is locally complete for master vertices.</p></li>
@@ -799,8 +800,8 @@ A Vineyard implementation for both computing and storage can be found in <a clas
 <li><p>Vertex properties are locally complete for master vertices.</p></li>
 <li><p>Edge properties are locally complete for all edges.</p></li>
 </ul>
-</div>
-<div class="section" id="vertex-cut-partition-strategy">
+</section>
+<section id="vertex-cut-partition-strategy">
 <h4>Vertex-cut Partition Strategy<a class="headerlink" href="#vertex-cut-partition-strategy" title="Permalink to this heading">#</a></h4>
 <ul class="simple">
 <li><p>Vertex data is locally complete for all vertices.</p></li>
@@ -809,9 +810,9 @@ A Vineyard implementation for both computing and storage can be found in <a clas
 <li><p>Vertex properties are locally complete for all vertices.</p></li>
 <li><p>Edge properties are locally complete for all edges.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="property-graph-model">
+</section>
+</section>
+<section id="property-graph-model">
 <h3>Property Graph Model<a class="headerlink" href="#property-graph-model" title="Permalink to this heading">#</a></h3>
 <p>GRIN makes the following assumptions for its property graph model.</p>
 <ul class="simple">
@@ -820,11 +821,11 @@ A Vineyard implementation for both computing and storage can be found in <a clas
 <li><p>Properties are bound to vertex and edge types, but some properties may have the same name.</p></li>
 <li><p>Labels can be assigned to vertices and edges (<strong>NOT</strong> their types) primarily for query filtering, and labels have no properties.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="implementation-guideline">
+</section>
+</section>
+<section id="implementation-guideline">
 <h2>Implementation Guideline<a class="headerlink" href="#implementation-guideline" title="Permalink to this heading">#</a></h2>
-<div class="section" id="for-computing-engine">
+<section id="for-computing-engine">
 <h3>For computing engine<a class="headerlink" href="#for-computing-engine" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Get GRIN APIs from <a class="reference external" href="https://github.com/GraphScope/GRIN">GRIN</a></p></li>
@@ -833,8 +834,8 @@ A Vineyard implementation for both computing and storage can be found in <a clas
 <li><p>Write or modify apps using the wrapper class (e.g., <code class="docutils literal notranslate"><span class="pre">grin_fragment</span></code>).</p></li>
 <li><p>Find a storage implementation to set up an end-to-end test.</p></li>
 </ul>
-</div>
-<div class="section" id="for-storage-engine">
+</section>
+<section id="for-storage-engine">
 <h3>For storage engine<a class="headerlink" href="#for-storage-engine" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Make a grin folder in your system, and navigate into the grin folder.</p></li>
@@ -853,29 +854,29 @@ discuss with GRIN designers.</p></li>
 <li><p>Write a storage-specific method to get a graph handler from your storage.</p></li>
 <li><p>Run a graph traversal test.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="design-details">
+</section>
+</section>
+<section id="design-details">
 <h2>Design Details<a class="headerlink" href="#design-details" title="Permalink to this heading">#</a></h2>
-<div class="section" id="handler">
+<section id="handler">
 <h3>Handler<a class="headerlink" href="#handler" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>GRIN provides a series of handlers for graph concepts, such as vertex, edge and graph itself.</p></li>
 <li><p>Since almost everything in GRIN are handlers except of only a few string names, the type for a graph concept and its handler is always mixed-used in GRIN.</p></li>
 <li><p>For example, GRIN uses the type Vertex to represent the type of a vertex handler, instead of using VertexHandler for clean code.</p></li>
 </ul>
-</div>
-<div class="section" id="edge">
+</section>
+<section id="edge">
 <h3>Edge<a class="headerlink" href="#edge" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>For any directed edge <code class="docutils literal notranslate"><span class="pre">(u,</span> <span class="pre">v)</span></code> where the direction goes from <code class="docutils literal notranslate"><span class="pre">u</span></code> to <code class="docutils literal notranslate"><span class="pre">v</span></code>, <code class="docutils literal notranslate"><span class="pre">u</span></code> is the source vertex, whereas <code class="docutils literal notranslate"><span class="pre">v</span></code> is the destination vertex.</p></li>
 </ul>
-</div>
-<div class="section" id="list">
+</section>
+<section id="list">
 <h3>List<a class="headerlink" href="#list" title="Permalink to this heading">#</a></h3>
 <p>GRIN provides two alternative approaches, namely array-style retrieval and iterator, for list retrieval of <code class="docutils literal notranslate"><span class="pre">GRIN_VERTEX_LIST</span></code>, <code class="docutils literal notranslate"><span class="pre">GRIN_EDGE_LIST</span></code>, and <code class="docutils literal notranslate"><span class="pre">GRIN_ADJACENT_LIST</span></code>.</p>
 <p>For other schema-level lists like <code class="docutils literal notranslate"><span class="pre">GRIN_VERTEX_TYPE_LIST</span></code> or <code class="docutils literal notranslate"><span class="pre">GRIN_PARTITION_LIST</span></code>, GRIN generally assume the array-style list retrieval, and does <strong>NOT</strong> provide a <code class="docutils literal notranslate"><span class="pre">GRIN_ENABLE_</span></code> macro for these lists.</p>
-<div class="section" id="array-style-retrieval">
+<section id="array-style-retrieval">
 <h4>Array-style Retrieval<a class="headerlink" href="#array-style-retrieval" title="Permalink to this heading">#</a></h4>
 <ul>
 <li><p>The array-style retrieval of a list handler is available to the user only if the storage can provide the size of the list, and an element retrieval API by position (i.e., index of array). Otherwise, the storage should provide a list iterator, see next section.</p></li>
@@ -904,8 +905,8 @@ discuss with GRIN designers.</p></li>
 </div>
 </li>
 </ul>
-</div>
-<div class="section" id="list-iterator">
+</section>
+<section id="list-iterator">
 <h4>List Iterator<a class="headerlink" href="#list-iterator" title="Permalink to this heading">#</a></h4>
 <ul>
 <li><p>A list iterator handler is provided to caller if the list size is unknown or for sequential scan efficiency.</p></li>
@@ -936,9 +937,9 @@ discuss with GRIN designers.</p></li>
 </div>
 </li>
 </ul>
-</div>
-</div>
-<div class="section" id="property">
+</section>
+</section>
+<section id="property">
 <h3>Property<a class="headerlink" href="#property" title="Permalink to this heading">#</a></h3>
 <ul>
 <li><p>Properties are bound to vertex and edge types. It means even some properties may have the same name, as long as they are bound to different vertex or edge types, GRIN will provide distinct handlers for these properties. This is
@@ -968,23 +969,23 @@ different data types in the underlying storage for efficiency concerns (e.g., sh
 </div>
 </li>
 </ul>
-</div>
-<div class="section" id="label">
+</section>
+<section id="label">
 <h3>Label<a class="headerlink" href="#label" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>GRIN does <strong>NOT</strong> distinguish label on vertices and edges, that means a vertex and an edge may have a same label.</p></li>
 <li><p>However the storage can tell GRIN whether labels are enabled in vertices or edges seperatedly with macros of <code class="docutils literal notranslate"><span class="pre">WITH_VERTEX_LABEL</span></code> and <code class="docutils literal notranslate"><span class="pre">WITH_EDGE_LABEL</span></code> respectively.</p></li>
 </ul>
-</div>
-<div class="section" id="order">
+</section>
+<section id="order">
 <h3>Order<a class="headerlink" href="#order" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>GRIN provides sorted vertex list assumptions.</p></li>
 <li><p>GRIN also assumes that if a vertex list sorted, then there is complete ordering for the vertices from the list.</p></li>
 <li><p>Sorted vertex list faciliates computations like vertex list join and data structures like vertex array which uses vertex as the index of the array.</p></li>
 </ul>
-</div>
-<div class="section" id="reference">
+</section>
+<section id="reference">
 <h3>Reference<a class="headerlink" href="#reference" title="Permalink to this heading">#</a></h3>
 <ul>
 <li><p>GRIN introduces the reference concept in partitioned graph. It stands for the reference of an instance that can
@@ -1023,8 +1024,8 @@ be recognized in partitions other than the current partition where the instance 
 </div>
 </li>
 </ul>
-</div>
-<div class="section" id="master-and-mirror">
+</section>
+<section id="master-and-mirror">
 <h3>Master and Mirror<a class="headerlink" href="#master-and-mirror" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Master &amp; mirror vertices are the concept borrowed from vertexcut partition strategy. When a vertex is recognized in
@@ -1032,8 +1033,8 @@ serveral partitions, GRIN refers one of them as the master vertex while others a
 aggregation purpose to share a common centural node for every one.</p></li>
 <li><p>While in edgecut partition, the concept becomes inner &amp; outer vertices. GRIN uses master &amp; mirror vertices to represent inner &amp; outer vertices respectively to unify these concepts.</p></li>
 </ul>
-</div>
-<div class="section" id="local-complete">
+</section>
+<section id="local-complete">
 <h3>Local Complete<a class="headerlink" href="#local-complete" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>The concept of local complete is with repect to whether a graph component adhere to a vertex or an edge is locally complete within the partition.</p></li>
@@ -1043,17 +1044,17 @@ aggregation purpose to share a common centural node for every one.</p></li>
 may <strong>NOT</strong> contain all the data or properties locally.</p></li>
 <li><p>GRIN currently provides vertex-level/edge-level local complete judgement APIs, while the introduction of type-level judgement APIs is open for discussion.</p></li>
 </ul>
-</div>
-<div class="section" id="natural-id-trait">
+</section>
+<section id="natural-id-trait">
 <h3>Natural ID Trait<a class="headerlink" href="#natural-id-trait" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Concepts represent the schema of the graph, such as vertex type and properties bound to a certain edge type, are usually numbered naturally from <code class="docutils literal notranslate"><span class="pre">0</span></code> to its <code class="docutils literal notranslate"><span class="pre">num</span> <span class="pre">-</span> <span class="pre">1</span></code> in many storage engines. To facilitate further optimizations
 in the upper computing engines, GRIN provides the natural number ID trait. A storage can provide such a trait if
 it also uses the natural numbering for graph schema concepts.</p></li>
 </ul>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
         </article>
       </div>
@@ -1159,14 +1160,11 @@ it also uses the natural numbering for graph schema concepts.</p></li>
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

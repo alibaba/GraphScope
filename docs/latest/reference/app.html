@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Analytical App" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Analytical App" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="reference/app.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="graphscope.framework.app.load_app" href="generated/graphscope.framework.app.load_app.html" /><link rel="prev" title="Graph" href="graph.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Analytical App - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,9 +665,9 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="analytical-app">
+          <section id="analytical-app">
 <span id="app"></span><h1>Analytical App<a class="headerlink" href="#analytical-app" title="Permalink to this heading">#</a></h1>
-<div class="section" id="appassets">
+<section id="appassets">
 <h2>AppAssets<a class="headerlink" href="#appassets" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.framework.app.AppAssets">
@@ -682,7 +683,7 @@ and its type (one of <cite>cpp_pie</cite>, <cite>cpp_pregel</cite>, <cite>cython
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmake_extra_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Init assets of the algorithm.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>algo</strong> (<em>str</em>) – Represent specific algo inside resource.</p></li>
 <li><p><strong>context</strong> (<em>str</em>) – Type of context that hold the calculation results.</p></li>
@@ -699,10 +700,10 @@ Defaults to None.</p></li>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">algo</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.algo" title="Permalink to this definition">#</a></dt>
 <dd><p>Algorithm name, e.g. sssp, pagerank.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Algorithm name of this asset.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
 </dd>
 </dl>
@@ -713,10 +714,10 @@ Defaults to None.</p></li>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">context_type</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.context_type" title="Permalink to this definition">#</a></dt>
 <dd><p>Context type, e.g. vertex_property, labeled_vertex_data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Type of the app context.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
 </dd>
 </dl>
@@ -727,10 +728,10 @@ Defaults to None.</p></li>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gar</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.gar" title="Permalink to this definition">#</a></dt>
 <dd><p>Gar resource.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>gar resource of this asset.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>bytes</p>
 </dd>
 </dl>
@@ -741,10 +742,10 @@ Defaults to None.</p></li>
 <span class="sig-name descname"><span class="pre">is_compatible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets.is_compatible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets.is_compatible" title="Permalink to this definition">#</a></dt>
 <dd><p>Determine if this algorithm can run on this type of graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDAGNode</span></code>) – A graph instance.</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>InvalidArgumentError</strong> – <ul>
 <li><p>App is not compatible with graph</p></li>
@@ -765,10 +766,10 @@ Defaults to None.</p></li>
 <dd><p>Generate a signature of the app assets by its algo name (and gar resources).</p>
 <p>Used to uniquely identify a app assets.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>signature of this assets</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
 </dd>
 </dl>
@@ -779,10 +780,10 @@ Defaults to None.</p></li>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">type</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.type" title="Permalink to this definition">#</a></dt>
 <dd><p>Algorithm type, one of <cite>cpp_pie</cite>, <cite>cpp_pregel</cite>, <cite>cython_pie</cite>, <cite>java_pie</cite> or <cite>cython_pregel</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Algorithm type of this asset.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
 </dd>
 </dl>
@@ -790,8 +791,8 @@ Defaults to None.</p></li>
 
 </dd></dl>
 
-</div>
-<div class="section" id="javaapp">
+</section>
+<section id="javaapp">
 <h2>JavaApp<a class="headerlink" href="#javaapp" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.analytical.app.JavaApp">
@@ -816,7 +817,7 @@ session is created.</p>
 <dd><p>Init JavaApp with the full path of your <cite>jar</cite> file and the fully-qualified name of your
 app class.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>full_jar_path</strong> (<em>str</em>) – The path where the jar file exists.</p></li>
 <li><p><strong>java_app_class</strong> (<em>str</em>) – the fully-qualified name of your app class.</p></li>
@@ -830,10 +831,10 @@ app class.</p>
 <span class="sig-name descname"><span class="pre">is_compatible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp.is_compatible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp.is_compatible" title="Permalink to this definition">#</a></dt>
 <dd><p>Determine if this algorithm can run on this type of graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDAGNode</span></code>) – A graph instance.</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>InvalidArgumentError</strong> – <ul>
 <li><p>App is not compatible with graph</p></li>
@@ -854,10 +855,10 @@ app class.</p>
 <dd><p>Generate a signature of the app assets by its algo name (and gar resources).</p>
 <p>Used to uniquely identify a app assets.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>signature of this assets</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
 </dd>
 </dl>
@@ -865,8 +866,8 @@ app class.</p>
 
 </dd></dl>
 
-</div>
-<div class="section" id="app-object">
+</section>
+<section id="app-object">
 <h2>App object<a class="headerlink" href="#app-object" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.framework.app.AppDAGNode">
@@ -907,15 +908,11 @@ previous ones.</p>
 
 </dd></dl>
 
-</div>
-<div class="section" id="functions">
+</section>
+<section id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">#</a></h2>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.framework.app.load_app.html#graphscope.framework.app.load_app" title="graphscope.framework.app.load_app"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.framework.app.load_app</span></code></a>([gar, ...])</p></td>
 <td><p>Load an app from gar.</p></td>
@@ -923,8 +920,8 @@ previous ones.</p>
 </tbody>
 </table>
 </div>
-</div>
-<div class="section" id="builtin-apps">
+</section>
+<section id="builtin-apps">
 <h2>BuiltIn apps<a class="headerlink" href="#builtin-apps" title="Permalink to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.attribute_assortativity_coefficient">
@@ -933,16 +930,16 @@ previous ones.</p>
 <p>Assortativity measures the similarity of connections in the graph with
 respect to the given attribute.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>attribute</strong> (<em>str</em>) – Node attribute key.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Assortativity of graph for given attribute</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>r (float)</p>
 </dd>
 </dl>
@@ -971,16 +968,16 @@ of the specified attribute.</p>
 <p>Assortativity measures the similarity of connections
 in the graph with respect to the given numeric attribute.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>attribute</strong> (<em>str</em>) – Node attribute key.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Assortativity of graph for given attribute</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>r (float)</p>
 </dd>
 </dl>
@@ -998,12 +995,13 @@ in the graph with respect to the given numeric attribute.</p>
 <p>This computes Eq. (21) in Ref. <a href="#id10"><span class="problematic" id="id2">[1]_</span></a> , for the mixing matrix
 of the specified attribute.</p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id3"><span class="brackets">1</span></dt>
-<dd><p>M. E. J. Newman, Mixing patterns in networks
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id3" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>M. E. J. Newman, Mixing patterns in networks
 Physical Review E, 67 026126, 2003</p>
-</dd>
-</dl>
+</aside>
+</aside>
 </dd></dl>
 
 <dl class="py function">
@@ -1053,13 +1051,14 @@ If None, then each edge has weight 1.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
-<dl class="footnote brackets">
-<dt class="label" id="id5"><span class="brackets">1</span></dt>
-<dd><p>A. Barrat, M. Barthélemy, R. Pastor-Satorras, and A. Vespignani,
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id5" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>A. Barrat, M. Barthélemy, R. Pastor-Satorras, and A. Vespignani,
 “The architecture of complex weighted networks”.
 PNAS 101 (11): 3747–3752 (2004).</p>
-</dd>
-</dl>
+</aside>
+</aside>
 </div></blockquote>
 </dd></dl>
 
@@ -1075,17 +1074,17 @@ PNAS 101 (11): 3747–3752 (2004).</p>
 <p>where <cite>V</cite> is the set of nodes in <cite>G</cite>, <cite>d(s, t)</cite> is the shortest path from <cite>s</cite> to <cite>t</cite>,
 and <cite>n</cite> is the number of nodes in <cite>G</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> ((<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>): A simple graph.) – </p></li>
 <li><p><strong>weight</strong> (<em>(</em><em>str</em><em>, </em><em>optional</em><em>)</em><em>: The edge data key corresponding to the edge weight.</em>) – Note that property under multiple labels should have the consistent index.
 Defaults to None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>r</strong> – The average shortest path length.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -1106,7 +1105,7 @@ Defaults to None.</p></li>
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">bfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/bfs.html#bfs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.bfs" title="Permalink to this definition">#</a></dt>
 <dd><p>Breadth first search from the src on projected simple graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>src</strong> (<em>optional</em>) – Source vertex of breadth first search. The type should be consistent
@@ -1114,10 +1113,10 @@ with the id type of the <cite>graph</cite>, that is, it’s <cite>int</cite> or 
 on the <cite>oid_type</cite> is <cite>int64_t</cite> or <cite>string</cite> of the <cite>graph</cite>. Defaults to 0.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex with a distance from the source, will be evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1139,20 +1138,20 @@ on the <cite>oid_type</cite> is <cite>int64_t</cite> or <cite>string</cite> of t
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">avg_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/clustering.html#avg_clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.avg_clustering" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the average clustering coefficient for the directed graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>degree_threshold</strong> (<em>int</em><em>, </em><em>optional</em>) – Filter super vertex which degree is greater than threshold. Default to 1e9.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>float</dt><dd><p>The average clustering coefficient.</p>
 </dd>
 </dl>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>r</p>
 </dd>
 </dl>
@@ -1176,16 +1175,16 @@ on the <cite>oid_type</cite> is <cite>int64_t</cite> or <cite>string</cite> of t
 <dd><p>Local clustering coefficient of a node in a Graph is the fraction
 of pairs of the node’s neighbors that are adjacent to each other.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>degree_threshold</strong> (<em>int</em><em>, </em><em>optional</em>) – Filter super vertex which degree is greater than threshold. Default to 1e9.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex assigned the computed clustering value, will be evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1217,7 +1216,7 @@ in the graph with respect to the node degree.</p>
 :param weighted: weighted graph or unweighted graph
 :type weighted: bool (True, False)</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><ul class="simple">
 <li><p><strong>r</strong> (<em>float</em>) – Assortativity of graph by degree.</p></li>
 <li><p><em>Examples</em></p></li>
@@ -1238,16 +1237,18 @@ probability distribution (mixing matrix) of the degrees.  If G is
 directed than the matrix e is the joint probability of the
 user-specified degree type for the source and target.</p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id7"><span class="brackets">1</span></dt>
-<dd><p>M. E. J. Newman, Mixing patterns in networks,
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id7" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>M. E. J. Newman, Mixing patterns in networks,
 Physical Review E, 67 026126, 2003</p>
-</dd>
-<dt class="label" id="id8"><span class="brackets">2</span></dt>
-<dd><p>Foster, J.G., Foster, D.V., Grassberger, P. &amp; Paczuski, M.
+</aside>
+<aside class="footnote brackets" id="id8" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<p>Foster, J.G., Foster, D.V., Grassberger, P. &amp; Paczuski, M.
 Edge direction and the structure of networks, PNAS 107, 10815-20 (2010).</p>
-</dd>
-</dl>
+</aside>
+</aside>
 </dd></dl>
 
 <dl class="py function">
@@ -1257,17 +1258,17 @@ Edge direction and the structure of networks, PNAS 107, 10815-20 (2010).</p>
 by the maximum possible degree in a simple graph n-1 where
 n is the number of nodes in G.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>centrality_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Available options are in/out/both.
 Defaults to “both”.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex assigned with the computed degree centrality, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1291,7 +1292,7 @@ Defaults to “both”.</p></li>
 See more about eigenvector centrality here:
 <a class="reference external" href="https://networkx.org/documentation/networkx-1.10/reference/generated/networkx.algorithms.centrality.eigenvector_centrality.html">https://networkx.org/documentation/networkx-1.10/reference/generated/networkx.algorithms.centrality.eigenvector_centrality.html</a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Defaults to 1e-06.</p></li>
@@ -1301,10 +1302,10 @@ Note that property under multiple labels should have the consistent index.
 Defaults to None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex assigned with a gv-centrality, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1329,7 +1330,7 @@ Defaults to None.</p></li>
 is a link analysis algorithm that rates Web pages. See more here:
 <a class="reference external" href="https://en.wikipedia.org/wiki/HITS_algorithm">https://en.wikipedia.org/wiki/HITS_algorithm</a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Defaults to 0.01.</p></li>
@@ -1337,10 +1338,10 @@ is a link analysis algorithm that rates Web pages. See more here:
 <li><p><strong>normalized</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to normalize the result to 0-1. Defaults to True.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex assigned with the HITS value, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexPropertyContextDAGNode" title="graphscope.framework.context.VertexPropertyContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexPropertyContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1369,10 +1370,10 @@ pair of nodes in the sequence is adjacent in the graph.</p>
 :param nodes: A list of one or more nodes in the graph <cite>G</cite>.
 :type nodes: list</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Whether the given list of nodes represents a simple path in <cite>G</cite>.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 </dl>
@@ -1418,13 +1419,13 @@ like the following:</p>
 <dd><p>K-cores of the graph are connected components that are left after
 all vertices of degree less than <cite>k</cite> have been removed.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>k</strong> (<em>int</em>) – The order of the core.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>A context with each vertex assigned with a boolean:</dt><dd><p>1 if the vertex satisfies k-core, otherwise 0.</p>
 </dd>
@@ -1432,7 +1433,7 @@ all vertices of degree less than <cite>k</cite> have been removed.</p>
 <p>Evaluated in eager mode.</p>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1455,13 +1456,13 @@ all vertices of degree less than <cite>k</cite> have been removed.</p>
 <dd><p>The k-shell is the subgraph induced by nodes with core number k.
 That is, nodes in the k-core that are not in the (k+1)-core.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>k</strong> (<em>int</em>) – The order of the k_shell.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>A context with each vertex assigned with a boolean:</dt><dd><p>1 if the vertex satisfies k-shell, otherwise 0.</p>
 </dd>
@@ -1469,7 +1470,7 @@ That is, nodes in the k-core that are not in the (k+1)-core.</p>
 <p>Evaluated in eager mode.</p>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1493,7 +1494,7 @@ That is, nodes in the k-core that are not in the (k+1)-core.</p>
 <p>See more details for Katz centrality here:
 <a class="reference external" href="https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality_numpy.html">https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality_numpy.html</a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – Auttenuation factor. Defaults to 0.1.</p></li>
@@ -1504,10 +1505,10 @@ That is, nodes in the k-core that are not in the (k+1)-core.</p>
 <li><p><strong>degree_threshold</strong> (<em>int</em><em>, </em><em>optional</em>) – Filter super vertex which degree is greater than threshold. Default to 1e9.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex assigned with the computed katz_centrality, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1529,7 +1530,7 @@ That is, nodes in the k-core that are not in the (k+1)-core.</p>
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">louvain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_tries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/louvain.html#louvain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.louvain" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute best partition on the <cite>graph</cite> by louvain.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple undirected graph.</p></li>
 <li><p><strong>min_progress</strong> – The minimum delta X required to be considered progress, where X is the number of nodes
@@ -1540,10 +1541,10 @@ on the current pass compared to the previous pass.</p></li>
 before exiting form the current level and compressing the graph.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex assigned with id of community it belongs to, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1572,16 +1573,16 @@ an InvalidArgumentError.</p>
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">cdlp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.cdlp" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluate Community Detection with Label Propagation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum rounds. Defaults to 10.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex assigned with a community ID, will be evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1603,16 +1604,16 @@ an InvalidArgumentError.</p>
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">lpa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/lpa.html#lpa"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.lpa" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluate Community Detection with Label Propagation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum rounds. Defaults to 10.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex assigned with a community ID, will be evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1634,16 +1635,16 @@ an InvalidArgumentError.</p>
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">lpa_u2i</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/lpa.html#lpa_u2i"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.lpa_u2i" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluate (multi-) label propagation on a property graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A property graph.</p></li>
 <li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of rounds. Defaults to 10.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex, following an array of propagated labels, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.LabeledVertexPropertyContextDAGNode" title="graphscope.framework.context.LabeledVertexPropertyContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.LabeledVertexPropertyContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1662,17 +1663,17 @@ an InvalidArgumentError.</p>
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">pagerank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/pagerank.html#pagerank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.pagerank" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluate PageRank on a graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>delta</strong> (<em>float</em><em>, </em><em>optional</em>) – Dumping factor. Defaults to 0.85.</p></li>
 <li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of rounds. Defaults to 10.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex assigned with the pagerank value, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1694,7 +1695,7 @@ an InvalidArgumentError.</p>
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">pagerank_nx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/pagerank.html#pagerank_nx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.pagerank_nx" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluate pagerank on a graph using algorithm exactly follows the implemented in NetworkX library.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – Dumping factor. Defaults to 0.85.</p></li>
@@ -1702,10 +1703,10 @@ an InvalidArgumentError.</p>
 <li><p><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em>) – Error tolerance used to check convergence in power method solver.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex assigned with the pagerank value, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1728,7 +1729,7 @@ an InvalidArgumentError.</p>
 <dd><p>Compute single source shortest path length on the <cite>graph</cite>.</p>
 <p>Note that the <cite>sssp</cite> algorithm requires an numerical property on the edge.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>src</strong> (<em>optional</em>) – The source vertex. The type should be consistent
@@ -1739,11 +1740,11 @@ Note that property under multiple labels should have the consistent index.
 Defaults to None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex assigned with the shortest distance from the <cite>src</cite>,
 evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1765,13 +1766,13 @@ evaluated in eager mode.</p>
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">triangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/triangles.html#triangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.triangles" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluate triangle counting of the graph G.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex assigned with the triangle counting result, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1793,16 +1794,16 @@ evaluated in eager mode.</p>
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">voterank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_of_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/voterank.html#voterank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.voterank" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluate VoteRank on a graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
 <li><p><strong>num_of_nodes</strong> (<em>unsigned long int</em><em>, </em><em>optional</em>) – Number of ranked nodes to extract. Default all nodes.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex assigned with the voterank value, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1826,13 +1827,13 @@ evaluated in eager mode.</p>
 This is an optimized version of WCC.
 Note this cannot be compiled against a property graph that has multiple labels.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A context with each vertex assigned with the component ID, evaluated in eager mode.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
 </dd>
 </dl>
@@ -1849,8 +1850,8 @@ Note this cannot be compiled against a property graph that has multiple labels.<
 </div>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -1985,15 +1986,12 @@ Note this cannot be compiled against a property graph that has multiple labels.<
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>

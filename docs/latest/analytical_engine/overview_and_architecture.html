@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Overview and Architecture" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Overview and Architecture" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/overview_and_architecture.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Key Concepts" href="key_concepts.html" /><link rel="prev" title="Design of Analytical Engine" href="design_of_gae.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Overview and Architecture - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,52 +665,54 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="overview-and-architecture">
+          <section class="tex2jax_ignore mathjax_ignore" id="overview-and-architecture">
 <h1>Overview and Architecture<a class="headerlink" href="#overview-and-architecture" title="Permalink to this heading">#</a></h1>
 <p>In GraphScope, Graph Analytical Engine (GAE) is responsible for handling various graph analytics algorithms. GAE derives from <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">GRAPE</a>, a graph processing system proposed on SIGMOD 2017. GRAPE differs from prior systems in its ability to parallelize sequential graph algorithms as a whole. Different from other parallel graph processing systems which need to recast the existing sequential algorithm into <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html">a new model</a> (e.g., Pregel and GAS), in GRAPE, sequential algorithms can be easily “plugged into” with only minor changes and get parallelized to handle large graphs efficiently. In addition to the ease of programming, GRAPE is designed to be highly efficient and flexible, to cope the scale, variety and complexity from real-life graph applications.</p>
-<div class="section" id="architecture">
+<section id="architecture">
 <h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this heading">#</a></h2>
 <p>GAE is a full-fledged, in-production system for graph analytics algorithms over large scale graph data. As shown in the following figure, there exist three major layers in GAE, namely storage layer, engine layer and application layer. Next, we give an overview to each of them below.</p>
-<div class="figure align-default" id="id1">
+<figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="../_images/gae_arch.png"><img alt="Architecture of GAE." src="../_images/gae_arch.png" style="width: 70%;" /></a>
-<p class="caption"><span class="caption-text">Architecture of GAE.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Architecture of GAE.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <ul class="simple">
 <li><p>Storage layer: Graph data in real-life is extremely large scale, and thus graph storage stores graph data in a distributed fashion. The graph storage consists of different graph formats with different features. Although there exist diverse types of graph storages, unified interfaces for graph storage are provided for GAE as well as other computation engines of GraphScope, and thus GAE does not care about how each type of graph storage is implemented.</p></li>
 <li><p>Engine layer: At the core of GAE is its engine layer. It is built on top of GRAPE, which provides many efficient graph-specific optimizations. Based on GRAPE, GAE offers three programming models for users (i.e., Pregel, PIE, and FLASH), and users can develop their own graph applications through user-friendly interfaces. The execution engine of GAE is written in C++ and supports other programming languages (i.e., Java and Python) through FFIs (Foreign Function Interfaces), allowing for better integration with other big data ecosystems. Additionally, GAE supports both batch and incremental computation patterns, giving users the freedom to choose the property computation pattern according to their demands.</p></li>
 <li><p>Application Layer: The application layer offers an application SDK that provides user-friendly interfaces for accessing graph structural/property data and communicating between different sub-graphs (fragments), so that users can easily develop their algorithms. Graph analytics algorithms can be directly written using the application SDK, but we have also built a built-in algorithm library consisting of common algorithms for various application domains to ease the development of new graph applications.</p></li>
 </ul>
-</div>
-<div class="section" id="storage-layer">
+</section>
+<section id="storage-layer">
 <h2>Storage Layer<a class="headerlink" href="#storage-layer" title="Permalink to this heading">#</a></h2>
 <p>Similar to many graph processing systems, GraphScope represents graph data using the <a class="reference external" href="https://www.dataversity.net/what-is-a-property-graph/">property graph model</a>. To support large-scale graph data, GraphScope uses an <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/key_concepts.html#edge-cut"><em>edge-cut partitioning strategy</em></a> to partition a graph into multiple sub-graphs (fragments).</p>
 <p>The graph storage in GraphScope consists of multiple types of graph formats, with each format dedicated to a specific scenario. Some support real-time graph updates while others treat graph data as immutable data once created. Some store graph data in memory for better performance, while others support persistent storage. Fortunately, all these storages are integrated with GRIN, a unified graph storage interface defined by GraphScope. Therefore, the computation engines are not aware of the implementation differences of each storage. For more details about the graph storage interface, please check out our <a class="reference external" href="https://graphscope.io/docs/latest/storage_engine/grin.html">introduction to GRIN</a>.</p>
-</div>
-<div class="section" id="engine-layer">
+</section>
+<section id="engine-layer">
 <h2>Engine Layer<a class="headerlink" href="#engine-layer" title="Permalink to this heading">#</a></h2>
 <p>There are four major components in the engine layer of GAE, which offers easy-to-use interfaces for graph algorithms.</p>
-<div class="section" id="grape-engine">
+<section id="grape-engine">
 <h3>GRAPE Engine<a class="headerlink" href="#grape-engine" title="Permalink to this heading">#</a></h3>
 <p>The foundation of the engine layer in GAE is GRAPE, which offers core functions for graph analytics, including accessing vertices/edges of a sub-graph (fragment), visiting property data of vertices/edges, state synchronization between different fragments, and intermediate data management. Meanwhile, GRAPE applies many graph-level optimizations, such as indexing, compression, dynamic push/pull switching, pipelining, and load balancing, to achieve better performance. For more details about these optimizations, please refer to <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">this link</a>.</p>
-</div>
-<div class="section" id="programming-model-apis">
+</section>
+<section id="programming-model-apis">
 <h3>Programming Model APIs<a class="headerlink" href="#programming-model-apis" title="Permalink to this heading">#</a></h3>
 <p>Currently, GAE supports APIs for three programming models: Pregel, PIE, and FLASH. <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html#pregel-model">Pregel</a> is a widely applied vertex-centric programming model in existing popular graph processing systems, such as GraphX and Giraph. <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/programming_model_pie.html">PIE</a> is proposed in GRAPE and can automatically parallelize existing sequential graph algorithms with some minor changes. <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/flash.html">FLASH</a> is a flexible programming model that can help users implement complex graph algorithms easily. Users can freely choose one of these three programming models according to their backgrounds and demands.</p>
-</div>
-<div class="section" id="ffis">
+</section>
+<section id="ffis">
 <h3>FFIs<a class="headerlink" href="#ffis" title="Permalink to this heading">#</a></h3>
 <p>The GRAPE engine is written in C++ for better performance, and GAE also provides Python and Java interfaces through FFI (Foreign Function Interface). With Python, it is natural and easy for GraphScope to interoperate with other Python data processing systems such as Pandas and Mars. Based on an efficient FFI for Java and C++ called <a class="reference external" href="https://github.com/alibaba/fastFFI">fastFFI</a>, GAE allows users to write Java applications and run these applications on GAE directly. Please check out our tutorials on how to develop algorithms with Python and Java.</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_python.html">Tutorial: Develop Algorithms in Python</a></p></li>
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_java.html">Tutorial: Develop your Algorithm in Java with PIE Model</a></p></li>
 </ul>
-</div>
-<div class="section" id="incremental-computation-engine">
+</section>
+<section id="incremental-computation-engine">
 <h3>Incremental Computation Engine<a class="headerlink" href="#incremental-computation-engine" title="Permalink to this heading">#</a></h3>
 <p>GAE also supports incremental computation over graph data via the <a class="reference external" href="http://vldb.org/pvldb/vol14/p1613-gong.pdf">Ingress</a> engine, where we apply a batch algorithm to compute the result over the original graph <em>G</em> once, followed by employing an incremental algorithm to adjust the old result in response to the input changes <span class="math notranslate nohighlight">\(\Delta\)</span><em>G</em> to <em>G</em>. To achieve this , based on the dynamic graph storage, we have implemented an <em>Ingress fragment</em> which can capture the changes between original and new graphs. Please check out <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/ingress.html">our detailed introduction to the Ingress engine</a> for more details.</p>
-</div>
-</div>
-<div class="section" id="application-layer">
+</section>
+</section>
+<section id="application-layer">
 <h2>Application Layer<a class="headerlink" href="#application-layer" title="Permalink to this heading">#</a></h2>
 <p>GAE provides C++, Python and Java SDKs for graph applications, where users can freely choose programming models, programming languages, and computation patterns (batch computation or incremental computation) to develop their own applications. GAE of GraphScope also provides <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html">20 graph analytics algorithms</a> as built-in algorithms, and users can directly invoke them. GraphScope is compatible with NetworkX APIs, and thus diverse kinds of <a class="reference external" href="https://networkx.org/documentation/stable/reference/algorithms/index.html">built-in algorithms in NetworkX</a> can also be directly invoked by users. In total, over 100 build-in graph analytical algorithms can be directly executed over GraphScope. Additionally, the support for the Pregel model has been implemented in GAE, and graph algorithms implemented in Giraph or GraphX can also be directly run on GAE. Please refer to the following tutorials on how to run NetworkX/Giraph/GraphX applications on GAE.</p>
 <ul class="simple">
@@ -718,8 +721,8 @@ MathJax = {
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/tutorial_run_giraph_apps.html">Tutorial: Run Giraph Applications on GraphScope</a></p></li>
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/tutorial_run_graphx_apps.html">Tutorial: Run GraphX Applications on GraphScope</a></p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -801,15 +804,12 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>

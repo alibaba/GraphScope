@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Tutorial: Develop your Algorithm in C++ with PIE Model" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Tutorial: Develop your Algorithm in C++ with PIE Model" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/tutorial_dev_algo_cpp_pie.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tutorial: Develop Your Algorithms in C++ with FLASH Model" href="tutorial_dev_algo_cpp_flash.html" /><link rel="prev" title="Tutorial: Graph Algorithms with NetowrkX APIs" href="tutorial_networkx_algorithms.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Tutorial: Develop your Algorithm in C++ with PIE Model - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,18 +665,18 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="tutorial-develop-your-algorithm-in-c-with-pie-model">
+          <section class="tex2jax_ignore mathjax_ignore" id="tutorial-develop-your-algorithm-in-c-with-pie-model">
 <h1>Tutorial: Develop your Algorithm in C++ with PIE Model<a class="headerlink" href="#tutorial-develop-your-algorithm-in-c-with-pie-model" title="Permalink to this heading">#</a></h1>
 <p>In this tutorial, we will demonstrate how to develop an algorithm using the PIE model in C++ programming language.</p>
-<div class="section" id="prerequisites">
+<section id="prerequisites">
 <h2>Prerequisites:<a class="headerlink" href="#prerequisites" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Familiarity with the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/programming_model_pie.html">PIE programming model</a></p></li>
 <li><p>Install GraphScope by using the command <code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">graphscope</span></code></p></li>
 </ul>
 <p>Then, We will guide you through developing a simple PIE algorithm that computes the degree for each vertex in the graph. The full API can be found in <a class="reference external" href="https://graphscope.io/docs/latest/reference/analytical_engine_index.html">Analytical Engine API Doc</a> and <a class="reference external" href="https://alibaba.github.io/libgrape-lite">libgrape-lite API</a>.</p>
-</div>
-<div class="section" id="step-1-define-the-context-class">
+</section>
+<section id="step-1-define-the-context-class">
 <h2>Step 1: Define the context class<a class="headerlink" href="#step-1-define-the-context-class" title="Permalink to this heading">#</a></h2>
 <p>First, we create a context class that inherits from <code class="docutils literal notranslate"><span class="pre">grape::VertexDataContext</span></code>. This class will store and manage algorithm-specific data and parameters.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">FRAG_T</span><span class="o">&gt;</span>
@@ -702,8 +703,8 @@ MathJax = {
 </pre></div>
 </div>
 <p>As shown in the code, the MyAppContext class defines two member variables called <code class="docutils literal notranslate"><span class="pre">step</span></code> and <code class="docutils literal notranslate"><span class="pre">param1</span></code> to store the current superstep and algorithm-specific parameter, respectively. And we also define a member variable named <code class="docutils literal notranslate"><span class="pre">result</span></code> with <code class="docutils literal notranslate"><span class="pre">uint64_t</span></code> type to store the the degree for each vertex in the fragment. The <code class="docutils literal notranslate"><span class="pre">Init</span></code> method is used to initialize the context of the computation. In current example, we initialize the <code class="docutils literal notranslate"><span class="pre">step</span></code> and <code class="docutils literal notranslate"><span class="pre">param1</span></code> variables to zero and the algorithm-specific parameter. We also set the result to zero for each vertex.</p>
-</div>
-<div class="section" id="step-2-define-the-algorithm-class">
+</section>
+<section id="step-2-define-the-algorithm-class">
 <h2>Step 2: Define the Algorithm class<a class="headerlink" href="#step-2-define-the-algorithm-class" title="Permalink to this heading">#</a></h2>
 <p>Next, we define the <code class="docutils literal notranslate"><span class="pre">MyApp</span></code> class, which is responsible for implementing the algorithm by using the <code class="docutils literal notranslate"><span class="pre">MyAppContext</span></code> class.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">FRAG_T</span><span class="o">&gt;</span>
@@ -754,8 +755,8 @@ MathJax = {
 <p>The <code class="docutils literal notranslate"><span class="pre">MyApp</span></code> class inherits from the <code class="docutils literal notranslate"><span class="pre">grape::ParallelAppBase</span></code>, which provides the basic functionality for implementing a parallel graph algorithm. It also inherits from the <code class="docutils literal notranslate"><span class="pre">grape::ParallelEngine</span></code> and <code class="docutils literal notranslate"><span class="pre">grape::Communicator</span></code> classes, which provide the communication and parallel processing capabilities. The MyApp class defines two <code class="docutils literal notranslate"><span class="pre">static</span> <span class="pre">constexpr</span></code> variables called <code class="docutils literal notranslate"><span class="pre">message_strategy</span></code> and <code class="docutils literal notranslate"><span class="pre">load_strategy</span></code>, these variables specify the message strategy and load strategy used in the computation. For more information please refer to the <a class="reference external" href="https://alibaba.github.io/libgrape-lite">libgrape-lite Doc</a>.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">PEval</span></code> method is used to implement the partial evaluation phase of the computation. In current example, we initialize the communication channels and do nothing else, instead, we put the computing logic into <code class="docutils literal notranslate"><span class="pre">IncEval</span></code> method.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">IncEval</span></code> method is used to implement the incremental evaluation phase of the computation. In this method, we increment the superstep counter in the context, process received messages sent by other fragments, and compute the degree for each vertex in the graph. The <code class="docutils literal notranslate"><span class="pre">ForEach</span></code> method is used to iterate over the inner vertices of the fragment, and the <code class="docutils literal notranslate"><span class="pre">GetOutgoingAdjList</span></code> and <code class="docutils literal notranslate"><span class="pre">GetIncomingAdjList</span></code> methods are used to get the outgoing and incoming adjacency lists of each vertex. The result for each vertex then set in the context.</p>
-</div>
-<div class="section" id="step-3-package-the-algorithm">
+</section>
+<section id="step-3-package-the-algorithm">
 <h2>Step 3: Package the Algorithm<a class="headerlink" href="#step-3-package-the-algorithm" title="Permalink to this heading">#</a></h2>
 <p>To make the algorithm runnable on the GraphScope, we need to package it as a <code class="docutils literal notranslate"><span class="pre">.gar</span></code> file. The package should include the above C++ files and a configuration file named <code class="docutils literal notranslate"><span class="pre">.gs_conf.yaml</span></code> with the following content:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">app</span><span class="p">:</span>
@@ -778,8 +779,8 @@ MathJax = {
 </pre></div>
 </div>
 <p>then, we package the algorithm by command: <code class="docutils literal notranslate"> <span class="pre">zip</span> <span class="pre">-jr</span> <span class="pre">'my_app.gar'</span> <span class="pre">'*.h'</span> <span class="pre">''.gs_conf.yaml'</span></code></p>
-</div>
-<div class="section" id="step-4-run-the-gar-file-on-graphscope">
+</section>
+<section id="step-4-run-the-gar-file-on-graphscope">
 <h2>Step 4: Run the .gar file on GraphScope<a class="headerlink" href="#step-4-run-the-gar-file-on-graphscope" title="Permalink to this heading">#</a></h2>
 <p>Use the following Python code to run the algorithm on GraphScope.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
@@ -796,12 +797,12 @@ MathJax = {
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="graphscope-c-sdk-with-github-template">
+</section>
+<section id="graphscope-c-sdk-with-github-template">
 <h2>GraphScope C++ SDK with Github Template<a class="headerlink" href="#graphscope-c-sdk-with-github-template" title="Permalink to this heading">#</a></h2>
 <p>To help you develop your algorithms more efficiently, we provide a <a class="reference external" href="https://github.com/GraphScope/cpp-template">C++ template library</a> to help you get started with your algorithm development. It includes examples and best practices for implementing PIE algorithms in C++.</p>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -879,14 +880,11 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

@@ -1,8 +1,9 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Key Concepts" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Key Concepts" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/key_concepts.html" />
 <meta property="og:site_name" content="GraphScope" />
@@ -15,18 +16,18 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Vertex-Centric Model" href="vertex_centric_models.html" /><link rel="prev" title="Overview and Architecture" href="overview_and_architecture.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2023.07.26 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Key Concepts - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=369552022d0b975c8e74270ce6eabe0fb7978f24" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -200,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -664,102 +665,102 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="section" id="key-concepts">
+          <section id="key-concepts">
 <h1>Key Concepts<a class="headerlink" href="#key-concepts" title="Permalink to this heading">#</a></h1>
 <p>In this document, we introduce some important concepts in GraphScope analytical engine, which defines the
 graph loading strategies, inner/outer vertices, and message passing and synchronization strategies.</p>
-<div class="section" id="loadstrategy">
+<section id="loadstrategy">
 <h2>LoadStrategy<a class="headerlink" href="#loadstrategy" title="Permalink to this heading">#</a></h2>
 <p>There are three ways to maintain the nodes crossing different fragments in GraphScope analytical engine.</p>
-<div class="section" id="onlyout">
+<section id="onlyout">
 <h3>OnlyOut<a class="headerlink" href="#onlyout" title="Permalink to this heading">#</a></h3>
 <p>Each fragment $F_{i}$ maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v, v’). For instance, in addition to local nodes {4, 5, 6, 7}, $F_{1}$ in graph G also stores a “mirror” node 3 and the edge (5, 3) when using OnlyOut strategy, as shown below.</p>
 <img alt="OnlyOut" src="../_images/onlyout.png" />
-</div>
-<div class="section" id="onlyin">
+</section>
+<section id="onlyin">
 <h3>OnlyIn<a class="headerlink" href="#onlyin" title="Permalink to this heading">#</a></h3>
 <p>Under this case, each fragment $F_{i}$ maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v’, v). In graph G, $F_{1}$ maintains “mirror” nodes {1, 9, 12} besides its local nodes.</p>
 <img alt="OnlyIn" src="../_images/onlyin.png" />
-</div>
-<div class="section" id="bothinout">
+</section>
+<section id="bothinout">
 <h3>BothInOut<a class="headerlink" href="#bothinout" title="Permalink to this heading">#</a></h3>
 <p>Each fragment $F_{i}$ maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v, v’) or (v’, v). Hence, in graph G, “mirror” nodes {1, 3, 9, 12} are stored in $F_{1}$ when BothInOut is applied.</p>
 <img alt="BothInOut" src="../_images/inandout.png" />
-</div>
-</div>
-<div class="section" id="partitionstrategy">
+</section>
+</section>
+<section id="partitionstrategy">
 <h2>PartitionStrategy<a class="headerlink" href="#partitionstrategy" title="Permalink to this heading">#</a></h2>
-<div class="section" id="edge-cut">
+<section id="edge-cut">
 <h3>Edge Cut<a class="headerlink" href="#edge-cut" title="Permalink to this heading">#</a></h3>
 <p>An <em>edge cut</em> partitioning splits vertices of a graph into roughly equal size clusters. The edges are stored in the same cluster as one or both of its endpoints. Edges with endpoints distributed across different clusters are <em>crossing edges</em>.</p>
 <img alt="Edge Cut" src="../_images/ecut.png" />
-</div>
-<div class="section" id="vertex-cut">
+</section>
+<section id="vertex-cut">
 <h3>Vertex Cut<a class="headerlink" href="#vertex-cut" title="Permalink to this heading">#</a></h3>
 <p>A <em>vertex-cut</em> partitioning divides edges of a graph into roughly equal size fragments. The vertices that hold the endpoints of an edge are also placed in the same fragment as the edge itself. A vertex has to be replicated when its adjacent edges are distributed across different fragments.</p>
 <img alt="Vertex Cut" src="../_images/vcut.png" />
-</div>
-</div>
-<div class="section" id="vertices-on-graphscope-analytical-engine">
+</section>
+</section>
+<section id="vertices-on-graphscope-analytical-engine">
 <h2>Vertices on GraphScope analytical engine<a class="headerlink" href="#vertices-on-graphscope-analytical-engine" title="Permalink to this heading">#</a></h2>
 <p>A node v is referred to as an</p>
-<div class="section" id="outervertex">
+<section id="outervertex">
 <h3>OuterVertex<a class="headerlink" href="#outervertex" title="Permalink to this heading">#</a></h3>
 <p>OuterVertex of fragment $F_{i}$ if it resides at another fragment $F_{j}$ and there exists a node v’ in $F_{i}$ such that (v, v’) or (v’, v) is an edge; e.g., nodes {1, 3, 9, 12} are OuterVertex of fragment $F_{1}$ in graph G;</p>
 <img alt="OuterVertex" src="../_images/outvertex.png" />
-</div>
-<div class="section" id="innervertex">
+</section>
+<section id="innervertex">
 <h3>InnerVertex<a class="headerlink" href="#innervertex" title="Permalink to this heading">#</a></h3>
 <p>InnerVertex of fragment $F_{i}$ if it is distributed to $F_{i}$; e.g. nodes {4, 5, 6, 7} are InnerVertex of fragment $F_{1}$ in G;</p>
 <img alt="InnerVertex" src="../_images/invertex.png" />
-</div>
-<div class="section" id="innervertexwithoutgoingedge">
+</section>
+<section id="innervertexwithoutgoingedge">
 <h3>InnerVertexWithOutgoingEdge<a class="headerlink" href="#innervertexwithoutgoingedge" title="Permalink to this heading">#</a></h3>
 <p>InnerVertexWithOutgoingEdge of fragment $F_{i}$ if it is stored in $F_{i}$ and has an adjacent edge (v, v’) outcoming to a node v’ in another fragment $F_{j}$; e.g., node 5 is an InnerVertexWithOutgoingEdge of $F_{1}$ in G with the outgoing edge (5, 3);</p>
 <img alt="InnerVertexWithOutgoingEdge" src="../_images/invertexout.png" />
-</div>
-<div class="section" id="innervertexwithincomingedge">
+</section>
+<section id="innervertexwithincomingedge">
 <h3>InnerVertexWithIncomingEdge<a class="headerlink" href="#innervertexwithincomingedge" title="Permalink to this heading">#</a></h3>
 <p>InnerVertexWithIncomingEdge of fragment $F_{i}$ if it is maintained in $F_{i}$ has an adjacent edge (v’, v) incoming from a node v’ in another fragment $F_{j}$; e.g., nodes {4, 5, 7} are InnerVertexWithIncomingEdge of $F_{1}$ in G, and (1, 4), (9, 5), and (12, 7) are corresponding incoming edges.</p>
 <img alt="InnerVertexWithIncomingEdge" src="../_images/invertexin.png" />
-</div>
-</div>
-<div class="section" id="messagemanager-and-messagestrategy">
+</section>
+</section>
+<section id="messagemanager-and-messagestrategy">
 <h2>MessageManager and MessageStrategy<a class="headerlink" href="#messagemanager-and-messagestrategy" title="Permalink to this heading">#</a></h2>
 <p>In each graph application in GAE, a MessageManager is created to manage the messages passed between different fragments. Considering the diversity of graph applications, we provide many message passing strategies, which are defined in MessageStrategy.</p>
 <p>Below are message passing and synchronization strategies supported by GAE.</p>
-<div class="section" id="alongoutgoingedgetooutervertex">
+<section id="alongoutgoingedgetooutervertex">
 <h3>AlongOutgoingEdgeToOuterVertex<a class="headerlink" href="#alongoutgoingedgetooutervertex" title="Permalink to this heading">#</a></h3>
 <p>Here the message is passed along crossing edges from InnerVertexWithOutgoingEdge to OuterVertex. For instance, the message is passed from node 5 to 3 in graph G.</p>
 <img alt="AlongOutgoingEdgeToOuterVertex" src="../_images/intoout.png" />
-</div>
-<div class="section" id="alongincomingedgetooutervertex">
+</section>
+<section id="alongincomingedgetooutervertex">
 <h3>AlongIncomingEdgeToOuterVertex<a class="headerlink" href="#alongincomingedgetooutervertex" title="Permalink to this heading">#</a></h3>
 <p>Under this case, the message is passed along crossing edges from InnerVertexWithIncomingEdge to OuterVertex. For example, the message is passed from node 5 to 9 in graph G.</p>
 <img alt="AlongIncomingEdgeToOuterVertex" src="../_images/intoout2.png" />
-</div>
-<div class="section" id="alongedgetooutervertex">
+</section>
+<section id="alongedgetooutervertex">
 <h3>AlongEdgeToOuterVertex<a class="headerlink" href="#alongedgetooutervertex" title="Permalink to this heading">#</a></h3>
 <p>Each message is passed along crossing edges from nodes that are both  InnerVertexWithIncomingEdge and InnerVertexWithOutgoingEdge to OuterVertex, e.g., messages are passed from node 5 to 3 and 9 and vice versa in graph G.</p>
 <img alt="AlongEdgeToOuterVertex" src="../_images/intoout3.png" />
-</div>
-<div class="section" id="synconoutervertexastarget">
+</section>
+<section id="synconoutervertexastarget">
 <h3>SyncOnOuterVertexAsTarget<a class="headerlink" href="#synconoutervertexastarget" title="Permalink to this heading">#</a></h3>
 <p>It is applied in company with the OnlyOut loading strategy. Here each fragment $F_{i}$ sends the states of its “mirror” node of OuterVertex v to $F_{j}$ that v resides, if there exists edge (v’, v) and v’ is “local” node of $F_{i}$, for synchronizing different states of v. For instance, the state of “mirror” node 3 is sent from $F_{1}$ to $F_{0}$ for synchronization at $F_{0}$.</p>
 <img alt="SyncOnOuterVertexAsTarget" src="../_images/sync1.png" />
-</div>
-<div class="section" id="synconoutervertexassource">
+</section>
+<section id="synconoutervertexassource">
 <h3>SyncOnOuterVertexAsSource<a class="headerlink" href="#synconoutervertexassource" title="Permalink to this heading">#</a></h3>
 <p>It is applied together with the OnlyIn loading strategy. Similar to <strong>SyncStateOnOuterVertexAsTarget</strong>, each fragment $F_{i}$ sends the states of its “mirror” nodes v to the corresponding fragments for synchronization. The difference is that for each such “mirror”, there exists outgoing edge (v, v’) to certain “local” node v’ of $F_{i}$. For example, the states of “mirror” nodes 1, 9, and 12 are sent from $F_{1}$ to $F_{0}$ and $F_{2}$ for synchronization with other states.</p>
 <img alt="SyncOnOuterVertexAsSource" src="../_images/sync2.png" />
-</div>
-<div class="section" id="synconoutervertex">
+</section>
+<section id="synconoutervertex">
 <h3>SyncOnOuterVertex<a class="headerlink" href="#synconoutervertex" title="Permalink to this heading">#</a></h3>
 <p>This is applied together with the BothInOut loading strategy. Under this case, each fragment $F_{i}$ sends the states of all its “mirror” nodes v to the corresponding fragments for synchronization, regardless of the directions of edges adjacent to v, e.g., the states of “mirror” nodes 1, 3, 9 and 12 are sent from $F_{1}$ to $F_{0}$ and $F_{2}$ for further synchronization.</p>
 <img alt="SyncOnOuterVertex" src="../_images/sync3.png" />
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
         </article>
       </div>
@@ -858,14 +859,11 @@ graph loading strategies, inner/outer vertices, and message passing and synchron
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>
