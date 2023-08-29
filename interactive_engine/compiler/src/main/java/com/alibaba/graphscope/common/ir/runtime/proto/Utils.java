@@ -22,11 +22,14 @@ import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
+import com.google.common.base.Preconditions;
 import com.google.protobuf.Int32Value;
 
+import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.NlsString;
 
 import java.util.List;
@@ -212,6 +215,12 @@ public abstract class Utils {
                                         + elementType.getSqlTypeName()
                                         + " is unsupported yet");
                 }
+            case DATE:
+                return Common.DataType.DATE;
+            case TIME:
+                return Common.DataType.TIME;
+            case TIMESTAMP:
+                return Common.DataType.DATETIME;
             default:
                 throw new UnsupportedOperationException(
                         "basic type " + basicType.getSqlTypeName() + " is unsupported yet");
@@ -319,5 +328,28 @@ public abstract class Utils {
             builder.setDstLabel(Int32Value.of(labelType.getDstLabelId()));
         }
         return builder.build();
+    }
+
+    public static final OuterExpression.Extract.Interval protoInterval(RexLiteral literal) {
+        Preconditions.checkArgument(
+                literal.getType().getSqlTypeName() == SqlTypeName.SYMBOL,
+                "interval should be an literal of 'SYMBOL' type");
+        TimeUnit timeUnit = literal.getValueAs(TimeUnit.class);
+        switch (timeUnit) {
+            case YEAR:
+                return OuterExpression.Extract.Interval.YEAR;
+            case MONTH:
+                return OuterExpression.Extract.Interval.MONTH;
+            case DAY:
+                return OuterExpression.Extract.Interval.DAY;
+            case HOUR:
+                return OuterExpression.Extract.Interval.HOUR;
+            case MINUTE:
+                return OuterExpression.Extract.Interval.MINUTE;
+            case SECOND:
+                return OuterExpression.Extract.Interval.SECOND;
+            default:
+                throw new UnsupportedOperationException("unsupported interval type " + timeUnit);
+        }
     }
 }

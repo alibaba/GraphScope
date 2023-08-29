@@ -134,8 +134,8 @@ public class WhereTest {
             RelNode where =
                     Utils.eval(
                                     "Match (a:software) With a.name as creationDate Where"
-                                        + " creationDate.month > 1990 and creationDate.day = 12"
-                                        + " Return creationDate")
+                                            + " creationDate.month > 1990 and creationDate.day = 12"
+                                            + " Return creationDate")
                             .build();
         } catch (CalciteException e) {
             Assert.assertTrue(
