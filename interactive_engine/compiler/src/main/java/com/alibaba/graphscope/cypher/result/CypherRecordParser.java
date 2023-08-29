@@ -25,6 +25,7 @@ import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.commons.lang3.ArrayUtils;
@@ -146,8 +147,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     protected NodeValue parseVertex(IrResult.Vertex vertex, @Nullable RelDataType dataType) {
         return VirtualValues.nodeValue(
                 vertex.getId(),
-                Values.stringArray(
-                        getLabelName(vertex.getLabel(), getLabelTypes(dataType))),
+                Values.stringArray(getLabelName(vertex.getLabel(), getLabelTypes(dataType))),
                 MapValue.EMPTY);
     }
 
@@ -157,19 +157,14 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                 VirtualValues.nodeValue(
                         edge.getSrcId(),
                         Values.stringArray(
-                                getSrcLabelName(
-                                        edge.getSrcLabel(),
-                                        getLabelTypes(dataType))),
+                                getSrcLabelName(edge.getSrcLabel(), getLabelTypes(dataType))),
                         MapValue.EMPTY),
                 VirtualValues.nodeValue(
                         edge.getDstId(),
                         Values.stringArray(
-                                getDstLabelName(
-                                        edge.getDstLabel(),
-                                        getLabelTypes(dataType))),
+                                getDstLabelName(edge.getDstLabel(), getLabelTypes(dataType))),
                         MapValue.EMPTY),
-                Values.stringValue(
-                        getLabelName(edge.getLabel(), getLabelTypes(dataType))),
+                Values.stringValue(getLabelName(edge.getLabel(), getLabelTypes(dataType))),
                 MapValue.EMPTY);
     }
 
@@ -181,8 +176,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         k -> {
                             switch (k.getInnerCase()) {
                                 case VERTEX:
-                                    nodes.add(
-                                            parseVertex(k.getVertex(), getVertexType(dataType)));
+                                    nodes.add(parseVertex(k.getVertex(), getVertexType(dataType)));
                                     break;
                                 case EDGE:
                                     relationships.add(
@@ -243,7 +237,8 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                     }
                     labelIds.add(labelType.getLabelId());
                 }
-                logger.warn("label id={} not found, expected ids are {}", nameOrId.getId(), labelIds);
+                logger.warn(
+                        "label id={} not found, expected ids are {}", nameOrId.getId(), labelIds);
                 return String.valueOf(nameOrId.getId());
         }
     }
@@ -260,7 +255,10 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         return labelType.getSrcLabel();
                     }
                 }
-                logger.warn("src label id={} not found, expected ids are {}", nameOrId.getId(), labelIds);
+                logger.warn(
+                        "src label id={} not found, expected ids are {}",
+                        nameOrId.getId(),
+                        labelIds);
                 return String.valueOf(nameOrId.getId());
         }
     }
@@ -277,7 +275,10 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         return labelType.getDstLabel();
                     }
                 }
-                logger.warn("dst label id={} not found, expected ids are {}", nameOrId.getId(), labelIds);
+                logger.warn(
+                        "dst label id={} not found, expected ids are {}",
+                        nameOrId.getId(),
+                        labelIds);
                 return String.valueOf(nameOrId.getId());
         }
     }
@@ -297,10 +298,14 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     }
 
     private RelDataType getVertexType(RelDataType graphPathType) {
-        return (graphPathType instanceof GraphPathType) ? ((GraphPathType) graphPathType).getComponentType().getGetVType() : graphPathType;
+        return (graphPathType instanceof GraphPathType)
+                ? ((GraphPathType) graphPathType).getComponentType().getGetVType()
+                : graphPathType;
     }
 
     private RelDataType getEdgeType(RelDataType graphPathType) {
-        return (graphPathType instanceof GraphPathType) ? ((GraphPathType) graphPathType).getComponentType().getExpandType() : graphPathType;
+        return (graphPathType instanceof GraphPathType)
+                ? ((GraphPathType) graphPathType).getComponentType().getExpandType()
+                : graphPathType;
     }
 }
