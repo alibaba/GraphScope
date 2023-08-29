@@ -1079,7 +1079,7 @@ mod test {
     #[test]
     fn post_process_edgexpd() {
         // g.V().outE()
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(build_edgexpd(1, vec![], None).into(), vec![1])
@@ -1121,7 +1121,7 @@ mod test {
         // g.V().out().has("birthday", 20220101)
         // In this case, the Select will be translated into an GetV, to fetch and filter the
         // results in one single `FilterMap` pegasus operator.
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(build_edgexpd(0, vec![], None).into(), vec![1])
@@ -1166,7 +1166,7 @@ mod test {
     #[test]
     fn post_process_edgexpd_label_filter() {
         // g.V().out().filter(@.~label == "person")
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(build_edgexpd(0, vec![], None).into(), vec![1])
@@ -1199,7 +1199,7 @@ mod test {
         // fetching the properties from two different nodes. In this case, we need to fetch
         // the properties using `GetV` twice before filter, and can
         // finally execute the selection of "0.age > 1.age".
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(build_edgexpd(0, vec![], Some(0.into())).into(), vec![1])
@@ -1260,7 +1260,7 @@ mod test {
     #[test]
     fn post_process_edgexpd_project_auxilia() {
         // g.V().out().as(0).select(0).by(valueMap("name", "id", "age")
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(build_edgexpd(0, vec![], Some(0.into())).into(), vec![1])
@@ -1312,7 +1312,7 @@ mod test {
     #[test]
     fn post_process_edgexpd_tag_no_auxilia() {
         // g.V().out().as('a').select('a')
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(build_edgexpd(0, vec![], Some(0.into())).into(), vec![1])
@@ -1342,7 +1342,7 @@ mod test {
 
     #[test]
     fn post_process_scan() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
@@ -1397,7 +1397,7 @@ mod test {
     #[test]
     fn post_process_getv_auxilia_projection() {
         // g.V().outE().inV().as('a').select('a').by(valueMap("name", "id", "age")
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(build_edgexpd(1, vec![], None).into(), vec![1])
@@ -1451,7 +1451,7 @@ mod test {
     #[test]
     fn post_process_getv_auxilia_filter() {
         // g.V().outE().inV().filter('age > 10')
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(build_edgexpd(1, vec![], None).into(), vec![1])
@@ -1516,7 +1516,7 @@ mod test {
         };
         let limit_opr = pb::Limit { range: Some(pb::Range { lower: 10, upper: 11 }) };
 
-        let mut logical_plan = LogicalPlan::default();
+        let mut logical_plan = LogicalPlan::with_root();
 
         logical_plan
             .append_operator_as_node(source_opr.clone().into(), vec![0])
@@ -1574,7 +1574,7 @@ mod test {
             meta_data: vec![],
         };
 
-        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
+        let mut logical_plan = LogicalPlan::with_node(Node::new(0, source_opr.clone().into()));
         logical_plan
             .append_operator_as_node(project_opr.clone().into(), vec![0])
             .unwrap(); // node 1
@@ -1619,7 +1619,7 @@ mod test {
             condition: None,
         };
 
-        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
+        let mut logical_plan = LogicalPlan::with_node(Node::new(0, source_opr.clone().into()));
         logical_plan
             .append_operator_as_node(path_opr.clone().into(), vec![0])
             .unwrap(); // node 1
@@ -1708,7 +1708,7 @@ mod test {
             condition: None,
         };
 
-        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
+        let mut logical_plan = LogicalPlan::with_node(Node::new(0, source_opr.clone().into()));
         logical_plan
             .append_operator_as_node(path_opr.clone().into(), vec![0])
             .unwrap(); // node 1
@@ -1820,7 +1820,7 @@ mod test {
             condition: None,
         };
 
-        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
+        let mut logical_plan = LogicalPlan::with_node(Node::new(0, source_opr.clone().into()));
         logical_plan
             .append_operator_as_node(path_opr.clone().into(), vec![0])
             .unwrap(); // node 1
@@ -1866,7 +1866,7 @@ mod test {
 
         let topby_opr = pb::OrderBy { pairs: vec![], limit: Some(pb::Range { lower: 10, upper: 11 }) };
 
-        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
+        let mut logical_plan = LogicalPlan::with_node(Node::new(0, source_opr.clone().into()));
         logical_plan
             .append_operator_as_node(topby_opr.clone().into(), vec![0])
             .unwrap(); // node 1
@@ -1883,7 +1883,7 @@ mod test {
 
     #[test]
     fn apply_as_physical_case1() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().as("0").where(out().as("1").has("lang", "java")).select("0").values("name")
         plan.meta = plan.meta.with_partition();
 
@@ -1971,7 +1971,7 @@ mod test {
 
     #[test]
     fn apply_as_physical_with_expand_degree_fuse() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().as("0").select("0").by(out().count().as("degree"))
         // out().degree() fused
         plan.meta = plan.meta.with_partition();
@@ -2036,7 +2036,7 @@ mod test {
 
     #[test]
     fn apply_as_physical_with_select_expand_degree_fuse() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().as("0").select().by(select("0").out().count().as("degree"))
         // select("0").out().degree() fused
         plan.meta = plan.meta.with_partition();
@@ -2130,7 +2130,7 @@ mod test {
         let join_opr = pb::Join { left_keys: vec![], right_keys: vec![], kind: 0 };
         let limit_opr = pb::Limit { range: Some(pb::Range { lower: 10, upper: 11 }) };
 
-        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
+        let mut logical_plan = LogicalPlan::with_node(Node::new(0, source_opr.clone().into()));
         logical_plan
             .append_operator_as_node(expand_opr.clone().into(), vec![0])
             .unwrap(); // node 1
@@ -2235,7 +2235,7 @@ mod test {
         // parents are expand_ac_opr and expand_bc_opr
         let intersect_opr = pb::Intersect { parents: vec![4, 6], key: Some(2.into()) };
 
-        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
+        let mut logical_plan = LogicalPlan::with_node(Node::new(0, source_opr.clone().into()));
         logical_plan
             .append_operator_as_node(expand_ab_opr_edge.clone().into(), vec![0])
             .unwrap(); // node 1
@@ -2356,7 +2356,7 @@ mod test {
         // parents are expand_ac_opr and expand_bc_opr
         let intersect_opr = pb::Intersect { parents: vec![4, 6], key: Some(2.into()) };
 
-        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
+        let mut logical_plan = LogicalPlan::with_node(Node::new(0, source_opr.clone().into()));
         logical_plan
             .append_operator_as_node(expand_ab_opr_edge.clone().into(), vec![0])
             .unwrap(); // node 1
@@ -2429,7 +2429,7 @@ mod test {
         };
         let union_opr = pb::Union { parents: vec![4, 5] };
         let join = pb::Join::default();
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(opr.clone(), vec![0])
             .unwrap(); // root(1)
         plan.append_operator_as_node(opr.clone(), vec![1])
@@ -2469,7 +2469,7 @@ mod test {
         };
         let union_opr = pb::Union { parents: vec![4, 5] };
         let join = pb::Join::default();
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(opr.clone(), vec![0])
             .unwrap(); // root(1)
         plan.append_operator_as_node(opr.clone(), vec![1])
@@ -2507,7 +2507,7 @@ mod test {
         let union1 = pb::Union { parents: vec![2, 3] };
         let union2 = pb::Union { parents: vec![3, 4] };
         let join = pb::Join::default();
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(opr.clone(), vec![0])
             .unwrap(); // root(1)
         plan.append_operator_as_node(opr.clone(), vec![1])
@@ -2549,7 +2549,7 @@ mod test {
         let union_opr = pb::Union { parents: vec![6, 7] };
         let join1 = pb::Join::default();
         let join2 = pb::Join::default();
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
 
         plan.append_operator_as_node(opr.clone(), vec![0])
             .unwrap(); // root(1)
@@ -2596,7 +2596,7 @@ mod test {
         let union1 = pb::Union { parents: vec![4, 5] };
         let union2 = pb::Union { parents: vec![8, 9] };
         let join = pb::Join::default();
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
 
         plan.append_operator_as_node(opr.clone(), vec![0])
             .unwrap(); // root(1)
@@ -2645,7 +2645,7 @@ mod test {
         let union_opr = pb::Union { parents: vec![4, 5] };
         let join1 = pb::Join::default();
         let join2 = pb::Join::default();
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
 
         plan.append_operator_as_node(opr.clone(), vec![0])
             .unwrap(); // root(1)

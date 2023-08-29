@@ -308,7 +308,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let srouce_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -335,7 +335,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C, TAG_D]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -367,7 +367,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -409,7 +409,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -458,7 +458,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -503,7 +503,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -543,7 +543,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -583,7 +583,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -623,7 +623,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();

@@ -88,7 +88,7 @@ pub(crate) type NodeType = Rc<RefCell<Node>>;
 /// An internal representation of the pb-[`LogicalPlan`].
 ///
 /// [`LogicalPlan`]: crate::generated::algebra::LogicalPlan
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct LogicalPlan {
     pub(crate) nodes: VecMap<NodeType>,
     /// To record the nodes' maximum id in the logical plan. Note that the nodes
@@ -96,14 +96,6 @@ pub struct LogicalPlan {
     pub(crate) max_node_id: NodeId,
     /// The metadata of the logical plan
     pub(crate) meta: PlanMeta,
-}
-
-impl Default for LogicalPlan {
-    fn default() -> Self {
-        let dummy_opr = pb::logical_plan::operator::Opr::Root(pb::Root {});
-        let dummy_root = Node::new(0, pb::logical_plan::Operator { opr: Some(dummy_opr) });
-        LogicalPlan::with_root(dummy_root)
-    }
 }
 
 impl PartialEq for LogicalPlan {
@@ -139,7 +131,7 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
 
     fn try_from(pb: pb::LogicalPlan) -> Result<Self, Self::Error> {
         let nodes_pb = pb.nodes;
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let mut id_map = HashMap::<NodeId, NodeId>::new();
         let mut parents = HashMap::<NodeId, BTreeSet<NodeId>>::new();
         for (id, node) in nodes_pb.iter().enumerate() {
@@ -327,8 +319,8 @@ impl LogicalPlan {
 
 #[allow(dead_code)]
 impl LogicalPlan {
-    /// Create a new logical plan from some root.
-    pub fn with_root(node: Node) -> Self {
+    /// Create a new logical plan from some node.
+    pub fn with_node(node: Node) -> Self {
         let mut meta = PlanMeta::default();
         let node_id = node.id;
         meta.refer_to_nodes(node_id, vec![node_id]);
@@ -339,8 +331,10 @@ impl LogicalPlan {
         Self { nodes, max_node_id: node_id + 1, meta }
     }
 
-    fn empty() -> Self {
-        LogicalPlan { nodes: VecMap::new(), max_node_id: 0, meta: PlanMeta::default() }
+    pub fn with_root() -> Self {
+        let root_opr = pb::logical_plan::operator::Opr::Root(pb::Root {});
+        let root_node = Node::new(0, pb::logical_plan::Operator { opr: Some(root_opr) });
+        LogicalPlan::with_node(root_node)
     }
 
     /// Get a node reference from the logical plan
@@ -710,9 +704,9 @@ impl LogicalPlan {
         // Decide whether need to include the from node or not
         if from_node == to_node {
             let mut plan = if contain_from_node {
-                LogicalPlan::with_root(clone_node(from_node))
+                LogicalPlan::with_node(clone_node(from_node))
             } else {
-                LogicalPlan::empty()
+                LogicalPlan::default()
             };
             plan.meta = self.meta.clone();
             return Some(plan);
@@ -1642,7 +1636,7 @@ mod test {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
 
         // The default logical plan should contain a dummy node
         assert_eq!(plan.len(), 1);
@@ -1847,7 +1841,7 @@ mod test {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
 
         let _ = plan
             .append_operator_as_node(opr.clone(), vec![0])
@@ -2210,7 +2204,7 @@ mod test {
 
     #[test]
     fn column_maintain_case1() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
 
         // g.V()
@@ -2267,7 +2261,7 @@ mod test {
 
     #[test]
     fn column_maintain_case2() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().out().as("here").has("lang", "java").select("here").values("name")
         let scan = pb::Scan {
             scan_opt: 0,
@@ -2342,7 +2336,7 @@ mod test {
 
     #[test]
     fn column_maintain_case3() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().outE().as("e").inV().as("v").select("e").order().by("weight").select("v").values("name").dedup()
 
         // g.V()
@@ -2460,7 +2454,7 @@ mod test {
 
     #[test]
     fn column_maintain_case4() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V("person").has("name", "John").as('a').outE("knows").as('b')
         //  .has("date", 20200101).inV().as('c').has('id', 10)
         //  .select('a').by(valueMap('age', "name"))
@@ -2593,7 +2587,7 @@ mod test {
     #[test]
     fn column_maintain_case5() {
         // Test the maintenance of all columns
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V("person").valueMap(ALL)
 
         // g.V("person")
@@ -2621,7 +2615,7 @@ mod test {
             .unwrap()
             .is_all_columns());
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V("person").valueMap(ALL)
 
         // g.V("person")
@@ -2666,7 +2660,7 @@ mod test {
     #[test]
     fn column_maintain_case6() {
         // Test the maintenance of columns after **rename tags**
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().out().as("a").in().select("a").as("b").select("b").by("name")
 
         // g.V()
@@ -2743,7 +2737,7 @@ mod test {
 
     #[test]
     fn column_maintain_semi_apply() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().where(out()).valueMap("age")
 
         // g.V()
@@ -2806,7 +2800,7 @@ mod test {
     #[test]
     fn column_maintain_groupby_case1() {
         // groupBy contains tagging a keys that is further a vertex
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().groupCount().order().by(select(keys).by('name'))
 
         // g.V()
@@ -2864,7 +2858,7 @@ mod test {
     #[test]
     fn column_maintain_groupby_case2() {
         // groupBy contains tagging a key that is further a vertex
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().groupCount().select(values)
 
         // g.V()
@@ -2912,7 +2906,7 @@ mod test {
     #[test]
     fn column_maintain_groupby_case3() {
         // groupBy contains tagging a keys
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().group().by(values('name').as('a')).select('a')
         // g.V()
         let scan = pb::Scan {
@@ -2971,7 +2965,7 @@ mod test {
 
     #[test]
     fn column_maintain_groupby_case4() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().group().by(outE().count()).by('name')
         // g.V()
         let scan = pb::Scan {
@@ -3062,7 +3056,7 @@ mod test {
 
     #[test]
     fn column_maintain_orderby() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.E(xx).values("workFrom").as("a").order().by(select("a"))
 
         let scan = pb::Scan {
@@ -3108,7 +3102,7 @@ mod test {
 
     #[test]
     fn column_maintain_union() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().union(out().has("age", Gt(10)), out().out()).as('a').select('a').by(valueMap('name', 'age'))
         // g.V()
         let scan = pb::Scan {
@@ -3186,7 +3180,7 @@ mod test {
 
     #[test]
     fn tag_projection_not_exist() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let project = pb::Project {
             mappings: vec![pb::project::ExprAlias {
                 expr: str_to_expr_pb("@keys.name".to_string()).ok(),
@@ -3203,7 +3197,7 @@ mod test {
 
     #[test]
     fn extract_subplan_from_apply_case1() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().as("v").where(out().as("o").has("lang", "java")).select("v").values("name")
 
         // g.V("person")
@@ -3284,7 +3278,7 @@ mod test {
 
     #[test]
     fn extract_subplan_from_apply_case2() {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         // g.V().where(not(out("created"))).values("name")
         let scan = pb::Scan {
             scan_opt: 0,
@@ -3369,7 +3363,7 @@ mod test {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(opr.clone(), vec![0])
             .unwrap(); // root(1)
         plan.append_operator_as_node(opr.clone(), vec![1])
@@ -3406,7 +3400,7 @@ mod test {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(opr.clone(), vec![0])
             .unwrap(); // root(1)
         plan.append_operator_as_node(opr.clone(), vec![1])
@@ -3437,7 +3431,7 @@ mod test {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(opr.clone(), vec![0])
             .unwrap(); // root(1)
         plan.append_operator_as_node(opr.clone(), vec![1])
@@ -3472,7 +3466,7 @@ mod test {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
 
         plan.append_operator_as_node(opr.clone(), vec![0])
             .unwrap(); // root(1)
@@ -3512,7 +3506,7 @@ mod test {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
 
         plan.append_operator_as_node(opr.clone(), vec![0])
             .unwrap(); // root(1)
@@ -3554,7 +3548,7 @@ mod test {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
 
         plan.append_operator_as_node(opr.clone(), vec![0])
             .unwrap(); // root(1)
@@ -3848,9 +3842,9 @@ mod test {
         let opr = pb::logical_plan::Operator {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
-        let mut plan = LogicalPlan::with_root(Node::new(1, opr.clone()));
+        let mut plan = LogicalPlan::with_node(Node::new(1, opr.clone()));
 
-        let mut subplan1 = LogicalPlan::with_root(Node::new(2, opr.clone()));
+        let mut subplan1 = LogicalPlan::with_node(Node::new(2, opr.clone()));
         subplan1
             .append_node(Node::new(4, opr.clone()), vec![2])
             .unwrap();
@@ -3861,7 +3855,7 @@ mod test {
             .append_node(Node::new(6, opr.clone()), vec![4, 5])
             .unwrap();
 
-        let subplan2 = LogicalPlan::with_root(Node::new(3, opr.clone()));
+        let subplan2 = LogicalPlan::with_node(Node::new(3, opr.clone()));
 
         plan.append_branch_plans(plan.get_node(1).unwrap(), vec![subplan1, subplan2]);
         let mut expected_plan = create_nested_logical_plan1();
@@ -3882,7 +3876,7 @@ mod test {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
         let subplan = plan.subplan(plan.get_node(1).unwrap(), plan.get_node(3).unwrap(), false);
-        let expected_plan = LogicalPlan::with_root(Node::new(3, opr.clone()));
+        let expected_plan = LogicalPlan::with_node(Node::new(3, opr.clone()));
         assert_eq!(subplan.unwrap(), expected_plan);
 
         // The node 3 is at one of the branches, which is incomplete and hence invalid subplan
@@ -3890,7 +3884,7 @@ mod test {
         assert!(subplan.is_none());
 
         let subplan = plan.subplan(plan.get_node(1).unwrap(), plan.get_node(6).unwrap(), false);
-        let mut expected_plan = LogicalPlan::with_root(Node::new(2, opr.clone()));
+        let mut expected_plan = LogicalPlan::with_node(Node::new(2, opr.clone()));
         expected_plan
             .append_node(Node::new(4, opr.clone()), vec![2])
             .unwrap();
@@ -3916,7 +3910,7 @@ mod test {
         let subplan_from_1_to_5 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(5).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_5_expected = LogicalPlan::with_root(Node::new(1, branch_opr.clone()));
+        let mut subplan_from_1_to_5_expected = LogicalPlan::with_node(Node::new(1, branch_opr.clone()));
         subplan_from_1_to_5_expected
             .append_node(Node::new(2, opr.clone()), vec![1])
             .unwrap();
@@ -3931,14 +3925,14 @@ mod test {
         let subplan_from_1_to_4 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(4).unwrap(), false)
             .unwrap();
-        let subplan_from_1_to_4_expected = LogicalPlan::with_root(Node::new(4, opr.clone()));
+        let subplan_from_1_to_4_expected = LogicalPlan::with_node(Node::new(4, opr.clone()));
         assert_eq!(subplan_from_1_to_4, subplan_from_1_to_4_expected);
 
         let subplan_from_1_to_6 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(6).unwrap(), false)
             .unwrap();
 
-        let mut subplan_from_1_to_6_expected = LogicalPlan::with_root(Node::new(1, branch_opr.clone()));
+        let mut subplan_from_1_to_6_expected = LogicalPlan::with_node(Node::new(1, branch_opr.clone()));
         subplan_from_1_to_6_expected
             .append_node(Node::new(2, opr.clone()), vec![1])
             .unwrap();
@@ -3969,7 +3963,7 @@ mod test {
         let subplan_from_1_to_5 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(5).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_5_expected = LogicalPlan::with_root(Node::new(1, branch_opr.clone()));
+        let mut subplan_from_1_to_5_expected = LogicalPlan::with_node(Node::new(1, branch_opr.clone()));
         subplan_from_1_to_5_expected
             .append_node(Node::new(2, opr.clone()), vec![1])
             .unwrap();
@@ -3984,7 +3978,7 @@ mod test {
         let subplan_from_1_to_6 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(6).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_6_expected = LogicalPlan::with_root(Node::new(1, branch_opr.clone()));
+        let mut subplan_from_1_to_6_expected = LogicalPlan::with_node(Node::new(1, branch_opr.clone()));
         subplan_from_1_to_6_expected
             .append_node(Node::new(3, opr.clone()), vec![1])
             .unwrap();
@@ -3999,7 +3993,7 @@ mod test {
         let subplan_from_1_to_7 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(7).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_7_expected = LogicalPlan::with_root(Node::new(1, branch_opr.clone()));
+        let mut subplan_from_1_to_7_expected = LogicalPlan::with_node(Node::new(1, branch_opr.clone()));
         subplan_from_1_to_7_expected
             .append_node(Node::new(2, opr.clone()), vec![1])
             .unwrap();
@@ -4033,7 +4027,7 @@ mod test {
         let subplan_from_1_to_5 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(5).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_5_expected = LogicalPlan::with_root(Node::new(1, branch_opr.clone()));
+        let mut subplan_from_1_to_5_expected = LogicalPlan::with_node(Node::new(1, branch_opr.clone()));
         subplan_from_1_to_5_expected
             .append_node(Node::new(2, opr.clone()), vec![1])
             .unwrap();
@@ -4048,7 +4042,7 @@ mod test {
         let subplan_from_1_to_8 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(8).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_8_expected = LogicalPlan::with_root(Node::new(4, opr.clone()));
+        let mut subplan_from_1_to_8_expected = LogicalPlan::with_node(Node::new(4, opr.clone()));
         subplan_from_1_to_8_expected
             .append_node(Node::new(6, opr.clone()), vec![4])
             .unwrap();
@@ -4063,7 +4057,7 @@ mod test {
         let subplan_from_4_to_8 = plan
             .subplan(plan.get_node(4).unwrap(), plan.get_node(8).unwrap(), false)
             .unwrap();
-        let mut subplan_from_4_to_8_expected = LogicalPlan::with_root(Node::new(4, branch_opr.clone()));
+        let mut subplan_from_4_to_8_expected = LogicalPlan::with_node(Node::new(4, branch_opr.clone()));
         subplan_from_4_to_8_expected
             .append_node(Node::new(6, opr.clone()), vec![4])
             .unwrap();
@@ -4078,7 +4072,7 @@ mod test {
         let subplan_from_1_to_9 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(9).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_9_expected = LogicalPlan::with_root(Node::new(1, branch_opr.clone()));
+        let mut subplan_from_1_to_9_expected = LogicalPlan::with_node(Node::new(1, branch_opr.clone()));
         subplan_from_1_to_9_expected
             .append_node(Node::new(2, opr.clone()), vec![1])
             .unwrap();
@@ -4118,7 +4112,7 @@ mod test {
         let subplan_from_1_to_8 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(8).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_8_expected = LogicalPlan::with_root(Node::new(2, opr.clone()));
+        let mut subplan_from_1_to_8_expected = LogicalPlan::with_node(Node::new(2, opr.clone()));
         subplan_from_1_to_8_expected
             .append_node(Node::new(4, opr.clone()), vec![2])
             .unwrap();
@@ -4133,7 +4127,7 @@ mod test {
         let subplan_from_1_to_9 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(9).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_9_expected = LogicalPlan::with_root(Node::new(3, opr.clone()));
+        let mut subplan_from_1_to_9_expected = LogicalPlan::with_node(Node::new(3, opr.clone()));
         subplan_from_1_to_9_expected
             .append_node(Node::new(6, opr.clone()), vec![3])
             .unwrap();
@@ -4148,7 +4142,7 @@ mod test {
         let subplan_from_2_to_8 = plan
             .subplan(plan.get_node(2).unwrap(), plan.get_node(8).unwrap(), false)
             .unwrap();
-        let mut subplan_from_2_to_8_expected = LogicalPlan::with_root(Node::new(2, branch_opr.clone()));
+        let mut subplan_from_2_to_8_expected = LogicalPlan::with_node(Node::new(2, branch_opr.clone()));
         subplan_from_2_to_8_expected
             .append_node(Node::new(4, opr.clone()), vec![2])
             .unwrap();
@@ -4163,7 +4157,7 @@ mod test {
         let subplan_from_3_to_9 = plan
             .subplan(plan.get_node(3).unwrap(), plan.get_node(9).unwrap(), false)
             .unwrap();
-        let mut subplan_from_3_to_9_expected = LogicalPlan::with_root(Node::new(3, branch_opr.clone()));
+        let mut subplan_from_3_to_9_expected = LogicalPlan::with_node(Node::new(3, branch_opr.clone()));
         subplan_from_3_to_9_expected
             .append_node(Node::new(6, opr.clone()), vec![3])
             .unwrap();
@@ -4178,7 +4172,7 @@ mod test {
         let subplan_from_1_to_10 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(10).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_10_expected = LogicalPlan::with_root(Node::new(1, branch_opr.clone()));
+        let mut subplan_from_1_to_10_expected = LogicalPlan::with_node(Node::new(1, branch_opr.clone()));
         subplan_from_1_to_10_expected
             .append_node(Node::new(2, opr.clone()), vec![1])
             .unwrap();
@@ -4221,7 +4215,7 @@ mod test {
         let subplan_from_1_to_4 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(4).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_4_expected = LogicalPlan::with_root(Node::new(1, branch_opr.clone()));
+        let mut subplan_from_1_to_4_expected = LogicalPlan::with_node(Node::new(1, branch_opr.clone()));
         subplan_from_1_to_4_expected
             .append_node(Node::new(2, opr.clone()), vec![1])
             .unwrap();
@@ -4236,7 +4230,7 @@ mod test {
         let subplan_from_1_to_5 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(5).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_5_expected = LogicalPlan::empty();
+        let mut subplan_from_1_to_5_expected = LogicalPlan::default();
         subplan_from_1_to_5_expected
             .append_node(Node::new(3, opr.clone()), vec![])
             .unwrap();
@@ -4248,7 +4242,7 @@ mod test {
         let subplan_from_1_to_6 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(6).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_6_expected = LogicalPlan::with_root(Node::new(1, branch_opr.clone()));
+        let mut subplan_from_1_to_6_expected = LogicalPlan::with_node(Node::new(1, branch_opr.clone()));
         subplan_from_1_to_6_expected
             .append_node(Node::new(2, opr.clone()), vec![1])
             .unwrap();
@@ -4269,7 +4263,7 @@ mod test {
         let subplan_from_1_to_7 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(7).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_7_expected = LogicalPlan::empty();
+        let mut subplan_from_1_to_7_expected = LogicalPlan::default();
         subplan_from_1_to_7_expected
             .append_node(Node::new(3, opr.clone()), vec![])
             .unwrap();
@@ -4284,7 +4278,7 @@ mod test {
         let subplan_from_1_to_8 = plan
             .subplan(plan.get_node(1).unwrap(), plan.get_node(8).unwrap(), false)
             .unwrap();
-        let mut subplan_from_1_to_8_expected = LogicalPlan::with_root(Node::new(1, branch_opr.clone()));
+        let mut subplan_from_1_to_8_expected = LogicalPlan::with_node(Node::new(1, branch_opr.clone()));
         subplan_from_1_to_8_expected
             .append_node(Node::new(2, opr.clone()), vec![1])
             .unwrap();
@@ -4319,8 +4313,8 @@ mod test {
             opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
         };
 
-        let plan1 = LogicalPlan::with_root(Node::new(4, opr.clone()));
-        let plan2 = LogicalPlan::with_root(Node::new(5, opr.clone()));
+        let plan1 = LogicalPlan::with_node(Node::new(4, opr.clone()));
+        let plan2 = LogicalPlan::with_node(Node::new(5, opr.clone()));
 
         assert_eq!(merge_node, plan.get_node(6).unwrap());
         assert_eq!(subplans, vec![plan1, plan2]);
@@ -4329,9 +4323,9 @@ mod test {
             .get_branch_plans(plan.get_node(1).unwrap())
             .unwrap();
 
-        let plan1 = LogicalPlan::with_root(Node::new(3, opr.clone()));
+        let plan1 = LogicalPlan::with_node(Node::new(3, opr.clone()));
 
-        let mut plan2 = LogicalPlan::with_root(Node::new(2, opr.clone()));
+        let mut plan2 = LogicalPlan::with_node(Node::new(2, opr.clone()));
         plan2
             .append_node(Node::new(4, opr.clone()), vec![2])
             .unwrap();
@@ -4345,7 +4339,7 @@ mod test {
         assert_eq!(merge_node, plan.get_node(7).unwrap());
         assert_eq!(subplans, vec![plan1, plan2]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_operator_as_node(opr.clone(), vec![0])
             .unwrap(); // root
         plan.append_operator_as_node(opr.clone(), vec![1])
@@ -4360,9 +4354,9 @@ mod test {
         let (merge_node, subplans) = plan
             .get_branch_plans(plan.get_node(1).unwrap())
             .unwrap();
-        let plan1 = LogicalPlan::with_root(Node::new(2, opr.clone()));
-        let plan2 = LogicalPlan::with_root(Node::new(3, opr.clone()));
-        let plan3 = LogicalPlan::with_root(Node::new(4, opr.clone()));
+        let plan1 = LogicalPlan::with_node(Node::new(2, opr.clone()));
+        let plan2 = LogicalPlan::with_node(Node::new(3, opr.clone()));
+        let plan3 = LogicalPlan::with_node(Node::new(4, opr.clone()));
 
         assert_eq!(merge_node, plan.get_node(5).unwrap());
         assert_eq!(subplans, vec![plan1, plan2, plan3]);

@@ -91,7 +91,7 @@ mod tests {
 
         let sink = default_sink_pb();
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let scan_id = plan
             .append_operator_as_node(scan_opr.into(), vec![0])
             .unwrap();
@@ -164,7 +164,7 @@ mod tests {
 
         let sink = default_sink_pb();
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let left_scan_id = plan
             .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
@@ -252,7 +252,7 @@ mod tests {
 
         let sink = default_sink_pb();
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let left_scan_id = plan
             .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
@@ -356,7 +356,7 @@ mod tests {
 
         let sink = default_sink_pb();
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let scan1_id = plan
             .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
@@ -432,7 +432,7 @@ mod tests {
 
         let sink = default_sink_pb();
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let branch2_id = plan
             .append_operator_as_node(dummy_opr.clone().into(), vec![0])
             .unwrap();

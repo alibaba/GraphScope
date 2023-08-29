@@ -183,7 +183,7 @@ mod test {
     // 6: union
     // 7: sink
     fn build_nested_branch_plan1_request() -> JobRequest {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
 
         let person_scan = get_person_scan(None);
 
@@ -243,7 +243,7 @@ mod test {
     // 5: join in TAG_A
     // 6: union
     fn build_nested_branch_plan2_request() -> JobRequest {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
 
         let scan = pb::Scan::default();
 
@@ -305,7 +305,7 @@ mod test {
     // 6. join2 in TAG_A
     // 7. union
     fn build_nested_branch_plan3_request() -> JobRequest {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
 
         let scan = pb::Scan::default();
 
@@ -378,7 +378,7 @@ mod test {
     // 9: union
     // 10: join in TAG_A
     fn build_nested_branch_plan4_request() -> JobRequest {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
 
         let scan = pb::Scan::default();
 
@@ -469,7 +469,7 @@ mod test {
     // 9: union
     // 10: join on TAG_A
     fn build_nested_branch_plan5_request() -> JobRequest {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
 
         let scan = pb::Scan::default();
 
@@ -561,7 +561,7 @@ mod test {
     // 8: alias as TAG_A
     // 9: join in TAG_A
     fn build_nested_branch_plan6_request() -> JobRequest {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
 
         let scan = pb::Scan::default();
 
