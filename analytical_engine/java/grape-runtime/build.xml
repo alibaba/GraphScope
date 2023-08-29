@@ -24,6 +24,10 @@
       <os family="mac"/>
     </condition>
 
+    <condition property="platform" value="linux64">
+      <os arch="aarch64" family="unix"/>
+    </condition>
+    
     <exec executable="nproc" outputproperty="cores.count">
       <arg value="--all"/>
     </exec>

@@ -218,6 +218,25 @@
           }
         }
       },
+      "children": [
+        2
+      ]
+    },
+    {
+      "opr": {
+        "opr": {
+          "Sink": {
+            "tags": [],
+            "sink_target": {
+              "inner": {
+                "SinkDefault": {
+                  "id_name_mappings": []
+                }
+              }
+            }
+          }
+        }
+      },
       "children": []
     }
   ],

@@ -52,7 +52,7 @@ impl DerefMut for PlanBuilder {
 
 impl PlanBuilder {
     pub fn add_dummy_source(&mut self) -> &mut Self {
-        let op = pb::physical_opr::operator::OpKind::Root(pb::RootScan {});
+        let op = pb::physical_opr::operator::OpKind::Root(pb::Root {});
         self.plan.push(op.into());
         self
     }

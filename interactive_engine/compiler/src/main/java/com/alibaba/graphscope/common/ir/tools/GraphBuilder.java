@@ -18,6 +18,8 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import static java.util.Objects.requireNonNull;
 
+import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
+import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
@@ -31,8 +33,6 @@ import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphRelCollations;
 import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
-import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
-import com.alibaba.graphscope.common.ir.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;

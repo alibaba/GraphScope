@@ -186,7 +186,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
     fn install(
         &self, mut stream: Stream<Record>, plan: &[pb::PhysicalOpr],
     ) -> Result<Stream<Record>, BuildJobError> {
-        let mut prev_op_kind = pb::physical_opr::operator::OpKind::Root(pb::RootScan {});
+        let mut prev_op_kind = pb::physical_opr::operator::OpKind::Root(pb::Root {});
         for op in &plan[..] {
             let op_kind = op.try_into().map_err(|e| FnGenError::from(e))?;
             match op_kind {

@@ -16,40 +16,22 @@
 
 package com.alibaba.graphscope.common.store;
 
-import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.config.GraphConfig;
-import com.alibaba.graphscope.common.ir.procedure.GraphStoredProcedures;
-import com.alibaba.graphscope.common.ir.procedure.reader.StoredProceduresReader;
-import com.alibaba.graphscope.common.ir.schema.FileFormatType;
-import com.alibaba.graphscope.common.ir.schema.IrGraphSchema;
+import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
+import com.alibaba.graphscope.common.ir.meta.reader.MetaDataReader;
+import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 
-import java.io.FileInputStream;
 import java.util.Optional;
 
 public class ExperimentalMetaFetcher implements IrMetaFetcher {
     private final IrMeta meta;
 
-    public ExperimentalMetaFetcher(Configs configs) throws Exception {
-        String schemaFile = GraphConfig.GRAPH_SCHEMA.get(configs);
+    public ExperimentalMetaFetcher(MetaDataReader dataReader) throws Exception {
         this.meta =
-                new IrMeta(
-                        new IrGraphSchema(
-                                new FileInputStream(schemaFile), getFormatType(schemaFile)),
-                        new GraphStoredProcedures(StoredProceduresReader.Factory.create(configs)));
+                new IrMeta(new IrGraphSchema(dataReader), new GraphStoredProcedures(dataReader));
     }
 
     @Override
     public Optional<IrMeta> fetch() {
         return Optional.of(this.meta);
-    }
-
-    private FileFormatType getFormatType(String schemaFile) {
-        if (schemaFile.endsWith(".yaml")) {
-            return FileFormatType.YAML;
-        } else if (schemaFile.endsWith(".json")) {
-            return FileFormatType.JSON;
-        } else {
-            throw new IllegalArgumentException("unsupported file format " + schemaFile);
-        }
     }
 }
