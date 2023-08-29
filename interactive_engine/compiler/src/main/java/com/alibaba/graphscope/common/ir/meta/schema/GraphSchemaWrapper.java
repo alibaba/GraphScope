@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.schema;
+package com.alibaba.graphscope.common.ir.meta.schema;
 
 import com.alibaba.graphscope.groot.common.exception.GraphElementNotFoundException;
 import com.alibaba.graphscope.groot.common.exception.GraphPropertyNotFoundException;
