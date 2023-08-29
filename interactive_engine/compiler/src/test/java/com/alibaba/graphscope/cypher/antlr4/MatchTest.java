@@ -133,5 +133,28 @@ public class MatchTest {
                 "[Parameter{name='name', dataType=CHAR(1)}, Parameter{name='age',"
                         + " dataType=INTEGER}]",
                 plan.getDynamicParams().toString());
+        Assert.assertEquals("RecordType(BIGINT id)", plan.getOutputType().toString());
+    }
+
+    // add a new test case for match without any dynamic params
+    @Test
+    public void match_8_test() {
+        LogicalPlan plan = Utils.evalLogicalPlan("Match (n:person) Return n.id;");
+        Assert.assertTrue(plan.getDynamicParams().isEmpty());
+        Assert.assertEquals("RecordType(BIGINT id)", plan.getOutputType().toString());
+    }
+
+    // add a new test case for match with multiple dynamic params
+    @Test
+    public void match_9_test() {
+        LogicalPlan plan =
+                Utils.evalLogicalPlan(
+                        "Match (n:person {name: $name, age: $age}) Where n.id > 10 Return n.id,"
+                            + " n.name;");
+        Assert.assertEquals(
+                "[Parameter{name='name', dataType=CHAR(1)}, Parameter{name='age',"
+                    + " dataType=INTEGER}]",
+                plan.getDynamicParams().toString());
+        Assert.assertEquals("RecordType(BIGINT id, CHAR(1) name)", plan.getOutputType().toString());
     }
 }
