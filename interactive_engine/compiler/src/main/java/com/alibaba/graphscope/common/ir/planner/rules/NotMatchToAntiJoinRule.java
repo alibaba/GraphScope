@@ -33,10 +33,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
-public class NotExistToAntiJoinRule<C extends NotExistToAntiJoinRule.Config> extends RelRule<C>
+public class NotMatchToAntiJoinRule<C extends NotMatchToAntiJoinRule.Config> extends RelRule<C>
         implements TransformationRule {
 
-    protected NotExistToAntiJoinRule(C config) {
+    protected NotMatchToAntiJoinRule(C config) {
         super(config);
     }
 
@@ -73,8 +73,8 @@ public class NotExistToAntiJoinRule<C extends NotExistToAntiJoinRule.Config> ext
     }
 
     public static class Config implements RelRule.Config {
-        public static NotExistToAntiJoinRule.Config DEFAULT =
-                new NotExistToAntiJoinRule.Config()
+        public static NotMatchToAntiJoinRule.Config DEFAULT =
+                new NotMatchToAntiJoinRule.Config()
                         .withOperandSupplier(
                                 b0 ->
                                         b0.operand(Filter.class)
@@ -100,25 +100,25 @@ public class NotExistToAntiJoinRule<C extends NotExistToAntiJoinRule.Config> ext
 
         @Override
         public RelRule toRule() {
-            return new NotExistToAntiJoinRule(this);
+            return new NotMatchToAntiJoinRule(this);
         }
 
         @Override
-        public NotExistToAntiJoinRule.Config withRelBuilderFactory(
+        public NotMatchToAntiJoinRule.Config withRelBuilderFactory(
                 RelBuilderFactory relBuilderFactory) {
             this.builderFactory = relBuilderFactory;
             return this;
         }
 
         @Override
-        public NotExistToAntiJoinRule.Config withDescription(
+        public NotMatchToAntiJoinRule.Config withDescription(
                 @org.checkerframework.checker.nullness.qual.Nullable String s) {
             this.description = s;
             return this;
         }
 
         @Override
-        public NotExistToAntiJoinRule.Config withOperandSupplier(
+        public NotMatchToAntiJoinRule.Config withOperandSupplier(
                 RelRule.OperandTransform operandTransform) {
             this.operandSupplier = operandTransform;
             return this;

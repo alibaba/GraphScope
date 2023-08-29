@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.cypher.antlr4;
 
-import com.alibaba.graphscope.common.ir.planner.rules.NotExistToAntiJoinRule;
+import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
@@ -144,7 +144,7 @@ public class WhereTest {
 
         RelOptPlanner planner =
                 com.alibaba.graphscope.common.ir.Utils.mockPlanner(
-                        NotExistToAntiJoinRule.Config.DEFAULT);
+                        NotMatchToAntiJoinRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(

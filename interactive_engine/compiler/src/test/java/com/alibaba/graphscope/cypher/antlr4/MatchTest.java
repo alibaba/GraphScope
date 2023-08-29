@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.cypher.antlr4;
 
-import com.alibaba.graphscope.common.ir.planner.rules.NotExistToAntiJoinRule;
+import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 
 import org.apache.calcite.plan.RelOptPlanner;
@@ -183,7 +183,7 @@ public class MatchTest {
                 multiMatch.explain().trim());
         RelOptPlanner planner =
                 com.alibaba.graphscope.common.ir.Utils.mockPlanner(
-                        NotExistToAntiJoinRule.Config.DEFAULT);
+                        NotMatchToAntiJoinRule.Config.DEFAULT);
         planner.setRoot(multiMatch);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(

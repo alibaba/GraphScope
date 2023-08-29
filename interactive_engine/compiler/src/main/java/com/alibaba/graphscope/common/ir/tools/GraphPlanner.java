@@ -24,7 +24,7 @@ import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
-import com.alibaba.graphscope.common.ir.planner.rules.NotExistToAntiJoinRule;
+import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
@@ -190,8 +190,8 @@ public class GraphPlanner {
                                                 FilterMatchRule.class.getSimpleName())) {
                                             ruleConfigs.add(FilterMatchRule.Config.DEFAULT);
                                         } else if (k.equals(
-                                                NotExistToAntiJoinRule.class.getSimpleName())) {
-                                            ruleConfigs.add(NotExistToAntiJoinRule.Config.DEFAULT);
+                                                NotMatchToAntiJoinRule.class.getSimpleName())) {
+                                            ruleConfigs.add(NotMatchToAntiJoinRule.Config.DEFAULT);
                                         } else {
                                             // todo: add more rule configs
                                         }
