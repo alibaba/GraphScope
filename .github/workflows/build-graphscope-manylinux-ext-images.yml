@@ -73,6 +73,16 @@ jobs:
         # manylinux2014 image
         sudo docker tag graphscope/manylinux2014:${tag} ${{ env.REGISTRY }}/graphscope/manylinux2014:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/manylinux2014:${tag}
+
+    - name: Clean Image
+      run: |
+        # aarch64
+        arch=$(uname -m)
+        # image tag
+        tag=ext-${arch}
+        # clean
+        sudo docker rmi -f graphscope/manylinux2014:${tag} || true
+        sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/manylinux2014:${tag} || true
        
   manifest_push_manylinux-ext-image:
     runs-on: ubuntu-20.04

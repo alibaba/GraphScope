@@ -23,12 +23,7 @@ on:
         default: true
         type: boolean
       build_vineyard_dev:
-        description: 'Whether to build vineyard-dev image'
-        required: true
-        default: true
-        type: boolean
-      build_vineyard_runtime:
-        description: 'Whether to build vineyard-runtime image'
+        description: 'Whether to build vineyard-dev(runtime) image'
         required: true
         default: true
         type: boolean
@@ -119,6 +114,16 @@ jobs:
         # dev-wheel image
         sudo docker tag graphscope/graphscope-dev:wheel-${tag} ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
+
+    - name: Clean Image
+      run: |
+        # aarch64
+        arch=$(uname -m)
+        # image tag
+        tag=${{ github.event.inputs.v6d_version }}-${arch}
+        # clean
+        sudo docker rmi -f graphscope/graphscope-dev:wheel-${tag} || true
+        sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag} || true
 
   manifesh-push-wheel-image:
     runs-on: ubuntu-20.04
@@ -214,6 +219,16 @@ jobs:
         sudo docker tag graphscope/graphscope-dev:${tag} ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
 
+    - name: Clean Image
+      run: |
+        # aarch64
+        arch=$(uname -m)
+        # image tag
+        tag=${{ github.event.inputs.v6d_version }}-${arch}
+        # clean
+        sudo docker rmi -f graphscope/graphscope-dev:${tag} || true
+        sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag} || true
+
   manifest-push-graphscope-dev-image:
     runs-on: ubuntu-20.04
     if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_graphscope_dev == 'true' }}
@@ -308,6 +323,16 @@ jobs:
         sudo docker tag graphscope/vineyard-dev:${tag} ${{ env.REGISTRY }}/graphscope/vineyard-dev:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-dev:${tag}
 
+    - name: Clean Image
+      run: |
+        # aarch64
+        arch=$(uname -m)
+        # image tag
+        tag=${{ github.event.inputs.v6d_version }}-${arch}
+        # clean
+        sudo docker rmi -f graphscope/vineyard-dev:${tag} || true
+        sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/vineyard-dev:${tag} || true
+
   manifest-push-vineyard-dev-image:
     runs-on: ubuntu-20.04
     if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
@@ -330,8 +355,11 @@ jobs:
 
   build-vineyard-runtime-image-x86-64:
     runs-on: ubuntu-20.04
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_vineyard_runtime == 'true') || (github.pull_request == 'pull_request')
+    # only trigger this step in 'workflow_dispatch' event,
+    # since the 'vineyard-dev' image isn't actually pushed in 'pull_request'
+    if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
 
+    needs: [manifest-push-vineyard-dev-image]
     steps:
     - uses: actions/checkout@v3
       with:
@@ -351,7 +379,6 @@ jobs:
         fi
 
     - name: Release Image
-      if: ${{ github.event_name == 'workflow_dispatch' }}
       env:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
         docker_username: ${{ secrets.DOCKER_USER }}
@@ -367,8 +394,11 @@ jobs:
 
   build-vineyard-runtime-image-aarch64:
     runs-on: [self-hosted, Linux, ARM64]
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_vineyard_runtime == 'true') || (github.pull_request == 'pull_request')
+    # only trigger this step in 'workflow_dispatch' event,
+    # since the 'vineyard-dev' image isn't actually pushed in 'pull_request'
+    if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
 
+    needs: [manifest-push-vineyard-dev-image]
     steps:
     - uses: actions/checkout@v3
       with:
@@ -388,7 +418,6 @@ jobs:
         fi
 
     - name: Release Image
-      if: ${{ github.event_name == 'workflow_dispatch' }}
       env:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
         docker_username: ${{ secrets.DOCKER_USER }}
@@ -402,9 +431,19 @@ jobs:
         sudo docker tag graphscope/vineyard-runtime:${tag} ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
 
+    - name: Clean Image
+      run: |
+        # aarch64
+        arch=$(uname -m)
+        # image tag
+        tag=${{ github.event.inputs.v6d_version }}-${arch}
+        # clean
+        sudo docker rmi -f graphscope/vineyard-runtime:${tag} || true
+        sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag} || true
+
   manifest-push-vineyard-runtime-image:
     runs-on: ubuntu-20.04
-    if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_runtime == 'true' }}
+    if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
 
     needs: [build-vineyard-runtime-image-x86-64, build-vineyard-runtime-image-aarch64]
     steps:
