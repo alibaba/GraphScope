@@ -520,7 +520,6 @@ class Session(object):
         for key, value in kw.items():
             self._config.set_option(key, value)
         self._config.session.instance_id = random_string(6)
-        self._config.post_setup()  # Do some necessary operation to make sure it's valid
 
         # initial setting of cluster_type
         self._cluster_type = self._parse_cluster_type()

@@ -21,6 +21,7 @@
 
 from dataclasses import dataclass
 from dataclasses import field
+from typing import List
 from typing import Union
 
 from simple_parsing import ArgumentParser
@@ -87,7 +88,7 @@ class ImageConfig:
     registry: str = "registry.cn-hongkong.aliyuncs.com"  # k8s image registry.
     repository: str = "graphscope"  # k8s image repository.
     tag: str = __version__  # k8s image tag.
-    pull_secrets: list[str] = field(
+    pull_secrets: List[str] = field(
         default_factory=list
     )  # A list of secrets to pull image.
     pull_policy: str = "IfNotPresent"  # Kubernetes image pull policy.
@@ -231,7 +232,7 @@ class CoordinatorConfig:
 class HostsLauncherConfig:
     """Local cluster configuration."""
 
-    hosts: list[str] = list_field("localhost")
+    hosts: List[str] = list_field("localhost")
     # list of hostnames of graphscope engine workers.
     etcd: EtcdConfig = EtcdConfig()
     # Etcd configuration. Only local session needs to configure etcd.
@@ -274,7 +275,7 @@ class KubernetesLauncherConfig:
 class OperatorLauncherConfig:
     namespace: str = "default"
     gae_endpoint: str = ""
-    hosts: list[str] = list_field()
+    hosts: List[str] = list_field()
 
 
 @dataclass
@@ -318,9 +319,6 @@ class Config(Serializable):
 
     operator_launcher: OperatorLauncherConfig = OperatorLauncherConfig()
     # Launcher used in operator mode.
-
-    def post_setup(self):
-        self.kubernetes_launcher.engine.post_setup()
 
     def set_option(self, key, value):  # noqa: C901
         """Forward set_option target to actual config fields"""
@@ -408,6 +406,8 @@ class Config(Serializable):
             self.kubernetes_launcher.config_file = value
         elif key == "reconnect":
             self.session.reconnect = value
+        elif key == "vineyard_shared_mem":
+            pass
         else:
             raise ValueError("Key not recognized: " + key)
 

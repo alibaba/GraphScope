@@ -87,6 +87,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._resource_object = ResourceManager(self._api_client)
 
         self._config: Config = config
+        self._config.kubernetes_launcher.engine.post_setup()
         launcher_config = config.kubernetes_launcher
 
         # Session Config
