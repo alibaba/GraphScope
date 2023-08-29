@@ -110,7 +110,9 @@ jobs:
         echo "engine.type: hiactor" >> /tmp/ir.compiler.properties
         echo "graph.schema: ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/ldbc_schema_csr_ic.json" >> /tmp/ir.compiler.properties
         echo "graph.store: exp" >> /tmp/ir.compiler.properties
-        echo "graph.planner: {\"isOn\":true,\"opt\":\"RBO\",\"rules\":[\"FilterMatchRule\"]}" >> /tmp/ir.compiler.properties
+        echo "graph.planner.is.on: true" >> /tmp/ir.compiler.properties
+        echo "graph.planner.opt: RBO" >> /tmp/ir.compiler.properties
+        echo "graph.planner.rules: FilterMatchRule" >> /tmp/ir.compiler.properties
 
         cd ${GITHUB_WORKSPACE}/flex/bin
 

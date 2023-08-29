@@ -16,7 +16,8 @@
 
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
-import com.alibaba.graphscope.common.ir.procedure.StoredProcedureMeta;
+import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
+import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedures;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.store.IrMeta;
@@ -77,8 +78,12 @@ public class ProcedureCallVisitor extends CypherGSBaseVisitor<RexNode> {
     // visit procedure name
     public SqlOperator visitOC_ProcedureNameAsOperator(CypherGSParser.OC_ProcedureNameContext ctx) {
         String procedureName = ctx.getText();
-        StoredProcedureMeta meta = irMeta.getStoredProcedures().getStoredProcedure(ctx.getText());
-        Preconditions.checkArgument(meta != null, "procedure %s not found", procedureName);
+        StoredProcedureMeta meta = null;
+        StoredProcedures procedures = irMeta.getStoredProcedures();
+        Preconditions.checkArgument(
+                procedures != null && (meta = procedures.getStoredProcedure(procedureName)) != null,
+                "procedure %s not found",
+                procedureName);
         return GraphStdOperatorTable.USER_DEFINED_PROCEDURE(meta);
     }
 
