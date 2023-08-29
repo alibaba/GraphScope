@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.procedure;
+package com.alibaba.graphscope.common.ir.meta.procedure;
 
 import org.apache.calcite.rel.type.RelDataType;
 

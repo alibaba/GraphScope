@@ -20,10 +20,8 @@ import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostURIChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostsRpcChannelFetcher;
-import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.config.FileLoadType;
-import com.alibaba.graphscope.common.config.FrontendConfig;
-import com.alibaba.graphscope.common.config.GraphConfig;
+import com.alibaba.graphscope.common.config.*;
+import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
@@ -136,9 +134,10 @@ public class GraphServer {
         if (args.length == 0 || args[0].isEmpty()) {
             throw new IllegalArgumentException("usage: GraphServer '<path_to_config_file>'");
         }
-        Configs configs = new Configs(args[0], FileLoadType.RELATIVE_PATH);
+        Configs configs = Configs.Factory.create(args[0]);
         IrMetaQueryCallback queryCallback =
-                new IrMetaQueryCallback(new ExperimentalMetaFetcher(configs));
+                new IrMetaQueryCallback(
+                        new ExperimentalMetaFetcher(new LocalMetaDataReader(configs)));
         GraphServer server =
                 new GraphServer(
                         configs, getChannelFetcher(configs), queryCallback, getTestGraph(configs));
