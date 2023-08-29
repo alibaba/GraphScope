@@ -18,7 +18,6 @@ use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::iter::FromIterator;
-use std::ops::{Add, AddAssign, Div};
 use std::rc::Rc;
 
 use ir_common::error::ParsePbError;
@@ -26,6 +25,8 @@ use ir_common::generated::algebra as pb;
 use ir_common::generated::algebra::pattern::binder::Item;
 use ir_common::generated::common as common_pb;
 use ir_common::{KeyId, LabelId, NameOrId};
+
+use fraction::Fraction;
 use vec_map::VecMap;
 
 use crate::error::{IrError, IrResult};
@@ -242,7 +243,7 @@ impl LogicalPlan {
         if branch_node.borrow().children.len() > 1 {
             // Record the flow of each node
             let mut node_flow_map: HashMap<u32, Fraction> =
-                HashMap::from_iter([(branch_node.borrow().id, Fraction::new(1, 1))]);
+                HashMap::from_iter([(branch_node.borrow().id, Fraction::from(1))]);
             // BFS search to get the flow of each node
             let mut queue = VecDeque::new();
             for &branch_child_id in branch_node.borrow().children.iter() {
@@ -250,14 +251,14 @@ impl LogicalPlan {
                 queue.push_back(branch_child_node);
             }
             while let Some(node) = queue.pop_front() {
-                let mut node_flow = Fraction::new(0, 1);
+                let mut node_flow = Fraction::from(0);
                 for &node_parent_id in node.borrow().parents.iter() {
                     // Converge node parents' sub flows
                     if let Some(&node_parent_flow) = node_flow_map.get(&node_parent_id) {
                         // Add parent node's sub flow to the current node
                         let node_parent = self.get_node(node_parent_id)?;
                         let node_parent_children_len = node_parent.borrow().children.len();
-                        node_flow += node_parent_flow / node_parent_children_len;
+                        node_flow += node_parent_flow / (node_parent_children_len as u64);
                     } else {
                         // If one of current node's parent's flow is still not avaliable, it sugguests that
                         // it is too early to get current node's flow
@@ -269,7 +270,7 @@ impl LogicalPlan {
                 }
                 // The node is the final merge node only if all the sub flows from the branch node merge to it
                 // Thus its flow should be 1, otherwise it is not the final merge node
-                if node_flow == 1 {
+                if node_flow == Fraction::from(1) {
                     return Some(node);
                 }
                 // Store current node's flow
@@ -290,14 +291,14 @@ impl LogicalPlan {
     fn get_branch_node(&self, merge_node: NodeType) -> Option<NodeType> {
         if merge_node.borrow().parents.len() > 1 {
             let mut node_flow_map: HashMap<u32, Fraction> =
-                HashMap::from_iter([(merge_node.borrow().id, Fraction::new(1, 1))]);
+                HashMap::from_iter([(merge_node.borrow().id, Fraction::from(1))]);
             let mut queue = VecDeque::new();
             for &merge_parent_id in merge_node.borrow().parents.iter() {
                 let merge_parent_node = self.get_node(merge_parent_id)?;
                 queue.push_back(merge_parent_node);
             }
             while let Some(node) = queue.pop_front() {
-                let mut node_flow = Fraction::new(0, 1);
+                let mut node_flow = Fraction::from(0);
                 for &node_child_id in node.borrow().children.iter() {
                     if let Some(&node_child_flow) = node_flow_map.get(&node_child_id) {
                         let node_child = self.get_node(node_child_id)?;
@@ -308,7 +309,7 @@ impl LogicalPlan {
                         continue;
                     }
                 }
-                if node_flow == 1 {
+                if node_flow == Fraction::from(1) {
                     return Some(node);
                 }
                 node_flow_map.insert(node.borrow().id, node_flow);
@@ -1609,65 +1610,6 @@ impl AsLogical for pb::logical_plan::Operator {
         }
         Ok(())
     }
-}
-
-#[derive(Debug, Clone, Copy)]
-struct Fraction {
-    numerator: usize,
-    denominator: usize,
-}
-
-impl Fraction {
-    fn new(numerator: usize, denominator: usize) -> Self {
-        Fraction { numerator, denominator }
-    }
-}
-
-impl Add for Fraction {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let denominator = get_lcm(self.denominator, rhs.denominator);
-        let numerator =
-            denominator / self.denominator * self.numerator + denominator / rhs.denominator * rhs.numerator;
-        Fraction { numerator, denominator }
-    }
-}
-
-impl AddAssign for Fraction {
-    fn add_assign(&mut self, rhs: Self) {
-        *self = *self + rhs
-    }
-}
-
-impl Div<usize> for Fraction {
-    type Output = Self;
-
-    fn div(self, rhs: usize) -> Self::Output {
-        if self.numerator % rhs == 0 {
-            Fraction { numerator: self.numerator / rhs, denominator: self.denominator }
-        } else {
-            Fraction { numerator: self.numerator, denominator: self.denominator * rhs }
-        }
-    }
-}
-
-impl PartialEq<usize> for Fraction {
-    fn eq(&self, other: &usize) -> bool {
-        (self.denominator * *other).eq(&self.numerator)
-    }
-}
-
-fn get_gcd(a: usize, b: usize) -> usize {
-    if a % b == 0 {
-        b
-    } else {
-        get_gcd(b, a % b)
-    }
-}
-
-fn get_lcm(a: usize, b: usize) -> usize {
-    a * b / get_gcd(a, b)
 }
 
 #[cfg(test)]
