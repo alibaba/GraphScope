@@ -18,6 +18,8 @@ NETWORKX				?= ON
 # testing build option
 BUILD_TEST				?= OFF
 
+# whether to build graphlearn-torch extension (graphlearn is built by default)
+WITH_GLTORCH				?= OFF 
 
 # INSTALL_PREFIX is environment variable, but if it is not set, then set default value
 ifeq ($(INSTALL_PREFIX),)
@@ -76,6 +78,9 @@ client: learning
 	python3 -m pip install -r requirements.txt -r requirements-dev.txt --user && \
 	export PATH=$(PATH):$(HOME)/.local/bin && \
 	python3 setup.py build_ext --inplace --user && \
+	if [ $(WITH_GLTORCH) = ON ]; then \
+		python3 setup.py build_gltorch_ext --inplace --user; \
+	fi && \
 	python3 -m pip install --user --no-build-isolation --editable $(CLIENT_DIR) && \
 	rm -rf $(CLIENT_DIR)/*.egg-info
 
