@@ -150,10 +150,10 @@ public class MatchTest {
         LogicalPlan plan =
                 Utils.evalLogicalPlan(
                         "Match (n:person {name: $name, age: $age}) Where n.id > 10 Return n.id,"
-                            + " n.name;");
+                                + " n.name;");
         Assert.assertEquals(
                 "[Parameter{name='name', dataType=CHAR(1)}, Parameter{name='age',"
-                    + " dataType=INTEGER}]",
+                        + " dataType=INTEGER}]",
                 plan.getDynamicParams().toString());
         Assert.assertEquals("RecordType(BIGINT id, CHAR(1) name)", plan.getOutputType().toString());
     }

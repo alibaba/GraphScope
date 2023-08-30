@@ -203,7 +203,7 @@ compile_hqps_so() {
 
   #only do codegen when receives a .pb file.
   if [[ $last_file_name == *.pb ]]; then
-    cmd="${CODEGEN_RUNNER} ${input_path} ${output_cc_path}"
+    cmd="${CODEGEN_RUNNER} -e hqps -i ${input_path} -o ${output_cc_path}"
     echo "Codegen command = ${cmd}"
     eval ${cmd}
     echo "----------------------------"
@@ -413,6 +413,20 @@ compile_pegasus_so() {
   echo "Finish copying, output to ${dst_so_path}"
 }
 
+function usage(){
+  cat << EOF
+  Usage: $0 [options]
+  Options:
+    -e, --engine_type=ENGINE_TYPE
+    -i, --input=INPUT
+    -w, --work_dir=WORK_DIR
+    --ir_conf=IR_CONF
+    --graph_schema_path=GRAPH_SCHEMA_PATH
+    --gie_home=GIE_HOME
+    [-o, --output_dir=OUTPUT_DIR]
+EOF
+}
+
 # input path
 # output dir
 run() {
@@ -451,12 +465,12 @@ run() {
     esac
   done
 
+  echo "Engine type            ="${ENGINE_TYPE}
   echo "Input                  ="${INPUT}
   echo "Work dir               ="${WORK_DIR}
   echo "Output path            ="${OUTPUT_DIR}
   echo "ir conf                ="${IR_CONF}
   echo "graph_schema_path      ="${GRAPH_SCHEMA_PATH}
-  echo "Engine type            ="${ENGINE_TYPE}
 
   # check input exist
   if [ ! -f ${INPUT} ]; then
@@ -467,7 +481,7 @@ run() {
   # if engine_type equals hqps
   if [ ${ENGINE_TYPE} == "hqps" ]; then
     echo "Engine type is hqps, generating dynamic library for hqps engine."
-    compile_hqps_so ${INPUT} ${WORK_DIR} ${IR_CONF} ${GRAPH_SCHEMA_PATH} ${OUTPUT_DIR}
+    compile_hqps_so ${INPUT} ${WORK_DIR} ${IR_CONF} ${GRAPH_SCHEMA_PATH} ${GIE_HOME} ${OUTPUT_DIR}
 
   # else if engine_type equals pegasus
   elif [ ${ENGINE_TYPE} == "pegasus" ]; then

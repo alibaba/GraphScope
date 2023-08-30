@@ -14,6 +14,7 @@ ENV JAVA_HOME=/usr/lib/jvm/default-java
 ENV RUST_BACKTRACE=1
 
 RUN apt-get update && \
+    apt-get install python3-pip -y && \
     apt-get install -y sudo vim && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
@@ -25,11 +26,13 @@ RUN mkdir -p /opt/graphscope /opt/vineyard && chown -R graphscope:graphscope /op
 USER graphscope
 WORKDIR /home/graphscope
 
-COPY ./gs ./gs
+COPY --chown=graphscope:graphscope gsctl /home/graphscope/gsctl
 ARG VINEYARD_VERSION=main
-RUN ./gs install-deps dev --v6d-version=$VINEYARD_VERSION --cn -j $(nproc) && \
-    sudo apt-get clean -y && \
-    sudo rm -rf /var/lib/apt/lists/*
+RUN cd /home/graphscope/gsctl && \
+    python3 -m pip install click && \
+    python3 gsctl.py install-deps dev --v6d-version=$VINEYARD_VERSION --cn -j $(nproc) && \
+    cd /home/graphscope
 RUN echo ". /home/graphscope/.graphscope_env" >> ~/.bashrc
 RUN python3 -m pip --no-cache install pyyaml --user
-RUN rm ./gs
+RUN rm -rf gsctl
+

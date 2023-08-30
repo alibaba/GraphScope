@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import com.alibaba.graphscope.common.ir.procedure.StoredProcedureMeta;
+import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 

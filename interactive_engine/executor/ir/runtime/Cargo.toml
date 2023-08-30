@@ -16,6 +16,7 @@ graph_proxy = { path="../graph_proxy" }
 prost = "0.11"
 vec_map = "0.8.2"
 ahash = "0.8"
+rand = "0.8.5"
 
 [features]
 default = []
