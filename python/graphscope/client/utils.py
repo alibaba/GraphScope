@@ -26,7 +26,6 @@ import time
 from functools import wraps
 
 import grpc
-
 from graphscope.config import gs_config
 from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import RetriesExceededError

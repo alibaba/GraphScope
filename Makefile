@@ -155,7 +155,6 @@ learning-install: learning
 learning: $(LEARNING_DIR)/graphlearn/built/lib/libgraphlearn_shared.$(SUFFIX)
 
 $(LEARNING_DIR)/graphlearn/built/lib/libgraphlearn_shared.$(SUFFIX):
-	(git submodule update --init || true)
 	cd $(LEARNING_DIR) && (git submodule update --init third_party/pybind11 || true)
 	mkdir -p $(LEARNING_BUILD_DIR)
 	cd $(LEARNING_BUILD_DIR) && \

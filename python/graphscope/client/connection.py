@@ -23,9 +23,6 @@ import base64
 import json
 
 import grpc
-from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
-from gremlin_python.process.anonymous_traversal import traversal
-
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.framework.record import EdgeRecordKey
 from graphscope.framework.record import VertexRecordKey
@@ -34,6 +31,8 @@ from graphscope.proto import ddl_service_pb2
 from graphscope.proto import ddl_service_pb2_grpc
 from graphscope.proto import write_service_pb2
 from graphscope.proto import write_service_pb2_grpc
+from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
+from gremlin_python.process.anonymous_traversal import traversal
 
 
 class Graph:

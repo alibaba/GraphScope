@@ -24,7 +24,6 @@ import threading
 import time
 
 import grpc
-
 from graphscope.client.utils import GS_GRPC_MAX_MESSAGE_LENGTH
 from graphscope.client.utils import GRPCUtils
 from graphscope.client.utils import handle_grpc_error
@@ -219,11 +218,12 @@ class GRPCClient(object):
         response = self._stub.CreateInteractiveInstance(request)
         return response.gremlin_endpoint, response.cypher_endpoint
 
-    def create_learning_instance(self, object_id, handle, config):
+    def create_learning_instance(self, object_id, handle, config, learning_backend):
         request = message_pb2.CreateLearningInstanceRequest(session_id=self._session_id)
         request.object_id = object_id
         request.handle = handle
         request.config = config
+        request.learning_backend = learning_backend
         response = self._stub.CreateLearningInstance(request)
         return response.handle, response.config, response.endpoints
 
