@@ -19,7 +19,7 @@ ENV LANG=en_US.utf-8
 COPY gsctl ./gsctl
 RUN cd ./gsctl && \
     python3 -m pip install click && \ 
-    python3 gsctl.py install-deps dev --cn --for-analytical --no-v6d && \
+    python3 gsctl.py install-deps dev --cn --for-analytical --no-v6d  -j $(nproc) && \
     rm -fr /root/gsctl
 
 # install hadoop for processing hadoop data source
