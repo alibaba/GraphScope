@@ -85,7 +85,9 @@ class ResourceConfig:
 class ImageConfig:
     """Image related stuffs."""
 
-    registry: Union[str, None] = "registry.cn-hongkong.aliyuncs.com"  # k8s image registry.
+    registry: Union[
+        str, None
+    ] = "registry.cn-hongkong.aliyuncs.com"  # k8s image registry.
     repository: str = "graphscope"  # k8s image repository.
     tag: str = __version__  # k8s image tag.
     pull_secrets: List[str] = field(
