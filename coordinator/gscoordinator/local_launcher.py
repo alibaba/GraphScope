@@ -506,5 +506,5 @@ class LocalLauncher(AbstractLauncher):
         }
         return config
 
-    def get_vineyard_stream_info(self) -> tuple[str, List[str]]:
+    def get_vineyard_stream_info(self):
         return "ssh", self.hosts

@@ -135,7 +135,7 @@ class AbstractLauncher(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_vineyard_stream_info(self) -> tuple[str, List[str]]:
+    def get_vineyard_stream_info(self):
         pass
 
     @abstractmethod
