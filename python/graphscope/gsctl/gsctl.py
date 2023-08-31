@@ -32,7 +32,9 @@ make_image_script = os.path.join(scripts_dir, "make_image_command.sh")
 def run_shell_cmd(cmd, workingdir):
     """wrapper function to run a shell command/scripts."""
     click.echo(f"run a shell command on cwd={workingdir}. \ncmd=\"{' '.join(cmd)}\"")
-    proc = subprocess.Popen(cmd, cwd=workingdir, stdout=subprocess.PIPE)
+    proc = subprocess.Popen(
+        cmd, cwd=workingdir, env=os.environ.copy(), stdout=subprocess.PIPE
+    )
     for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
         print(line.rstrip())
 
@@ -67,7 +69,7 @@ def cli(ctx, repo_home):
         ["dev", "client"],
         case_sensitive=False,
     ),
-    required=False,
+    required=True,
 )
 @click.option(
     "--cn",
@@ -85,6 +87,8 @@ def cli(ctx, repo_home):
 @click.option(
     "--from-local",
     type=click.Path(),
+    default="/tmp/gs-local-deps",
+    show_default=True,
     help="""Find raw dependencies of GraphScope from a local directory. The raw
     dependencies would then be built and installed to [prefix]. If the directory
     is empty or not exists, dependency files would be downloaded to [directory].""",
@@ -98,7 +102,7 @@ def cli(ctx, repo_home):
 @click.option(
     "-j",
     "--jobs",
-    default="${nproc}",
+    default="2",
     help="Concurrent jobs in building, i.e., -j argument passed to make.",
 )
 @click.option(
@@ -126,33 +130,30 @@ def install_deps(
     no_v6d,
 ):
     """Install dependencies for building GraphScope."""
-    click.echo("install_deps")
-    if type is None:
-        type = "dev"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        if from_local is None:
-            from_local = tmpdir
-        cmd = [
-            "bash",
-            install_deps_script,
-            "-t",
-            type,
-            "-c",
-            str(cn),
-            "-i",
-            install_prefix,
-            "-d",
-            from_local,
-            "-v",
-            str(v6d_version),
-            "-j",
-            str(jobs),
-            "-a",
-            str(for_analytical),
-            "-n",
-            str(no_v6d),
-        ]
-        run_shell_cmd(cmd, repo.home)
+    cmd = [
+        "bash",
+        install_deps_script,
+        "-t",
+        type,
+        "-i",
+        install_prefix,
+        "-d",
+        from_local,
+        "-v",
+        str(v6d_version),
+        "-j",
+        str(jobs),
+    ]
+    if for_analytical:
+        cmd.append("--for-analytical")
+    if no_v6d:
+        if not for_analytical:
+            # could only be used with '--for-analytical'
+            raise RuntimeError("Missing --for-analytical with --no-v6d parameter")
+        cmd.append("--no-v6d")
+    if cn:
+        cmd.append("--cn")
+    run_shell_cmd(cmd, repo.home)
 
 
 @click.command()

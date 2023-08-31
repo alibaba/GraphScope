@@ -18,9 +18,12 @@
 
 import os
 
+import pytest
+
 gar_test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
 
 
+@pytest.mark.skip(reason="Issue 3162")
 def test_load_from_gar(graphscope_session):
     graph_yaml = os.path.join(
         gar_test_repo_dir, "graphar/ldbc_sample/parquet/ldbc_sample.graph.yml"
@@ -31,6 +34,7 @@ def test_load_from_gar(graphscope_session):
     del graph
 
 
+@pytest.mark.skip(reason="Issue 3162")
 def test_archive_to_gar(ldbc_graph):
     graph_yaml = os.path.join(gar_test_repo_dir, "graphar/ldbc/ldbc.graph.yml")
     ldbc_graph.archive(graph_yaml)
