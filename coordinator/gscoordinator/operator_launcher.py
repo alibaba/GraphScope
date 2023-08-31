@@ -67,7 +67,7 @@ class OperatorLauncher(AbstractLauncher):
         return self._namespace
 
     @property
-    def hosts(self) -> list[str]:
+    def hosts(self):
         return self._hosts
 
     @property

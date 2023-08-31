@@ -36,6 +36,7 @@ from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from queue import Queue
 from string import Template
+from typing import List
 
 import yaml
 from google.protobuf.any_pb2 import Any
@@ -1926,7 +1927,7 @@ class ResolveMPICmdPrefix(object):
             raise RuntimeError("mpirun command not found.")
         return mpi
 
-    def resolve(self, num_workers: int, hosts: list[str]):
+    def resolve(self, num_workers: int, hosts: List[str]):
         cmd = []
         env = {}
         if num_workers == 1 and hosts[0] in ("localhost", "127.0.0.1"):

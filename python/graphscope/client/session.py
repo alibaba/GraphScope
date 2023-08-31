@@ -325,7 +325,7 @@ class Session(object):
 
                 k8s_image_pull_policy (str, optional): Kubernetes image pull policy. Defaults to "IfNotPresent".
 
-                k8s_image_pull_secrets (list[str], optional): A list of secret name used to authorize pull image.
+                k8s_image_pull_secrets (List[str], optional): A list of secret name used to authorize pull image.
 
                 k8s_vineyard_image (str, optional): The image of vineyard.
 

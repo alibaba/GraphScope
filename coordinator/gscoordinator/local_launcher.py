@@ -115,7 +115,7 @@ class LocalLauncher(AbstractLauncher):
         return ""
 
     @property
-    def hosts(self) -> list[str]:
+    def hosts(self) -> List[str]:
         return self._hosts
 
     @property
@@ -506,5 +506,5 @@ class LocalLauncher(AbstractLauncher):
         }
         return config
 
-    def get_vineyard_stream_info(self) -> tuple[str, list[str]]:
+    def get_vineyard_stream_info(self) -> tuple[str, List[str]]:
         return "ssh", self.hosts

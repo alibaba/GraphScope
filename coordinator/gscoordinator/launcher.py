@@ -21,6 +21,7 @@ import os
 import platform
 from abc import ABCMeta
 from abc import abstractmethod
+from typing import List
 
 from gscoordinator.utils import GRAPHSCOPE_HOME
 
@@ -76,7 +77,7 @@ class AbstractLauncher(metaclass=ABCMeta):
     def __init__(self):
         self._instance_id: str = None
         self._num_workers: int = None
-        self._hosts: list[str] = []
+        self._hosts: List[str] = []
         self._analytical_engine_endpoint: str = None
         self._vineyard_endpoint: str = None
         self._vineyard_socket: str = None
@@ -134,7 +135,7 @@ class AbstractLauncher(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_vineyard_stream_info(self) -> tuple[str, list[str]]:
+    def get_vineyard_stream_info(self) -> tuple[str, List[str]]:
         pass
 
     @abstractmethod
@@ -164,7 +165,7 @@ class AbstractLauncher(metaclass=ABCMeta):
         return self._instance_id
 
     @property
-    def hosts(self) -> list[str]:
+    def hosts(self) -> List[str]:
         return self._hosts
 
     @abstractmethod
