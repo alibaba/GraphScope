@@ -85,7 +85,7 @@ class ResourceConfig:
 class ImageConfig:
     """Image related stuffs."""
 
-    registry: str = "registry.cn-hongkong.aliyuncs.com"  # k8s image registry.
+    registry: Union[str, None] = "registry.cn-hongkong.aliyuncs.com"  # k8s image registry.
     repository: str = "graphscope"  # k8s image repository.
     tag: str = __version__  # k8s image tag.
     pull_secrets: List[str] = field(
@@ -418,10 +418,11 @@ gs_config = Config()
 if __name__ == "__main__":
     config = Config()
     config.coordinator.resource.requests = None
+    config.kubernetes_launcher.image.registry = ""
     print(config.dumps_yaml())
     # print(config.dumps_json())
-    s = config.dumps_json()
-    config3 = Config.loads_json(s)
+    s = config.dumps_yaml()
+    config3 = Config.loads_yaml(s)
     print(config3)
 
     parser = ArgumentParser()
