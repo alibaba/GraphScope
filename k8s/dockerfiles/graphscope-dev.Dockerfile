@@ -31,8 +31,8 @@ ARG VINEYARD_VERSION=main
 RUN cd /home/graphscope/gsctl && \
     python3 -m pip install click && \
     python3 gsctl.py install-deps dev --v6d-version=$VINEYARD_VERSION --cn -j $(nproc) && \
-    cd /home/graphscope
+    cd /home/graphscope && \
+    rm -fr gsctl
+
 RUN echo ". /home/graphscope/.graphscope_env" >> ~/.bashrc
 RUN python3 -m pip --no-cache install pyyaml --user
-RUN rm -rf gsctl
-

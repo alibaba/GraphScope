@@ -5,45 +5,50 @@ source ${script_dir}/lib/colors.sh
 source ${script_dir}/lib/install_thirdparty_dependencies.sh
 source ${script_dir}/lib/install_vineyard.sh
 source ${script_dir}/lib/util.sh
+source ${script_dir}/initialize.sh
 
-
-while getopts ":t:c:i:d:v:j:a:n" opt; do
-  case $opt in
+# parse args
+while getopts ":t:i:d:v:j:-:" opt; do
+  case ${opt} in
     t)
-      type="$OPTARG"
-      ;;
-    c)
-      cn="$OPTARG"
+      type=${OPTARG}
       ;;
     i)
-      install_prefix="$OPTARG"
+      install_prefix=${OPTARG}
       ;;
     d)
-      deps_prefix="$OPTARG"
+      deps_prefix=${OPTARG}
       ;;
     v)
-      v6d_version="$OPTARG"
+      v6d_version=${OPTARG}
       ;;
     j)
-      jobs="$OPTARG"
+      jobs=${OPTARG}
       ;;
-    a)
-      for_analytical="$OPTARG"
+    -)
+      case ${OPTARG} in
+        for-analytical)
+          for_analytical=true
+          ;;
+        no-v6d)
+          no_v6d=true
+          ;;
+        cn)
+          cn=true
+          ;;
+        *)
+          echo "Invalid option: --${OPTARG}"
+          exit 1
+          ;;
+      esac
       ;;
-    n)
-      no_v6d="$OPTARG"
-      ;;
-    \?)
-      echo "Invalid options: -$OPTARG" >&2
-      exit 1
-      ;;
-    :)
-      echo "The option -$OPTARG requires parameters" >&2
+    *)
+      echo "Invalid option: -${OPTARG}"
       exit 1
       ;;
   esac
 done
-
+shift $((OPTIND -1))
 
 SUDO=sudo
 if [[ $(id -u) -eq 0 ]]; then
@@ -59,7 +64,7 @@ readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 
 log "Installing ${type} dependencies for GraphScope on ${OS}..."
 
-if [[ -n ${cn} ]]; then
+if [ "${cn}" == true ]; then
   log "Set to speed up downloading for CN locations."
   # export some mirror locations for CN, e.g., brew/docker...
   export HOMEBREW_BREW_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git"
@@ -255,8 +260,12 @@ install_grape_vineyard_universal() {
 
 install_rust_universal() {
   if ! command -v rustup &>/dev/null; then
-    log "Installing rust."
-    curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal
+    log "Installing rust with fixed version: 1.71/0."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source $HOME/.cargo/env
+    rustup install 1.71.0
+    rustup default 1.71.0
+    rustc --version
   fi
 }
 
@@ -380,14 +389,14 @@ install_deps_for_dev() {
   fi
 
   install_basic_packages_universal
-  if [[ -n ${for_analytical} ]]; then
+  if [ "${for_analytical}" == true ]; then
     install_dependencies_analytical_universal
-    if [[ -z ${no_v6d} ]]; then
+    if [ "${no_v6d}" != true ]; then
       install_grape_vineyard_universal
     fi
   else # for all
     install_dependencies_analytical_universal
-    if [[ -z ${no_v6d} ]]; then
+    if [ "${no_v6d}" != true ]; then
       install_grape_vineyard_universal
     fi
     install_java_maven_universal

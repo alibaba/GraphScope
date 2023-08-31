@@ -40,7 +40,7 @@ install_vineyard() {
         -DBUILD_VINEYARD_TESTS=OFF \
         -DBUILD_SHARED_LIBS=ON \
         -DBUILD_VINEYARD_PYTHON_BINDINGS=ON  \
-        -DBUILD_VINEYARD_GRAPH_WITH_GAR=ON
+        -DBUILD_VINEYARD_GRAPH_WITH_GAR=OFF
   make -j"${jobs}"
   make install
   strip "${V6D_PREFIX}"/bin/vineyard* "${V6D_PREFIX}"/lib/libvineyard*
