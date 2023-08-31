@@ -16,19 +16,17 @@
 
 package com.alibaba.graphscope.common.intermediate.strategy;
 
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
-import com.alibaba.graphscope.common.intermediate.operator.LimitOp;
 import com.alibaba.graphscope.common.intermediate.operator.OpArg;
-import com.alibaba.graphscope.common.intermediate.operator.OrderOp;
-import com.alibaba.graphscope.common.intermediate.operator.UnfoldOp;
 import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
-import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.intermediate.operator.UnfoldOp;
 import com.alibaba.graphscope.common.jna.type.*;
 
-import java.util.List;
-import java.util.Optional;
 import org.javatuples.Pair;
+
+import java.util.List;
 
 // fuse select as with the following unfold
 public class UnfoldFusionStrategy implements InterOpStrategy {
