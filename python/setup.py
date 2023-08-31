@@ -195,7 +195,7 @@ def parsed_package_data():
             "VERSION",
             "proto/*.pyi",
             "gsctl/scripts/*.sh",
-            "gsctl/scripts/lib/*.sh"
+            "gsctl/scripts/lib/*.sh",
         ],
     }
 
