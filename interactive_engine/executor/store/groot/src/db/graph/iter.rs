@@ -97,9 +97,14 @@ impl IntoIterator for EdgeTypeScan {
     type IntoIter = Records<RocksEdgeImpl>;
 
     fn into_iter(self) -> Self::IntoIter {
-        let mut edge_kind_iter = self
-            .edge_info
-            .get_kinds(self.snapshot_id as i64);
+        let edge_kinds = self.edge_info.lock();
+        let mut edge_kind_iter = edge_kinds.iter_kinds().filter_map(|edge_kind| {
+            if edge_kind.is_alive_at(self.snapshot_id as i64) {
+                Some(edge_kind.clone())
+            } else {
+                None
+            }
+        });
         let mut res: Records<RocksEdgeImpl> = Box::new(::std::iter::empty());
         while let Some(edge_kind) = edge_kind_iter.next() {
             let iter = EdgeKindScan::new(

@@ -194,6 +194,8 @@ def parsed_package_data():
         "graphscope": [
             "VERSION",
             "proto/*.pyi",
+            "gsctl/scripts/*.sh",
+            "gsctl/scripts/lib/*.sh",
         ],
     }
 
