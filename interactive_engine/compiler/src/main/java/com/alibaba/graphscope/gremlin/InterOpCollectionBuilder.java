@@ -55,14 +55,8 @@ public class InterOpCollectionBuilder {
     public InterOpCollection build() throws OpArgIllegalException, UnsupportedStepException {
         InterOpCollection opCollection = new InterOpCollection();
         List<Step> steps = traversal.asAdmin().getSteps();
-        int indexer = -1;
-        boolean selectOneUnfoldOpt = false;
-        boolean afterAsOp = false;
-        boolean aggregateType = false;
-        String tagname = "";
+
         for (Step step : steps) {
-            indexer += 1;
-            aggregateType = false;
             List<InterOpBase> opList = new ArrayList<>();
             // judge by class type instead of instance
             if (Utils.equalClass(step, GraphStep.class)) {
@@ -81,7 +75,6 @@ public class InterOpCollectionBuilder {
                     || Utils.equalClass(step, MinGlobalStep.class)
                     || Utils.equalClass(step, FoldStep.class)
                     || Utils.equalClass(step, MeanGlobalStep.class)) {
-                aggregateType = true;
                 opList.add(StepTransformFactory.AGGREGATE_STEP.apply(step));
             } else if (Utils.equalClass(step, PropertiesStep.class)
                     || Utils.equalClass(step, PropertyMapStep.class)
@@ -152,14 +145,7 @@ public class InterOpCollectionBuilder {
             } else if (Utils.equalClass(step, ConstantStep.class)) {
                 opList.add(StepTransformFactory.CONSTANT_STEP.apply(step));
             } else if (Utils.equalClass(step, UnfoldStep.class)) {
-                UnfoldOp unfoldOp = (UnfoldOp) StepTransformFactory.UNFOLD_STEP.apply(step);
-                if (selectOneUnfoldOpt) {
-                    unfoldOp.setUnfoldTag(new OpArg<>(ArgUtils.asAlias(tagname, true)));
-                } else if (afterAsOp) {
-                    unfoldOp.setUnfoldTag(new OpArg<>(ArgUtils.asAlias(tagname, true)));
-                }
-                // System.out.println(unfoldOp.getUnfoldTag().get().getArg());
-                opList.add(unfoldOp);
+                opList.add(StepTransformFactory.UNFOLD_STEP.apply(step));
             } else if (Utils.equalClass(step, CoinStep.class)) {
                 opList.add(StepTransformFactory.COIN_STEP.apply(step));
             } else if (Utils.equalClass(step, SampleGlobalStep.class)) {
@@ -169,42 +155,6 @@ public class InterOpCollectionBuilder {
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }
-            selectOneUnfoldOpt = false;
-            afterAsOp = false;
-            if (Utils.equalClass(step, SelectOneStep.class)
-                    && indexer < steps.size() - 1
-                    && opList.size() == 1
-                    && Utils.equalClass(steps.get(indexer + 1), UnfoldStep.class)) {
-                ProjectOp projectOp = (ProjectOp) opList.get(0);
-                List<Pair<String, FfiAlias.ByValue>> pairList =
-                        (List<Pair<String, FfiAlias.ByValue>>)
-                                projectOp.getExprWithAlias().get().getArg();
-                Pair single = pairList.get(0);
-                tagname = (String) single.getValue0();
-                tagname = tagname.substring(1);
-                // System.out.println(tagname);
-                selectOneUnfoldOpt = true;
-                continue;
-            } else if (aggregateType) {
-                GroupOp gop = (GroupOp) opList.get(0);
-                List<ArgAggFn> aggFnList = (List<ArgAggFn>) gop.getGroupByValues().get().getArg();
-                ArgAggFn aggFn = aggFnList.get(0);
-                FfiAlias.ByValue aggAlias = aggFn.getAlias();
-                // System.out.println("hit out");
-                if (aggAlias != null
-                        && aggAlias.alias != null
-                        && aggAlias.alias.opt == FfiNameIdOpt.Name) {
-                    afterAsOp = true;
-                    tagname = aggFn.getAlias().alias.name;
-                    // System.out.println("hit in");
-                    // System.out.println(tagname);
-                }
-            }
-
-            // System.out.println("come here");
-            // System.out.println(step);
-            // System.out.println(opList);
-            // System.out.println(step.getLabels());
 
             for (int i = 0; i < opList.size(); ++i) {
                 InterOpBase op = opList.get(i);
@@ -220,13 +170,6 @@ public class InterOpCollectionBuilder {
                     if (!step.getLabels().isEmpty()) {
                         String label = (String) step.getLabels().iterator().next();
                         op.setAlias(new OpArg(ArgUtils.asAlias(label, true)));
-
-                        // System.out.println("=====================hit");
-                        // System.out.println(label);
-                        // System.out.println(op.getAlias().get().getArg());
-
-                        afterAsOp = true;
-                        tagname = label;
                     }
                 }
                 opCollection.appendInterOp(op);
