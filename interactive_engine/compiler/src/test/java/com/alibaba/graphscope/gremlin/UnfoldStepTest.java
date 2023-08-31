@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.UnfoldOp;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
-import com.alibaba.graphscope.common.intermediate.strategy.UnfoldFusionStrategy;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;

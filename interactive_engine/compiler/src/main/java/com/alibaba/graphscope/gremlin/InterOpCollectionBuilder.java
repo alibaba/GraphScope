@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
-import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.*;
@@ -37,7 +36,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IdentityStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SubgraphStep;
-import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
