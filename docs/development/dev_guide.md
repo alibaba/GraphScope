@@ -37,10 +37,10 @@ To use the dev containers for GraphScope development, you can follow these steps
 To install all dependencies on your local, use the GraphScope command-line utility [gs](https://github.com/alibaba/GraphScope/blob/main/gs) with the subcommand `install-deps` like this
 
 ```bash
-./gs install-deps dev
+python3 gsctl.py install-deps dev
 
 # for more usage, try
-# ./gs install-deps -h
+# python3 gsctl.py install-deps -h
 ```
 
 You could download the `gs` directly or clone the [GraphScope](https://github.com/alibaba/GraphScope) to local, the `gs` is located in the root directory of GraphScope.
@@ -52,7 +52,7 @@ You could download the `gs` directly or clone the [GraphScope](https://github.co
 With `gs` command-line utility, you can build all targets for GraphScope with a single command.
 
 ```bash
-./gs make all
+python3 gsctl.py make all
 ```
 
 This would build all targets sequentially, here we
@@ -65,7 +65,7 @@ You may found the built artifacts in several places according to each components
 And you could install them to one place by
 
 ```bash
-./gs make install [--prefix=/opt/graphscope]
+python3 gsctl.py make install [--prefix=/opt/graphscope]
 ```
 
 By default it would install all artifacts to `/opt/graphscope`, and you could specify another location by assigning the value of `--prefix`.
@@ -94,7 +94,7 @@ The package would be installed in [editable mode](https://pip.pypa.io/en/stable/
 ````
 
 ```shell
-./gs make coordinator
+python3 gsctl.py make coordinator
 ```
 
 ### Build Python Client
@@ -108,5 +108,5 @@ This package would also be installed in [editable mode](https://pip.pypa.io/en/s
 ````
 
 ```shell
-./gs make client
+python3 gsctl.py make client
 ```
