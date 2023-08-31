@@ -5,7 +5,7 @@ source ${script_dir}/lib/colors.sh
 source ${script_dir}/lib/install_thirdparty_dependencies.sh
 source ${script_dir}/lib/install_vineyard.sh
 source ${script_dir}/lib/util.sh
-
+source ${script_dir}/initialize.sh
 
 
 echo "# this file is located in 'src/make_command.sh'"
