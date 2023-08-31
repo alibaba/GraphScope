@@ -1143,6 +1143,8 @@ class KubernetesClusterLauncher(AbstractLauncher):
         return owner_reference_json
 
     def _check_if_vineyard_deployment_exist(self):
+        if self._vineyard_deployment is None or self._vineyard_deployment == "":
+            return False
         try:
             self._apps_api.read_namespaced_deployment(
                 self._vineyard_deployment, self._namespace
