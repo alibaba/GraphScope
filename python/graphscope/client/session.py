@@ -22,6 +22,7 @@
 import atexit
 import base64
 import contextlib
+import copy
 import gc
 import json
 import logging
@@ -511,11 +512,11 @@ class Session(object):
         # config has the highest priority
         if config is not None:
             if isinstance(config, str):
-                self._config = self._load_config(config, silent=False)
+                self._config = self._load_config_from_file(config, silent=False)
             else:
-                self._config = config
+                self._config = copy.deepcopy(config)
         else:
-            self._config = gs_config  # default config
+            self._config = copy.deepcopy(gs_config)  # default config
         self._api_client = api_client
         for key, value in kw.items():
             self._config.set_option(key, value)
@@ -603,7 +604,7 @@ class Session(object):
                 self._config.dumps_json(),
             )
 
-    def _load_config(self, path, silent=True):
+    def _load_config_from_file(self, path, silent=True):
         config_path = os.path.expandvars(os.path.expanduser(path))
         try:
             return Config.load(config_path, drop_extra_fields=False)

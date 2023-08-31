@@ -807,13 +807,13 @@ class KubernetesClusterLauncher(AbstractLauncher):
         logger.info("Creating engine pods...")
 
         stateful_set = self._engine_cluster.get_engine_stateful_set()
-        # if self._vineyard_deployment is not None:
-        #     # schedule engine statefulset to the same node with vineyard deployment
-        #     stateful_set = self._add_pod_affinity_for_vineyard_deployment(
-        #         workload=stateful_set
-        #     )
-        # else:
-        #     stateful_set = self._inject_vineyard_as_sidecar(stateful_set)
+        if self._vineyard_deployment is not None:
+            # schedule engine statefulset to the same node with vineyard deployment
+            stateful_set = self._add_pod_affinity_for_vineyard_deployment(
+                workload=stateful_set
+            )
+        else:
+            stateful_set = self._inject_vineyard_as_sidecar(stateful_set)
 
         response = self._apps_api.create_namespaced_stateful_set(
             self._namespace, stateful_set
@@ -931,9 +931,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             self._pod_ip_list.append(pod.status.pod_ip)
             self._pod_host_ip_list.append(pod.status.host_ip)
         assert len(self._pod_ip_list) > 0
-        self._analytical_engine_endpoint = (
-            f"{self._pod_ip_list[0]}:{self._random_analytical_engine_rpc_port}"
-        )
+
         self._vineyard_service_endpoint = (
             self._engine_cluster.get_vineyard_service_endpoint(self._api_client)
         )
@@ -1029,7 +1027,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
         # launch engine
         rmcp = ResolveMPICmdPrefix(rsh_agent=True)
-        cmd, mpi_env = rmcp.resolve(self._num_workers, ",".join(pod_name_list))
+        cmd, mpi_env = rmcp.resolve(self._num_workers, pod_name_list)
 
         cmd.append(ANALYTICAL_ENGINE_PATH)
         cmd.extend(["--host", "0.0.0.0"])
@@ -1069,11 +1067,13 @@ class KubernetesClusterLauncher(AbstractLauncher):
         pod_name_list, pod_ip_list, _ = self._allocate_analytical_engine()
         if not pod_name_list or not pod_ip_list:
             raise RuntimeError("Failed to allocate analytical engine.")
-        logger.info(
-            "Starting GAE rpc service on %s ...", self._analytical_engine_endpoint
-        )
-
         self._distribute_analytical_process(pod_name_list, pod_ip_list)
+        self._analytical_engine_endpoint = (
+            f"{self._pod_ip_list[0]}:{self._random_analytical_engine_rpc_port}"
+        )
+        logger.info(
+            "GAE rpc service is listening on %s ...", self._analytical_engine_endpoint
+        )
 
     def _delete_dangling_coordinator(self):
         # delete service

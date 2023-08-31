@@ -30,11 +30,11 @@ import queue
 import random
 import re
 import signal
-import string
 import sys
 import threading
 import traceback
 from concurrent import futures
+from string import ascii_letters
 
 import grpc
 from packaging import version
@@ -43,10 +43,6 @@ from simple_parsing import ArgumentParser
 from gscoordinator.io_utils import StdStreamWrapper
 
 # capture system stdout
-from gscoordinator.launcher import AbstractLauncher
-from gscoordinator.local_launcher import LocalLauncher
-from gscoordinator.operator_launcher import OperatorLauncher
-
 sys.stdout = StdStreamWrapper(sys.stdout)
 sys.stderr = StdStreamWrapper(sys.stderr)
 
@@ -62,11 +58,14 @@ from graphscope.proto import types_pb2
 from gscoordinator.dag_manager import DAGManager
 from gscoordinator.dag_manager import GSEngine
 from gscoordinator.kubernetes_launcher import KubernetesClusterLauncher
+from gscoordinator.launcher import AbstractLauncher
+from gscoordinator.local_launcher import LocalLauncher
 from gscoordinator.monitor import Monitor
 from gscoordinator.object_manager import InteractiveInstanceManager
 from gscoordinator.object_manager import LearningInstanceManager
 from gscoordinator.object_manager import ObjectManager
 from gscoordinator.op_executor import OperationExecutor
+from gscoordinator.operator_launcher import OperatorLauncher
 from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
 from gscoordinator.utils import check_server_ready
 from gscoordinator.utils import create_single_op_dag
@@ -165,33 +164,18 @@ class CoordinatorServiceServicer(
         self._object_manager = ObjectManager()
 
         # only one connection is allowed at the same time
-        # session id will be generated when connection from client is established
-        self._session_id = None
         self._connected = False
-
-        self._launcher = launcher
 
         # control log fetching
         self._streaming_logs = False
         self._pipe_merged = PipeMerger(sys.stdout, sys.stderr)
 
+        self._session_id = "session_" + "".join(random.choices(ascii_letters, k=8))
+
         # dangling check
         self._dangling_timeout_seconds = dangling_timeout_seconds
-        self._comm_timeout_seconds = 120
-        self._poll_timeout_seconds = 2
         self._dangling_detecting_timer = None
         self._cleanup_instance = False
-        self._session_id = (
-            f"session_{''.join(random.choices(string.ascii_letters, k=8))}"
-        )
-        self._launcher.set_session_workspace(self._session_id)
-        if not self._launcher.start():
-            raise RuntimeError("Coordinator launching instance failed.")
-
-        self._operation_executor: OperationExecutor = OperationExecutor(
-            self._session_id, self._launcher, self._object_manager
-        )
-
         # the dangling timer should be initialized after the launcher started,
         # otherwise there would be a deadlock if `self._launcher.start()` failed.
         self._set_dangling_timer(cleanup_instance=True)
@@ -199,6 +183,15 @@ class CoordinatorServiceServicer(
         # a lock that protects the coordinator
         self._lock = threading.RLock()
         atexit.register(self.cleanup)
+
+        self._launcher = launcher
+        self._launcher.set_session_workspace(self._session_id)
+        if not self._launcher.start():
+            raise RuntimeError("Coordinator launching instance failed.")
+
+        self._operation_executor: OperationExecutor = OperationExecutor(
+            self._session_id, self._launcher, self._object_manager
+        )
 
     def __del__(self):
         self.cleanup()
@@ -247,7 +240,6 @@ class CoordinatorServiceServicer(
         self._dangling_timeout_seconds = request.dangling_timeout_seconds
         # other timeout seconds
         self._comm_timeout_seconds = getattr(request, "comm_timeout_seconds", 120)
-        self._poll_timeout_seconds = getattr(request, "poll_timeout_seconds", 2)
         # If true, also delete graphscope instance (such as pods) in closing process
         self._cleanup_instance = request.cleanup_instance
 
@@ -397,9 +389,7 @@ class CoordinatorServiceServicer(
     def FetchLogs(self, request, context):
         while self._streaming_logs:
             try:
-                info_message, error_message = self._pipe_merged.poll(
-                    timeout=self._poll_timeout_seconds
-                )
+                info_message, error_message = self._pipe_merged.poll(timeout=2)
             except queue.Empty:
                 info_message, error_message = "", ""
             except Exception as e:
@@ -483,9 +473,7 @@ class CoordinatorServiceServicer(
             self._object_manager.put(object_id, gie_manager)
             # 60 seconds is enough, see also GH#1024; try 120
             # already add errs to outs
-            outs, _ = proc.communicate(
-                timeout=self._comm_timeout_seconds
-            )  # throws TimeoutError
+            outs, _ = proc.communicate(timeout=120)  # throws TimeoutError
             return_code = proc.poll()
             if return_code != 0:
                 raise RuntimeError(f"Error code: {return_code}, message {outs}")
@@ -654,7 +642,7 @@ class CoordinatorServiceServicer(
 
 
 def parse_sys_args():
-    parser = ArgumentParser()
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         "--config",
         type=str,
@@ -663,21 +651,20 @@ def parse_sys_args():
     parser.add_argument(
         "--config-file", type=str, help="The config file path in yaml or json format"
     )
-    parser.add_arguments(Config, dest="gs")
+    # parser.add_arguments(Config, dest="gs")
     return parser.parse_args()
 
 
 def launch_graphscope():
     args = parse_sys_args()
-    print(args)
     if args.config:
         config = base64.b64decode(args.config).decode("utf-8", errors="ignore")
         config = Config.loads_json(config)
-        print(config.dumps_yaml())
     elif args.config_file:
         config = Config.load(args.config_file)
     else:
         raise RuntimeError("Must specify a config or config-file")
+    logger.info("Start server with args \n%s", config.dumps_yaml())
     launcher = get_launcher(config)
     start_server(launcher, config)
 
@@ -715,8 +702,6 @@ def start_server(launcher, config: Config):
     )
     endpoint = f"0.0.0.0:{config.coordinator.service_port}"
     server.add_insecure_port(endpoint)
-
-    logger.info("Start server with args \n%s", config.dumps_yaml())
 
     logger.info("Coordinator server listen at %s", endpoint)
 

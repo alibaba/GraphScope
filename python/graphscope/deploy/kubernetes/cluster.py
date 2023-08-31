@@ -53,8 +53,6 @@ class KubernetesClusterLauncher(Launcher):
     _cluster_role_name_prefix = "gs-cluster-reader-"
     _cluster_role_binding_name_prefix = f"{_cluster_role_name_prefix}binding-"
 
-    _random_coordinator_service_port = random.randint(59001, 60000)
-
     _url_pattern = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"  # noqa: E501
     _endpoint_pattern = r"(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*"
 
@@ -255,7 +253,7 @@ class KubernetesClusterLauncher(Launcher):
         image_pull_policy = self._config.kubernetes_launcher.image.pull_policy
         host_network = "ENABLE_HOST_NETWORK" in os.environ
         node_selector = self._config.coordinator.node_selector
-        port = self._random_coordinator_service_port
+        port = self._config.coordinator.service_port
 
         coordinator = CoordinatorDeployment(
             namespace=self._namespace,
@@ -297,8 +295,6 @@ class KubernetesClusterLauncher(Launcher):
             "--config",
             self.base64_encode(self._config.dumps_json()),
         ]
-        print(self._config.dumps_yaml())
-        print(" ".join(args))
         return args
 
     def _create_services(self):

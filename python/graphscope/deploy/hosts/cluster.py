@@ -52,15 +52,11 @@ class HostsClusterLauncher(Launcher):
         self._config = copy.deepcopy(config)
         self._proc = None
 
-        port = config.coordinator.service_port
-        if port is None:
+        port = self._config.coordinator.service_port
+        if not is_free_port(port):
             port = get_free_port()
-            config.coordinator.service_port = port
-        else:
-            # check port conflict
-            if not is_free_port(port):
-                raise RuntimeError(f"Port {port} already used.")
-        self._coordinator_endpoint = f"{config.hosts_launcher.hosts[0]}:{port}"
+            self._config.coordinator.service_port = port
+        self._coordinator_endpoint = f"{self._config.hosts_launcher.hosts[0]}:{port}"
 
     def poll(self):
         if self._proc is not None:

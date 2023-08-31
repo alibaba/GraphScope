@@ -28,7 +28,6 @@ except ImportError:
 
 from graphscope.config import Config
 from graphscope.config import KubernetesLauncherConfig
-from graphscope.config import SessionConfig
 from graphscope.deploy.kubernetes.resource_builder import ResourceBuilder
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
 
@@ -66,16 +65,58 @@ class EngineCluster:
         engine_pod_prefix,
         learning_start_port,
     ):
-        session_config: SessionConfig = config.session
+        self._instance_id = config.session.instance_id
+        self._glog_level = parse_as_glog_level(config.session.log_level)
+        self._num_workers = config.session.num_workers
+
         launcher_config: KubernetesLauncherConfig = config.kubernetes_launcher
+
+        self._namespace = launcher_config.namespace
+        self._service_type = launcher_config.service_type
 
         self._engine_resources = launcher_config.engine
 
-        self._instance_id = session_config.instance_id
-        self._glog_level = parse_as_glog_level(session_config.log_level)
-        self._num_workers = session_config.num_workers
+        self._with_dataset = launcher_config.dataset.enable
 
-        self._namespace = launcher_config.namespace
+        self._with_analytical = launcher_config.engine.enable_gae
+        self._with_analytical_java = launcher_config.engine.enable_gae_java
+        self._with_interactive = launcher_config.engine.enable_gie
+        self._with_learning = launcher_config.engine.enable_gle
+        self._with_mars = launcher_config.mars.enable
+
+        def load_base64_json(string):
+            if string is None:
+                return None
+            json_str = base64.b64decode(string).decode("utf-8", errors="ignore")
+            return json.loads(json_str)
+
+        self._node_selector = load_base64_json(launcher_config.engine.node_selector)
+
+        self._volumes = load_base64_json(launcher_config.volumes)
+
+        self._dataset_proxy = load_base64_json(launcher_config.dataset.proxy)
+
+        self._image_pull_policy = launcher_config.image.pull_policy
+        self._image_pull_secrets = launcher_config.image.pull_secrets
+
+        registry = launcher_config.image.registry
+        repository = launcher_config.image.repository
+        tag = launcher_config.image.tag
+
+        image_prefix = f"{registry}/{repository}" if registry else repository
+        self._analytical_image = f"{image_prefix}/analytical:{tag}"
+        self._analytical_java_image = f"{image_prefix}/analytical-java:{tag}"
+        self._interactive_frontend_image = f"{image_prefix}/interactive-frontend:{tag}"
+        self._interactive_executor_image = f"{image_prefix}/interactive-executor:{tag}"
+        self._learning_image = f"{image_prefix}/learning:{tag}"
+        self._dataset_image = f"{image_prefix}/dataset:{tag}"
+
+        self._vineyard_deployment = config.vineyard.deployment_name
+        self._vineyard_image = config.vineyard.image
+        self._vineyard_service_port = config.vineyard.rpc_port
+        self._sock = "/tmp/vineyard_workspace/vineyard.sock"
+
+        self._dataset_requests = {"cpu": "200m", "memory": "64Mi"}
 
         self._engine_pod_prefix = engine_pod_prefix
         self._analytical_prefix = "gs-analytical-"
@@ -97,52 +138,6 @@ class EngineCluster:
 
         self._frontend_labels = self._engine_labels.copy()
         self._frontend_labels["app.kubernetes.io/component"] = "frontend"
-
-        self._with_dataset = launcher_config.dataset.enable
-
-        registry = launcher_config.image.registry
-        repository = launcher_config.image.repository
-        tag = launcher_config.image.tag
-
-        image_prefix = f"{registry}/{repository}" if registry else repository
-        self._analytical_image = f"{image_prefix}/analytical:{tag}"
-        self._analytical_java_image = f"{image_prefix}/analytical-java:{tag}"
-        self._interactive_frontend_image = f"{image_prefix}/interactive-frontend:{tag}"
-        self._interactive_executor_image = f"{image_prefix}/interactive-executor:{tag}"
-        self._learning_image = f"{image_prefix}/learning:{tag}"
-        self._dataset_image = f"{image_prefix}/dataset:{tag}"
-
-        self._vineyard_image = config.vineyard.image
-
-        self._image_pull_policy = launcher_config.image.pull_policy
-        self._image_pull_secrets = launcher_config.image.pull_secrets
-
-        self._vineyard_deployment = config.vineyard.deployment_name
-
-        self._with_analytical = launcher_config.engine.enable_gae
-        self._with_analytical_java = launcher_config.engine.enable_gae_java
-        self._with_interactive = launcher_config.engine.enable_gie
-        self._with_learning = launcher_config.engine.enable_gle
-        self._with_mars = launcher_config.mars.enable
-
-        def load_base64_json(string):
-            if string is None:
-                return None
-            json_str = base64.b64decode(string).decode("utf-8", errors="ignore")
-            return json.loads(json_str)
-
-        self._node_selector = load_base64_json(launcher_config.engine.node_selector)
-
-        self._volumes = load_base64_json(launcher_config.volumes)
-
-        self._dataset_proxy = load_base64_json(launcher_config.dataset.proxy)
-
-        self._sock = "/tmp/vineyard_workspace/vineyard.sock"
-
-        self._dataset_requests = {"cpu": "200m", "memory": "64Mi"}
-
-        self._service_type = launcher_config.service_type
-        self._vineyard_service_port = config.vineyard.rpc_port
 
     @property
     def vineyard_ipc_socket(self):
