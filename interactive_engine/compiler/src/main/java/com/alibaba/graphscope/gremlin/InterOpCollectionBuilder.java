@@ -170,6 +170,7 @@ public class InterOpCollectionBuilder {
                         op.setAlias(new OpArg(ArgUtils.asAlias(label, true)));
                     }
                 }
+
                 opCollection.appendInterOp(op);
             }
         }

@@ -43,9 +43,30 @@ public class UnfoldFusionStrategy implements InterOpStrategy {
             UnfoldOp next = nextUnfold(original, i);
             if (cur instanceof ProjectOp && next != null) {
                 ProjectOp projectOp = (ProjectOp) cur;
+                FfiAlias.ByValue alias_name;
+
+                // skip for the following conditions (may be impossible, e.g., select("a",
+                // "b").unfold())
+                // select("a").as("b").unfold()
+                // select("a", "b").as("c").unfold()
+                // select("a", "b").as("c", "d").unfold()
+                // [unsure]? select("a").by("name").unfold()
+                if (projectOp.getAlias().isPresent()) {
+                    alias_name = (FfiAlias.ByValue) projectOp.getAlias().get().getArg();
+                    if (alias_name.alias.name != null) {
+                        continue;
+                    }
+                }
+
                 List<Pair<String, FfiAlias.ByValue>> pairList =
                         (List<Pair<String, FfiAlias.ByValue>>)
                                 projectOp.getExprWithAlias().get().getArg();
+
+                // select("a", "b").unfold()
+                if (pairList.size() >= 2) {
+                    continue;
+                }
+
                 Pair single = pairList.get(0);
                 String tag_name = (String) single.getValue0();
                 next.setUnfoldTag(new OpArg<>(ArgUtils.asAlias(tag_name.substring(1), true)));
