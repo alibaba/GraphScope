@@ -55,7 +55,7 @@ manylinux2014-ext:
 	cd ../python/graphscope  && \
 	docker build \
 		--progress=$(BUILD_PROGRESS) \
-		-t graphscope/manylinux2014:20230407-ext-${ARCH} \
+		-t graphscope/manylinux2014:ext-${ARCH} \
 		-f $(DOCKERFILES_DIR)/manylinux2014-ext.Dockerfile .
 
 graphscope-dev:

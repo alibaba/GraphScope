@@ -46,8 +46,10 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
         SqlOperator operator = call.getOperator();
         if (operator.getKind() == SqlKind.CASE) {
             return visitCase(call);
+        } else if (call.getOperands().size() == 1) {
+            return visitUnaryOperator(call);
         } else {
-            return visitOperator(call);
+            return visitBinaryOperator(call);
         }
     }
 
@@ -72,7 +74,26 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                 .build();
     }
 
-    private OuterExpression.Expression visitOperator(RexCall call) {
+    private OuterExpression.Expression visitUnaryOperator(RexCall call) {
+        SqlOperator operator = call.getOperator();
+        RexNode operand = call.getOperands().get(0);
+        switch (operator.getKind()) {
+            case NOT:
+            default:
+                return OuterExpression.Expression.newBuilder()
+                        .addOperators(Utils.protoOperator(operator))
+                        .addOperators(
+                                OuterExpression.ExprOpr.newBuilder()
+                                        .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE))
+                        .addAllOperators(operand.accept(this).getOperatorsList())
+                        .addOperators(
+                                OuterExpression.ExprOpr.newBuilder()
+                                        .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE))
+                        .build();
+        }
+    }
+
+    private OuterExpression.Expression visitBinaryOperator(RexCall call) {
         SqlOperator operator = call.getOperator();
         OuterExpression.Expression.Builder exprBuilder = OuterExpression.Expression.newBuilder();
         // left-associative
@@ -181,5 +202,11 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                                 .setNodeType(paramDataType)
                                 .build())
                 .build();
+    }
+
+    @Override
+    public OuterExpression.Expression visitSubQuery(RexSubQuery subQuery) {
+        throw new UnsupportedOperationException(
+                "conversion from subQuery to ir core structure is unsupported yet");
     }
 }
