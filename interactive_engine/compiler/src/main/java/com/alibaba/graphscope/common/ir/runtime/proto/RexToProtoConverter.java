@@ -85,7 +85,7 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                             Preconditions.checkArgument(
                                     operand instanceof RexGraphVariable,
                                     "component type of 'ARRAY_VALUE_CONSTRUCTOR' should be"
-                                        + " 'variable' in ir core structure");
+                                            + " 'variable' in ir core structure");
                             varsBuilder.addKeys(operand.accept(this).getOperators(0).getVar());
                         });
         return OuterExpression.Expression.newBuilder()
