@@ -18,7 +18,8 @@ package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.GraphConfig;
-import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
+import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
+import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
@@ -75,9 +76,9 @@ public class Utils {
                             ImmutableMap.of(
                                     GraphConfig.GRAPH_SCHEMA.getKey(),
                                     schemaResource.toURI().getPath(),
-                                    GraphConfig.GRAPH_STORED_PROCEDURES_URI.getKey(),
-                                    proceduresResource.toURI().toString()));
-            return new ExperimentalMetaFetcher(configs).fetch().get();
+                                    GraphConfig.GRAPH_STORED_PROCEDURES.getKey(),
+                                    proceduresResource.toURI().getPath()));
+            return new ExperimentalMetaFetcher(new LocalMetaDataReader(configs)).fetch().get();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

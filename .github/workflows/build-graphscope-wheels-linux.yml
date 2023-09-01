@@ -67,7 +67,7 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
       with:
-        name: wheel-${{ github.sha }}
+        name: wheel-arm64-${{ github.sha }}
         path: |
           client.tar.gz
           graphscope.tar.gz

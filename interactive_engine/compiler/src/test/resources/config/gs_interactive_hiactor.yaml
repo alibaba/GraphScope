@@ -1,0 +1,30 @@
+---
+version: 0.0.1
+directories:
+  workspace: .
+  subdirs:
+    data: target/test-classes/config  # by default data, relative to ${workspace}
+    conf: conf # by default conf, relative to ${workspace}
+    logs: logs  # by default logs, relative to ${workspace}
+log_level: INFO # default INFO
+default_graph: modern  # configure the graph to be loaded while starting the service, if graph name not specified
+# may include other configuration items of other engines
+compute_engine:
+  type: hiactor  # [hiactor|pegasus] hiactor is for high-qps scenario, pegasus is for bi scenario
+  hosts:
+    - localhost:8001
+compiler:
+  planner:
+    is_on: true
+    opt: RBO
+    rules:
+      - FilterMatchRule
+  endpoint:
+    default_listen_address: 0.0.0.0  # default localhost
+    bolt_connector:   # for cypher, there may be other connectors, such as bolt_connector, https_connector
+      disabled: false   # default false
+      port: 8002  # default 7687
+    gremlin_connector: # for cypher, there may be other connectors, such as bolt_connector, https_connector
+      disabled: false   # default false
+      port: 8003  # default 7687
+  query_timeout: 200 # query timeout in milliseconds, default 2000

@@ -22,7 +22,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.step.HasContainerHolder;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.CoinStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.NoOpBarrierStep;
@@ -67,15 +66,6 @@ public class ScanFusionStepStrategy
                 }
                 currentStep = currentStep.getNextStep();
             }
-            // then fuse scan + coin: g.V().coin()
-            if (currentStep instanceof CoinStep) {
-                scanFusionStep.setCoinStep((CoinStep) currentStep);
-                TraversalHelper.copyLabels(currentStep, currentStep.getPreviousStep(), false);
-                traversal.removeStep(currentStep);
-            }
-            // more complex:
-            // g.V().has(..).coin() -> scan(filter, coin)
-            // g.V().coin().has(..) -> scan(coin) + select(expression)
         }
     }
 }

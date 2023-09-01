@@ -18,16 +18,16 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.config.FileLoadType;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PlannerConfig;
+import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
+import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
+import com.alibaba.graphscope.common.ir.meta.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
-import com.alibaba.graphscope.common.ir.planner.rules.NotExistToAntiJoinRule;
+import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
-import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
-import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
@@ -73,6 +73,7 @@ public class GraphPlanner {
     public GraphPlanner(Configs graphConfig) {
         this.graphConfig = graphConfig;
         this.plannerConfig = PlannerConfig.create(this.graphConfig);
+        logger.debug("planner config: " + this.plannerConfig);
         this.optPlanner = createRelOptPlanner(this.plannerConfig);
         this.rexBuilder = new GraphRexBuilder(new GraphTypeFactoryImpl());
         this.idGenerator = new AtomicLong(FrontendConfig.FRONTEND_SERVER_ID.get(graphConfig));
@@ -189,8 +190,8 @@ public class GraphPlanner {
                                                 FilterMatchRule.class.getSimpleName())) {
                                             ruleConfigs.add(FilterMatchRule.Config.DEFAULT);
                                         } else if (k.equals(
-                                                NotExistToAntiJoinRule.class.getSimpleName())) {
-                                            ruleConfigs.add(NotExistToAntiJoinRule.Config.DEFAULT);
+                                                NotMatchToAntiJoinRule.class.getSimpleName())) {
+                                            ruleConfigs.add(NotMatchToAntiJoinRule.Config.DEFAULT);
                                         } else {
                                             // todo: add more rule configs
                                         }
@@ -219,8 +220,9 @@ public class GraphPlanner {
                     "usage: GraphPlanner '<path_to_config_file>' '<path_to_query_file>'"
                             + " '<path_to_physical_output_file>'");
         }
-        Configs configs = new Configs(args[0], FileLoadType.RELATIVE_PATH);
-        ExperimentalMetaFetcher metaFetcher = new ExperimentalMetaFetcher(configs);
+        Configs configs = Configs.Factory.create(args[0]);
+        ExperimentalMetaFetcher metaFetcher =
+                new ExperimentalMetaFetcher(new LocalMetaDataReader(configs));
         String query = FileUtils.readFileToString(new File(args[1]), StandardCharsets.UTF_8);
         GraphPlanner planner = new GraphPlanner(configs);
         Antlr4Parser cypherParser = new CypherAntlr4Parser();

@@ -257,7 +257,6 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
 
         public PlanPointer(Pointer ptrPlan) {
             this.ptrPlan = Objects.requireNonNull(ptrPlan);
-            this.lastIdx = -1;
         }
     }
 }
