@@ -1,3 +1,17 @@
+/** Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include <climits>
 #include <vector>
 #include "flex/engines/hqps_db/core/context.h"
@@ -27,7 +41,7 @@ void work() {
   using GI = gs::MutableCSRInterface;
   using vertex_id_t = typename GI::vertex_id_t;
   std::vector<vertex_id_t> vids{0};
-  auto set_a = gs::MakeDefaultRowVertexSet(std::move(vids), "a");
+  auto set_a = gs::make_default_row_vertex_set(std::move(vids), "a");
   gs::Context<decltype(set_a), 0, 0, grape::EmptyType> ctx_a(std::move(set_a));
   VLOG(10) << "Finish construct set a";
 
@@ -36,7 +50,7 @@ void work() {
   std::vector<vertex_id_t> vids_b0{1, 2, 1};
   std::vector<size_t> off_b0{0, 3};
 
-  auto set_b = gs::MakeDefaultRowVertexSet(std::move(vids_b0), "b");
+  auto set_b = gs::make_default_row_vertex_set(std::move(vids_b0), "b");
 
   auto ctx_2 =
       ctx_a.AddNode<AppendOpt::Persist>(std::move(set_b), std::move(off_b0));
@@ -47,7 +61,7 @@ void work() {
   std::vector<vertex_id_t> vids_c0{3, 4, 5, 6, 7};
   std::vector<size_t> off_c0{0, 3, 3, 5};
 
-  auto set_c = gs::MakeDefaultRowVertexSet(std::move(vids_c0), "b");
+  auto set_c = gs::make_default_row_vertex_set(std::move(vids_c0), "b");
   auto ctx_3 =
       ctx_2.AddNode<AppendOpt::Persist>(std::move(set_c), std::move(off_c0));
   for (auto iter : ctx_3) {

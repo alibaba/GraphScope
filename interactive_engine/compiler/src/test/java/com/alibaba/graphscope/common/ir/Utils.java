@@ -18,29 +18,33 @@ package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.GraphConfig;
-import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
+import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
+import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
+import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.collect.ImmutableMap;
 
-import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
-import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.RelRule;
+import org.apache.calcite.plan.*;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.tools.RelBuilderFactory;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.net.URL;
 
 public class Utils {
-    public static final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
+    public static final RelDataTypeFactory typeFactory = new GraphTypeFactoryImpl();
     public static final RexBuilder rexBuilder = new GraphRexBuilder(typeFactory);
     public static final IrMeta schemaMeta = mockSchemaMeta();
+    public static final RelBuilderFactory relBuilderFactory =
+            (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
+                    GraphBuilder.create(null, (GraphOptCluster) cluster, schema);
 
     public static final GraphBuilder mockGraphBuilder() {
         GraphOptCluster cluster = GraphOptCluster.create(mockPlanner(), rexBuilder);
@@ -48,11 +52,12 @@ public class Utils {
                 null, cluster, new GraphOptSchema(cluster, schemaMeta.getSchema()));
     }
 
-    public static final RelOptPlanner mockPlanner(RelRule... rules) {
+    public static final RelOptPlanner mockPlanner(RelRule.Config... rules) {
         HepProgramBuilder hepBuilder = HepProgram.builder();
         if (rules.length > 0) {
-            for (RelRule rule : rules) {
-                hepBuilder.addRuleInstance(rule);
+            for (RelRule.Config ruleConfig : rules) {
+                hepBuilder.addRuleInstance(
+                        ruleConfig.withRelBuilderFactory(relBuilderFactory).toRule());
             }
         }
         return new HepPlanner(hepBuilder.build());
@@ -71,9 +76,9 @@ public class Utils {
                             ImmutableMap.of(
                                     GraphConfig.GRAPH_SCHEMA.getKey(),
                                     schemaResource.toURI().getPath(),
-                                    GraphConfig.GRAPH_STORED_PROCEDURES_URI.getKey(),
-                                    proceduresResource.toURI().toString()));
-            return new ExperimentalMetaFetcher(configs).fetch().get();
+                                    GraphConfig.GRAPH_STORED_PROCEDURES.getKey(),
+                                    proceduresResource.toURI().getPath()));
+            return new ExperimentalMetaFetcher(new LocalMetaDataReader(configs)).fetch().get();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

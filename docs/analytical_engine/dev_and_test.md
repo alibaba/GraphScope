@@ -85,7 +85,7 @@ With `gs` command-line utility, you can build analytical engine of GraphScope wi
 # Clone a repo if needed
 # git clone https://github.com/alibaba/graphscope
 # cd graphscope
-./gs make analytical
+python3 gsctl.py make analytical
 ```
 
 The code of analytical engine is a cmake project, with a `CMakeLists.txt` in the its root directory (`/analytical_engine`). After the building with `gs`, you may found the built artifacts in `analytical_engine/build/grape_engine`.
@@ -95,7 +95,7 @@ Together with the `grape_engine` are shared libraries, or there may have a bunch
 You could install it to a location by
 
 ```bash
-./gs make analytical-install --install-prefix /usr/local
+python3 gsctl.py make analytical-install --install-prefix /usr/local
 ```
 
 ````{note}
@@ -116,7 +116,7 @@ export GRAPHSCOPE_HOME=`pwd`
 See more about `GRAPHSCOPE_HOME` in [run tests](../development/how_to_test.md#run-tests)
 
 ```bash
-./gs test analytical
+python3 gsctl.py test analytical
 ```
 
 It would download the test dataset to the `/tmp/gstest` (if not exists) and run multiple algorithms against various graphs, and compare the result with the ground truth.

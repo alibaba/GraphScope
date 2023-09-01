@@ -3,18 +3,27 @@
 
 FROM centos:7 AS builder
 
+
 # shanghai zoneinfo
 ENV TZ=Asia/Shanghai
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+RUN yum install sudo -y && \
+    yum update glibc-common -y  && \
+    sudo localedef -i en_US -f UTF-8 en_US.UTF-8 && \    
+    yum install python3-pip -y && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo '$TZ' > /etc/timezone
 
-COPY ./gs ./gs
-RUN ./gs install-deps dev --cn --for-analytical --no-v6d  && \
-    yum clean all -y --enablerepo='*' && \
-    rm -fr /var/cache/yum
+ENV LC_ALL=en_US.utf-8
+ENV LANG=en_US.utf-8
+
+COPY gsctl ./gsctl
+RUN cd ./gsctl && \
+    python3 -m pip install click && \ 
+    python3 gsctl.py install-deps dev --cn --for-analytical --no-v6d  -j $(nproc) && \
+    rm -fr /root/gsctl
 
 # install hadoop for processing hadoop data source
-RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+RUN if [ "$(uname -m)" = "aarch64" ]; then \
       curl -sS -LO https://archive.apache.org/dist/hadoop/common/hadoop-3.3.0/hadoop-3.3.0-aarch64.tar.gz; \
       tar xzf hadoop-3.3.0-aarch64.tar.gz -C /opt/; \
     else \

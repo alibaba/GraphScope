@@ -32,22 +32,23 @@ limitations under the License.
 namespace gs {
 
 static constexpr const char* AGG_FUNC_TEMPLATE_STR =
-    "auto %1% = gs::make_aggregate_prop<%2%>(std::tuple{{%3%}, "
+    "auto %1% = gs::make_aggregate_prop<%2%>(std::tuple{%3%}, "
     "std::integer_sequence<int32_t, %4%>{});\n";
 
 static constexpr const char* FOLD_OP_TEMPLATE_STR =
-    "auto %1% = gs::make_fold_opt(%2%);\n"
-    "auto %3% = Engine::GroupByWithoutKey(%4%, std::move(%5%), %1%);\n";
+    "auto %2% = Engine::GroupByWithoutKey(%3%, std::move(%4%), "
+    "std::tuple{%1%});\n";
 
 std::pair<std::string, std::string> gen_agg_var_and_code_for_fold(
-    BuildingContext& ctx, const physical::GroupBy::AggFunc& agg_func) {
+    BuildingContext& ctx, const physical::GroupBy::AggFunc& agg_func,
+    TagIndMapping& tag_ind_mapping) {
   auto agg_func_name = agg_func_pb_2_str(agg_func.aggregate());
   auto cur_var_name = ctx.GetNextAggFuncName();
   std::vector<int32_t> in_tags;
   std::vector<std::string> in_prop_names;
   std::vector<std::string> in_prop_types;
   int32_t res_alias = agg_func.alias().value();
-  auto real_res_alias = ctx.CreateOrGetTagInd(res_alias);
+  auto real_res_alias = tag_ind_mapping.CreateOrGetTagInd(res_alias);
   auto& vars = agg_func.vars();
   for (auto i = 0; i < vars.size(); ++i) {
     auto& var = vars[i];
@@ -113,7 +114,7 @@ class FoldOpBuilder {
   FoldOpBuilder& AddAggFunc(const physical::GroupBy::AggFunc& agg_func) {
     std::string agg_fun_var_name, agg_fun_code;
     std::tie(agg_fun_var_name, agg_fun_code) =
-        gen_agg_var_and_code_for_fold(ctx_, agg_func);
+        gen_agg_var_and_code_for_fold(ctx_, agg_func, new_tag_id_mapping_);
     agg_func_name_and_code.emplace_back(agg_fun_var_name, agg_fun_code);
     return *this;
   }
@@ -134,7 +135,6 @@ class FoldOpBuilder {
     }
 
     std::string prev_ctx_name, next_ctx_name;
-    std::string fold_opt_var_name = ctx_.GetNextGroupOptName();
     std::tie(prev_ctx_name, next_ctx_name) = ctx_.GetPrevAndNextCtxName();
 
     std::string agg_func_code_con;
@@ -147,15 +147,16 @@ class FoldOpBuilder {
     }
 
     boost::format formater(FOLD_OP_TEMPLATE_STR);
-    formater % fold_opt_var_name % fold_ops_code % next_ctx_name %
-        ctx_.GraphVar() % prev_ctx_name;
-
+    formater % fold_ops_code % next_ctx_name % ctx_.GraphVar() % prev_ctx_name;
+    ctx_.UpdateTagIdAndIndMapping(new_tag_id_mapping_);
     return agg_func_code_con + formater.str();
   }
 
  private:
   BuildingContext& ctx_;
   std::vector<std::pair<std::string, std::string>> agg_func_name_and_code;
+  // fold remove previous columns, use a new TagIdMapping
+  TagIndMapping new_tag_id_mapping_;
 };
 
 static std::string BuildGroupWithoutKeyOp(

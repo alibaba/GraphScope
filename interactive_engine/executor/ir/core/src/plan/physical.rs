@@ -480,6 +480,37 @@ impl AsPhysical for pb::Unfold {
     }
 }
 
+impl AsPhysical for pb::Sample {
+    fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if let Some(sample_type) = &self.sample_type {
+            let sample_type = sample_type
+                .inner
+                .as_ref()
+                .ok_or(IrError::MissingData("Sample::sample_type".to_string()))?;
+            match sample_type {
+                pb::sample::sample_type::Inner::SampleByNum(num) => {
+                    if num.num <= 0 {
+                        Err(IrError::ParsePbError("SampleByNum num should be > 0".into()))?
+                    }
+                }
+                pb::sample::sample_type::Inner::SampleByRatio(ratio) => {
+                    if ratio.ratio < 0.0 || ratio.ratio > 1.0 {
+                        Err(IrError::ParsePbError("SampleByRatio ratio should be in [0, 1]".into()))?
+                    }
+                }
+            }
+        }
+        let mut sample = self.clone();
+        sample.post_process(builder, plan_meta)?;
+        builder.sample(self.clone());
+        Ok(())
+    }
+    fn post_process(&mut self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        post_process_vars(builder, plan_meta, false)?;
+        Ok(())
+    }
+}
+
 impl AsPhysical for pb::Sink {
     fn add_job_builder(&self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut sink_opr = self.clone();
@@ -552,6 +583,11 @@ impl AsPhysical for pb::logical_plan::Operator {
                 Union(_) => Ok(()),
                 Intersect(_) => Ok(()),
                 Unfold(unfold) => unfold.add_job_builder(builder, plan_meta),
+                Root(_) => {
+                    builder.add_dummy_source();
+                    Ok(())
+                }
+                Sample(sample) => sample.add_job_builder(builder, plan_meta),
                 _ => Err(IrError::Unsupported(format!("the operator {:?}", self))),
             }
         } else {
@@ -616,6 +652,17 @@ impl AsPhysical for LogicalPlan {
             if let Some(Apply(apply_opr)) = curr_node.borrow().opr.opr.as_ref() {
                 let mut sub_bldr = PlanBuilder::default();
                 if let Some(subplan) = self.extract_subplan(curr_node.clone()) {
+                    for (_, node) in &subplan.nodes {
+                        let operator = node.borrow().opr.clone();
+                        match operator.opr.as_ref() {
+                            // TODO(bingqing): remove this when engine supports.
+                            Some(pb::logical_plan::operator::Opr::Path(_)) => {
+                                Err(IrError::Unsupported("PathExpand in Apply".to_string()))?
+                            }
+                            _ => {}
+                        }
+                    }
+
                     let mut expand_degree_opt = None;
                     if subplan.len() <= 2 {
                         if subplan.len() == 1 {
@@ -1035,12 +1082,15 @@ mod test {
     fn post_process_edgexpd() {
         // g.V().outE()
         let mut plan = LogicalPlan::default();
-        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(1, vec![], None).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(1, vec![], None).into(), vec![1])
             .unwrap();
-        plan.append_operator_as_node(build_sink().into(), vec![1])
+        plan.append_operator_as_node(build_sink().into(), vec![2])
             .unwrap();
+
+        plan.clean_redundant_nodes();
+
         let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
@@ -1074,14 +1124,17 @@ mod test {
         // In this case, the Select will be translated into an GetV, to fetch and filter the
         // results in one single `FilterMap` pegasus operator.
         let mut plan = LogicalPlan::default();
-        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(0, vec![], None).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(0, vec![], None).into(), vec![1])
             .unwrap();
-        plan.append_operator_as_node(build_select("@.birthday == 20220101").into(), vec![1])
+        plan.append_operator_as_node(build_select("@.birthday == 20220101").into(), vec![2])
             .unwrap();
-        plan.append_operator_as_node(build_sink().into(), vec![2])
+        plan.append_operator_as_node(build_sink().into(), vec![3])
             .unwrap();
+
+        plan.clean_redundant_nodes();
+
         let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
@@ -1116,14 +1169,17 @@ mod test {
     fn post_process_edgexpd_label_filter() {
         // g.V().out().filter(@.~label == "person")
         let mut plan = LogicalPlan::default();
-        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(0, vec![], None).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(0, vec![], None).into(), vec![1])
             .unwrap();
-        plan.append_operator_as_node(build_select("@.~label == \"person\"").into(), vec![1])
+        plan.append_operator_as_node(build_select("@.~label == \"person\"").into(), vec![2])
             .unwrap();
-        plan.append_operator_as_node(build_sink().into(), vec![2])
+        plan.append_operator_as_node(build_sink().into(), vec![3])
             .unwrap();
+
+        plan.clean_redundant_nodes();
+
         let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
@@ -1146,16 +1202,19 @@ mod test {
         // the properties using `GetV` twice before filter, and can
         // finally execute the selection of "0.age > 1.age".
         let mut plan = LogicalPlan::default();
-        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(0, vec![], Some(0.into())).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(0, vec![], Some(0.into())).into(), vec![1])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(0, vec![], Some(1.into())).into(), vec![1])
+        plan.append_operator_as_node(build_edgexpd(0, vec![], Some(1.into())).into(), vec![2])
             .unwrap();
-        plan.append_operator_as_node(build_select("@0.age > @1.age").into(), vec![2])
+        plan.append_operator_as_node(build_select("@0.age > @1.age").into(), vec![3])
             .unwrap();
-        plan.append_operator_as_node(build_sink().into(), vec![3])
+        plan.append_operator_as_node(build_sink().into(), vec![4])
             .unwrap();
+
+        plan.clean_redundant_nodes();
+
         let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
@@ -1204,14 +1263,17 @@ mod test {
     fn post_process_edgexpd_project_auxilia() {
         // g.V().out().as(0).select(0).by(valueMap("name", "id", "age")
         let mut plan = LogicalPlan::default();
-        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(0, vec![], Some(0.into())).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(0, vec![], Some(0.into())).into(), vec![1])
             .unwrap();
-        plan.append_operator_as_node(build_project("{@0.name, @0.id, @0.age}").into(), vec![1])
+        plan.append_operator_as_node(build_project("{@0.name, @0.id, @0.age}").into(), vec![2])
             .unwrap();
-        plan.append_operator_as_node(build_sink().into(), vec![2])
+        plan.append_operator_as_node(build_sink().into(), vec![3])
             .unwrap();
+
+        plan.clean_redundant_nodes();
+
         let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
@@ -1253,14 +1315,17 @@ mod test {
     fn post_process_edgexpd_tag_no_auxilia() {
         // g.V().out().as('a').select('a')
         let mut plan = LogicalPlan::default();
-        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(0, vec![], Some(0.into())).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(0, vec![], Some(0.into())).into(), vec![1])
             .unwrap();
-        plan.append_operator_as_node(build_project("@0").into(), vec![1])
+        plan.append_operator_as_node(build_project("@0").into(), vec![2])
             .unwrap();
-        plan.append_operator_as_node(build_sink().into(), vec![2])
+        plan.append_operator_as_node(build_sink().into(), vec![3])
             .unwrap();
+
+        plan.clean_redundant_nodes();
+
         let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan_meta = plan_meta.with_partition();
@@ -1281,21 +1346,23 @@ mod test {
     fn post_process_scan() {
         let mut plan = LogicalPlan::default();
         // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
-        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
         // .hasLabel("person")
-        plan.append_operator_as_node(build_select("@.~label == \"person\"").into(), vec![0])
+        plan.append_operator_as_node(build_select("@.~label == \"person\"").into(), vec![1])
             .unwrap();
         // .has("age", 27)
-        plan.append_operator_as_node(build_select("@.age == 27").into(), vec![1])
+        plan.append_operator_as_node(build_select("@.age == 27").into(), vec![2])
             .unwrap();
 
         // .valueMap("age", "name", "id")
-        plan.append_operator_as_node(build_project("{@.name, @.id}").into(), vec![2])
+        plan.append_operator_as_node(build_project("{@.name, @.id}").into(), vec![3])
             .unwrap();
 
-        plan.append_operator_as_node(build_sink().into(), vec![3])
+        plan.append_operator_as_node(build_sink().into(), vec![4])
             .unwrap();
+
+        plan.clean_redundant_nodes();
 
         let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
@@ -1333,16 +1400,19 @@ mod test {
     fn post_process_getv_auxilia_projection() {
         // g.V().outE().inV().as('a').select('a').by(valueMap("name", "id", "age")
         let mut plan = LogicalPlan::default();
-        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(1, vec![], None).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(1, vec![], None).into(), vec![1])
             .unwrap();
-        plan.append_operator_as_node(build_getv(Some(0.into())).into(), vec![1])
+        plan.append_operator_as_node(build_getv(Some(0.into())).into(), vec![2])
             .unwrap();
-        plan.append_operator_as_node(build_project("{@0.name, @0.id, @0.age}").into(), vec![2])
+        plan.append_operator_as_node(build_project("{@0.name, @0.id, @0.age}").into(), vec![3])
             .unwrap();
-        plan.append_operator_as_node(build_sink().into(), vec![3])
+        plan.append_operator_as_node(build_sink().into(), vec![4])
             .unwrap();
+
+        plan.clean_redundant_nodes();
+
         let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
@@ -1384,9 +1454,9 @@ mod test {
     fn post_process_getv_auxilia_filter() {
         // g.V().outE().inV().filter('age > 10')
         let mut plan = LogicalPlan::default();
-        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![0])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(1, vec![], None).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(1, vec![], None).into(), vec![1])
             .unwrap();
         plan.append_operator_as_node(
             pb::GetV {
@@ -1405,11 +1475,14 @@ mod test {
                 meta_data: None,
             }
             .into(),
-            vec![1],
+            vec![2],
         )
         .unwrap();
-        plan.append_operator_as_node(build_sink().into(), vec![2])
+        plan.append_operator_as_node(build_sink().into(), vec![3])
             .unwrap();
+
+        plan.clean_redundant_nodes();
+
         let mut job_builder = PlanBuilder::default();
         let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
@@ -1448,20 +1521,23 @@ mod test {
         let mut logical_plan = LogicalPlan::default();
 
         logical_plan
-            .append_operator_as_node(source_opr.clone().into(), vec![])
+            .append_operator_as_node(source_opr.clone().into(), vec![0])
             .unwrap(); // node 0
         logical_plan
-            .append_operator_as_node(select_opr.clone().into(), vec![0])
+            .append_operator_as_node(select_opr.clone().into(), vec![1])
             .unwrap(); // node 1
         logical_plan
-            .append_operator_as_node(expand_opr.clone().into(), vec![1])
+            .append_operator_as_node(expand_opr.clone().into(), vec![2])
             .unwrap(); // node 2
         logical_plan
-            .append_operator_as_node(limit_opr.clone().into(), vec![2])
+            .append_operator_as_node(limit_opr.clone().into(), vec![3])
             .unwrap(); // node 3
         logical_plan
-            .append_operator_as_node(build_sink().into(), vec![3])
+            .append_operator_as_node(build_sink().into(), vec![4])
             .unwrap();
+
+        logical_plan.clean_redundant_nodes();
+
         let mut builder = PlanBuilder::default();
         let mut plan_meta = logical_plan.meta.clone();
         let _ = logical_plan.add_job_builder(&mut builder, &mut plan_meta);
@@ -1823,7 +1899,7 @@ mod test {
         };
 
         let opr_id = plan
-            .append_operator_as_node(scan.clone().into(), vec![])
+            .append_operator_as_node(scan.clone().into(), vec![0])
             .unwrap();
 
         // .out().as("1")
@@ -1860,6 +1936,8 @@ mod test {
         };
         plan.append_operator_as_node(project.clone().into(), vec![opr_id])
             .unwrap();
+
+        plan.clean_redundant_nodes();
 
         let mut builder = PlanBuilder::default();
         let mut meta = plan.meta.clone();
@@ -1910,7 +1988,7 @@ mod test {
         };
 
         let opr_id = plan
-            .append_operator_as_node(scan.clone().into(), vec![])
+            .append_operator_as_node(scan.clone().into(), vec![0])
             .unwrap();
 
         // .out().count()
@@ -1924,6 +2002,8 @@ mod test {
             pb::Apply { join_kind: 4, tags: vec![], subtask: subplan_id as i32, alias: Some(1.into()) };
         plan.append_operator_as_node(apply.clone().into(), vec![opr_id])
             .unwrap();
+
+        plan.clean_redundant_nodes();
 
         let mut builder = PlanBuilder::default();
         let mut meta = plan.meta.clone();
@@ -1973,7 +2053,7 @@ mod test {
         };
 
         let opr_id = plan
-            .append_operator_as_node(scan.clone().into(), vec![])
+            .append_operator_as_node(scan.clone().into(), vec![0])
             .unwrap();
 
         // .select("0").out().count()
@@ -1998,6 +2078,8 @@ mod test {
                 .into();
         plan.append_operator_as_node(apply.clone(), vec![opr_id])
             .unwrap();
+
+        plan.clean_redundant_nodes();
 
         let mut builder = PlanBuilder::default();
         let mut meta = plan.meta.clone();

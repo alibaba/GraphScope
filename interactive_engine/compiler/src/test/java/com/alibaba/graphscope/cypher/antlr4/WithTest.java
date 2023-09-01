@@ -154,8 +154,39 @@ public class WithTest {
                 project.explain().trim());
     }
 
+    // with + optional match
     @Test
     public void with_10_test() {
+        RelNode project =
+                Utils.eval(
+                                "Match (a:person)-[]->(b:person) With b Optional Match"
+                                        + " (b:person)-[]->(c:person) Return b, c")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(b=[b], c=[c], isAppend=[false])\n"
+                    + "  LogicalJoin(condition=[=(b, b)], joinType=[left])\n"
+                    + "    GraphLogicalProject(b=[b], isAppend=[false])\n"
+                    + "      GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[b], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])\n"
+                    + "    GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[c], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[b], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                project.explain().trim());
+    }
+
+    @Test
+    public void with_11_test() {
         RelNode project =
                 Utils.eval("Match (a:person)-[k:knows*1..2]->(b:person) Return length(k)").build();
         Assert.assertEquals(

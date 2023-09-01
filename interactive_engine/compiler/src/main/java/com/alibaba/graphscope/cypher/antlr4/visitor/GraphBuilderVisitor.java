@@ -59,7 +59,9 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
             sentences.add(visitOC_PatternPart(partCtx).build());
         }
         if (sentences.size() == 1) {
-            builder.match(sentences.get(0), GraphOpt.Match.INNER);
+            builder.match(
+                    sentences.get(0),
+                    (ctx.OPTIONAL() != null) ? GraphOpt.Match.OPTIONAL : GraphOpt.Match.INNER);
         } else if (sentences.size() > 1) {
             builder.match(sentences.get(0), sentences.subList(1, sentences.size()));
         } else {
@@ -94,7 +96,7 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
     @Override
     public GraphBuilder visitOC_NodePattern(CypherGSParser.OC_NodePatternContext ctx) {
         // source
-        if (ctx.parent instanceof CypherGSParser.OC_PatternElementContext) {
+        if (!(ctx.parent instanceof CypherGSParser.OC_PatternElementChainContext)) {
             builder.source(Utils.sourceConfig(ctx));
         } else { // getV
             builder.getV(Utils.getVConfig(ctx));

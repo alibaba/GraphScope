@@ -44,7 +44,12 @@ public abstract class RegularPhysicalBuilder<T, R> extends PhysicalBuilder<R> {
                     new RelVisitor() {
                         @Override
                         public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
-                            super.visit(node, ordinal, parent);
+                            /**
+                             * for operators like join, we will visit its inputs in {@code appendNode}
+                             */
+                            if (node.getInputs().size() == 1) {
+                                super.visit(node, ordinal, parent);
+                            }
                             appendNode((PhysicalNode) node.accept(relShuttle));
                         }
                     };
