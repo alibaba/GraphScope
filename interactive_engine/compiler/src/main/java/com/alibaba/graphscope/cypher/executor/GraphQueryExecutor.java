@@ -109,13 +109,11 @@ public class GraphQueryExecutor extends FabricExecutor {
             GraphPlanner.PlannerInstance instance = graphPlanner.instance(parseTree, irMeta);
             GraphPlanner.Summary planSummary = instance.plan();
             try (PhysicalBuilder physicalBuilder = planSummary.getPhysicalBuilder()) {
-                logger.info(
-                        "cypher query \"{}\", job conf name \"{}\", logical plan {}, physical plan"
-                                + " {}",
+                logger.debug(
+                        "cypher query \"{}\", job conf name \"{}\", calcite logical plan {}",
                         statement,
                         planSummary.getName(),
-                        planSummary.getLogicalPlan().explain(),
-                        physicalBuilder.explain());
+                        planSummary.getLogicalPlan().explain());
                 if (planSummary.getLogicalPlan().isReturnEmpty()) {
                     return StatementResults.initial();
                 }
@@ -123,8 +121,12 @@ public class GraphQueryExecutor extends FabricExecutor {
                 QueryTimeoutConfig timeoutConfig = getQueryTimeoutConfig();
                 StatementResults.SubscribableExecution execution =
                         new GraphPlanExecution(this.client, planSummary, timeoutConfig);
-                metaQueryCallback.afterExec(irMeta);
                 StatementResult result = StatementResults.connectVia(execution, querySubject);
+                logger.info(
+                        "cypher query \"{}\", job conf name \"{}\", ir core logical plan {}",
+                        statement,
+                        planSummary.getName(),
+                        physicalBuilder.explain());
                 return result;
             }
         } catch (Exception e) {

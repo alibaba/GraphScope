@@ -35,8 +35,9 @@ jobs:
 
         # Not sure when the first installation would fail, saying that the lock of python3.10 is taken
         # However the second trial would success.
-        ./gs install-deps dev || true
-        ./gs install-deps dev
+        python3 -m pip install click
+        python3 gsctl.py install-deps dev || true
+        python3 gsctl.py install-deps dev
         echo "export PATH=/usr/local/opt/coreutils/libexec/gnubin:\$PATH" >> ~/.graphscope_env
 
     - name: Install JDK 11
@@ -150,8 +151,9 @@ jobs:
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
 
-        ./gs install-deps dev || true
-        ./gs install-deps dev
+        python3 -m pip install click
+        python3 gsctl.py install-deps dev || true
+        python3 gsctl.py install-deps dev
 
     - name: Install latest libgrape-lite
       if: false

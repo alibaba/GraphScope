@@ -53,12 +53,14 @@ CALL : ( 'C' | 'c' ) ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'L' | 'l' ) ;
 YIELD : ( 'Y' | 'y' ) ( 'I' | 'i' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'D' | 'd' ) ;
 
 oC_RegularQuery
-     :  oC_Match ( SP? oC_With )* ( SP oC_Return ) ;
+     :  oC_Match ( SP? ( oC_Match | oC_With ) )* ( SP oC_Return ) ;
 
 oC_Match
-     :  MATCH SP? oC_Pattern ( SP? oC_Where )? ;
+     :  ( OPTIONAL SP )? MATCH SP? oC_Pattern ( SP? oC_Where )? ;
 
 MATCH : ( 'M' | 'm' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'C' | 'c' ) ( 'H' | 'h' ) ;
+
+OPTIONAL : ( 'O' | 'o' ) ( 'P' | 'p' ) ( 'T' | 't' ) ( 'I' | 'i' ) ( 'O' | 'o' ) ( 'N' | 'n' ) ( 'A' | 'a' ) ( 'L' | 'l' ) ;
 
 // multiple sentences
 oC_Pattern
@@ -76,6 +78,9 @@ oC_PatternElement
               :  ( oC_NodePattern ( SP? oC_PatternElementChain )* )
                   | ( '(' oC_PatternElement ')' )
                   ;
+
+oC_RelationshipsPattern
+           :  oC_NodePattern ( SP? oC_PatternElementChain )+ ;
 
 // (n)
 // (n:Person)
@@ -217,9 +222,12 @@ OR : ( 'O' | 'o' ) ( 'R' | 'r' ) ;
 XOR : ( 'X' | 'x' ) ( 'O' | 'o' ) ( 'R' | 'r' ) ;
 
 oC_AndExpression
-             :  oC_ComparisonExpression ( SP AND SP oC_ComparisonExpression )* ;
+             :  oC_NotExpression ( SP AND SP oC_NotExpression )* ;
 
 AND : ( 'A' | 'a' ) ( 'N' | 'n' ) ( 'D' | 'd' ) ;
+
+oC_NotExpression
+             :  ( NOT SP? )* oC_ComparisonExpression ;
 
 NOT : ( 'N' | 'n' ) ( 'O' | 'o' ) ( 'T' | 't' ) ;
 
@@ -269,13 +277,16 @@ oC_PropertyLookup
 
 oC_Atom
     :  oC_Literal
-        | oC_ParenthesizedExpression
-        | oC_Variable
-        | oC_FunctionInvocation
-        | oC_CountAny
         | oC_Parameter
         | oC_CaseExpression
-        ;
+        | oC_CountAny
+        | oC_PatternPredicate
+        | oC_ParenthesizedExpression
+        | oC_FunctionInvocation
+        | oC_Variable ;
+
+oC_PatternPredicate
+    :  oC_RelationshipsPattern ;
 
 oC_Parameter
     : '$' ( oC_SymbolicName ) ;

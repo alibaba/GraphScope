@@ -23,20 +23,20 @@ cd graphscope
 
 Now you are ready to build the GIE engine (on vineyard store) with the following command:
 ```bash
-./gs make interactive --storage-type=vineyard
+python3 gsctl.py make interactive --storage-type=vineyard
 ```
 You can find the built artifacts in `interactive_engine/assembly/target/graphscope`.
 
 You could install it to a location by
 
 ```bash
-./gs make interactive-install --storage-type=vineyard --install-prefix /opt/graphscope
+python3 gsctl.py make interactive-install --storage-type=vineyard --install-prefix /opt/graphscope
 ```
 
 ## Test GIE with Vineyard Store on Local
 You could test the GIE engine on vineyard store with the following command:
 ```bash
-./gs test interactive --local --storage-type=vineyard
+python3 gsctl.py test interactive --local --storage-type=vineyard
 ```
 
 This will run end2end tests, from compiling a gremlin queries to obtaining and verifying the results from the computed engine. The test includes:

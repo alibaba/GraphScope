@@ -16,6 +16,9 @@
 
 package com.alibaba.graphscope.cypher.antlr4;
 
+import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
+
+import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.runtime.CalciteException;
 import org.junit.Assert;
@@ -111,6 +114,69 @@ public class WhereTest {
 
     @Test
     public void where_6_test() {
+        RelNode before =
+                Utils.eval(
+                                "Match (a:person)-[]->()-[]->(b:person) Where Not a=b AND NOT"
+                                        + " (a:person)-[]->(b:person) Return a, b")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n"
+                    + "  LogicalFilter(condition=[AND(NOT(=(a, b)), NOT(EXISTS({\n"
+                    + "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[b],"
+                    + " opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
+                    + "})))])\n"
+                    + "    GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[b], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[END])\n"
+                    + "      GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                    + "        GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                before.explain().trim());
+
+        RelOptPlanner planner =
+                com.alibaba.graphscope.common.ir.Utils.mockPlanner(
+                        NotMatchToAntiJoinRule.Config.DEFAULT);
+        planner.setRoot(before);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n"
+                    + "  LogicalFilter(condition=[<>(a, b)])\n"
+                    + "    LogicalJoin(condition=[AND(=(a, a), =(b, b))], joinType=[anti])\n"
+                    + "      GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[b], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[END])\n"
+                    + "      GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                    + "        GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])\n"
+                    + "      GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[b], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                after.explain().trim());
+    }
+
+    @Test
+    public void where_7_test() {
         RelNode where =
                 Utils.eval(
                                 "Match (a:software) With a.creationDate as creationDate Where"
@@ -129,7 +195,7 @@ public class WhereTest {
 
     // expect to throw exceptions
     @Test
-    public void where_7_test() {
+    public void where_8_test() {
         try {
             RelNode where =
                     Utils.eval(
