@@ -25,11 +25,10 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.*;
+import java.util.List;
 
 /**
  * A wrapper structure for all related graph operators
@@ -40,23 +39,26 @@ public abstract class AbstractLogicalMatch extends SingleRel {
         super(cluster, RelTraitSet.createEmpty(), input);
     }
 
-    // Join or FlatMap or Intersect
-    public RelNode toPhysical() {
-        throw new UnsupportedOperationException("will implement in physical layer");
-    }
-
     @Override
     public List<RelNode> getInputs() {
         return this.input == null ? ImmutableList.of() : ImmutableList.of(this.input);
     }
 
-    protected void addFields(List<RelDataTypeField> addTo, RelDataType rowType) {
-        List<RelDataTypeField> fields = rowType.getFieldList();
-        for (RelDataTypeField field : fields) {
-            if (!field.getName().equals(AliasInference.DEFAULT_NAME)) {
-                addTo.add(field);
-            }
-        }
+    protected void addFields(List<RelDataTypeField> addTo, RelNode topNode) {
+        RelVisitor visitor =
+                new RelVisitor() {
+                    @Override
+                    public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
+                        super.visit(node, ordinal, parent);
+                        List<RelDataTypeField> fields = node.getRowType().getFieldList();
+                        for (RelDataTypeField field : fields) {
+                            if (!field.getName().equals(AliasInference.DEFAULT_NAME)) {
+                                addTo.add(field);
+                            }
+                        }
+                    }
+                };
+        visitor.go(topNode);
     }
 
     @Override

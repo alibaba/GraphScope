@@ -67,4 +67,9 @@ public class RexVariableAliasCollector<R> extends RexVisitorImpl<List<R>> {
     public List<R> visitDynamicParam(RexDynamicParam dynamicParam) {
         return ImmutableList.of();
     }
+
+    @Override
+    public List<R> visitSubQuery(RexSubQuery subQuery) {
+        return ImmutableList.of();
+    }
 }
