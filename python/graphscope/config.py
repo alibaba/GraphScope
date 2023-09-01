@@ -305,9 +305,9 @@ class SessionConfig:
 
 @dataclass
 class Config(Serializable):
-    launcher_type: str = (
-        "hosts"  # Launcher type, choose from 'hosts', 'k8s' or 'operator'.
-    )
+    launcher_type: str = "k8s"
+    # Launcher type, choose from 'hosts', 'k8s' or 'operator'.
+
     session: SessionConfig = SessionConfig()
 
     coordinator: CoordinatorConfig = CoordinatorConfig()  # Coordinator configuration.
