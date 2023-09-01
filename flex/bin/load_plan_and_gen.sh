@@ -68,13 +68,9 @@ fi
 #fi
 
 cypher_to_plan() {
-  if [ $# -ne 6 ]; then
-    echo "Usage: $0 <query_name> <input_file> <output_plan file> <output_yaml_file> <ir_compiler_properties>, but receive: "$#
-    exit 1
-  fi
-  # check GIE_HOME set
-  if [ -z ${GIE_HOME} ]; then
-    echo "GIE_HOME not set."
+  if [ $# -ne 7 ]; then
+    echo "Usage: $0 <query_name> <input_file> <output_plan file> <output_yaml_file>"
+    echo "          <ir_compiler_properties> <graph_schema_path> <gie_home>, but receive: "$#
     exit 1
   fi
   query_name=$1
@@ -82,6 +78,9 @@ cypher_to_plan() {
   output_path=$3
   output_yaml_file=$4
   ir_compiler_properties=$5
+  graph_schema_path=$6
+  GIE_HOME=$7
+
   # find java executable
   echo "IR compiler properties = ${ir_compiler_properties}"
   #check file exists
@@ -151,16 +150,17 @@ cypher_to_plan() {
 
 compile_hqps_so() {
   #check input params size eq 2 or 3
-  if [ $# -ne 4 ] && [ $# -ne 5 ]; then
-    echo "Usage: $0 <input_file> <work_dir> <ir_compiler_properties_file> <graph_schema_file> [output_dir]"
+  if [ $# -ne 5 ] && [ $# -ne 6 ]; then
+    echo "Usage: $0 <input_file> <work_dir> <ir_compiler_properties_file> <graph_schema_file> <GIE_HOME> [output_dir]"
     exit 1
   fi
   input_path=$1
   work_dir=$2
   ir_compiler_properties=$3
   graph_schema_path=$4
-  if [ $# -eq 5 ]; then
-    output_dir=$5
+  gie_home=$5
+  if [ $# -eq 6 ]; then
+    output_dir=$6
   else
     output_dir=${work_dir}
   fi
@@ -168,6 +168,7 @@ compile_hqps_so() {
   echo "Work dir = ${work_dir}"
   echo "ir compiler properties = ${ir_compiler_properties}"
   echo "graph schema path = ${graph_schema_path}"
+  echo "GIE_HOME = ${gie_home}"
   echo "Output dir = ${output_dir}"
 
   last_file_name=$(basename ${input_path})
@@ -212,7 +213,7 @@ compile_hqps_so() {
     # first do .cypher to .pb
     output_pb_path="${cur_dir}/${query_name}.pb"
     output_yaml_path="${cur_dir}/${query_name}.yaml"
-    cypher_to_plan ${query_name} ${input_path} ${output_pb_path} ${output_yaml_path} ${ir_compiler_properties} ${graph_schema_path}
+    cypher_to_plan ${query_name} ${input_path} ${output_pb_path} ${output_yaml_path} ${ir_compiler_properties} ${graph_schema_path} ${gie_home}
     echo "----------------------------"
     echo "Codegen from cypher query done."
     echo "----------------------------"
@@ -444,8 +445,8 @@ run() {
       WORK_DIR="${i#*=}"
       shift # past argument=value
       ;;
-    -o=* | --output_dir=*)
-      OUTPUT_DIR="${i#*=}"
+    --gie_home=*)
+      GIE_HOME="${i#*=}"
       shift # past argument=value
       ;;
     --ir_conf=*)
@@ -454,6 +455,10 @@ run() {
       ;;
     --graph_schema_path=*)
       GRAPH_SCHEMA_PATH="${i#*=}"
+      shift # past argument=value
+      ;;
+    -o=* | --output_dir=*)
+      OUTPUT_DIR="${i#*=}"
       shift # past argument=value
       ;;
     -* | --*)
@@ -468,9 +473,10 @@ run() {
   echo "Engine type            ="${ENGINE_TYPE}
   echo "Input                  ="${INPUT}
   echo "Work dir               ="${WORK_DIR}
-  echo "Output path            ="${OUTPUT_DIR}
   echo "ir conf                ="${IR_CONF}
   echo "graph_schema_path      ="${GRAPH_SCHEMA_PATH}
+  echo "GIE_HOME               ="${GIE_HOME}
+  echo "Output path            ="${OUTPUT_DIR}
 
   # check input exist
   if [ ! -f ${INPUT} ]; then
@@ -495,9 +501,8 @@ run() {
 }
 
 if [ $# -lt 5 ]; then
-  echo "Usage: $0 input_file work_dir output_dir"
-  echo "Example: $0 -e=hqps/pegasus -i=../query/1.pb -o=/plugin/ --ir_conf=../conf/ir.conf --graph_schema_path=../conf/graph_schema.json -w=/tmp/codegen"
-  echo "your num args: "$#
+  echo "only receives: $# args"
+  usage
   exit 1
 fi
 
