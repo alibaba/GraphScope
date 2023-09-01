@@ -61,8 +61,7 @@ public class YamlConfigTest {
                 "./target/test-classes/config/modern/plugins",
                 GraphConfig.GRAPH_STORED_PROCEDURES.get(configs));
         Assert.assertEquals(
-                "ldbc_ic1, ldbc_ic2, ldbc_ic3",
-                GraphConfig.GRAPH_STORED_PROCEDURES_ENABLE_LISTS.get(configs));
+                "ldbc_ic2", GraphConfig.GRAPH_STORED_PROCEDURES_ENABLE_LISTS.get(configs));
         Assert.assertEquals(
                 "./target/test-classes/config/modern/graph.yaml",
                 GraphConfig.GRAPH_SCHEMA.get(configs));

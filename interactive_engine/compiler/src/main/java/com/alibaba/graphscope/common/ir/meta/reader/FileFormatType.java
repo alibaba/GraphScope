@@ -18,5 +18,6 @@ package com.alibaba.graphscope.common.ir.meta.reader;
 
 public enum FileFormatType {
     YAML,
-    JSON
+    JSON,
+    PROPERTIES
 }

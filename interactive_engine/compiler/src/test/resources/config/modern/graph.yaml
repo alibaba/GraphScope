@@ -1,6 +1,4 @@
 stored_procedures:
   directory: plugins  # default plugins, relative to ${workspace}/${name}
   enable_lists:
-    - ldbc_ic1
     - ldbc_ic2
-    - ldbc_ic3

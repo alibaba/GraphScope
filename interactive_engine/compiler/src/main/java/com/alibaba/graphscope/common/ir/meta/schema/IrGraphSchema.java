@@ -40,6 +40,7 @@ public class IrGraphSchema implements GraphSchema {
         String content =
                 new String(
                         schemaInputStream.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        schemaInputStream.getInputStream().close();
         switch (schemaInputStream.getFormatType()) {
             case YAML:
                 this.graphSchema = Utils.buildSchemaFromYaml(content);
