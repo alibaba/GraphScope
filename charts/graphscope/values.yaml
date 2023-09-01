@@ -86,11 +86,11 @@ engines:
     frontend:
       resources:
         requests:
-          cpu: 0.2
-          memory: 512Mi
+          cpu: 0.5
+          memory: 1024Mi
         limits:
-          cpu: 0.2
-          memory: 512Mi
+          cpu: 0.5
+          memory: 1024Mi
   gle:
     resources:
       requests:

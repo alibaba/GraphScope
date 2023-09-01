@@ -138,7 +138,7 @@ class EngineConfig:
     gie_executor_resource: ResourceConfig = ResourceConfig.make_guaranteed(1, "1Gi")
     # Resource for interactive executor pod
 
-    gie_frontend_resource: ResourceConfig = ResourceConfig.make_guaranteed(0.2, "512Mi")
+    gie_frontend_resource: ResourceConfig = ResourceConfig.make_guaranteed(0.5, "1Gi")
     # Resource for interactive frontend pod
 
     gle_resource: ResourceConfig = ResourceConfig.make_guaranteed(0.2, "1Gi")
