@@ -25,6 +25,7 @@ import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.google.protobuf.util.JsonFormat;
+
 import org.apache.calcite.rex.RexNode;
 import org.junit.Assert;
 import org.junit.Test;
@@ -50,6 +51,8 @@ public class RexToProtoTest {
                                 builder.literal(1),
                                 builder.variable("a", "age")));
         RexToProtoConverter converter = new RexToProtoConverter(true, false);
-        Assert.assertEquals(FileUtils.readJsonFromResource("proto/expression_with_brace.json"), JsonFormat.printer().print(braceExpr.accept(converter)));
+        Assert.assertEquals(
+                FileUtils.readJsonFromResource("proto/expression_with_brace.json"),
+                JsonFormat.printer().print(braceExpr.accept(converter)));
     }
 }
