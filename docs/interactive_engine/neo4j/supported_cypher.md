@@ -80,8 +80,8 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | Comparison | Less than or equal | <= | <= |  <input type="checkbox" disabled checked /> |  |
 | Comparison | Greater than | > | > |  <input type="checkbox" disabled checked /> |  |
 | Comparison | Greater than or equal | >= | >= |  <input type="checkbox" disabled checked /> |  |
-| Comparison | Verify as `NULL`| IS NULL | is null |  <input type="checkbox" disabled /> | planned |
-| Comparison | Verify as `NOT NULL`| IS NOT NULL | is not null |  <input type="checkbox" disabled /> | planned |
+| Comparison | Verify as `NULL`| IS NULL | is null |  <input type="checkbox" disabled checked /> |  |
+| Comparison | Verify as `NOT NULL`| IS NOT NULL | is not null |  <input type="checkbox" disabled checked /> |  |
 | Comparison | String starts with | STARTS WITH | starts with  | <input type="checkbox" disabled  />|  planned |
 | Comparison | String ends with | ENDS WITH | ends with | <input type="checkbox" disabled  />|  planned |
 | Comparison | String contains | CONTAINS | contains | <input type="checkbox" disabled  />|  planned |
