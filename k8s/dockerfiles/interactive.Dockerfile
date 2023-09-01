@@ -50,7 +50,7 @@ USER graphscope
 WORKDIR /home/graphscope
 
 ############### RUNTIME: executor #######################
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:20230407-ext AS ext
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:ext AS ext
 FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION AS executor
 
 ENV RUST_BACKTRACE=1

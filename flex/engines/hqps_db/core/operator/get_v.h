@@ -54,31 +54,23 @@ class GetVertex {
   template <
       typename SET_T, typename LabelT, size_t num_labels, typename EXPRESSION,
       typename std::enable_if<(SET_T::is_edge_set &&
-                               !SET_T::is_multi_dst_label)>::type* = nullptr,
-      typename RES_T = std::pair<default_vertex_set_t, std::vector<offset_t>>>
-  static RES_T GetNoPropVFromEdgeSet(
+                               !SET_T::is_multi_dst_label)>::type* = nullptr>
+  static auto GetNoPropVFromEdgeSet(
       const GRAPH_INTERFACE& graph, const SET_T& set,
       GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
     VLOG(10) << "[Get no PropertyV from edge set]" << set.Size();
-    return GetNoPropVSetFromSingleDstEdgeSet<RES_T>(graph, set,
-                                                    std::move(get_v_opt));
+    return GetNoPropVSetFromSingleDstEdgeSet(graph, set, std::move(get_v_opt));
   }
 
-  // get no propv from two label dst edge set
-  template <typename SET_T, typename LabelT, size_t num_labels,
-            typename EXPRESSION,
-            typename std::enable_if<(SET_T::is_edge_set &&
-                                     SET_T::is_multi_dst_label &&
-                                     num_labels == 2)>::type* = nullptr,
-            typename RES_T = std::pair<
-                TwoLabelVertexSet<vertex_id_t, label_id_t, grape::EmptyType>,
-                std::vector<offset_t>>>
-  static RES_T GetNoPropVFromEdgeSet(
-      const GRAPH_INTERFACE& graph, const SET_T& set,
-      GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
-    VLOG(10) << "[Get no PropertyV from mutlti dst edge set]" << set.Size();
-    return GetNoPropVSetFromMutliDstEdgeSet<RES_T>(graph, set,
-                                                   std::move(get_v_opt));
+  // get no prop v from untyped edge set, with no predicate.
+  template <typename LabelT, size_t num_labels>
+  static auto GetNoPropVFromEdgeSet(
+      const GRAPH_INTERFACE& graph,
+      const UnTypedEdgeSet<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
+                           typename GRAPH_INTERFACE::sub_graph_t>& set,
+      GetVOpt<LabelT, num_labels, Filter<TruePredicate>>&& get_v_opt) {
+    VLOG(10) << "[Get no PropertyV from unkeyed dst edge set]" << set.Size();
+    return set.GetVertices(get_v_opt);
   }
 
   // Result is multilabelVertexset.
@@ -209,28 +201,13 @@ class GetVertex {
   }
 
   // get single label from single dst edge label.
-  template <typename RES_T, typename LabelT, size_t num_labels, typename SET_T,
+  template <typename LabelT, size_t num_labels, typename SET_T,
             typename EXPRESSION>
-  static RES_T GetNoPropVSetFromSingleDstEdgeSet(
+  static auto GetNoPropVSetFromSingleDstEdgeSet(
       const GRAPH_INTERFACE& graph, const SET_T& set,
       GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
     auto v_opt = get_v_opt.v_opt_;
-    auto v_label = get_v_opt.v_labels_[0];
     auto expr = get_v_opt.filter_.expr_;
-    return set.GetVertices(get_v_opt.v_opt_, get_v_opt.v_labels_, expr);
-  }
-
-  // get multiple label dst edge label. returns two label set.
-  template <typename RES_T, typename LabelT, size_t num_labels,
-            typename EXPRESSION,
-            typename std::enable_if<num_labels == 2>::type* = nullptr>
-  static RES_T GetNoPropVSetFromMutliDstEdgeSet(
-      const GRAPH_INTERFACE& graph,
-      const MultiLabelDstEdgeSet<num_labels, GRAPH_INTERFACE, grape::EmptyType>&
-          set,
-      GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
-    auto v_opt = get_v_opt.v_opt_;
-    auto expr = get_v_opt.expr_;
     return set.GetVertices(get_v_opt.v_opt_, get_v_opt.v_labels_, expr);
   }
 

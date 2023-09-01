@@ -1,0 +1,1 @@
+MATCH(a:PERSON)-[b: STUDYAT]->(c) where b.classYear < 2009 return b.classYear AS classYear ORDER BY classYear DESC LIMIT 10;

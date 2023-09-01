@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.groot.servers.ir;
 
-import com.alibaba.graphscope.common.ir.schema.GraphSchemaWrapper;
+import com.alibaba.graphscope.common.ir.meta.schema.GraphSchemaWrapper;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.common.store.SnapshotId;

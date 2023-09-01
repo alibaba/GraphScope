@@ -101,7 +101,8 @@ impl MultiVersionGraph for GraphStore {
                 .edge_manager
                 .get_all_edges(snapshot_id as i64);
             while let Some(info) = iter.next() {
-                let mut edge_kind_iter = info.into_iter();
+                let edge_kinds = info.lock();
+                let mut edge_kind_iter = edge_kinds.iter_kinds();
                 while let Some(edge_kind_info) = edge_kind_iter.next() {
                     if let Some(edge) = self.get_edge_from_relation(
                         snapshot_id,

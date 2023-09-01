@@ -10,6 +10,7 @@ For your reference, we've tested the tutorial on Ubuntu 20.04.
 
 - Kubernetes Cluster
 - Python >= 3.9
+- JDK 11 (Both JDK 8 and 20 have known compatibility issues)
 
 To get started, you need to prepare a Kubernetes Cluster to continue.
 

@@ -78,6 +78,18 @@ impl Decode for Primitives {
     }
 }
 
+#[rustversion::before(1.72.0)]
+fn type_id_from_bytes<R: ReadExt>(reader: &mut R) -> io::Result<TypeId> {
+    let number = <u64>::read_from(reader)?;
+    Ok(unsafe { std::mem::transmute(number) })
+}
+
+#[rustversion::since(1.72.0)]
+fn type_id_from_bytes<R: ReadExt>(reader: &mut R) -> io::Result<TypeId> {
+    let number = <u128>::read_from(reader)?;
+    Ok(unsafe { std::mem::transmute(number) })
+}
+
 impl Encode for Object {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
         match self {
@@ -161,8 +173,7 @@ impl Decode for Object {
             5 => {
                 let bytes = <Vec<u8>>::read_from(reader)?;
                 let mut bytes_reader = &bytes[0..];
-                let number = <u64>::read_from(&mut bytes_reader)?;
-                let t: TypeId = unsafe { std::mem::transmute(number) };
+                let t: TypeId = type_id_from_bytes(&mut bytes_reader)?;
                 let obj = de_dyn_obj(&t, &mut bytes_reader)?;
                 Ok(Object::DynOwned(obj))
             }
