@@ -25,6 +25,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalFilter;
+import org.apache.calcite.rel.logical.LogicalJoin;
 
 /**
  * a wrapper of {@code GraphRelShuttle} and re-implement {@code RelShuttleImpl} to visit our self-defined operators ({@code GraphLogicalXX})
@@ -53,6 +54,11 @@ public class GraphRelShuttleWrapper extends RelShuttleImpl {
     @Override
     public RelNode visit(LogicalFilter filter) {
         return relShuttle.visit(filter);
+    }
+
+    @Override
+    public RelNode visit(LogicalJoin join) {
+        return relShuttle.visit(join);
     }
 
     @Override

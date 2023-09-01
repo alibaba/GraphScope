@@ -1,7 +1,7 @@
 # The vineyard-dev image including all vineyard-related dependencies
 # that could compile graphscope analytical engine.
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-FROM $REGISTRY/graphscope/manylinux2014:20230407-ext AS ext
+FROM $REGISTRY/graphscope/manylinux2014:ext AS ext
 FROM ubuntu:22.04
 
 # shanghai zoneinfo

@@ -5,6 +5,7 @@ source ${script_dir}/lib/colors.sh
 source ${script_dir}/lib/install_thirdparty_dependencies.sh
 source ${script_dir}/lib/install_vineyard.sh
 source ${script_dir}/lib/util.sh
+source ${script_dir}/initialize.sh
 
 
 while getopts ":t:d:l:s:k:n:" opt; do
@@ -22,7 +23,7 @@ while getopts ":t:d:l:s:k:n:" opt; do
       storage_type=$OPTARG
       ;;
     k)
-      on_ks=$OPTARG
+      on_k8s=$OPTARG
       ;;
     n)
       nx=$OPTARG
@@ -76,7 +77,7 @@ function test_analytical-java {
 
 function test_interactive {
 	get_test_data
-	if [[ -n ${on_local} ]]; then
+	if [ "${on_local}" == "True" ]; then
 		if [[ ${storage_type} = "experimental" ]]; then
 			info "Testing interactive on local with experimental storage"
 			# IR unit test
@@ -124,7 +125,7 @@ function test_interactive {
 			info "Testing interactive on local with default storage"
 		fi
 	fi
-	if [[ -n ${on_k8s} ]]; then
+	if [ "${on_k8s}" == "True" ]; then
 		info "Testing interactive on k8s"
 		export PYTHONPATH="${GS_SOURCE_DIR}"/python:${PYTHONPATH}
 		cd "${GS_SOURCE_DIR}"/interactive_engine && mvn clean install --quiet -DskipTests -Drust.compile.skip=true -P graphscope,graphscope-assembly
@@ -141,23 +142,23 @@ function test_learning {
 function test_e2e {
 	get_test_data
 	cd "${GS_SOURCE_DIR}"/python || exit
-	if [[ -n ${on_local} ]]; then
+	if [ "${on_local}" == "True" ]; then
 		# unittest
 		python3 -m pytest -s -vvv --exitfirst graphscope/tests/minitest/test_min.py
 	fi
-	if [[ -n ${on_k8s} ]]; then
+	if [ "${on_k8s}" == "True" ]; then
 		python3 -m pytest -s -vvv --exitfirst ./graphscope/tests/kubernetes/test_demo_script.py
 	fi
 }
 
 function test_groot {
 	get_test_data
-	if [[ -n ${on_local} ]]; then
+	if [ "${on_local}" == "True" ]; then
 		info "Testing groot on local"
 		cd "${GS_SOURCE_DIR}"/interactive_engine/groot-server
 		mvn test -Pgremlin-test
 	fi
-	if [[ -n ${on_k8s} ]]; then
+	if [ "${on_k8s}" == "True" ]; then
 		info "Testing groot on k8s, note you must already setup a groot cluster and necessary environment variables"
 		cd "${GS_SOURCE_DIR}"/python || exit
 		python3 -m pytest --exitfirst -s -vvv ./graphscope/tests/kubernetes/test_store_service.py

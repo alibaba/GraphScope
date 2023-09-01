@@ -32,21 +32,17 @@ import com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.Filter;
-import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexVisitor;
 import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class LogicalPlanVisitor extends CypherGSBaseVisitor<LogicalPlan> {
-    private static final Logger logger = LoggerFactory.getLogger(LogicalPlanVisitor.class);
     private final GraphBuilder builder;
     private final IrMeta irMeta;
 
@@ -68,26 +64,13 @@ public class LogicalPlanVisitor extends CypherGSBaseVisitor<LogicalPlan> {
                     builderVisitor.visitOC_RegularQuery(ctx.oC_RegularQuery()).build();
             ImmutableMap<Integer, String> map =
                     builderVisitor.getExpressionVisitor().getDynamicParams();
-            return new LogicalPlan(
-                    regularQuery, returnEmpty(regularQuery), getParameters(regularQuery, map));
+            return new LogicalPlan(regularQuery, getParameters(regularQuery, map));
         } else {
             RexNode procedureCall =
                     new ProcedureCallVisitor(this.builder, this.irMeta)
                             .visitOC_StandaloneCall(ctx.oC_StandaloneCall());
             return new LogicalPlan(procedureCall);
         }
-    }
-
-    private boolean returnEmpty(RelNode relNode) {
-        List<RelNode> inputs = Lists.newArrayList(relNode);
-        while (!inputs.isEmpty()) {
-            RelNode cur = inputs.remove(0);
-            if (cur instanceof LogicalValues) {
-                return true;
-            }
-            inputs.addAll(cur.getInputs());
-        }
-        return false;
     }
 
     private List<StoredProcedureMeta.Parameter> getParameters(

@@ -16,9 +16,11 @@
 
 package com.alibaba.graphscope.cypher.antlr4;
 
+import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 
+import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -124,8 +126,86 @@ public class MatchTest {
                 SqlTypeName.BIGINT, condition.getOperands().get(1).getType().getSqlTypeName());
     }
 
+    // Match (a:person)-[x:knows]->(b:person), (b:person)-[:knows]-(c:person)
+    // Optional Match (a:person)-[]->(c:person)
+    // Return a
     @Test
     public void match_7_test() {
+        RelNode multiMatch =
+                Utils.eval(
+                                "Match (a:person)-[x:knows]->(b:person),"
+                                        + " (b:person)-[:knows]-(c:person) Optional Match"
+                                        + " (a:person)-[]->(c:person) Return a")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  LogicalJoin(condition=[AND(=(a, a), =(c, c))], joinType=[left])\n"
+                    + "    GraphLogicalMultiMatch(input=[null],"
+                    + " sentences=[{s0=[GraphLogicalGetV(tableConfig=[{isAll=false,"
+                    + " tables=[person]}], alias=[b], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[x],"
+                    + " opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
+                    + "], s1=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[c], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                    + " alias=[DEFAULT], opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[b], opt=[VERTEX])\n"
+                    + "]}])\n"
+                    + "    GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[c], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                multiMatch.explain().trim());
+    }
+
+    @Test
+    public void match_8_test() {
+        RelNode multiMatch = Utils.eval("Match (a) Where not (a)-[c]-(b) Return a Limit 1").build();
+        Assert.assertEquals(
+                "GraphLogicalSort(fetch=[1])\n"
+                    + "  GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "    LogicalFilter(condition=[NOT(EXISTS({\n"
+                    + "GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[b], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[c], opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "}))])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])",
+                multiMatch.explain().trim());
+        RelOptPlanner planner =
+                com.alibaba.graphscope.common.ir.Utils.mockPlanner(
+                        NotMatchToAntiJoinRule.Config.DEFAULT);
+        planner.setRoot(multiMatch);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphLogicalSort(fetch=[1])\n"
+                    + "  GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "    LogicalJoin(condition=[=(a, a)], joinType=[anti])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "      GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[b], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[c], opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                after.explain().trim());
+    }
+
+    @Test
+    public void match_9_test() {
         LogicalPlan plan =
                 Utils.evalLogicalPlan(
                         "Match (n:person {name: $name}) Where n.age = $age Return n.id;");
@@ -138,7 +218,7 @@ public class MatchTest {
 
     // add a new test case for match without any dynamic params
     @Test
-    public void match_8_test() {
+    public void match_10_test() {
         LogicalPlan plan = Utils.evalLogicalPlan("Match (n:person) Return n.id;");
         Assert.assertTrue(plan.getDynamicParams().isEmpty());
         Assert.assertEquals("RecordType(BIGINT id)", plan.getOutputType().toString());
@@ -146,7 +226,7 @@ public class MatchTest {
 
     // add a new test case for match with multiple dynamic params
     @Test
-    public void match_9_test() {
+    public void match_11_test() {
         LogicalPlan plan =
                 Utils.evalLogicalPlan(
                         "Match (n:person {name: $name, age: $age}) Where n.id > 10 Return n.id,"

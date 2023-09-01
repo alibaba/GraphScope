@@ -68,7 +68,7 @@ to help you install all the dependencies.
 git clone https://github.com/alibaba/graphscope
 cd graphscope
 
-./gs install-deps dev
+python3 gsctl.py install-deps dev
 # use --help to get more usage.
 ```
 

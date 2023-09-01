@@ -113,11 +113,11 @@ RETURN a, b;
 | Keyword | Comments |  Supported  |  Todo
 |:---|---|:---:|:---|
 | MATCH | only one Match clause is allowed  | <input type="checkbox" disabled checked />  |
-| OPTIONAL MATCH | implements as left outer join | <input type="checkbox" disabled  /> |  planned |
+| OPTIONAL MATCH | implements as left outer join | <input type="checkbox" checked /> |  |
 | RETURN .. [AS] |  | <input type="checkbox" disabled checked />  |   |
 | WITH .. [AS] | project, aggregate, distinct | <input type="checkbox" disabled checked />  | |
 | WHERE |  | <input type="checkbox" disabled checked />  |    |
-| NOT EXIST (an edge/path) | implements as anti join  |  <input type="checkbox" disabled  />|  |
+| WHERE NOT EXIST (an edge/path) | implements as anti join  |  <input type="checkbox" checked  />|  |
 | ORDER BY |  | <input type="checkbox" disabled checked />  |  |
 | LIMIT |  | <input type="checkbox" disabled checked />  |    |
 

@@ -165,6 +165,10 @@ public abstract class Utils {
                 return OuterExpression.ExprOpr.newBuilder()
                         .setLogical(OuterExpression.Logical.OR)
                         .build();
+            case NOT:
+                return OuterExpression.ExprOpr.newBuilder()
+                        .setLogical(OuterExpression.Logical.NOT)
+                        .build();
             default:
                 // TODO: support IN and NOT_IN
                 throw new UnsupportedOperationException(

@@ -4,8 +4,10 @@
 
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 #FROM vineyardcloudnative/manylinux-llvm:2014-11.0.0 AS llvm
-FROM $REGISTRY/graphscope/manylinux2014:20230407-ext AS ext
+FROM $REGISTRY/graphscope/manylinux2014:ext AS ext
 
+# build form https://github.com/sighingnow/manylinux/tree/dyn-rebase
+# usually we don't need to change this image unless the underlying python needs to be updated
 FROM $REGISTRY/graphscope/manylinux2014:20230407
 
 # shanghai zoneinfo

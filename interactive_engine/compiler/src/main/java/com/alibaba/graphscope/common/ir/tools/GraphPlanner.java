@@ -25,25 +25,29 @@ import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
+import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
+import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
-import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.*;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.rules.CoreRules;
+import org.apache.calcite.rel.rules.FilterJoinRule;
 import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -53,6 +57,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
@@ -67,13 +72,16 @@ public class GraphPlanner {
     private final RelOptPlanner optPlanner;
     private final RexBuilder rexBuilder;
     private final AtomicLong idGenerator;
+    private static final RelBuilderFactory relBuilderFactory =
+            (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
+                    GraphBuilder.create(null, (GraphOptCluster) cluster, schema);
 
     public GraphPlanner(Configs graphConfig) {
         this.graphConfig = graphConfig;
         this.plannerConfig = PlannerConfig.create(this.graphConfig);
         logger.debug("planner config: " + this.plannerConfig);
         this.optPlanner = createRelOptPlanner(this.plannerConfig);
-        this.rexBuilder = new GraphRexBuilder(new JavaTypeFactoryImpl());
+        this.rexBuilder = new GraphRexBuilder(new GraphTypeFactoryImpl());
         this.idGenerator = new AtomicLong(FrontendConfig.FRONTEND_SERVER_ID.get(graphConfig));
     }
 
@@ -125,10 +133,7 @@ public class GraphPlanner {
                 RelOptPlanner planner = this.optCluster.getPlanner();
                 planner.setRoot(regularQuery);
                 logicalPlan =
-                        new LogicalPlan(
-                                planner.findBestExp(),
-                                logicalPlan.isReturnEmpty(),
-                                logicalPlan.getDynamicParams());
+                        new LogicalPlan(planner.findBestExp(), logicalPlan.getDynamicParams());
             }
             // build physical plan from logical plan
             PhysicalBuilder physicalBuilder;
@@ -179,18 +184,31 @@ public class GraphPlanner {
             PlannerConfig.Opt opt = plannerConfig.getOpt();
             switch (opt) {
                 case RBO:
-                    HepProgramBuilder hepBuilder = HepProgram.builder();
+                    List<RelRule.Config> ruleConfigs = Lists.newArrayList();
                     plannerConfig
                             .getRules()
                             .forEach(
                                     k -> {
-                                        if (k.equals(FilterMatchRule.class.getSimpleName())) {
-                                            hepBuilder.addRuleInstance(
-                                                    FilterMatchRule.Config.DEFAULT.toRule());
+                                        if (k.equals(
+                                                FilterJoinRule.FilterIntoJoinRule.class
+                                                        .getSimpleName())) {
+                                            ruleConfigs.add(CoreRules.FILTER_INTO_JOIN.config);
+                                        } else if (k.equals(
+                                                FilterMatchRule.class.getSimpleName())) {
+                                            ruleConfigs.add(FilterMatchRule.Config.DEFAULT);
+                                        } else if (k.equals(
+                                                NotMatchToAntiJoinRule.class.getSimpleName())) {
+                                            ruleConfigs.add(NotMatchToAntiJoinRule.Config.DEFAULT);
                                         } else {
-                                            // todo: add more rules
+                                            // todo: add more rule configs
                                         }
                                     });
+                    HepProgramBuilder hepBuilder = HepProgram.builder();
+                    ruleConfigs.forEach(
+                            k -> {
+                                hepBuilder.addRuleInstance(
+                                        k.withRelBuilderFactory(relBuilderFactory).toRule());
+                            });
                     return new HepPlanner(hepBuilder.build());
                 case CBO:
                 default:
