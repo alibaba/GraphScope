@@ -19,6 +19,8 @@
 """ GraphScope default configuration.
 """
 
+import base64
+import json
 from dataclasses import dataclass
 from dataclasses import field
 from typing import List
@@ -373,9 +375,11 @@ class Config(Serializable):
         elif key == "mars_scheduler_mem":
             self.kubernetes_launcher.mars.scheduler_resource.set_mem_guarantee(value)
         elif key == "k8s_coordinator_pod_node_selector":
-            self.coordinator.node_selector = value
+            self.coordinator.node_selector = base64_encode(json.dumps(value))
         elif key == "k8s_engine_pod_node_selector":
-            self.kubernetes_launcher.engine.node_selector = value
+            self.kubernetes_launcher.engine.node_selector = base64_encode(
+                json.dumps(value)
+            )
         elif key == "enabled_engines":
             self.kubernetes_launcher.engine.enabled_engines = value
         elif key == "with_mars":
@@ -383,7 +387,7 @@ class Config(Serializable):
         elif key == "with_dataset":
             self.kubernetes_launcher.dataset.enable = value
         elif key == "k8s_volumes":
-            self.kubernetes_launcher.volumes = value
+            self.kubernetes_launcher.volumes = base64_encode(json.dumps(value))
         elif key == "k8s_service_type":
             self.kubernetes_launcher.service_type = value
         elif key == "preemptive":
@@ -412,6 +416,10 @@ class Config(Serializable):
             pass
         else:
             raise ValueError("Key not recognized: " + key)
+
+
+def base64_encode(string):
+    return base64.b64encode(string.encode("utf-8")).decode("utf-8", errors="ignore")
 
 
 gs_config = Config()
