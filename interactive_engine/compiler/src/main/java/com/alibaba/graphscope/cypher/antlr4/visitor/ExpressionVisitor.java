@@ -28,11 +28,13 @@ import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexSubQuery;
@@ -51,11 +53,14 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     private final GraphBuilderVisitor parent;
     private final GraphBuilder builder;
     private final ParamIdGenerator paramIdGenerator;
+    // map paramId to param name
+    private final ImmutableMap.Builder<Integer, String> paramsBuilder;
 
     public ExpressionVisitor(GraphBuilderVisitor parent) {
         this.parent = parent;
         this.builder = Objects.requireNonNull(parent).getGraphBuilder();
         this.paramIdGenerator = new ParamIdGenerator();
+        this.paramsBuilder = ImmutableMap.builder();
     }
 
     @Override
@@ -232,7 +237,9 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         String paramName = ctx.oC_SymbolicName().getText();
         int paramIndex = this.paramIdGenerator.generate(paramName);
         GraphRexBuilder rexBuilder = (GraphRexBuilder) builder.getRexBuilder();
-        return new ExprVisitorResult(rexBuilder.makeGraphDynamicParam(paramName, paramIndex));
+        RexDynamicParam dynamicParam = rexBuilder.makeGraphDynamicParam(paramName, paramIndex);
+        paramsBuilder.put(dynamicParam.getIndex(), paramName);
+        return new ExprVisitorResult(dynamicParam);
     }
 
     @Override
@@ -380,6 +387,10 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
             }
             return paramId;
         }
+    }
+
+    public ImmutableMap<Integer, String> getDynamicParams() {
+        return this.paramsBuilder.build();
     }
 
     private RexLiteral createIntervalLiteral(String fieldName) {
