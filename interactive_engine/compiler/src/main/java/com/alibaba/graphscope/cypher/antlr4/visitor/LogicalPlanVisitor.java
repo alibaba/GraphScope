@@ -21,13 +21,9 @@ import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
-import com.google.common.collect.Lists;
 
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rex.RexNode;
-
-import java.util.List;
 
 public class LogicalPlanVisitor extends CypherGSBaseVisitor<LogicalPlan> {
     private final GraphBuilder builder;
@@ -50,24 +46,12 @@ public class LogicalPlanVisitor extends CypherGSBaseVisitor<LogicalPlan> {
                     new GraphBuilderVisitor(this.builder)
                             .visitOC_RegularQuery(ctx.oC_RegularQuery())
                             .build();
-            return new LogicalPlan(regularQuery, returnEmpty(regularQuery));
+            return new LogicalPlan(regularQuery);
         } else {
             RexNode procedureCall =
                     new ProcedureCallVisitor(this.builder, this.irMeta)
                             .visitOC_StandaloneCall(ctx.oC_StandaloneCall());
             return new LogicalPlan(procedureCall);
         }
-    }
-
-    private boolean returnEmpty(RelNode relNode) {
-        List<RelNode> inputs = Lists.newArrayList(relNode);
-        while (!inputs.isEmpty()) {
-            RelNode cur = inputs.remove(0);
-            if (cur instanceof LogicalValues) {
-                return true;
-            }
-            inputs.addAll(cur.getInputs());
-        }
-        return false;
     }
 }

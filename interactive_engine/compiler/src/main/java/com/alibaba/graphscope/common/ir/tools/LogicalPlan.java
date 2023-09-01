@@ -16,11 +16,18 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
+import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
+import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
+import com.google.common.collect.Lists;
+
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.logical.LogicalValues;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -31,9 +38,9 @@ public class LogicalPlan {
     private @Nullable RexNode procedureCall;
     private boolean returnEmpty;
 
-    public LogicalPlan(RelNode regularQuery, boolean returnEmpty) {
+    public LogicalPlan(RelNode regularQuery) {
         this.regularQuery = Objects.requireNonNull(regularQuery);
-        this.returnEmpty = returnEmpty;
+        this.returnEmpty = returnEmpty(this.regularQuery);
     }
 
     public LogicalPlan(RexNode procedureCall) {
@@ -59,6 +66,41 @@ public class LogicalPlan {
             return this.procedureCall.toString();
         } else {
             return StringUtils.EMPTY;
+        }
+    }
+
+    private boolean returnEmpty(RelNode relNode) {
+        List<RelNode> inputs = Lists.newArrayList(relNode);
+        while (!inputs.isEmpty()) {
+            RelNode cur = inputs.remove(0);
+            if (cur instanceof LogicalValues) {
+                return true;
+            }
+            if (cur instanceof GraphLogicalSingleMatch) {
+                GraphLogicalSingleMatch match = (GraphLogicalSingleMatch) cur;
+                if (returnEmpty(match.getSentence())) {
+                    return true;
+                }
+            } else if (cur instanceof GraphLogicalMultiMatch) {
+                GraphLogicalMultiMatch match = (GraphLogicalMultiMatch) cur;
+                for (RelNode sentence : match.getSentences()) {
+                    if (returnEmpty(sentence)) {
+                        return true;
+                    }
+                }
+            }
+            inputs.addAll(cur.getInputs());
+        }
+        return false;
+    }
+
+    public @Nullable RelDataType getOutputType() {
+        if (regularQuery != null) {
+            return Utils.getOutputType(regularQuery);
+        } else if (procedureCall != null) {
+            return procedureCall.getType();
+        } else {
+            return null;
         }
     }
 }
