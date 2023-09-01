@@ -75,11 +75,11 @@ class ResourceConfig:
         self.limits.memory = memory
 
     @staticmethod
-    def make_guaranteed(cpu, memory):
+    def make_burstable(cpu, memory):
         """Get default resource config for a container in kubernetes."""
         return ResourceConfig(
             requests=ResourceSpec(cpu=cpu, memory=memory),
-            limits=ResourceSpec(cpu=cpu, memory=memory),
+            # limits=ResourceSpec(cpu=cpu, memory=memory),
         )
 
 
@@ -103,8 +103,8 @@ class MarsConfig:
     """Mars configuration"""
 
     enable: bool = False  # Enable Mars or not.
-    worker_resource: ResourceConfig = ResourceConfig.make_guaranteed(0.2, "4Mi")
-    scheduler_resource: ResourceConfig = ResourceConfig.make_guaranteed(0.2, "4Mi")
+    worker_resource: ResourceConfig = ResourceConfig.make_burstable(0.2, "4Mi")
+    scheduler_resource: ResourceConfig = ResourceConfig.make_burstable(0.2, "4Mi")
 
 
 @dataclass
@@ -134,16 +134,16 @@ class EngineConfig:
 
     preemptive: bool = True
 
-    gae_resource: ResourceConfig = ResourceConfig.make_guaranteed(1, "4Gi")
+    gae_resource: ResourceConfig = ResourceConfig.make_burstable(1, "4Gi")
     # Resource for analytical pod
 
-    gie_executor_resource: ResourceConfig = ResourceConfig.make_guaranteed(1, "2Gi")
+    gie_executor_resource: ResourceConfig = ResourceConfig.make_burstable(1, "2Gi")
     # Resource for interactive executor pod
 
-    gie_frontend_resource: ResourceConfig = ResourceConfig.make_guaranteed(0.5, "2Gi")
+    gie_frontend_resource: ResourceConfig = ResourceConfig.make_burstable(0.5, "1Gi")
     # Resource for interactive frontend pod
 
-    gle_resource: ResourceConfig = ResourceConfig.make_guaranteed(0.2, "1Gi")
+    gle_resource: ResourceConfig = ResourceConfig.make_burstable(0.2, "1Gi")
     # Resource for learning pod
 
     def post_setup(self):
@@ -203,7 +203,7 @@ class VineyardConfig:
 
     image: str = "vineyardcloudnative/vineyardd:latest"  # Image for vineyard container.
 
-    resource: ResourceConfig = ResourceConfig.make_guaranteed(0.2, "256Mi")
+    resource: ResourceConfig = ResourceConfig.make_burstable(0.2, "256Mi")
     # Resource for vineyard sidecar container
 
 
@@ -223,7 +223,7 @@ class CoordinatorConfig:
     # Name of the coordinator deployment and service.
     node_selector: Union[str, None] = None
     # Node selector for coordinator pod in kubernetes
-    resource: ResourceConfig = ResourceConfig.make_guaranteed(0.5, "512Mi")
+    resource: ResourceConfig = ResourceConfig.make_burstable(0.5, "512Mi")
     # Resource configuration of coordinator.
 
     # For GraphScope operator
