@@ -18,6 +18,7 @@ package com.alibaba.graphscope.cypher.antlr4;
 
 import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
@@ -201,5 +202,39 @@ public class MatchTest {
                     + " person]}], alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 after.explain().trim());
+    }
+
+    @Test
+    public void match_9_test() {
+        LogicalPlan plan =
+                Utils.evalLogicalPlan(
+                        "Match (n:person {name: $name}) Where n.age = $age Return n.id;");
+        Assert.assertEquals(
+                "[Parameter{name='name', dataType=CHAR(1)}, Parameter{name='age',"
+                        + " dataType=INTEGER}]",
+                plan.getDynamicParams().toString());
+        Assert.assertEquals("RecordType(BIGINT id)", plan.getOutputType().toString());
+    }
+
+    // add a new test case for match without any dynamic params
+    @Test
+    public void match_10_test() {
+        LogicalPlan plan = Utils.evalLogicalPlan("Match (n:person) Return n.id;");
+        Assert.assertTrue(plan.getDynamicParams().isEmpty());
+        Assert.assertEquals("RecordType(BIGINT id)", plan.getOutputType().toString());
+    }
+
+    // add a new test case for match with multiple dynamic params
+    @Test
+    public void match_11_test() {
+        LogicalPlan plan =
+                Utils.evalLogicalPlan(
+                        "Match (n:person {name: $name, age: $age}) Where n.id > 10 Return n.id,"
+                                + " n.name;");
+        Assert.assertEquals(
+                "[Parameter{name='name', dataType=CHAR(1)}, Parameter{name='age',"
+                        + " dataType=INTEGER}]",
+                plan.getDynamicParams().toString());
+        Assert.assertEquals("RecordType(BIGINT id, CHAR(1) name)", plan.getOutputType().toString());
     }
 }
