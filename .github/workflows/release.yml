@@ -152,6 +152,10 @@ jobs:
     needs: [build-gss-image-x86-64, build-gss-image-aarch64]
 
     steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
     - name: Create and Push Docker Manifest
       env:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
