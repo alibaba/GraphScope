@@ -326,6 +326,10 @@ jobs:
     needs: [build-image-x86-64, build-image-aarch64]
 
     steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
     - name: Create and Push Docker Nightly Manifest
       if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')
       env:
