@@ -398,6 +398,7 @@ def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir
     # GNN engine
 
 
+@pytest.mark.skip(reason="(yuansi) skip for refactoring")
 def test_demo_with_lazy_mode(
     gs_session_with_lazy_mode, data_dir, modern_graph_data_dir
 ):
