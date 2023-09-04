@@ -23,7 +23,7 @@ import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
-import com.alibaba.graphscope.common.ir.meta.schema.StatisticSchema;
+import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
@@ -119,7 +119,7 @@ public class GraphPlanner {
 
         public Summary plan() {
             // build logical plan from parsed query
-            StatisticSchema schema = irMeta.getSchema();
+            IrGraphSchema schema = irMeta.getSchema();
             GraphBuilder graphBuilder =
                     GraphBuilder.create(
                             null, this.optCluster, new GraphOptSchema(this.optCluster, schema));

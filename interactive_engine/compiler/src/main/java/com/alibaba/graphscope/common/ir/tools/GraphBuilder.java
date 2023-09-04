@@ -19,7 +19,7 @@ package com.alibaba.graphscope.common.ir.tools;
 import static java.util.Objects.requireNonNull;
 
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
-import com.alibaba.graphscope.common.ir.meta.schema.StatisticSchema;
+import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
@@ -234,7 +234,7 @@ public class GraphBuilder extends RelBuilder {
      * @param opt
      * @return
      */
-    private List<List<String>> getTableNames(GraphOpt.Source opt, StatisticSchema rootSchema) {
+    private List<List<String>> getTableNames(GraphOpt.Source opt, IrGraphSchema rootSchema) {
         switch (opt) {
             case VERTEX:
                 return rootSchema.getVertexList().stream()

@@ -154,7 +154,7 @@ public class FfiLogicalPlanTest {
     public void logical_plan_4_test() throws Exception {
         LogicalPlan logicalPlan =
                 com.alibaba.graphscope.cypher.antlr4.Utils.evalLogicalPlan(
-                        "Call query_ic2(10l, 20120112l)");
+                        "Call ldbc_ic2(10l, 20120112l)");
         try (PhysicalBuilder<byte[]> ffiBuilder = new ProcedurePhysicalBuilder(logicalPlan)) {
             ffiBuilder.build();
             Assert.assertEquals(
