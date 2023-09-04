@@ -98,7 +98,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._retry_time_seconds = config.session.retry_time_seconds
 
         # Vineyard Config
-        self._vineyard_socket = config.vineyard.socket
+        # self._vineyard_socket = config.vineyard.socket
         self._vineyard_rpc_port = config.vineyard.rpc_port
         self._vineyard_deployment = config.vineyard.deployment_name
 
@@ -218,6 +218,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._session_workspace = None
 
         self._engine_cluster = self._build_engine_cluster()
+        self._vineyard_socket = self._engine_cluster.vineyard_ipc_socket
 
         self._vineyard_service_endpoint = None
         self._vineyard_internal_service_endpoint = None
