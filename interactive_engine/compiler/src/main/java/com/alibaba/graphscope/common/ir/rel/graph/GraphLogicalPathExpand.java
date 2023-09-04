@@ -18,7 +18,7 @@ package com.alibaba.graphscope.common.ir.rel.graph;
 
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.alibaba.graphscope.common.ir.type.GraphPxdElementType;
+import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
@@ -32,7 +32,6 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -149,8 +148,8 @@ public class GraphLogicalPathExpand extends SingleRel {
                         new RelDataTypeFieldImpl(
                                 getAliasName(),
                                 getAliasId(),
-                                new ArraySqlType(
-                                        new GraphPxdElementType(
+                                new GraphPathType(
+                                        new GraphPathType.ElementType(
                                                 this.expand
                                                         .getRowType()
                                                         .getFieldList()
@@ -160,7 +159,6 @@ public class GraphLogicalPathExpand extends SingleRel {
                                                         .getRowType()
                                                         .getFieldList()
                                                         .get(0)
-                                                        .getType()),
-                                        false))));
+                                                        .getType())))));
     }
 }

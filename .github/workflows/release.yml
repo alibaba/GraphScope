@@ -21,7 +21,7 @@ env:
   OSS_ENDPOINT: oss-cn-beijing.aliyuncs.com
 
 jobs:
-  release-gss-image:
+  build-gss-image-x86-64:
     if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: ubuntu-20.04
     steps:
@@ -48,9 +48,11 @@ jobs:
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
         # docker tag: 0.15.0 -> 0.15.0a20220808
+        # x86_64
+        arch=$(uname -m)
         time=$(date "+%Y%m%d")
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
-        tag="${version}a${time}"
+        tag="${version}a${time}"-${arch}
         sudo docker tag graphscope/graphscope-store:${SHORT_SHA} ${{ env.GSS_IMAGE }}:${tag}
         sudo docker push ${{ env.GSS_IMAGE }}:${tag}
 
@@ -66,8 +68,117 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
-        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}
-        sudo docker push ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}
+        # x86_64
+        arch=$(uname -m)
+        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}-${arch}
+        sudo docker push ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}-${arch}
+
+  build-gss-image-aarch64:
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    runs-on: [self-hosted, Linux, ARM64]
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Add envs to GITHUB_ENV
+      run: |
+        short_sha=$(git rev-parse --short HEAD)
+        echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
+
+    - name: Build GraphScope Store Image
+      run: |
+        cd ${GITHUB_WORKSPACE}/k8s
+        sudo make graphscope-store VERSION=${SHORT_SHA}
+
+    - name: Release Nightly Image
+      # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+      # GraphScope-Store doesn't need nightly release yet.
+      # To save some resources, comment this step out temporarily.
+      if: false
+      env:
+        docker_password: ${{ secrets.DOCKER_PASSWORD }}
+        docker_username: ${{ secrets.DOCKER_USER }}
+      run: |
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
+        # docker tag: 0.15.0 -> 0.15.0a20220808
+        # aarch64
+        arch=$(uname -m)
+        time=$(date "+%Y%m%d")
+        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+        tag="${version}a${time}"-${arch}
+        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} ${{ env.GSS_IMAGE }}:${tag}
+        sudo docker push ${{ env.GSS_IMAGE }}:${tag}
+
+    - name: Extract Tag Name
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      id: tag
+      run: echo "TAG=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Release Image
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      env:
+        docker_password: ${{ secrets.DOCKER_PASSWORD }}
+        docker_username: ${{ secrets.DOCKER_USER }}
+      run: |
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
+        # aarch64
+        arch=$(uname -m)
+        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}-${arch}
+        sudo docker push ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}-${arch}
+
+    - name: Clean Nightly Image
+      if: false
+      run: |
+        # docker tag: 0.15.0 -> 0.15.0a20220808
+        # aarch64
+        arch=$(uname -m)
+        time=$(date "+%Y%m%d")
+        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+        tag="${version}a${time}"-${arch}
+        # clean
+        sudo docker rmi -f graphscope-store:${SHORT_SHA} || true
+        sudo docker rmi -f ${{ env.GSS_IMAGE }}:${tag} || true
+
+    - name: Clean Release Image
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      run: |
+        # aarch64
+        arch=$(uname -m)
+        sudo docker rmi -f graphscope-store:${SHORT_SHA} || true
+        sudo docker rmi -f ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}-${arch} || true
+
+  push-gss-image-manifest:
+    runs-on: ubuntu-20.04
+
+    needs: [build-gss-image-x86-64, build-gss-image-aarch64]
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - name: Create and Push Docker Manifest
+      env:
+        docker_password: ${{ secrets.DOCKER_PASSWORD }}
+        docker_username: ${{ secrets.DOCKER_USER }}
+      run: |
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+        time=$(date "+%Y%m%d")
+        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+        # create
+        
+        sudo docker manifest create \
+          ${{ env.GSS_IMAGE }}:${version}a${time} \
+          ${{ env.GSS_IMAGE }}:${version}a${time}-x86_64 \
+          ${{ env.GSS_IMAGE }}:${version}a${time}-aarch64
+        
+        sudo docker manifest create \
+          ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }} \
+          ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}-x86_64 \
+          ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}-aarch64
+        
+        # push
+        sudo docker manifest push ${{ env.GSS_IMAGE }}:${version}a${time}
+        sudo docker manifest push ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}
 
   release-helm-charts:
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}

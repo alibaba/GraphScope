@@ -17,32 +17,20 @@
 package com.alibaba.graphscope.common.ir.meta.procedure;
 
 import com.alibaba.graphscope.common.ir.meta.reader.MetaDataReader;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
-import org.apache.calcite.rel.type.*;
-import org.apache.calcite.sql.type.SqlTypeName;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.yaml.snakeyaml.Yaml;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 public class GraphStoredProcedures implements StoredProcedures {
-    private final RelDataTypeFactory typeFactory;
     private final Map<String, StoredProcedureMeta> storedProcedureMetaMap;
 
     public GraphStoredProcedures(MetaDataReader reader) throws Exception {
-        this.typeFactory = new JavaTypeFactoryImpl();
         this.storedProcedureMetaMap = Maps.newLinkedHashMap();
         for (InputStream inputStream : reader.getStoredProcedures()) {
-            StoredProcedureMeta createdMeta = createStoredProcedureMeta(inputStream);
+            StoredProcedureMeta createdMeta = StoredProcedureMeta.Deserializer.perform(inputStream);
             this.storedProcedureMetaMap.put(createdMeta.getName(), createdMeta);
             inputStream.close();
         }
@@ -51,102 +39,5 @@ public class GraphStoredProcedures implements StoredProcedures {
     @Override
     public @Nullable StoredProcedureMeta getStoredProcedure(String procedureName) {
         return this.storedProcedureMetaMap.get(procedureName);
-    }
-
-    private StoredProcedureMeta createStoredProcedureMeta(InputStream inputStream)
-            throws IOException {
-        Yaml yaml = new Yaml();
-        Map<String, Object> config =
-                yaml.load(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8));
-        Preconditions.checkArgument(config != null, "stored procedure meta data is null");
-        String procedureName = (String) config.get("name");
-        return new StoredProcedureMeta(
-                procedureName,
-                createReturnType((List) config.get("returns")),
-                createParameters((List) config.get("params")));
-    }
-
-    private RelDataType createReturnType(List config) {
-        List<RelDataTypeField> fields = Lists.newArrayList();
-        Iterator iterator = config.iterator();
-        int index = 0;
-        while (iterator.hasNext()) {
-            Map<String, Object> field = (Map<String, Object>) iterator.next();
-            fields.add(
-                    new RelDataTypeFieldImpl(
-                            (String) field.get("name"),
-                            index,
-                            createDataType((String) field.get("type"))));
-            ++index;
-        }
-        return new RelRecordType(fields);
-    }
-
-    private List<StoredProcedureMeta.Parameter> createParameters(List config) {
-        List<StoredProcedureMeta.Parameter> parameters = Lists.newArrayList();
-        Iterator iterator = config.iterator();
-        while (iterator.hasNext()) {
-            Map<String, Object> parameter = (Map<String, Object>) iterator.next();
-            parameters.add(
-                    new StoredProcedureMeta.Parameter(
-                            (String) parameter.get("name"),
-                            createDataType((String) parameter.get("type"))));
-        }
-        return parameters;
-    }
-
-    private RelDataType createDataType(String typeString) {
-        typeString = typeString.toUpperCase().replaceAll("\\s*", "");
-        switch (typeString) {
-            case "STRING":
-                return typeFactory.createSqlType(SqlTypeName.CHAR);
-            case "INTEGER":
-                return typeFactory.createSqlType(SqlTypeName.INTEGER);
-            case "BOOLEAN":
-                return typeFactory.createSqlType(SqlTypeName.BOOLEAN);
-            case "FLOAT":
-                return typeFactory.createSqlType(SqlTypeName.FLOAT);
-            case "DOUBLE":
-                return typeFactory.createSqlType(SqlTypeName.DOUBLE);
-            case "LONG":
-                return typeFactory.createSqlType(SqlTypeName.BIGINT);
-            case "MULTISET(STRING)":
-                return typeFactory.createMultisetType(
-                        typeFactory.createSqlType(SqlTypeName.CHAR), -1);
-            case "MULTISET(INTEGER)":
-                return typeFactory.createMultisetType(
-                        typeFactory.createSqlType(SqlTypeName.INTEGER), -1);
-            case "MULTISET(BOOLEAN)":
-                return typeFactory.createMultisetType(
-                        typeFactory.createSqlType(SqlTypeName.BOOLEAN), -1);
-            case "MULTISET(FLOAT)":
-                return typeFactory.createMultisetType(
-                        typeFactory.createSqlType(SqlTypeName.FLOAT), -1);
-            case "MULTISET(DOUBLE)":
-                return typeFactory.createMultisetType(
-                        typeFactory.createSqlType(SqlTypeName.DOUBLE), -1);
-            case "MULTISET(LONG)":
-                return typeFactory.createMultisetType(
-                        typeFactory.createSqlType(SqlTypeName.BIGINT), -1);
-            case "ARRAY(STRING)":
-                return typeFactory.createArrayType(typeFactory.createSqlType(SqlTypeName.CHAR), -1);
-            case "ARRAY(INTEGER)":
-                return typeFactory.createArrayType(
-                        typeFactory.createSqlType(SqlTypeName.INTEGER), -1);
-            case "ARRAY(BOOLEAN)":
-                return typeFactory.createArrayType(
-                        typeFactory.createSqlType(SqlTypeName.BOOLEAN), -1);
-            case "ARRAY(FLOAT)":
-                return typeFactory.createArrayType(
-                        typeFactory.createSqlType(SqlTypeName.FLOAT), -1);
-            case "ARRAY(DOUBLE)":
-                return typeFactory.createArrayType(
-                        typeFactory.createSqlType(SqlTypeName.DOUBLE), -1);
-            case "ARRAY(LONG)":
-                return typeFactory.createArrayType(
-                        typeFactory.createSqlType(SqlTypeName.BIGINT), -1);
-            default:
-                throw new UnsupportedOperationException("unsupported type: " + typeString);
-        }
     }
 }
