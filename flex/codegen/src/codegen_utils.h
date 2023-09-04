@@ -151,7 +151,7 @@ std::tuple<std::string, std::string> decode_param_from_decoder(
 }
 
 template <typename T>
-void intersection(std::vector<T>& v1, std::vector<T>& v2) {
+void intersection(std::vector<T>& v1, const std::vector<T>& v2) {
   std::vector<T> res;
   for (auto num : v1) {
     for (int i = 0; i < v2.size(); i++) {

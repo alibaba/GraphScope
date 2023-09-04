@@ -23,6 +23,7 @@ import "common.proto";
 import "expr.proto";
 import "schema.proto";
 import "type.proto";
+import "google/protobuf/wrappers.proto";
 
 message MetaData {
   common.IrDataType type = 1;
@@ -412,6 +413,29 @@ message Pattern {
   repeated MetaData meta_data = 2;
 }
 
+message Sample {
+  message SampleByRatio {
+    // The sample ratio
+    double ratio = 1;
+  }
+  message SampleByNum {
+    // The sample number
+    int32 num = 1;
+  }
+  message SampleType {
+    oneof inner {
+      SampleByRatio sample_by_ratio = 1;
+      SampleByNum sample_by_num = 2;
+    }
+  }
+  // The type of sampling
+  SampleType sample_type = 1;
+  // The seed for random number generator, which is optional
+  google.protobuf.Int32Value seed = 2;
+  // The variable refer to the sample weight, which is optional
+  common.Variable sample_weight = 3;
+}
+
 message Sink {
   message SinkTarget {
     oneof inner {
@@ -446,6 +470,9 @@ message SinkVineyard {
   schema.Schema graph_schema = 2;
 }
 
+// A dummy node to delegate a source opr for multiple scan cases.
+message Root {}
+
 // A logical plan of graph relation algebra forms a DAG, where each node is an operator and the
 // edge indicates the execution flow.
 message LogicalPlan {
@@ -466,6 +493,8 @@ message LogicalPlan {
       As as = 14;
       Intersect intersect = 15;
       Sink sink = 16;
+      Root root = 17;
+      Sample sample = 18;
       // Saving the room for relational operators
       GetV vertex = 30;
       EdgeExpand edge = 31;

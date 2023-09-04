@@ -29,6 +29,7 @@ import com.alibaba.graphscope.gremlin.plugin.step.GroupStep;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasArg;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
+import com.google.common.collect.Lists;
 
 import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
@@ -46,6 +47,7 @@ import org.javatuples.Pair;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -160,6 +162,56 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             dedupOp.setDedupKeys(new OpArg(dedupVars));
             interOpList.add(dedupOp);
             return interOpList;
+        }
+    },
+    SAMPLE_BY_STEP {
+        @Override
+        public List<InterOpBase> apply(TraversalParent parent) {
+            SampleGlobalStep sampleStep = (SampleGlobalStep) parent;
+            Traversal.Admin probabilityTraversal =
+                    sampleStep.getLocalChildren().isEmpty()
+                            ? new IdentityTraversal()
+                            : (Traversal.Admin) sampleStep.getLocalChildren().get(0);
+            Optional<String> exprOpt =
+                    getSubTraversalAsExpr(new ExprArg(probabilityTraversal)).getSingleExpr();
+            String expr;
+            List<InterOpBase> interOpList = Lists.newArrayList();
+            // probabilityTraversal can be converted to a variable, i.e. sample(10).by('name') or
+            // sample(10).by(select('b').by('name'))
+            if (exprOpt.isPresent()) {
+                expr = exprOpt.get();
+            } else { // probabilityTraversal is a subtask, i.e. sample(10).by(out().count())
+                ApplyOp applyOp = new ApplyOp();
+                applyOp.setJoinKind(new OpArg(FfiJoinKind.Inner));
+                Traversal copy = GremlinAntlrToJava.getTraversalSupplier().get();
+                // copy steps in by(..) to apply
+                probabilityTraversal.getSteps().forEach(s -> copy.asAdmin().addStep((Step) s));
+                applyOp.setSubOpCollection(
+                        new OpArg<>((new InterOpCollectionBuilder(copy)).build()));
+                int stepIdx =
+                        TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
+                FfiAlias.ByValue applyAlias =
+                        AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.DEFAULT, stepIdx, 0));
+                applyOp.setAlias(new OpArg(applyAlias));
+                interOpList.add(applyOp);
+                String applyAliasName = applyAlias.alias.name;
+                expr = "@" + applyAliasName;
+            }
+            int sampleAmount =
+                    Utils.getFieldValue(SampleGlobalStep.class, sampleStep, "amountToSample");
+            SampleOp sampleOp =
+                    new SampleOp(
+                            SampleOp.AmountType.create(sampleAmount),
+                            getSeed(sampleStep),
+                            getExpressionAsVar(expr));
+            interOpList.add(sampleOp);
+            return interOpList;
+        }
+
+        private long getSeed(SampleGlobalStep step) {
+            Random random = Utils.getFieldValue(SampleGlobalStep.class, step, "random");
+            AtomicLong seed = Utils.getFieldValue(Random.class, random, "seed");
+            return seed.get();
         }
     },
     // order().by("name"), order().by(values("name")) -> [OrderOp("@.name")]

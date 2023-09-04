@@ -27,14 +27,14 @@ Please refer to [Dev Environment](../development/dev_guide.md#dev-environment) t
 With `gs` command-line utility, you can build all targets for GraphScope with a single command.
 
 ```bash
-./gs make install
+python3 gsctl.py make install
 ```
 
 ### Run tests
 
 Run a bunch of test cases that involves 3 engines
 ```bash
-./gs test e2e --local
+python3 gsctl.py test e2e --local
 ```
 
 ## Test GraphScope on Kubernetes cluster
@@ -44,7 +44,7 @@ Make sure you have [docker](https://www.docker.com) installed.
 ### Build images
 
 ```bash
-./gs make-image all
+python3 gsctl.py make-image all
 ```
 
 Executing this command will generate the corresponding images for each component.
@@ -63,10 +63,10 @@ Images of GraphScope
 Or you could choose to generate image for a specific component. For example
 
 ```bash
-./gs make-image analytical
+python3 gsctl.py make-image analytical
 ```
 
-Try `./gs make-image -h` for more available options.
+Try `python3 gsctl.py make-image -h` for more available options.
 
 ### Prepare a Kubernetes cluster
 
@@ -79,5 +79,5 @@ The tests would launch a couple of pods on your cluster, so you need to set appr
 Take our previous built image for example, which has an empty registry (or you could say it's `docker.io` by default), and tagged `latest`
 
 ```bash
-./gs test e2e --k8s --registry="docker.io" --tag="latest"
+python3 gsctl.py test e2e --k8s --registry="docker.io" --tag="latest"
 ```

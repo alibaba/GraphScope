@@ -47,6 +47,8 @@ public abstract class AliasInference {
     public static final String DEFAULT_NAME = "~DEFAULT";
     public static final int DEFAULT_ID = -1;
 
+    public static final int DEFAULT_COLUMN_ID = 100;
+
     public static final String DELIMITER = ".";
 
     public static final String SIMPLE_NAME(String alias) {

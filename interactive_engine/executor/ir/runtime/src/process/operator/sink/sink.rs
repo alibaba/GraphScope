@@ -215,7 +215,7 @@ impl RecordSinkEncoder {
                     graph_path_pb.push(vertex_or_edge_pb);
                 }
             }
-            GraphPath::EndV((path_end, _)) | GraphPath::SimpleEndV((path_end, _)) => {
+            GraphPath::EndV((path_end, _)) | GraphPath::SimpleEndV((path_end, _, _)) => {
                 let vertex_or_edge_pb = self.vertex_or_edge_to_pb(path_end);
                 graph_path_pb.push(vertex_or_edge_pb);
             }

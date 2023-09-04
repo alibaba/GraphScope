@@ -27,6 +27,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
+import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IdentityStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SubgraphStep;
 
 import java.util.List;
@@ -40,7 +41,8 @@ public class GremlinResultAnalyzer {
                     || Utils.equalClass(step, ExpandFusionStep.class)
                     || Utils.equalClass(step, EdgeVertexStep.class)
                     || Utils.equalClass(step, EdgeOtherVertexStep.class)
-                    || Utils.equalClass(step, PathExpandStep.class)) {
+                    || Utils.equalClass(step, PathExpandStep.class)
+                    || Utils.equalClass(step, IdentityStep.class)) {
                 parserType = GremlinResultParserFactory.GRAPH_ELEMENT;
             } else if (Utils.equalClass(step, CountGlobalStep.class)
                     || Utils.equalClass(step, SumGlobalStep.class)
@@ -76,7 +78,9 @@ public class GremlinResultAnalyzer {
                     || Utils.equalClass(step, WherePredicateStep.class)
                     || Utils.equalClass(step, TraversalFilterStep.class)
                     || Utils.equalClass(step, WhereTraversalStep.class)
-                    || Utils.equalClass(step, NotStep.class)) {
+                    || Utils.equalClass(step, NotStep.class)
+                    || Utils.equalClass(step, CoinStep.class)
+                    || Utils.equalClass(step, SampleGlobalStep.class)) {
                 // do nothing;
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");

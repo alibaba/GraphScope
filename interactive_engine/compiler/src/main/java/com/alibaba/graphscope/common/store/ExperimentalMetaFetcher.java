@@ -16,30 +16,27 @@
 
 package com.alibaba.graphscope.common.store;
 
-import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.config.GraphConfig;
-import com.alibaba.graphscope.common.ir.procedure.GraphStoredProcedures;
-import com.alibaba.graphscope.common.ir.procedure.reader.StoredProceduresReader;
-import com.alibaba.graphscope.common.ir.schema.GraphSchemaWrapper;
-import com.alibaba.graphscope.gremlin.Utils;
+import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
+import com.alibaba.graphscope.common.ir.meta.reader.MetaDataReader;
+import com.alibaba.graphscope.common.ir.meta.schema.GraphSchemaWrapper;
 
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public class ExperimentalMetaFetcher implements IrMetaFetcher {
     private final IrMeta meta;
 
-    public ExperimentalMetaFetcher(Configs configs) throws IOException {
-        String schemaFilePath = GraphConfig.GRAPH_SCHEMA.get(configs);
-        String schemaJson = Utils.readStringFromFile(schemaFilePath);
+    public ExperimentalMetaFetcher(MetaDataReader dataReader) throws Exception {
+        String schemaJson =
+                new String(dataReader.getGraphSchema().readAllBytes(), StandardCharsets.UTF_8);
         this.meta =
                 new IrMeta(
                         new GraphSchemaWrapper(
-                                com.alibaba.graphscope.common.ir.schema.Utils.buildSchemaFromJson(
-                                        schemaJson),
+                                com.alibaba.graphscope.common.ir.meta.schema.Utils
+                                        .buildSchemaFromJson(schemaJson),
                                 schemaJson,
                                 false),
-                        new GraphStoredProcedures(StoredProceduresReader.Factory.create(configs)));
+                        new GraphStoredProcedures(dataReader));
     }
 
     @Override

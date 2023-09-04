@@ -105,6 +105,8 @@ class InteractiveQuery(object):
         return self.submit(query, lang, request_options=request_options, **kwargs)
 
     def submit(self, query, lang="gremlin", request_options=None, **kwargs):
+        from neo4j import RoutingControl
+
         """Execute gremlin or cypher querying scripts.
 
         <Gremlin>
@@ -130,7 +132,9 @@ class InteractiveQuery(object):
         if lang == "gremlin":
             return self.gremlin_client.submit(query, request_options=request_options)
         elif lang == "cypher":
-            return self.cypher_driver.execute_query(query, **kwargs)
+            return self.cypher_driver.execute_query(
+                query, routing_=RoutingControl.READ, **kwargs
+            )
         else:
             raise ValueError(
                 f"Unsupported query language: {lang} other than gremlin and cypher"
