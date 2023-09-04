@@ -21,15 +21,18 @@ import com.alibaba.graphscope.common.ir.rex.RexTmpVariable;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.cypher.antlr4.visitor.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.sql.SqlOperator;
@@ -45,11 +48,14 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     private final GraphBuilderVisitor parent;
     private final GraphBuilder builder;
     private final ParamIdGenerator paramIdGenerator;
+    // map paramId to param name
+    private final ImmutableMap.Builder<Integer, String> paramsBuilder;
 
     public ExpressionVisitor(GraphBuilderVisitor parent) {
         this.parent = parent;
         this.builder = Objects.requireNonNull(parent).getGraphBuilder();
         this.paramIdGenerator = new ParamIdGenerator();
+        this.paramsBuilder = ImmutableMap.builder();
     }
 
     @Override
@@ -238,7 +244,9 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         String paramName = ctx.oC_SymbolicName().getText();
         int paramIndex = this.paramIdGenerator.generate(paramName);
         GraphRexBuilder rexBuilder = (GraphRexBuilder) builder.getRexBuilder();
-        return new ExprVisitorResult(rexBuilder.makeGraphDynamicParam(paramName, paramIndex));
+        RexDynamicParam dynamicParam = rexBuilder.makeGraphDynamicParam(paramName, paramIndex);
+        paramsBuilder.put(dynamicParam.getIndex(), paramName);
+        return new ExprVisitorResult(dynamicParam);
     }
 
     @Override
@@ -262,27 +270,89 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     @Override
     public ExprVisitorResult visitOC_FunctionInvocation(
             CypherGSParser.OC_FunctionInvocationContext ctx) {
+        String functionName = ctx.oC_FunctionName().getText();
+        switch (getFunctionType(functionName)) {
+            case SIMPLE:
+                return visitOC_SimpleFunction(ctx);
+            case AGGREGATE:
+                return visitOC_AggregateFunction(ctx);
+            case USER_DEFINED:
+            default:
+                throw new UnsupportedOperationException(
+                        "user defined function " + functionName + " is unsupported yet");
+        }
+    }
+
+    public ExprVisitorResult visitOC_SimpleFunction(
+            CypherGSParser.OC_FunctionInvocationContext ctx) {
+        List<CypherGSParser.OC_ExpressionContext> exprCtx = ctx.oC_Expression();
+        String functionName = ctx.oC_FunctionName().getText();
+        switch (functionName.toUpperCase()) {
+            case "LENGTH":
+                Preconditions.checkArgument(
+                        !exprCtx.isEmpty(), "LENGTH function should have one argument");
+                return new ExprVisitorResult(
+                        builder.variable(exprCtx.get(0).getText(), GraphProperty.LEN_KEY));
+            default:
+                throw new IllegalArgumentException(
+                        "simple function " + functionName + " is unsupported yet");
+        }
+    }
+
+    private FunctionType getFunctionType(String functionName) {
+        switch (functionName.toUpperCase()) {
+            case "LENGTH":
+                return FunctionType.SIMPLE;
+            case "COUNT":
+            case "SUM":
+            case "AVG":
+            case "MIN":
+            case "MAX":
+            case "COLLECT":
+                return FunctionType.AGGREGATE;
+            default:
+                return FunctionType.USER_DEFINED;
+        }
+    }
+
+    private enum FunctionType {
+        SIMPLE,
+        AGGREGATE,
+        USER_DEFINED
+    }
+
+    public ExprVisitorResult visitOC_AggregateFunction(
+            CypherGSParser.OC_FunctionInvocationContext ctx) {
         List<RexNode> variables =
                 ctx.oC_Expression().stream()
                         .map(k -> visitOC_Expression(k).getExpr())
                         .collect(Collectors.toList());
         RelBuilder.AggCall aggCall;
         String alias = parent.inferAlias();
-        if (ctx.oC_FunctionName().COUNT() != null) {
-            aggCall = builder.count((ctx.DISTINCT() != null), alias, variables);
-        } else if (ctx.oC_FunctionName().SUM() != null) {
-            aggCall = builder.sum((ctx.DISTINCT() != null), alias, variables.get(0));
-        } else if (ctx.oC_FunctionName().AVG() != null) {
-            aggCall = builder.avg((ctx.DISTINCT() != null), alias, variables.get(0));
-        } else if (ctx.oC_FunctionName().MIN() != null) {
-            aggCall = builder.min(alias, variables.get(0));
-        } else if (ctx.oC_FunctionName().MAX() != null) {
-            aggCall = builder.max(alias, variables.get(0));
-        } else if (ctx.oC_FunctionName().COLLECT() != null) {
-            aggCall = builder.collect((ctx.DISTINCT() != null), alias, variables);
-        } else {
-            throw new UnsupportedOperationException(
-                    "agg function " + ctx.oC_FunctionName().getText() + " is unsupported yet");
+        String functionName = ctx.oC_FunctionName().getText();
+        boolean isDistinct = ctx.DISTINCT() != null;
+        switch (functionName.toUpperCase()) {
+            case "COUNT":
+                aggCall = builder.count(isDistinct, alias, variables);
+                break;
+            case "SUM":
+                aggCall = builder.sum(isDistinct, alias, variables.get(0));
+                break;
+            case "AVG":
+                aggCall = builder.avg(isDistinct, alias, variables.get(0));
+                break;
+            case "MIN":
+                aggCall = builder.min(alias, variables.get(0));
+                break;
+            case "MAX":
+                aggCall = builder.max(alias, variables.get(0));
+                break;
+            case "COLLECT":
+                aggCall = builder.collect((ctx.DISTINCT() != null), alias, variables);
+                break;
+            default:
+                throw new UnsupportedOperationException(
+                        "agg function " + functionName + " is unsupported yet");
         }
         return new ExprVisitorResult(
                 ImmutableList.of(aggCall),
@@ -386,5 +456,9 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
             }
             return paramId;
         }
+    }
+
+    public ImmutableMap<Integer, String> getDynamicParams() {
+        return this.paramsBuilder.build();
     }
 }

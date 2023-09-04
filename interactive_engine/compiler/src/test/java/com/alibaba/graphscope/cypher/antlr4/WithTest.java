@@ -188,6 +188,27 @@ public class WithTest {
     @Test
     public void with_11_test() {
         RelNode project =
+                Utils.eval("Match (a:person)-[k:knows*1..2]->(b:person) Return length(k)").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(~len=[k.~len], isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[b], opt=[END])\n"
+                    + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[DEFAULT], opt=[END])\n"
+                    + "], offset=[1], fetch=[1], path_opt=[ARBITRARY], result_opt=[END_V],"
+                    + " alias=[k])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                project.explain().trim());
+    }
+
+    @Test
+    public void with_12_test() {
+        RelNode project =
                 Utils.eval("Match (a:person)-[]-(b:person) Return [a.name, b.age, 1]").build();
         Assert.assertEquals(
                 "GraphLogicalProject($f0=[ARRAY_VALUE_CONSTRUCTOR(a.name, b.age, 1)],"

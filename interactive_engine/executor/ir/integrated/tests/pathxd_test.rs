@@ -19,7 +19,7 @@ mod common;
 
 #[cfg(test)]
 mod test {
-    use graph_proxy::apis::{GraphElement, ID};
+    use graph_proxy::apis::{Element, GraphElement, ID};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_physical_client::physical_builder::*;
@@ -169,6 +169,7 @@ mod test {
         let request = init_path_expand_request(pb::Range { lower: 1, upper: 3 }, 1, 0);
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<ID>> = vec![];
+        let mut result_length_collection = vec![];
         let mut expected_result_paths = vec![
             vec![1, 2],
             vec![1, 4],
@@ -181,11 +182,13 @@ mod test {
             vec![4, 1, 2],
             vec![4, 1, 4],
         ];
+        let exptected_result_path_lengths = vec![1, 1, 1, 1, 2, 2, 2, 2, 2, 2];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_length_collection.push(path.len());
                         result_collection.push(
                             path.clone()
                                 .take_path()
@@ -203,7 +206,9 @@ mod test {
         }
         expected_result_paths.sort();
         result_collection.sort();
-        assert_eq!(result_collection, expected_result_paths)
+        result_length_collection.sort();
+        assert_eq!(result_collection, expected_result_paths);
+        assert_eq!(result_length_collection, exptected_result_path_lengths);
     }
 
     #[test]
@@ -236,7 +241,7 @@ mod test {
             }
         }
         result_collection.sort();
-        assert_eq!(result_collection, expected_result_path_ends)
+        assert_eq!(result_collection, expected_result_path_ends);
     }
 
     #[test]
@@ -255,13 +260,16 @@ mod test {
         let request = init_path_expand_exactly_request(1);
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<ID>> = vec![];
+        let mut result_length_collection = vec![];
         let mut expected_result_paths =
             vec![vec![1, 2, 1], vec![1, 4, 1], vec![2, 1, 2], vec![2, 1, 4], vec![4, 1, 2], vec![4, 1, 4]];
+        let expected_result_path_lens = vec![2, 2, 2, 2, 2, 2];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_length_collection.push(path.len());
                         result_collection.push(
                             path.clone()
                                 .take_path()
@@ -279,7 +287,9 @@ mod test {
         }
         expected_result_paths.sort();
         result_collection.sort();
-        assert_eq!(result_collection, expected_result_paths)
+        result_length_collection.sort();
+        assert_eq!(result_collection, expected_result_paths);
+        assert_eq!(result_length_collection, expected_result_path_lens);
     }
 
     #[test]
@@ -312,7 +322,7 @@ mod test {
             }
         }
         result_collection.sort();
-        assert_eq!(result_collection, expected_result_path_ends)
+        assert_eq!(result_collection, expected_result_path_ends);
     }
 
     #[test]
@@ -330,6 +340,7 @@ mod test {
         let request = init_path_expand_range_from_zero_request(1);
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<ID>> = vec![];
+        let mut result_length_collection = vec![];
         let mut expected_result_paths = vec![
             vec![1],
             vec![2],
@@ -346,11 +357,13 @@ mod test {
             vec![4, 1, 2],
             vec![4, 1, 4],
         ];
+        let expected_result_path_lens = vec![0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_length_collection.push(path.len());
                         result_collection.push(
                             path.clone()
                                 .take_path()
@@ -368,7 +381,9 @@ mod test {
         }
         expected_result_paths.sort();
         result_collection.sort();
-        assert_eq!(result_collection, expected_result_paths)
+        result_length_collection.sort();
+        assert_eq!(result_collection, expected_result_paths);
+        assert_eq!(result_length_collection, expected_result_path_lens);
     }
 
     #[test]
@@ -386,13 +401,16 @@ mod test {
         let request = init_path_expand_request(pb::Range { lower: 1, upper: 3 }, 1, 1);
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<ID>> = vec![];
+        let mut result_length_collection = vec![];
         let mut expected_result_paths =
             vec![vec![1, 2], vec![1, 4], vec![2, 1], vec![4, 1], vec![2, 1, 4], vec![4, 1, 2]];
+        let expected_result_path_lens = vec![1, 1, 1, 1, 2, 2];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_length_collection.push(path.len());
                         result_collection.push(
                             path.clone()
                                 .take_path()
@@ -410,7 +428,9 @@ mod test {
         }
         expected_result_paths.sort();
         result_collection.sort();
-        assert_eq!(result_collection, expected_result_paths)
+        result_length_collection.sort();
+        assert_eq!(result_collection, expected_result_paths);
+        assert_eq!(result_length_collection, expected_result_path_lens);
     }
 
     #[test]
@@ -444,7 +464,7 @@ mod test {
         }
         expected_result_path_ends.sort();
         result_collection.sort();
-        assert_eq!(result_collection, expected_result_path_ends)
+        assert_eq!(result_collection, expected_result_path_ends);
     }
 
     #[test]
@@ -463,12 +483,15 @@ mod test {
         let request = init_path_expand_with_until_request(pb::Range { lower: 1, upper: 3 });
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<ID>> = vec![];
+        let mut result_length_collection = vec![];
         let mut expected_result_paths = vec![vec![2, 1], vec![4, 1], vec![1, 2, 1], vec![1, 4, 1]];
+        let expected_result_path_lens = vec![1, 1, 2, 2];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_length_collection.push(path.len());
                         result_collection.push(
                             path.clone()
                                 .take_path()
@@ -486,7 +509,9 @@ mod test {
         }
         expected_result_paths.sort();
         result_collection.sort();
-        assert_eq!(result_collection, expected_result_paths)
+        result_length_collection.sort();
+        assert_eq!(result_collection, expected_result_paths);
+        assert_eq!(result_length_collection, expected_result_path_lens);
     }
 
     #[test]
@@ -505,13 +530,16 @@ mod test {
         let request = init_path_expand_with_until_request(pb::Range { lower: 2, upper: 3 });
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<ID>> = vec![];
+        let mut result_length_collection = vec![];
         let mut expected_result_paths =
             vec![vec![1, 2, 1], vec![1, 4, 1], vec![2, 1, 2], vec![2, 1, 4], vec![4, 1, 2], vec![4, 1, 4]];
+        let expected_result_path_lens = vec![2, 2, 2, 2, 2, 2];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_length_collection.push(path.len());
                         result_collection.push(
                             path.clone()
                                 .take_path()
@@ -529,7 +557,8 @@ mod test {
         }
         expected_result_paths.sort();
         result_collection.sort();
-        assert_eq!(result_collection, expected_result_paths)
+        assert_eq!(result_collection, expected_result_paths);
+        assert_eq!(result_length_collection, expected_result_path_lens);
     }
 
     #[test]
@@ -548,12 +577,15 @@ mod test {
         let request = init_path_expand_with_until_request(pb::Range { lower: 0, upper: 3 });
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<ID>> = vec![];
+        let mut result_length_collection = vec![];
         let mut expected_result_paths = vec![vec![1], vec![2, 1], vec![4, 1]];
+        let expected_result_path_lens = vec![0, 1, 1];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_length_collection.push(path.len());
                         result_collection.push(
                             path.clone()
                                 .take_path()
@@ -571,7 +603,9 @@ mod test {
         }
         expected_result_paths.sort();
         result_collection.sort();
-        assert_eq!(result_collection, expected_result_paths)
+        assert_eq!(result_collection, expected_result_paths);
+        assert_eq!(result_collection, expected_result_paths);
+        assert_eq!(result_length_collection, expected_result_path_lens);
     }
 
     #[test]
@@ -589,13 +623,16 @@ mod test {
         let request = init_path_expand_with_filter_request(true);
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<ID>> = vec![];
+        let mut result_length_collection = vec![];
         let mut expected_result_paths =
             vec![vec![1, 4], vec![2, 1], vec![4, 1], vec![1, 4, 1], vec![2, 1, 4], vec![4, 1, 4]];
+        let expected_result_path_lens = vec![1, 1, 1, 2, 2, 2];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_length_collection.push(path.len());
                         result_collection.push(
                             path.clone()
                                 .take_path()
@@ -613,7 +650,9 @@ mod test {
         }
         expected_result_paths.sort();
         result_collection.sort();
-        assert_eq!(result_collection, expected_result_paths)
+        result_length_collection.sort();
+        assert_eq!(result_collection, expected_result_paths);
+        assert_eq!(result_length_collection, expected_result_path_lens);
     }
 
     #[test]
@@ -632,6 +671,7 @@ mod test {
         let request = init_path_expand_request(pb::Range { lower: 1, upper: 3 }, 2, 0);
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<String>> = vec![];
+        let mut result_length_collection = vec![];
         let mut expected_result_paths: Vec<Vec<String>> = vec![
             vec!["v1", "e[1->2]", "v2"],
             vec!["v1", "e[1->4]", "v4"],
@@ -651,11 +691,13 @@ mod test {
                 .collect()
         })
         .collect();
+        let expected_result_path_lens = vec![1, 1, 1, 1, 2, 2, 2, 2, 2, 2];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_length_collection.push(path.len());
                         let path_collect = path.clone().take_path().unwrap();
                         let mut path_ids = vec![];
                         for v_or_e in path_collect {
@@ -678,7 +720,9 @@ mod test {
         }
         expected_result_paths.sort();
         result_collection.sort();
-        assert_eq!(result_collection, expected_result_paths)
+        result_length_collection.sort();
+        assert_eq!(result_collection, expected_result_paths);
+        assert_eq!(result_length_collection, expected_result_path_lens);
     }
 
     #[test]
@@ -697,6 +741,7 @@ mod test {
         let request = init_path_expand_range_from_zero_request(2);
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<String>> = vec![];
+        let mut result_length_collection = vec![];
         let mut expected_result_paths: Vec<Vec<String>> = vec![
             vec!["v1"],
             vec!["v2"],
@@ -720,11 +765,13 @@ mod test {
                 .collect()
         })
         .collect();
+        let expected_result_path_lens = vec![0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_length_collection.push(path.len());
                         let path_collect = path.clone().take_path().unwrap();
                         let mut path_ids = vec![];
                         for v_or_e in path_collect {
@@ -747,7 +794,9 @@ mod test {
         }
         expected_result_paths.sort();
         result_collection.sort();
-        assert_eq!(result_collection, expected_result_paths)
+        result_length_collection.sort();
+        assert_eq!(result_collection, expected_result_paths);
+        assert_eq!(result_length_collection, expected_result_path_lens);
     }
 
     #[test]
@@ -766,6 +815,7 @@ mod test {
         let request = init_path_expand_exactly_request(2);
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<String>> = vec![];
+        let mut result_length_collection = vec![];
         let mut expected_result_paths: Vec<Vec<String>> = vec![
             vec!["v1", "e[1->2]", "v2", "e[1->2]", "v1"],
             vec!["v1", "e[1->4]", "v4", "e[1->4]", "v1"],
@@ -781,11 +831,13 @@ mod test {
                 .collect()
         })
         .collect();
+        let expected_result_path_lens = vec![2, 2, 2, 2, 2, 2];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_length_collection.push(path.len());
                         let path_collect = path.clone().take_path().unwrap();
                         let mut path_ids = vec![];
                         for v_or_e in path_collect {
@@ -808,7 +860,8 @@ mod test {
         }
         expected_result_paths.sort();
         result_collection.sort();
-        assert_eq!(result_collection, expected_result_paths)
+        assert_eq!(result_collection, expected_result_paths);
+        assert_eq!(result_length_collection, expected_result_path_lens);
     }
 
     #[test]

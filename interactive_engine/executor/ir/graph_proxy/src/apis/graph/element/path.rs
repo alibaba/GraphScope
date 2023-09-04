@@ -56,10 +56,24 @@ impl VertexOrEdge {
         }
     }
 
+    pub fn is_vertex(&self) -> bool {
+        match self {
+            VertexOrEdge::V(_) => true,
+            _ => false,
+        }
+    }
+
     pub fn as_edge(&self) -> Option<&Edge> {
         match self {
             VertexOrEdge::E(e) => Some(e),
             _ => None,
+        }
+    }
+
+    pub fn is_edge(&self) -> bool {
+        match self {
+            VertexOrEdge::E(_) => true,
+            _ => false,
         }
     }
 }
@@ -73,7 +87,7 @@ pub enum GraphPath {
     /// Arbitrary path with only end vertices preserved, which may contain both vertices and edges, or only vertices.
     EndV((VertexOrEdge, usize)),
     /// Simple path with only end vertex preserved, which may contains both vertices and edges, or only vertices.
-    SimpleEndV((VertexOrEdge, Vec<ID>)),
+    SimpleEndV((VertexOrEdge, Vec<ID>, usize)),
 }
 
 impl GraphPath {
@@ -86,7 +100,7 @@ impl GraphPath {
                 pb::path_expand::PathOpt::Simple => {
                     let entry = entry.into();
                     let id = entry.id();
-                    GraphPath::SimpleEndV((entry, vec![id]))
+                    GraphPath::SimpleEndV((entry, vec![id], 1))
                 }
             },
             pb::path_expand::ResultOpt::AllV | pb::path_expand::ResultOpt::AllVE => match path_opt {
@@ -114,16 +128,23 @@ impl GraphPath {
             }
             GraphPath::EndV((ref mut e, ref mut weight)) => {
                 *e = entry.into();
-                *weight += 1;
+                // we only increase the weight when the entry is a vertex.
+                if e.is_vertex() {
+                    *weight += 1;
+                }
                 true
             }
-            GraphPath::SimpleEndV((ref mut e, ref mut path)) => {
+            GraphPath::SimpleEndV((ref mut e, ref mut path, ref mut weight)) => {
                 let entry = entry.into();
                 if path.contains(&entry.id()) {
                     false
                 } else {
                     path.push(entry.id());
-                    *e = entry.into();
+                    *e = entry;
+                    // we only increase the weight when the entry is a vertex.
+                    if e.is_vertex() {
+                        *weight += 1;
+                    }
                     true
                 }
             }
@@ -133,7 +154,7 @@ impl GraphPath {
     pub fn get_path_end(&self) -> &VertexOrEdge {
         match self {
             GraphPath::AllPath(ref p) | GraphPath::SimpleAllPath(ref p) => p.last().unwrap(),
-            GraphPath::EndV((ref e, _)) | GraphPath::SimpleEndV((ref e, _)) => e,
+            GraphPath::EndV((ref e, _)) | GraphPath::SimpleEndV((ref e, _, _)) => e,
         }
     }
 
@@ -206,9 +227,14 @@ impl Element for GraphPath {
     // the path len is the number of edges in the path;
     fn len(&self) -> usize {
         match self {
-            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => p.len() - 1,
+            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => {
+                p.iter()
+                    .filter(|v_or_e| v_or_e.is_vertex())
+                    .count()
+                    - 1
+            }
             GraphPath::EndV((_, weight)) => *weight - 1,
-            GraphPath::SimpleEndV((_, p)) => p.len() - 1,
+            GraphPath::SimpleEndV((_, _, weight)) => *weight - 1,
         }
     }
 
@@ -247,9 +273,9 @@ impl PartialEq for GraphPath {
             | (GraphPath::SimpleAllPath(p1), GraphPath::AllPath(p2))
             | (GraphPath::SimpleAllPath(p1), GraphPath::SimpleAllPath(p2)) => p1.eq(p2),
             (GraphPath::EndV((p1, _)), GraphPath::EndV((p2, _)))
-            | (GraphPath::EndV((p1, _)), GraphPath::SimpleEndV((p2, _)))
-            | (GraphPath::SimpleEndV((p1, _)), GraphPath::EndV((p2, _)))
-            | (GraphPath::SimpleEndV((p1, _)), GraphPath::SimpleEndV((p2, _))) => p1.eq(p2),
+            | (GraphPath::EndV((p1, _)), GraphPath::SimpleEndV((p2, _, _)))
+            | (GraphPath::SimpleEndV((p1, _, _)), GraphPath::EndV((p2, _)))
+            | (GraphPath::SimpleEndV((p1, _, _)), GraphPath::SimpleEndV((p2, _, _))) => p1.eq(p2),
             _ => false,
         }
     }
@@ -263,9 +289,9 @@ impl PartialOrd for GraphPath {
             | (GraphPath::SimpleAllPath(p1), GraphPath::AllPath(p2))
             | (GraphPath::SimpleAllPath(p1), GraphPath::SimpleAllPath(p2)) => p1.partial_cmp(p2),
             (GraphPath::EndV((p1, _)), GraphPath::EndV((p2, _)))
-            | (GraphPath::EndV((p1, _)), GraphPath::SimpleEndV((p2, _)))
-            | (GraphPath::SimpleEndV((p1, _)), GraphPath::EndV((p2, _)))
-            | (GraphPath::SimpleEndV((p1, _)), GraphPath::SimpleEndV((p2, _))) => p1.partial_cmp(p2),
+            | (GraphPath::EndV((p1, _)), GraphPath::SimpleEndV((p2, _, _)))
+            | (GraphPath::SimpleEndV((p1, _, _)), GraphPath::EndV((p2, _)))
+            | (GraphPath::SimpleEndV((p1, _, _)), GraphPath::SimpleEndV((p2, _, _))) => p1.partial_cmp(p2),
             _ => None,
         }
     }
@@ -320,10 +346,11 @@ impl Encode for GraphPath {
                 writer.write_u8(2)?;
                 path.write_to(writer)?;
             }
-            GraphPath::SimpleEndV((path_end, path)) => {
+            GraphPath::SimpleEndV((path_end, path, weight)) => {
                 writer.write_u8(3)?;
                 path_end.write_to(writer)?;
                 path.write_to(writer)?;
+                writer.write_u64(*weight as u64)?;
             }
         }
         Ok(())
@@ -350,7 +377,8 @@ impl Decode for GraphPath {
             3 => {
                 let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
                 let path = <Vec<ID>>::read_from(reader)?;
-                Ok(GraphPath::SimpleEndV((vertex_or_edge, path)))
+                let weight = <u64>::read_from(reader)? as usize;
+                Ok(GraphPath::SimpleEndV((vertex_or_edge, path, weight)))
             }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
@@ -392,7 +420,7 @@ impl Hash for GraphPath {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
             GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => p.hash(state),
-            GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _)) => e.hash(state),
+            GraphPath::EndV((e, _)) | GraphPath::SimpleEndV((e, _, _)) => e.hash(state),
         }
     }
 }

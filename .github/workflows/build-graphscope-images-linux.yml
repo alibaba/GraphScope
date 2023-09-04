@@ -11,6 +11,15 @@ on:
   push:
     tags:
       - "v*"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'k8s/dockerfiles/analytical.Dockerfile'
+      - 'k8s/dockerfiles/coordinator.Dockerfile'
+      - 'k8s/dockerfiles/interactive.Dockerfile'
+      - 'k8s/dockerfiles/learning.Dockerfile'
+      - '.github/workflows/build-graphscope-images-linux.yml'
 
 concurrency:
   group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
@@ -20,8 +29,8 @@ env:
   REGISTRY: registry.cn-hongkong.aliyuncs.com
 
 jobs:
-  build-image:
-    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+  build-image-x86-64:
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.pull_request == 'pull_request') || (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-20.04
 
     steps:
@@ -53,7 +62,6 @@ jobs:
         make learning CI=false VERSION=${SHORT_SHA}
         df -h
 
-
     - name: Release Nightly Image
       if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       env:
@@ -61,10 +69,12 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+        # x86_64
+        arch=$(uname -m)
         # docker tag: 0.15.0 -> 0.15.0a20220808
         time=$(date "+%Y%m%d")
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
-        tag="${version}a${time}"
+        tag="${version}a${time}"-${arch}
 
         # graphscope image
         sudo docker tag graphscope/coordinator:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
@@ -89,8 +99,7 @@ jobs:
         sudo docker pull ${{ env.REGISTRY }}/graphscope/dataset:latest
         sudo docker tag ${{ env.REGISTRY }}/graphscope/dataset:latest ${{ env.REGISTRY }}/graphscope/dataset:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/dataset:${tag}
-
-
+        
     - name: Extract Tag Name
       if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
       id: tag
@@ -103,9 +112,10 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
-
+        # x86_64
+        arch=$(uname -m)
         # Release version tag
-        tag=${{ steps.tag.outputs.TAG }}
+        tag=${{ steps.tag.outputs.TAG }}-${arch}
         # graphscope image
         sudo docker tag graphscope/coordinator:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker tag graphscope/analytical:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical:${tag}
@@ -130,7 +140,7 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/dataset:${tag}
 
         # Release the latest tag
-        tag=latest
+        tag=latest-${arch}
         sudo docker tag graphscope/coordinator:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
         sudo docker tag graphscope/analytical:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical:${tag}
         # skip build analytical-java
@@ -146,3 +156,298 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
+
+
+  build-image-aarch64:
+    runs-on: [self-hosted, Linux, ARM64]
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.pull_request == 'pull_request') || (github.event_name == 'workflow_dispatch')
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+  
+      - name: Add envs to GITHUB_ENV
+        run: |
+          short_sha=$(git rev-parse --short HEAD)
+          echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
+  
+      - name: Build GraphScope Image
+        run: |
+          cd ${GITHUB_WORKSPACE}/k8s
+          make coordinator CI=false VERSION=${SHORT_SHA}
+          make analytical CI=false VERSION=${SHORT_SHA}
+          # skip build analytical-java
+          # make analytical-java CI=false VERSION=${SHORT_SHA}
+          make interactive-frontend CI=false VERSION=${SHORT_SHA}
+          make interactive-executor CI=false VERSION=${SHORT_SHA}
+          make learning CI=false VERSION=${SHORT_SHA}
+
+  
+  
+      - name: Release Nightly Image
+        if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+        env:
+          docker_password: ${{ secrets.DOCKER_PASSWORD }}
+          docker_username: ${{ secrets.DOCKER_USER }}
+        run: |
+          echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+          # aarch64
+          arch=$(uname -m)
+          # docker tag: 0.15.0 -> 0.15.0a20220808
+          time=$(date "+%Y%m%d")
+          version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+          tag="${version}a${time}"-${arch}
+          
+          # graphscope image
+          sudo docker tag graphscope/coordinator:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
+          sudo docker tag graphscope/analytical:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical:${tag}
+          # skip build analytical-java
+          # sudo docker tag graphscope/analytical-java:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
+          sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
+          sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
+          sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
+  
+          sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
+          sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
+          # skip build analytical-java
+          # Don't push analytical-java, since it's relatively large and not used at this moment.
+          # sudo docker push ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
+          sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
+          sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
+          sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
+  
+      - name: Extract Tag Name
+        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+        id: tag
+        run: echo "TAG=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+  
+      - name: Release Image
+        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+        env:
+          docker_password: ${{ secrets.DOCKER_PASSWORD }}
+          docker_username: ${{ secrets.DOCKER_USER }}
+        run: |
+          echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+          # aarch64
+          arch=$(uname -m)
+          # Release version tag
+          tag=${{ steps.tag.outputs.TAG }}-${arch}
+          # graphscope image
+          sudo docker tag graphscope/coordinator:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
+          sudo docker tag graphscope/analytical:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical:${tag}
+          # skip build analytical-java
+          # sudo docker tag graphscope/analytical-java:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
+          sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
+          sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
+          sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
+  
+          sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
+          sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
+          # skip build analytical-java
+          # sudo docker push ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
+          sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
+          sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
+          sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
+
+          # Release the latest tag
+          tag=latest-${arch}
+          sudo docker tag graphscope/coordinator:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
+          sudo docker tag graphscope/analytical:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical:${tag}
+          # skip build analytical-java
+          # sudo docker tag graphscope/analytical-java:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
+          sudo docker tag graphscope/interactive-frontend:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
+          sudo docker tag graphscope/interactive-executor:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
+          sudo docker tag graphscope/learning:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/learning:${tag}
+  
+          sudo docker push ${{ env.REGISTRY }}/graphscope/coordinator:${tag}
+          sudo docker push ${{ env.REGISTRY }}/graphscope/analytical:${tag}
+          # skip build analytical-java
+          # sudo docker push ${{ env.REGISTRY }}/graphscope/analytical-java:${tag}
+          sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag}
+          sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
+          sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
+
+      - name: Clean Nightly Image
+        if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+        run: |
+          # aarch64
+          arch=$(uname -m)
+          # docker tag: 0.15.0 -> 0.15.0a20220808
+          time=$(date "+%Y%m%d")
+          version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+          tag="${version}a${time}"-${arch}
+          # clean
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/coordinator:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/analytical:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/analytical-java:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/learning:${tag} || true
+          tag=${SHORT_SHA}
+          sudo docker rmi -f graphscope/coordinator:${tag} || true
+          sudo docker rmi -f graphscope/analytical:${tag} || true
+          sudo docker rmi -f graphscope/analytical-java:${tag} || true
+          sudo docker rmi -f graphscope/interactive-frontend:${tag} || true
+          sudo docker rmi -f graphscope/interactive-executor:${tag} || true
+          sudo docker rmi -f graphscope/learning:${tag} || true
+
+      - name: Clean Release Image
+        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+        run: |
+          # aarch64
+          arch=$(uname -m)
+          # Release version tag
+          tag=${{ steps.tag.outputs.TAG }}-${arch}
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/coordinator:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/analytical:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/analytical-java:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/learning:${tag} || true
+          tag=latest-${arch}
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/coordinator:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/analytical:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/analytical-java:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/interactive-frontend:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag} || true
+          sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/learning:${tag} || true
+          tag=${SHORT_SHA}
+          sudo docker rmi -f graphscope/coordinator:${tag} || true
+          sudo docker rmi -f graphscope/analytical:${tag} || true
+          sudo docker rmi -f graphscope/analytical-java:${tag} || true
+          sudo docker rmi -f graphscope/interactive-frontend:${tag} || true
+          sudo docker rmi -f graphscope/interactive-executor:${tag} || true
+          sudo docker rmi -f graphscope/learning:${tag} || true
+
+
+  manifesh-push-image:
+    runs-on: ubuntu-20.04
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    needs: [build-image-x86-64, build-image-aarch64]
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - name: Create and Push Docker Nightly Manifest
+      if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')
+      env:
+        docker_password: ${{ secrets.DOCKER_PASSWORD }}
+        docker_username: ${{ secrets.DOCKER_USER }}
+      run: |
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+        time=$(date "+%Y%m%d")
+        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+        # create
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/coordinator:${version}a${time} \
+          ${{ env.REGISTRY }}/graphscope/coordinator:${version}a${time}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/coordinator:${version}a${time}-aarch64 
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/analytical:${version}a${time} \
+          ${{ env.REGISTRY }}/graphscope/analytical:${version}a${time}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/analytical:${version}a${time}-aarch64 
+        
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/interactive-frontend:${version}a${time} \
+          ${{ env.REGISTRY }}/graphscope/interactive-frontend:${version}a${time}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/interactive-frontend:${version}a${time}-aarch64
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/interactive-executor:${version}a${time} \
+          ${{ env.REGISTRY }}/graphscope/interactive-executor:${version}a${time}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/interactive-executor:${version}a${time}-aarch64
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/learning:${version}a${time} \
+          ${{ env.REGISTRY }}/graphscope/learning:${version}a${time}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/learning:${version}a${time}-aarch64
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/dataset:${version}a${time} \
+          ${{ env.REGISTRY }}/graphscope/dataset:${version}a${time}-x86_64 
+
+        # push
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/coordinator:${version}a${time}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/analytical:${version}a${time}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${version}a${time}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-executor:${version}a${time}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/learning:${version}a${time}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/dataset:${version}a${time}
+
+    - name: Create and Push Docker Release Manifest
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      env:
+        docker_password: ${{ secrets.DOCKER_PASSWORD }}
+        docker_username: ${{ secrets.DOCKER_USER }}
+      run: |
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/coordinator:${{ steps.tag.outputs.TAG }} \
+          ${{ env.REGISTRY }}/graphscope/coordinator:${{ steps.tag.outputs.TAG }}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/coordinator:${{ steps.tag.outputs.TAG }}-aarch64 
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/analytical:${{ steps.tag.outputs.TAG }} \
+          ${{ env.REGISTRY }}/graphscope/analytical:${{ steps.tag.outputs.TAG }}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/analytical:${{ steps.tag.outputs.TAG }}-aarch64 
+        
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/interactive-frontend:${{ steps.tag.outputs.TAG }} \
+          ${{ env.REGISTRY }}/graphscope/interactive-frontend:${{ steps.tag.outputs.TAG }}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/interactive-frontend:${{ steps.tag.outputs.TAG }}-aarch64
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/interactive-executor:${{ steps.tag.outputs.TAG }} \
+          ${{ env.REGISTRY }}/graphscope/interactive-executor:${{ steps.tag.outputs.TAG }}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/interactive-executor:${{ steps.tag.outputs.TAG }}-aarch64
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/learning:${{ steps.tag.outputs.TAG }} \
+          ${{ env.REGISTRY }}/graphscope/learning:${{ steps.tag.outputs.TAG }}-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/learning:${{ steps.tag.outputs.TAG }}-aarch64
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/dataset:${{ steps.tag.outputs.TAG }} \
+          ${{ env.REGISTRY }}/graphscope/dataset:${{ steps.tag.outputs.TAG }}-x86_64
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/coordinator:latest \
+          ${{ env.REGISTRY }}/graphscope/coordinator:latest-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/coordinator:latest-aarch64 
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/analytical:latest \
+          ${{ env.REGISTRY }}/graphscope/analytical:latest-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/analytical:latest-aarch64 
+        
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/interactive-frontend:latest \
+          ${{ env.REGISTRY }}/graphscope/interactive-frontend:latest-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/interactive-frontend:latest-aarch64
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/interactive-executor:latest \
+          ${{ env.REGISTRY }}/graphscope/interactive-executor:latest-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/interactive-executor:latest-aarch64
+
+        sudo docker manifest create \
+          ${{ env.REGISTRY }}/graphscope/learning:latest \
+          ${{ env.REGISTRY }}/graphscope/learning:latest-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/learning:latest-aarch64
+
+        # push
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/coordinator:${{ steps.tag.outputs.TAG }}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/analytical:${{ steps.tag.outputs.TAG }}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-frontend:${{ steps.tag.outputs.TAG }}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-executor:${{ steps.tag.outputs.TAG }}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/learning:${{ steps.tag.outputs.TAG }}
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/dataset:${{ steps.tag.outputs.TAG }}
+
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/coordinator:latest
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/analytical:latest
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-frontend:latest
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/interactive-executor:latest
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/learning:latest
+
