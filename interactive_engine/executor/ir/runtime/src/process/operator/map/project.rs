@@ -23,6 +23,7 @@ use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
 use crate::error::{FnExecResult, FnGenResult};
+use crate::process::entry::CollectionEntry;
 use crate::process::entry::DynEntry;
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::operator::TagKey;
@@ -41,6 +42,7 @@ struct ProjectOperator {
 pub enum Projector {
     ExprProjector(Evaluator),
     GraphElementProjector(TagKey),
+    MultiGraphElementProjector(Vec<TagKey>),
 }
 
 // TODO:
@@ -58,6 +60,14 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
             DynEntry::new(projected_result)
         }
         Projector::GraphElementProjector(tag_key) => tag_key.get_arc_entry(input)?,
+        Projector::MultiGraphElementProjector(tag_keys) => {
+            let mut collection = Vec::with_capacity(tag_keys.len());
+            for tag_key in tag_keys.iter() {
+                let entry = tag_key.get_arc_entry(input)?;
+                collection.push(entry);
+            }
+            DynEntry::new(CollectionEntry { inner: collection })
+        }
     };
     Ok(entry)
 }
@@ -121,15 +131,24 @@ impl FilterMapFuncGen for pb::Project {
                 .expr
                 .ok_or(ParsePbError::from("expr eval is missing in project"))?;
             let projector = if expr.operators.len() == 1 {
-                if let Some(common_pb::ExprOpr {
-                    item: Some(common_pb::expr_opr::Item::Var(var)), ..
-                }) = expr.operators.first()
-                {
-                    let tag_key = TagKey::try_from(var.clone())?;
-                    Projector::GraphElementProjector(tag_key)
-                } else {
-                    let evaluator = Evaluator::try_from(expr)?;
-                    Projector::ExprProjector(evaluator)
+                match expr.operators.get(0).unwrap() {
+                    common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Var(var)), .. } => {
+                        let tag_key = TagKey::try_from(var.clone())?;
+                        Projector::GraphElementProjector(tag_key)
+                    }
+                    common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Vars(vars)), .. } => {
+                        // TODO: for VarMap, we may also implemnt as MultiGraphElementProjector? because there's no need to preserve key in each record.
+                        let tag_keys = vars
+                            .keys
+                            .iter()
+                            .map(|var| TagKey::try_from(var.clone()))
+                            .collect::<Result<Vec<_>, _>>()?;
+                        Projector::MultiGraphElementProjector(tag_keys)
+                    }
+                    _ => {
+                        let evaluator = Evaluator::try_from(expr)?;
+                        Projector::ExprProjector(evaluator)
+                    }
                 }
             } else {
                 let evaluator = Evaluator::try_from(expr)?;
@@ -156,8 +175,9 @@ mod tests {
     use pegasus::api::{Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
+    use pegasus_common::downcast::AsAny;
 
-    use crate::process::entry::Entry;
+    use crate::process::entry::{CollectionEntry, Entry};
     use crate::process::operator::map::FilterMapFuncGen;
     use crate::process::operator::tests::{
         init_source, init_source_with_multi_tags, init_source_with_tag, init_vertex1, init_vertex2,
@@ -505,21 +525,24 @@ mod tests {
             is_append: false,
         };
         let mut result = project_test(init_source(), project_opr_pb);
-        let mut object_result = vec![];
+        let mut collection_result: Vec<Vec<Object>> = vec![];
         while let Some(Ok(res)) = result.next() {
-            object_result.push(
-                res.get(None)
-                    .unwrap()
-                    .as_object()
-                    .unwrap()
-                    .clone(),
-            );
+            let collection_entry = res
+                .get(None)
+                .unwrap()
+                .as_any_ref()
+                .downcast_ref::<CollectionEntry>()
+                .unwrap()
+                .inner
+                .clone()
+                .into_iter()
+                .map(|entry| entry.as_object().unwrap().clone())
+                .collect();
+            collection_result.push(collection_entry);
         }
-        let expected_result = vec![
-            object!(vec![object!(29), object!("marko")]),
-            object!(vec![object!(27), object!("vadas")]),
-        ];
-        assert_eq!(object_result, expected_result);
+        let expected_result =
+            vec![vec![object!(29), object!("marko")], vec![object!(27), object!("vadas")]];
+        assert_eq!(collection_result, expected_result);
     }
 
     // g.V().valueMap("age", "name") // by map

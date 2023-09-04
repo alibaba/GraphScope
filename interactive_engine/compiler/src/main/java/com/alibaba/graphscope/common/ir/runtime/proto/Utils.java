@@ -28,6 +28,8 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.util.NlsString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,6 +38,8 @@ import java.util.stream.Collectors;
  * convert {@code RexNode} to data types in protobuf
  */
 public abstract class Utils {
+    private static final Logger logger = LoggerFactory.getLogger(Utils.class);
+
     public static final Common.Value protoValue(RexLiteral literal) {
         switch (literal.getType().getSqlTypeName()) {
             case NULL:
@@ -249,12 +253,8 @@ public abstract class Utils {
                                 + " to IrDataType is unsupported yet");
             case MULTISET:
             case ARRAY:
-                RelDataType elementType = dataType.getComponentType();
-                if (elementType instanceof GraphPxdElementType
-                        || elementType instanceof GraphSchemaType) {
-                    // todo: support array of graph element types in pb
-                    return DataType.IrDataType.newBuilder().build();
-                }
+                logger.warn("multiset or array type can not be converted to any ir core data type");
+                return DataType.IrDataType.newBuilder().build();
             default:
                 return DataType.IrDataType.newBuilder()
                         .setDataType(protoBasicDataType(dataType))
