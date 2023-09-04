@@ -127,7 +127,14 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._vineyard_image = config.vineyard.image
         self._vineyard_mem = config.vineyard.resource.requests.memory
         self._vineyard_cpu = config.vineyard.resource.requests.cpu
-        self._vineyard_shared_mem = launcher_config.engine.gae_resource.limits.memory
+        if launcher_config.engine.gae_resource.limits is not None:
+            self._vineyard_shared_mem = (
+                launcher_config.engine.gae_resource.limits.memory
+            )
+        elif launcher_config.engine.gae_resource.requests is not None:
+            self._vineyard_shared_mem = (
+                launcher_config.engine.gae_resource.requests.memory
+            )
 
         self._service_type = launcher_config.service_type
 
