@@ -1333,6 +1333,8 @@ class Session(object):
         node_features=None,
         edge_features=None,
         node_labels=None,
+        edge_dir="out",
+        random_node_split=None,
     ):
         from graphscope.learning.gl_torch_graph import GLTorchGraph
 
@@ -1354,6 +1356,8 @@ class Session(object):
             "node_features": node_features,
             "edge_features": edge_features,
             "node_labels": node_labels,
+            "edge_dir": edge_dir,
+            "random_node_split": random_node_split,
         }
         config = base64.b64encode(pickle.dumps(config))
         handle, config, endpoints = self._grpc_client.create_learning_instance(
@@ -1362,7 +1366,7 @@ class Session(object):
             config,
             message_pb2.LearningBackend.GRAPHLEARN_TORCH,
         )
-        g = GLTorchGraph(endpoints)
+        g = GLTorchGraph(handle, endpoints)
         self._learning_instance_dict[graph.vineyard_id] = g
         graph._attach_learning_instance(g)
         return g
@@ -1659,11 +1663,20 @@ def graphlearn_torch(
     node_features=None,
     edge_features=None,
     node_labels=None,
+    edge_dir="out",
+    random_node_split=None,
 ):
     assert graph is not None, "graph cannot be None"
     assert (
         graph._session is not None
     ), "The graph object is invalid"  # pylint: disable=protected-access
     return graph._session.graphlearn_torch(
-        graph, edges, edge_weights, node_features, edge_features, node_labels
+        graph,
+        edges,
+        edge_weights,
+        node_features,
+        edge_features,
+        node_labels,
+        edge_dir,
+        random_node_split,
     )  # pylint: disable=protected-access

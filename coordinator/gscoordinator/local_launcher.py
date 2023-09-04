@@ -310,6 +310,11 @@ class LocalLauncher(AbstractLauncher):
         server_client_master_port = get_free_port("localhost")
         handle["server_client_master_port"] = server_client_master_port
 
+        server_list = [f"localhost:{server_client_master_port}"]
+        # for train, val and test
+        for _ in range(3):
+            server_list.append("localhost:" + str(get_free_port("localhost")))
+
         handle = base64.b64encode(pickle.dumps(handle))
 
         # launch the server
@@ -351,7 +356,7 @@ class LocalLauncher(AbstractLauncher):
             )
             setattr(proc, "stdout_watcher", stdout_watcher)
             self._learning_instance_processes[object_id].append(proc)
-        return [f"localhost:{server_client_master_port}"]
+        return server_list
 
     def close_analytical_instance(self):
         self._stop_subprocess(self._analytical_engine_process, kill=True)

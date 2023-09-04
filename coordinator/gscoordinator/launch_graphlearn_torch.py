@@ -53,12 +53,16 @@ def run_server_proc(proc_rank, handle, config, server_rank, dataset):
 def launch_graphlearn_torch_server(handle, config, server_rank):
     logger.info(f"-- [Server {server_rank}] Initializing server ...")
 
-    dataset = glt.distributed.DistDataset()
+    edge_dir = config.pop("edge_dir")
+    random_node_split = config.pop("random_node_split")
+    dataset = glt.distributed.DistDataset(edge_dir=edge_dir)
     dataset.load_vineyard(
         vineyard_id=str(handle["vineyard_id"]),
         vineyard_socket=handle["vineyard_socket"],
         **config,
     )
+    if random_node_split is not None:
+        dataset.random_node_split(**random_node_split)
     logger.info(f"-- [Server {server_rank}] Initializing server ...")
 
     torch.multiprocessing.spawn(
