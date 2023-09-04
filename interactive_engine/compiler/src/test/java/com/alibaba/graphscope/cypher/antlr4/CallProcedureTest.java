@@ -24,8 +24,8 @@ import org.junit.Test;
 public class CallProcedureTest {
     @Test
     public void match_1_test() {
-        LogicalPlan logicalPlan = Utils.evalLogicalPlan("Call query_ic2(10l, 20120112l)");
-        Assert.assertEquals("query_ic2(10:BIGINT, 20120112:BIGINT)", logicalPlan.explain().trim());
+        LogicalPlan logicalPlan = Utils.evalLogicalPlan("Call ldbc_ic2(10l, 20120112l)");
+        Assert.assertEquals("ldbc_ic2(10:BIGINT, 20120112:BIGINT)", logicalPlan.explain().trim());
         Assert.assertEquals(
                 "RecordType(CHAR(1) name)", logicalPlan.getProcedureCall().getType().toString());
     }
