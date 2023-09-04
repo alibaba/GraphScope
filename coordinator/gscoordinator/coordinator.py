@@ -20,6 +20,7 @@
 
 import argparse
 import atexit
+import base64
 import functools
 import json
 import logging
@@ -29,24 +30,23 @@ import queue
 import random
 import re
 import signal
-import string
 import sys
 import threading
 import traceback
 from concurrent import futures
+from string import ascii_letters
 
 import grpc
 from packaging import version
+from simple_parsing import ArgumentParser
 
 from gscoordinator.io_utils import StdStreamWrapper
 
 # capture system stdout
-from gscoordinator.launcher import AbstractLauncher
-from gscoordinator.local_launcher import LocalLauncher
-
 sys.stdout = StdStreamWrapper(sys.stdout)
 sys.stderr = StdStreamWrapper(sys.stderr)
 
+from graphscope.config import Config
 from graphscope.framework.utils import PipeMerger
 from graphscope.framework.utils import i_to_attr
 from graphscope.framework.utils import s_to_attr
@@ -58,15 +58,17 @@ from graphscope.proto import types_pb2
 from gscoordinator.dag_manager import DAGManager
 from gscoordinator.dag_manager import GSEngine
 from gscoordinator.kubernetes_launcher import KubernetesClusterLauncher
+from gscoordinator.launcher import AbstractLauncher
+from gscoordinator.local_launcher import LocalLauncher
 from gscoordinator.monitor import Monitor
 from gscoordinator.object_manager import InteractiveInstanceManager
 from gscoordinator.object_manager import LearningInstanceManager
 from gscoordinator.object_manager import ObjectManager
 from gscoordinator.op_executor import OperationExecutor
+from gscoordinator.operator_launcher import OperatorLauncher
 from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
 from gscoordinator.utils import check_server_ready
 from gscoordinator.utils import create_single_op_dag
-from gscoordinator.utils import str2bool
 from gscoordinator.version import __version__
 
 
@@ -157,35 +159,23 @@ class CoordinatorServiceServicer(
     ):
         config_logging(log_level)
 
+        self._operator_mode = False
+
         self._object_manager = ObjectManager()
 
         # only one connection is allowed at the same time
-        # session id will be generated when connection from client is established
-        self._session_id = None
         self._connected = False
-
-        self._launcher = launcher
 
         # control log fetching
         self._streaming_logs = False
         self._pipe_merged = PipeMerger(sys.stdout, sys.stderr)
 
+        self._session_id = "session_" + "".join(random.choices(ascii_letters, k=8))
+
         # dangling check
         self._dangling_timeout_seconds = dangling_timeout_seconds
-        self._comm_timeout_seconds = 120
-        self._poll_timeout_seconds = 2
         self._dangling_detecting_timer = None
         self._cleanup_instance = False
-
-        self._session_id = self._generate_session_id()
-        self._launcher.set_session_workspace(self._session_id)
-        if not self._launcher.start():
-            raise RuntimeError("Coordinator launching instance failed.")
-
-        self._operation_executor: OperationExecutor = OperationExecutor(
-            self._session_id, self._launcher, self._object_manager
-        )
-
         # the dangling timer should be initialized after the launcher started,
         # otherwise there would be a deadlock if `self._launcher.start()` failed.
         self._set_dangling_timer(cleanup_instance=True)
@@ -194,15 +184,24 @@ class CoordinatorServiceServicer(
         self._lock = threading.RLock()
         atexit.register(self.cleanup)
 
+        self._launcher = launcher
+        self._launcher.set_session_workspace(self._session_id)
+        if not self._launcher.start():
+            raise RuntimeError("Coordinator launching instance failed.")
+
+        self._operation_executor: OperationExecutor = OperationExecutor(
+            self._session_id, self._launcher, self._object_manager
+        )
+
     def __del__(self):
         self.cleanup()
 
     @Monitor.connectSession
     def ConnectSession(self, request, context):
-        if self._launcher.analytical_engine_process is not None:
+        if self._launcher.analytical_engine_endpoint is not None:
             engine_config = self._operation_executor.get_analytical_engine_config()
             engine_config.update(self._launcher.get_engine_config())
-            host_names = self._launcher.hosts.split(",")
+            host_names = self._launcher.hosts
         else:
             engine_config = {}
             host_names = []
@@ -241,7 +240,6 @@ class CoordinatorServiceServicer(
         self._dangling_timeout_seconds = request.dangling_timeout_seconds
         # other timeout seconds
         self._comm_timeout_seconds = getattr(request, "comm_timeout_seconds", 120)
-        self._poll_timeout_seconds = getattr(request, "poll_timeout_seconds", 2)
         # If true, also delete graphscope instance (such as pods) in closing process
         self._cleanup_instance = request.cleanup_instance
 
@@ -264,7 +262,11 @@ class CoordinatorServiceServicer(
         """
         Disconnect session, note that it won't clean up any resources if self._cleanup_instance is False.
         """
-        if not self._check_session_consistency(request, context):
+        if request.session_id != self._session_id:
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details(
+                f"Session handle not matched, {request.session_id} versus {self._session_id}"
+            )
             return message_pb2.CloseSessionResponse()
 
         self._connected = False
@@ -387,9 +389,7 @@ class CoordinatorServiceServicer(
     def FetchLogs(self, request, context):
         while self._streaming_logs:
             try:
-                info_message, error_message = self._pipe_merged.poll(
-                    timeout=self._poll_timeout_seconds
-                )
+                info_message, error_message = self._pipe_merged.poll(timeout=2)
             except queue.Empty:
                 info_message, error_message = "", ""
             except Exception as e:
@@ -436,7 +436,7 @@ class CoordinatorServiceServicer(
             return message_pb2.CreateAnalyticalInstanceResponse()
         return message_pb2.CreateAnalyticalInstanceResponse(
             engine_config=json.dumps(engine_config),
-            host_names=self._launcher.hosts.split(","),
+            host_names=self._launcher.hosts,
         )
 
     def CreateInteractiveInstance(self, request, context):
@@ -463,9 +463,10 @@ class CoordinatorServiceServicer(
         object_id = request.object_id
         schema_path = request.schema_path
         params = request.params
+        with_cypher = request.with_cypher
         try:
             proc = self._launcher.create_interactive_instance(
-                object_id, schema_path, params
+                object_id, schema_path, params, with_cypher
             )
             gie_manager = InteractiveInstanceManager(object_id)
             # Put it to object_manager to ensure it could be killed during coordinator cleanup
@@ -473,9 +474,7 @@ class CoordinatorServiceServicer(
             self._object_manager.put(object_id, gie_manager)
             # 60 seconds is enough, see also GH#1024; try 120
             # already add errs to outs
-            outs, _ = proc.communicate(
-                timeout=self._comm_timeout_seconds
-            )  # throws TimeoutError
+            outs, _ = proc.communicate(timeout=120)  # throws TimeoutError
             return_code = proc.poll()
             if return_code != 0:
                 raise RuntimeError(f"Error code: {return_code}, message {outs}")
@@ -485,14 +484,18 @@ class CoordinatorServiceServicer(
             logger.debug("Got endpoints: %s %s", gremlin_endpoint, cypher_endpoint)
             # coordinator use internal endpoint
             gie_manager.set_endpoint(gremlin_endpoint)
-            if check_server_ready(
-                gremlin_endpoint, server="gremlin"
-            ) and check_server_ready(
+            if check_server_ready(gremlin_endpoint, server="gremlin"):
+                logger.info(
+                    "Built interactive gremlin frontend: %s for graph %ld",
+                    gremlin_endpoint,
+                    object_id,
+                )
+
+            if with_cypher and check_server_ready(
                 cypher_endpoint, server="cypher"
             ):  # throws TimeoutError
                 logger.info(
-                    "Built interactive frontend gremlin: %s & cypher: %s for graph %ld",
-                    gremlin_endpoint,
+                    "Built interactive cypher frontend: %s for graph %ld",
                     cypher_endpoint,
                     object_id,
                 )
@@ -620,12 +623,6 @@ class CoordinatorServiceServicer(
         if cleanup_instance:
             self._launcher.stop(is_dangling=is_dangling)
 
-    @staticmethod
-    def _generate_session_id():
-        return "session_" + "".join(
-            [random.choice(string.ascii_lowercase) for _ in range(8)]
-        )
-
     def _set_dangling_timer(self, cleanup_instance: bool):
         if self._dangling_timeout_seconds > 0:
             self._dangling_detecting_timer = threading.Timer(
@@ -648,363 +645,52 @@ class CoordinatorServiceServicer(
             self._cancel_dangling_timer()
             self._set_dangling_timer(cleanup_instance)
 
-    def _check_session_consistency(self, request, context):
-        if request.session_id != self._session_id:
-            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
-            context.set_details(
-                f"Session handle not matched, {request.session_id} versus {self._session_id}"
-            )
-            return False
-        else:
-            return True
-
 
 def parse_sys_args():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
+    parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--num_workers",
-        type=int,
-        default=4,
-        help="The number of graphscope engine workers.",
-    )
-    parser.add_argument(
-        "--preemptive",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=True,
-        help="Support resource preemption or resource guarantee",
-    )
-    parser.add_argument(
-        "--instance_id",
+        "--config",
         type=str,
-        help="Unique id for each GraphScope instance.",
+        help="The base64 encoded config in json format.",
     )
     parser.add_argument(
-        "--port",
-        type=int,
-        default=63800,
-        help="Coordinator service port.",
+        "--config-file", type=str, help="The config file path in yaml or json format"
     )
-    parser.add_argument(
-        "--log_level",
-        type=str,
-        default="info",
-        help="Log level, choose from 'info' or 'debug'.",
-    )
-    parser.add_argument(
-        "--hosts",
-        type=str,
-        default="localhost",
-        help="list of comma seperated hostnames of graphscope engine workers.",
-    )
-    parser.add_argument(
-        "--vineyard_socket",
-        type=str,
-        default=None,
-        help="Vineyard IPC socket path, a socket suffixed by timestamp will be created in '/tmp' if not given.",
-    )
-    parser.add_argument(
-        "--cluster_type",
-        type=str,
-        default="k8s",
-        help="Cluster type of deploying, choose from 'k8s' or 'local'.",
-    )
-    parser.add_argument(
-        "--k8s_namespace",
-        type=str,
-        default="graphscope",
-        help="The namespace to create all resource, which must exist in advance.",
-    )
-    parser.add_argument(
-        "--k8s_image_registry", type=str, default="", help="k8s image registry"
-    )
-    parser.add_argument(
-        "--k8s_image_repository",
-        type=str,
-        default="graphscope",
-        help="k8s image repository",
-    )
-    parser.add_argument(
-        "--k8s_image_tag", type=str, default=__version__, help="k8s image tag"
-    )
-    parser.add_argument(
-        "--k8s_service_type",
-        type=str,
-        default="NodePort",
-        help="Service type, choose from 'NodePort' or 'LoadBalancer'.",
-    )
-    parser.add_argument(
-        "--k8s_vineyard_deployment",
-        type=str,
-        default=None,
-        help="The name of vineyard deployment, it should exist as expected.",
-    )
-    parser.add_argument(
-        "--k8s_coordinator_name",
-        type=str,
-        default="",
-        help="Coordinator name of graphscope instance.",
-    )
-    parser.add_argument(
-        "--k8s_coordinator_service_name",
-        type=str,
-        default="",
-        help="Coordinator service name of graphscope instance.",
-    )
-    parser.add_argument(
-        "--k8s_image_pull_policy",
-        type=str,
-        default="IfNotPresent",
-        help="Kubernetes image pull policy.",
-    )
-    parser.add_argument(
-        "--k8s_image_pull_secrets",
-        type=str,
-        default="",
-        help="A list of comma separated secrets to pull image.",
-    )
-    parser.add_argument(
-        "--k8s_vineyard_cpu",
-        type=float,
-        default=1.0,
-        help="CPU cores of vineyard container.",
-    )
-    parser.add_argument(
-        "--k8s_vineyard_image",
-        type=str,
-        default=None,
-        help="Image for vineyard container",
-    )
-    parser.add_argument(
-        "--k8s_vineyard_mem",
-        type=str,
-        default="256Mi",
-        help="Memory of vineyard container, suffix with ['Mi', 'Gi', 'Ti'].",
-    )
-    parser.add_argument(
-        "--vineyard_shared_mem",
-        type=str,
-        default="8Gi",
-        help="Plasma memory in vineyard, suffix with ['Mi', 'Gi', 'Ti'].",
-    )
-    parser.add_argument(
-        "--k8s_engine_cpu",
-        type=float,
-        default=1.0,
-        help="CPU cores of engine container, default: 1.0",
-    )
-    parser.add_argument(
-        "--k8s_engine_mem",
-        type=str,
-        default="256Mi",
-        help="Memory of engine container, suffix with ['Mi', 'Gi', 'Ti'].",
-    )
-    parser.add_argument(
-        "--etcd_addrs",
-        type=str,
-        default=None,
-        help="The addr of external etcd cluster, with formats like 'etcd01:port,etcd02:port,etcd03:port' ",
-    )
-    parser.add_argument(
-        "--etcd_listening_client_port",
-        type=int,
-        default=2379,
-        help="The port that etcd server will beind to for accepting client connections. Defaults to 2379.",
-    )
-    parser.add_argument(
-        "--etcd_listening_peer_port",
-        type=int,
-        default=2380,
-        help="The port that etcd server will beind to for accepting peer connections. Defaults to 2380.",
-    )
-    parser.add_argument(
-        "--k8s_enabled_engines",
-        type=str,
-        default=None,
-        help="A set of engines to enable",
-    )
-    parser.add_argument(
-        "--k8s_with_mars",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=False,
-        help="Enable mars or not.",
-    )
-    parser.add_argument(
-        "--k8s_mars_worker_cpu",
-        type=float,
-        default=0.5,
-        help="CPU cores of mars worker container, default: 0.5",
-    )
-    parser.add_argument(
-        "--k8s_mars_worker_mem",
-        type=str,
-        default="4Gi",
-        help="Memory of Mars worker container, default: 4Gi",
-    )
-    parser.add_argument(
-        "--k8s_mars_scheduler_cpu",
-        type=float,
-        default=0.5,
-        help="CPU cores of Mars scheduler container, default: 0.5",
-    )
-    parser.add_argument(
-        "--k8s_mars_scheduler_mem",
-        type=str,
-        default="2Gi",
-        help="Memory of Mars scheduler container, default: 2Gi",
-    )
-    parser.add_argument(
-        "--k8s_engine_pod_node_selector",
-        type=str,
-        default="",
-        help="Node selector for engine pods, default is None",
-    )
-    parser.add_argument(
-        "--k8s_volumes",
-        type=str,
-        default="",
-        help="A json string specifies the kubernetes volumes to mount.",
-    )
-    parser.add_argument(
-        "--k8s_delete_namespace",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=False,
-        help="Delete the namespace that created by graphscope.",
-    )
-    parser.add_argument(
-        "--timeout_seconds",
-        type=int,
-        default=600,
-        help="The length of time to wait before giving up launching graphscope.",
-    )
-    parser.add_argument(
-        "--dangling_timeout_seconds",
-        type=int,
-        default=600,
-        help="The length of time to wait starting from client disconnected before killing the graphscope instance",
-    )
-    parser.add_argument(
-        "--waiting_for_delete",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=False,
-        help="Wait until the graphscope instance has been deleted successfully",
-    )
-    parser.add_argument(
-        "--k8s_with_dataset",
-        type=str2bool,
-        nargs="?",
-        const=False,
-        default=False,
-        help="Mount the aliyun dataset bucket as a volume by ossfs.",
-    )
-    parser.add_argument(
-        "--k8s_deploy_mode",
-        type=str,
-        default="eager",
-        help="The deploying mode of graphscope, eager or lazy.",
-    )
-    parser.add_argument(
-        "--monitor",
-        type=str2bool,
-        nargs="?",
-        const=False,
-        default=False,
-        help="Enable or disable prometheus exporter.",
-    )
-    parser.add_argument(
-        "--monitor_port",
-        type=int,
-        default=9968,
-        help="Coordinator prometheus exporter service port.",
-    )
-    parser.add_argument(
-        "--dataset_proxy",
-        type=str,
-        nargs="?",
-        const="",
-        default="",
-        help="A json string specifies the dataset proxy info."
-        "Available options of proxy: http_proxy, https_proxy, no_proxy.",
-    )
+    # parser.add_arguments(Config, dest="gs")
     return parser.parse_args()
 
 
 def launch_graphscope():
     args = parse_sys_args()
-    launcher = get_launcher(args)
-    start_server(launcher, args)
-
-
-def get_launcher(args):
-    if args.cluster_type == "k8s":
-        launcher = KubernetesClusterLauncher(
-            coordinator_name=args.k8s_coordinator_name,
-            coordinator_service_name=args.k8s_coordinator_service_name,
-            delete_namespace=args.k8s_delete_namespace,
-            engine_cpu=args.k8s_engine_cpu,
-            engine_mem=args.k8s_engine_mem,
-            engine_pod_node_selector=args.k8s_engine_pod_node_selector,
-            image_pull_policy=args.k8s_image_pull_policy,
-            image_pull_secrets=args.k8s_image_pull_secrets,
-            image_registry=args.k8s_image_registry,
-            image_repository=args.k8s_image_repository,
-            image_tag=args.k8s_image_tag,
-            instance_id=args.instance_id,
-            log_level=args.log_level,
-            mars_worker_cpu=args.k8s_mars_worker_cpu,
-            mars_worker_mem=args.k8s_mars_worker_mem,
-            mars_scheduler_cpu=args.k8s_mars_scheduler_cpu,
-            mars_scheduler_mem=args.k8s_mars_scheduler_mem,
-            with_dataset=args.k8s_with_dataset,
-            namespace=args.k8s_namespace,
-            num_workers=args.num_workers,
-            preemptive=args.preemptive,
-            service_type=args.k8s_service_type,
-            timeout_seconds=args.timeout_seconds,
-            vineyard_cpu=args.k8s_vineyard_cpu,
-            vineyard_deployment=args.k8s_vineyard_deployment,
-            vineyard_image=args.k8s_vineyard_image,
-            vineyard_mem=args.k8s_vineyard_mem,
-            vineyard_shared_mem=args.vineyard_shared_mem,
-            volumes=args.k8s_volumes,
-            waiting_for_delete=args.waiting_for_delete,
-            with_mars=args.k8s_with_mars,
-            enabled_engines=args.k8s_enabled_engines,
-            dataset_proxy=args.dataset_proxy,
-            deploy_mode=args.k8s_deploy_mode,
-        )
-    elif args.cluster_type == "hosts":
-        launcher = LocalLauncher(
-            num_workers=args.num_workers,
-            hosts=args.hosts,
-            etcd_addrs=args.etcd_addrs,
-            etcd_listening_client_port=args.etcd_listening_client_port,
-            etcd_listening_peer_port=args.etcd_listening_peer_port,
-            vineyard_socket=args.vineyard_socket,
-            shared_mem=args.vineyard_shared_mem,
-            log_level=args.log_level,
-            instance_id=args.instance_id,
-            timeout_seconds=args.timeout_seconds,
-        )
+    if args.config:
+        config = base64.b64decode(args.config).decode("utf-8", errors="ignore")
+        config = Config.loads_json(config)
+    elif args.config_file:
+        config = Config.load(args.config_file)
     else:
-        raise RuntimeError("Expect hosts or k8s of cluster_type parameter")
+        raise RuntimeError("Must specify a config or config-file")
+    logger.info("Start server with args \n%s", config.dumps_yaml())
+    launcher = get_launcher(config)
+    start_server(launcher, config)
+
+
+def get_launcher(config: Config):
+    if config.launcher_type == "hosts":
+        launcher = LocalLauncher(config)
+    elif config.launcher_type == "k8s":
+        launcher = KubernetesClusterLauncher(config)
+    elif config.launcher_type == "operator":
+        launcher = OperatorLauncher(config)
+    else:
+        raise RuntimeError("Expect hosts, k8s or operator of launcher_type parameter")
     return launcher
 
 
-def start_server(launcher, args):
+def start_server(launcher, config: Config):
     coordinator_service_servicer = CoordinatorServiceServicer(
         launcher=launcher,
-        dangling_timeout_seconds=args.dangling_timeout_seconds,
-        log_level=args.log_level,
+        dangling_timeout_seconds=config.session.dangling_timeout_seconds,
+        log_level=config.session.log_level,
     )
 
     # register gRPC server
@@ -1019,23 +705,24 @@ def start_server(launcher, args):
     coordinator_service_pb2_grpc.add_CoordinatorServiceServicer_to_server(
         coordinator_service_servicer, server
     )
-    server.add_insecure_port(f"0.0.0.0:{args.port}")
+    endpoint = f"0.0.0.0:{config.coordinator.service_port}"
+    server.add_insecure_port(endpoint)
 
-    logger.info("Start server with args %s", args)
-
-    logger.info("Coordinator server listen at 0.0.0.0:%d", args.port)
+    logger.info("Coordinator server listen at %s", endpoint)
 
     server.start()
 
-    if args.monitor:
+    if config.coordinator.monitor:
         try:
-            Monitor.startServer(args.monitor_port, "0.0.0.0")
+            Monitor.startServer(config.coordinator.monitor_port, "0.0.0.0")
             logger.info(
-                "Coordinator monitor server listen at 0.0.0.0:%d", args.monitor_port
+                "Coordinator monitor server listen at 0.0.0.0:%d",
+                config.coordinator.monitor_port,
             )
         except Exception:  # noqa: E722, pylint: disable=broad-except
             logger.exception(
-                "Failed to start monitor server 0.0.0.0:%d", args.monitor_port
+                "Failed to start monitor server 0.0.0.0:%d",
+                config.coordinator.monitor_port,
             )
 
     # handle SIGTERM signal

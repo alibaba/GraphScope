@@ -486,7 +486,7 @@ jobs:
 
           python3 -m pytest --ignore=./graphscope/tests/kubernetes/test_store_service.py \
                           --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
-                          --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
+                          --cov-report=term -s -vvv --log-cli-level=INFO \
                           ./graphscope/tests/kubernetes
 
       - name: Upload Coverage

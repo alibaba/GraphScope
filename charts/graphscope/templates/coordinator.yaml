@@ -40,95 +40,25 @@ spec:
             port: 59001
         {{- end }}
         args:
-          - python3
-          - "-m"
-          - gscoordinator
-          - "--cluster_type"
-          - "k8s"
-          - "--port"
-          - "59001"
-          - "--num_workers"
-          - {{ .Values.engines.num_workers | quote }}
-          - "--instance_id"
-          - {{ .Release.Name }}
-          - "--log_level"
-          - {{ .Values.engines.log_level }}
-          - "--k8s_namespace"
-          - {{ .Release.Namespace }}
-          - "--k8s_service_type"
-          - {{ .Values.coordinator.service.type }}
-          - "--preemptive"
-          - {{ .Values.preemptive | quote }}
-          {{- if .Values.image.registry }}
-          - "--k8s_image_registry"
-          - {{ .Values.image.registry }}
-          {{- end }}
-          - "--k8s_image_repository"
-          - {{ .Values.image.repository }}
-          - "--k8s_image_tag"
-          {{- if .Values.image.tag }}
-          - {{ .Values.image.tag | quote }}
-          {{- else }}
-          - {{ .Chart.AppVersion | quote }}
-          {{- end }}
-          - "--k8s_image_pull_policy"
-          - {{ .Values.image.pullPolicy | quote }}
-          {{- if .Values.image.pullSecrets}}
-          - "--k8s_image_pull_secrets"
-          - {{ include "graphscope.imagePullSecretsStr" . | default (printf "''") | trimAll "\n" | quote }}
-          {{- end }}
-          - "--k8s_coordinator_name"
-          {{- $fullname := include "graphscope.fullname" . }}
-          - {{ printf "%s-%s" "coordinator" $fullname | quote }}
-          - "--k8s_coordinator_service_name"
-          - {{ printf "%s-%s" "coordinator-service" $fullname | quote }}
-          {{- if .Values.vineyard.deployment }}
-          - "--k8s_vineyard_deployment"
-          - {{ .Values.vineyard.deployment }}
-          {{- end }}
-          - "--k8s_vineyard_image"
-          - {{ .Values.vineyard.image.name }}:{{ .Values.vineyard.image.tag }}
-          - "--k8s_vineyard_cpu"
-          - {{ .Values.vineyard.resources.requests.cpu | quote }}
-          - "--k8s_vineyard_mem"
-          - {{ .Values.vineyard.resources.requests.memory }}
-          - "--vineyard_shared_mem"
-          - {{ .Values.vineyard.shared_mem }}
-          - "--k8s_engine_cpu"
-          - {{ .Values.engines.resources.requests.cpu | quote }}
-          - "--k8s_engine_mem"
-          - {{ .Values.engines.resources.requests.memory }}
-          {{- if .Values.volumes.enabled }}
-          - '--k8s_volumes'
-          - {{ mustToJson .Values.volumes.items | b64enc | quote}}
-          {{- end }}
-          - "--timeout_seconds"
-          - {{ .Values.coordinator.timeout_seconds | quote }}
-          - "--dangling_timeout_seconds"
-          - "-1"
-          - "--waiting_for_delete"
-          - "False"
-          - "--k8s_delete_namespace"
-          - "False"
-          - "--k8s_enabled_engines"
-          - {{ .Values.engines.enabled_engines }}
-          - "--k8s_with_dataset"
-          - {{ .Values.engines.dataset.enabled | quote }}
-          {{- if and .Values.engines.dataset.enabled .Values.engines.dataset.proxy }}
-          - "--dataset_proxy"
-          - {{ mustToJson .Values.engines.dataset.proxy | b64enc | quote }}
-          {{- end }}
-
+          - /home/graphscope/start.sh
+        volumeMounts:
+          - name: config
+            mountPath: /home/graphscope/config.yaml
+            subPath: coordinator.config
+          - name: config
+            mountPath: /home/graphscope/start.sh
+            subPath: start.sh
       {{- if .Values.withJupyter }}
       - name: jupyter
-        {{- if .Values.jupyter.image.tag }}
-        image: "{{ .Values.jupyter.image.name }}:{{ .Values.jupyter.image.tag }}"
-        {{- else }}
-        image: "{{ .Values.jupyter.image.name }}:{{ .Chart.AppVersion }}"
-        {{- end }}
+        image:  {{ include "graphscope.images.image" (dict "imageRoot" .Values.image "DefaultTag" .Chart.AppVersion "Component" .Values.jupyter) }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         resources: {{- toYaml .Values.jupyter.resources | nindent 10 }}
         ports:
           - containerPort: 8888
             name: jupyter
       {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: coordinator-{{ include "graphscope.fullname" . }}
+            defaultMode: 0755
