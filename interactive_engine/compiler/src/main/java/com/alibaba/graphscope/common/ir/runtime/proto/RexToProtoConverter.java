@@ -149,7 +149,7 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
 
     private boolean needBrace(SqlOperator operator, RexNode operand) {
         return operand instanceof RexCall
-                && ((RexCall) operand).getOperator().getLeftPrec() < operator.getLeftPrec();
+                && ((RexCall) operand).getOperator().getLeftPrec() <= operator.getLeftPrec();
     }
 
     @Override
