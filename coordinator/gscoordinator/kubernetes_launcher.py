@@ -127,14 +127,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._vineyard_image = config.vineyard.image
         self._vineyard_mem = config.vineyard.resource.requests.memory
         self._vineyard_cpu = config.vineyard.resource.requests.cpu
-        if launcher_config.engine.gae_resource.limits is not None:
-            self._vineyard_shared_mem = (
-                launcher_config.engine.gae_resource.limits.memory
-            )
-        elif launcher_config.engine.gae_resource.requests is not None:
-            self._vineyard_shared_mem = (
-                launcher_config.engine.gae_resource.requests.memory
-            )
 
         self._service_type = launcher_config.service_type
 
@@ -331,7 +323,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def launch_vineyard(self):
         """Launch vineyardd in k8s cluster."""
         # vineyardd is auto launched in vineyardd container
-        # args = f"vineyardd -size {self._vineyard_shared_mem} \
+        # args = f"vineyardd \
         #  -socket {self._engine_cluster._sock} -etcd_endpoint http://{self._pod_ip_list[0]}:2379"
         pass
 
@@ -796,7 +788,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
             apply_resources=True,
             owner_references=owner_reference_json,
             sidecar_image=self._vineyard_image,
-            sidecar_size=self._vineyard_shared_mem,
             sidecar_cpu=self._vineyard_cpu,
             sidecar_memory=self._vineyard_mem,
             sidecar_service_type=self._service_type,
@@ -1191,7 +1182,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
             vineyardd_image=self._vineyard_image,
             vineyardd_memory=self._vineyard_mem,
             vineyardd_cpu=self._vineyard_cpu,
-            vineyardd_size=self._vineyard_shared_mem,
             vineyardd_service_type=self._service_type,
             owner_references=owner_reference_json,
         )
