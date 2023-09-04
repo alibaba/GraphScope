@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.config;
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
+import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -61,8 +62,7 @@ public class YamlConfigTest {
                 "./target/test-classes/config/modern/plugins",
                 GraphConfig.GRAPH_STORED_PROCEDURES.get(configs));
         Assert.assertEquals(
-                "ldbc_ic1, ldbc_ic2, ldbc_ic3",
-                GraphConfig.GRAPH_STORED_PROCEDURES_ENABLE_LISTS.get(configs));
+                "ldbc_ic2", GraphConfig.GRAPH_STORED_PROCEDURES_ENABLE_LISTS.get(configs));
         Assert.assertEquals(
                 "./target/test-classes/config/modern/graph.yaml",
                 GraphConfig.GRAPH_SCHEMA.get(configs));
@@ -72,5 +72,18 @@ public class YamlConfigTest {
         Assert.assertEquals(false, FrontendConfig.NEO4J_BOLT_SERVER_DISABLED.get(configs));
         Assert.assertEquals(8002, (int) FrontendConfig.NEO4J_BOLT_SERVER_PORT.get(configs));
         Assert.assertEquals(200, (int) FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(configs));
+    }
+
+    @Test
+    public void schema_config_test() throws Exception {
+        YamlConfigs configs =
+                new YamlConfigs("config/gs_interactive_hiactor.yaml", FileLoadType.RESOURCES);
+        IrGraphSchema graphSchema = new IrGraphSchema(new LocalMetaDataReader(configs));
+        Assert.assertEquals(
+                "DefaultGraphVertex{labelId=0, label=person,"
+                    + " propertyList=[DefaultGraphProperty{id=0, name=id, dataType=LONG},"
+                    + " DefaultGraphProperty{id=1, name=name, dataType=STRING},"
+                    + " DefaultGraphProperty{id=2, name=age, dataType=INT}], primaryKeyList=[id]}",
+                graphSchema.getElement("person").toString());
     }
 }

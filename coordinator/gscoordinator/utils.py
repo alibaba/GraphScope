@@ -36,6 +36,7 @@ from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from queue import Queue
 from string import Template
+from typing import List
 
 import yaml
 from google.protobuf.any_pb2 import Any
@@ -52,6 +53,7 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
 
+from gscoordinator.constants import ANALYTICAL_CONTAINER_NAME
 from gscoordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -282,9 +284,9 @@ def check_java_app_graph_consistency(
     return True
 
 
-def run_command(args: str, cwd=None):
+def run_command(args: str, cwd=None, **kwargs):
     logger.info("Running command: %s, cwd: %s", args, cwd)
-    cp = subprocess.run(shlex.split(args), capture_output=True, cwd=cwd)
+    cp = subprocess.run(shlex.split(args), capture_output=True, cwd=cwd, **kwargs)
     if cp.returncode != 0:
         err = cp.stderr.decode("utf-8", errors="ignore")
         logger.error(
@@ -330,7 +332,7 @@ def compile_library(commands, workdir, output_name, launcher):
             workdir,
             output_name,
             launcher.hosts_list[0],
-            launcher._engine_cluster.analytical_container_name,
+            ANALYTICAL_CONTAINER_NAME,
         )
     elif launcher.type() == types_pb2.HOSTS:
         return _compile_on_local(commands, workdir, output_name)
@@ -1894,27 +1896,21 @@ class ResolveMPICmdPrefix(object):
 
     @staticmethod
     def alloc(num_workers, hosts):
-        host_list = hosts.split(",")
-        host_list_len = len(host_list)
-        assert host_list_len != 0
-
-        host_to_proc_num = {}
-        if num_workers >= host_list_len:
-            quotient = num_workers / host_list_len
-            residue = num_workers % host_list_len
-            for host in host_list:
+        length = len(hosts)
+        assert length != 0
+        proc_num = {}
+        if num_workers >= length:
+            quotient = num_workers / length
+            residue = num_workers % length
+            for host in hosts:
                 if residue > 0:
-                    host_to_proc_num[host] = quotient + 1
+                    proc_num[host] = quotient + 1
                     residue -= 1
                 else:
-                    host_to_proc_num[host] = quotient
+                    proc_num[host] = quotient
         else:
             raise RuntimeError("The number of hosts less then num_workers")
-
-        for i in range(host_list_len):
-            host_list[i] = f"{host_list[i]}:{host_to_proc_num[host_list[i]]}"
-
-        return ",".join(host_list)
+        return ",".join([f"{host}:{proc_num[host]}" for host in hosts])
 
     @staticmethod
     def find_mpi():
@@ -1931,11 +1927,10 @@ class ResolveMPICmdPrefix(object):
             raise RuntimeError("mpirun command not found.")
         return mpi
 
-    def resolve(self, num_workers, hosts):
+    def resolve(self, num_workers: int, hosts: List[str]):
         cmd = []
         env = {}
-
-        if num_workers == 1 and (hosts == "localhost" or hosts == "127.0.0.1"):
+        if num_workers == 1 and hosts[0] in ("localhost", "127.0.0.1"):
             # run without mpi on localhost if workers num is 1
             if shutil.which("ssh") is None:
                 # also need a fake ssh agent

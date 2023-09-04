@@ -18,25 +18,16 @@ package com.alibaba.graphscope.common.store;
 
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
 import com.alibaba.graphscope.common.ir.meta.reader.MetaDataReader;
-import com.alibaba.graphscope.common.ir.meta.schema.GraphSchemaWrapper;
+import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public class ExperimentalMetaFetcher implements IrMetaFetcher {
     private final IrMeta meta;
 
     public ExperimentalMetaFetcher(MetaDataReader dataReader) throws Exception {
-        String schemaJson =
-                new String(dataReader.getGraphSchema().readAllBytes(), StandardCharsets.UTF_8);
         this.meta =
-                new IrMeta(
-                        new GraphSchemaWrapper(
-                                com.alibaba.graphscope.common.ir.meta.schema.Utils
-                                        .buildSchemaFromJson(schemaJson),
-                                schemaJson,
-                                false),
-                        new GraphStoredProcedures(dataReader));
+                new IrMeta(new IrGraphSchema(dataReader), new GraphStoredProcedures(dataReader));
     }
 
     @Override

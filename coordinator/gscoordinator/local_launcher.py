@@ -27,6 +27,7 @@ import sys
 import time
 from typing import List
 
+from graphscope.config import Config
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
 from graphscope.framework.utils import get_java_version
@@ -49,37 +50,30 @@ logger = logging.getLogger("graphscope")
 
 
 class LocalLauncher(AbstractLauncher):
-    def __init__(
-        self,
-        num_workers: int,
-        hosts: str,
-        etcd_addrs: str,
-        etcd_listening_client_port: int,
-        etcd_listening_peer_port: int,
-        vineyard_socket: str,
-        shared_mem: str,
-        log_level: str,
-        instance_id: str,
-        timeout_seconds: int,
-        close_timeout_seconds: int = 60,
-        retry_time_seconds: int = 1,
-    ):
+    def __init__(self, config):
         super().__init__()
-        self._num_workers = num_workers
-        self._hosts = hosts
 
-        self._external_etcd_addr = etcd_addrs
-        self._etcd_listening_client_port = etcd_listening_client_port
-        self._etcd_listening_peer_port = etcd_listening_peer_port
-        self._vineyard_socket = vineyard_socket
-        self._shared_mem = shared_mem
+        self._config: Config = config
+        session_config = config.session
+        vineyard_config = config.vineyard
+        launcher_config = config.hosts_launcher
 
-        self._glog_level = parse_as_glog_level(log_level)
-        self._instance_id = instance_id
-        self._timeout_seconds = timeout_seconds
-        self._close_timeout_seconds = close_timeout_seconds
-        self._retry_time_seconds = retry_time_seconds
-        self._vineyard_socket_prefix = os.path.join(get_tempdir(), "vineyard.sock.")
+        # Session Config
+        self._num_workers = session_config.num_workers
+        self._glog_level = parse_as_glog_level(session_config.log_level)
+        self._instance_id = session_config.instance_id
+        self._timeout_seconds = session_config.timeout_seconds
+        self._retry_time_seconds = session_config.retry_time_seconds
+
+        # Vineyard Config
+        self._vineyard_socket = vineyard_config.socket
+        self._vineyard_rpc_port = vineyard_config.rpc_port
+
+        # Launcher Config
+        self._hosts = launcher_config.hosts
+        self._external_etcd_addr = launcher_config.etcd.endpoint
+        self._etcd_listening_client_port = launcher_config.etcd.listening_client_port
+        self._etcd_listening_peer_port = launcher_config.etcd.listening_peer_port
 
         # A graphscope instance may have multiple session by reconnecting to coordinator
         self._instance_workspace = os.path.join(WORKSPACE, self._instance_id)
@@ -88,12 +82,9 @@ class LocalLauncher(AbstractLauncher):
         self._session_workspace = None
 
         # etcd
-        self._etcd_peer_port = None
-        self._etcd_client_port = None
         self._etcd_process = None
         self._etcd_endpoint = None
         # vineyardd
-        self._vineyard_rpc_port = None
         self._vineyardd_process = None
         # analytical engine
         self._analytical_engine_process = None
@@ -115,39 +106,37 @@ class LocalLauncher(AbstractLauncher):
     def stop(self, is_dangling=False):
         self.close_analytical_instance()
         self.close_vineyard()
-        self.close_etcd()
 
-    def set_session_workspace(self, session_id):
+    def set_session_workspace(self, session_id: str):
         self._session_workspace = os.path.join(self._instance_workspace, session_id)
         os.makedirs(self._session_workspace, exist_ok=True)
 
-    def get_namespace(self):
+    def get_namespace(self) -> str:
         return ""
 
     @property
-    def hosts(self):
+    def hosts(self) -> List[str]:
         return self._hosts
 
     @property
-    def vineyard_socket(self):
+    def vineyard_socket(self) -> str:
         return self._vineyard_socket
 
     @property
-    def etcd_port(self):
-        return self._etcd_client_port
+    def vineyard_endpoint(self) -> str:
+        return f"{self._hosts[0]}:{self._vineyard_rpc_port}"
 
     def create_analytical_instance(self):
         mpi_resolver = ResolveMPICmdPrefix()
         cmd, mpi_env = mpi_resolver.resolve(self._num_workers, self._hosts)
 
-        master = self.hosts.split(",")[0]
+        master = self.hosts[0]
         rpc_port = get_free_port(master)
         self._analytical_engine_endpoint = f"{master}:{rpc_port}"
 
         cmd.append(ANALYTICAL_ENGINE_PATH)
         cmd.extend(["--host", "0.0.0.0"])
         cmd.extend(["--port", str(rpc_port)])
-        cmd.extend(["--vineyard_shared_mem", self._shared_mem])
 
         if mpi_resolver.openmpi():
             cmd.extend(["-v", str(self._glog_level)])
@@ -163,18 +152,8 @@ class LocalLauncher(AbstractLauncher):
 
         logger.info("Launch analytical engine with command: %s", " ".join(cmd))
 
-        process = subprocess.Popen(
-            cmd,
-            start_new_session=True,
-            cwd=os.getcwd(),
-            env=env,
-            encoding="utf-8",
-            errors="replace",
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,
-            bufsize=1,
+        process = self._popen_helper(
+            cmd, cwd=os.getcwd(), env=env, stderr=subprocess.PIPE
         )
 
         logger.info("Server is initializing analytical engine.")
@@ -197,7 +176,7 @@ class LocalLauncher(AbstractLauncher):
         )
 
     def create_interactive_instance(
-        self, object_id: int, schema_path: str, params: dict
+        self, object_id: int, schema_path: str, params: dict, with_cypher: bool
     ):
         try:
             logger.info("Java version: %s", get_java_version())
@@ -222,6 +201,7 @@ class LocalLauncher(AbstractLauncher):
 
         params = "\n".join([f"{k}={v}" for k, v in params.items()])
         params = base64.b64encode(params.encode("utf-8")).decode("utf-8")
+        neo4j_disabled = "true" if not with_cypher else "false"
 
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
@@ -235,20 +215,31 @@ class LocalLauncher(AbstractLauncher):
             str(self._interactive_port + 2 * num_workers),  # frontend gremlin port
             str(self._interactive_port + 2 * num_workers + 1),  # frontend cypher port
             self.vineyard_socket,
+            neo4j_disabled,
             params,
         ]
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
         self._interactive_port += 2 * num_workers + 2
+        return self._popen_helper(cmd, cwd=os.getcwd(), env=env)
+
+    @staticmethod
+    def _popen_helper(cmd, cwd, env, stdout=None, stderr=None):
+        # A default value that serves for simple cases,
+        # where the caller are not interested in the output.
+        if stdout is None:
+            stdout = subprocess.PIPE
+        if stderr is None:
+            stderr = subprocess.STDOUT
         process = subprocess.Popen(
             cmd,
             start_new_session=True,
-            cwd=os.getcwd(),
+            cwd=cwd,
             env=env,
             encoding="utf-8",
             errors="replace",
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stdout=stdout,
+            stderr=stderr,
             universal_newlines=True,
             bufsize=1,
         )
@@ -262,9 +253,7 @@ class LocalLauncher(AbstractLauncher):
             )
         )
 
-        server_list = [
-            f"localhost:{get_free_port('localhost')}" for _ in range(self.num_workers)
-        ]
+        server_list = [f"localhost:{get_free_port()}" for _ in range(self.num_workers)]
         hosts = ",".join(server_list)
         handle["server"] = hosts
         handle = base64.b64encode(
@@ -293,21 +282,9 @@ class LocalLauncher(AbstractLauncher):
             ]
             logger.debug("launching learning server: %s", " ".join(cmd))
 
-            proc = subprocess.Popen(
-                cmd,
-                env=env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                encoding="utf-8",
-                errors="replace",
-                universal_newlines=True,
-                bufsize=1,
-            )
-            stdout_watcher = PipeWatcher(
-                proc.stdout,
-                sys.stdout,
-                suppressed=(not logger.isEnabledFor(logging.DEBUG)),
-            )
+            proc = self._popen_helper(cmd, cwd=None, env=env)
+            stdout_watcher = PipeWatcher(proc.stdout, sys.stdout)
+            stdout_watcher.suppress(not logger.isEnabledFor(logging.DEBUG))
             setattr(proc, "stdout_watcher", stdout_watcher)
             self._learning_instance_processes[object_id].append(proc)
         return server_list
@@ -326,18 +303,9 @@ class LocalLauncher(AbstractLauncher):
             str(object_id),
         ]
         logger.info("Close GIE instance with command: %s", " ".join(cmd))
-        process = subprocess.Popen(
-            cmd,
-            start_new_session=True,
-            cwd=os.getcwd(),
-            env=env,
-            encoding="utf-8",
-            errors="replace",
-            universal_newlines=True,
-            bufsize=1,
-        )
+        process = self._popen_helper(cmd, cwd=os.getcwd(), env=env)
         # 60 seconds is enough
-        process.wait(timeout=self._close_timeout_seconds)
+        process.wait(timeout=self._timeout_seconds)
         return process
 
     def close_learning_instance(self, object_id):
@@ -350,30 +318,23 @@ class LocalLauncher(AbstractLauncher):
         self._learning_instance_processes.clear()
 
     def launch_etcd(self):
-        if is_free_port(self._etcd_listening_client_port):
-            self._etcd_client_port = self._etcd_listening_client_port
-        else:
-            self._etcd_client_port = get_free_port()
-        if is_free_port(self._etcd_listening_peer_port):
-            self._etcd_peer_port = self._etcd_listening_peer_port
-        else:
-            self._etcd_peer_port = get_free_port()
+        if not is_free_port(self._etcd_listening_client_port):
+            self._etcd_listening_client_port = get_free_port()
+        if not is_free_port(self._etcd_listening_peer_port):
+            self._etcd_listening_peer_port = get_free_port()
 
-        if isinstance(self._hosts, (list, tuple)):
-            hosts = self._hosts
-        else:
-            hosts = self._hosts.split(",")
         local_hostname = "127.0.0.1"
-        if len(hosts) > 1:
+        if len(self._hosts) > 1:
             try:
                 local_hostname = socket.gethostname()
-                socket.gethostbyname(
-                    local_hostname
-                )  # make sure the hostname is dns-resolvable
+                # make sure the hostname is dns-resolvable
+                socket.gethostbyname(local_hostname)
             except:  # noqa: E722
                 local_hostname = "127.0.0.1"  # fallback to a must-correct hostname
 
-        self._etcd_endpoint = f"http://{local_hostname}:{self._etcd_client_port}"
+        self._etcd_endpoint = (
+            f"http://{local_hostname}:{self._etcd_listening_client_port}"
+        )
 
         env = os.environ.copy()
         env.update({"ETCD_MAX_TXN_OPS": "102400"})
@@ -382,32 +343,19 @@ class LocalLauncher(AbstractLauncher):
             "--data-dir",
             str(self._instance_workspace),
             "--listen-peer-urls",
-            f"http://0.0.0.0:{self._etcd_peer_port}",
+            f"http://0.0.0.0:{self._etcd_listening_peer_port}",
             "--listen-client-urls",
-            f"http://0.0.0.0:{self._etcd_client_port}",
+            f"http://0.0.0.0:{self._etcd_listening_client_port}",
             "--advertise-client-urls",
             self._etcd_endpoint,
             "--initial-cluster",
-            f"default=http://127.0.0.1:{self._etcd_peer_port}",
+            f"default=http://127.0.0.1:{self._etcd_listening_peer_port}",
             "--initial-advertise-peer-urls",
-            f"http://127.0.0.1:{self._etcd_peer_port}",
+            f"http://127.0.0.1:{self._etcd_listening_peer_port}",
         ]
         logger.info("Launch etcd with command: %s", " ".join(cmd))
         logger.info("Server is initializing etcd.")
-
-        process = subprocess.Popen(
-            cmd,
-            start_new_session=True,
-            cwd=os.getcwd(),
-            env=env,
-            encoding="utf-8",
-            errors="replace",
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-            bufsize=1,
-        )
+        process = self._popen_helper(cmd, cwd=os.getcwd(), env=env)
 
         stdout_watcher = PipeWatcher(
             process.stdout,
@@ -419,11 +367,11 @@ class LocalLauncher(AbstractLauncher):
         self._etcd_process = process
 
         start_time = time.time()
-        while is_free_port(self._etcd_client_port):
+        while is_free_port(self._etcd_listening_client_port):
             if self._timeout_seconds + start_time < time.time():
                 self._etcd_process.kill()
-                _, errs = self._etcd_process.communicate()
-                logger.error("Start etcd timeout, %s", errs)
+                outs, _ = self._etcd_process.communicate()
+                logger.error("Start etcd timeout, %s", outs)
                 msg = "Launch etcd service failed due to timeout: "
                 msg += "\n".join([line for line in stdout_watcher.poll_all()])
                 raise RuntimeError(msg)
@@ -437,28 +385,32 @@ class LocalLauncher(AbstractLauncher):
         if self.vineyard_socket is not None:
             logger.info("Found existing vineyard socket: %s", self.vineyard_socket)
             return
+        ts = get_timestamp()
+        self._vineyard_socket = os.path.join(get_tempdir(), f"vineyard.sock.{ts}")
+        if not is_free_port(self._vineyard_rpc_port):
+            logger.warning(
+                "Vineyard rpc port %d is occupied, try to use another one.",
+                self._vineyard_rpc_port,
+            )
+            self._vineyard_rpc_port = get_free_port()
 
-        hosts = [f"{host.split(':')[0]}:1" for host in self._hosts.split(",")]
-
+        hosts = [f"{host.split(':')[0]}:1" for host in self._hosts]
         if len(hosts) > 1:  # Use MPI to start multiple process
             mpi_resolver = ResolveMPICmdPrefix()
-            cmd, mpi_env = mpi_resolver.resolve(len(hosts), ",".join(hosts))
+            cmd, mpi_env = mpi_resolver.resolve(len(hosts), hosts)
         else:  # Start single process without MPI
             cmd, mpi_env = [], {}
-
-        ts = get_timestamp()
-        self._vineyard_socket = f"{self._vineyard_socket_prefix}{ts}"
-        self._vineyard_rpc_port = 9600 if is_free_port(9600) else get_free_port()
 
         cmd.extend([sys.executable, "-m", "vineyard"])
         cmd.extend(["--socket", self.vineyard_socket])
         cmd.extend(["--rpc_socket_port", str(self._vineyard_rpc_port)])
-        cmd.extend(["--size", self._shared_mem])
-        if len(hosts) == 1:
-            cmd.extend(["--meta", "local"])
-        else:
+        if len(hosts) > 1:
+            # Launch etcd if not exists
+            self.configure_etcd_endpoint()
             cmd.extend(["-etcd_endpoint", self._etcd_endpoint])
             cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
+        else:
+            cmd.extend(["--meta", "local"])
         env = os.environ.copy()
         env["GLOG_v"] = str(self._glog_level)
         env.update(mpi_env)
@@ -466,26 +418,9 @@ class LocalLauncher(AbstractLauncher):
         logger.info("Launch vineyardd with command: %s", " ".join(cmd))
         logger.info("Server is initializing vineyardd.")
 
-        process = subprocess.Popen(
-            cmd,
-            start_new_session=True,
-            cwd=os.getcwd(),
-            env=env,
-            encoding="utf-8",
-            errors="replace",
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-            bufsize=1,
-        )
+        process = self._popen_helper(cmd, cwd=os.getcwd(), env=env)
 
-        stdout_watcher = PipeWatcher(
-            process.stdout,
-            sys.stdout,
-            drop=False,
-            suppressed=False,
-        )
+        stdout_watcher = PipeWatcher(process.stdout, sys.stdout, drop=False)
         setattr(process, "stdout_watcher", stdout_watcher)
         self._vineyardd_process = process
 
@@ -498,7 +433,7 @@ class LocalLauncher(AbstractLauncher):
                     msg = "Launch vineyardd failed: "
                     msg += "\n".join([line for line in stdout_watcher.poll_all()])
                     msg += "\nRerun with `graphscope.set_option(log_level='debug')`,"
-                    msg += " to get verbosed vineyardd logs."
+                    msg += " to get verbose vineyardd logs."
                     raise RuntimeError(msg)
                 if self._timeout_seconds + start_time < time.time():
                     self._vineyardd_process.kill()
@@ -510,8 +445,9 @@ class LocalLauncher(AbstractLauncher):
         stdout_watcher.drop(True)
         stdout_watcher.suppress(not logger.isEnabledFor(logging.DEBUG))
         logger.info(
-            "Vineyardd is ready, ipc socket is %s",
+            "Vineyardd is ready, ipc socket is %s, rpc port is %s",
             self._vineyard_socket,
+            self._vineyard_rpc_port,
         )
 
     def close_etcd(self):
@@ -519,6 +455,7 @@ class LocalLauncher(AbstractLauncher):
 
     def close_vineyard(self):
         self._stop_subprocess(self._vineyardd_process, kill=True)
+        self.close_etcd()
 
     @staticmethod
     def _stop_subprocess(proc, kill=False) -> None:
@@ -530,7 +467,7 @@ class LocalLauncher(AbstractLauncher):
 
     def distribute_file(self, path) -> None:
         dir = os.path.dirname(path)
-        for host in self.hosts.split(","):
+        for host in self.hosts:
             if host not in ("localhost", "127.0.0.1"):
                 logger.debug(run_command(f"ssh {host} mkdir -p {dir}"))  # noqa: G004
                 logger.debug(run_command(f"scp -r {path} {host}:{path}"))  # noqa: G004
@@ -550,18 +487,11 @@ class LocalLauncher(AbstractLauncher):
             logger.info("etcd cluster created")
         else:
             self._etcd_endpoint = f"http://{self._external_etcd_addr}"
-            logger.info("Using etcd cluster")
+            logger.info("Using external etcd cluster")
         logger.info("etcd endpoint is %s", self._etcd_endpoint)
 
     def start(self):
         try:
-            # create etcd
-            if isinstance(self._hosts, (list, tuple)):
-                hosts = self._hosts
-            else:
-                hosts = self._hosts.split(",")
-            if len(hosts) > 1:
-                self.configure_etcd_endpoint()
             # create vineyard
             self.launch_vineyard()
         except Exception:  # pylint: disable=broad-except
@@ -573,10 +503,10 @@ class LocalLauncher(AbstractLauncher):
 
     def get_engine_config(self) -> dict:
         config = {
-            "engine_hosts": self._hosts,
+            "engine_hosts": ",".join(self._hosts),
             "mars_endpoint": None,
         }
         return config
 
     def get_vineyard_stream_info(self):
-        return "ssh", self.hosts.split(",")
+        return "ssh", self.hosts

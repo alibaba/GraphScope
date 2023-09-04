@@ -220,6 +220,26 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     }
 
     @Override
+    public ExprVisitorResult visitOC_ListLiteral(CypherGSParser.OC_ListLiteralContext ctx) {
+        List<ExprVisitorResult> operands =
+                ctx.oC_Expression().stream()
+                        .map(k -> visitOC_Expression(k))
+                        .collect(Collectors.toList());
+        List<RelBuilder.AggCall> aggCallList = Lists.newArrayList();
+        List<RexNode> expressions = Lists.newArrayList();
+        operands.forEach(
+                k -> {
+                    if (!k.getAggCalls().isEmpty()) {
+                        aggCallList.addAll(k.getAggCalls());
+                    }
+                    expressions.add(k.getExpr());
+                });
+        return new ExprVisitorResult(
+                aggCallList,
+                builder.call(GraphStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR, expressions));
+    }
+
+    @Override
     public ExprVisitorResult visitOC_Parameter(CypherGSParser.OC_ParameterContext ctx) {
         String paramName = ctx.oC_SymbolicName().getText();
         int paramIndex = this.paramIdGenerator.generate(paramName);

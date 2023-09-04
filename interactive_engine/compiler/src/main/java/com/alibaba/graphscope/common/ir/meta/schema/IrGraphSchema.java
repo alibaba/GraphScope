@@ -16,53 +16,54 @@
 
 package com.alibaba.graphscope.common.ir.meta.schema;
 
+import com.alibaba.graphscope.common.ir.meta.reader.MetaDataReader;
+import com.alibaba.graphscope.common.ir.meta.reader.SchemaInputStream;
 import com.alibaba.graphscope.groot.common.exception.GraphElementNotFoundException;
 import com.alibaba.graphscope.groot.common.exception.GraphPropertyNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
-import com.google.common.collect.ImmutableList;
+import com.alibaba.graphscope.groot.common.util.IrSchemaParser;
 
-import org.apache.calcite.schema.Statistic;
-import org.apache.calcite.util.ImmutableBitSet;
-import org.apache.calcite.util.Static;
-import org.apache.commons.lang3.ObjectUtils;
-import org.checkerframework.checker.nullness.qual.Nullable;
-
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
- * A wrapper class for {@link GraphSchema}
+ * Maintain Graph schema meta for IR and add two extra interfaces : {@link #schemaJson()} and {@link #isColumnId()}
  */
-public class GraphSchemaWrapper implements StatisticSchema {
+public class IrGraphSchema implements GraphSchema {
     private final GraphSchema graphSchema;
     private final String schemeJson;
     private final boolean isColumnId;
 
-    public GraphSchemaWrapper(GraphSchema graphSchema, String schemaJson, boolean isColumnId) {
+    public IrGraphSchema(MetaDataReader dataReader) throws Exception {
+        SchemaInputStream schemaInputStream = dataReader.getGraphSchema();
+        String content =
+                new String(
+                        schemaInputStream.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        schemaInputStream.getInputStream().close();
+        switch (schemaInputStream.getFormatType()) {
+            case YAML:
+                this.graphSchema = Utils.buildSchemaFromYaml(content);
+                this.schemeJson = IrSchemaParser.getInstance().parse(this.graphSchema);
+                break;
+            case JSON:
+            default:
+                this.graphSchema = Utils.buildSchemaFromJson(content);
+                this.schemeJson = content;
+        }
+        this.isColumnId = false;
+    }
+
+    public IrGraphSchema(GraphSchema graphSchema, boolean isColumnId) {
         this.graphSchema = graphSchema;
-        this.schemeJson = schemaJson;
+        this.schemeJson = IrSchemaParser.getInstance().parse(graphSchema);
         this.isColumnId = isColumnId;
     }
 
-    @Override
-    public Statistic getStatistic(List<String> tableName) {
-        ObjectUtils.requireNonEmpty(tableName);
-        String labelName = tableName.get(0);
-        try {
-            return new DefaultStatistic(this.graphSchema.getElement(labelName));
-        } catch (GraphElementNotFoundException e) {
-            throw Static.RESOURCE.tableNotFound(labelName).ex();
-        }
-    }
-
-    @Override
     public boolean isColumnId() {
         return this.isColumnId;
     }
 
-    @Override
     public String schemaJson() {
         return this.schemeJson;
     }
@@ -110,38 +111,5 @@ public class GraphSchemaWrapper implements StatisticSchema {
     @Override
     public int getVersion() {
         return this.getVersion();
-    }
-
-    /**
-     * An inner class to implement interfaces related to primary keys from {@code Statistic}
-     */
-    private class DefaultStatistic implements Statistic {
-        private GraphElement element;
-        private ImmutableBitSet primaryBitSet;
-
-        public DefaultStatistic(GraphElement element) {
-            Objects.requireNonNull(element);
-            this.element = element;
-            List<GraphProperty> primaryKeys = this.element.getPrimaryKeyList();
-            if (ObjectUtils.isEmpty(primaryKeys)) {
-                this.primaryBitSet = ImmutableBitSet.of();
-            } else {
-                this.primaryBitSet =
-                        ImmutableBitSet.of(
-                                primaryKeys.stream()
-                                        .map(k -> k.getId())
-                                        .collect(Collectors.toList()));
-            }
-        }
-
-        @Override
-        public boolean isKey(ImmutableBitSet columns) {
-            return this.primaryBitSet.isEmpty() ? false : this.primaryBitSet.equals(columns);
-        }
-
-        @Override
-        public @Nullable List<ImmutableBitSet> getKeys() {
-            return ImmutableList.of(primaryBitSet);
-        }
     }
 }

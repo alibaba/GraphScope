@@ -34,19 +34,11 @@ from graphscope.framework.errors import K8sError
 logger = logging.getLogger("graphscope")
 
 
-def resolve_api_client(k8s_client_config={}):
+def resolve_api_client(k8s_config_file=None):
     """Get ApiClient from predefined locations.
 
     Args:
-        k8s_client_config (dict):
-            Provide configurable parameters for connecting to remote K8s cluster.
-            {
-                "config_file": "~/.kube/config",
-                "context": None,
-                "client_configuration": None,
-                "persist_config": True
-            }
-            Defaults to empty dict.
+        k8s_config_file(str): Path to kubernetes config file.
 
     Raises:
         RuntimeError: K8s api client resolve failed.
@@ -62,7 +54,7 @@ def resolve_api_client(k8s_client_config={}):
     """
     try:
         # load from kubernetes config file
-        kube_config.load_kube_config(**k8s_client_config)
+        kube_config.load_kube_config(k8s_config_file)
     except:  # noqa: E722
         try:
             # load from incluster configuration

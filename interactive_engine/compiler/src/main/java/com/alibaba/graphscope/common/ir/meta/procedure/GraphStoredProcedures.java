@@ -32,6 +32,7 @@ public class GraphStoredProcedures implements StoredProcedures {
         for (InputStream inputStream : reader.getStoredProcedures()) {
             StoredProcedureMeta createdMeta = StoredProcedureMeta.Deserializer.perform(inputStream);
             this.storedProcedureMetaMap.put(createdMeta.getName(), createdMeta);
+            inputStream.close();
         }
     }
 
