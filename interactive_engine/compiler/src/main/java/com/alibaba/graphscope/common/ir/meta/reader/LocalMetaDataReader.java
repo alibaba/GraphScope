@@ -49,7 +49,7 @@ public class LocalMetaDataReader implements MetaDataReader {
         String procedurePath = GraphConfig.GRAPH_STORED_PROCEDURES.get(configs);
         File procedureDir = new File(procedurePath);
         if (!procedureDir.exists() || !procedureDir.isDirectory()) {
-            logger.warn("procedure path {} not exist or not a directory", procedurePath);
+            logger.warn("procedure path='{}' not exist or not a directory", procedurePath);
             return ImmutableList.of();
         }
         List<String> enableProcedureList =

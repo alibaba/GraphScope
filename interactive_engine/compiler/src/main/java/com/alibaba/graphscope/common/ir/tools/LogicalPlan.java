@@ -16,8 +16,10 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
+import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.rel.RelNode;
@@ -27,6 +29,7 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -38,13 +41,21 @@ public class LogicalPlan {
     private @Nullable RexNode procedureCall;
     private boolean returnEmpty;
 
+    private final List<StoredProcedureMeta.Parameter> dynamicParams;
+
     public LogicalPlan(RelNode regularQuery) {
+        this(regularQuery, ImmutableList.of());
+    }
+
+    public LogicalPlan(RelNode regularQuery, List<StoredProcedureMeta.Parameter> dynamicParams) {
         this.regularQuery = Objects.requireNonNull(regularQuery);
         this.returnEmpty = returnEmpty(this.regularQuery);
+        this.dynamicParams = Objects.requireNonNull(dynamicParams);
     }
 
     public LogicalPlan(RexNode procedureCall) {
         this.procedureCall = Objects.requireNonNull(procedureCall);
+        this.dynamicParams = ImmutableList.of();
     }
 
     public @Nullable RelNode getRegularQuery() {
@@ -102,5 +113,9 @@ public class LogicalPlan {
         } else {
             return null;
         }
+    }
+
+    public List<StoredProcedureMeta.Parameter> getDynamicParams() {
+        return Collections.unmodifiableList(dynamicParams);
     }
 }

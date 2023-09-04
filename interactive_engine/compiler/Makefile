@@ -22,6 +22,8 @@ QUIET_OPT := --quiet
 
 query:=
 physical:=
+procedure:=
+extra:=
 config.path:=conf/ir.compiler.properties
 
 build:
@@ -54,13 +56,17 @@ run:
 	  -Dpegasus.hosts=${pegasus.hosts} \
 	  com.alibaba.graphscope.GraphServer ${config.path}
 
-# make physical_plan config.path='<path to the config file>' query='<query in string>' physical='<path to the physical output file>'
+# make physical_plan config.path='<path to the config file>'
+# 					 query='<query in string>'
+# 					 physical='<path to the physical output file>'
+# 					 procedure='<path_to_procedure_file>'
+# 					 extra='<extra_key_value_config_pairs>'
 physical_plan:
 	cd $(CUR_DIR) && $(java) \
 		-cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
 		-Djna.library.path=../executor/ir/target/release \
 		-Dgraph.schema=${graph.schema} \
-		com.alibaba.graphscope.common.ir.tools.GraphPlanner "${config.path}" "$(query)" "$(physical)"
+		com.alibaba.graphscope.common.ir.tools.GraphPlanner "${config.path}" "$(query)" "$(physical)" "$(procedure)" "$(extra)"
 
 # start rpc server
 # make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json 
