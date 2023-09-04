@@ -66,13 +66,13 @@ class ResourceConfig:
     def get_limits(self):
         return self.limits.as_dict() if self.limits is not None else None
 
-    def set_cpu_guarantee(self, cpu):
+    def set_cpu_request(self, cpu):
         self.requests.cpu = cpu
-        self.limits.cpu = cpu
+        # self.limits.cpu = cpu
 
-    def set_mem_guarantee(self, memory):
+    def set_mem_request(self, memory):
         self.requests.memory = memory
-        self.limits.memory = memory
+        # self.limits.memory = memory
 
     @staticmethod
     def make_burstable(cpu, memory):
@@ -345,9 +345,9 @@ class Config(Serializable):
         elif key == "k8s_image_secrets":
             self.kubernetes_launcher.image.pull_secrets = value
         elif key == "k8s_coordinator_cpu":
-            self.coordinator.resource.set_cpu_guarantee(value)
+            self.coordinator.resource.set_cpu_request(value)
         elif key == "k8s_coordinator_mem":
-            self.coordinator.resource.set_mem_guarantee(value)
+            self.coordinator.resource.set_mem_request(value)
         elif key == "etcd_addrs":
             self.hosts_launcher.etcd.endpoint = value
         elif key == "etcd_listening_client_port":
@@ -359,21 +359,21 @@ class Config(Serializable):
         elif key == "k8s_vineyard_deployment":
             self.vineyard.deployment_name = value
         elif key == "k8s_vineyard_cpu":
-            self.vineyard.resource.set_cpu_guarantee(value)
+            self.vineyard.resource.set_cpu_request(value)
         elif key == "k8s_vineyard_mem":
-            self.vineyard.resource.set_mem_guarantee(value)
+            self.vineyard.resource.set_mem_request(value)
         elif key == "k8s_engine_cpu":
-            self.kubernetes_launcher.engine.gae_resource.set_cpu_guarantee(value)
+            self.kubernetes_launcher.engine.gae_resource.set_cpu_request(value)
         elif key == "k8s_engine_mem":
-            self.kubernetes_launcher.engine.gae_resource.set_mem_guarantee(value)
+            self.kubernetes_launcher.engine.gae_resource.set_mem_request(value)
         elif key == "mars_worker_cpu":
-            self.kubernetes_launcher.mars.worker_resource.set_cpu_guarantee(value)
+            self.kubernetes_launcher.mars.worker_resource.set_cpu_request(value)
         elif key == "mars_worker_mem":
-            self.kubernetes_launcher.mars.worker_resource.set_mem_guarantee(value)
+            self.kubernetes_launcher.mars.worker_resource.set_mem_request(value)
         elif key == "mars_scheduler_cpu":
-            self.kubernetes_launcher.mars.scheduler_resource.set_cpu_guarantee(value)
+            self.kubernetes_launcher.mars.scheduler_resource.set_cpu_request(value)
         elif key == "mars_scheduler_mem":
-            self.kubernetes_launcher.mars.scheduler_resource.set_mem_guarantee(value)
+            self.kubernetes_launcher.mars.scheduler_resource.set_mem_request(value)
         elif key == "k8s_coordinator_pod_node_selector":
             self.coordinator.node_selector = base64_encode(json.dumps(value))
         elif key == "k8s_engine_pod_node_selector":
