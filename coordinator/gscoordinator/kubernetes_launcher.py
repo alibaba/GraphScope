@@ -504,6 +504,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         object_id: int,
         schema_path: str,
         params: dict,
+        with_cypher: bool,
         engine_selector: str,
     ):
         """
@@ -519,7 +520,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
         params = "\n".join([f"{k}={v}" for k, v in params.items()])
         params = base64.b64encode(params.encode("utf-8")).decode("utf-8")
-
+        neo4j_disabled = "true" if not with_cypher else "false"
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "create_gremlin_instance_on_k8s",
@@ -534,6 +535,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             str(self._interactive_port + 3),  # frontend cypher port
             self._coordinator_name,
             engine_selector,
+            neo4j_disabled,
             params,
         ]
         self._interactive_port += 4
@@ -554,7 +556,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         return process
 
     def create_interactive_instance(
-        self, object_id: int, schema_path: str, params: dict
+        self, object_id: int, schema_path: str, params: dict, with_cypher: bool
     ):
         pod_name_list, _, _ = self._allocate_interactive_engine(object_id)
         if not pod_name_list:
@@ -568,7 +570,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             )
 
         return self._distribute_interactive_process(
-            hosts, object_id, schema_path, params, engine_selector
+            hosts, object_id, schema_path, params, with_cypher, engine_selector
         )
 
     def close_interactive_instance(self, object_id):

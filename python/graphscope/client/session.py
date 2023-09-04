@@ -1177,7 +1177,7 @@ class Session(object):
         """
         return self.interactive(graph, params)
 
-    def interactive(self, graph, params=None):
+    def interactive(self, graph, params=None, with_cypher=False):
         """Get an interactive engine handler to execute gremlin and cypher queries.
 
         It will return an instance of :class:`graphscope.interactive.query.InteractiveQuery`,
@@ -1221,7 +1221,7 @@ class Session(object):
             gremlin_endpoint,
             cypher_endpoint,
         ) = self._grpc_client.create_interactive_instance(
-            object_id, schema_path, params
+            object_id, schema_path, params, with_cypher
         )
         interactive_query = InteractiveQuery(graph, gremlin_endpoint, cypher_endpoint)
         self._interactive_instance_dict[object_id] = interactive_query
@@ -1561,7 +1561,7 @@ def gremlin(graph, params=None):
     return interactive(graph, params)
 
 
-def interactive(graph, params=None):
+def interactive(graph, params=None, with_cypher=False):
     """Create an interactive engine and get the handler to execute gremlin and cypher queries.
 
     See params detail in :meth:`graphscope.Session.interactive`
@@ -1579,10 +1579,9 @@ def interactive(graph, params=None):
         >>> interactive_query = graphscope.interactive()
     """
     assert graph is not None, "graph cannot be None"
-    assert (
-        graph._session is not None
-    ), "The graph object is invalid"  # pylint: disable=protected-access
-    return graph._session.interactive(graph, params)  # pylint: disable=protected-access
+    sess = graph._session  # pylint: disable=protected-access
+    assert sess is not None, "The graph object is invalid"
+    return sess.interactive(graph, params, with_cypher)
 
 
 def graphlearn(graph, nodes=None, edges=None, gen_labels=None):

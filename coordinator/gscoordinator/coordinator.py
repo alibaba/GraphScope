@@ -463,9 +463,10 @@ class CoordinatorServiceServicer(
         object_id = request.object_id
         schema_path = request.schema_path
         params = request.params
+        with_cypher = request.with_cypher
         try:
             proc = self._launcher.create_interactive_instance(
-                object_id, schema_path, params
+                object_id, schema_path, params, with_cypher
             )
             gie_manager = InteractiveInstanceManager(object_id)
             # Put it to object_manager to ensure it could be killed during coordinator cleanup
@@ -483,14 +484,18 @@ class CoordinatorServiceServicer(
             logger.debug("Got endpoints: %s %s", gremlin_endpoint, cypher_endpoint)
             # coordinator use internal endpoint
             gie_manager.set_endpoint(gremlin_endpoint)
-            if check_server_ready(
-                gremlin_endpoint, server="gremlin"
-            ) and check_server_ready(
+            if check_server_ready(gremlin_endpoint, server="gremlin"):
+                logger.info(
+                    "Built interactive gremlin frontend: %s for graph %ld",
+                    gremlin_endpoint,
+                    object_id,
+                )
+
+            if with_cypher and check_server_ready(
                 cypher_endpoint, server="cypher"
             ):  # throws TimeoutError
                 logger.info(
-                    "Built interactive frontend gremlin: %s & cypher: %s for graph %ld",
-                    gremlin_endpoint,
+                    "Built interactive cypher frontend: %s for graph %ld",
                     cypher_endpoint,
                     object_id,
                 )

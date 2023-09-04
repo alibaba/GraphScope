@@ -71,32 +71,20 @@ engines:
       requests:
         cpu: 1
         memory: 1Gi
-      limits:
-        cpu: 2.0
-        memory: 2Gi
   gie:
     executor:
       resources:
         requests:
           cpu: 1
           memory: 1Gi
-        limits:
-          cpu: 1
-          memory: 1Gi
     frontend:
       resources:
         requests:
           cpu: 0.5
-          memory: 1024Mi
-        limits:
-          cpu: 0.5
-          memory: 1024Mi
+          memory: 1Gi
   gle:
     resources:
       requests:
-        cpu: 0.2
-        memory: 1Gi
-      limits:
         cpu: 0.2
         memory: 1Gi
 

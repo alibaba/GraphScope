@@ -176,7 +176,7 @@ class LocalLauncher(AbstractLauncher):
         )
 
     def create_interactive_instance(
-        self, object_id: int, schema_path: str, params: dict
+        self, object_id: int, schema_path: str, params: dict, with_cypher: bool
     ):
         try:
             logger.info("Java version: %s", get_java_version())
@@ -201,6 +201,7 @@ class LocalLauncher(AbstractLauncher):
 
         params = "\n".join([f"{k}={v}" for k, v in params.items()])
         params = base64.b64encode(params.encode("utf-8")).decode("utf-8")
+        neo4j_disabled = "true" if not with_cypher else "false"
 
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
@@ -214,6 +215,7 @@ class LocalLauncher(AbstractLauncher):
             str(self._interactive_port + 2 * num_workers),  # frontend gremlin port
             str(self._interactive_port + 2 * num_workers + 1),  # frontend cypher port
             self.vineyard_socket,
+            neo4j_disabled,
             params,
         ]
         logger.info("Create GIE instance with command: %s", " ".join(cmd))

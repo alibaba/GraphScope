@@ -90,7 +90,7 @@ class AbstractLauncher(metaclass=ABCMeta):
 
     @abstractmethod
     def create_interactive_instance(
-        self, object_id: int, schema_path: str, params: dict
+        self, object_id: int, schema_path: str, params: dict, with_cypher: bool
     ):
         pass
 

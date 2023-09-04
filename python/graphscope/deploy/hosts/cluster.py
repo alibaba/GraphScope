@@ -75,7 +75,7 @@ class HostsClusterLauncher(Launcher):
             self.base64_encode(self._config.dumps_json()),
         ]
 
-        logger.info("Initializing coordinator with command: %s", " ".join(cmd))
+        # logger.info("Initializing coordinator with command: %s", " ".join(cmd))
 
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "TRUE"
