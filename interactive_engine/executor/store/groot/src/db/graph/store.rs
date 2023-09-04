@@ -396,6 +396,22 @@ impl MultiVersionGraph for GraphStore {
         }
     }
 
+    fn clear_vertex_properties(&self, si: i64, id: i64, label: LabelId, prop_ids: &[PropertyId]) -> GraphResult<()> {
+        self.check_si_guard(si)?;
+        let info = res_unwrap!(self.vertex_manager.get_type(si, label), si, id, label)?;
+        if let Some(data) = self.get_vertex_data(si, id, &info)? {
+            let version = get_codec_version(data);
+            let decoder = info.get_decoder(si, version)?;
+            let mut old = decoder.decode_all(data);
+            clear_props(&mut old, prop_ids);
+            let res = self
+                .do_insert_vertex_data(si, info, id, &old)
+                .map(|_| self.update_si_guard(si));
+            return res_unwrap!(res, clear_vertex_properties, si, id, label);
+        }
+        Ok(())
+    }
+
     fn delete_vertex(&self, si: i64, id: i64, label: LabelId) -> GraphResult<()> {
         self.check_si_guard(si)?;
         let info = res_unwrap!(self.vertex_manager.get_type(si, label), si, id, label)?;
@@ -434,8 +450,8 @@ impl MultiVersionGraph for GraphStore {
             edge_kind
         )?;
         let direction = if forward { EdgeDirection::Out } else { EdgeDirection::In };
-        let data_res = self.get_edge_data(si, id, &info, direction);
-        match res_unwrap!(data_res, insert_update_edge, si, id, edge_kind)? {
+        let data_res = self.get_edge_data(si, id, &info, direction)?;
+        match data_res {
             Some(data) => {
                 let version = get_codec_version(data);
                 let decoder = info.get_decoder(si, version)?;
@@ -453,6 +469,30 @@ impl MultiVersionGraph for GraphStore {
                 res_unwrap!(res, insert_update_edge, si, id, edge_kind)
             }
         }
+    }
+
+    fn clear_edge_properties(&self, si: i64, id: EdgeId, edge_kind: &EdgeKind, forward: bool, prop_ids: &[PropertyId]) -> GraphResult<()> {
+        self.check_si_guard(si)?;
+        self.check_si_guard(si)?;
+        let info = res_unwrap!(
+            self.edge_manager.get_edge_kind(si, edge_kind),
+            insert_update_edge,
+            si,
+            id,
+            edge_kind
+        )?;
+        let direction = if forward { EdgeDirection::Out } else { EdgeDirection::In };
+        if let Some(data) = self.get_edge_data(si, id, &info, direction)? {
+            let version = get_codec_version(data);
+            let decoder = info.get_decoder(si, version)?;
+            let mut old = decoder.decode_all(data);
+            clear_props(&mut old, prop_ids);
+            let res = self
+                .do_insert_edge_data(si, id, info, direction, &old)
+                .map(|_| self.update_si_guard(si));
+            return res_unwrap!(res, clear_edge_properties, si, id, edge_kind);
+        }
+        Ok(())
     }
 
     fn delete_edge(&self, si: i64, id: EdgeId, edge_kind: &EdgeKind, forward: bool) -> GraphResult<()> {
@@ -818,6 +858,12 @@ impl GraphStore {
 fn merge_updates<'a>(old: &mut HashMap<PropertyId, ValueRef<'a>>, updates: &'a dyn PropertyMap) {
     for (prop_id, v) in updates.as_map() {
         old.insert(prop_id, v);
+    }
+}
+
+fn clear_props(old: &mut HashMap<PropertyId, ValueRef>, prop_ids: &[PropertyId]) {
+    for prop_id in prop_ids {
+        old.remove(prop_id);
     }
 }
 

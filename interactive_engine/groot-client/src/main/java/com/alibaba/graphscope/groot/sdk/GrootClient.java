@@ -174,13 +174,11 @@ public class GrootClient {
      * @param vertex vertex that contains label and primary key properties
      */
     public long deleteVertex(Vertex vertex) {
-        WriteRequestPb request = vertex.toWriteRequest(WriteTypePb.DELETE);
-        return submit(request);
+        return modifyVertex(vertex, WriteTypePb.DELETE);
     }
 
     public long deleteVertices(List<Vertex> vertices) {
-        List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, WriteTypePb.DELETE);
-        return submit(requests);
+        return modifyVertex(vertices, WriteTypePb.DELETE);
     }
 
     public void deleteVertex(Vertex vertex, StreamObserver<BatchWriteResponse> callback) {
@@ -189,6 +187,10 @@ public class GrootClient {
 
     public void deleteVertices(List<Vertex> vertices, StreamObserver<BatchWriteResponse> callback) {
         modifyVertex(vertices, callback, WriteTypePb.DELETE);
+    }
+
+    public long clearVertexProperty(Vertex vertex) {
+        return modifyVertex(vertex, WriteTypePb.CLEAR_PROPERTY);
     }
 
     /**
@@ -250,6 +252,11 @@ public class GrootClient {
     public void deleteEdges(List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
         modifyEdge(edges, callback, WriteTypePb.DELETE);
     }
+
+    public long clearEdgeProperty(Edge edge) {
+        return modifyEdge(edge, WriteTypePb.CLEAR_PROPERTY);
+    }
+
 
     /**
      * Commit the realtime write transaction.

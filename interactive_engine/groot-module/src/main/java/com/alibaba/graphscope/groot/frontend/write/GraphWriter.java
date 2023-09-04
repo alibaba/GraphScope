@@ -26,16 +26,14 @@ import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.*;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 public class GraphWriter implements MetricsAgent {
 
@@ -129,6 +127,10 @@ public class GraphWriter implements MetricsAgent {
                 case DELETE_EDGE:
                     addDeleteEdgeOperation(batchBuilder, schema, dataRecord);
                     break;
+                case CLEAR_VERTEX_PROPERTIES:
+                    addClearVertexPropertiesOperation(batchBuilder, schema, dataRecord);
+                case CLEAR_EDGE_PROPERTIES:
+                    addClearEdgePropertiesOperation(batchBuilder, schema, dataRecord);
                 default:
                     throw new IllegalArgumentException(
                             "Invalid operationType [" + operationType + "]");
@@ -192,133 +194,45 @@ public class GraphWriter implements MetricsAgent {
 
     private void addDeleteEdgeOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
-        EdgeId edgeId;
-        EdgeKind edgeKind;
-        EdgeTarget edgeTarget = dataRecord.getEdgeTarget();
-        if (edgeTarget != null) {
-            edgeId = edgeTarget.getEdgeId();
-            edgeKind = edgeTarget.getEdgeKind();
-        } else {
-            EdgeRecordKey edgeRecordKey = dataRecord.getEdgeRecordKey();
-            VertexRecordKey srcVertexRecordKey = edgeRecordKey.getSrcVertexRecordKey();
-            VertexRecordKey dstVertexRecordKey = edgeRecordKey.getDstVertexRecordKey();
-            String label = edgeRecordKey.getLabel();
-            GraphElement edgeDef = schema.getElement(label);
-            GraphElement srcVertexDef = schema.getElement(srcVertexRecordKey.getLabel());
-            GraphElement dstVertexDef = schema.getElement(dstVertexRecordKey.getLabel());
-            int labelId = edgeDef.getLabelId();
-            Map<Integer, PropertyValue> srcVertexPkVals =
-                    parseRawProperties(srcVertexDef, srcVertexRecordKey.getProperties());
-            long srcVertexHashId =
-                    getHashId(srcVertexDef.getLabelId(), srcVertexPkVals, srcVertexDef);
-            Map<Integer, PropertyValue> dstVertexPkVals =
-                    parseRawProperties(dstVertexDef, dstVertexRecordKey.getProperties());
-            long dstVertexHashId =
-                    getHashId(dstVertexDef.getLabelId(), dstVertexPkVals, dstVertexDef);
-            long edgeInnerId = edgeRecordKey.getEdgeInnerId();
-            edgeId =
-                    new EdgeId(
-                            new VertexId(srcVertexHashId),
-                            new VertexId(dstVertexHashId),
-                            edgeInnerId);
-            edgeKind =
-                    EdgeKind.newBuilder()
-                            .setEdgeLabelId(new LabelId(labelId))
-                            .setSrcVertexLabelId(new LabelId(srcVertexDef.getLabelId()))
-                            .setDstVertexLabelId(new LabelId(dstVertexDef.getLabelId()))
-                            .build();
-        }
+        EdgeId   edgeId = getEdgeId(schema, dataRecord);
+        EdgeKind   edgeKind = getEdgeKind(schema, dataRecord);
+
         batchBuilder.addOperation(new DeleteEdgeOperation(edgeId, edgeKind, true));
         batchBuilder.addOperation(new DeleteEdgeOperation(edgeId, edgeKind, false));
     }
 
     private void addUpdateEdgeOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
-        EdgeId edgeId;
-        EdgeKind edgeKind;
-        GraphElement edgeDef;
-        EdgeTarget edgeTarget = dataRecord.getEdgeTarget();
+        EdgeId   edgeId = getEdgeId(schema, dataRecord);
+        EdgeKind   edgeKind = getEdgeKind(schema, dataRecord);
+        GraphElement   edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
+
         Map<String, Object> properties = dataRecord.getProperties();
-        if (edgeTarget != null) {
-            edgeId = edgeTarget.getEdgeId();
-            edgeKind = edgeTarget.getEdgeKind();
-            edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
-        } else {
-            EdgeRecordKey edgeRecordKey = dataRecord.getEdgeRecordKey();
-            VertexRecordKey srcVertexRecordKey = edgeRecordKey.getSrcVertexRecordKey();
-            VertexRecordKey dstVertexRecordKey = edgeRecordKey.getDstVertexRecordKey();
-            String label = edgeRecordKey.getLabel();
-            edgeDef = schema.getElement(label);
-            GraphElement srcVertexDef = schema.getElement(srcVertexRecordKey.getLabel());
-            GraphElement dstVertexDef = schema.getElement(dstVertexRecordKey.getLabel());
-            int labelId = edgeDef.getLabelId();
-            Map<Integer, PropertyValue> srcVertexPkVals =
-                    parseRawProperties(srcVertexDef, srcVertexRecordKey.getProperties());
-            long srcVertexHashId =
-                    getHashId(srcVertexDef.getLabelId(), srcVertexPkVals, srcVertexDef);
-            Map<Integer, PropertyValue> dstVertexPkVals =
-                    parseRawProperties(dstVertexDef, dstVertexRecordKey.getProperties());
-            long dstVertexHashId =
-                    getHashId(dstVertexDef.getLabelId(), dstVertexPkVals, dstVertexDef);
-            long edgeInnerId = edgeRecordKey.getEdgeInnerId();
-            edgeId =
-                    new EdgeId(
-                            new VertexId(srcVertexHashId),
-                            new VertexId(dstVertexHashId),
-                            edgeInnerId);
-            edgeKind =
-                    EdgeKind.newBuilder()
-                            .setEdgeLabelId(new LabelId(labelId))
-                            .setSrcVertexLabelId(new LabelId(srcVertexDef.getLabelId()))
-                            .setDstVertexLabelId(new LabelId(dstVertexDef.getLabelId()))
-                            .build();
-        }
+
         Map<Integer, PropertyValue> propertyVals = parseRawProperties(edgeDef, properties);
         batchBuilder.addOperation(new UpdateEdgeOperation(edgeId, edgeKind, propertyVals, true));
         batchBuilder.addOperation(new UpdateEdgeOperation(edgeId, edgeKind, propertyVals, false));
     }
 
+
+    private void addClearEdgePropertiesOperation(
+            OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
+        EdgeId   edgeId = getEdgeId(schema, dataRecord);
+        EdgeKind   edgeKind = getEdgeKind(schema, dataRecord);
+        GraphElement   edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
+        List<Integer> propertyIds = getNonPrimaryKeyIds(edgeDef, dataRecord.getProperties());
+        batchBuilder.addOperation(new ClearEdgePropertyOperation(edgeId, edgeKind, propertyIds, true));
+        batchBuilder.addOperation(new ClearEdgePropertyOperation(edgeId, edgeKind, propertyIds, false));
+    }
+
     private void addOverwriteEdgeOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
-        EdgeId edgeId;
-        EdgeKind edgeKind;
-        GraphElement edgeDef;
-        EdgeTarget edgeTarget = dataRecord.getEdgeTarget();
+        EdgeId   edgeId = getEdgeId(schema, dataRecord);
+        EdgeKind   edgeKind = getEdgeKind(schema, dataRecord);
+        GraphElement   edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
+
         Map<String, Object> properties = dataRecord.getProperties();
-        if (edgeTarget != null) {
-            edgeId = edgeTarget.getEdgeId();
-            edgeKind = edgeTarget.getEdgeKind();
-            edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
-        } else {
-            EdgeRecordKey edgeRecordKey = dataRecord.getEdgeRecordKey();
-            VertexRecordKey srcVertexRecordKey = edgeRecordKey.getSrcVertexRecordKey();
-            VertexRecordKey dstVertexRecordKey = edgeRecordKey.getDstVertexRecordKey();
-            String label = edgeRecordKey.getLabel();
-            edgeDef = schema.getElement(label);
-            GraphElement srcVertexDef = schema.getElement(srcVertexRecordKey.getLabel());
-            GraphElement dstVertexDef = schema.getElement(dstVertexRecordKey.getLabel());
-            int labelId = edgeDef.getLabelId();
-            Map<Integer, PropertyValue> srcVertexPkVals =
-                    parseRawProperties(srcVertexDef, srcVertexRecordKey.getProperties());
-            long srcVertexHashId =
-                    getHashId(srcVertexDef.getLabelId(), srcVertexPkVals, srcVertexDef);
-            Map<Integer, PropertyValue> dstVertexPkVals =
-                    parseRawProperties(dstVertexDef, dstVertexRecordKey.getProperties());
-            long dstVertexHashId =
-                    getHashId(dstVertexDef.getLabelId(), dstVertexPkVals, dstVertexDef);
-            long edgeInnerId = this.edgeIdGenerator.getNextId();
-            edgeId =
-                    new EdgeId(
-                            new VertexId(srcVertexHashId),
-                            new VertexId(dstVertexHashId),
-                            edgeInnerId);
-            edgeKind =
-                    EdgeKind.newBuilder()
-                            .setEdgeLabelId(new LabelId(labelId))
-                            .setSrcVertexLabelId(new LabelId(srcVertexDef.getLabelId()))
-                            .setDstVertexLabelId(new LabelId(dstVertexDef.getLabelId()))
-                            .build();
-        }
+
         Map<Integer, PropertyValue> propertyVals = parseRawProperties(edgeDef, properties);
         batchBuilder.addOperation(new OverwriteEdgeOperation(edgeId, edgeKind, propertyVals, true));
         batchBuilder.addOperation(
@@ -333,7 +247,7 @@ public class GraphWriter implements MetricsAgent {
         int labelId = vertexDef.getLabelId();
         Map<Integer, PropertyValue> pkVals =
                 parseRawProperties(vertexDef, vertexRecordKey.getProperties());
-        long hashId = getHashId(labelId, pkVals, vertexDef);
+        long hashId = getPrimaryKeysHashId(labelId, pkVals, vertexDef);
         batchBuilder.addOperation(
                 new DeleteVertexOperation(new VertexId(hashId), new LabelId(labelId)));
     }
@@ -345,14 +259,32 @@ public class GraphWriter implements MetricsAgent {
         String label = vertexRecordKey.getLabel();
         GraphElement vertexDef = schema.getElement(label);
         int labelId = vertexDef.getLabelId();
-        Map<Integer, PropertyValue> pkVals =
-                parseRawProperties(vertexDef, vertexRecordKey.getProperties());
+        Map<Integer, PropertyValue> pkVals = parseRawProperties(vertexDef, vertexRecordKey.getProperties());
         Map<Integer, PropertyValue> propertyVals = parseRawProperties(vertexDef, properties);
         propertyVals.putAll(pkVals);
-        long hashId = getHashId(labelId, pkVals, vertexDef);
+        long hashId = getPrimaryKeysHashId(labelId, pkVals, vertexDef);
         batchBuilder.addOperation(
                 new UpdateVertexOperation(
                         new VertexId(hashId), new LabelId(labelId), propertyVals));
+    }
+
+
+    private void addClearVertexPropertiesOperation(
+            OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
+        VertexRecordKey vertexRecordKey = dataRecord.getVertexRecordKey();
+        String label = vertexRecordKey.getLabel();
+        GraphElement vertexDef = schema.getElement(label);
+        int labelId = vertexDef.getLabelId();
+        Map<String, Object> pkProperties = vertexRecordKey.getProperties();
+        Map<Integer, PropertyValue> pkVals = parseRawProperties(vertexDef, pkProperties);
+        long hashId = getPrimaryKeysHashId(labelId, pkVals, vertexDef);
+
+        Map<String, Object> properties = dataRecord.getProperties();
+        properties.putAll(pkProperties);
+        List<Integer> propertyIds = getNonPrimaryKeyIds(vertexDef, properties);
+        batchBuilder.addOperation(
+                new ClearVertexPropertyOperation(
+                        new VertexId(hashId), new LabelId(labelId), propertyIds));
     }
 
     private void addOverwriteVertexOperation(
@@ -362,11 +294,10 @@ public class GraphWriter implements MetricsAgent {
         String label = vertexRecordKey.getLabel();
         GraphElement vertexDef = schema.getElement(label);
         int labelId = vertexDef.getLabelId();
-        Map<Integer, PropertyValue> pkVals =
-                parseRawProperties(vertexDef, vertexRecordKey.getProperties());
+        Map<Integer, PropertyValue> pkVals = parseRawProperties(vertexDef, vertexRecordKey.getProperties());
         Map<Integer, PropertyValue> propertyVals = parseRawProperties(vertexDef, properties);
         propertyVals.putAll(pkVals);
-        long hashId = getHashId(labelId, propertyVals, vertexDef);
+        long hashId = getPrimaryKeysHashId(labelId, propertyVals, vertexDef);
         batchBuilder.addOperation(
                 new OverwriteVertexOperation(
                         new VertexId(hashId), new LabelId(labelId), propertyVals));
@@ -396,15 +327,82 @@ public class GraphWriter implements MetricsAgent {
         return res;
     }
 
-    public static long getHashId(
-            int labelId, Map<Integer, PropertyValue> pkVals, GraphElement graphElement) {
+    private EdgeId getEdgeId(GraphSchema schema, DataRecord dataRecord) {
+        EdgeTarget edgeTarget = dataRecord.getEdgeTarget();
+        if (edgeTarget != null) {
+            return edgeTarget.getEdgeId();
+        } else {
+            EdgeRecordKey edgeRecordKey = dataRecord.getEdgeRecordKey();
+
+            VertexRecordKey srcVertexRecordKey = edgeRecordKey.getSrcVertexRecordKey();
+            VertexRecordKey dstVertexRecordKey = edgeRecordKey.getDstVertexRecordKey();
+
+            GraphElement srcVertexDef = schema.getElement(srcVertexRecordKey.getLabel());
+            GraphElement dstVertexDef = schema.getElement(dstVertexRecordKey.getLabel());
+            Map<Integer, PropertyValue> srcVertexPkVals =
+                    parseRawProperties(srcVertexDef, srcVertexRecordKey.getProperties());
+            long srcVertexHashId =
+                    getPrimaryKeysHashId(srcVertexDef.getLabelId(), srcVertexPkVals, srcVertexDef);
+            Map<Integer, PropertyValue> dstVertexPkVals =
+                    parseRawProperties(dstVertexDef, dstVertexRecordKey.getProperties());
+            long dstVertexHashId =
+                    getPrimaryKeysHashId(dstVertexDef.getLabelId(), dstVertexPkVals, dstVertexDef);
+            long edgeInnerId = edgeRecordKey.getEdgeInnerId();
+            return new EdgeId(
+                    new VertexId(srcVertexHashId),
+                    new VertexId(dstVertexHashId),
+                    edgeInnerId);
+        }
+    }
+
+    private EdgeKind getEdgeKind(GraphSchema schema, DataRecord dataRecord) {
+        EdgeTarget edgeTarget = dataRecord.getEdgeTarget();
+        if (edgeTarget != null) {
+            return edgeTarget.getEdgeKind();
+        } else {
+            EdgeRecordKey edgeRecordKey = dataRecord.getEdgeRecordKey();
+            String label = edgeRecordKey.getLabel();
+            GraphElement edgeDef = schema.getElement(label);
+
+            VertexRecordKey srcVertexRecordKey = edgeRecordKey.getSrcVertexRecordKey();
+            VertexRecordKey dstVertexRecordKey = edgeRecordKey.getDstVertexRecordKey();
+
+            GraphElement srcVertexDef = schema.getElement(srcVertexRecordKey.getLabel());
+            GraphElement dstVertexDef = schema.getElement(dstVertexRecordKey.getLabel());
+            int labelId = edgeDef.getLabelId();
+
+            return EdgeKind.newBuilder()
+                    .setEdgeLabelId(new LabelId(labelId))
+                    .setSrcVertexLabelId(new LabelId(srcVertexDef.getLabelId()))
+                    .setDstVertexLabelId(new LabelId(dstVertexDef.getLabelId()))
+                    .build();
+        }
+    }
+
+    public static long getPrimaryKeysHashId(
+            int labelId, Map<Integer, PropertyValue> properties, GraphElement graphElement) {
         List<GraphProperty> pklist = graphElement.getPrimaryKeyList();
         List<byte[]> pks = new ArrayList<>(pklist.size());
         for (GraphProperty pk : pklist) {
-            byte[] valBytes = pkVals.get(pk.getId()).getValBytes();
+            byte[] valBytes = properties.get(pk.getId()).getValBytes();
             pks.add(valBytes);
         }
         return PkHashUtils.hash(labelId, pks);
+    }
+
+    public static List<Integer> getNonPrimaryKeyIds(GraphElement graphElement, Map<String, Object> properties) {
+        List<GraphProperty> pklist = graphElement.getPrimaryKeyList();
+        Set<String> pkNames = pklist.stream().map(GraphProperty::getName).collect(Collectors.toSet());
+        List<Integer> ids = new ArrayList<>();
+        properties.forEach(
+                (name, val) -> {
+                    if (!pkNames.contains(name)) {
+                        int id = graphElement.getProperty(name).getId();
+                        ids.add(id);
+                    }
+                }
+        );
+        return ids;
     }
 
     @Override
