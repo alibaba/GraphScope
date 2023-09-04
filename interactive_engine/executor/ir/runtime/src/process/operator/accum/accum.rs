@@ -27,7 +27,7 @@ use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use crate::error::{FnExecError, FnExecResult, FnGenError, FnGenResult};
 use crate::process::entry::{CollectionEntry, DynEntry, Entry};
 use crate::process::operator::accum::accumulator::{
-    Accumulator, Count, DistinctCount, Maximum, Minimum, Sum, ToList, ToSet,
+    Accumulator, Count, DistinctCount, First, Maximum, Minimum, Sum, ToList, ToSet,
 };
 use crate::process::operator::accum::AccumFactoryGen;
 use crate::process::operator::TagKey;
@@ -43,6 +43,7 @@ pub enum EntryAccumulator {
     ToDistinctCount(DistinctCount<DynEntry>),
     ToSum(Sum<Primitives>),
     ToAvg(Sum<Primitives>, Count<()>),
+    ToFirst(First<DynEntry>),
 }
 
 /// Accumulator for Record, including multiple accumulators for entries(columns) in Record.
@@ -110,6 +111,7 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                     sum.accum(primitive)?;
                     count.accum(())
                 }
+                EntryAccumulator::ToFirst(first) => first.accum(next),
             }
         } else {
             Ok(())
@@ -164,6 +166,9 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                     Ok(DynEntry::new(Object::None))
                 }
             }
+            EntryAccumulator::ToFirst(first) => Ok(first
+                .finalize()?
+                .unwrap_or(DynEntry::new(Object::None))),
         }
     }
 }
@@ -193,10 +198,7 @@ impl AccumFactoryGen for pb::GroupBy {
                 Err(ParsePbError::from("accum value alias is missing in MultiAccum"))?
             }
             let entry_accumulator = match agg_kind {
-                Aggregate::First => {
-                    //not implemented
-                    Err(FnGenError::unsupported_error("aggregate `First` is not implemented"))?
-                }
+                Aggregate::First => EntryAccumulator::ToFirst(First { first: None }),
                 Aggregate::Count => EntryAccumulator::ToCount(Count { value: 0, _ph: Default::default() }),
                 Aggregate::ToList => EntryAccumulator::ToList(ToList { inner: vec![] }),
                 Aggregate::Min => EntryAccumulator::ToMin(Minimum { min: None }),
@@ -255,6 +257,10 @@ impl Encode for EntryAccumulator {
                 sum.write_to(writer)?;
                 count.write_to(writer)?;
             }
+            EntryAccumulator::ToFirst(first) => {
+                writer.write_u8(8)?;
+                first.write_to(writer)?;
+            }
         }
         Ok(())
     }
@@ -296,6 +302,10 @@ impl Decode for EntryAccumulator {
                 let sum = <Sum<Primitives>>::read_from(reader)?;
                 let count = <Count<()>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToAvg(sum, count))
+            }
+            8 => {
+                let first = <First<DynEntry>>::read_from(reader)?;
+                Ok(EntryAccumulator::ToFirst(first))
             }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
@@ -669,5 +679,25 @@ mod tests {
     fn avg_with_none_test() {
         fold_with_none_record_test(7);
         fold_with_none_vertex_prop_record_test(7);
+    }
+
+    // g.V().fold().first()
+    #[test]
+    fn first_test() {
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 8, // first
+            alias: Some(TAG_A.into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(init_source(), fold_opr_pb);
+        let mut fold_result = DynEntry::new(Object::None);
+        let expected_result = DynEntry::new(init_vertex1());
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(TAG_A)) {
+                fold_result = entry.clone();
+            }
+        }
+        assert_eq!(fold_result, expected_result);
     }
 }
