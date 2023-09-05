@@ -308,7 +308,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let srouce_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -335,7 +335,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C, TAG_D]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -355,6 +355,8 @@ mod test {
     //    match(__.as('a').out("knows").as('b'))
     // )
     fn init_match_case3_request() -> JobRequest {
+        init_schema();
+
         let source = pb::Scan::default();
 
         let pattern_0 = get_pattern_case3();
@@ -365,7 +367,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -393,6 +395,8 @@ mod test {
     //    match(__.as('a').out("knows").as('b'))
     // )
     fn init_match_case4_request() -> JobRequest {
+        init_schema();
+
         let source = pb::Scan::default();
 
         let in_edge = get_in_edge();
@@ -405,7 +409,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -440,6 +444,8 @@ mod test {
     // first match follows the "in()" step
     // second match follows the "V()"(source operator) step
     fn init_match_case5_request() -> JobRequest {
+        init_schema();
+
         let source = pb::Scan::default();
 
         let in_edge = get_in_edge();
@@ -452,7 +458,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -485,6 +491,8 @@ mod test {
     //    match(__.as('a').out().as('b'))
     // )
     fn init_match_case6_request() -> JobRequest {
+        init_schema();
+
         let source = pb::Scan::default();
 
         let pattern_0 = get_pattern_case5();
@@ -495,7 +503,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -523,6 +531,8 @@ mod test {
     //    match(__.as('a').out().as('b'))
     // )
     fn init_match_case7_request() -> JobRequest {
+        init_schema();
+
         let source = get_person_scan();
 
         let pattern_0 = get_pattern_case5();
@@ -533,7 +543,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -561,6 +571,8 @@ mod test {
     //    match(__.as('a').out().as('b'))
     // )
     fn init_match_case8_request() -> JobRequest {
+        init_schema();
+
         let source = get_person_scan();
 
         let pattern_0 = get_pattern_case3();
@@ -571,7 +583,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
@@ -599,6 +611,8 @@ mod test {
     //    match(__.as('a').out("knows").as('b'))
     // )
     fn init_match_case9_request() -> JobRequest {
+        init_schema();
+
         let source = get_person_scan();
 
         let pattern_0 = get_pattern_case5();
@@ -609,7 +623,7 @@ mod test {
 
         let sink = get_sink(vec![TAG_A, TAG_B, TAG_C]);
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let source_id = plan
             .append_operator_as_node(source.into(), vec![0])
             .unwrap();
