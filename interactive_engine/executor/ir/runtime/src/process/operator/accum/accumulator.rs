@@ -336,3 +336,45 @@ impl<D: Decode + Eq + Hash> Decode for DistinctCount<D> {
         Ok(DistinctCount { inner })
     }
 }
+
+#[derive(Clone)]
+pub struct First<D> {
+    pub first: Option<D>,
+}
+
+impl<D: Debug> Debug for First<D> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "first={:?}", self.first)
+    }
+}
+
+unsafe impl<D: Send> Send for First<D> {}
+
+impl<D: Debug + Send + 'static> Accumulator<D, Option<D>> for First<D> {
+    fn accum(&mut self, next: D) -> FnExecResult<()> {
+        if self.first.is_none() {
+            self.first = Some(next);
+        } else {
+            // do nothing
+        }
+        Ok(())
+    }
+
+    fn finalize(&mut self) -> FnExecResult<Option<D>> {
+        Ok(self.first.take())
+    }
+}
+
+impl<D: Encode> Encode for First<D> {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        self.first.write_to(writer)?;
+        Ok(())
+    }
+}
+
+impl<D: Decode> Decode for First<D> {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let first = <Option<D>>::read_from(reader)?;
+        Ok(First { first })
+    }
+}

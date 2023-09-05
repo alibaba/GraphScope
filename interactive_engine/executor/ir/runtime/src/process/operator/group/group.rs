@@ -430,4 +430,37 @@ mod tests {
         }
         assert_eq!(group_result, expected_result);
     }
+
+    // g.V().group.by("name").first() with key as 'a', value as 'b'
+    #[test]
+    fn group_first_test() {
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 8, // First
+            alias: Some(TAG_B.into()),
+        };
+        let key_alias = pb::group_by::KeyAlias {
+            key: Some(common_pb::Variable::from("@.name".to_string())),
+            alias: Some(TAG_A.into()),
+        };
+        let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
+        let mut result = group_test(group_opr_pb);
+        let mut group_result = vec![];
+        let mut expected_result: Vec<(Object, DynEntry)> = vec![
+            (object!("marko"), DynEntry::new(init_vertex1())),
+            (object!("vadas"), DynEntry::new(init_vertex2())),
+        ];
+        while let Some(Ok(result)) = result.next() {
+            let key = result
+                .get(Some(TAG_A))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            let val = result.get(Some(TAG_B)).unwrap();
+            group_result.push((key.clone(), val.clone()));
+        }
+        expected_result.sort_by(|o1, o2| o1.0.cmp(&o2.0));
+        group_result.sort_by(|o1, o2| o1.0.cmp(&o2.0));
+        assert_eq!(group_result, expected_result);
+    }
 }
