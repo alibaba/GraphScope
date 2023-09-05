@@ -558,6 +558,11 @@ class EdgeRecordKey:
 
 We also have a java sdk for realtime write and schema management.
 
+APIs including:
+  - Insert / delete / update vertices
+  - Insert / delete / update edges
+  - Clear properties of vertices or edges by property name
+
 Refer to [RealtimeWrite.java](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/groot-client/src/main/java/com/alibaba/graphscope/groot/sdk/example/RealtimeWrite.java) for examples.
 
 ## Uninstalling and Restarting

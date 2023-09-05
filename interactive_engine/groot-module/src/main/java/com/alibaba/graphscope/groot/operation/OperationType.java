@@ -34,7 +34,11 @@ public enum OperationType {
     REMOVE_EDGE_KIND(12),
 
     PREPARE_DATA_LOAD(13),
-    COMMIT_DATA_LOAD(14);
+    COMMIT_DATA_LOAD(14),
+
+    CLEAR_VERTEX_PROPERTIES(15),
+
+    CLEAR_EDGE_PROPERTIES(16);
 
     private final byte b;
 
