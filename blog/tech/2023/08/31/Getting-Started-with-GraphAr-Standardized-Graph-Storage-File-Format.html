@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Getting Started with GraphAr: Standardized Graph Storage File Format</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2023-08-31">31 Aug 2023</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2023-08-31">31 Aug 2023</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Getting Started with GraphAr: Standardized Graph Storage File Format</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2023-08-31-title-picture.jpg" alt="graphar-title" />
+<a href="https://graphscope.io/blog/tech/2023/08/29/GraphAr-A-Standard-Data-File-Format-for-Graph-Data-Storage-and-Retrieval">GraphAr</a> is an open source, standard data file format for graph data storage and retrieval. It defines a standardized file format for graph data, and provides a set of interfaces for generating, accessing, and transforming these formatted files.
+This post is a quick guide that explains how to work with GraphAr, using the C++ SDK it provides.</p>
+
+<h3 id="what-is-graphar">What is GraphAr?</h3>
+
+<p>GraphAr (Graph Archive, abbreviated as GAR) defines a standardized, system-independent file format for graph data and provides a set of interfaces for generating, accessing, and converting these formatted files. GraphAr can help various graph computing applications or existing systems to conveniently build and access graph data. It can be used as a direct data source for graph computing applications, as well as for importing/exporting and persistently storing graph data, reducing the overhead of collaboration between various graph systems. The following figure shows the scenario of using GraphAr as a graph data archiving format in typical business: with GraphAr, users can quickly assemble a graph with the required vertex and edge data for subsequent processing, such as GraphScope graph analysis tasks.</p>
+
+<p><img src="/blog/assets/images/2023-08-31-graphar-business.jpg" alt="graphar-business" /></p>
+<center> Figure 1: Typical business scenario using GraphAr. </center>
+<p><br /></p>
+
+<p>GraphAr C++ uses CMake as a build configuration system. To install the GraphAr C++ SDK from source code, you need to install the following dependencies:</p>
+<ul>
+  <li>A C++17-enabled compiler. On Linux, gcc 7.1 and higher should be sufficient. For MacOS, at least clang 5 is required</li>
+  <li>CMake 3.5 or higher</li>
+  <li>On Linux and macOS, make build utilities</li>
+  <li>curl-devel with SSL (Linux) or curl (macOS), for s3 filesystem support</li>
+</ul>
+
+<p>To set up the environment and compile/install the GraphAr C++ SDK from source code, you can follow these steps:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># download the source code</span>
+<span class="nv">$ </span>git clone https://github.com/alibaba/GraphAr.git
+
+<span class="c"># update submodule</span>
+<span class="nv">$ </span>git submodule update <span class="nt">--init</span>
+
+<span class="c"># compile</span>
+<span class="nv">$ </span><span class="nb">cd </span>GraphAr/cpp
+<span class="nv">$ </span><span class="nb">mkdir </span>build-release
+<span class="nv">$ </span><span class="nb">cd </span>build-release
+<span class="nv">$ </span>cmake ..
+<span class="nv">$ </span>make <span class="nt">-j</span><span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span>
+
+<span class="c"># install GraphAr C++ SDK</span>
+<span class="nv">$ </span><span class="nb">sudo </span>make <span class="nb">install</span>
+</code></pre></div></div>
+
+<p>More details about compiling and installing GraphAr C++ SDK can be found in the <a href="https://github.com/alibaba/GraphAr/tree/main/cpp">documentation</a>.</p>
+
+<h3 id="defining-information-files">Defining Information Files</h3>
+
+<p>GraphAr uses a group of Yaml files to save the meta information for a graph.
+The graph information file defines the most basic information of a graph includes its name, the root directory path of the data files, the vertex information and edge information files it contains, and the version of GraphAr. 
+The vertex information file and edge information file define the information of the vertex and edge types in the graph, respectively.
+For example, the file “ldbc_sample.graph.yml” defines an example graph named “ldbc_sample”, which includes one type of vertices (“person”) and one type of edges (“person knows person”).
+The three information files are shown below:</p>
+
+<ul>
+  <li><em>ldbc_sample.graph.yml</em></li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">name</span><span class="pi">:</span> <span class="s">ldbc_sample</span>
+<span class="na">vertices</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">person.vertex.yml</span>
+<span class="na">edges</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">person_knows_person.edge.yml</span>
+<span class="na">version</span><span class="pi">:</span> <span class="s">gar/v1</span>
+</code></pre></div></div>
+
+<ul>
+  <li><em>person.vertex.yml</em></li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">label</span><span class="pi">:</span> <span class="s">person</span>
+<span class="na">chunk_size</span><span class="pi">:</span> <span class="m">100</span>
+<span class="na">prefix</span><span class="pi">:</span> <span class="s">vertex/person/</span>
+<span class="na">property_groups</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">properties</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">id</span>
+        <span class="na">data_type</span><span class="pi">:</span> <span class="s">int64</span>
+        <span class="na">is_primary</span><span class="pi">:</span> <span class="kc">true</span>
+    <span class="na">file_type</span><span class="pi">:</span> <span class="s">parquet</span>
+  <span class="pi">-</span> <span class="na">properties</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">firstName</span>
+        <span class="na">data_type</span><span class="pi">:</span> <span class="s">string</span>
+        <span class="na">is_primary</span><span class="pi">:</span> <span class="kc">false</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">lastName</span>
+        <span class="na">data_type</span><span class="pi">:</span> <span class="s">string</span>
+        <span class="na">is_primary</span><span class="pi">:</span> <span class="kc">false</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">gender</span>
+        <span class="na">data_type</span><span class="pi">:</span> <span class="s">string</span>
+        <span class="na">is_primary</span><span class="pi">:</span> <span class="kc">false</span>
+    <span class="na">file_type</span><span class="pi">:</span> <span class="s">parquet</span>
+<span class="na">version</span><span class="pi">:</span> <span class="s">gar/v1</span>
+</code></pre></div></div>
+
+<ul>
+  <li><em>person_knows_person.edge.yml</em></li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">src_label</span><span class="pi">:</span> <span class="s">person</span>
+<span class="na">edge_label</span><span class="pi">:</span> <span class="s">knows</span>
+<span class="na">dst_label</span><span class="pi">:</span> <span class="s">person</span>
+<span class="na">chunk_size</span><span class="pi">:</span> <span class="m">1024</span>
+<span class="na">src_chunk_size</span><span class="pi">:</span> <span class="m">100</span>
+<span class="na">dst_chunk_size</span><span class="pi">:</span> <span class="m">100</span>
+<span class="na">directed</span><span class="pi">:</span> <span class="kc">false</span>
+<span class="na">prefix</span><span class="pi">:</span> <span class="s">edge/person_knows_person/</span>
+<span class="na">adj_lists</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">ordered</span><span class="pi">:</span> <span class="kc">true</span>
+    <span class="na">aligned_by</span><span class="pi">:</span> <span class="s">src</span>
+    <span class="na">file_type</span><span class="pi">:</span> <span class="s">parquet</span>
+    <span class="na">property_groups</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">properties</span><span class="pi">:</span>
+          <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">creationDate</span>
+            <span class="na">data_type</span><span class="pi">:</span> <span class="s">string</span>
+            <span class="na">is_primary</span><span class="pi">:</span> <span class="kc">false</span>
+        <span class="na">file_type</span><span class="pi">:</span> <span class="s">parquet</span>
+<span class="na">version</span><span class="pi">:</span> <span class="s">gar/v1</span>
+</code></pre></div></div>
+
+<p>GraphAr stores the actual graph data in files in the specified directory, following the format defined in the information files. Each data chunk is stored in a separate file, which can be in the ORC, Parquet, or CSV format. The data files for the graphs described in the three Yaml files can be found in the <a href="https://github.com/GraphScope/gar-test/tree/main/ldbc_sample/parquet">GraphAr test data</a>. For more information on the definition of the GraphAr file format, please refer to the <a href="https://alibaba.github.io/GraphAr/user-guide/file-format.html">GraphAr File Format Introduction</a>.</p>
+
+<h3 id="using-graphar-c-sdk">Using GraphAr C++ SDK</h3>
+
+<h4 id="construct-information">Construct Information</h4>
+
+<p>The metadata of a graph can be constructed easily through reading the already existed information files, as the following code illustrates:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">"gar/graph_info.h"</span><span class="cp">
+</span>
+<span class="c1">// construct graph info from yaml file</span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">path</span> <span class="o">=</span> <span class="s">"/tesing/ldbc_sample.graph.yml"</span><span class="p">;</span> <span class="c1">// yaml file path</span>
+<span class="k">auto</span> <span class="n">graph_info</span> <span class="o">=</span> <span class="n">GraphArchive</span><span class="o">::</span><span class="n">GraphInfo</span><span class="o">::</span><span class="n">Load</span><span class="p">(</span><span class="n">path</span><span class="p">).</span><span class="n">value</span><span class="p">();</span>
+
+<span class="c1">// get vertex info</span>
+<span class="k">auto</span> <span class="n">maybe_vertex_info</span> <span class="o">=</span> <span class="n">graph_info</span><span class="p">.</span><span class="n">GetVertexInfo</span><span class="p">(</span><span class="s">"person"</span><span class="p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">maybe_vertex_info</span><span class="p">.</span><span class="n">status</span><span class="p">().</span><span class="n">ok</span><span class="p">()))</span> <span class="p">{</span>
+  <span class="k">auto</span> <span class="n">vertex_info</span> <span class="o">=</span> <span class="n">maybe_vertex_info</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
+  <span class="c1">// ...</span>
+<span class="p">}</span>
+
+<span class="c1">// get edge info</span>
+<span class="k">auto</span> <span class="n">maybe_edge_info</span> <span class="o">=</span> <span class="n">graph_info</span><span class="p">.</span><span class="n">GetEdgeInfo</span><span class="p">(</span><span class="s">"person"</span><span class="p">,</span> <span class="s">"knows"</span><span class="p">,</span> <span class="s">"person"</span><span class="p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">maybe_edge_info</span><span class="p">.</span><span class="n">status</span><span class="p">().</span><span class="n">ok</span><span class="p">()))</span> <span class="p">{</span>
+  <span class="k">auto</span> <span class="n">edge_info</span> <span class="o">=</span> <span class="n">maybe_vertex_info</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
+  <span class="c1">// ...</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="reading-from-graphar">Reading from GraphAr</h4>
+
+<p>GraphAr supports the flexible reading of graph data, e.g., allowing to read data of a single vertex, a vertex chunk, or all vertices with a specific label. In addition, necessary property groups can be selected to read and avoid reading all properties from the files. Furthermore, it provides convenient and flexible access to adjList, offset and property chunks for edges.</p>
+
+<p>As a simple case, the following example shows how to read all vertices with label “person” of the graph defined by “graph_info” and output the values of “id” and “firstName” for each vertex.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">"gar/graph.h"</span><span class="cp">
+</span>
+<span class="k">auto</span><span class="o">&amp;</span> <span class="n">vertices</span> <span class="o">=</span> <span class="n">GraphArchive</span><span class="o">::</span><span class="n">ConstructVerticesCollection</span><span class="p">(</span><span class="n">graph_info</span><span class="p">,</span> <span class="s">"person"</span><span class="p">).</span><span class="n">value</span><span class="p">();</span>
+<span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="n">it</span> <span class="o">=</span> <span class="n">vertices</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span> <span class="n">it</span> <span class="o">!=</span> <span class="n">vertices</span><span class="p">.</span><span class="n">end</span><span class="p">();</span> <span class="o">++</span><span class="n">it</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">auto</span> <span class="n">vertex</span> <span class="o">=</span> <span class="o">*</span><span class="n">it</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"firstName= "</span>
+            <span class="o">&lt;&lt;</span> <span class="n">vertex</span><span class="p">.</span><span class="n">property</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">(</span><span class="s">"firstName"</span><span class="p">).</span><span class="n">value</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The next example reads all edges with label “person_knows_person” from the above graph and outputs the end vertices for each edge.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">auto</span> <span class="n">expect</span> <span class="o">=</span> <span class="n">GraphArchive</span><span class="o">::</span><span class="n">ConstructEdgesCollection</span><span class="p">(</span>
+                  <span class="n">graph_info</span><span class="p">,</span> <span class="s">"person"</span><span class="p">,</span> <span class="s">"konws"</span> <span class="s">"person"</span><span class="p">,</span>
+                  <span class="n">GraphArchive</span><span class="o">::</span><span class="n">AdjListType</span><span class="o">::</span><span class="n">ordered_by_source</span><span class="p">)</span>
+                  <span class="p">.</span><span class="n">value</span><span class="p">();</span>
+<span class="k">auto</span><span class="o">&amp;</span> <span class="n">edges</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">get</span><span class="o">&lt;</span><span class="n">GraphArchive</span><span class="o">::</span><span class="n">EdgesCollection</span><span class="o">&lt;</span>
+    <span class="n">GraphArchive</span><span class="o">::</span><span class="n">AdjListType</span><span class="o">::</span><span class="n">ordered_by_source</span><span class="o">&gt;&gt;</span><span class="p">(</span><span class="n">expect</span><span class="p">.</span><span class="n">value</span><span class="p">());</span>
+
+<span class="k">auto</span> <span class="n">vertex_index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// the index of the vertex whose edges are to be read</span>
+<span class="k">auto</span> <span class="n">it</span> <span class="o">=</span> <span class="n">edges</span><span class="p">.</span><span class="n">first_src</span><span class="p">(</span><span class="n">vertex_index</span><span class="p">);</span>  <span class="c1">// get the iterator of the first edge</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">it</span> <span class="o">!=</span> <span class="n">edges</span><span class="p">.</span><span class="n">end</span><span class="p">())</span> <span class="p">{</span>
+  <span class="k">do</span> <span class="p">{</span>
+    <span class="n">GraphArchive</span><span class="o">::</span><span class="n">IdType</span> <span class="n">src</span> <span class="o">=</span> <span class="n">it</span><span class="p">.</span><span class="n">source</span><span class="p">(),</span> <span class="n">dst</span> <span class="o">=</span> <span class="n">it</span><span class="p">.</span><span class="n">destination</span><span class="p">();</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">src</span> <span class="o">&lt;&lt;</span> <span class="sc">' '</span> <span class="o">&lt;&lt;</span> <span class="n">dst</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">it</span><span class="p">.</span><span class="n">next_src</span><span class="p">());</span>  <span class="c1">// get the next edge</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="writing-to-graphar">Writing to GraphAr</h4>
+
+<p>As same with the readers, the GraphAr writers provide different-level methods to output the graph data in memory into GraphAr files.</p>
+
+<p>As the simplest cases, the example below adds vertices to <em>VerticesBuilder</em> and then dumps the data to files; it also adds edges to <em>EdgesBuilder</em> and then dumps them.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">"gar/writer/edges_builder.h"</span><span class="cp">
+#include</span> <span class="cpf">"gar/writer/vertices_builder.h"</span><span class="cp">
+</span>
+<span class="k">auto</span> <span class="n">prefix</span> <span class="o">=</span> <span class="s">"/tesing/"</span><span class="p">;</span> <span class="c1">// the root directory of the graph data</span>
+<span class="n">GraphArchive</span><span class="o">::</span><span class="n">builder</span><span class="o">::</span><span class="n">VerticesBuilder</span> <span class="nf">v_builder</span><span class="p">(</span><span class="n">vertex_info</span><span class="p">,</span>  <span class="n">prefix</span><span class="p">);</span>
+<span class="n">GraphArchive</span><span class="o">::</span><span class="n">builder</span><span class="o">::</span><span class="n">Vertex</span> <span class="n">v</span><span class="p">;</span>
+<span class="n">v</span><span class="p">.</span><span class="n">AddProperty</span><span class="p">(</span><span class="s">"id"</span><span class="p">,</span> <span class="mi">933</span><span class="p">);</span>
+<span class="n">v</span><span class="p">.</span><span class="n">AddProperty</span><span class="p">(</span><span class="s">"firstName"</span><span class="p">,</span> <span class="s">"Alice"</span><span class="p">);</span>
+<span class="n">v_builder</span><span class="p">.</span><span class="n">AddVertex</span><span class="p">(</span><span class="n">v</span><span class="p">);</span> <span class="c1">// add a vertex</span>
+<span class="c1">// add other vertices...</span>
+<span class="n">v_builder</span><span class="p">.</span><span class="n">Dump</span><span class="p">();</span> <span class="c1">// write out to GraphAr</span>
+
+<span class="n">GraphArchive</span><span class="o">::</span><span class="n">builder</span><span class="o">::</span><span class="n">EdgesBuilder</span> <span class="nf">e_builder</span><span class="p">(</span><span class="n">edge_info</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> 
+                                              <span class="n">GraphArchive</span><span class="o">::</span><span class="n">AdjListType</span><span class="o">::</span><span class="n">ordered_by_source</span><span class="p">,</span>
+                                              <span class="n">vertices_num</span><span class="p">);</span>
+<span class="n">GraphArchive</span><span class="o">::</span><span class="n">builder</span><span class="o">::</span><span class="n">Edge</span> <span class="nf">e</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+<span class="n">e</span><span class="p">.</span><span class="n">AddProperty</span><span class="p">(</span><span class="s">"creationDate"</span><span class="p">,</span> <span class="s">"2011-07-20T20:02:04.233+0000"</span><span class="p">);</span>
+<span class="n">e_builder</span><span class="p">.</span><span class="n">AddEdge</span><span class="p">(</span><span class="n">e</span><span class="p">);</span> <span class="c1">// add an edge</span>
+<span class="c1">// add other edges...</span>
+<span class="n">e_builder</span><span class="p">.</span><span class="n">Dump</span><span class="p">();</span>  <span class="c1">// write out to GraphAr</span>
+</code></pre></div></div>
+
+<h4 id="a-pagerank-example">A PageRank Example</h4>
+
+<p>In addition to serving as a standardized archive format for graph data, GraphAr has another important use case: it can act as a direct data source, supporting the implementation of various out-of-core graph algorithms through its file access interface.
+This allows for the analysis and processing of large-scale graph data using limited memory and computational resources on a single machine.
+The GraphAr code repository already provides implementations for several typical out-of-core graph algorithms, including PageRank, BFS, and weakly connected components.</p>
+
+<p>Taking PageRank as an example, a single-machine out-of-core algorithm implemented with GraphAr would first read the yaml file to obtain the graph’s metadata. Then, <em>VerticesCollection</em> and <em>EdgesCollection</em> are constructed to facilitate accessing the graph data. Subsequently, the edge data is loaded from the GraphAr disk file in a streaming fashion using an iterator and used to update the PageRank results for each vertex in memory.
+Finally, we can extend the metadata of vertices of the original “person” type to include a new attribute named “pagerank” and use <em>VerticesBuilder</em> to write the computation results into a new GraphAr data file. The core computation portion of the PageRank algorithm can be seen in the sample code below, and the complete code can be found in the GraphAr example code.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">auto</span> <span class="n">it_begin</span> <span class="o">=</span> <span class="n">edges</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">it_end</span> <span class="o">=</span> <span class="n">edges</span><span class="p">.</span><span class="n">end</span><span class="p">();</span>
+
+<span class="c1">// max_iters: the number of iterations</span>
+<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">iter</span> <span class="o">&lt;</span> <span class="n">max_iters</span><span class="p">;</span> <span class="n">iter</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+ <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"iter "</span> <span class="o">&lt;&lt;</span> <span class="n">iter</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  
+ <span class="c1">// iterate over all edges</span>
+ <span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="n">it</span> <span class="o">=</span> <span class="n">it_begin</span><span class="p">;</span> <span class="n">it</span> <span class="o">!=</span> <span class="n">it_end</span><span class="p">;</span> <span class="o">++</span><span class="n">it</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">GAR_NAMESPACE</span><span class="o">::</span><span class="n">IdType</span> <span class="n">src</span> <span class="o">=</span> <span class="n">it</span><span class="p">.</span><span class="n">source</span><span class="p">(),</span> <span class="n">dst</span> <span class="o">=</span> <span class="n">it</span><span class="p">.</span><span class="n">destination</span><span class="p">();</span>
+    <span class="c1">// using source vertex to update destination vertex</span>
+    <span class="n">pr_next</span><span class="p">[</span><span class="n">dst</span><span class="p">]</span> <span class="o">+=</span> <span class="n">pr_curr</span><span class="p">[</span><span class="n">src</span><span class="p">]</span> <span class="o">/</span> <span class="n">out_degree</span><span class="p">[</span><span class="n">src</span><span class="p">];</span>
+  <span class="p">}</span>
+  
+  <span class="c1">// iterate over all vertices and update PageRank value</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">GAR_NAMESPACE</span><span class="o">::</span><span class="n">IdType</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">num_vertices</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">pr_next</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">damping</span> <span class="o">*</span> <span class="n">pr_next</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span>
+                 <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">damping</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">num_vertices</span><span class="p">));</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">out_degree</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+      <span class="n">pr_next</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">damping</span> <span class="o">*</span> <span class="n">pr_curr</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+    <span class="n">pr_curr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">pr_next</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+    <span class="n">pr_next</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Please refer to <a href="https://alibaba.github.io/GraphAr/applications/out-of-core.html">more examples</a> to learn about the other available case studies utilizing GraphAr.</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Getting Started with GraphAr: Standardized Graph Storage File Format&amp;url=https://graphscope.io/tech/2023/08/31/Getting-Started-with-GraphAr-Standardized-Graph-Storage-File-Format.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2023/08/31/Getting-Started-with-GraphAr-Standardized-Graph-Storage-File-Format.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2023/08/31/Getting-Started-with-GraphAr-Standardized-Graph-Storage-File-Format.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2023 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>

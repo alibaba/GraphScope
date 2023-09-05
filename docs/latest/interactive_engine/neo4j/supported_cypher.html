@@ -311,7 +311,6 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.set_option.html">graphscope.set_option</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.get_option.html">graphscope.get_option</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.g.html">graphscope.g</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.gremlin.html">graphscope.gremlin</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/generated/graphscope.graphlearn.html">graphscope.graphlearn</a></li>
@@ -563,6 +562,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../../v0.24.0/index.html">
+                
+                  v0.24.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../../v0.23.0/index.html">
                 
                   v0.23.0
@@ -590,18 +601,6 @@ MathJax = {
               <dd><a href="../../../v0.22.0/index.html">
                 
                   v0.22.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../v0.21.0/index.html">
-                
-                  v0.21.0
                 
               </a></dd>
             
@@ -1102,6 +1101,20 @@ Note that some Aggregator operators, such as <code class="docutils literal notra
 <td class="text-center"><p><input type="checkbox" disabled  /></p></td>
 <td class="text-left"><p>planned</p></td>
 </tr>
+<tr class="row-odd"><td class="text-left"><p>Scalar</p></td>
+<td class="text-left"><p>Returns the length of a path</p></td>
+<td class="text-left"><p>length()</p></td>
+<td class="text-left"><p>length()</p></td>
+<td class="text-center"><p><input type="checkbox" disabled checked /></p></td>
+<td class="text-left"><p></p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>List</p></td>
+<td class="text-left"><p>Fold expressions into a single list</p></td>
+<td class="text-left"><p>[]</p></td>
+<td class="text-left"><p>[]</p></td>
+<td class="text-center"><p><input type="checkbox" disabled checked /></p></td>
+<td class="text-left"><p></p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1134,8 +1147,8 @@ RETURN a, b;
 </tr>
 <tr class="row-odd"><td class="text-left"><p>OPTIONAL MATCH</p></td>
 <td><p>implements as left outer join</p></td>
-<td class="text-center"><p><input type="checkbox" disabled  /></p></td>
-<td class="text-left"><p>planned</p></td>
+<td class="text-center"><p><input type="checkbox" checked /></p></td>
+<td class="text-left"><p></p></td>
 </tr>
 <tr class="row-even"><td class="text-left"><p>RETURN … [AS]</p></td>
 <td><p></p></td>
@@ -1152,9 +1165,9 @@ RETURN a, b;
 <td class="text-center"><p><input type="checkbox" disabled checked /></p></td>
 <td class="text-left"><p></p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p>NOT EXIST (an edge/path)</p></td>
+<tr class="row-odd"><td class="text-left"><p>WHERE NOT EXIST (an edge/path)</p></td>
 <td><p>implements as anti join</p></td>
-<td class="text-center"><p><input type="checkbox" disabled  /></p></td>
+<td class="text-center"><p><input type="checkbox" checked  /></p></td>
 <td class="text-left"><p></p></td>
 </tr>
 <tr class="row-even"><td class="text-left"><p>ORDER BY</p></td>

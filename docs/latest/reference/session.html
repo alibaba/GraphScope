@@ -311,7 +311,6 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.set_option.html">graphscope.set_option</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/graphscope.get_option.html">graphscope.get_option</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.g.html">graphscope.g</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.gremlin.html">graphscope.gremlin</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/graphscope.graphlearn.html">graphscope.graphlearn</a></li>
@@ -563,6 +562,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.24.0/index.html">
+                
+                  v0.24.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.23.0/index.html">
                 
                   v0.23.0
@@ -590,18 +601,6 @@ MathJax = {
               <dd><a href="../../v0.22.0/index.html">
                 
                   v0.22.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.21.0/index.html">
-                
-                  v0.21.0
                 
               </a></dd>
             
@@ -671,7 +670,7 @@ MathJax = {
 <h2>Session object<a class="headerlink" href="#session-object" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.Session">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">Session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">addr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'eager'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'k8s'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preemptive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_namespace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_service_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'NodePort'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_registry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'registry.cn-hongkong.aliyuncs.com'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'graphscope'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'0.24.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_pull_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'IfNotPresent'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_pull_secrets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_coordinator_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_coordinator_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'512Mi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etcd_addrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etcd_listening_client_port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2379</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etcd_listening_peer_port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2380</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_vineyard_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vineyardcloudnative/vineyardd:latest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_vineyard_deployment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_vineyard_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_vineyard_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'512Mi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vineyard_shared_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_engine_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_engine_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1Gi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_mars_worker_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_mars_worker_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'4Mi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_mars_scheduler_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_mars_scheduler_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2Mi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_coordinator_pod_node_selector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_engine_pod_node_selector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_volumes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_waiting_for_delete</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_deploy_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'eager'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout_seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dangling_timeout_seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enabled_engines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'analytical,interactive,learning'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_mars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reconnect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hosts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['localhost']</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">Session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Config</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ApiClient</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session" title="Permalink to this definition">#</a></dt>
 <dd><p>A class for interacting with GraphScope graph computation service cluster.</p>
 <p>A <a class="reference internal" href="#graphscope.Session" title="graphscope.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></a> object encapsulates the environment in which <code class="xref py py-class docutils literal notranslate"><span class="pre">Operation</span></code>
 objects are executed/evaluated.</p>
@@ -721,7 +720,7 @@ you can find all params detail in <a class="reference internal" href="#graphscop
 </div></blockquote>
 </li>
 <li><p>or all params can be provided by a json configuration file or configuration dict.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="s1">&#39;/tmp/config.json&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="s1">&#39;/tmp/config.yaml&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Or</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;k8s_engine_cpu&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;k8s_engine_mem&#39;</span><span class="p">:</span> <span class="s1">&#39;5Gi&#39;</span><span class="p">})</span>
 </pre></div>
@@ -744,74 +743,88 @@ close the session and release the resources, ignore all exceptions in close().</
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">addr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'eager'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'k8s'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preemptive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_namespace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_service_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'NodePort'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_registry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'registry.cn-hongkong.aliyuncs.com'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_repository</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'graphscope'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'0.24.0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_pull_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'IfNotPresent'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_image_pull_secrets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_coordinator_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_coordinator_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'512Mi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etcd_addrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etcd_listening_client_port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2379</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etcd_listening_peer_port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2380</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_vineyard_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vineyardcloudnative/vineyardd:latest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_vineyard_deployment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_vineyard_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_vineyard_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'512Mi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vineyard_shared_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_engine_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_engine_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1Gi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_mars_worker_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_mars_worker_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'4Mi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_mars_scheduler_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_mars_scheduler_mem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2Mi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_coordinator_pod_node_selector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_engine_pod_node_selector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_volumes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_waiting_for_delete</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k8s_deploy_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'eager'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout_seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dangling_timeout_seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enabled_engines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'analytical,interactive,learning'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_mars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reconnect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hosts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['localhost']</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Config</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ApiClient</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Construct a new GraphScope session.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> (<em>dict</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – The configuration dict or file about how to launch the GraphScope instance.
 For str, it will identify it as a path and read the configuration file to build a
-session if file exist. If not specified, the global default configuration
-<code class="code docutils literal notranslate"><span class="pre">DEFAULT_CONFIG_FILE</span></code> will be used, which get value of GS_CONFIG_PATH
-in environment. Note that it will overwrite explicit parameters. Defaults to None.</p></li>
-<li><p><strong>addr</strong> (<em>str</em><em>, </em><em>optional</em>) – The endpoint of a pre-launched GraphScope instance with ‘&lt;ip&gt;:&lt;port&gt;’ format.
-A new session id will be generated for each session connection.</p></li>
-<li><p><strong>mode</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>optional values are eager and lazy. Defaults to eager.
-Eager execution is a flexible platform for research and experimentation, it provides:</p>
+session if file exist. If not specified, the global default configuration will be used
+Note that it will overwrite explicit parameters. Defaults to None.</p></li>
+<li><p><strong>api_client</strong> – The kube api client used in kubernetes cluster</p></li>
+<li><p><strong>kw</strong> – <p>Configurable keys. For backward compatibility. For more details, see <cite>Config</cite> class in <cite>config.py</cite>
+addr (str, optional): The endpoint of a pre-launched GraphScope instance with ‘&lt;ip&gt;:&lt;port&gt;’ format.</p>
 <blockquote>
-<div><p>An intuitive interface: Quickly test on small data.
-Easier debugging: Call ops directly to inspect running models and test changes.</p>
+<div><p>A new session id will be generated for each session connection.</p>
 </div></blockquote>
 <dl class="simple">
-<dt>Lazy execution means GraphScope does not process the data till it has to. It just gathers all the</dt><dd><p>information to a DAG that we feed into it, and processes only when we execute <code class="code docutils literal notranslate"><span class="pre">sess.run(fetches)</span></code></p>
+<dt>mode (str, optional): optional values are eager and lazy. Defaults to eager.</dt><dd><dl class="simple">
+<dt>Eager execution is a flexible platform for research and experimentation, it provides:</dt><dd><p>An intuitive interface: Quickly test on small data.
+Easier debugging: Call ops directly to inspect running models and test changes.</p>
+</dd>
+<dt>Lazy execution means GraphScope does not process the data till it has to.</dt><dd><p>It just gathers all the information to a DAG that we feed into it,
+and processes only when we execute <code class="code docutils literal notranslate"><span class="pre">sess.run(fetches)</span></code></p>
 </dd>
 </dl>
-</p></li>
-<li><p><strong>cluster_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Deploy GraphScope instance on hosts or k8s cluster. Defaults to k8s.
-Available options: “k8s” and “hosts”. Note that only support deployed on localhost with hosts mode.</p></li>
-<li><p><strong>num_workers</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of workers to launch GraphScope engine. Defaults to 2.</p></li>
-<li><p><strong>preemptive</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, GraphScope instance will treat resource params (e.g. k8s_coordinator_cpu)
-as limits and provide the minimum available value as requests, but this will make pod has a <cite>Burstable</cite> QOS,
-which can be preempted by other pods with high QOS. Otherwise, it will set both requests and limits with the
-same value.</p></li>
-<li><p><strong>k8s_namespace</strong> (<em>str</em><em>, </em><em>optional</em>) – Contains the namespace to create all resource inside.
-If param missing, it will try to read namespace from kubernetes context, or
+</dd>
+<dt>cluster_type (str, optional): Deploy GraphScope instance on hosts or k8s cluster. Defaults to k8s.</dt><dd><p>Available options: “k8s” and “hosts”. Note that only support deployed on localhost with hosts mode.</p>
+</dd>
+</dl>
+<p>num_workers (int, optional): The number of workers to launch GraphScope engine. Defaults to 2.</p>
+<dl class="simple">
+<dt>preemptive (bool, optional): If True, GraphScope instance will treat resource params</dt><dd><p>(e.g. k8s_coordinator_cpu) as limits and provide the minimum available value as requests,
+but this will make pod has a <cite>Burstable</cite> QOS, which can be preempted by other pods with high QOS.
+Otherwise, it will set both requests and limits with the same value.</p>
+</dd>
+<dt>k8s_namespace (str, optional): Contains the namespace to create all resource inside.</dt><dd><p>If param missing, it will try to read namespace from kubernetes context, or
 a random namespace will be created and deleted if namespace not exist.
-Defaults to None.</p></li>
-<li><p><strong>k8s_service_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Type determines how the GraphScope service is exposed.
-Valid options are NodePort, and LoadBalancer. Defaults to NodePort.</p></li>
-<li><p><strong>k8s_image_registry</strong> (<em>str</em><em>, </em><em>optional</em>) – The GraphScope image registry.</p></li>
-<li><p><strong>k8s_image_repository</strong> (<em>str</em><em>, </em><em>optional</em>) – The GraphScope image repository.</p></li>
-<li><p><strong>k8s_image_tag</strong> (<em>str</em><em>, </em><em>optional</em>) – The GraphScope image tag.</p></li>
-<li><p><strong>k8s_image_pull_policy</strong> (<em>str</em><em>, </em><em>optional</em>) – Kubernetes image pull policy. Defaults to “IfNotPresent”.</p></li>
-<li><p><strong>k8s_image_pull_secrets</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – A list of secret name used to authorize pull image.</p></li>
-<li><p><strong>k8s_vineyard_image</strong> (<em>str</em><em>, </em><em>optional</em>) – The image of vineyard.</p></li>
-<li><p><strong>k8s_vineyard_deployment</strong> (<em>str</em><em>, </em><em>optional</em>) – The name of vineyard deployment to use. GraphScope will try to
-discovery the deployment from kubernetes cluster, then use it if exists, and fallback to launching
-a bundled vineyard container otherwise.</p></li>
-<li><p><strong>k8s_vineyard_cpu</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum number of CPU cores request for vineyard container. Defaults to 0.5.</p></li>
-<li><p><strong>k8s_vineyard_mem</strong> (<em>str</em><em>, </em><em>optional</em>) – Minimum number of memory request for vineyard container. Defaults to ‘512Mi’.</p></li>
-<li><p><strong>vineyard_shared_mem</strong> (<em>str</em><em>, </em><em>optional</em>) – Init size of vineyard shared memory. Defaults to ‘4Gi’ for Kubernetes and
-half of the total memory for local sessions.</p></li>
-<li><p><strong>k8s_engine_cpu</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum number of CPU cores request for engine container. Defaults to 0.5.</p></li>
-<li><p><strong>k8s_engine_mem</strong> (<em>str</em><em>, </em><em>optional</em>) – Minimum number of memory request for engine container. Defaults to ‘4Gi’.</p></li>
-<li><p><strong>k8s_coordinator_cpu</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum number of CPU cores request for coordinator pod. Defaults to 1.0.</p></li>
-<li><p><strong>k8s_coordinator_mem</strong> (<em>str</em><em>, </em><em>optional</em>) – Minimum number of memory request for coordinator pod. Defaults to ‘4Gi’.</p></li>
-<li><p><strong>etcd_addrs</strong> (<em>str</em><em>, </em><em>optional</em>) – The addr of external etcd cluster,
-with formats like ‘etcd01:port,etcd02:port,etcd03:port’</p></li>
-<li><p><strong>k8s_mars_worker_cpu</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum number of CPU cores request for mars worker container. Defaults to 0.5.</p></li>
-<li><p><strong>k8s_mars_worker_mem</strong> (<em>str</em><em>, </em><em>optional</em>) – Minimum number of memory request for mars worker container. Defaults to ‘4Gi’.</p></li>
-<li><p><strong>k8s_mars_scheduler_cpu</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum number of CPU cores request for mars scheduler container. Defaults to 0.5.</p></li>
-<li><p><strong>k8s_mars_scheduler_mem</strong> (<em>str</em><em>, </em><em>optional</em>) – Minimum number of memory request for mars scheduler container. Defaults to ‘2Gi’.</p></li>
-<li><p><strong>k8s_coordinator_pod_node_selector</strong> (<em>dict</em><em>, </em><em>optional</em>) – Node selector to the coordinator pod on k8s. Default is None.
-See also: <a class="reference external" href="https://tinyurl.com/3nx6k7ph">https://tinyurl.com/3nx6k7ph</a></p></li>
-<li><p><strong>None</strong> (<em>k8s_engine_pod_node_selector =</em>) – Node selector to the engine pod on k8s. Default is None.
-See also: <a class="reference external" href="https://tinyurl.com/3nx6k7ph">https://tinyurl.com/3nx6k7ph</a></p></li>
-<li><p><strong>with_mars</strong> (<em>bool</em><em>, </em><em>optional</em>) – Launch graphscope with mars. Defaults to False.</p></li>
-<li><p><strong>enabled_engines</strong> (<em>str</em><em>, </em><em>optional</em>) – Select a subset of engines to enable. Only make sense in k8s mode.</p></li>
-<li><p><strong>with_dataset</strong> (<em>bool</em><em>, </em><em>optional</em>) – Create a container and mount aliyun demo dataset bucket to the path <cite>/dataset</cite>.</p></li>
-<li><p><strong>k8s_volumes</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>A dict of k8s volume which represents a directory containing data, accessible to the
-containers in a pod. Defaults to {}.</p>
+Defaults to None.</p>
+</dd>
+<dt>k8s_service_type (str, optional): Type determines how the GraphScope service is exposed.</dt><dd><p>Valid options are NodePort, and LoadBalancer. Defaults to NodePort.</p>
+</dd>
+</dl>
+<p>k8s_image_registry (str, optional): The GraphScope image registry.</p>
+<p>k8s_image_repository (str, optional): The GraphScope image repository.</p>
+<p>k8s_image_tag (str, optional): The GraphScope image tag.</p>
+<p>k8s_image_pull_policy (str, optional): Kubernetes image pull policy. Defaults to “IfNotPresent”.</p>
+<p>k8s_image_pull_secrets (List[str], optional): A list of secret name used to authorize pull image.</p>
+<p>k8s_vineyard_image (str, optional): The image of vineyard.</p>
+<dl class="simple">
+<dt>k8s_vineyard_deployment (str, optional): The name of vineyard deployment to use. GraphScope will try to</dt><dd><p>discovery the deployment from kubernetes cluster, then use it if exists, and fallback to launching
+a bundled vineyard container otherwise.</p>
+</dd>
+</dl>
+<p>k8s_vineyard_cpu (float, optional): Number of CPU cores request for vineyard container. Defaults to 0.2.</p>
+<p>k8s_vineyard_mem (str, optional): Number of memory request for vineyard container. Defaults to ‘256Mi’</p>
+<p>k8s_engine_cpu (float, optional): Number of CPU cores request for engine container. Defaults to 1.</p>
+<p>k8s_engine_mem (str, optional): Number of memory request for engine container. Defaults to ‘4Gi’.</p>
+<p>k8s_coordinator_cpu (float, optional): Number of CPU cores request for coordinator. Defaults to 0.5.</p>
+<p>k8s_coordinator_mem (str, optional): Number of memory request for coordinator. Defaults to ‘512Mi’.</p>
+<dl>
+<dt>etcd_addrs (str, optional): The addr of external etcd cluster,</dt><dd><p>with formats like ‘etcd01:port,etcd02:port,etcd03:port’</p>
+</dd>
+<dt>k8s_mars_worker_cpu (float, optional):</dt><dd><p>Minimum number of CPU cores request for Mars worker container. Defaults to 0.2.</p>
+</dd>
+<dt>k8s_mars_worker_mem (str, optional):</dt><dd><p>Minimum number of memory request for Mars worker container. Defaults to ‘4Mi’.</p>
+</dd>
+<dt>k8s_mars_scheduler_cpu (float, optional):</dt><dd><p>Minimum number of CPU cores request for Mars scheduler container. Defaults to 0.2.</p>
+</dd>
+<dt>k8s_mars_scheduler_mem (str, optional):</dt><dd><p>Minimum number of memory request for Mars scheduler container. Defaults to ‘4Mi’.</p>
+</dd>
+<dt>k8s_coordinator_pod_node_selector (dict, optional):</dt><dd><p>Node selector to the coordinator pod on k8s. Default is None.
+See also: <a class="reference external" href="https://tinyurl.com/3nx6k7ph">https://tinyurl.com/3nx6k7ph</a></p>
+</dd>
+<dt>k8s_engine_pod_node_selector = None</dt><dd><p>Node selector to the engine pod on k8s. Default is None.
+See also: <a class="reference external" href="https://tinyurl.com/3nx6k7ph">https://tinyurl.com/3nx6k7ph</a></p>
+</dd>
+<dt>with_mars (bool, optional):</dt><dd><p>Launch graphscope with Mars. Defaults to False.</p>
+</dd>
+<dt>enabled_engines (str, optional):</dt><dd><p>Select a subset of engines to enable. Only make sense in k8s mode.</p>
+</dd>
+<dt>with_dataset (bool, optional):</dt><dd><p>Create a container and mount aliyun demo dataset bucket to the path <cite>/dataset</cite>.</p>
+</dd>
+<dt>k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data,</dt><dd><p>accessible to the containers in a pod. Defaults to {}.</p>
 <p>For example, you can mount host path with:</p>
 <dl>
 <dt>k8s_volumes = {</dt><dd><dl>
@@ -882,56 +895,32 @@ containers in a pod. Defaults to {}.</p>
 </dd>
 </dl>
 <p>}</p>
-</p></li>
-<li><p><strong>timeout_seconds</strong> (<em>int</em><em>, </em><em>optional</em>) – For waiting service ready (or waiting for delete if
-k8s_waiting_for_delete is True).</p></li>
-<li><p><strong>dangling_timeout_seconds</strong> (<em>int</em><em>, </em><em>optional</em>) – After seconds of client disconnect,
-coordinator will kill this graphscope instance. Defaults to 600.
+</dd>
+<dt>timeout_seconds (int, optional): For waiting service ready (or waiting for delete if</dt><dd><p>k8s_waiting_for_delete is True).</p>
+</dd>
+<dt>dangling_timeout_seconds (int, optional): After seconds of client disconnect,</dt><dd><p>coordinator will kill this graphscope instance. Defaults to 600.
 Expect this value to be greater than 5 (heartbeat interval).
-Disable dangling check by setting -1.</p></li>
-<li><p><strong>k8s_deploy_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – the deploy mode of engines on the kubernetes cluster. Default to eager.
-eager: create all engine pods at once
-lazy: create engine pods when called</p></li>
-<li><p><strong>k8s_waiting_for_delete</strong> (<em>bool</em><em>, </em><em>optional</em>) – Waiting for service delete or not. Defaults to False.</p></li>
-<li><p><strong>**kw</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>Other optional parameters will be put to <code class="code docutils literal notranslate"><span class="pre">**kw</span></code>.
-- k8s_client_config (dict, optional):</p>
-<blockquote>
-<div><p>Provide configurable parameters for connecting to remote k8s,
-which strongly relies on the <cite>kube_config.load_kube_config</cite> function.
-eg: {</p>
-<blockquote>
-<div><p>”config_file”: “~/.kube/config”,
-“context”: None,
-“client_configuration”: None,
-“persist_config”: True</p>
-</div></blockquote>
-<p>}
-config_file: Name of the kube-config file.
-context: set the active context. If is set to None, current_context from config file will be used.
-client_configuration: The kubernetes.client.Configuration to set configs to.
-persist_config: If True, config file will be updated when changed(e.g GCP token refresh).</p>
-</div></blockquote>
-<ul>
-<li><dl class="simple">
-<dt>log_level: Deprecated.</dt><dd><p>Move this param as a global configuration. Set via <cite>graphscope.set_option(log_level=’DEBUG’)</cite></p>
+Disable dangling check by setting -1.</p>
+</dd>
+<dt>k8s_deploy_mode (str, optional): the deploy mode of engines on the kubernetes cluster. Default to eager.</dt><dd><p>eager: create all engine pods at once
+lazy: create engine pods when called</p>
 </dd>
 </dl>
-</li>
-<li><dl class="simple">
-<dt>show_log: Deprecated.</dt><dd><p>Move this param as a global configuration.Set via <cite>graphscope.set_option(show_log=True)</cite></p>
+<p>k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.</p>
+<dl>
+<dt>k8s_client_config (dict, optional):</dt><dd><p>config_file: Name of the kube-config file.
+Provide configurable parameters for connecting to remote k8s
+e.g. “~/.kube/config”</p>
 </dd>
-</dl>
-</li>
-</ul>
-</p></li>
-<li><p><strong>reconnect</strong> (<em>bool</em><em>, </em><em>optional</em>) – <p>When connecting to a pre-launched GraphScope cluster with <code class="code docutils literal notranslate"><span class="pre">addr</span></code>,
-the connect request would be rejected with there is still an existing session connected. There
+<dt>reconnect (bool, optional): When connecting to a pre-launched GraphScope cluster with <code class="code docutils literal notranslate"><span class="pre">addr</span></code>,</dt><dd><p>the connect request would be rejected with there is still an existing session connected. There
 are cases where the session still exists and user’s client has lost connection with the backend,
 e.g., in a jupyter notebook. We have a <code class="code docutils literal notranslate"><span class="pre">dangling_timeout_seconds</span></code> for it, but a more
 deterministic behavior would be better.</p>
 <p>If <code class="code docutils literal notranslate"><span class="pre">reconnect</span></code> is True, the existing session will be reused. It is the user’s responsibility
 to ensure there’s no such an active client.</p>
 <p>Defaults to <code class="code docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+</dl>
 </p></li>
 </ul>
 </dd>
@@ -1087,7 +1076,7 @@ GNN training. The detail is explained in the examples below.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.interactive">
-<span class="sig-name descname"><span class="pre">interactive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.interactive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.interactive" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">interactive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_cypher</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.interactive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.interactive" title="Permalink to this definition">#</a></dt>
 <dd><p>Get an interactive engine handler to execute gremlin and cypher queries.</p>
 <p>It will return an instance of <a class="reference internal" href="interactive.html#graphscope.interactive.query.InteractiveQuery" title="graphscope.interactive.query.InteractiveQuery"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.interactive.query.InteractiveQuery</span></code></a>,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># close and recreate InteractiveQuery.</span>
@@ -1206,16 +1195,13 @@ Supported types:
 <tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.set_option.html#graphscope.set_option" title="graphscope.set_option"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.set_option</span></code></a>(**kwargs)</p></td>
 <td><p>Set the value of specified options.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.get_option.html#graphscope.get_option" title="graphscope.get_option"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.get_option</span></code></a>(key)</p></td>
-<td><p>Get the value of specified option.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.g.html#graphscope.g" title="graphscope.g"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.g</span></code></a>([incoming_data, oid_type, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.g.html#graphscope.g" title="graphscope.g"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.g</span></code></a>([incoming_data, oid_type, ...])</p></td>
 <td><p>Construct a GraphScope graph object on the default session.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.gremlin.html#graphscope.gremlin" title="graphscope.gremlin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.gremlin</span></code></a>(*args, **kwargs)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.gremlin.html#graphscope.gremlin" title="graphscope.gremlin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.gremlin</span></code></a>(*args, **kwargs)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.graphlearn.html#graphscope.graphlearn" title="graphscope.graphlearn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.graphlearn</span></code></a>(graph[, nodes, edges, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.graphlearn.html#graphscope.graphlearn" title="graphscope.graphlearn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.graphlearn</span></code></a>(graph[, nodes, edges, ...])</p></td>
 <td><p>Create a graph learning engine.</p></td>
 </tr>
 </tbody>

@@ -24,6 +24,7 @@
       ~session.get_vineyard_object_mapping_table
       ~session.graphlearn
       ~session.gremlin
+      ~session.interactive
       ~session.learning
       ~session.load_from
       ~session.load_from_gar

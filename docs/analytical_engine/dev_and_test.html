@@ -1,28 +1,33 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Dev and Test" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Dev and Test" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/dev_and_test.html" />
 <meta property="og:site_name" content="GraphScope" />
 <meta property="og:description" content="This guide will walk you through the process of understanding how the code is organized, identifying key functions and important code, and building and testing the analytical engine. Setup: For sim..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
 <meta property="og:image" content="/_images/social_previews/summary_analytical_engine_dev_and_test_8da047e0.png" />
 <meta property="og:image:alt" content="This guide will walk you through the process of understanding how the code is organized, identifying key functions and important code, and building and testi..." />
 <meta name="description" content="This guide will walk you through the process of understanding how the code is organized, identifying key functions and important code, and building and testing the analytical engine. Setup: For sim..." />
+<meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Getting Started" href="../interactive_engine/getting_started.html" /><link rel="prev" title="Tutorial: Run GraphX Applications on GraphScope" href="tutorial_run_graphx_apps.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Dev and Test - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -196,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -234,7 +239,7 @@ MathJax = {
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment for GAE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="overview_and_architecture.html">Overview and Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="key_concepts.html">Key Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vertex_centric_models.html">Vertex-Centric Model</a></li>
@@ -254,14 +259,14 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/tinkerpop_gremlin.html">GIE for Gremlin</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/guide_and_examples.html">Guide and Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/cypher_sdk.html">GIE for Cypher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/supported_cypher.html">Cypher Support</a></li>
 </ul>
@@ -300,8 +305,8 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -313,13 +318,13 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -363,18 +368,18 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -409,7 +414,7 @@ MathJax = {
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -558,6 +563,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.24.0/index.html">
+                
+                  v0.24.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.23.0/index.html">
                 
                   v0.23.0
@@ -585,18 +602,6 @@ MathJax = {
               <dd><a href="../v0.22.0/index.html">
                 
                   v0.22.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.21.0/index.html">
-                
-                  v0.21.0
                 
               </a></dd>
             
@@ -660,11 +665,11 @@ MathJax = {
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="dev-and-test">
+          <section class="tex2jax_ignore mathjax_ignore" id="dev-and-test">
 <h1>Dev and Test<a class="headerlink" href="#dev-and-test" title="Permalink to this heading">#</a></h1>
 <p>This guide will walk you through the process of understanding how the code is organized,
 identifying key functions and important code, and building and testing the analytical engine.</p>
-<div class="section" id="setup">
+<section id="setup">
 <h2>Setup<a class="headerlink" href="#setup" title="Permalink to this heading">#</a></h2>
 <p>For simplicity, we suggest you use a prebuilt docker image with necessary dependencies installed.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--name<span class="w"> </span>dev<span class="w"> </span>-it<span class="w"> </span>--shm-size<span class="o">=</span>4096m<span class="w"> </span>registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest
@@ -677,8 +682,8 @@ Please refer to <a class="reference internal" href="../development/dev_guide.htm
 <span class="nb">cd</span><span class="w"> </span>analatical_engine
 </pre></div>
 </div>
-</div>
-<div class="section" id="understanding-the-codebase">
+</section>
+<section id="understanding-the-codebase">
 <h2>Understanding the Codebase<a class="headerlink" href="#understanding-the-codebase" title="Permalink to this heading">#</a></h2>
 <p>Since the analytical engine inherits from GRAPE, it requires libgrape-lite as a dependency.
 Please note that the core functionalities of libgrape-lite, such as graph structures, graph partitioners, workers,
@@ -714,10 +719,12 @@ communication between workers, and applications, are heavily reused in the analy
 <li><p><code class="docutils literal notranslate"><span class="pre">cmake</span></code> contains CMake scripts for configuring the build.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">test</span></code> contains test cases and scripts.</p></li>
 </ul>
-<div class="figure align-default" id="id1">
+<figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="../_images/fig-grape.jpg"><img alt="Key components of libgrape-lite" src="../_images/fig-grape.jpg" style="width: 80%;" /></a>
-<p class="caption"><span class="caption-text">Key components of libgrape-lite</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Key components of libgrape-lite</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
 <p>The figure above illustrates the key components of libgrape-lite, (as well as analytical engine in GraphScope), and how they work. More specifically,</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Fragment</span></code> is a partition of graph data and is a processing object for graphs on a computing node.</p></li>
@@ -725,28 +732,28 @@ communication between workers, and applications, are heavily reused in the analy
 <li><p><code class="docutils literal notranslate"><span class="pre">Application</span></code> is the main logic of the user’s application. In an application, the user can access the local <code class="docutils literal notranslate"><span class="pre">Fragment</span></code> or send/receive messages through the <code class="docutils literal notranslate"><span class="pre">MessageManager</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Worker</span></code>, a class that is responsible for loading the graph (<code class="docutils literal notranslate"><span class="pre">Fragment</span></code>), calling the application to compute on the local <code class="docutils literal notranslate"><span class="pre">Fragment</span></code>, and communicating with <code class="docutils literal notranslate"><span class="pre">Worker</span></code>s on other computing nodes through the <code class="docutils literal notranslate"><span class="pre">MessageManager</span></code>.</p></li>
 </ul>
-</div>
-<div class="section" id="making-modifications">
+</section>
+<section id="making-modifications">
 <h2>Making Modifications<a class="headerlink" href="#making-modifications" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
 <li><p>You are encouraged to fork the repo and make modifications on your own fork.</p></li>
 <li><p>It is much easier to begin with a small change, such as revising a specific algorithm, adding a new algorithm, and then gradually move on to more complex changes. You are suggested to avoid large changes in a single commit.</p></li>
 <li><p>If you want to contribute to the repo, please refer to <a class="reference internal" href="#../development/contributing.md"><span class="xref myst">Contributing to GraphScope</span></a> to get more details.</p></li>
 </ul>
-</div>
-<div class="section" id="building-analytical-engine">
+</section>
+<section id="building-analytical-engine">
 <h2>Building Analytical Engine<a class="headerlink" href="#building-analytical-engine" title="Permalink to this heading">#</a></h2>
 <p>With <code class="docutils literal notranslate"><span class="pre">gs</span></code> command-line utility, you can build analytical engine of GraphScope with a single command.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clone a repo if needed</span>
 <span class="c1"># git clone https://github.com/alibaba/graphscope</span>
 <span class="c1"># cd graphscope</span>
-./gs<span class="w"> </span>make<span class="w"> </span>analytical
+python3<span class="w"> </span>gsctl.py<span class="w"> </span>make<span class="w"> </span>analytical
 </pre></div>
 </div>
 <p>The code of analytical engine is a cmake project, with a <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> in the its root directory (<code class="docutils literal notranslate"><span class="pre">/analytical_engine</span></code>). After the building with <code class="docutils literal notranslate"><span class="pre">gs</span></code>, you may found the built artifacts in <code class="docutils literal notranslate"><span class="pre">analytical_engine/build/grape_engine</span></code>.</p>
 <p>Together with the <code class="docutils literal notranslate"><span class="pre">grape_engine</span></code> are shared libraries, or there may have a bunch of test binaries if you choose to build the tests.</p>
 <p>You could install it to a location by</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>analytical-install<span class="w"> </span>--install-prefix<span class="w"> </span>/usr/local
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>make<span class="w"> </span>analytical-install<span class="w"> </span>--install-prefix<span class="w"> </span>/usr/local
 </pre></div>
 </div>
 <div class="admonition note">
@@ -754,8 +761,8 @@ communication between workers, and applications, are heavily reused in the analy
 <p>The <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> of analytical engine is in <code class="docutils literal notranslate"><span class="pre">analytical_engine/CMakeLists.txt</span></code>.</p>
 <p>Take a look at this file if you want to investigate more of the analytical engine or customize the building.</p>
 </div>
-</div>
-<div class="section" id="testing">
+</section>
+<section id="testing">
 <h2>Testing<a class="headerlink" href="#testing" title="Permalink to this heading">#</a></h2>
 <p>The analytical engine has a suite of tests to ensure the correctness of the code, from unit tests to graph algorithm correctness tests. You could easily test with the new artifacts with a single command:</p>
 <p>Here we set the working directory to local repo.</p>
@@ -764,12 +771,12 @@ communication between workers, and applications, are heavily reused in the analy
 </pre></div>
 </div>
 <p>See more about <code class="docutils literal notranslate"><span class="pre">GRAPHSCOPE_HOME</span></code> in <a class="reference internal" href="../development/how_to_test.html#run-tests"><span class="std std-ref">run tests</span></a></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span><span class="nb">test</span><span class="w"> </span>analytical
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span><span class="nb">test</span><span class="w"> </span>analytical
 </pre></div>
 </div>
 <p>It would download the test dataset to the <code class="docutils literal notranslate"><span class="pre">/tmp/gstest</span></code> (if not exists) and run multiple algorithms against various graphs, and compare the result with the ground truth.</p>
-</div>
-</div>
+</section>
+</section>
 
         </article>
       </div>
@@ -846,14 +853,11 @@ communication between workers, and applications, are heavily reused in the analy
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

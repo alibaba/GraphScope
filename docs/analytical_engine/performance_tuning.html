@@ -1,28 +1,33 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Performance Tuning" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Performance Tuning" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="analytical_engine/performance_tuning.html" />
 <meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="misc;." />
-<meta property="og:image" content="/_images/social_previews/summary_analytical_engine_performance_tuning_61d57213.png" />
-<meta property="og:image:alt" content="misc;." />
-<meta name="description" content="misc;." />
+<meta property="og:description" content="Memory footprint and performance on large-scale graph data are the keys to the success of graph analysis in real-world scenarios. In this section, We’ll go through the internal design of the proper..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="/_images/social_previews/summary_analytical_engine_performance_tuning_c06eea6b.png" />
+<meta property="og:image:alt" content="Memory footprint and performance on large-scale graph data are the keys to the success of graph analysis in real-world scenarios. In this section, We’ll go t..." />
+<meta name="description" content="Memory footprint and performance on large-scale graph data are the keys to the success of graph analysis in real-world scenarios. In this section, We’ll go through the internal design of the proper..." />
+<meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Guide and Examples" href="guide_and_examples.html" /><link rel="prev" title="Customized Algorithms" href="customized_algorithms.html" />
 
-    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
         <title>Performance Tuning - GraphScope documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/rst-versions.css?v=52590405" />
     
     
 
@@ -187,7 +192,7 @@ MathJax = {
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -196,7 +201,7 @@ MathJax = {
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand" href="../index.html">
   
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
@@ -234,7 +239,7 @@ MathJax = {
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment for GAE</a></li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="design_of_gae.html">Design of Analytical Engine</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="design_of_gae.html">Design of Analytical Engine</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Design of Analytical Engine</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="overview_and_architecture.html">Overview and Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="key_concepts.html">Key Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vertex_centric_models.html">Vertex-Centric Model</a></li>
@@ -254,14 +259,14 @@ MathJax = {
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine/deployment.html">Standalone Deployment for GIE</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/tinkerpop_eco.html">Apache TinkerPop Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Apache TinkerPop Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/tinkerpop_gremlin.html">GIE for Gremlin</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/guide_and_examples.html">Guide and Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/supported_gremlin_steps.html">Supported Gremlin Steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/tinkerpop/faq.html">FAQs for GIE Gremlin Usage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../interactive_engine/neo4j_eco.html">Neo4j Ecosystem</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Neo4j Ecosystem</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/cypher_sdk.html">GIE for Cypher</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive_engine/neo4j/supported_cypher.html">Cypher Support</a></li>
 </ul>
@@ -300,8 +305,8 @@ MathJax = {
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Python API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Session</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -313,13 +318,13 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Analytical App</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Operation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -363,18 +368,18 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Cython SDK API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of NetworkX-style API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -409,7 +414,7 @@ MathJax = {
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Graph generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -558,6 +563,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.24.0/index.html">
+                
+                  v0.24.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.23.0/index.html">
                 
                   v0.23.0
@@ -585,18 +602,6 @@ MathJax = {
               <dd><a href="../v0.22.0/index.html">
                 
                   v0.22.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.21.0/index.html">
-                
-                  v0.21.0
                 
               </a></dd>
             
@@ -654,18 +659,245 @@ MathJax = {
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <div class="tex2jax_ignore mathjax_ignore section" id="performance-tuning">
+          <section class="tex2jax_ignore mathjax_ignore" id="performance-tuning">
 <h1>Performance Tuning<a class="headerlink" href="#performance-tuning" title="Permalink to this heading">#</a></h1>
-<ul class="simple">
-<li><p>misc;</p></li>
+<p>Memory footprint and performance on large-scale graph data are the keys
+to the success of graph analysis in real-world scenarios. In this section,
+We’ll go through the internal design of the property graph data structure
+in GraphScope, analyze the impact factor of memory footprint and performance,
+and finally give some suggestions on how to optimize the performance and
+reduce the memory usage of graph analysis.</p>
+<section id="memory-footprint-of-property-graphs">
+<h2>Memory Footprint of Property Graphs<a class="headerlink" href="#memory-footprint-of-property-graphs" title="Permalink to this heading">#</a></h2>
+<p>We first dive into the detailed design of the property graph data structure
+to see how it is stored in memory and which factors affect the memory footprint.</p>
+<section id="property-graph-data-structure">
+<h3>Property graph data structure<a class="headerlink" href="#property-graph-data-structure" title="Permalink to this heading">#</a></h3>
+<p>GraphScope uses the <code class="docutils literal notranslate"><span class="pre">ArrowFragment</span></code> data structure <a class="reference external" href="https://github.com/v6d-io/v6d/blob/main/modules/graph/fragment/arrow_fragment.vineyard-mod">defined in Vineyard</a> for
+its property graphs. Basically, the <code class="docutils literal notranslate"><span class="pre">ArrowFragment</span></code> has the following members:</p>
+<ul>
+<li><p>Indexers: the vertices in the user input graphs are natural integral numbers
+or strings. To make the graph analytical processing efficient, we need to map
+the original IDs in the user input to a consecutive range of integral numbers.
+This process requires a data structure called <code class="docutils literal notranslate"><span class="pre">VertexMap</span></code>, which is basically
+a hashmap which maps the original vertex ID to the internal vertex ID and an
+array which record the original vertex IDs in each partition.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">o2g_&lt;fragment_id&gt;_&lt;vertex_label&gt;</span></code>: vertices in each partition for each label
+has such a hashmap. The hashmap is either flatten hashmap or perfect hashmap.</p>
+<p>The key type of the hashmap is the same with the original vertex IDs (usually
+<code class="docutils literal notranslate"><span class="pre">int64_t</span></code> or <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>) and the value type is the internal vertex ID
+(usually <code class="docutils literal notranslate"><span class="pre">uint64_t</span></code>).</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">oid_arrays_&lt;fragment_id&gt;_&lt;vertex_label&gt;</span></code>: arrays for original vertex IDs in
+each partition for each label.</p>
+<p>The type of this array is the same with the original vertex IDs (usually <code class="docutils literal notranslate"><span class="pre">int64_t</span></code>
+or <code class="docutils literal notranslate"><span class="pre">string</span></code>).</p>
+</li>
 </ul>
+</li>
+<li><p>Topologies: the first major part of the property graph is the topology: it basically
+a CSR (Compressed Sparse Row Format) matrix:</p>
+<ul>
+<li><p>incoming edges: each <code class="docutils literal notranslate"><span class="pre">(src_type,</span> <span class="pre">edge_type)</span></code> pair has a CSR matrix for its incoming
+edges. The CSR matrix consists of a <code class="docutils literal notranslate"><span class="pre">indptr</span></code> array and a <code class="docutils literal notranslate"><span class="pre">indices</span></code> array:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ie_lists_-&lt;vertex_label&gt;-&lt;edge_label&gt;</span></code>: the <code class="docutils literal notranslate"><span class="pre">indptr</span></code> array, each element in
+the <code class="docutils literal notranslate"><span class="pre">indptr</span></code> array is a <code class="docutils literal notranslate"><span class="pre">(neighbor_vertex_id,</span> <span class="pre">edge_table_index)</span></code> pair where the
+first the neighbor vertex id and the second is the index points to the
+corresponding edge table.</p>
+<p>By default, the type of <code class="docutils literal notranslate"><span class="pre">neighbor_vertex_id</span></code> is <code class="docutils literal notranslate"><span class="pre">uint64_t</span></code> or <code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> and
+the type of <code class="docutils literal notranslate"><span class="pre">edge_table_index</span></code> is <code class="docutils literal notranslate"><span class="pre">size_t</span></code>.</p>
+<p>The size of the <code class="docutils literal notranslate"><span class="pre">indptr</span></code> array is <code class="docutils literal notranslate"><span class="pre">num_edges</span></code>.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ie_offsets_lists_-&lt;vertex_label&gt;-&lt;edge_label&gt;</span></code>: the <code class="docutils literal notranslate"><span class="pre">indices</span></code> array, each
+element in the <code class="docutils literal notranslate"><span class="pre">indices</span></code> array is an <code class="docutils literal notranslate"><span class="pre">offset</span></code>, and the slice
+<code class="docutils literal notranslate"><span class="pre">ie_lists[ie_offsets[i]:ie_offsets[i+1]]</span></code> is the edges for vertex <code class="docutils literal notranslate"><span class="pre">i</span></code>.</p>
+<p>By default, the type of <code class="docutils literal notranslate"><span class="pre">offset</span></code> is <code class="docutils literal notranslate"><span class="pre">size_t</span></code>.</p>
+<p>The size of <code class="docutils literal notranslate"><span class="pre">indices</span></code> aray is <code class="docutils literal notranslate"><span class="pre">num_vertices</span> <span class="pre">+</span> <span class="pre">1</span></code>, which is a 0-based offset array.</p>
+</li>
+</ul>
+</li>
+<li><p>outgoing edges: a CSR matrix, same as the incoming edges, but for outgoing edges
+of current partition.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">oe_lists_-&lt;vertex_label&gt;-&lt;edge_label&gt;</span></code>: the <code class="docutils literal notranslate"><span class="pre">indptr</span></code> array, each element in
+the <code class="docutils literal notranslate"><span class="pre">indptr</span></code> array is a <code class="docutils literal notranslate"><span class="pre">(neighbor_vertex_id,</span> <span class="pre">edge_table_index)</span></code> pair where the
+first the neighbor vertex id and the second is the index points to the
+corresponding edge table.</p>
+<p>By default, the type of <code class="docutils literal notranslate"><span class="pre">neighbor_vertex_id</span></code> is <code class="docutils literal notranslate"><span class="pre">uint64_t</span></code> or <code class="docutils literal notranslate"><span class="pre">uint32_t</span></code> and
+the type of <code class="docutils literal notranslate"><span class="pre">edge_table_index</span></code> is <code class="docutils literal notranslate"><span class="pre">size_t</span></code>.</p>
+<p>The size of the <code class="docutils literal notranslate"><span class="pre">indptr</span></code> array is <code class="docutils literal notranslate"><span class="pre">num_edges</span></code>.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">oe_offsets_lists_-&lt;vertex_label&gt;-&lt;edge_label&gt;</span></code>: the <code class="docutils literal notranslate"><span class="pre">indices</span></code> array, each
+element in the <code class="docutils literal notranslate"><span class="pre">indices</span></code> array is an <code class="docutils literal notranslate"><span class="pre">offset</span></code>, and the slice
+<code class="docutils literal notranslate"><span class="pre">oe_lists[oe_offsets[i]:oe_offsets[i+1]]</span></code> is the edges for vertex <code class="docutils literal notranslate"><span class="pre">i</span></code>.</p>
+<p>By default, the type of <code class="docutils literal notranslate"><span class="pre">offset</span></code> is <code class="docutils literal notranslate"><span class="pre">size_t</span></code>.</p>
+<p>The size of <code class="docutils literal notranslate"><span class="pre">indices</span></code> aray is <code class="docutils literal notranslate"><span class="pre">num_vertices</span> <span class="pre">+</span> <span class="pre">1</span></code>, which is a 0-based offset array.</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Properties: the second part of the property graph is the properties: each vertex
+label and each edge label has a table for its properties:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">edge_tables_-&lt;edge_label&gt;</span></code>: tables for edge properties, each edge label has such
+a table;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vertex_tables_-&lt;vertex_label&gt;</span></code>: tables for vertex properties, each vertex label has
+such a table.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="memory-usage-estimation">
+<h3>Memory usage estimation<a class="headerlink" href="#memory-usage-estimation" title="Permalink to this heading">#</a></h3>
+<p>The memory usage of a given fragment with vertex number <code class="docutils literal notranslate"><span class="pre">V</span></code>, edge number <code class="docutils literal notranslate"><span class="pre">E</span></code>, original
+ID type <code class="docutils literal notranslate"><span class="pre">OID_T</span></code> and internal ID type <code class="docutils literal notranslate"><span class="pre">VID_T</span></code> can be
+estimated as:</p>
+<ul>
+<li><p>Indexers:</p>
+<ul>
+<li><p>with flatten hashmap: <code class="docutils literal notranslate"><span class="pre">(sizeof(OID_T)</span> <span class="pre">+</span> <span class="pre">sizeof(VID_T)</span> <span class="pre">+</span> <span class="pre">sizeof(uint8_t))</span> <span class="pre">*</span> <span class="pre">V</span> <span class="pre">/</span> <span class="pre">load_factor</span></code>;</p>
+<p>From the observation in our practices, the <code class="docutils literal notranslate"><span class="pre">load_factory</span></code> is usually within the range
+of <code class="docutils literal notranslate"><span class="pre">[0.4,</span> <span class="pre">0.5]</span></code>.</p>
+</li>
+<li><p>with perfect hashmap: <code class="docutils literal notranslate"><span class="pre">(sizeof(OID_T)</span> <span class="pre">*</span> <span class="pre">V)</span> <span class="pre">*</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">overhead)</span></code>.</p>
+<p>In practice the <code class="docutils literal notranslate"><span class="pre">overhead</span></code> is usually within the range of <code class="docutils literal notranslate"><span class="pre">[0.15,</span> <span class="pre">0.2]</span></code>.</p>
+</li>
+</ul>
+</li>
+<li><p>Topologies:</p>
+<ul class="simple">
+<li><p>incoming edges: <code class="docutils literal notranslate"><span class="pre">(sizeof(VID_T)</span> <span class="pre">+</span> <span class="pre">sizeof(size_t))</span> <span class="pre">*</span> <span class="pre">E</span> <span class="pre">+</span> <span class="pre">sizeof(size_t)</span> <span class="pre">*</span> <span class="pre">(V+1)</span></code>;</p></li>
+<li><p>outgoing edges: same as incoming edges, <code class="docutils literal notranslate"><span class="pre">(sizeof(VID_T)</span> <span class="pre">+</span> <span class="pre">sizeof(size_t))</span> <span class="pre">*</span> <span class="pre">E</span> <span class="pre">+</span> <span class="pre">sizeof(size_t)</span> <span class="pre">*</span> <span class="pre">(V+1)</span></code>.</p></li>
+</ul>
+</li>
+<li><p>Properties:</p>
+<ul>
+<li><p>edge properties: depends on how many edge properties you have.</p>
+<p>In GraphScope, by default the an extra column <code class="docutils literal notranslate"><span class="pre">edge_id</span></code> property (of type <code class="docutils literal notranslate"><span class="pre">int64_t</span></code>)
+will be generated and added to the edge table as a unique identifier for each edge.</p>
+</li>
+<li><p>vertex properties: depends on how many vertex properties you have.</p>
+<p>In GraphScope, by default the original vertex ID is kept as a property in the vertex table
+as well.</p>
+</li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="optimizing-memory-usage">
+<h2>Optimizing Memory Usage<a class="headerlink" href="#optimizing-memory-usage" title="Permalink to this heading">#</a></h2>
+<p>Based on the above analysis, we summary the optimization tips of reducing fragment memory
+footprint as follows:</p>
+<ul>
+<li><p>Optimizing indexers:</p>
+<ul>
+<li><p>Use perfect hashmap. It is not the default option but can be enabled by the argument
+<code class="docutils literal notranslate"><span class="pre">use_perfect_hash=True</span></code> in <code class="docutils literal notranslate"><span class="pre">graphscope.g()</span></code> and <code class="docutils literal notranslate"><span class="pre">graphscope.load_from()</span></code>.</p>
+<p>As analyzed above, the perfect hashmap can reduce the memory footprint of vertex map
+for a really large margin.</p>
+</li>
+<li><p>Use local vertex map. GraphScope internally has two kinds of vertex map implemented, the
+former is called <code class="docutils literal notranslate"><span class="pre">GlobalVertexMap</span></code> which stores all vertices in all fragments in the
+indexer, the later is called <code class="docutils literal notranslate"><span class="pre">LocalVertexMap</span></code> which only stores related vertices (vertices that
+has edges between inner vertices of current fragment) in the indexer.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">LocalVertexMap</span></code> is not the default option but can be enabled by the argument
+<code class="docutils literal notranslate"><span class="pre">vertex_map=&quot;local&quot;</span></code> in <code class="docutils literal notranslate"><span class="pre">graphscope.load_from()</span></code>. The <code class="docutils literal notranslate"><span class="pre">LocalVertexMap</span></code> is suitable for
+graphs which will scales to many nodes (e.g., dozens or hundreds of workers), but it
+does has some limitations on the flexibility that can only used when loading graphs using
+<code class="docutils literal notranslate"><span class="pre">graphscope.load_from()</span></code> and repeatedly <code class="docutils literal notranslate"><span class="pre">add_vertices/edges()</span></code> are not supported.</p>
+</li>
+</ul>
+</li>
+<li><p>Optimizing topologies:</p>
+<ul>
+<li><p>GraphScope uses <code class="docutils literal notranslate"><span class="pre">uint64_t</span></code> as the <code class="docutils literal notranslate"><span class="pre">VID_T</span></code> (internal vertex id) to support large-scale
+graphs. However, from above analysis, the type of <code class="docutils literal notranslate"><span class="pre">VID_T</span></code> is one of the key factors
+that affects the memory footprint of the topology part.</p>
+<p>If you are sure your graph is fairly small (less than <code class="docutils literal notranslate"><span class="pre">10^8</span></code> of vertices, the absolute
+value depends on number of labels and number of partitions), you can use <code class="docutils literal notranslate"><span class="pre">int32_t</span></code>
+as the <code class="docutils literal notranslate"><span class="pre">VID_T</span></code> to optimize the memory usage, by <code class="docutils literal notranslate"><span class="pre">vid_type=&quot;int32_t&quot;</span></code> option in
+<code class="docutils literal notranslate"><span class="pre">graphscope.g()</span></code> and <code class="docutils literal notranslate"><span class="pre">graphscope.load_from()</span></code>.s</p>
+</li>
+<li><p>GraphScope supports options <code class="docutils literal notranslate"><span class="pre">compact_edges=True</span></code> in <code class="docutils literal notranslate"><span class="pre">graphscope.g()</span></code> and <code class="docutils literal notranslate"><span class="pre">graphscope.load_from()</span></code>
+to compact the <code class="docutils literal notranslate"><span class="pre">ie_lists</span></code> and <code class="docutils literal notranslate"><span class="pre">oe_lists</span></code> arrays using delta and varint encoding. Such compression
+can half the memory footprint of the topology part, but has overhead in computation during
+traversing the fragment that can up to <code class="docutils literal notranslate"><span class="pre">20%</span></code>.</p></li>
+</ul>
+</li>
+<li><p>Optimize properties:</p>
+<ul>
+<li><p>The generation of <code class="docutils literal notranslate"><span class="pre">edge_id</span></code> column in the edge tables can be avoided by the argument
+<code class="docutils literal notranslate"><span class="pre">generated_eid=False</span></code> in <code class="docutils literal notranslate"><span class="pre">graphscope.g()</span></code> and <code class="docutils literal notranslate"><span class="pre">graphscope.load_from()</span></code>. This helps a
+a lot (saves <code class="docutils literal notranslate"><span class="pre">sizeof(size_t)</span> <span class="pre">*</span> <span class="pre">E</span></code>) if your edges doesn’t much many properties and you
+only need to run efficient analytical jobs.</p>
+<p>Note that if you intend to run interactive queries on the graph, the argument <code class="docutils literal notranslate"><span class="pre">generated_eid</span></code>
+must be <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</li>
+<li><p>The preservation of <code class="docutils literal notranslate"><span class="pre">vertex_id</span></code> column in the vertex tables can be avoided by the argument
+<code class="docutils literal notranslate"><span class="pre">retain_oid=False</span></code> in <code class="docutils literal notranslate"><span class="pre">graphscope.g()</span></code> and <code class="docutils literal notranslate"><span class="pre">graphscope.load_from()</span></code>. It helps not very much
+(saves <code class="docutils literal notranslate"><span class="pre">sizeof(OID_T)</span> <span class="pre">*</span> <span class="pre">V</span></code>) but the gain can be more significant if your graph has low <code class="docutils literal notranslate"><span class="pre">E/V</span></code>
+ratio (graphs has many vertices and not so many edges).</p>
+<p>Note that if you intend to run interactive queries on the graph, the argument <code class="docutils literal notranslate"><span class="pre">retain_oid</span></code>
+must be <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="optimizing-performance-of-graph-analytics">
+<h2>Optimizing Performance of Graph Analytics<a class="headerlink" href="#optimizing-performance-of-graph-analytics" title="Permalink to this heading">#</a></h2>
+<p>GraphScope supports analytical applications on both <code class="docutils literal notranslate"><span class="pre">ArrowFragment</span></code> graphs with many vertex
+labels, edge labels, and properties, as well as <code class="docutils literal notranslate"><span class="pre">ArrowProjectedFragment</span></code> graphs with only
+one vertex label, one edge label, and at most one property for each vertex and edge.</p>
+<ul>
+<li><p>The analytical applications on <code class="docutils literal notranslate"><span class="pre">ArrowFragment</span></code> requires an implicit “flatten” process to
+make it a <code class="docutils literal notranslate"><span class="pre">ArrowFlattenFragment</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">ArrowFlattenFragment</span></code> can be thought as a “view” on the property graph <code class="docutils literal notranslate"><span class="pre">ArrowFragment</span></code>.
+It is mainly for compatibility purpose and has performance penalty for traversing.
+In practice if the performance of analytical applications is critical, flatten fragments
+should be avoid and projected fragments should be used instead.</p>
+</li>
+<li><p>The analytical applications on <code class="docutils literal notranslate"><span class="pre">ArrowProjectFragment</span></code> requires an implicit “project” process
+to create the <code class="docutils literal notranslate"><span class="pre">ArrowProjectedFragment</span></code>. This process involves traversing the edges and
+generating a new <code class="docutils literal notranslate"><span class="pre">offsets</span></code> arrays.</p>
+<p>To optimizing the run time in cases where you need to run many different algorithms on the
+same graph using the same projection settings, it is preferred to project the fragment
+explicitly to <code class="docutils literal notranslate"><span class="pre">ArrowProjectFragment</span></code> first to avoid the overhead of the “project” process. i.e.,</p>
+<p>Instead of:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="o">....</span>   <span class="c1"># fragment that can be implicit projected</span>
+
+<span class="n">r1</span> <span class="o">=</span> <span class="n">sssp</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">r2</span> <span class="o">=</span> <span class="n">pagerank</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="n">r3</span> <span class="o">=</span> <span class="n">wcc</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="o">...</span>
+</pre></div>
 </div>
+<p>You should first project it explicitly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="o">....</span>   <span class="c1"># fragment that can be implicit projected</span>
+
+<span class="n">projected_g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">_project_to_simple</span><span class="p">()</span>
+<span class="n">r1</span> <span class="o">=</span> <span class="n">sssp</span><span class="p">(</span><span class="n">projected_g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">r2</span> <span class="o">=</span> <span class="n">pagerank</span><span class="p">(</span><span class="n">projected_g</span><span class="p">)</span>
+<span class="n">r3</span> <span class="o">=</span> <span class="n">wcc</span><span class="p">(</span><span class="n">projected_g</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>When apply analytical algorithms on <code class="docutils literal notranslate"><span class="pre">ArrowFragment</span></code>, if (1) it has only one vertex label, (2)
+it has only one edge label, and (3) each vertex and edge has at most one property, then
+the <code class="docutils literal notranslate"><span class="pre">ArrowProjectedFragment</span></code> will be generated, otherwise, the <code class="docutils literal notranslate"><span class="pre">ArrowFlattenFragment</span></code> will be used.</p>
+</section>
+</section>
 
         </article>
       </div>
@@ -713,20 +945,42 @@ MathJax = {
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Performance Tuning</a><ul>
+<li><a class="reference internal" href="#memory-footprint-of-property-graphs">Memory Footprint of Property Graphs</a><ul>
+<li><a class="reference internal" href="#property-graph-data-structure">Property graph data structure</a></li>
+<li><a class="reference internal" href="#memory-usage-estimation">Memory usage estimation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#optimizing-memory-usage">Optimizing Memory Usage</a></li>
+<li><a class="reference internal" href="#optimizing-performance-of-graph-analytics">Optimizing Performance of Graph Analytics</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

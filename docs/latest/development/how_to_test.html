@@ -311,7 +311,6 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.set_option.html">graphscope.set_option</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_option.html">graphscope.get_option</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.g.html">graphscope.g</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.gremlin.html">graphscope.gremlin</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.graphlearn.html">graphscope.graphlearn</a></li>
@@ -563,6 +562,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.24.0/index.html">
+                
+                  v0.24.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.23.0/index.html">
                 
                   v0.23.0
@@ -590,18 +601,6 @@ MathJax = {
               <dd><a href="../../v0.22.0/index.html">
                 
                   v0.22.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.21.0/index.html">
-                
-                  v0.21.0
                 
               </a></dd>
             
@@ -688,14 +687,14 @@ MathJax = {
 <section id="build-all-targets-for-graphscope">
 <h3>Build All Targets for GraphScope<a class="headerlink" href="#build-all-targets-for-graphscope" title="Permalink to this heading">#</a></h3>
 <p>With <code class="docutils literal notranslate"><span class="pre">gs</span></code> command-line utility, you can build all targets for GraphScope with a single command.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>install
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>make<span class="w"> </span>install
 </pre></div>
 </div>
 </section>
 <section id="run-tests">
 <h3>Run tests<a class="headerlink" href="#run-tests" title="Permalink to this heading">#</a></h3>
 <p>Run a bunch of test cases that involves 3 engines</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span><span class="nb">test</span><span class="w"> </span>e2e<span class="w"> </span>--local
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span><span class="nb">test</span><span class="w"> </span>e2e<span class="w"> </span>--local
 </pre></div>
 </div>
 </section>
@@ -705,7 +704,7 @@ MathJax = {
 <p>Make sure you have <a class="reference external" href="https://www.docker.com">docker</a> installed.</p>
 <section id="build-images">
 <h3>Build images<a class="headerlink" href="#build-images" title="Permalink to this heading">#</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make-image<span class="w"> </span>all
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>make-image<span class="w"> </span>all
 </pre></div>
 </div>
 <p>Executing this command will generate the corresponding images for each component.</p>
@@ -717,10 +716,10 @@ MathJax = {
 </figcaption>
 </figure>
 <p>Or you could choose to generate image for a specific component. For example</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make-image<span class="w"> </span>analytical
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>make-image<span class="w"> </span>analytical
 </pre></div>
 </div>
-<p>Try <code class="docutils literal notranslate"><span class="pre">./gs</span> <span class="pre">make-image</span> <span class="pre">-h</span></code> for more available options.</p>
+<p>Try <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">gsctl.py</span> <span class="pre">make-image</span> <span class="pre">-h</span></code> for more available options.</p>
 </section>
 <section id="prepare-a-kubernetes-cluster">
 <h3>Prepare a Kubernetes cluster<a class="headerlink" href="#prepare-a-kubernetes-cluster" title="Permalink to this heading">#</a></h3>
@@ -730,7 +729,7 @@ MathJax = {
 <h3>Run tests<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
 <p>The tests would launch a couple of pods on your cluster, so you need to set appropriate environment variables to let it use your newly built image.</p>
 <p>Take our previous built image for example, which has an empty registry (or you could say it’s <code class="docutils literal notranslate"><span class="pre">docker.io</span></code> by default), and tagged <code class="docutils literal notranslate"><span class="pre">latest</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span><span class="nb">test</span><span class="w"> </span>e2e<span class="w"> </span>--k8s<span class="w"> </span>--registry<span class="o">=</span><span class="s2">&quot;docker.io&quot;</span><span class="w"> </span>--tag<span class="o">=</span><span class="s2">&quot;latest&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span><span class="nb">test</span><span class="w"> </span>e2e<span class="w"> </span>--k8s<span class="w"> </span>--registry<span class="o">=</span><span class="s2">&quot;docker.io&quot;</span><span class="w"> </span>--tag<span class="o">=</span><span class="s2">&quot;latest&quot;</span>
 </pre></div>
 </div>
 </section>

@@ -311,7 +311,6 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.set_option.html">graphscope.set_option</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_option.html">graphscope.get_option</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.g.html">graphscope.g</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.gremlin.html">graphscope.gremlin</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.graphlearn.html">graphscope.graphlearn</a></li>
@@ -563,6 +562,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.24.0/index.html">
+                
+                  v0.24.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.23.0/index.html">
                 
                   v0.23.0
@@ -590,18 +601,6 @@ MathJax = {
               <dd><a href="../../v0.22.0/index.html">
                 
                   v0.22.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.21.0/index.html">
-                
-                  v0.21.0
                 
               </a></dd>
             
@@ -685,19 +684,19 @@ MathJax = {
 </pre></div>
 </div>
 <p>Now you are ready to build the GIE engine (on vineyard store) with the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>interactive<span class="w"> </span>--storage-type<span class="o">=</span>vineyard
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>make<span class="w"> </span>interactive<span class="w"> </span>--storage-type<span class="o">=</span>vineyard
 </pre></div>
 </div>
 <p>You can find the built artifacts in <code class="docutils literal notranslate"><span class="pre">interactive_engine/assembly/target/graphscope</span></code>.</p>
 <p>You could install it to a location by</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>interactive-install<span class="w"> </span>--storage-type<span class="o">=</span>vineyard<span class="w"> </span>--install-prefix<span class="w"> </span>/opt/graphscope
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>make<span class="w"> </span>interactive-install<span class="w"> </span>--storage-type<span class="o">=</span>vineyard<span class="w"> </span>--install-prefix<span class="w"> </span>/opt/graphscope
 </pre></div>
 </div>
 </section>
 <section id="test-gie-with-vineyard-store-on-local">
 <h2>Test GIE with Vineyard Store on Local<a class="headerlink" href="#test-gie-with-vineyard-store-on-local" title="Permalink to this heading">#</a></h2>
 <p>You could test the GIE engine on vineyard store with the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span><span class="nb">test</span><span class="w"> </span>interactive<span class="w"> </span>--local<span class="w"> </span>--storage-type<span class="o">=</span>vineyard
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span><span class="nb">test</span><span class="w"> </span>interactive<span class="w"> </span>--local<span class="w"> </span>--storage-type<span class="o">=</span>vineyard
 </pre></div>
 </div>
 <p>This will run end2end tests, from compiling a gremlin queries to obtaining and verifying the results from the computed engine. The test includes:</p>

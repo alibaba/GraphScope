@@ -311,7 +311,6 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.set_option.html">graphscope.set_option</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_option.html">graphscope.get_option</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.g.html">graphscope.g</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.gremlin.html">graphscope.gremlin</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.graphlearn.html">graphscope.graphlearn</a></li>
@@ -563,6 +562,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.24.0/index.html">
+                
+                  v0.24.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.23.0/index.html">
                 
                   v0.23.0
@@ -590,18 +601,6 @@ MathJax = {
               <dd><a href="../../v0.22.0/index.html">
                 
                   v0.22.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.21.0/index.html">
-                
-                  v0.21.0
                 
               </a></dd>
             
@@ -698,10 +697,10 @@ making it easier to collaborate with others and maintain a stable development en
 <section id="install-deps-on-local">
 <h3>Install deps on local<a class="headerlink" href="#install-deps-on-local" title="Permalink to this heading">#</a></h3>
 <p>To install all dependencies on your local, use the GraphScope command-line utility <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/gs">gs</a> with the subcommand <code class="docutils literal notranslate"><span class="pre">install-deps</span></code> like this</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>install-deps<span class="w"> </span>dev
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>install-deps<span class="w"> </span>dev
 
 <span class="c1"># for more usage, try</span>
-<span class="c1"># ./gs install-deps -h</span>
+<span class="c1"># python3 gsctl.py install-deps -h</span>
 </pre></div>
 </div>
 <p>You could download the <code class="docutils literal notranslate"><span class="pre">gs</span></code> directly or clone the <a class="reference external" href="https://github.com/alibaba/GraphScope">GraphScope</a> to local, the <code class="docutils literal notranslate"><span class="pre">gs</span></code> is located in the root directory of GraphScope.</p>
@@ -710,7 +709,7 @@ making it easier to collaborate with others and maintain a stable development en
 <section id="build-all-targets-for-graphscope">
 <h2>Build All Targets for GraphScope<a class="headerlink" href="#build-all-targets-for-graphscope" title="Permalink to this heading">#</a></h2>
 <p>With <code class="docutils literal notranslate"><span class="pre">gs</span></code> command-line utility, you can build all targets for GraphScope with a single command.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>all
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>make<span class="w"> </span>all
 </pre></div>
 </div>
 <p>This would build all targets sequentially, here we
@@ -721,7 +720,7 @@ You may found the built artifacts in several places according to each components
 <li><p>learning engine: <code class="docutils literal notranslate"><span class="pre">learning_engine/graph-learn/graphlearn/cmake-build</span></code></p></li>
 </ul>
 <p>And you could install them to one place by</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>install<span class="w"> </span><span class="o">[</span>--prefix<span class="o">=</span>/opt/graphscope<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>make<span class="w"> </span>install<span class="w"> </span><span class="o">[</span>--prefix<span class="o">=</span>/opt/graphscope<span class="o">]</span>
 </pre></div>
 </div>
 <p>By default it would install all artifacts to <code class="docutils literal notranslate"><span class="pre">/opt/graphscope</span></code>, and you could specify another location by assigning the value of <code class="docutils literal notranslate"><span class="pre">--prefix</span></code>.</p>
@@ -746,7 +745,7 @@ You may found the built artifacts in several places according to each components
 <p class="admonition-title">Tip</p>
 <p>The package would be installed in <a class="reference external" href="https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-e">editable mode</a>, which means any changed you made in local directory will take effect.</p>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>coordinator
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>make<span class="w"> </span>coordinator
 </pre></div>
 </div>
 </section>
@@ -758,7 +757,7 @@ You may found the built artifacts in several places according to each components
 <p class="admonition-title">Tip</p>
 <p>This package would also be installed in <a class="reference external" href="https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-e">editable mode</a></p>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>client
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>make<span class="w"> </span>client
 </pre></div>
 </div>
 </section>

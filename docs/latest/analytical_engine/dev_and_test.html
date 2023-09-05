@@ -311,7 +311,6 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.set_option.html">graphscope.set_option</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_option.html">graphscope.get_option</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.g.html">graphscope.g</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.gremlin.html">graphscope.gremlin</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.graphlearn.html">graphscope.graphlearn</a></li>
@@ -563,6 +562,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.24.0/index.html">
+                
+                  v0.24.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.23.0/index.html">
                 
                   v0.23.0
@@ -590,18 +601,6 @@ MathJax = {
               <dd><a href="../../v0.22.0/index.html">
                 
                   v0.22.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.21.0/index.html">
-                
-                  v0.21.0
                 
               </a></dd>
             
@@ -747,13 +746,13 @@ communication between workers, and applications, are heavily reused in the analy
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clone a repo if needed</span>
 <span class="c1"># git clone https://github.com/alibaba/graphscope</span>
 <span class="c1"># cd graphscope</span>
-./gs<span class="w"> </span>make<span class="w"> </span>analytical
+python3<span class="w"> </span>gsctl.py<span class="w"> </span>make<span class="w"> </span>analytical
 </pre></div>
 </div>
 <p>The code of analytical engine is a cmake project, with a <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> in the its root directory (<code class="docutils literal notranslate"><span class="pre">/analytical_engine</span></code>). After the building with <code class="docutils literal notranslate"><span class="pre">gs</span></code>, you may found the built artifacts in <code class="docutils literal notranslate"><span class="pre">analytical_engine/build/grape_engine</span></code>.</p>
 <p>Together with the <code class="docutils literal notranslate"><span class="pre">grape_engine</span></code> are shared libraries, or there may have a bunch of test binaries if you choose to build the tests.</p>
 <p>You could install it to a location by</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>analytical-install<span class="w"> </span>--install-prefix<span class="w"> </span>/usr/local
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>make<span class="w"> </span>analytical-install<span class="w"> </span>--install-prefix<span class="w"> </span>/usr/local
 </pre></div>
 </div>
 <div class="admonition note">
@@ -771,7 +770,7 @@ communication between workers, and applications, are heavily reused in the analy
 </pre></div>
 </div>
 <p>See more about <code class="docutils literal notranslate"><span class="pre">GRAPHSCOPE_HOME</span></code> in <a class="reference internal" href="../development/how_to_test.html#run-tests"><span class="std std-ref">run tests</span></a></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span><span class="nb">test</span><span class="w"> </span>analytical
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span><span class="nb">test</span><span class="w"> </span>analytical
 </pre></div>
 </div>
 <p>It would download the test dataset to the <code class="docutils literal notranslate"><span class="pre">/tmp/gstest</span></code> (if not exists) and run multiple algorithms against various graphs, and compare the result with the ground truth.</p>

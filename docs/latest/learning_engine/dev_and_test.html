@@ -311,7 +311,6 @@ MathJax = {
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.set_option.html">graphscope.set_option</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_option.html">graphscope.get_option</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.g.html">graphscope.g</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.gremlin.html">graphscope.gremlin</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.graphlearn.html">graphscope.graphlearn</a></li>
@@ -563,6 +562,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.24.0/index.html">
+                
+                  v0.24.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.23.0/index.html">
                 
                   v0.23.0
@@ -590,18 +601,6 @@ MathJax = {
               <dd><a href="../../v0.22.0/index.html">
                 
                   v0.22.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.21.0/index.html">
-                
-                  v0.21.0
                 
               </a></dd>
             
@@ -677,10 +676,10 @@ on your local machine, or build it in our provided docker image.</p>
 <h3>Install deps on local<a class="headerlink" href="#install-deps-on-local" title="Permalink to this heading">#</a></h3>
 <p>To install all dependencies on your local, use the GraphScope command-line utility <code class="docutils literal notranslate"><span class="pre">gs</span></code> with the subcommand
 <code class="docutils literal notranslate"><span class="pre">install-deps</span></code> like this</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>install-deps<span class="w"> </span>dev
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>install-deps<span class="w"> </span>dev
 
 <span class="c1"># for more usage, try</span>
-<span class="c1"># ./gs install-deps -h</span>
+<span class="c1"># python3 gsctl.py install-deps -h</span>
 </pre></div>
 </div>
 </section>
@@ -701,11 +700,11 @@ More options about <code class="docutils literal notranslate"><span class="pre">
 <section id="build-learning-engine">
 <h2>Build Learning Engine<a class="headerlink" href="#build-learning-engine" title="Permalink to this heading">#</a></h2>
 <p>You can build all targets for GraphScope Learning Engine with a single command.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>learning
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>make<span class="w"> </span>learning
 </pre></div>
 </div>
 <p>You could install it to a location by:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gs<span class="w"> </span>make<span class="w"> </span>learning-install<span class="w"> </span>--install-prefix<span class="w"> </span>/opt/graphscope
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>make<span class="w"> </span>learning-install<span class="w"> </span>--install-prefix<span class="w"> </span>/opt/graphscope
 </pre></div>
 </div>
 </section>
