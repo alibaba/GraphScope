@@ -58,6 +58,9 @@ enum OpTypePb {
 
   PREPARE_DATA_LOAD = 13;
   COMMIT_DATA_LOAD = 14;
+
+  CLEAR_VERTEX_PROPERTIES = 15;
+  CLEAR_EDGE_PROPERTIES = 16;
 }
 
 message VertexIdPb {
@@ -81,6 +84,7 @@ message DataOperationPb {
   // One of [LabelIdPb, EdgeLocation]
   bytes locationBlob = 2;
   map<int32, gs.rpc.graph.PropertyValuePb> props = 3;
+  repeated int32 propIds = 4;
 }
 
 message KindOperationPb {

@@ -91,7 +91,7 @@ public class RealtimeWrite {
         System.out.println("Finished adding vertices and edges");
     }
 
-    private static void testUpdateDeleteEdge(GrootClient client) {
+    private static void testUpdateAndDeleteEdge(GrootClient client) {
         Map<String, String> srcPk = new HashMap<>();
         Map<String, String> dstPk = new HashMap<>();
         Map<String, String> properties = new HashMap<>();
@@ -110,7 +110,7 @@ public class RealtimeWrite {
         System.out.println("Finished delete edge person-0 -> software-0");
     }
 
-    private static void testUpdateDeleteVertex(GrootClient client) {
+    private static void testUpdateAndDeleteVertex(GrootClient client) {
         Map<String, String> properties = new HashMap<>();
         properties.put("id", String.valueOf(0));
         properties.put("name", "marko-0-updated");
@@ -121,6 +121,31 @@ public class RealtimeWrite {
         Map<String, String> pk_properties = new HashMap<>();
         client.deleteVertex(new Vertex("person", pk_properties));
         System.out.println("Finished delete vertex person-0");
+    }
+
+    private static void testClearProperties(GrootClient client) {
+        {
+            Map<String, String> properties = new HashMap<>();
+            properties.put("id", String.valueOf(1));
+            properties.put("name", "");
+            properties.put("age", "");
+            long snapshotId = client.clearVertexProperty(new Vertex("person", properties));
+            client.remoteFlush(snapshotId);
+            System.out.println("Finished update vertex person-0");
+        }
+        {
+            Map<String, String> srcPk = new HashMap<>();
+            Map<String, String> dstPk = new HashMap<>();
+            Map<String, String> properties = new HashMap<>();
+
+            srcPk.put("id", String.valueOf(1));
+            dstPk.put("id", String.valueOf(2));
+            properties.put("weight", "");
+            long snapshotId =
+                    client.clearEdgeProperty(
+                            new Edge("knows", "person", "person", srcPk, dstPk, properties));
+            client.remoteFlush(snapshotId);
+        }
     }
 
     private static List<Vertex> getVerticesA() {
@@ -356,18 +381,20 @@ public class RealtimeWrite {
 
         RealtimeWrite writer = new RealtimeWrite();
 
-        client.dropSchema();
-        writer.initSchema(client);
+        // client.dropSchema();
+        // writer.initSchema(client);
 
-        List<Vertex> verticesA = RealtimeWrite.getVerticesA();
-        List<Vertex> verticesB = RealtimeWrite.getVerticesB();
-        List<Edge> edges = RealtimeWrite.getEdges();
+        // List<Vertex> verticesA = RealtimeWrite.getVerticesA();
+        // List<Vertex> verticesB = RealtimeWrite.getVerticesB();
+        // List<Edge> edges = RealtimeWrite.getEdges();
 
         TimeWatch watch = TimeWatch.start();
         // writer.sequential(client, verticesA, verticesB, edges);
         // writer.parallel(client, verticesA, verticesB, edges);
         // writer.sequentialBatch(client, verticesA, verticesB, edges);
-        writer.sequentialAsync(client, verticesA, verticesB, edges);
+        //        writer.sequentialAsync(client, verticesA, verticesB, edges);
+        // RealtimeWrite.testAddVerticesEdges(client);
+        RealtimeWrite.testClearProperties(client);
         watch.status("Total");
     }
 }
