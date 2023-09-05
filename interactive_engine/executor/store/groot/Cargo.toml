@@ -24,6 +24,7 @@ grpcio-sys = { version = "0.10", features = ["openssl"] }
 # deactivation of zstd due to the 'hidden symbol "ZSTD_maxCLevel" is referenced by DSO' error
 rocksdb = { version = "0.21.0", features = ["snappy", "lz4", "zlib"], default-features = false }
 dyn_type = { path = "../../common/dyn_type" }
+rustversion = "1.0"
 
 [build-dependencies]
 protoc-grpcio = "3.0"
