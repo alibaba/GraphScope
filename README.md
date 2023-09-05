@@ -17,7 +17,7 @@
 [![README-zh](https://shields.io/badge/README-%E4%B8%AD%E6%96%87-blue)](README-zh.md)
 [![ACM DL](https://img.shields.io/badge/ACM%20DL-10.14778%2F3476311.3476369-blue)](https://dl.acm.org/doi/10.14778/3476311.3476369)
 
-🎉 See our ongoing [GraphScope Flex](flex/): a LEGO-inspired, modular, and user-friendly GraphScope evolution. 🎉
+🎉 See our ongoing [GraphScope Flex](https://github.com/alibaba/GraphScope/tree/main/flex): a LEGO-inspired, modular, and user-friendly GraphScope evolution. 🎉
 
 GraphScope is a unified distributed graph computing platform that provides a one-stop environment for performing diverse graph operations on a cluster of computers through a user-friendly Python interface. GraphScope makes multi-staged processing of large-scale graph data on compute clusters simply by combining several important pieces of Alibaba technology: including [GRAPE](https://github.com/alibaba/libgrape-lite), [MaxGraph](interactive_engine/), and [Graph-Learn](https://github.com/alibaba/graph-learn) (GL) for analytics, interactive, and graph neural networks (GNN) computation, respectively, and the [Vineyard](https://github.com/v6d-io/v6d) store that offers efficient in-memory data transfers.
 
@@ -333,10 +333,10 @@ Please note that we have not hardened this release for production use and it lac
 To build graphscope Python package and the engine binaries, you need to install some dependencies and build tools.
 
 ```bash
-./gs install-deps dev
+python3 gsctl.py install-deps dev
 
 # With argument --cn to speed up the download if you are in China.
-./gs install-deps dev --cn
+python3 gsctl.py install-deps dev --cn
 ```
 
 Then you can build GraphScope with pre-configured `make` commands.

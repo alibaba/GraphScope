@@ -23,6 +23,7 @@ import tempfile
 import pytest
 
 import graphscope
+from graphscope.config import Config
 from graphscope.dataset import load_p2p_network
 
 COORDINATOR_HOME = os.path.join(os.path.dirname(__file__), "../", "../coordinator")
@@ -35,23 +36,10 @@ def setUpModule():
 
 
 @pytest.fixture
-def invalid_config_file():
-    with tempfile.TemporaryDirectory() as dir_name:
-        json_path = os.path.join(dir_name, "test.json")
-        with open(json_path, "w") as f:
-            # json format is incorrect.
-            f.write('{"xxx": ["xxx"],"xxx": 9527 "num_workers": 4}')
-        yield json_path
-
-
-@pytest.fixture
-def local_config_file():
-    conf = {"num_workers": 4}
-    with tempfile.TemporaryDirectory() as dir_name:
-        json_path = os.path.join(dir_name, "test.json")
-        with open(json_path, "w") as f:
-            json.dump(conf, f)
-        yield json_path
+def config_from_json():
+    conf = '{"session.num_workers": 4}'
+    config = Config.loads_json(conf)
+    yield config
 
 
 def test_default_session():
@@ -61,43 +49,8 @@ def test_default_session():
     assert default_sess.info["status"] == "closed"
 
 
-def test_launch_cluster_on_local(local_config_file):
-    s = graphscope.session(cluster_type="hosts", config=local_config_file)
-    info = s.info
-    assert info["status"] == "active"
-    s.close()
-
-
-@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
-def test_launch_session_from_config(local_config_file):
-    saved = os.environ.get("GS_CONFIG_PATH", "")
-    try:
-        os.environ["GS_CONFIG_PATH"] = local_config_file
-        s = graphscope.session(cluster_type="hosts")
-
-        info = s.info
-        assert info["status"] == "active"
-        s.close()
-    finally:
-        os.environ["GS_CONFIG_PATH"] = saved
-
-
-@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
-def test_launch_session_from_dict():
-    conf_dict = {"num_workers": 4}
-    s = graphscope.session(cluster_type="hosts", config=conf_dict)
-
-    info = s.info
-    assert info["status"] == "active"
-    s.close()
-
-
-@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
-def test_config_dict_has_highest_priority(local_config_file):
-    s = graphscope.session(
-        cluster_type="hosts", config=local_config_file, num_workers=2
-    )
-
+def test_launch_cluster_on_local(config_from_json):
+    s = graphscope.session(cluster_type="hosts", config=config_from_json)
     info = s.info
     assert info["status"] == "active"
     s.close()
@@ -105,13 +58,7 @@ def test_config_dict_has_highest_priority(local_config_file):
 
 def test_error_on_config_file_not_exist():
     with pytest.raises(FileNotFoundError, match="No such file or directory"):
-        graphscope.session(cluster_type="hosts", config="~/non_existing_filename.txt")
-
-
-def test_error_on_invalid_config_file(invalid_config_file):
-    # invalid config file (example json format incorrect)
-    with pytest.raises(json.decoder.JSONDecodeError):
-        graphscope.session(cluster_type="hosts", config=invalid_config_file)
+        graphscope.session(cluster_type="hosts", config="~/non_existing_filename.yaml")
 
 
 def test_correct_closing_on_hosts():

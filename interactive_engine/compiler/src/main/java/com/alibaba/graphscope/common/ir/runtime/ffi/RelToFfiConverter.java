@@ -41,12 +41,14 @@ import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.sun.jna.Pointer;
 
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.logical.*;
+import org.apache.calcite.rel.logical.LogicalFilter;
+import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexLiteral;
@@ -276,7 +278,11 @@ public class RelToFfiConverter implements GraphRelShuttle {
             for (int i = 0; i < keys.groupKeyCount(); ++i) {
                 RelDataTypeField field = fields.get(i);
                 RexVariable rexVar =
-                        RexGraphVariable.of(field.getIndex(), field.getName(), field.getType());
+                        RexGraphVariable.of(
+                                field.getIndex(),
+                                AliasInference.DEFAULT_COLUMN_ID,
+                                field.getName(),
+                                field.getType());
                 OuterExpression.Variable exprVar =
                         rexVar.accept(new RexToProtoConverter(true, isColumnId))
                                 .getOperators(0)
@@ -384,6 +390,54 @@ public class RelToFfiConverter implements GraphRelShuttle {
             }
         }
         return new PhysicalNode(sort, ptrNode);
+    }
+
+    @Override
+    public PhysicalNode visit(LogicalJoin join) {
+        Pointer ptrJoin = LIB.initJoinOperator(Utils.ffiJoinKind(join.getJoinType()));
+        List<RexNode> conditions = RelOptUtil.conjunctions(join.getCondition());
+        String errorMessage =
+                "join condition in ir core should be 'AND' of equal conditions, each equal"
+                        + " condition has two variables as operands";
+        Preconditions.checkArgument(!conditions.isEmpty(), errorMessage);
+        for (RexNode condition : conditions) {
+            List<RexGraphVariable> leftRightVars = getLeftRightVariables(condition);
+            Preconditions.checkArgument(leftRightVars.size() == 2, errorMessage);
+            OuterExpression.Variable leftVar =
+                    leftRightVars
+                            .get(0)
+                            .accept(new RexToProtoConverter(true, isColumnId))
+                            .getOperators(0)
+                            .getVar();
+            OuterExpression.Variable rightVar =
+                    leftRightVars
+                            .get(1)
+                            .accept(new RexToProtoConverter(true, isColumnId))
+                            .getOperators(0)
+                            .getVar();
+            checkFfiResult(
+                    LIB.addJoinKeyPairPb(
+                            ptrJoin,
+                            new FfiPbPointer.ByValue(leftVar.toByteArray()),
+                            new FfiPbPointer.ByValue(rightVar.toByteArray())));
+        }
+        return new PhysicalNode(join, ptrJoin);
+    }
+
+    private List<RexGraphVariable> getLeftRightVariables(RexNode condition) {
+        List<RexGraphVariable> vars = Lists.newArrayList();
+        if (condition instanceof RexCall) {
+            RexCall call = (RexCall) condition;
+            if (call.getOperator().getKind() == SqlKind.EQUALS) {
+                RexNode left = call.getOperands().get(0);
+                RexNode right = call.getOperands().get(1);
+                if (left instanceof RexGraphVariable && right instanceof RexGraphVariable) {
+                    vars.add((RexGraphVariable) left);
+                    vars.add((RexGraphVariable) right);
+                }
+            }
+        }
+        return vars;
     }
 
     private Pointer ffiQueryParams(AbstractBindableTableScan tableScan) {

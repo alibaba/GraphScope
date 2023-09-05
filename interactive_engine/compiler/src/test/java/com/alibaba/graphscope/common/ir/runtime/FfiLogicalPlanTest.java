@@ -84,9 +84,7 @@ public class FfiLogicalPlanTest {
                 aggregate.explain().trim());
         try (PhysicalBuilder<byte[]> ffiBuilder =
                 new FfiPhysicalBuilder(
-                        getMockGraphConfig(),
-                        Utils.schemaMeta,
-                        new LogicalPlan(aggregate, false))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(aggregate))) {
             ffiBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("ffi_logical_plan_1.json"),
@@ -117,7 +115,7 @@ public class FfiLogicalPlanTest {
                 filter.explain().trim());
         try (PhysicalBuilder<byte[]> ffiBuilder =
                 new FfiPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(filter, false))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(filter))) {
             ffiBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("ffi_logical_plan_2.json"),
@@ -144,7 +142,7 @@ public class FfiLogicalPlanTest {
                 project.explain().trim());
         try (PhysicalBuilder<byte[]> ffiBuilder =
                 new FfiPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project, false))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project))) {
             ffiBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("ffi_logical_plan_3.json"),
@@ -156,7 +154,7 @@ public class FfiLogicalPlanTest {
     public void logical_plan_4_test() throws Exception {
         LogicalPlan logicalPlan =
                 com.alibaba.graphscope.cypher.antlr4.Utils.evalLogicalPlan(
-                        "Call query_ic2(10l, 20120112l)");
+                        "Call ldbc_ic2(10l, 20120112l)");
         try (PhysicalBuilder<byte[]> ffiBuilder = new ProcedurePhysicalBuilder(logicalPlan)) {
             ffiBuilder.build();
             Assert.assertEquals(
@@ -192,7 +190,7 @@ public class FfiLogicalPlanTest {
                 project.explain().trim());
         try (PhysicalBuilder<byte[]> ffiBuilder =
                 new FfiPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project, false))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project))) {
             ffiBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("case_when.json"), ffiBuilder.explain());

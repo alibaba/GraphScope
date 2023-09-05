@@ -252,6 +252,14 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue setUnfoldMeta(Pointer unfold, FfiPbPointer.ByValue meta);
 
+    Pointer initJoinOperator(FfiJoinKind joinKind);
+
+    FfiResult.ByValue addJoinKeyPairPb(
+            Pointer join, FfiPbPointer.ByValue left, FfiPbPointer.ByValue right);
+
+    FfiResult.ByValue appendJoinOperator(
+            Pointer plan, Pointer join, int leftParent, int rightParent, IntByReference oprIdx);
+
     Pointer initSampleOperator();
 
     FfiResult.ByValue setSampleType(Pointer sample, FfiPbPointer.ByValue sampleType);

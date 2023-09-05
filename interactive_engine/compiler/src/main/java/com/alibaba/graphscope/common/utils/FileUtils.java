@@ -16,8 +16,16 @@
 
 package com.alibaba.graphscope.common.utils;
 
+import com.alibaba.graphscope.common.ir.meta.reader.FileFormatType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.parser.ParserException;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
@@ -28,6 +36,25 @@ public class FileUtils {
             return Resources.toString(url, StandardCharsets.UTF_8).trim();
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static FileFormatType getFormatType(String file) throws IOException {
+        // can not differentiate between properties and YAML format files based on their content,
+        // so here the determination is made based on the file extension.
+        if (file.endsWith(".properties")) return FileFormatType.PROPERTIES;
+        try (InputStream inputStream = new FileInputStream(file)) {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.readTree(inputStream);
+            return FileFormatType.JSON;
+        } catch (IOException e1) {
+            try (InputStream inputStream = new FileInputStream(file)) {
+                Yaml yaml = new Yaml();
+                yaml.load(inputStream);
+                return FileFormatType.YAML;
+            } catch (ParserException e2) {
+                throw new UnsupportedOperationException("unsupported file format " + file);
+            }
         }
     }
 }

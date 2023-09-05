@@ -123,6 +123,9 @@ install_apache_arrow() {
   download_tar_and_untar_if_not_exists ${directory} ${file} "${url}"
   pushd ${directory} || exit
 
+  # temporarily fix the xsimd dependency downloading issue by manually download
+  mkdir -p src && wget https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies/9.0.1.tar.gz -P src/
+
   cmake ./cpp \
     -DCMAKE_PREFIX_PATH="${install_prefix}" \
     -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
@@ -387,7 +390,7 @@ install_cppkafka() {
 
   directory="cppkafka-0.4.0"
   file="0.4.0.tar.gz"
-  url="https://github.com/mfontanini/cppkafka/archive/refs/tags"
+  url="https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies"
   url=$(maybe_set_to_cn_url ${url})
   log "Building and installing ${directory}."
   pushd "${workdir}" || exit

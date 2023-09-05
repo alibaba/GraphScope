@@ -27,9 +27,8 @@ jobs:
 
     - name: Build Image
       run: |
-        # build graphscope-dev:wheel with specified v6d's version
         cd ${GITHUB_WORKSPACE}/k8s
-        # output: graphscope/manylinux-ext:-x86_64
+        # output: graphscope/manylinux:ext-x86_64
         make manylinux2014-ext
 
     - name: Release Image
@@ -42,7 +41,7 @@ jobs:
         # x86_64
         arch=$(uname -m)
         # image tag
-        tag=20230407-ext-${arch}
+        tag=ext-${arch}
         # manylinux2014 image
         sudo docker tag graphscope/manylinux2014:${tag} ${{ env.REGISTRY }}/graphscope/manylinux2014:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/manylinux2014:${tag}
@@ -56,9 +55,8 @@ jobs:
 
     - name: Build Image
       run: |
-        # build graphscope-dev:wheel with specified v6d's version
         cd ${GITHUB_WORKSPACE}/k8s
-        # output: graphscope/manylinux2014-ext:-aarch64
+        # output: graphscope/manylinux2014:ext-aarch64
         make manylinux2014-ext
         
     - name: Release Image
@@ -71,12 +69,22 @@ jobs:
         # aarch64
         arch=$(uname -m)
         # image tag
-        tag=20230407-ext-${arch}
+        tag=ext-${arch}
         # manylinux2014 image
         sudo docker tag graphscope/manylinux2014:${tag} ${{ env.REGISTRY }}/graphscope/manylinux2014:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/manylinux2014:${tag}
+
+    - name: Clean Image
+      run: |
+        # aarch64
+        arch=$(uname -m)
+        # image tag
+        tag=ext-${arch}
+        # clean
+        sudo docker rmi -f graphscope/manylinux2014:${tag} || true
+        sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/manylinux2014:${tag} || true
        
-  build-manylinux-ext-image-docker-manifest:
+  manifest_push_manylinux-ext-image:
     runs-on: ubuntu-20.04
     needs: [build-manylinux-ext-image-x86-64, build-manylinux-ext-image-aarch64]
     steps:
@@ -89,10 +97,8 @@ jobs:
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
         # create
         sudo docker manifest create \
-          ${{ env.REGISTRY }}/graphscope/manylinux2014-ext:20230407-ext \
-          ${{ env.REGISTRY }}/graphscope/manylinux2014-ext:20230407-ext-x86_64 \
-          ${{ env.REGISTRY }}/graphscope/manylinux2014-ext:20230407-ext-aarch64
+          ${{ env.REGISTRY }}/graphscope/manylinux2014:ext \
+          ${{ env.REGISTRY }}/graphscope/manylinux2014:ext-x86_64 \
+          ${{ env.REGISTRY }}/graphscope/manylinux2014:ext-aarch64
         # push
-        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/manylinux2014-ext:20230407-ext
-
-       
+        sudo docker manifest push ${{ env.REGISTRY }}/graphscope/manylinux2014:ext

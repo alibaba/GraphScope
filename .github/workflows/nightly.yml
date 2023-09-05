@@ -43,7 +43,8 @@ jobs:
         fi
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
-        ./gs install-deps dev --v6d-version v0.16.4
+        python3 -m pip install click 
+        python3 gsctl.py install-deps dev --v6d-version v0.16.4
 
     - name: Setup tmate session
       if: false

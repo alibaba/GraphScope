@@ -47,6 +47,7 @@ except ImportError:
     K8SApiException = None
     K8SConfigException = None
 
+from graphscope.config import Config
 from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_kubernetes_object_info
 from graphscope.deploy.kubernetes.utils import resolve_api_client
@@ -54,6 +55,9 @@ from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_tempdir
 from graphscope.proto import types_pb2
 
+from gscoordinator.constants import ANALYTICAL_CONTAINER_NAME
+from gscoordinator.constants import INTERACTIVE_EXECUTOR_CONTAINER_NAME
+from gscoordinator.constants import LEARNING_CONTAINER_NAME
 from gscoordinator.launcher import AbstractLauncher
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
 from gscoordinator.utils import GRAPHSCOPE_HOME
@@ -63,7 +67,6 @@ from gscoordinator.utils import ResolveMPICmdPrefix
 from gscoordinator.utils import delegate_command_to_pod
 from gscoordinator.utils import parse_as_glog_level
 from gscoordinator.utils import run_kube_cp_command
-from gscoordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
 
@@ -74,140 +77,63 @@ class FakeKubeResponse:
 
 
 class KubernetesClusterLauncher(AbstractLauncher):
-    def __init__(
-        self,
-        coordinator_name=None,
-        coordinator_service_name=None,
-        delete_namespace=None,
-        engine_cpu=None,
-        engine_mem=None,
-        engine_pod_node_selector=None,
-        image_pull_policy=None,
-        image_pull_secrets=None,
-        image_registry=None,
-        image_repository=None,
-        image_tag=None,
-        instance_id=None,
-        log_level=None,
-        mars_scheduler_cpu=None,
-        mars_scheduler_mem=None,
-        mars_worker_cpu=None,
-        mars_worker_mem=None,
-        with_dataset=False,
-        namespace=None,
-        num_workers=None,
-        preemptive=None,
-        service_type=None,
-        timeout_seconds=None,
-        kube_timeout_seconds=1,
-        retry_time_seconds=2,
-        del_retry_time_seconds=1,
-        vineyard_cpu=None,
-        vineyard_deployment=None,
-        vineyard_image=None,
-        vineyard_mem=None,
-        vineyard_shared_mem=None,
-        volumes=None,
-        waiting_for_delete=None,
-        with_mars=False,
-        enabled_engines="",
-        dataset_proxy=None,
-        deploy_mode="eager",
-        **kwargs,
-    ):
+    def __init__(self, config: Config):
         super().__init__()
+        self._serving = False
+
         self._api_client = resolve_api_client()
         self._core_api = kube_client.CoreV1Api(self._api_client)
         self._apps_api = kube_client.AppsV1Api(self._api_client)
         self._resource_object = ResourceManager(self._api_client)
 
-        self._instance_id = instance_id
-        self._namespace = namespace
-        self._delete_namespace = delete_namespace
+        self._config: Config = config
+        self._config.kubernetes_launcher.engine.post_setup()
+        launcher_config = config.kubernetes_launcher
 
-        self._coordinator_name = coordinator_name
-        self._coordinator_service_name = coordinator_service_name
+        # Session Config
+        self._num_workers = config.session.num_workers
+        self._glog_level = parse_as_glog_level(config.session.log_level)
+        self._instance_id = config.session.instance_id
+        self._timeout_seconds = config.session.timeout_seconds
+        self._retry_time_seconds = config.session.retry_time_seconds
+
+        # Vineyard Config
+        # self._vineyard_socket = config.vineyard.socket
+        self._vineyard_rpc_port = config.vineyard.rpc_port
+        self._vineyard_deployment = config.vineyard.deployment_name
+
+        # Launcher Config
+        self._namespace = launcher_config.namespace
+        self._delete_namespace = launcher_config.delete_namespace
+
+        # Coordinator Config
+        self._coordinator_name = config.coordinator.deployment_name
+        self._coordinator_service_name = self._coordinator_name
+
+        self._image_registry = launcher_config.image.registry
+        self._image_repository = launcher_config.image.repository
+        self._image_tag = launcher_config.image.tag
+        self._image_pull_policy = launcher_config.image.pull_policy
+        self._image_pull_secrets = launcher_config.image.pull_secrets
+
+        self._vineyard_resource = config.vineyard.resource
+
+        self._volumes = launcher_config.volumes
 
         self._owner_references = self.get_coordinator_owner_references()
-        self._image_registry = image_registry
-        self._image_repository = image_repository
-        self._image_tag = image_tag
-        self._image_pull_policy = image_pull_policy
-
-        self._image_pull_secrets = (
-            image_pull_secrets.split(",") if image_pull_secrets else []
-        )
-
-        self._glog_level = parse_as_glog_level(log_level)
 
         self._engine_pod_prefix = "gs-engine-"
 
-        self._num_workers = num_workers
+        self._vineyard_image = config.vineyard.image
+        self._vineyard_mem = config.vineyard.resource.requests.memory
+        self._vineyard_cpu = config.vineyard.resource.requests.cpu
 
-        self._vineyard_image = vineyard_image
-        self._vineyard_mem = vineyard_mem
-        self._vineyard_cpu = vineyard_cpu
-        self._vineyard_size = vineyard_shared_mem
+        self._service_type = launcher_config.service_type
 
-        self._vineyard_deployment = vineyard_deployment
-
-        self._engine_cpu = engine_cpu
-        self._engine_mem = engine_mem
-        self._engine_pod_node_selector = engine_pod_node_selector
-        self._vineyard_shared_mem = vineyard_shared_mem
-
-        self._volumes = volumes
-        self._dataset_proxy = dataset_proxy
-
-        self._with_dataset = with_dataset
-        self._preemptive = preemptive
-        self._service_type = service_type
-
-        assert timeout_seconds is not None
-        self._timeout_seconds = timeout_seconds
-        # timeout seconds waiting for kube service ready
-        self._kube_timeout_seconds = kube_timeout_seconds
-        # retry time when waiting for kube service ready
-        self._retry_time_seconds = retry_time_seconds
-        # retry time when deleting dangling coordinators
-        self._del_retry_time_seconds = del_retry_time_seconds
-
-        self._waiting_for_delete = waiting_for_delete
-        self._serving = False
-
-        self._with_analytical = False
-        self._with_analytical_java = False
-        self._with_interactive = False
-        self._with_learning = False
-        engines = set([item.strip() for item in enabled_engines.split(",")])
-        valid_engines = set(
-            "analytical,analytical-java,interactive,learning,gae,gae-java,gie,gle".split(
-                ","
-            )
-        )
-
-        for item in engines:
-            if item not in valid_engines and item != "":
-                raise ValueError(
-                    f"Not a valid engine name: {item}, valid engines are {valid_engines}"
-                )
-            if item == "analytical" or item == "gae":
-                self._with_analytical = True
-            if item == "interactive" or item == "gie":
-                self._with_interactive = True
-            if item == "learning" or item == "gle":
-                self._with_learning = True
-            if item == "analytical-java" or item == "gae-java":
-                self._with_analytical_java = True
-
-        self._with_mars = with_mars
-        self._mars_scheduler_cpu = mars_scheduler_cpu
-        self._mars_scheduler_mem = mars_scheduler_mem
-        self._mars_worker_cpu = mars_worker_cpu
-        self._mars_worker_mem = mars_worker_mem
+        self._waiting_for_delete = launcher_config.waiting_for_delete
 
         # check the validity of deploy mode
-        self._deploy_mode = deploy_mode
+        self._deploy_mode = launcher_config.deployment_mode
         if self._deploy_mode not in ["eager", "lazy"]:
             logger.error(
                 "Invalid mode %s, choose from 'eager' or 'lazy'. Proceeding with default mode: 'eager'",
@@ -218,10 +144,9 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._vineyard_pod_name_list = []
 
         # set the kube config file
-        self._k8s_config_file = self.get_current_kubeconfig()
-        config = kwargs.pop("k8s_client_config", {})
-        if "config_file" in config:
-            self._k8s_config_file = config["config_file"]
+        self._k8s_config_file = launcher_config.config_file
+        if self._k8s_config_file is None:
+            self._k8s_config_file = os.environ.get("KUBECONFIG", "~/.kube/config")
 
         if self._vineyard_deployment is not None:
             self._deploy_vineyard_deployment_if_not_exist()
@@ -288,21 +213,17 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._learning_instance_processes = {}
 
         # workspace
-        self._instance_workspace = os.path.join(WORKSPACE, instance_id)
+        self._instance_workspace = os.path.join(WORKSPACE, self._instance_id)
         os.makedirs(self._instance_workspace, exist_ok=True)
         self._session_workspace = None
 
-        self._engine_cluster = self._build_engine_cluster(
-            with_analytical_container=self._with_analytical,
-            with_analytical_java_container=self._with_analytical_java,
-            with_interactive_container=self._with_interactive,
-            with_learning_container=self._with_learning,
-        )
+        self._engine_cluster = self._build_engine_cluster()
+        self._vineyard_socket = self._engine_cluster.vineyard_ipc_socket
 
         self._vineyard_service_endpoint = None
         self._vineyard_internal_service_endpoint = None
         self._mars_service_endpoint = None
-        if self._with_mars:
+        if self._config.kubernetes_launcher.mars.enable:
             self._mars_cluster = MarsCluster(
                 self._instance_id, self._namespace, self._service_type
             )
@@ -313,61 +234,13 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def type(self):
         return types_pb2.K8S
 
-    def vineyard_deployment_exists(self):
-        return self._vineyard_deployment is not None
-
-    def get_current_kubeconfig(self):
-        """Gets the current kubeconfig file path.
-
-        Returns:
-            str: The path to the current kubeconfig file.
-        """
-
-        kubeconfig_path = os.environ.get("KUBECONFIG")
-        if kubeconfig_path is None:
-            kubeconfig_path = "~/.kube/config"
-
-        return kubeconfig_path
-
     # the argument `with_analytical_` means whether to add the analytical engine
-    # container to the engine statefulset, and the other three arguments are similar.
-    def _build_engine_cluster(
-        self,
-        with_analytical_container: bool,
-        with_analytical_java_container: bool,
-        with_interactive_container: bool,
-        with_learning_container: bool,
-    ):
+    # container to the engine statefulsets, and the other three arguments are similar.
+    def _build_engine_cluster(self):
         return EngineCluster(
-            engine_cpu=self._engine_cpu,
-            engine_mem=self._engine_mem,
-            engine_pod_node_selector=self._engine_pod_node_selector,
+            config=self._config,
             engine_pod_prefix=self._engine_pod_prefix,
-            glog_level=self._glog_level,
-            image_pull_policy=self._image_pull_policy,
-            image_pull_secrets=self._image_pull_secrets,
-            image_registry=self._image_registry,
-            image_repository=self._image_repository,
-            image_tag=self._image_tag,
-            instance_id=self._instance_id,
             learning_start_port=self._learning_start_port,
-            with_dataset=self._with_dataset,
-            namespace=self._namespace,
-            num_workers=self._num_workers,
-            preemptive=self._preemptive,
-            service_type=self._service_type,
-            vineyard_cpu=self._vineyard_cpu,
-            vineyard_deployment=self._vineyard_deployment,
-            vineyard_image=self._vineyard_image,
-            vineyard_mem=self._vineyard_mem,
-            vineyard_shared_mem=self._vineyard_shared_mem,
-            volumes=self._volumes,
-            with_mars=self._with_mars,
-            with_analytical=with_analytical_container,
-            with_analytical_java=with_analytical_java_container,
-            with_interactive=with_interactive_container,
-            with_learning=with_learning_container,
-            dataset_proxy=self._dataset_proxy,
         )
 
     def get_coordinator_owner_references(self):
@@ -397,11 +270,12 @@ class KubernetesClusterLauncher(AbstractLauncher):
         return self._namespace
 
     def get_vineyard_stream_info(self):
-        hosts = [f"{self._namespace}:{host}" for host in self._pod_name_list]
         if self._vineyard_deployment is not None:
             hosts = [
                 f"{self._namespace}:{host}" for host in self._vineyard_pod_name_list
             ]
+        else:
+            hosts = [f"{self._namespace}:{host}" for host in self._pod_name_list]
         return "kubernetes", hosts
 
     def set_session_workspace(self, session_id):
@@ -415,24 +289,27 @@ class KubernetesClusterLauncher(AbstractLauncher):
         pass
 
     @property
-    def preemptive(self):
-        return self._preemptive
-
-    @property
     def hosts(self):
-        """String of a list of pod name, comma separated."""
-        return ",".join(self._pod_name_list)
+        """list of pod name"""
+        return self._pod_name_list
 
     @property
     def hosts_list(self):
         return self._get_analytical_hosts()
 
+    @property
+    def vineyard_endpoint(self) -> str:
+        if self._check_if_vineyard_deployment_exist():
+            return self._vineyard_service_endpoint
+        else:
+            return self._vineyard_internal_endpoint
+
     def distribute_file(self, path):
         pod_name_list, _, _ = self._allocate_analytical_engine()
         for pod in pod_name_list:
-            container = self._engine_cluster.analytical_container_name
+            container = ANALYTICAL_CONTAINER_NAME
             try:
-                # The library may exists in the analytical pod.
+                # The library may exist in the analytical pod.
                 test_cmd = f"test -f {path}"
                 logger.debug(delegate_command_to_pod(test_cmd, pod, container))
                 logger.info("Library exists, skip distribute")
@@ -447,7 +324,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def launch_vineyard(self):
         """Launch vineyardd in k8s cluster."""
         # vineyardd is auto launched in vineyardd container
-        # args = f"vineyardd -size {self._vineyard_shared_mem} \
+        # args = f"vineyardd \
         #  -socket {self._engine_cluster._sock} -etcd_endpoint http://{self._pod_ip_list[0]}:2379"
         pass
 
@@ -501,12 +378,20 @@ class KubernetesClusterLauncher(AbstractLauncher):
             self._engine_pod_prefix = f"gs-{engine_type}-" + (
                 f"{object_id}-" if object_id else ""
             ).replace("_", "-")
-            self._engine_cluster = self._build_engine_cluster(
-                with_analytical_container=engine_type == "analytical",
-                with_analytical_java_container=engine_type == "analytical-java",
-                with_interactive_container=engine_type == "interactive",
-                with_learning_container=engine_type == "learning",
+            self._config.kubernetes_launcher.engine.enable_gae = (
+                engine_type == "analytical"
             )
+            self._config.kubernetes_launcher.engine.enable_gae_java = (
+                engine_type == "analytical-java"
+            )
+            self._config.kubernetes_launcher.engine.enable_gie = (
+                engine_type == "interactive"
+            )
+            self._config.kubernetes_launcher.engine.enable_gle = (
+                engine_type == "learning"
+            )
+
+            self._engine_cluster = self._build_engine_cluster()
             response = self._create_engine_stateful_set()
             self._waiting_for_services_ready()
 
@@ -541,6 +426,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         """delete the engine stateful set with the given object id.
 
         Args:
+            engine_type(str): the type of engine
             object_id (int): The object id of the engine to delete.
         """
         resource_object = getattr(self, f"_{engine_type}_resource_object")
@@ -604,7 +490,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
     def _allocate_interactive_engine(self, object_id):
         # check the interactive engine flag
-        if not self._with_interactive:
+        if not self._config.kubernetes_launcher.engine.enable_gie:
             raise NotImplementedError("Interactive engine not enabled")
 
         # allocate analytical engine based on the mode
@@ -618,6 +504,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         object_id: int,
         schema_path: str,
         params: dict,
+        with_cypher: bool,
         engine_selector: str,
     ):
         """
@@ -629,11 +516,11 @@ class KubernetesClusterLauncher(AbstractLauncher):
         """
         env = os.environ.copy()
         env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
-        container = self._engine_cluster.interactive_executor_container_name
+        container = INTERACTIVE_EXECUTOR_CONTAINER_NAME
 
         params = "\n".join([f"{k}={v}" for k, v in params.items()])
         params = base64.b64encode(params.encode("utf-8")).decode("utf-8")
-
+        neo4j_disabled = "true" if not with_cypher else "false"
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "create_gremlin_instance_on_k8s",
@@ -648,6 +535,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             str(self._interactive_port + 3),  # frontend cypher port
             self._coordinator_name,
             engine_selector,
+            neo4j_disabled,
             params,
         ]
         self._interactive_port += 4
@@ -668,7 +556,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         return process
 
     def create_interactive_instance(
-        self, object_id: int, schema_path: str, params: dict
+        self, object_id: int, schema_path: str, params: dict, with_cypher: bool
     ):
         pod_name_list, _, _ = self._allocate_interactive_engine(object_id)
         if not pod_name_list:
@@ -682,7 +570,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             )
 
         return self._distribute_interactive_process(
-            hosts, object_id, schema_path, params, engine_selector
+            hosts, object_id, schema_path, params, with_cypher, engine_selector
         )
 
     def close_interactive_instance(self, object_id):
@@ -694,7 +582,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         hosts = ",".join(pod_name_list)
         env = os.environ.copy()
         env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
-        container = self._engine_cluster.interactive_executor_container_name
+        container = INTERACTIVE_EXECUTOR_CONTAINER_NAME
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "close_gremlin_instance_on_k8s",
@@ -880,16 +768,8 @@ class KubernetesClusterLauncher(AbstractLauncher):
         sts_name = (
             f"{self._engine_cluster.engine_stateful_set_name}-{self._instance_id}"
         )
-        owner_reference = [
-            {
-                "apiVersion": self._owner_references[0].api_version,
-                "kind": self._owner_references[0].kind,
-                "name": self._owner_references[0].name,
-                "uid": self._owner_references[0].uid,
-            }
-        ]
 
-        owner_reference_json = json.dumps(owner_reference)
+        owner_reference_json = self._get_owner_reference_as_json()
         # inject vineyard sidecar into the workload
         #
         # the name is used to specify the name of the sidecar container, which is also the
@@ -909,7 +789,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
             apply_resources=True,
             owner_references=owner_reference_json,
             sidecar_image=self._vineyard_image,
-            sidecar_size=self._vineyard_shared_mem,
             sidecar_cpu=self._vineyard_cpu,
             sidecar_memory=self._vineyard_mem,
             sidecar_service_type=self._service_type,
@@ -976,16 +855,16 @@ class KubernetesClusterLauncher(AbstractLauncher):
             "vineyard_service_name": self._engine_cluster.vineyard_service_name,
             "vineyard_rpc_endpoint": self._vineyard_service_endpoint,
         }
-        if self._with_mars:
+        if self._config.kubernetes_launcher.mars.enable:
             config["mars_endpoint"] = self._mars_service_endpoint
         return config
 
     def _create_services(self):
         self._create_engine_stateful_set()
-        if self._with_interactive:
+        if self._config.kubernetes_launcher.engine.enable_gie:
             self._create_frontend_deployment(owner_references=self._owner_references)
             # self._create_frontend_service()
-        if self._with_mars:
+        if self._config.kubernetes_launcher.mars.enable:
             # scheduler used by Mars
             self._create_mars_scheduler()
 
@@ -1026,7 +905,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
                             self._core_api.list_namespaced_event,
                             namespace,
                             field_selector=field_selector,
-                            timeout_seconds=self._kube_timeout_seconds,
+                            timeout_seconds=1,
                         )
                         for event in stream:
                             msg = f"[{pod_name}]: {event['object'].message}"
@@ -1053,9 +932,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             self._pod_ip_list.append(pod.status.pod_ip)
             self._pod_host_ip_list.append(pod.status.host_ip)
         assert len(self._pod_ip_list) > 0
-        self._analytical_engine_endpoint = (
-            f"{self._pod_ip_list[0]}:{self._random_analytical_engine_rpc_port}"
-        )
+
         self._vineyard_service_endpoint = (
             self._engine_cluster.get_vineyard_service_endpoint(self._api_client)
         )
@@ -1068,7 +945,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         logger.info("Engines pod ip list: %s", self._pod_ip_list)
         logger.info("Engines pod host ip list: %s", self._pod_host_ip_list)
         logger.info("Vineyard service endpoint: %s", self._vineyard_service_endpoint)
-        if self._with_mars:
+        if self._config.kubernetes_launcher.mars.enable:
             self._mars_service_endpoint = self._mars_cluster.get_mars_service_endpoint(
                 self._api_client
             )
@@ -1125,26 +1002,16 @@ class KubernetesClusterLauncher(AbstractLauncher):
         return pod_name_list
 
     def _allocate_analytical_engine(self):
-        # check the engine flag
-        if self._with_analytical and self._with_analytical_java:
-            logger.info(
-                "Analytical engine and analytical engine(java) cannot be enabled at the same time. "
-                "Proceeding to only enable analytical_java."
-            )
-            self._with_analytical = False
-        elif not (self._with_analytical or self._with_analytical_java):
-            raise NotImplementedError(
-                "Neither analytical engine nor analytical engine(java) is enabled."
-            )
-
         # allocate analytical engine based on the mode
         if self._deploy_mode == "eager":
             return self._pod_name_list, self._pod_ip_list, self._pod_host_ip_list
         else:
-            if self._with_analytical:
+            if self._config.kubernetes_launcher.engine.enable_gae:
                 return self.deploy_analytical_engine()
-            else:
+            elif self._config.kubernetes_launcher.engine.enable_gae_java:
                 return self.deploy_analytical_java_engine()
+            else:
+                logger.warning("analytical is not enabled, skip allocating")
 
     def _distribute_analytical_process(self, pod_name_list, pod_ip_list):
         # generate and distribute hostfile
@@ -1153,7 +1020,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             for i, pod_ip in enumerate(pod_ip_list):
                 f.write(f"{pod_ip} {pod_name_list[i]}\n")
 
-        container = self._engine_cluster.analytical_container_name
+        container = ANALYTICAL_CONTAINER_NAME
         for pod in pod_name_list:
             logger.debug(
                 run_kube_cp_command(hosts, "/tmp/hosts_of_nodes", pod, container, True)
@@ -1161,7 +1028,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
         # launch engine
         rmcp = ResolveMPICmdPrefix(rsh_agent=True)
-        cmd, mpi_env = rmcp.resolve(self._num_workers, ",".join(pod_name_list))
+        cmd, mpi_env = rmcp.resolve(self._num_workers, pod_name_list)
 
         cmd.append(ANALYTICAL_ENGINE_PATH)
         cmd.extend(["--host", "0.0.0.0"])
@@ -1201,11 +1068,13 @@ class KubernetesClusterLauncher(AbstractLauncher):
         pod_name_list, pod_ip_list, _ = self._allocate_analytical_engine()
         if not pod_name_list or not pod_ip_list:
             raise RuntimeError("Failed to allocate analytical engine.")
-        logger.info(
-            "Starting GAE rpc service on %s ...", self._analytical_engine_endpoint
-        )
-
         self._distribute_analytical_process(pod_name_list, pod_ip_list)
+        self._analytical_engine_endpoint = (
+            f"{self._pod_ip_list[0]}:{self._random_analytical_engine_rpc_port}"
+        )
+        logger.info(
+            "GAE rpc service is listening on %s ...", self._analytical_engine_endpoint
+        )
 
     def _delete_dangling_coordinator(self):
         # delete service
@@ -1257,21 +1126,26 @@ class KubernetesClusterLauncher(AbstractLauncher):
                             "Deleting dangling coordinator %s timeout",
                             self._coordinator_name,
                         )
-                    time.sleep(self._del_retry_time_seconds)
+                    time.sleep(self._retry_time_seconds)
 
     def _get_owner_reference_as_json(self):
-        owner_reference = [
-            {
-                "apiVersion": self._owner_references[0].api_version,
-                "kind": self._owner_references[0].kind,
-                "name": self._owner_references[0].name,
-                "uid": self._owner_references[0].uid,
-            }
-        ]
-        owner_reference_json = json.dumps(owner_reference)
+        if self._owner_references:
+            owner_reference = [
+                {
+                    "apiVersion": self._owner_references[0].api_version,
+                    "kind": self._owner_references[0].kind,
+                    "name": self._owner_references[0].name,
+                    "uid": self._owner_references[0].uid,
+                }
+            ]
+            owner_reference_json = json.dumps(owner_reference)
+        else:
+            owner_reference_json = json.dumps([])
         return owner_reference_json
 
     def _check_if_vineyard_deployment_exist(self):
+        if self._vineyard_deployment is None or self._vineyard_deployment == "":
+            return False
         try:
             self._apps_api.read_namespaced_deployment(
                 self._vineyard_deployment, self._namespace
@@ -1305,23 +1179,20 @@ class KubernetesClusterLauncher(AbstractLauncher):
             name=self._vineyard_deployment,
             namespace=self._namespace,
             replicas=self._num_workers,
-            etcd_replicas=self._num_workers,
+            etcd_replicas=1,
             vineyardd_image=self._vineyard_image,
             vineyardd_memory=self._vineyard_mem,
             vineyardd_cpu=self._vineyard_cpu,
-            vineyardd_size=self._vineyard_shared_mem,
             vineyardd_service_type=self._service_type,
             owner_references=owner_reference_json,
         )
         vineyard_pods = self._core_api.list_namespaced_pod(
             self._namespace,
-            label_selector="app.kubernetes.io/instance="
-            + self._namespace
-            + "-"
-            + self._vineyard_deployment,
+            label_selector=f"app.kubernetes.io/instance={self._namespace}-{self._vineyard_deployment}",
         )
-        for pod in vineyard_pods.items:
-            self._vineyard_pod_name_list.append(pod.metadata.name)
+        self._vineyard_pod_name_list.extend(
+            [pod.metadata.name for pod in vineyard_pods.items]
+        )
 
     def start(self):
         if self._serving:
@@ -1374,7 +1245,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
                                     logger.error(
                                         "Deleting namespace %s timeout", self._namespace
                                     )
-                                time.sleep(self._del_retry_time_seconds)
+                                time.sleep(self._retry_time_seconds)
 
                 else:
                     # delete coordinator deployment and service
@@ -1384,7 +1255,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
     def _allocate_learning_engine(self, object_id):
         # check the learning engine flag
-        if not self._with_learning:
+        if not self._config.kubernetes_launcher.engine.enable_gle:
             raise NotImplementedError("Learning engine not enabled")
 
         # allocate learning engine based on the mode
@@ -1419,7 +1290,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         # launch the server
         self._learning_instance_processes[object_id] = []
         for pod_index, pod in enumerate(self._pod_name_list):
-            container = self._engine_cluster.learning_container_name
+            container = LEARNING_CONTAINER_NAME
             sub_cmd = f"python3 -m gscoordinator.learning {handle} {config} {pod_index}"
             cmd = f"kubectl -n {self._namespace} exec -it -c {container} {pod} -- {sub_cmd}"
             logger.debug("launching learning server: %s", " ".join(cmd))

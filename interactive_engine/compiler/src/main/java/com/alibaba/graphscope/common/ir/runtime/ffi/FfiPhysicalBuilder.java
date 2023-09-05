@@ -43,33 +43,47 @@ import com.sun.jna.ptr.IntByReference;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
+import org.apache.calcite.rel.logical.LogicalJoin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * build physical plan from logical plan of a regular query, the physical plan is actually denoted by ir core structure (FFI Pointer)
  */
 public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> {
+    private static final Logger logger = LoggerFactory.getLogger(FfiPhysicalBuilder.class);
     private static final IrCoreLibrary LIB = IrCoreLibrary.INSTANCE;
     private final IrMeta irMeta;
     private final Configs graphConfig;
-    private final Pointer ptrPlan;
-    private int lastIdx;
+    private final PlanPointer planPointer;
 
     public FfiPhysicalBuilder(Configs graphConfig, IrMeta irMeta, LogicalPlan logicalPlan) {
+        this(graphConfig, irMeta, logicalPlan, createDefaultPlanPointer(irMeta));
+    }
+
+    public FfiPhysicalBuilder(
+            Configs graphConfig, IrMeta irMeta, LogicalPlan logicalPlan, PlanPointer planPointer) {
         super(
                 logicalPlan,
                 new GraphRelShuttleWrapper(new RelToFfiConverter(irMeta.getSchema().isColumnId())));
         this.graphConfig = graphConfig;
         this.irMeta = irMeta;
-        checkFfiResult(LIB.setSchema(irMeta.getSchema().schemaJson()));
-        this.ptrPlan = LIB.initLogicalPlan();
+        this.planPointer = Objects.requireNonNull(planPointer);
         initialize();
+    }
+
+    private static PlanPointer createDefaultPlanPointer(IrMeta irMeta) {
+        checkFfiResult(LIB.setSchema(irMeta.getSchema().schemaJson()));
+        return new PlanPointer(LIB.initLogicalPlan());
     }
 
     @Override
     public void appendNode(PhysicalNode<Pointer> node) {
-        IntByReference oprIdx = new IntByReference(this.lastIdx);
+        Pointer ptrPlan = this.planPointer.ptrPlan;
+        IntByReference oprIdx = new IntByReference(this.planPointer.lastIdx);
         RelNode original = node.getOriginal();
         if (original instanceof GraphLogicalSource) {
             checkFfiResult(
@@ -111,16 +125,42 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
                         LIB.appendOrderbyOperator(
                                 ptrPlan, node.getNode(), oprIdx.getValue(), oprIdx));
             }
+        } else if (original instanceof LogicalJoin) {
+            LogicalPlan leftPlan = new LogicalPlan(((LogicalJoin) original).getLeft());
+            LogicalPlan rightPlan = new LogicalPlan(((LogicalJoin) original).getRight());
+            FfiPhysicalBuilder leftBuilder =
+                    new FfiPhysicalBuilder(
+                            graphConfig,
+                            irMeta,
+                            leftPlan,
+                            new PlanPointer(this.planPointer.ptrPlan));
+            FfiPhysicalBuilder rightBuilder =
+                    new FfiPhysicalBuilder(
+                            graphConfig,
+                            irMeta,
+                            rightPlan,
+                            new PlanPointer(this.planPointer.ptrPlan));
+            checkFfiResult(
+                    LIB.appendJoinOperator(
+                            ptrPlan,
+                            node.getNode(),
+                            leftBuilder.getLastIdx(),
+                            rightBuilder.getLastIdx(),
+                            oprIdx));
         } else {
             throw new UnsupportedOperationException(
                     "node type " + original.getClass() + " can not be appended to the ffi plan");
         }
-        this.lastIdx = oprIdx.getValue();
+        this.planPointer.lastIdx = oprIdx.getValue();
+    }
+
+    public int getLastIdx() {
+        return this.planPointer.lastIdx;
     }
 
     @Override
     public String explain() {
-        FfiResult res = LIB.printPlanAsJson(this.ptrPlan);
+        FfiResult res = LIB.printPlanAsJson(this.planPointer.ptrPlan);
         if (res == null || res.code != ResultCode.Success) {
             throw new IllegalStateException("print plan in ir core fail, msg : %s" + res, null);
         }
@@ -129,23 +169,29 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
 
     @Override
     public byte[] build() {
-        appendSink(new IntByReference(this.lastIdx));
-        FfiData.ByValue ffiData =
-                LIB.buildPhysicalPlan(ptrPlan, getEngineWorkerNum(), getEngineServerNum());
-        checkFfiResult(ffiData.error);
-        byte[] bytes = ffiData.getBytes();
-        ffiData.close();
-        return bytes;
+        try {
+            appendSink(new IntByReference(this.planPointer.lastIdx));
+            FfiData.ByValue ffiData =
+                    LIB.buildPhysicalPlan(
+                            this.planPointer.ptrPlan, getEngineWorkerNum(), getEngineServerNum());
+            checkFfiResult(ffiData.error);
+            byte[] bytes = ffiData.getBytes();
+            ffiData.close();
+            return bytes;
+        } catch (Exception e) {
+            logger.error("ir core logical plan {}", explain());
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public void close() throws Exception {
-        if (this.ptrPlan != null) {
-            LIB.destroyLogicalPlan(this.ptrPlan);
+        if (this.planPointer.ptrPlan != null) {
+            LIB.destroyLogicalPlan(this.planPointer.ptrPlan);
         }
     }
 
-    private void checkFfiResult(FfiResult res) {
+    private static void checkFfiResult(FfiResult res) {
         if (res == null || res.code != ResultCode.Success) {
             throw new IllegalStateException(
                     "build logical plan, unexpected ffi results from ir_core, msg : " + res);
@@ -157,9 +203,12 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
         Preconditions.checkArgument(
                 ffiNodes.size() == 2,
                 "should have 2 ffi nodes, one is `scan` and the other is `match`");
-        checkFfiResult(LIB.appendScanOperator(ptrPlan, ffiNodes.get(0), oprIdx.getValue(), oprIdx));
         checkFfiResult(
-                LIB.appendPatternOperator(ptrPlan, ffiNodes.get(1), oprIdx.getValue(), oprIdx));
+                LIB.appendScanOperator(
+                        this.planPointer.ptrPlan, ffiNodes.get(0), oprIdx.getValue(), oprIdx));
+        checkFfiResult(
+                LIB.appendPatternOperator(
+                        this.planPointer.ptrPlan, ffiNodes.get(1), oprIdx.getValue(), oprIdx));
     }
 
     private void appendProjectDedup(PhysicalNode<Pointer> node, IntByReference oprIdx) {
@@ -168,14 +217,18 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
                 ffiNodes.size() == 2,
                 "should have 2 ffi nodes, one is `project` and the other is `dedup`");
         checkFfiResult(
-                LIB.appendProjectOperator(ptrPlan, ffiNodes.get(0), oprIdx.getValue(), oprIdx));
+                LIB.appendProjectOperator(
+                        this.planPointer.ptrPlan, ffiNodes.get(0), oprIdx.getValue(), oprIdx));
         checkFfiResult(
-                LIB.appendDedupOperator(ptrPlan, ffiNodes.get(1), oprIdx.getValue(), oprIdx));
+                LIB.appendDedupOperator(
+                        this.planPointer.ptrPlan, ffiNodes.get(1), oprIdx.getValue(), oprIdx));
     }
 
-    private void appendSink(IntByReference oprIdx) {
+    public void appendSink(IntByReference oprIdx) {
         Pointer ptrSink = LIB.initSinkOperator();
-        checkFfiResult(LIB.appendSinkOperator(ptrPlan, ptrSink, oprIdx.getValue(), oprIdx));
+        checkFfiResult(
+                LIB.appendSinkOperator(
+                        this.planPointer.ptrPlan, ptrSink, oprIdx.getValue(), oprIdx));
     }
 
     private int getEngineWorkerNum() {
@@ -195,6 +248,15 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
             case "hiactor":
             default:
                 return 1;
+        }
+    }
+
+    private static class PlanPointer {
+        private final Pointer ptrPlan;
+        private int lastIdx;
+
+        public PlanPointer(Pointer ptrPlan) {
+            this.ptrPlan = Objects.requireNonNull(ptrPlan);
         }
     }
 }

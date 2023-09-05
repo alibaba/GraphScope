@@ -46,8 +46,12 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
         SqlOperator operator = call.getOperator();
         if (operator.getKind() == SqlKind.CASE) {
             return visitCase(call);
+        } else if (operator.getKind() == SqlKind.ARRAY_VALUE_CONSTRUCTOR) {
+            return visitArrayValueConstructor(call);
+        } else if (call.getOperands().size() == 1) {
+            return visitUnaryOperator(call);
         } else {
-            return visitOperator(call);
+            return visitBinaryOperator(call);
         }
     }
 
@@ -72,7 +76,46 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                 .build();
     }
 
-    private OuterExpression.Expression visitOperator(RexCall call) {
+    private OuterExpression.Expression visitArrayValueConstructor(RexCall call) {
+        OuterExpression.VariableKeys.Builder varsBuilder =
+                OuterExpression.VariableKeys.newBuilder();
+        call.getOperands()
+                .forEach(
+                        operand -> {
+                            Preconditions.checkArgument(
+                                    operand instanceof RexGraphVariable,
+                                    "component type of 'ARRAY_VALUE_CONSTRUCTOR' should be"
+                                            + " 'variable' in ir core structure");
+                            varsBuilder.addKeys(operand.accept(this).getOperators(0).getVar());
+                        });
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setVars(varsBuilder)
+                                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
+                .build();
+    }
+
+    private OuterExpression.Expression visitUnaryOperator(RexCall call) {
+        SqlOperator operator = call.getOperator();
+        RexNode operand = call.getOperands().get(0);
+        switch (operator.getKind()) {
+            case NOT:
+            default:
+                return OuterExpression.Expression.newBuilder()
+                        .addOperators(Utils.protoOperator(operator))
+                        .addOperators(
+                                OuterExpression.ExprOpr.newBuilder()
+                                        .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE))
+                        .addAllOperators(operand.accept(this).getOperatorsList())
+                        .addOperators(
+                                OuterExpression.ExprOpr.newBuilder()
+                                        .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE))
+                        .build();
+        }
+    }
+
+    private OuterExpression.Expression visitBinaryOperator(RexCall call) {
         SqlOperator operator = call.getOperator();
         OuterExpression.Expression.Builder exprBuilder = OuterExpression.Expression.newBuilder();
         // left-associative
@@ -128,7 +171,7 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
 
     private boolean needBrace(SqlOperator operator, RexNode operand) {
         return operand instanceof RexCall
-                && ((RexCall) operand).getOperator().getLeftPrec() < operator.getLeftPrec();
+                && ((RexCall) operand).getOperator().getLeftPrec() <= operator.getLeftPrec();
     }
 
     @Override
@@ -181,5 +224,11 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                                 .setNodeType(paramDataType)
                                 .build())
                 .build();
+    }
+
+    @Override
+    public OuterExpression.Expression visitSubQuery(RexSubQuery subQuery) {
+        throw new UnsupportedOperationException(
+                "conversion from subQuery to ir core structure is unsupported yet");
     }
 }
