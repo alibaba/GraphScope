@@ -195,7 +195,7 @@ public class GraphWriter implements MetricsAgent {
 
     private void addDeleteEdgeOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
-        EdgeId edgeId = getEdgeId(schema, dataRecord);
+        EdgeId edgeId = getEdgeId(schema, dataRecord, false);
         EdgeKind edgeKind = getEdgeKind(schema, dataRecord);
 
         batchBuilder.addOperation(new DeleteEdgeOperation(edgeId, edgeKind, true));
@@ -204,7 +204,7 @@ public class GraphWriter implements MetricsAgent {
 
     private void addUpdateEdgeOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
-        EdgeId edgeId = getEdgeId(schema, dataRecord);
+        EdgeId edgeId = getEdgeId(schema, dataRecord, false);
         EdgeKind edgeKind = getEdgeKind(schema, dataRecord);
         GraphElement edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
 
@@ -217,7 +217,7 @@ public class GraphWriter implements MetricsAgent {
 
     private void addClearEdgePropertiesOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
-        EdgeId edgeId = getEdgeId(schema, dataRecord);
+        EdgeId edgeId = getEdgeId(schema, dataRecord, false);
         EdgeKind edgeKind = getEdgeKind(schema, dataRecord);
         GraphElement edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
         List<Integer> propertyIds = getNonPrimaryKeyIds(edgeDef, dataRecord.getProperties());
@@ -229,7 +229,7 @@ public class GraphWriter implements MetricsAgent {
 
     private void addOverwriteEdgeOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
-        EdgeId edgeId = getEdgeId(schema, dataRecord);
+        EdgeId edgeId = getEdgeId(schema, dataRecord, true);
         EdgeKind edgeKind = getEdgeKind(schema, dataRecord);
         GraphElement edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
 
@@ -331,7 +331,7 @@ public class GraphWriter implements MetricsAgent {
         return res;
     }
 
-    private EdgeId getEdgeId(GraphSchema schema, DataRecord dataRecord) {
+    private EdgeId getEdgeId(GraphSchema schema, DataRecord dataRecord, boolean overwrite) {
         EdgeTarget edgeTarget = dataRecord.getEdgeTarget();
         if (edgeTarget != null) {
             return edgeTarget.getEdgeId();
@@ -351,7 +351,8 @@ public class GraphWriter implements MetricsAgent {
                     parseRawProperties(dstVertexDef, dstVertexRecordKey.getProperties());
             long dstVertexHashId =
                     getPrimaryKeysHashId(dstVertexDef.getLabelId(), dstVertexPkVals, dstVertexDef);
-            long edgeInnerId = edgeRecordKey.getEdgeInnerId();
+            long edgeInnerId = overwrite ? edgeIdGenerator.getNextId() : edgeRecordKey.getEdgeInnerId();
+
             return new EdgeId(
                     new VertexId(srcVertexHashId), new VertexId(dstVertexHashId), edgeInnerId);
         }
