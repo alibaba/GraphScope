@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Release Notes: v0.24.0</h1>
+            <section class="post-meta">
+                
+                on ReleaseNotes
+                
+                <time class="post-date" datetime=" 2023-09-05">05 Sep 2023</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2023-09-05">05 Sep 2023</time>
+            
+                on ReleaseNotes
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Release Notes: v0.24.0</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/release_note_t.png" alt="release-note" />
+We are pleased to introduce a range of enhancements to GraphScope with the GraphScope 0.24.0 release. This release includes a graph query engine specifically designed for high-QPS (queries per second) scenarios. It also encompasses notable features and improvements in the Interactive Engine (GIE), Learning Engine (GLE), and deployment processes.</p>
+
+<p>We highlight the following improvements included in this release:</p>
+
+<p><strong>1. Graph Query Engine for High QPS</strong></p>
+
+<p>In high QPS (Queries Per Second) scenarios, the graph query engine needs to process a large number of queries within a short period of time. The performance metric that users are most concerned about is the system’s throughput. Based on GraphScope Flex, we have designed a graph query engine specifically for high QPS scenarios. This engine is currently undergoing rapid iterative development, and we welcome your feedback. The engine has the following features:</p>
+
+<ul>
+  <li>Multiple query language support: Currently, the engine supports Cypher as the query language, with plans to add support for Gremlin and GQL in the future.</li>
+  <li>High performance: Built on the Hiactor framework, it avoids context switching between threads in high-concurrency situations, thereby improving system throughput. It also supports stored procedures written in C++, further enhancing performance for specific queries.</li>
+</ul>
+
+<p><strong>2. Enhancements for GIE</strong></p>
+
+<p>Key Features:</p>
+<ul>
+  <li>Support the <code class="language-plaintext highlighter-rouge">sample()</code> step of Gremlin to randomly pick up a given number of traversers from a Gremlin traversal. Additionally, <code class="language-plaintext highlighter-rouge">coin()</code> step can now follow any step in a Gremlin traversal, instead of just <code class="language-plaintext highlighter-rouge">V()</code> and <code class="language-plaintext highlighter-rouge">E()</code>. For example,
+    <div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">sample</span><span class="o">(</span><span class="mi">10</span><span class="o">)</span>   <span class="c1">// Sample 10 traversers from `g.V()`</span>
+<span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">out</span><span class="o">().</span><span class="na">coin</span><span class="o">(</span><span class="mf">0.2</span><span class="o">)</span>  <span class="c1">// Randomly pick up 20% among all vertices' out neighbors</span>
+</code></pre></div>    </div>
+  </li>
+  <li>Support the <code class="language-plaintext highlighter-rouge">union()</code> step of Gremlin to combine the traversers from multiple traversals. For example,
+    <div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">union</span><span class="o">(</span><span class="n">out</span><span class="o">(),</span> <span class="n">out</span><span class="o">().</span><span class="na">out</span><span class="o">())</span>  <span class="c1">// the results would now be one-hop (out once) and two-hop (out twice) neighbors of all vertices. </span>
+</code></pre></div>    </div>
+  </li>
+  <li>Support the <code class="language-plaintext highlighter-rouge">unfold()</code> step of Gremlin, which is a reversed operator of <code class="language-plaintext highlighter-rouge">fold()</code> that flattens a collection of traversers into discrete elements. For example,
+    <div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">fold</span><span class="o">().</span><span class="na">unfold</span><span class="o">()</span>  <span class="c1">// must obtain `g.V()` again</span>
+</code></pre></div>    </div>
+  </li>
+  <li>Support the <code class="language-plaintext highlighter-rouge">identity()</code> step of Gremlin, which simply returns the current traversers, and is often used together with <code class="language-plaintext highlighter-rouge">union()</code> step. For example,
+    <div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">union</span><span class="o">(</span><span class="n">identity</span><span class="o">(),</span> <span class="n">out</span><span class="o">())</span>  <span class="c1">// return `V()` and its one-hop neighbors</span>
+</code></pre></div>    </div>
+  </li>
+  <li>Support <code class="language-plaintext highlighter-rouge">isNull</code> in the <code class="language-plaintext highlighter-rouge">expr()</code> for verifying wether a certain property has <code class="language-plaintext highlighter-rouge">NULL</code> value. For example,
+    <div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">where</span><span class="o">(</span><span class="n">expr</span><span class="o">(</span><span class="s2">"@.age isNull"</span><span class="o">))</span>  <span class="c1">// the vertices without the field of `age` will be pruned</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>But fixes:</p>
+<ul>
+  <li>Fix a bug of <code class="language-plaintext highlighter-rouge">count()</code> step followed by <code class="language-plaintext highlighter-rouge">order()</code> and <code class="language-plaintext highlighter-rouge">limit()</code> that can cause the <code class="language-plaintext highlighter-rouge">gaia</code> engine to abort unexpectedly. Now the following Gremlin query can be executed smoothly:
+    <div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">g</span><span class="o">.</span><span class="na">V</span><span class="o">().</span><span class="na">order</span><span class="o">().</span><span class="na">by</span><span class="o">(</span><span class="s1">'id'</span><span class="o">,</span> <span class="n">asc</span><span class="o">).</span><span class="na">limit</span><span class="o">(</span><span class="mi">1</span><span class="o">).</span><span class="na">out</span><span class="o">().</span><span class="na">count</span><span class="o">()</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p><strong>3. Enhancements for Deployment</strong></p>
+
+<ul>
+  <li>All GraphScope images support both the <code class="language-plaintext highlighter-rouge">x86</code> and <code class="language-plaintext highlighter-rouge">arm64</code> platforms.</li>
+  <li>This release includes the <code class="language-plaintext highlighter-rouge">gsctl</code> command-line utility for building and testing GraphScope. The <code class="language-plaintext highlighter-rouge">gsctl</code> tool provides several commands and options to streamline the development and deployment process. You can use the following command to install the graphscope-client package and then use <code class="language-plaintext highlighter-rouge">gsctl</code>:</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>pip3 <span class="nb">install </span>graphscope-client
+<span class="nv">$ </span>gsctl <span class="nt">--help</span>
+</code></pre></div></div>
+
+<p><strong>4. Other Enhancements and Bug Fixes</strong></p>
+
+<ul>
+  <li>Fix the <code class="language-plaintext highlighter-rouge">Py_None</code> reference count issue in GLE.</li>
+  <li>Fix the bug that GLE client only connects with a single server in distributed training.</li>
+  <li>Update the GLE-related tutorials.</li>
+</ul>
+
+<p>For more detailed improvements that have been made in this release, please refer to the complete <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.24.0">changelog</a>.</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Release Notes: v0.24.0&amp;url=https://graphscope.io/releasenotes/2023/09/05/release-notes-0.24.0.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/releasenotes/2023/09/05/release-notes-0.24.0.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/releasenotes/2023/09/05/release-notes-0.24.0.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2023 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>
