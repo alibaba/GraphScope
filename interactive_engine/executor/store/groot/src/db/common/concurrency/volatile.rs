@@ -14,7 +14,16 @@ impl<T: Copy + Clone> Volatile<T> {
         unsafe { std::ptr::read_volatile(&self.data as *const T) }
     }
 
+    #[rustversion::before(1.74.0)]
     pub fn set(&self, data: T) {
         unsafe { std::ptr::write_volatile(&self.data as *const T as *mut T, data) }
+    }
+
+    #[rustversion::since(1.74.0)]
+    pub fn set(&self, data: T) {
+        unsafe {
+            let ptr = &self.data as *const T;
+            std::ptr::write_volatile(ptr as *mut T, data)
+        }
     }
 }
