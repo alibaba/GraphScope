@@ -436,7 +436,7 @@ mod tests {
     fn group_first_test() {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
-            aggregate: 8, // ToList
+            aggregate: 8, // First
             alias: Some(TAG_B.into()),
         };
         let key_alias = pb::group_by::KeyAlias {

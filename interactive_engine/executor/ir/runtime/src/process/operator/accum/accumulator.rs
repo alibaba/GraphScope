@@ -374,7 +374,7 @@ impl<D: Encode> Encode for First<D> {
 
 impl<D: Decode> Decode for First<D> {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
-        let max = <Option<D>>::read_from(reader)?;
-        Ok(First { first: max })
+        let first = <Option<D>>::read_from(reader)?;
+        Ok(First { first })
     }
 }
