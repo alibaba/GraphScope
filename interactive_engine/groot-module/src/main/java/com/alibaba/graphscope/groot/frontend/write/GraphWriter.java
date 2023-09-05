@@ -411,13 +411,11 @@ public class GraphWriter implements MetricsAgent {
 
     public static List<Integer> getNonPrimaryKeyIds(
             GraphElement graphElement, Map<String, Object> properties) {
-        List<GraphProperty> pklist = graphElement.getPrimaryKeyList();
-        Set<String> pkNames =
-                pklist.stream().map(GraphProperty::getName).collect(Collectors.toSet());
+        List<String> pklist = graphElement.getPrimaryKeyNameList();
         List<Integer> ids = new ArrayList<>();
         properties.forEach(
                 (name, val) -> {
-                    if (!pkNames.contains(name)) {
+                    if (pklist == null || !pklist.contains(name)) {
                         int id = graphElement.getProperty(name).getId();
                         ids.add(id);
                     }
