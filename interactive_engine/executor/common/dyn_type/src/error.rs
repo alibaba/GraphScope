@@ -44,6 +44,9 @@ impl fmt::Display for CastError {
             RawType::KV => write!(f, "can't cast KV into {}", self.target),
             RawType::None => write!(f, "can't cast None into {}", self.target),
             RawType::Unknown => write!(f, "can't cast unknown dyn type into {}", self.target),
+            RawType::DateFormat => write!(f, "can't cast date into {}", self.target),
+            RawType::TimeFormat => write!(f, "can't cast time into {}", self.target),
+            RawType::DateTimeFormat => write!(f, "can't cast datetime into {}", self.target),
         }
     }
 }

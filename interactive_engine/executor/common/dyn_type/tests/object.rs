@@ -144,4 +144,34 @@ mod tests {
         assert_eq!(right.partial_cmp(&left), Some(Ordering::Greater));
         assert_eq!(*&*right, 8_u128);
     }
+
+    #[test]
+    fn test_object_as_dateformat() {
+        let date = chrono::NaiveDate::from_ymd_opt(2020, 10, 10).unwrap();
+        let date_obj = Object::from(date);
+        let date_recovered = date_obj
+            .as_date_format()
+            .unwrap()
+            .as_date()
+            .unwrap();
+        assert_eq!(date_recovered, date);
+
+        let time = chrono::NaiveTime::from_hms_opt(10, 10, 10).unwrap();
+        let time_obj = Object::from(time);
+        let time_recovered = time_obj
+            .as_date_format()
+            .unwrap()
+            .as_time()
+            .unwrap();
+        assert_eq!(time_recovered, time);
+
+        let date_time = chrono::NaiveDateTime::from_timestamp_opt(1602310210, 0).unwrap();
+        let date_time_obj = Object::from(date_time);
+        let date_time_recovered = date_time_obj
+            .as_date_format()
+            .unwrap()
+            .as_date_time()
+            .unwrap();
+        assert_eq!(date_time_recovered, date_time);
+    }
 }
