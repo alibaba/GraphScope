@@ -1326,6 +1326,7 @@ mod groupby {
         ToList = 5,
         ToSet = 6,
         Avg = 7,
+        First = 8,
     }
 
     /*

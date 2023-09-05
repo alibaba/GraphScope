@@ -26,7 +26,8 @@ public enum FfiAggOpt implements IntEnum<FfiAggOpt> {
     CountDistinct,
     ToList,
     ToSet,
-    Avg;
+    Avg,
+    First;
 
     @Override
     public int getInt() {

@@ -223,4 +223,18 @@ public class WithTest {
                     + "], matchOpt=[INNER])",
                 project.explain().trim());
     }
+
+    @Test
+    public void with_13_test() {
+        RelNode project =
+                Utils.eval("Match (a:person) Return head(collect(a.name)) as name").build();
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                        + " values=[[{operands=[a.name], aggFunction=FIRST_VALUE, alias='name',"
+                        + " distinct=false}]])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])",
+                project.explain().trim());
+        Assert.assertEquals("RecordType(CHAR(1) name)", project.getRowType().toString());
+    }
 }
