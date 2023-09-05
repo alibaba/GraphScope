@@ -30,7 +30,7 @@ public class ClearVertexPropertyOperation extends Operation {
 
     public ClearVertexPropertyOperation(
             VertexId vertexId, LabelId labelId, List<Integer> properties) {
-        super(OperationType.UPDATE_VERTEX);
+        super(OperationType.CLEAR_VERTEX_PROPERTIES);
         this.vertexId = vertexId;
         this.labelId = labelId;
         this.properties = properties;

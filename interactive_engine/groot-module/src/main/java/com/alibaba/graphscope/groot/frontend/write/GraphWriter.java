@@ -129,8 +129,10 @@ public class GraphWriter implements MetricsAgent {
                     break;
                 case CLEAR_VERTEX_PROPERTIES:
                     addClearVertexPropertiesOperation(batchBuilder, schema, dataRecord);
+                    break;
                 case CLEAR_EDGE_PROPERTIES:
                     addClearEdgePropertiesOperation(batchBuilder, schema, dataRecord);
+                    break;
                 default:
                     throw new IllegalArgumentException(
                             "Invalid operationType [" + operationType + "]");
@@ -276,12 +278,13 @@ public class GraphWriter implements MetricsAgent {
         GraphElement vertexDef = schema.getElement(label);
         int labelId = vertexDef.getLabelId();
         Map<String, Object> pkProperties = vertexRecordKey.getProperties();
-        Map<Integer, PropertyValue> pkVals = parseRawProperties(vertexDef, pkProperties);
-        long hashId = getPrimaryKeysHashId(labelId, pkVals, vertexDef);
-
         Map<String, Object> properties = dataRecord.getProperties();
-        properties.putAll(pkProperties);
-        List<Integer> propertyIds = getNonPrimaryKeyIds(vertexDef, properties);
+        Map<String, Object> allProperties = new HashMap<>();
+        allProperties.putAll(pkProperties);
+        allProperties.putAll(properties);
+
+        long hashId = getPrimaryKeysHashIdFromRaw(labelId, allProperties, vertexDef);
+        List<Integer> propertyIds = getNonPrimaryKeyIds(vertexDef, allProperties);
         batchBuilder.addOperation(
                 new ClearVertexPropertyOperation(
                         new VertexId(hashId), new LabelId(labelId), propertyIds));
@@ -385,6 +388,20 @@ public class GraphWriter implements MetricsAgent {
         List<byte[]> pks = new ArrayList<>(pklist.size());
         for (GraphProperty pk : pklist) {
             byte[] valBytes = properties.get(pk.getId()).getValBytes();
+            pks.add(valBytes);
+        }
+        return PkHashUtils.hash(labelId, pks);
+    }
+    public static long getPrimaryKeysHashIdFromRaw(int labelId, Map<String, Object> properties, GraphElement graphElement) {
+        List<String> pklist = graphElement.getPrimaryKeyNameList();
+        List<byte[]> pks = new ArrayList<>(pklist.size());
+
+        for (String propertyName : pklist) {
+            GraphProperty propertyDef = graphElement.getProperty(propertyName);
+            Object valString = properties.get(propertyName);
+            DataType dataType = propertyDef.getDataType();
+            PropertyValue propertyValue = new PropertyValue(dataType, valString);
+            byte[] valBytes = propertyValue.getValBytes();
             pks.add(valBytes);
         }
         return PkHashUtils.hash(labelId, pks);
