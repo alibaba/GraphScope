@@ -11,8 +11,8 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.alibaba.graphscope.groot.operation.dml;
+
 import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;
@@ -50,4 +50,3 @@ public class ClearVertexPropertyOperation extends Operation {
         return builder.build().toByteString();
     }
 }
-

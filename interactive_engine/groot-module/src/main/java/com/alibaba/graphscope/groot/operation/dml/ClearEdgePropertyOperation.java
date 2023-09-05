@@ -14,7 +14,6 @@
 package com.alibaba.graphscope.groot.operation.dml;
 
 import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
-import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
 import com.alibaba.graphscope.groot.operation.EdgeId;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;
@@ -23,7 +22,6 @@ import com.alibaba.graphscope.proto.groot.EdgeLocationPb;
 import com.google.protobuf.ByteString;
 
 import java.util.List;
-import java.util.Map;
 
 public class ClearEdgePropertyOperation extends Operation {
 
@@ -33,11 +31,8 @@ public class ClearEdgePropertyOperation extends Operation {
     private boolean forward;
 
     public ClearEdgePropertyOperation(
-            EdgeId edgeId,
-            EdgeKind edgeKind,
-            List<Integer> properties,
-            boolean forward) {
-        super(OperationType.UPDATE_EDGE);
+            EdgeId edgeId, EdgeKind edgeKind, List<Integer> properties, boolean forward) {
+        super(OperationType.CLEAR_EDGE_PROPERTIES);
         this.edgeId = edgeId;
         this.edgeKind = edgeKind;
         this.properties = properties;

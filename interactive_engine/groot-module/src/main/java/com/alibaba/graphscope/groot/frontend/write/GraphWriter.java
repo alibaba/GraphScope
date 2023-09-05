@@ -196,8 +196,8 @@ public class GraphWriter implements MetricsAgent {
 
     private void addDeleteEdgeOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
-        EdgeId   edgeId = getEdgeId(schema, dataRecord);
-        EdgeKind   edgeKind = getEdgeKind(schema, dataRecord);
+        EdgeId edgeId = getEdgeId(schema, dataRecord);
+        EdgeKind edgeKind = getEdgeKind(schema, dataRecord);
 
         batchBuilder.addOperation(new DeleteEdgeOperation(edgeId, edgeKind, true));
         batchBuilder.addOperation(new DeleteEdgeOperation(edgeId, edgeKind, false));
@@ -205,9 +205,9 @@ public class GraphWriter implements MetricsAgent {
 
     private void addUpdateEdgeOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
-        EdgeId   edgeId = getEdgeId(schema, dataRecord);
-        EdgeKind   edgeKind = getEdgeKind(schema, dataRecord);
-        GraphElement   edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
+        EdgeId edgeId = getEdgeId(schema, dataRecord);
+        EdgeKind edgeKind = getEdgeKind(schema, dataRecord);
+        GraphElement edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
 
         Map<String, Object> properties = dataRecord.getProperties();
 
@@ -216,22 +216,23 @@ public class GraphWriter implements MetricsAgent {
         batchBuilder.addOperation(new UpdateEdgeOperation(edgeId, edgeKind, propertyVals, false));
     }
 
-
     private void addClearEdgePropertiesOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
-        EdgeId   edgeId = getEdgeId(schema, dataRecord);
-        EdgeKind   edgeKind = getEdgeKind(schema, dataRecord);
-        GraphElement   edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
+        EdgeId edgeId = getEdgeId(schema, dataRecord);
+        EdgeKind edgeKind = getEdgeKind(schema, dataRecord);
+        GraphElement edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
         List<Integer> propertyIds = getNonPrimaryKeyIds(edgeDef, dataRecord.getProperties());
-        batchBuilder.addOperation(new ClearEdgePropertyOperation(edgeId, edgeKind, propertyIds, true));
-        batchBuilder.addOperation(new ClearEdgePropertyOperation(edgeId, edgeKind, propertyIds, false));
+        batchBuilder.addOperation(
+                new ClearEdgePropertyOperation(edgeId, edgeKind, propertyIds, true));
+        batchBuilder.addOperation(
+                new ClearEdgePropertyOperation(edgeId, edgeKind, propertyIds, false));
     }
 
     private void addOverwriteEdgeOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
-        EdgeId   edgeId = getEdgeId(schema, dataRecord);
-        EdgeKind   edgeKind = getEdgeKind(schema, dataRecord);
-        GraphElement   edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
+        EdgeId edgeId = getEdgeId(schema, dataRecord);
+        EdgeKind edgeKind = getEdgeKind(schema, dataRecord);
+        GraphElement edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
 
         Map<String, Object> properties = dataRecord.getProperties();
 
@@ -261,7 +262,8 @@ public class GraphWriter implements MetricsAgent {
         String label = vertexRecordKey.getLabel();
         GraphElement vertexDef = schema.getElement(label);
         int labelId = vertexDef.getLabelId();
-        Map<Integer, PropertyValue> pkVals = parseRawProperties(vertexDef, vertexRecordKey.getProperties());
+        Map<Integer, PropertyValue> pkVals =
+                parseRawProperties(vertexDef, vertexRecordKey.getProperties());
         Map<Integer, PropertyValue> propertyVals = parseRawProperties(vertexDef, properties);
         propertyVals.putAll(pkVals);
         long hashId = getPrimaryKeysHashId(labelId, pkVals, vertexDef);
@@ -269,7 +271,6 @@ public class GraphWriter implements MetricsAgent {
                 new UpdateVertexOperation(
                         new VertexId(hashId), new LabelId(labelId), propertyVals));
     }
-
 
     private void addClearVertexPropertiesOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
@@ -297,7 +298,8 @@ public class GraphWriter implements MetricsAgent {
         String label = vertexRecordKey.getLabel();
         GraphElement vertexDef = schema.getElement(label);
         int labelId = vertexDef.getLabelId();
-        Map<Integer, PropertyValue> pkVals = parseRawProperties(vertexDef, vertexRecordKey.getProperties());
+        Map<Integer, PropertyValue> pkVals =
+                parseRawProperties(vertexDef, vertexRecordKey.getProperties());
         Map<Integer, PropertyValue> propertyVals = parseRawProperties(vertexDef, properties);
         propertyVals.putAll(pkVals);
         long hashId = getPrimaryKeysHashId(labelId, propertyVals, vertexDef);
@@ -352,9 +354,7 @@ public class GraphWriter implements MetricsAgent {
                     getPrimaryKeysHashId(dstVertexDef.getLabelId(), dstVertexPkVals, dstVertexDef);
             long edgeInnerId = edgeRecordKey.getEdgeInnerId();
             return new EdgeId(
-                    new VertexId(srcVertexHashId),
-                    new VertexId(dstVertexHashId),
-                    edgeInnerId);
+                    new VertexId(srcVertexHashId), new VertexId(dstVertexHashId), edgeInnerId);
         }
     }
 
@@ -392,7 +392,9 @@ public class GraphWriter implements MetricsAgent {
         }
         return PkHashUtils.hash(labelId, pks);
     }
-    public static long getPrimaryKeysHashIdFromRaw(int labelId, Map<String, Object> properties, GraphElement graphElement) {
+
+    public static long getPrimaryKeysHashIdFromRaw(
+            int labelId, Map<String, Object> properties, GraphElement graphElement) {
         List<String> pklist = graphElement.getPrimaryKeyNameList();
         List<byte[]> pks = new ArrayList<>(pklist.size());
 
@@ -407,9 +409,11 @@ public class GraphWriter implements MetricsAgent {
         return PkHashUtils.hash(labelId, pks);
     }
 
-    public static List<Integer> getNonPrimaryKeyIds(GraphElement graphElement, Map<String, Object> properties) {
+    public static List<Integer> getNonPrimaryKeyIds(
+            GraphElement graphElement, Map<String, Object> properties) {
         List<GraphProperty> pklist = graphElement.getPrimaryKeyList();
-        Set<String> pkNames = pklist.stream().map(GraphProperty::getName).collect(Collectors.toSet());
+        Set<String> pkNames =
+                pklist.stream().map(GraphProperty::getName).collect(Collectors.toSet());
         List<Integer> ids = new ArrayList<>();
         properties.forEach(
                 (name, val) -> {
@@ -417,8 +421,7 @@ public class GraphWriter implements MetricsAgent {
                         int id = graphElement.getProperty(name).getId();
                         ids.add(id);
                     }
-                }
-        );
+                });
         return ids;
     }
 

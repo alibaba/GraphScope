@@ -193,6 +193,10 @@ public class GrootClient {
         return modifyVertex(vertex, WriteTypePb.CLEAR_PROPERTY);
     }
 
+    public long clearVertexProperties(List<Vertex> vertices) {
+        return modifyVertex(vertices, WriteTypePb.CLEAR_PROPERTY);
+    }
+
     /**
      * Add edge by realtime write
      * @param edge edge that contains label, src vertex label and pk, dst label and pk, and properties
@@ -257,6 +261,9 @@ public class GrootClient {
         return modifyEdge(edge, WriteTypePb.CLEAR_PROPERTY);
     }
 
+    public long clearEdgeProperties(List<Edge> edges) {
+        return modifyEdge(edges, WriteTypePb.CLEAR_PROPERTY);
+    }
 
     /**
      * Commit the realtime write transaction.
