@@ -87,14 +87,12 @@ class ResourceConfig:
 class ImageConfig:
     """Image related stuffs."""
 
-    registry: Union[
-        str, None
-    ] = "registry.cn-hongkong.aliyuncs.com"  # k8s image registry.
+    registry: Union[str, None] = "registry.cn-hongkong.aliyuncs.com"
+    # k8s image registry.
     repository: str = "graphscope"  # k8s image repository.
     tag: str = __version__  # k8s image tag.
-    pull_secrets: List[str] = field(
-        default_factory=list
-    )  # A list of secrets to pull image.
+    pull_secrets: List[str] = field(default_factory=list)
+    # A list of secrets to pull image.
     pull_policy: str = "IfNotPresent"  # Kubernetes image pull policy.
 
 
@@ -103,8 +101,12 @@ class MarsConfig:
     """Mars configuration"""
 
     enable: bool = False  # Enable Mars or not.
-    worker_resource: ResourceConfig = ResourceConfig.make_burstable(0.2, "4Mi")
-    scheduler_resource: ResourceConfig = ResourceConfig.make_burstable(0.2, "4Mi")
+    worker_resource: ResourceConfig = field(
+        default_factory=lambda: ResourceConfig.make_burstable(0.2, "4Mi")
+    )
+    scheduler_resource: ResourceConfig = field(
+        default_factory=lambda: ResourceConfig.make_burstable(0.2, "4Mi")
+    )
 
 
 @dataclass
@@ -134,16 +136,24 @@ class EngineConfig:
 
     preemptive: bool = True
 
-    gae_resource: ResourceConfig = ResourceConfig.make_burstable(1, "4Gi")
+    gae_resource: ResourceConfig = field(
+        default_factory=lambda: ResourceConfig.make_burstable(1, "4Gi")
+    )
     # Resource for analytical pod
 
-    gie_executor_resource: ResourceConfig = ResourceConfig.make_burstable(1, "2Gi")
+    gie_executor_resource: ResourceConfig = field(
+        default_factory=lambda: ResourceConfig.make_burstable(1, "2Gi")
+    )
     # Resource for interactive executor pod
 
-    gie_frontend_resource: ResourceConfig = ResourceConfig.make_burstable(0.5, "1Gi")
+    gie_frontend_resource: ResourceConfig = field(
+        default_factory=lambda: ResourceConfig.make_burstable(0.5, "1Gi")
+    )
     # Resource for interactive frontend pod
 
-    gle_resource: ResourceConfig = ResourceConfig.make_burstable(0.2, "1Gi")
+    gle_resource: ResourceConfig = field(
+        default_factory=lambda: ResourceConfig.make_burstable(0.2, "1Gi")
+    )
     # Resource for learning pod
 
     def post_setup(self):
@@ -203,7 +213,9 @@ class VineyardConfig:
 
     image: str = "vineyardcloudnative/vineyardd:latest"  # Image for vineyard container.
 
-    resource: ResourceConfig = ResourceConfig.make_burstable(0.2, "256Mi")
+    resource: ResourceConfig = field(
+        default_factory=lambda: ResourceConfig.make_burstable(0.2, "256Mi")
+    )
     # Resource for vineyard sidecar container
 
 
@@ -223,7 +235,9 @@ class CoordinatorConfig:
     # Name of the coordinator deployment and service.
     node_selector: Union[str, None] = None
     # Node selector for coordinator pod in kubernetes
-    resource: ResourceConfig = ResourceConfig.make_burstable(0.5, "512Mi")
+    resource: ResourceConfig = field(
+        default_factory=lambda: ResourceConfig.make_burstable(0.5, "512Mi")
+    )
     # Resource configuration of coordinator.
 
     # For GraphScope operator
@@ -238,7 +252,7 @@ class HostsLauncherConfig:
 
     hosts: List[str] = list_field("localhost")
     # list of hostnames of graphscope engine workers.
-    etcd: EtcdConfig = EtcdConfig()
+    etcd: EtcdConfig = field(default_factory=EtcdConfig)
     # Etcd configuration. Only local session needs to configure etcd.
 
     dataset_download_retries: int = 3
@@ -266,13 +280,15 @@ class KubernetesLauncherConfig:
     waiting_for_delete: bool = False
     # Wait until the graphscope instance has been deleted successfully.
 
-    image: ImageConfig = ImageConfig()  # Image configuration.
+    image: ImageConfig = field(default_factory=ImageConfig)  # Image configuration.
 
-    engine: EngineConfig = EngineConfig()  # Engine configuration.
+    engine: EngineConfig = field(default_factory=EngineConfig)  # Engine configuration.
 
-    dataset: DatasetConfig = DatasetConfig()  # Dataset configuration.
+    dataset: DatasetConfig = field(
+        default_factory=DatasetConfig
+    )  # Dataset configuration.
 
-    mars: MarsConfig = MarsConfig()  # Mars configuration.
+    mars: MarsConfig = field(default_factory=MarsConfig)  # Mars configuration.
 
 
 @dataclass
@@ -310,18 +326,26 @@ class Config(Serializable):
     launcher_type: str = "k8s"
     # Launcher type, choose from 'hosts', 'k8s' or 'operator'.
 
-    session: SessionConfig = SessionConfig()
+    session: SessionConfig = field(default_factory=SessionConfig)
 
-    coordinator: CoordinatorConfig = CoordinatorConfig()  # Coordinator configuration.
-    vineyard: VineyardConfig = VineyardConfig()  # Vineyard configuration.
+    coordinator: CoordinatorConfig = field(
+        default_factory=CoordinatorConfig
+    )  # Coordinator configuration.
+    vineyard: VineyardConfig = field(
+        default_factory=VineyardConfig
+    )  # Vineyard configuration.
 
-    hosts_launcher: HostsLauncherConfig = HostsLauncherConfig()
+    hosts_launcher: HostsLauncherConfig = field(default_factory=HostsLauncherConfig)
     # Local cluster configuration.
 
-    kubernetes_launcher: KubernetesLauncherConfig = KubernetesLauncherConfig()
+    kubernetes_launcher: KubernetesLauncherConfig = field(
+        default_factory=KubernetesLauncherConfig
+    )
     # Kubernetes cluster configuration.
 
-    operator_launcher: OperatorLauncherConfig = OperatorLauncherConfig()
+    operator_launcher: OperatorLauncherConfig = field(
+        default_factory=OperatorLauncherConfig
+    )
     # Launcher used in operator mode.
 
     def set_option(self, key, value):  # noqa: C901
