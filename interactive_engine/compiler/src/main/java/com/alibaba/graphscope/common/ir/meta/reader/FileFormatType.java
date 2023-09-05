@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.cypher.antlr4;
+package com.alibaba.graphscope.common.ir.meta.reader;
 
-import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
-
-import org.junit.Assert;
-import org.junit.Test;
-
-public class CallProcedureTest {
-    @Test
-    public void match_1_test() {
-        LogicalPlan logicalPlan = Utils.evalLogicalPlan("Call ldbc_ic2(10l, 20120112l)");
-        Assert.assertEquals("ldbc_ic2(10:BIGINT, 20120112:BIGINT)", logicalPlan.explain().trim());
-        Assert.assertEquals(
-                "RecordType(CHAR(1) name)", logicalPlan.getProcedureCall().getType().toString());
-    }
+public enum FileFormatType {
+    YAML,
+    JSON,
+    PROPERTIES
 }

@@ -83,7 +83,6 @@ void VineyardServer::Start() {
     vineyardd_path = "/usr/bin/env python3 -m vineyard";
   }
   std::string cmd = vineyardd_path + " --socket " + vineyard_socket_ +
-                    " --size " + FLAGS_vineyard_shared_mem +
                     " --etcd_endpoint " + FLAGS_etcd_endpoint +
                     " --etcd_prefix vineyard.gsa." + std::to_string(ts);
   if (comm_spec_.worker_num() == comm_spec_.local_num()) {

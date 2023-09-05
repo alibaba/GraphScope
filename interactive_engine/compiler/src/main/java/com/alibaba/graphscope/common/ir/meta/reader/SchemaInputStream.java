@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.meta.schema;
+package com.alibaba.graphscope.common.ir.meta.reader;
 
-import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
+import java.io.InputStream;
 
-import org.apache.calcite.schema.Statistic;
+public class SchemaInputStream {
+    private final InputStream inputStream;
+    private final FileFormatType formatType;
 
-import java.util.List;
+    public SchemaInputStream(InputStream inputStream, FileFormatType formatType) {
+        this.inputStream = inputStream;
+        this.formatType = formatType;
+    }
 
-/**
- * Extends {@link GraphSchema} to add {@link Statistic}
- */
-public interface StatisticSchema extends GraphSchema {
-    // get meta for CBO
-    Statistic getStatistic(List<String> tableName);
+    public InputStream getInputStream() {
+        return inputStream;
+    }
 
-    // if the property name need to be converted to id
-    boolean isColumnId();
-
-    // schema json for ir core
-    String schemaJson();
+    public FileFormatType getFormatType() {
+        return formatType;
+    }
 }

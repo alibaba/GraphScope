@@ -19,19 +19,20 @@ package com.alibaba.graphscope.common.ir.meta.reader;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.config.Utils;
+import com.alibaba.graphscope.common.utils.FileUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.nio.file.Paths;
+import java.io.*;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 // a local file system implementation of MetaDataReader
@@ -44,7 +45,7 @@ public class LocalMetaDataReader implements MetaDataReader {
     }
 
     @Override
-    public List<InputStream> getStoredProcedures() throws FileNotFoundException {
+    public List<InputStream> getStoredProcedures() throws IOException {
         String procedurePath = GraphConfig.GRAPH_STORED_PROCEDURES.get(configs);
         File procedureDir = new File(procedurePath);
         if (!procedureDir.exists() || !procedureDir.isDirectory()) {
@@ -60,27 +61,49 @@ public class LocalMetaDataReader implements MetaDataReader {
                 procedureInputs.add(new FileInputStream(file));
             }
         } else {
+            Map<String, InputStream> procedureInputMap =
+                    getProcedureNameWithInputStream(procedureDir);
             for (String enableProcedure : enableProcedureList) {
-                File procedureFile =
-                        new File(Paths.get(procedurePath, enableProcedure + ".yaml").toString());
-                if (!procedureFile.exists()) {
-                    logger.warn(
-                            "procedure {} not exist in directory {}",
-                            procedureFile.getName(),
-                            procedurePath);
-                } else {
-                    procedureInputs.add(new FileInputStream(procedureFile));
-                }
+                InputStream enableInput = procedureInputMap.get(enableProcedure);
+                Preconditions.checkArgument(
+                        enableInput != null,
+                        "can not find procedure with name=%s under directory=%s, candidates are %s",
+                        enableProcedure,
+                        procedureDir,
+                        procedureInputMap.keySet());
+                procedureInputs.add(enableInput);
             }
         }
         return Collections.unmodifiableList(procedureInputs);
     }
 
+    private Map<String, InputStream> getProcedureNameWithInputStream(File procedureDir)
+            throws IOException {
+        Map<String, InputStream> procedureInputMap = Maps.newHashMap();
+        for (File file : procedureDir.listFiles()) {
+            String procedureName = getProcedureName(file);
+            procedureInputMap.put(procedureName, new FileInputStream(file));
+        }
+        return procedureInputMap;
+    }
+
+    private String getProcedureName(File file) throws IOException {
+        try (InputStream inputStream = new FileInputStream(file)) {
+            Yaml yaml = new Yaml();
+            Map<String, Object> map = yaml.load(inputStream);
+            Object procedureName = map.get("name");
+            Preconditions.checkArgument(
+                    procedureName != null, "procedure name not exist in %s", file.getName());
+            return procedureName.toString();
+        }
+    }
+
     @Override
-    public InputStream getGraphSchema() throws FileNotFoundException {
+    public SchemaInputStream getGraphSchema() throws IOException {
         String schemaPath =
                 Objects.requireNonNull(
                         GraphConfig.GRAPH_SCHEMA.get(configs), "schema path not exist");
-        return new FileInputStream(schemaPath);
+        return new SchemaInputStream(
+                new FileInputStream(schemaPath), FileUtils.getFormatType(schemaPath));
     }
 }

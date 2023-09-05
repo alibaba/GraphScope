@@ -196,9 +196,9 @@ class ResourceBuilder:
         return volumes, source_volume_mounts, destination_volume_mounts
 
     @staticmethod
-    def get_resources(requests, limits, preemptive=True):
+    def get_resources(requests, limits):
         resource_requirements = kube_client.V1ResourceRequirements()
-        if not preemptive and requests is not None:
+        if requests is not None:
             resource_requirements.requests = requests
         if limits is not None:
             resource_requirements.limits = limits

@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coordinator-{{ include "graphscope.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope.coordinator.labels" . | nindent 8 }}
+data:
+  start.sh: |-
+    #!/bin/bash
+    python3 -m gscoordinator --config-file /home/graphscope/config.yaml
+  coordinator.config: |-
+    launcher_type: k8s
+    coordinator:
+      {{- $fullname := include "graphscope.fullname" . }}
+      deployment_name: {{ printf "%s-%s" "coordinator" $fullname }}
+      monitor: false
+      monitor_port: 9090
+      operator_mode: false
+      service_port: 59001
+    kubernetes_launcher:
+      dataset:
+        enable: {{ .Values.dataset.enabled }}
+        proxy: {{ mustToJson .Values.dataset.proxy | b64enc }}
+      delete_namespace: false
+      engine:
+        enabled_engines: {{ .Values.engines.enabled_engines }}
+        gae_resource: {{ toYaml .Values.engines.gae.resources | nindent 10 }}
+        gie_executor_resource: {{ toYaml .Values.engines.gie.executor.resources | nindent 10 }}
+        gie_frontend_resource: {{ toYaml .Values.engines.gie.frontend.resources | nindent 10 }}
+        gle_resource: {{ toYaml .Values.engines.gle.resources | nindent 10 }}
+      image:
+        pull_policy: {{ .Values.image.pullPolicy }}
+        pull_secrets: {{ toYaml .Values.image.pullSecrets | nindent 10 }}
+        registry: {{ .Values.image.registry }}
+        repository: {{ .Values.image.repository }}
+        {{- if .Values.image.tag }}
+        tag: {{ .Values.image.tag }}
+        {{- else }}
+        tag: {{ .Chart.AppVersion }}
+        {{- end }}
+      namespace: {{ .Release.Namespace }}
+      service_type: {{ .Values.coordinator.service.type }}
+      {{- if .Values.volumes.enabled }}
+      volumes: {{ mustToJson .Values.volumes.items | b64enc | quote}}
+      {{- end }}
+      waiting_for_delete: false
+    session:
+      dangling_timeout_seconds: -1
+      execution_mode: eager
+      instance_id: {{ .Release.Name }}
+      log_level: {{ .Values.engines.log_level }}
+      num_workers: {{ .Values.engines.num_workers }}
+      timeout_seconds: {{ .Values.coordinator.timeout_seconds }}
+    vineyard:
+      deployment_name: {{ .Values.vineyard.deployment }}
+      image: {{ .Values.vineyard.image.name }}:{{ .Values.vineyard.image.tag }}
+      resource: {{ toYaml .Values.vineyard.resources | nindent 10 }}
+      rpc_port: 9600

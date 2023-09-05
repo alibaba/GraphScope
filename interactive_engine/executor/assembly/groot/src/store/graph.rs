@@ -163,6 +163,8 @@ fn do_write_batch<G: MultiVersionGraph>(
             OpTypePb::OVERWRITE_EDGE => overwrite_edge(graph, snapshot_id, op)?,
             OpTypePb::UPDATE_EDGE => update_edge(graph, snapshot_id, op)?,
             OpTypePb::DELETE_EDGE => delete_edge(graph, snapshot_id, op)?,
+            OpTypePb::CLEAR_VERTEX_PROPERTIES => clear_vertex_properties(graph, snapshot_id, op)?,
+            OpTypePb::CLEAR_EDGE_PROPERTIES => clear_edge_properties(graph, snapshot_id, op)?,
             // Ddl
             OpTypePb::CREATE_VERTEX_TYPE => {
                 if create_vertex_type(graph, snapshot_id, op)? {
@@ -337,6 +339,21 @@ fn update_vertex<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operati
     graph.insert_update_vertex(snapshot_id, vertex_id, label_id, &property_map)
 }
 
+fn clear_vertex_properties<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<()> {
+    trace!("clear vertex properties");
+    let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
+
+    let vertex_id_pb = parse_pb::<VertexIdPb>(data_operation_pb.get_keyBlob())?;
+    let vertex_id = vertex_id_pb.get_id();
+
+    let label_id_pb = parse_pb::<LabelIdPb>(data_operation_pb.get_locationBlob())?;
+    let label_id = label_id_pb.get_id();
+    let property_ids = data_operation_pb.get_propIds();
+    graph.clear_vertex_properties(snapshot_id, vertex_id, label_id, &property_ids)
+}
+
 fn delete_vertex<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
     trace!("delete_vertex");
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
@@ -380,14 +397,26 @@ fn update_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operation
     let edge_location_pb = parse_pb::<EdgeLocationPb>(data_operation_pb.get_locationBlob())?;
     let edge_kind_pb = edge_location_pb.get_edgeKind();
     let edge_kind = EdgeKind::from_proto(edge_kind_pb);
+    let forward = edge_location_pb.get_forward();
     let property_map = <dyn PropertyMap>::from_proto(data_operation_pb.get_props());
-    graph.insert_update_edge(
-        snapshot_id,
-        edge_id,
-        &edge_kind,
-        edge_location_pb.get_forward(),
-        &property_map,
-    )
+    graph.insert_update_edge(snapshot_id, edge_id, &edge_kind, forward, &property_map)
+}
+
+fn clear_edge_properties<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<()> {
+    trace!("update_edge");
+    let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
+
+    let edge_id_pb = parse_pb::<EdgeIdPb>(data_operation_pb.get_keyBlob())?;
+    let edge_id = EdgeId::from_proto(&edge_id_pb);
+
+    let edge_location_pb = parse_pb::<EdgeLocationPb>(data_operation_pb.get_locationBlob())?;
+    let edge_kind_pb = edge_location_pb.get_edgeKind();
+    let edge_kind = EdgeKind::from_proto(edge_kind_pb);
+    let forward = edge_location_pb.get_forward();
+    let prop_ids = data_operation_pb.get_propIds();
+    graph.clear_edge_properties(snapshot_id, edge_id, &edge_kind, forward, prop_ids)
 }
 
 fn delete_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {

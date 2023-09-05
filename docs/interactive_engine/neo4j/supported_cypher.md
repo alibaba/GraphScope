@@ -97,6 +97,7 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | BitOpr  | Bit right shift | via function | >> |  <input type="checkbox" disabled  />| planned |
 | Branch | Use with `Project` and `Return` | CASE WHEN  | CASE WHEN |  <input type="checkbox" disabled  />| planned |
 | Scalar | Returns the length of a path | length() | length() | <input type="checkbox" disabled checked /> | |
+| List | Fold expressions into a single list | [] | [] | <input type="checkbox" disabled checked /> |   |
 
 
 
