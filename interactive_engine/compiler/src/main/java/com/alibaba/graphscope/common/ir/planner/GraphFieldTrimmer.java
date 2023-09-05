@@ -6,10 +6,16 @@ import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
 import com.alibaba.graphscope.common.ir.rel.graph.AbstractBindableTableScan;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
+import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
+import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.rex.RexVariableAliasCollector;
+import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
+import com.google.common.collect.ImmutableSet;
+import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.rel.AbstractRelNode;
+import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -25,38 +31,41 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class GraphFieldTrimmer extends RelFieldTrimmer {
+    private GraphBuilder graphBuilder;
 
+    public class GraphVariable {
+        private int aliasId;
+        private @Nullable GraphProperty property;
 
-    public class GraphVariable{
-       private int aliasId;
-       private @Nullable GraphProperty property;
-       public GraphVariable(int aliasId,@Nullable GraphProperty property){
-         this.aliasId=aliasId;
-         this.property=property;
-       }
+        public GraphVariable(int aliasId, @Nullable GraphProperty property) {
+            this.aliasId = aliasId;
+            this.property = property;
+        }
 
-       public GraphVariable(int aliasId){
-           this.aliasId=aliasId;
-       }
+        public GraphVariable(int aliasId) {
+            this.aliasId = aliasId;
+        }
 
-       @Override
-       public boolean equals(Object o){
-           if(this==o) return true;
-           if (o == null || getClass() != o.getClass()) return false;
-           if (!super.equals(o)) return false;
-           RexGraphVariable rhs = (RexGraphVariable) o;
-           if(rhs.getProperty()==null){
-               return aliasId==rhs.getAliasId();
-           }
-           return  aliasId==rhs.getAliasId()&&Objects.equals(property,rhs.getProperty());
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
+            RexGraphVariable rhs = (RexGraphVariable) o;
+            if (rhs.getProperty() == null) {
+                return aliasId == rhs.getAliasId();
+            }
+            return aliasId == rhs.getAliasId() && Objects.equals(property, rhs.getProperty());
 
-       }
+        }
     }
+
     private final ReflectUtil.MethodDispatcher<RelNode> graphTrimFieldsDispatcher;
 
-    public GraphFieldTrimmer(@Nullable SqlValidator validator, RelBuilder relBuilder) {
-        super(validator, relBuilder);
-        graphTrimFieldsDispatcher  =
+    public GraphFieldTrimmer(GraphBuilder builder) {
+        super(null, builder);
+        graphBuilder = builder;
+        graphTrimFieldsDispatcher =
                 ReflectUtil.createMethodDispatcher(
                         RelNode.class,
                         this,
@@ -68,81 +77,128 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     }
 
     public RelNode trim(RelNode root) {
-        final Set<GraphVariable> fields=Collections.emptySet();
-        return dispatchTrimFields(root,fields);
+        final ImmutableSet<GraphVariable> fields = ImmutableSet.of();
+        return dispatchTrimFields(root, fields);
     }
 
 
-    public RelNode trimFields(GraphLogicalProject project, Set<GraphVariable> fieldsUsed){
+    public RelNode trimFields(GraphLogicalProject project, ImmutableSet<GraphVariable> fieldsUsed) {
         // TODO(huaiyu)
         return project;
     }
 
-    public RelNode trimFields(GraphLogicalAggregate aggregate,Set<GraphVariable> fieldsUsed){
-        // TODO(huaiyu)
+    public RelNode trimFields(GraphLogicalAggregate aggregate, ImmutableSet<GraphVariable> fieldsUsed) {
+        ImmutableSet.Builder builder=ImmutableSet.builder();
+        // collect aggregate calls
+        for(GraphAggCall call:aggregate.getAggCalls()){
+            for(RexNode operand:call.getOperands()){
+                operand.accept(new RexVariableAliasCollector<>(true, this::findField))
+                        .stream()
+                        .forEach(builder::add);
+            }
+        }
+
+        // collect group bys
+        GraphGroupKeys keys=aggregate.getGroupKey();
+        for(RexNode node:keys.getVariables()){
+            node.accept(new RexVariableAliasCollector<>(true, this::findField))
+                    .stream()
+                    .forEach(builder::add);
+        }
+
+        List<RexNode> operands=aggregate.getAggCalls()
         return aggregate;
     }
 
-    public RelNode trimFields(GraphLogicalSort sort,Set<GraphVariable> fieldsUsed){
-        // TODO(huaiyu)
-        return sort;
-    }
+    public RelNode trimFields(GraphLogicalSort sort, ImmutableSet<GraphVariable> fieldsUsed) {
+        RexNode offset = sort.offset;
+        RexNode fetch = sort.fetch;
+        RelCollation collation=sort.collation;
 
-    public RelNode trimFields(AbstractBindableTableScan tableScan,Set<GraphVariable> fieldsUsed){
-        // TODO(huaiyu)
-        return tableScan;
-    }
 
-    public RelNode trimFields(LogicalFilter filter,Set<GraphVariable> fieldsUsed){
-       // Find columns and PropertyRef used by filter.
-        RexNode condition=filter.getCondition();
-        List<GraphVariable> fields=condition.accept(new RexVariableAliasCollector<>(true,this::findField))
+        ImmutableSet.Builder builder=ImmutableSet.builder();
+        offset.accept(new RexVariableAliasCollector<>(true, this::findField))
                 .stream()
-                .collect(Collectors.toList());
+                .forEach(builder::add);
 
-        fieldsUsed.addAll(fields);
+        fetch.accept(new RexVariableAliasCollector<>(true, this::findField))
+                .stream()
+                .forEach(builder::add);
+        // TODO(collect order by)
 
-        RelNode input=filter.getInput();
-        RelNode result=trimChild(input,fieldsUsed);
-        if(Objects.equals(input,result)){
+        builder.addAll(fieldsUsed);
+        fieldsUsed=builder.build();
+
+        RelNode input = sort.getInput();
+        RelNode newInput = trimChild(input, fieldsUsed);
+        if (Objects.equals(input, newInput)) {
+            return sort;
+        }
+        // FIXME(huaiyu) get nodes from collection
+//        graphBuilder.push(newInput).sortLimit(offset,fetch)
+        return graphBuilder.build();
+    }
+
+
+    public RelNode trimFields(LogicalFilter filter, ImmutableSet<GraphVariable> fieldsUsed) {
+        // Find columns and PropertyRef used by filter.
+        RexNode condition = filter.getCondition();
+
+        ImmutableSet.Builder builder=ImmutableSet.builder();
+        condition.accept(new RexVariableAliasCollector<>(true, this::findField))
+                .stream()
+                .forEach(builder::add);
+
+        builder.addAll(fieldsUsed);
+        fieldsUsed=builder.build();
+
+
+        RelNode input = filter.getInput();
+        RelNode newInput = trimChild(input, fieldsUsed);
+        if (Objects.equals(input, newInput)) {
             return filter;
         }
 
-
-        return filter;
-
+        graphBuilder.push(newInput).filter(filter.getVariablesSet(), filter.getCondition());
+        return graphBuilder.build();
     }
 
-    public RelNode trimFields(GraphLogicalSingleMatch singleMatch,Set<GraphVariable>fieldsUsed){
-      List<RelNode> sentence=Collections.singletonList(singleMatch.getSentence());
-      return  singleMatch;
+    public RelNode trimFields(GraphLogicalSingleMatch singleMatch, ImmutableSet<GraphVariable> fieldsUsed) {
+        List<RelNode> sentence = Collections.singletonList(singleMatch.getSentence());
+        return singleMatch;
     }
 
-    public RelNode trimFields(GraphLogicalMultiMatch multiMatch,Set<GraphVariable> fieldUsed){
-        List<RelNode> setences=multiMatch.getSentences();
-        List<RelNode> result=Collections.emptyList();
-        for(RelNode node:setences){
-            trimChild(node,fieldUsed);
+    public RelNode trimFields(GraphLogicalMultiMatch multiMatch, ImmutableSet<GraphVariable> fieldUsed) {
+        List<RelNode> setences = multiMatch.getSentences();
+        List<RelNode> result = Collections.emptyList();
+        for (RelNode node : setences) {
+            trimChild(node, fieldUsed);
         }
         // TODO(huaiyu)
         return multiMatch;
     }
 
-    protected RelNode trimChild(RelNode rel, Set<GraphVariable> fieldsUsed) {
-        return dispatchTrimFields(rel,fieldsUsed);
-
-    }
-   final public GraphVariable findField(RexGraphVariable var){
-        return new GraphVariable(var.getAliasId(),var.getProperty());
+    public RelNode trimFields(AbstractBindableTableScan tableScan, ImmutableSet<GraphVariable> fieldsUsed) {
+        // TODO(huaiyu)
+        return tableScan;
     }
 
+
+    protected RelNode trimChild(RelNode rel, ImmutableSet<GraphVariable> fieldsUsed) {
+        return dispatchTrimFields(rel, fieldsUsed);
+
+    }
+
+    final public GraphVariable findField(RexGraphVariable var) {
+        return new GraphVariable(var.getAliasId(), var.getProperty());
+    }
 
 
     protected final RelNode dispatchTrimFields(
             RelNode rel,
             Set<GraphVariable> fieldsUsed
-    ){
-        return graphTrimFieldsDispatcher.invoke(rel,fieldsUsed);
+    ) {
+        return graphTrimFieldsDispatcher.invoke(rel, fieldsUsed);
     }
 
 }
