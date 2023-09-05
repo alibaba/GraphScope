@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.config;
 
+import com.alibaba.graphscope.common.utils.FileUtils;
+
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 
@@ -81,10 +83,15 @@ public class Configs {
 
     public static class Factory {
         public static Configs create(String file) throws Exception {
-            if (file.endsWith(".yaml")) {
-                return new YamlConfigs(file);
-            } else {
-                return new Configs(file);
+            switch (FileUtils.getFormatType(file)) {
+                case YAML:
+                    return new YamlConfigs(file);
+                case PROPERTIES:
+                    return new Configs(file);
+                case JSON:
+                default:
+                    throw new UnsupportedOperationException(
+                            "can not initiate Configs from the file " + file);
             }
         }
     }

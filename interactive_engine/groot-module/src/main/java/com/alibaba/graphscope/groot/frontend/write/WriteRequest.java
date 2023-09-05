@@ -59,6 +59,8 @@ public class WriteRequest {
                 return new WriteRequest(OperationType.UPDATE_VERTEX, dataRecord);
             case DELETE:
                 return new WriteRequest(OperationType.DELETE_VERTEX, dataRecord);
+            case CLEAR_PROPERTY:
+                return new WriteRequest(OperationType.CLEAR_VERTEX_PROPERTIES, dataRecord);
             default:
                 throw new IllegalArgumentException("Invalid write type [" + typePb + "]");
         }
@@ -72,6 +74,8 @@ public class WriteRequest {
                 return new WriteRequest(OperationType.UPDATE_EDGE, dataRecord);
             case DELETE:
                 return new WriteRequest(OperationType.DELETE_EDGE, dataRecord);
+            case CLEAR_PROPERTY:
+                return new WriteRequest(OperationType.CLEAR_EDGE_PROPERTIES, dataRecord);
             default:
                 throw new IllegalArgumentException("Invalid write type [" + typePb + "]");
         }

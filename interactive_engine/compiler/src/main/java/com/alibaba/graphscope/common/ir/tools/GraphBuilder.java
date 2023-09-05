@@ -19,7 +19,7 @@ package com.alibaba.graphscope.common.ir.tools;
 import static java.util.Objects.requireNonNull;
 
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
-import com.alibaba.graphscope.common.ir.meta.schema.StatisticSchema;
+import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
@@ -36,6 +36,7 @@ import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
+import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gremlin.Utils;
@@ -54,7 +55,6 @@ import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.IntervalSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -235,7 +235,7 @@ public class GraphBuilder extends RelBuilder {
      * @param opt
      * @return
      */
-    private List<List<String>> getTableNames(GraphOpt.Source opt, StatisticSchema rootSchema) {
+    private List<List<String>> getTableNames(GraphOpt.Source opt, IrGraphSchema rootSchema) {
         switch (opt) {
             case VERTEX:
                 return rootSchema.getVertexList().stream()
@@ -393,12 +393,12 @@ public class GraphBuilder extends RelBuilder {
         ColumnField columnField = getAliasField(alias);
         RelDataTypeField aliasField = columnField.right;
         if (property.equals(GraphProperty.LEN_KEY)) {
-            if (!(aliasField.getType() instanceof ArraySqlType)) {
+            if (!(aliasField.getType() instanceof GraphPathType)) {
                 throw new ClassCastException(
                         "cannot get property='len' from type class ["
                                 + aliasField.getType().getClass()
                                 + "], should be ["
-                                + ArraySqlType.class
+                                + GraphPathType.class
                                 + "]");
             } else {
                 return RexGraphVariable.of(
@@ -414,7 +414,7 @@ public class GraphBuilder extends RelBuilder {
                     "cannot get property=['id', 'label', 'all', 'key'] from type class ["
                             + aliasField.getType().getClass()
                             + "], should be ["
-                            + GraphOptSchema.class
+                            + GraphSchemaType.class
                             + "]");
         }
         if (property.equals(GraphProperty.LABEL_KEY)) {
@@ -634,6 +634,7 @@ public class GraphBuilder extends RelBuilder {
                 || (sqlKind == SqlKind.CASE)
                 || (sqlKind == SqlKind.PROCEDURE_CALL)
                 || (sqlKind == SqlKind.NOT)
+                || sqlKind == SqlKind.ARRAY_VALUE_CONSTRUCTOR
                 || sqlKind == SqlKind.EXTRACT;
     }
 

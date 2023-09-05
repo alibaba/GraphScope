@@ -70,7 +70,9 @@ public class Utils {
                             .getContextClassLoader()
                             .getResource("schema/modern.json");
             URL proceduresResource =
-                    Thread.currentThread().getContextClassLoader().getResource("procedures");
+                    Thread.currentThread()
+                            .getContextClassLoader()
+                            .getResource("config/modern/plugins");
             Configs configs =
                     new Configs(
                             ImmutableMap.of(

@@ -52,16 +52,10 @@ public class GraphOptTable implements RelOptTable {
     private List<String> tableName;
     private RelOptSchema schema;
     private RelDataType dataType;
-    private Statistic statistic;
 
-    protected GraphOptTable(
-            RelOptSchema schema,
-            List<String> tableName,
-            GraphElement element,
-            Statistic statistic) {
+    protected GraphOptTable(RelOptSchema schema, List<String> tableName, GraphElement element) {
         this.schema = schema;
         this.tableName = tableName;
-        this.statistic = statistic;
         this.dataType = deriveType(element);
     }
 
@@ -158,12 +152,12 @@ public class GraphOptTable implements RelOptTable {
 
     @Override
     public boolean isKey(ImmutableBitSet immutableBitSet) {
-        return this.statistic.isKey(immutableBitSet);
+        throw new UnsupportedOperationException("is key is unsupported yet in statistics");
     }
 
     @Override
     public @Nullable List<ImmutableBitSet> getKeys() {
-        return this.statistic.getKeys();
+        throw new UnsupportedOperationException("get keys is unsupported yet in statistics");
     }
 
     @Override

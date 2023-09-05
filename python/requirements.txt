@@ -23,3 +23,4 @@ rich
 tqdm
 click
 vineyard>=0.16.3;sys_platform!="win32"
+simple-parsing

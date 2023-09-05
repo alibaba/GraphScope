@@ -26,5 +26,5 @@ public interface MetaDataReader {
     // if enableProcedures is null, return all stored procedures
     List<InputStream> getStoredProcedures() throws Exception;
 
-    InputStream getGraphSchema() throws Exception;
+    SchemaInputStream getGraphSchema() throws Exception;
 }

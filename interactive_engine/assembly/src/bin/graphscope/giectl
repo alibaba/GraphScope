@@ -66,6 +66,8 @@ END
 #   executor_count: number of executor, equal to engine count
 #   frontend_gremlin_port: frontend gremlin port
 #   frontend_cypher_port: frontend cypher port
+#   neo4j_disabled: whether to disable neo4j
+#   params: parameters of engine
 ##########################
 start_frontend() {
   declare -r GRAPHSCOPE_RUNTIME=$1
@@ -74,7 +76,8 @@ start_frontend() {
   declare -r pegasus_hosts=$4
   declare -r frontend_gremlin_port=$5
   declare -r frontend_cypher_port=$6
-  declare -r params=$7
+  declare -r neo4j_disabled=$7
+  declare -r params=$8
 
   declare -r threads_per_worker=${THREADS_PER_WORKER:-2}
 
@@ -119,6 +122,7 @@ start_frontend() {
       -e "s@PEGASUS_HOSTS@${pegasus_hosts}@g" \
       -e "s@FRONTEND_GREMLIN_PORT@${frontend_gremlin_port}@g" \
       -e "s@FRONTEND_CYPHER_PORT@${frontend_cypher_port}@g" \
+      -e "s@NEO4J_DISABLED@${neo4j_disabled}@g" \
       -e "s@THREADS_PER_WORKER@${threads_per_worker}@g" \
       ${GRAPHSCOPE_HOME}/conf/frontend.vineyard.properties > ${config_dir}/frontend.vineyard.properties
   echo -e "\n" >> ${config_dir}/frontend.vineyard.properties
@@ -208,6 +212,8 @@ start_executor() {
 #   frontend_gremlin_port
 #   frontend_cypher_port
 #   vineyard_ipc_socket
+#   neo4j_disabled: whether to disable neo4j
+#   params: parameters of engine
 ##########################
 create_gremlin_instance_on_local() {
   declare -r GRAPHSCOPE_RUNTIME=$1
@@ -219,7 +225,8 @@ create_gremlin_instance_on_local() {
   declare -r frontend_gremlin_port=$7
   declare -r frontend_cypher_port=$8
   export VINEYARD_IPC_SOCKET=$9
-  declare -r params=${10}
+  declare -r neo4j_disabled=${10}
+  declare -r params=${11}
 
   declare -r cluster_type="local"
   declare -r executor_count="1"  # local mode only start one executor
@@ -247,10 +254,14 @@ create_gremlin_instance_on_local() {
   pegasus_hosts=${pegasus_hosts:1}
 
   start_frontend ${GRAPHSCOPE_RUNTIME} ${object_id} ${schema_path} ${pegasus_hosts} \
-                 ${frontend_gremlin_port} ${frontend_cypher_port} ${params}
+                 ${frontend_gremlin_port} ${frontend_cypher_port} ${neo4j_disabled} ${params}
 
   log "FRONTEND_GREMLIN_ENDPOINT:127.0.0.1:${frontend_gremlin_port}"
-  log "FRONTEND_CYPHER_ENDPOINT:127.0.0.1:${frontend_cypher_port}"
+  if [ "${neo4j_disabled}" = "true" ]; then
+    log "cypher is disabled"
+  else
+    log "FRONTEND_CYPHER_ENDPOINT:127.0.0.1:${frontend_cypher_port}"
+  fi
 
   # executor use executor inner port
   for server_id in $(seq 0 $(($server_size - 1))); do
@@ -355,6 +366,8 @@ create_k8s_service() {
 #   frontend_cypher_port
 #   coordinator_name: name of coordinator deployment object in k8s
 #   engine_selector: the label name of engine selector
+#   neo4j_disabled: whether to disable neo4j
+#   params: parameters of engine
 ##########################
 create_gremlin_instance_on_k8s() {
   declare -r GRAPHSCOPE_RUNTIME=$1
@@ -371,7 +384,8 @@ create_gremlin_instance_on_k8s() {
   declare -r frontend_cypher_port=$9
   declare -r coordinator_name=${10} # deployment name of coordinator
   declare -r engine_selector=${11}
-  declare -r params=${12}
+  declare -r neo4j_disabled=${12}
+  declare -r params=${13}
 
   instance_id=${coordinator_name#*-}
 
@@ -390,7 +404,7 @@ create_gremlin_instance_on_k8s() {
 
   launch_frontend_cmd="GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} \
       ${GRAPHSCOPE_HOME}/bin/giectl start_frontend \
-      ${GRAPHSCOPE_RUNTIME} ${object_id} ${schema_path} ${pegasus_hosts} ${frontend_gremlin_port} ${frontend_cypher_port} '${params}'"
+      ${GRAPHSCOPE_RUNTIME} ${object_id} ${schema_path} ${pegasus_hosts} ${frontend_gremlin_port} ${frontend_cypher_port} ${neo4j_disabled} '${params}'"
   kubectl cp ${schema_path} ${frontend_name}:${schema_path}
 
   log "${frontend_name}"
@@ -418,13 +432,17 @@ create_gremlin_instance_on_k8s() {
 
   log "Expose gremlin server."
   timeout_seconds=60
+  frontend_deployment_name=$(kubectl get deployment -lapp.kubernetes.io/component=frontend,app.kubernetes.io/instance=${instance_id},app.kubernetes.io/engine_selector=${engine_selector} -o jsonpath='{.items[*].metadata.name}')
   # random from range [50001, 51000) for interactive engine
   frontend_external_gremlin_port=$(( ((RANDOM<<15)|RANDOM) % 1000 + 50000 ))
-  frontend_external_cypher_port=$(( ((RANDOM<<15)|RANDOM) % 1000 + 50000 ))
-  frontend_deployment_name=$(kubectl get deployment -lapp.kubernetes.io/component=frontend,app.kubernetes.io/instance=${instance_id},app.kubernetes.io/engine_selector=${engine_selector} -o jsonpath='{.items[*].metadata.name}')
-  
   create_k8s_service gremlin ${object_id} ${instance_id} ${frontend_deployment_name} ${frontend_gremlin_port} ${frontend_external_gremlin_port} 
-  create_k8s_service cypher ${object_id} ${instance_id} ${frontend_deployment_name} ${frontend_cypher_port} ${frontend_external_cypher_port}
+
+  if [ "${neo4j_disabled}" = "true" ]; then
+    log "cypher is disabled"
+  else
+    frontend_external_cypher_port=$(( ((RANDOM<<15)|RANDOM) % 1000 + 50000 ))
+    create_k8s_service cypher ${object_id} ${instance_id} ${frontend_deployment_name} ${frontend_cypher_port} ${frontend_external_cypher_port}
+  fi
 
   exit 0
 }

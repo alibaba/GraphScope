@@ -207,6 +207,17 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                 SqlFunctionCategory.USER_DEFINED_PROCEDURE);
     }
 
+    // combine multiple expressions into a list
+    public static final SqlOperator ARRAY_VALUE_CONSTRUCTOR =
+            new SqlSpecialOperator(
+                    "ARRAY_VALUE_CONSTRUCTOR",
+                    SqlKind.ARRAY_VALUE_CONSTRUCTOR,
+                    0,
+                    false,
+                    ReturnTypes.explicit(SqlTypeName.ANY).andThen(SqlTypeTransforms.TO_ARRAY),
+                    GraphInferTypes.FIRST_KNOWN,
+                    OperandTypes.ANY);
+
     public static final SqlFunction EXTRACT =
             new SqlFunction(
                     "EXTRACT",
