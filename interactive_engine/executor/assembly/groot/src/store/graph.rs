@@ -339,7 +339,9 @@ fn update_vertex<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operati
     graph.insert_update_vertex(snapshot_id, vertex_id, label_id, &property_map)
 }
 
-fn clear_vertex_properties<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
+fn clear_vertex_properties<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<()> {
     trace!("clear vertex properties");
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
@@ -400,7 +402,9 @@ fn update_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operation
     graph.insert_update_edge(snapshot_id, edge_id, &edge_kind, forward, &property_map)
 }
 
-fn clear_edge_properties<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
+fn clear_edge_properties<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<()> {
     trace!("update_edge");
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 

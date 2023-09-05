@@ -151,8 +151,10 @@ pub trait MultiVersionGraph {
         &self, si: SnapshotId, id: VertexId, label: LabelId, properties: &dyn PropertyMap,
     ) -> GraphResult<()>;
 
-    fn clear_vertex_properties(&self, si: SnapshotId, id: VertexId, label: LabelId, prop_ids: &[PropertyId]) -> GraphResult<()>;
-        /// Delete a vertex with `id` and `label` at `si`. The existence will not be checked. This interface is thread safe.
+    fn clear_vertex_properties(
+        &self, si: SnapshotId, id: VertexId, label: LabelId, prop_ids: &[PropertyId],
+    ) -> GraphResult<()>;
+    /// Delete a vertex with `id` and `label` at `si`. The existence will not be checked. This interface is thread safe.
     ///
     /// If vertex type of `label` not found, storage error or other errors, `GraphError` will be returned.
     fn delete_vertex(&self, si: SnapshotId, id: VertexId, label: LabelId) -> GraphResult<()>;
@@ -178,10 +180,11 @@ pub trait MultiVersionGraph {
         properties: &dyn PropertyMap,
     ) -> GraphResult<()>;
 
+    fn clear_edge_properties(
+        &self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, forward: bool, prop_ids: &[PropertyId],
+    ) -> GraphResult<()>;
 
-    fn clear_edge_properties(&self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, forward: bool, prop_ids: &[PropertyId]) -> GraphResult<()>;
-
-        /// Delete an edge with `id` and `edge_kind` at `si`. The existence will not be checked. This interface is thread safe.
+    /// Delete an edge with `id` and `edge_kind` at `si`. The existence will not be checked. This interface is thread safe.
     ///
     /// If edge kind of `edge_kind` not found, storage error or other errors, `GraphError` will be returned.
     fn delete_edge(

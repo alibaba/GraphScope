@@ -396,7 +396,9 @@ impl MultiVersionGraph for GraphStore {
         }
     }
 
-    fn clear_vertex_properties(&self, si: i64, id: i64, label: LabelId, prop_ids: &[PropertyId]) -> GraphResult<()> {
+    fn clear_vertex_properties(
+        &self, si: i64, id: i64, label: LabelId, prop_ids: &[PropertyId],
+    ) -> GraphResult<()> {
         self.check_si_guard(si)?;
         let info = res_unwrap!(self.vertex_manager.get_type(si, label), si, id, label)?;
         if let Some(data) = self.get_vertex_data(si, id, &info)? {
@@ -471,7 +473,9 @@ impl MultiVersionGraph for GraphStore {
         }
     }
 
-    fn clear_edge_properties(&self, si: i64, id: EdgeId, edge_kind: &EdgeKind, forward: bool, prop_ids: &[PropertyId]) -> GraphResult<()> {
+    fn clear_edge_properties(
+        &self, si: i64, id: EdgeId, edge_kind: &EdgeKind, forward: bool, prop_ids: &[PropertyId],
+    ) -> GraphResult<()> {
         self.check_si_guard(si)?;
         self.check_si_guard(si)?;
         let info = res_unwrap!(
