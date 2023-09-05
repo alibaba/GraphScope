@@ -473,6 +473,9 @@ message SinkVineyard {
 // A dummy node to delegate a source opr for multiple scan cases.
 message Root {}
 
+// A node for auxiliary suggesting branches when dealing with logical plan with nested branches
+message Branch {}
+
 // A logical plan of graph relation algebra forms a DAG, where each node is an operator and the
 // edge indicates the execution flow.
 message LogicalPlan {
@@ -495,6 +498,7 @@ message LogicalPlan {
       Sink sink = 16;
       Root root = 17;
       Sample sample = 18;
+      Branch branch = 19;
       // Saving the room for relational operators
       GetV vertex = 30;
       EdgeExpand edge = 31;
