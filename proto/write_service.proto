@@ -55,6 +55,7 @@ enum WriteTypePb {
   INSERT = 1;
   UPDATE = 2;
   DELETE = 3;
+  CLEAR_PROPERTY = 4;
 }
 
 message WriteRequestPb {

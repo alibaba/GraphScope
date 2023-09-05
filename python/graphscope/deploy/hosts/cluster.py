@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import base64
+import copy
 import logging
 import os
 import signal
@@ -24,13 +24,12 @@ import subprocess
 import sys
 
 import graphscope
-from graphscope.config import GSConfig as gs_config
+from graphscope.config import Config
 from graphscope.deploy.launcher import Launcher
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
 from graphscope.framework.utils import in_notebook
 from graphscope.framework.utils import is_free_port
-from graphscope.framework.utils import random_string
 
 try:
     import gscoordinator
@@ -49,111 +48,46 @@ logger = logging.getLogger("graphscope")
 class HostsClusterLauncher(Launcher):
     """Class for setting up GraphScope instance on hosts cluster"""
 
-    def __init__(
-        self,
-        hosts=None,
-        port=None,
-        etcd_addrs=None,
-        etcd_listening_client_port=None,
-        etcd_listening_peer_port=None,
-        num_workers=None,
-        vineyard_socket=None,
-        timeout_seconds=None,
-        vineyard_shared_mem=None,
-        **kwargs
-    ):
-        self._hosts: [str] = hosts
-        self._port = port
-        self._etcd_addrs = etcd_addrs
-        self._etcd_listening_client_port = etcd_listening_client_port
-        self._etcd_listening_peer_port = etcd_listening_peer_port
-        self._num_workers = num_workers
-        self._vineyard_socket = vineyard_socket
-        self._timeout_seconds = timeout_seconds
-        self._vineyard_shared_mem = vineyard_shared_mem
-
-        self._instance_id = random_string(6)
+    def __init__(self, config: Config):
+        self._config = copy.deepcopy(config)
         self._proc = None
-        self._closed = True
+
+        port = self._config.coordinator.service_port
+        if not is_free_port(port):
+            port = get_free_port()
+            self._config.coordinator.service_port = port
+        self._coordinator_endpoint = f"{self._config.hosts_launcher.hosts[0]}:{port}"
 
     def poll(self):
         if self._proc is not None:
             return self._proc.poll()
         return -1
 
+    def base64_encode(self, string):
+        return base64.b64encode(string.encode("utf-8")).decode("utf-8", errors="ignore")
+
     def _launch_coordinator(self):
-        if self._port is None:
-            self._port = get_free_port()
-        else:
-            # check port conflict
-            if not is_free_port(self._port):
-                raise RuntimeError("Port {} already used.".format(self._port))
-
-        self._coordinator_endpoint = "{}:{}".format(self._hosts[0], self._port)
-
         cmd = [
             sys.executable,
             "-m",
             "gscoordinator",
-            "--num_workers",
-            "{}".format(str(self._num_workers)),
-            "--hosts",
-            "{}".format(",".join(self._hosts)),
-            "--log_level",
-            "{}".format(gs_config.log_level),
-            "--timeout_seconds",
-            "{}".format(self._timeout_seconds),
-            "--port",
-            "{}".format(str(self._port)),
-            "--cluster_type",
-            self.type(),
-            "--instance_id",
-            self._instance_id,
+            "--config",
+            self.base64_encode(self._config.dumps_json()),
         ]
 
-        if self._etcd_addrs is not None:
-            cmd.extend(["--etcd_addrs", self._etcd_addrs])
-        if self._etcd_listening_client_port is not None:
-            cmd.extend(
-                ["--etcd_listening_client_port", str(self._etcd_listening_client_port)]
-            )
-        if self._etcd_listening_peer_port is not None:
-            cmd.extend(
-                [
-                    "--etcd_listening_peer_port",
-                    str(self._etcd_listening_peer_port),
-                ]
-            )
-
-        if self._vineyard_shared_mem is not None:
-            cmd.extend(["--vineyard_shared_mem", self._vineyard_shared_mem])
-
-        if self._vineyard_socket:
-            cmd.extend(["--vineyard_socket", "{}".format(self._vineyard_socket)])
-
-        logger.info("Initializing coordinator with command: %s", " ".join(cmd))
+        # logger.info("Initializing coordinator with command: %s", " ".join(cmd))
 
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "TRUE"
         # add graphscope module to PYTHONPATH
+        graphscope_dir = os.path.join(os.path.dirname(graphscope.__file__), "..")
+        coordinator_dir = os.path.join(graphscope_dir, "..", "coordinator")
+        additional_path = graphscope_dir + os.pathsep + coordinator_dir
+
         if "PYTHONPATH" in env:
-            env["PYTHONPATH"] = (
-                os.path.join(os.path.dirname(graphscope.__file__), "..")
-                + os.pathsep
-                + os.path.join(
-                    os.path.dirname(graphscope.__file__), "..", "..", "coordinator"
-                )
-                + os.pathsep
-                + env["PYTHONPATH"]
-            )
+            env["PYTHONPATH"] = additional_path + os.pathsep + env["PYTHONPATH"]
         else:
-            env["PYTHONPATH"] = (
-                os.path.join(os.path.dirname(graphscope.__file__), "..")
-                + os.pathsep
-                + os.path.join(
-                    os.path.dirname(graphscope.__file__), "..", "..", "coordinator"
-                )
-            )
+            env["PYTHONPATH"] = additional_path
 
         # Param `start_new_session=True` is for putting child process to a new process group
         # so it won't get the signals from parent.
@@ -172,7 +106,7 @@ class HostsClusterLauncher(Launcher):
             bufsize=1,
         )
         stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
-        if not gs_config.show_log:
+        if not self._config.session.show_log:
             stdout_watcher.add_filter(
                 lambda line: "Loading" in line and "it/s]" in line
             )
@@ -203,7 +137,7 @@ class HostsClusterLauncher(Launcher):
                 "Error when launching coordinator on hosts cluster"
             ) from e
 
-    def stop(self):
+    def stop(self, wait=False):
         """Stop GraphScope instance."""
         # coordinator's GRPCServer.wait_for_termination works for SIGINT (Ctrl-C)
         if self._proc is not None:

@@ -28,6 +28,7 @@ from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
 from graphscope.proto.error_codes_pb2 import OK
 
+from gscoordinator.launcher import AbstractLauncher
 from gscoordinator.monitor import Monitor
 from gscoordinator.object_manager import GraphMeta
 from gscoordinator.object_manager import LibMeta
@@ -52,7 +53,7 @@ logger = logging.getLogger("graphscope")
 
 
 class OperationExecutor:
-    def __init__(self, session_id: str, launcher, object_manager):
+    def __init__(self, session_id: str, launcher: AbstractLauncher, object_manager):
         self._session_id = session_id
         self._launcher = launcher
 
@@ -648,15 +649,7 @@ class OperationExecutor:
         else:
             executor_workers_num = self._launcher.num_workers
             threads_per_executor = threads_per_worker
-        if self._launcher.type() == types_pb2.HOSTS:
-            engine_config = self.get_analytical_engine_config()
-            vineyard_rpc_endpoint = engine_config["vineyard_rpc_endpoint"]
-        else:
-            vineyard_rpc_endpoint = self._launcher._vineyard_internal_endpoint
-            if self._launcher.vineyard_deployment_exists():
-                vineyard_rpc_endpoint = self._launcher._vineyard_service_endpoint
-            else:
-                vineyard_rpc_endpoint = self._launcher._vineyard_internal_endpoint
+        vineyard_rpc_endpoint = self._launcher.vineyard_endpoint
         total_builder_chunks = executor_workers_num * threads_per_executor
 
         (
@@ -733,12 +726,8 @@ class OperationExecutor:
                 "\n"
             )
         storage_options = json.loads(op.attr[types_pb2.STORAGE_OPTIONS].s.decode())
-        engine_config = self.get_analytical_engine_config()
-        if self._launcher.type() == types_pb2.HOSTS:
-            vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
-        else:
-            vineyard_endpoint = self._launcher._vineyard_internal_endpoint
-        vineyard_ipc_socket = engine_config["vineyard_socket"]
+        vineyard_endpoint = self._launcher.vineyard_endpoint
+        vineyard_ipc_socket = self._launcher.vineyard_socket
         deployment, hosts = self._launcher.get_vineyard_stream_info()
         path = op.attr[types_pb2.GRAPH_SERIALIZATION_PATH].s.decode()
         obj_id = op.attr[types_pb2.VINEYARD_ID].i
@@ -769,12 +758,8 @@ class OperationExecutor:
                 "\n"
             )
         storage_options = json.loads(op.attr[types_pb2.STORAGE_OPTIONS].s.decode())
-        engine_config = self.get_analytical_engine_config()
-        if self._launcher.type() == types_pb2.HOSTS:
-            vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
-        else:
-            vineyard_endpoint = self._launcher._vineyard_internal_endpoint
-        vineyard_ipc_socket = engine_config["vineyard_socket"]
+        vineyard_endpoint = self._launcher.vineyard_endpoint
+        vineyard_ipc_socket = self._launcher.vineyard_socket
         deployment, hosts = self._launcher.get_vineyard_stream_info()
         path = op.attr[types_pb2.GRAPH_SERIALIZATION_PATH].s.decode()
         graph_id = vineyard.io.deserialize(
@@ -825,12 +810,8 @@ class OperationExecutor:
         write_options = json.loads(op.attr[types_pb2.WRITE_OPTIONS].s.decode())
         fd = op.attr[types_pb2.FD].s.decode()
         df = op.attr[types_pb2.VINEYARD_ID].s.decode()
-        engine_config = self.get_analytical_engine_config()
-        if self._launcher.type() == types_pb2.HOSTS:
-            vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
-        else:
-            vineyard_endpoint = self._launcher._vineyard_internal_endpoint
-        vineyard_ipc_socket = engine_config["vineyard_socket"]
+        vineyard_endpoint = self._launcher.vineyard_endpoint
+        vineyard_ipc_socket = self._launcher.vineyard_socket
         deployment, hosts = self._launcher.get_vineyard_stream_info()
         dfstream = vineyard.io.open(
             "vineyard://" + str(df),
@@ -924,15 +905,8 @@ class OperationExecutor:
                 loader.attr[types_pb2.PROTOCOL].CopyFrom(utils.s_to_attr(new_protocol))
                 loader.attr[types_pb2.SOURCE].CopyFrom(utils.s_to_attr(new_source))
 
-        engine_config = self.get_analytical_engine_config()
-        if self._launcher.type() == types_pb2.HOSTS:
-            vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
-        else:
-            if self._launcher.vineyard_deployment_exists():
-                vineyard_endpoint = self._launcher._vineyard_service_endpoint
-            else:
-                vineyard_endpoint = self._launcher._vineyard_internal_endpoint
-        vineyard_ipc_socket = engine_config["vineyard_socket"]
+        vineyard_endpoint = self._launcher.vineyard_endpoint
+        vineyard_ipc_socket = self._launcher.vineyard_socket
 
         for loader in op.large_attr.chunk_meta_list.items:
             # handle vertex or edge loader

@@ -93,11 +93,11 @@ class Label:
 
     def __init__(self, name, label_id=0):
         self._name: str = name
-        self._props: list[Property] = []
+        self._props: List[Property] = []
         self._version_id: int = 0
         self._label_id: int = label_id
 
-        self._valid_props: list[int] = []
+        self._valid_props: List[int] = []
         self._prop_index: dict[str, int] = {}
         self._comment: str = ""
 
@@ -196,7 +196,7 @@ class EdgeLabel(Label):
 
     def __init__(self, name, label_id=0):
         super().__init__(name, label_id)
-        self._relations: list[Relation] = []
+        self._relations: List[Relation] = []
 
     @property
     def type_enum(self):
@@ -260,10 +260,10 @@ class GraphSchema:
         self._vertex_labels: List[VertexLabel] = []
         self._edge_labels: List[EdgeLabel] = []
 
-        self._vertex_labels_to_add: list[VertexLabel] = []
-        self._edge_labels_to_add: list[EdgeLabel] = []
-        self._vertex_labels_to_drop: list[VertexLabel] = []
-        self._edge_labels_to_drop: list[EdgeLabel] = []
+        self._vertex_labels_to_add: List[VertexLabel] = []
+        self._edge_labels_to_add: List[EdgeLabel] = []
+        self._vertex_labels_to_drop: List[VertexLabel] = []
+        self._edge_labels_to_drop: List[EdgeLabel] = []
         # 1 indicate valid, 0 indicate invalid.
         self._valid_vertices = []
         self._valid_edges = []

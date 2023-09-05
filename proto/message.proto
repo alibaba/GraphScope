@@ -185,6 +185,7 @@ message CreateInteractiveInstanceRequest {
   int64 object_id = 2;
   string schema_path = 3;
   map<string, string> params = 4;
+  bool with_cypher = 5;
 };
 
 message CreateInteractiveInstanceResponse {
