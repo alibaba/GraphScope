@@ -23,6 +23,11 @@ schema:
           property_name: age
           property_type:
             primitive_type: DT_SIGNED_INT32
+        - property_id: 3
+          property_name: birthday
+          property_type:
+            date:
+              date_format: DF_YYYY_MM_DD
       primary_keys:
         - id
     - type_name: software

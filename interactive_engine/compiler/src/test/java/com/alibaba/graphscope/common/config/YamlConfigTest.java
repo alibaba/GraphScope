@@ -81,9 +81,11 @@ public class YamlConfigTest {
         IrGraphSchema graphSchema = new IrGraphSchema(new LocalMetaDataReader(configs));
         Assert.assertEquals(
                 "DefaultGraphVertex{labelId=0, label=person,"
-                    + " propertyList=[DefaultGraphProperty{id=0, name=id, dataType=LONG},"
-                    + " DefaultGraphProperty{id=1, name=name, dataType=STRING},"
-                    + " DefaultGraphProperty{id=2, name=age, dataType=INT}], primaryKeyList=[id]}",
+                        + " propertyList=[DefaultGraphProperty{id=0, name=id, dataType=LONG},"
+                        + " DefaultGraphProperty{id=1, name=name, dataType=STRING},"
+                        + " DefaultGraphProperty{id=2, name=age, dataType=INT},"
+                        + " DefaultGraphProperty{id=3, name=birthday, dataType=DATE}],"
+                        + " primaryKeyList=[id]}",
                 graphSchema.getElement("person").toString());
     }
 }

@@ -108,12 +108,16 @@ public class GraphOptTable implements RelOptTable {
         switch (property.getDataType()) {
             case BOOL:
                 return typeFactory.createSqlType(SqlTypeName.BOOLEAN);
+            case CHAR:
             case STRING:
                 return typeFactory.createSqlType(SqlTypeName.CHAR);
+            case SHORT:
             case INT:
                 return typeFactory.createSqlType(SqlTypeName.INTEGER);
             case LONG:
                 return typeFactory.createSqlType(SqlTypeName.BIGINT);
+            case FLOAT:
+                return typeFactory.createSqlType(SqlTypeName.FLOAT);
             case DOUBLE:
                 return typeFactory.createSqlType(SqlTypeName.DOUBLE);
             case DATE:

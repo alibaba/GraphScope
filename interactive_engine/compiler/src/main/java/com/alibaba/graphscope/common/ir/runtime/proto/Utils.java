@@ -225,10 +225,6 @@ public abstract class Utils {
                 }
             case DATE:
                 return Common.DataType.DATE;
-            case TIME:
-                return Common.DataType.TIME;
-            case TIMESTAMP:
-                return Common.DataType.DATETIME;
             default:
                 throw new UnsupportedOperationException(
                         "basic type " + basicType.getSqlTypeName() + " is unsupported yet");

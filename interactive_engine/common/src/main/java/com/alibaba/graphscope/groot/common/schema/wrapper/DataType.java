@@ -35,9 +35,7 @@ public enum DataType {
     DOUBLE_LIST(13),
     STRING_LIST(14),
     BYTES_LIST(15),
-    DATE(16),
-    TIME(17),
-    DATETIME(18);
+    DATE(16);
 
     private final byte type;
 

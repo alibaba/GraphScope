@@ -153,12 +153,14 @@ public abstract class Utils {
                         throw new UnsupportedOperationException(
                                 "unsupported primitive type: " + value);
                 }
-            } else {
-                throw new UnsupportedOperationException("unsupported type: " + type);
+            } else if ((value = typeMap.get("date")) instanceof Map) {
+                Object format = ((Map) value).get("date_format");
+                if (format != null && format.toString().equals("DF_YYYY_MM_DD")) {
+                    return DataType.DATE;
+                }
             }
-        } else {
-            throw new UnsupportedOperationException("unsupported type: " + type);
         }
+        throw new UnsupportedOperationException("unsupported type: " + type);
     }
 
     /**
@@ -261,12 +263,9 @@ public abstract class Utils {
                 return DataType.STRING_LIST;
             case 12:
                 return DataType.DATE;
-            case 13:
-                return DataType.TIME;
-            case 14:
-                return DataType.DATETIME;
             default:
-                return DataType.UNKNOWN;
+                throw new UnsupportedOperationException(
+                        "convert from ir core type " + ordinal + " to DataType is unsupported yet");
         }
     }
 }
