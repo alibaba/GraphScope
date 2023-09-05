@@ -5,9 +5,90 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 31 Aug 2023 08:37:46 +0000</pubDate>
-    <lastBuildDate>Thu, 31 Aug 2023 08:37:46 +0000</lastBuildDate>
+    <pubDate>Tue, 05 Sep 2023 07:22:50 +0000</pubDate>
+    <lastBuildDate>Tue, 05 Sep 2023 07:22:50 +0000</lastBuildDate>
     <generator>Jekyll v4.3.2</generator>
+    
+      <item>
+        <title>Release Notes: v0.24.0</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/release_note_t.png&quot; alt=&quot;release-note&quot; /&gt;
+We are pleased to introduce a range of enhancements to GraphScope with the GraphScope 0.24.0 release. This release includes a graph query engine specifically designed for high-QPS (queries per second) scenarios. It also encompasses notable features and improvements in the Interactive Engine (GIE), Learning Engine (GLE), and deployment processes.&lt;/p&gt;
+
+&lt;p&gt;We highlight the following improvements included in this release:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;1. Graph Query Engine for High QPS&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;In high QPS (Queries Per Second) scenarios, the graph query engine needs to process a large number of queries within a short period of time. The performance metric that users are most concerned about is the system’s throughput. Based on GraphScope Flex, we have designed a graph query engine specifically for high QPS scenarios. This engine is currently undergoing rapid iterative development, and we welcome your feedback. The engine has the following features:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Multiple query language support: Currently, the engine supports Cypher as the query language, with plans to add support for Gremlin and GQL in the future.&lt;/li&gt;
+  &lt;li&gt;High performance: Built on the Hiactor framework, it avoids context switching between threads in high-concurrency situations, thereby improving system throughput. It also supports stored procedures written in C++, further enhancing performance for specific queries.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;2. Enhancements for GIE&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Key Features:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Support the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sample()&lt;/code&gt; step of Gremlin to randomly pick up a given number of traversers from a Gremlin traversal. Additionally, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;coin()&lt;/code&gt; step can now follow any step in a Gremlin traversal, instead of just &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;V()&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;E()&lt;/code&gt;. For example,
+    &lt;div class=&quot;language-groovy highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;sample&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;// Sample 10 traversers from `g.V()`&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;coin&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;0.2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// Randomly pick up 20% among all vertices&apos; out neighbors&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Support the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;union()&lt;/code&gt; step of Gremlin to combine the traversers from multiple traversals. For example,
+    &lt;div class=&quot;language-groovy highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;union&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;())&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// the results would now be one-hop (out once) and two-hop (out twice) neighbors of all vertices. &lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Support the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;unfold()&lt;/code&gt; step of Gremlin, which is a reversed operator of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fold()&lt;/code&gt; that flattens a collection of traversers into discrete elements. For example,
+    &lt;div class=&quot;language-groovy highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;fold&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;unfold&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// must obtain `g.V()` again&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Support the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;identity()&lt;/code&gt; step of Gremlin, which simply returns the current traversers, and is often used together with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;union()&lt;/code&gt; step. For example,
+    &lt;div class=&quot;language-groovy highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;union&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;identity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;())&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// return `V()` and its one-hop neighbors&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Support &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;isNull&lt;/code&gt; in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;expr()&lt;/code&gt; for verifying wether a certain property has &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NULL&lt;/code&gt; value. For example,
+    &lt;div class=&quot;language-groovy highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;expr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;@.age isNull&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// the vertices without the field of `age` will be pruned&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;But fixes:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Fix a bug of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;count()&lt;/code&gt; step followed by &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;order()&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;limit()&lt;/code&gt; that can cause the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gaia&lt;/code&gt; engine to abort unexpectedly. Now the following Gremlin query can be executed smoothly:
+    &lt;div class=&quot;language-groovy highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;V&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;order&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;by&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;id&apos;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;asc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;limit&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;3. Enhancements for Deployment&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;All GraphScope images support both the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x86&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arm64&lt;/code&gt; platforms.&lt;/li&gt;
+  &lt;li&gt;This release includes the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gsctl&lt;/code&gt; command-line utility for building and testing GraphScope. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gsctl&lt;/code&gt; tool provides several commands and options to streamline the development and deployment process. You can use the following command to install the graphscope-client package and then use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gsctl&lt;/code&gt;:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;pip3 &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;graphscope-client
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;gsctl &lt;span class=&quot;nt&quot;&gt;--help&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;4. Other Enhancements and Bug Fixes&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Fix the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Py_None&lt;/code&gt; reference count issue in GLE.&lt;/li&gt;
+  &lt;li&gt;Fix the bug that GLE client only connects with a single server in distributed training.&lt;/li&gt;
+  &lt;li&gt;Update the GLE-related tutorials.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;For more detailed improvements that have been made in this release, please refer to the complete &lt;a href=&quot;https://github.com/alibaba/GraphScope/releases/tag/v0.24.0&quot;&gt;changelog&lt;/a&gt;.&lt;/p&gt;
+</description>
+        <pubDate>Tue, 05 Sep 2023 01:33:20 +0000</pubDate>
+        <link>https://graphscope.io/blog/releasenotes/2023/09/05/release-notes-0.24.0.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2023/09/05/release-notes-0.24.0.html</guid>
+        
+        
+        <category>ReleaseNotes</category>
+        
+      </item>
     
       <item>
         <title>Getting Started with GraphAr: Standardized Graph Storage File Format</title>
@@ -1220,136 +1301,6 @@ We are thrilled to introduce a range of enhancements to GraphScope, with the Gra
         
         
         <category>ReleaseNotes</category>
-        
-      </item>
-    
-      <item>
-        <title>Visualizing Insights from Large Graphs: A Comprehensive Guide to Using G6VP and GraphScope</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp.jpg&quot; alt=&quot;G6VP&quot; /&gt;
-GraphScope now supports serving as the backend engine for &lt;a href=&quot;https://insight.antv.antgroup.com/&quot;&gt;G6VP&lt;/a&gt;, an open-sourced graph visualization and analysis platform. With G6VP and GraphScope, users can import graph data and analyze graph data easily. This article mainly introduces how to deploy G6VP and GraphScope and perform data analysis.&lt;/p&gt;
-
-&lt;h3 id=&quot;what-is-g6vp&quot;&gt;What is G6VP&lt;/h3&gt;
-
-&lt;p&gt;G6VP is a graph visualization and analysis platform developed by AntV Graph Visualization team of Ant Group. Users can connect their own data in G6VP, including local file uploads or various graph databases, and assemble the rich graph visualization and analysis assets provided by G6VP to perform data analysis, or design and develop their own graph visualization and analysis products, embedding them into their own systems.
-&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-01.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;deployment-of-g6vp-and-graphscope&quot;&gt;Deployment of G6VP and GraphScope&lt;/h3&gt;
-
-&lt;p&gt;Currently, G6VP supports GraphScope as a backend service. As G6VP does not have an available online server, the integration and deployment with GraphScope need to be based on Docker images. Currently, G6VP only supports the persistent graph storage (Groot) and graph interactive engine (GIE) in GraphScope. In the future, the docking of other storage and computation engines in GraphScope will be continuously completed, providing an efficient one-stop solution.&lt;/p&gt;
-
-&lt;h4 id=&quot;image-deployment&quot;&gt;Image Deployment&lt;/h4&gt;
-
-&lt;p&gt;In this step, you need to deploy the GraphScope service and G6VP HTTP service through docker images. It should be noted that the machine networks where the two services are located can be connected.&lt;/p&gt;
-
-&lt;p&gt;We first need to pull and start the image:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:httpserver
-&lt;span class=&quot;c&quot;&gt;# Start the Image, the port should be mapped in this procedure to ensure the availability of the service&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;# 12312 is the Gremlin&apos;s query port &lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;# 9527 is the server port&lt;/span&gt;
-docker run &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 12312:12312 &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 9527:9527 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:httpserver
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;After the GraphScope persistent storage (Groot) container is successfully started, the default dataset will be loaded. If you want to import your own dataset, please refer to the &lt;a href=&quot;https://graphscope.io/docs/latest/storage_engine/groot&quot;&gt;Groot documentation&lt;/a&gt;. You can execute the following command to check whether the container is running normally:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Note that when the server is running the container, replace the localhost address with the server IP&lt;/span&gt;
-curl http://localhost:9527/api/v1/graph
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;After successful deployment, the address of the GraphScope engine is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost:9527&lt;/code&gt;, which will be used in the “Access GraphScope Service in G6VP” step later.&lt;/p&gt;
-
-&lt;h4 id=&quot;start-g6vp-http-service&quot;&gt;Start G6VP HTTP Service&lt;/h4&gt;
-
-&lt;p&gt;There are two ways to start G6VP HTTP service:&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Start directly using the binary installation package&lt;/strong&gt;&lt;br /&gt;
-You need to download &lt;a href=&quot;https://github.com/antvis/G6VP/blob/master/release/gi-httpservice.tgz&quot;&gt;gi-httpservices.tgz file&lt;/a&gt;, unzip gi-httpservice.tgz and enter the file folder to start the service. Before doing that, make sure the NodeJS environment is available on your computer.&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;gi-httpservice
-&lt;span class=&quot;c&quot;&gt;# make sure port 7001 is available&lt;/span&gt;
-lsof &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt;:7001
-npm run start
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Install and start from source code&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;You need to clone the source code of G6VP from GitHub, enter the folder &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;G6VP/packages/gi-httpservice&lt;/code&gt;, install the dependencies, and start the service:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git clone https://github.com/antvis/G6VP.git
-&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;G6VP/packages/gi-httpservice
-npm &lt;span class=&quot;nb&quot;&gt;install
-&lt;/span&gt;npm run dev
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Now, G6VP http service is running, visit &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost:7001/&lt;/code&gt; (7001 is the default port), you will see the tips in the console of browser:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-02.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;access-graphscope-service-in-g6vp&quot;&gt;Access GraphScope Service in G6VP&lt;/h3&gt;
-
-&lt;p&gt;To connect GraphScope service, you need to fill the address of services from previous steps：&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Platform address: The address of G6VP HTTP service, it was &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost:7001&lt;/code&gt; from the previous step&lt;/li&gt;
-  &lt;li&gt;Engine address: The address of GS service, it was &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost:9527&lt;/code&gt; from the previous step&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-03.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Click “Connect” button and you will see the tip if it is success, and the subgraph select panel will be shown at below:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-04.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Next you can select a subgraph from “Select Subgraph”. This select dropdown has listed all the graphs in the GraphScope service you started. If there is no option, please checkout if the data importing step is failed. When you click “Analyze”, the page will jump to the list of the datasets, and you will find the dataset you just created:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-05.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Now you can click the blue computer icon on the right of the dataset record in the list to create a workbook with the dataset. You will see the page below and the dataset field is already filled and please name the workbook and then click “Create Canvas”:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-06.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;After that, a workbook is successfully created and you will see an empty canvas with configuration panel like this:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-07.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;analyze-the-data&quot;&gt;Analyze the Data&lt;/h3&gt;
-
-&lt;p&gt;After the above steps, you have completed the connection to GraphScope and the creation of data and workbook. Then, you can perform data analysis in the newly created workbook. Now you can configure Gremlin query asset in the workbook, enter the Gremlin query statement, such as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;g.V().limit(10)&lt;/code&gt; in the figure below, to successfully query the data:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-08.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;If you are not satisfy with the nodes and edges’ styles, configuring it on the style panel on the left:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-09.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Select one or brush multiple nodes and right click to expand the neighbors:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-10.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;You can configure the neighbor querying asset on the left if it does not meet the requirement:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-11.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;In addition, you can use the filter to analyze the statistical info, and there will be an intelligent recommend:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-12.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The introduction above is only about the basic functions. Plenty of fancy graph analysis assets will be found at the assets center.&lt;/p&gt;
-
-&lt;p&gt;Last but not least, do not forget to save your workbook after the above operations. Next time you visit G6VP, you will found your workbook at the workbook list. Don’t be worry, the datasets info, workbooks are all cached at your computer. G6VP will not record any user information!&lt;/p&gt;
-
-&lt;p&gt;If you want to embed the workbook into your system, export it at the right top “Open”. There will be 3 ways to export:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-05-g6vp-13.jpeg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;More usage and docs can be referred to &lt;a href=&quot;https://www.yuque.com/antv/gi&quot;&gt;G6VP documentation&lt;/a&gt; and &lt;a href=&quot;http://github.com/antvis/g6vp&quot;&gt;G6VP GitHub repo&lt;/a&gt;.&lt;/p&gt;
-</description>
-        <pubDate>Wed, 05 Jul 2023 10:00:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2023/07/05/Visualizing-Insights-from-Large-Graphs.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/07/05/Visualizing-Insights-from-Large-Graphs.html</guid>
-        
-        
-        <category>Tech</category>
         
       </item>
     
