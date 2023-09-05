@@ -351,7 +351,7 @@ public class GraphWriter implements MetricsAgent {
                     parseRawProperties(dstVertexDef, dstVertexRecordKey.getProperties());
             long dstVertexHashId =
                     getPrimaryKeysHashId(dstVertexDef.getLabelId(), dstVertexPkVals, dstVertexDef);
-            long edgeInnerId = 
+            long edgeInnerId =
                     overwrite ? edgeIdGenerator.getNextId() : edgeRecordKey.getEdgeInnerId();
 
             return new EdgeId(
