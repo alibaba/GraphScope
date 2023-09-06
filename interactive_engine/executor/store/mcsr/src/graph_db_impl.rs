@@ -13,13 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::HashMap;
-use std::fs::create_dir_all;
+use std::collections::{HashMap, HashSet};
+use std::fs::{create_dir_all, File};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::col_table::ColTable;
+use crate::edge_trim::EdgeTrimJson;
 use crate::error::GDBResult;
 use crate::graph::{Direction, IndexType};
 use crate::graph_db::{CsrTrait, GlobalCsrTrait, LocalEdge, LocalVertex, NbrIter, NbrOffsetIter};
@@ -480,7 +481,7 @@ where
         Ok(())
     }
 
-    pub fn deserialize(dir: &str, partition: usize) -> GDBResult<Self> {
+    pub fn deserialize(dir: &str, partition: usize, trim_json_path: Option<String>) -> GDBResult<Self> {
         let root_dir = PathBuf::from_str(dir).unwrap();
         let schema_path = root_dir
             .join(DIR_GRAPH_SCHEMA)
@@ -489,6 +490,16 @@ where
         let partition_dir = root_dir
             .join(DIR_BINARY_DATA)
             .join(format!("partition_{}", partition));
+
+        let (ie_enable, oe_enable) = if let Some(trim_json_path) = &trim_json_path {
+            let edge_trim_path = PathBuf::from_str(trim_json_path).unwrap();
+            let file = File::open(edge_trim_path)?;
+            let trim_json =
+                serde_json::from_reader::<File, EdgeTrimJson>(file).map_err(std::io::Error::from)?;
+            trim_json.get_enable_indexs(&graph_schema)
+        } else {
+            (HashSet::<usize>::new(), HashSet::<usize>::new())
+        };
 
         let vertex_label_num = graph_schema.vertex_type_to_id.len();
         let edge_label_num = graph_schema.edge_type_to_id.len();
@@ -513,7 +524,7 @@ where
 
                     let ie_path = &partition_dir
                         .join(format!("ie_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
-                    if Path::exists(ie_path) {
+                    if Path::exists(ie_path) && (trim_json_path.is_none() || ie_enable.contains(&index)) {
                         info!("importing {}", ie_path.as_os_str().to_str().unwrap());
                         let path_str = ie_path.to_str().unwrap().to_string();
                         if graph_schema.is_single_ie(
@@ -533,7 +544,7 @@ where
 
                     let oe_path = &partition_dir
                         .join(format!("oe_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
-                    if Path::exists(oe_path) {
+                    if Path::exists(oe_path) && (trim_json_path.is_none() || oe_enable.contains(&index)){
                         info!("importing {}", oe_path.as_os_str().to_str().unwrap());
                         let path_str = oe_path.to_str().unwrap().to_string();
                         if graph_schema.is_single_oe(

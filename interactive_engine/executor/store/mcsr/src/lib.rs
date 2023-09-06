@@ -28,6 +28,7 @@ pub mod col_table;
 pub mod columns;
 pub mod date;
 pub mod date_time;
+mod edge_trim;
 mod error;
 pub mod graph;
 pub mod graph_db;

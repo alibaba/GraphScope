@@ -209,7 +209,7 @@ fn traverse_partition(
     graph_data_dir: &String, output_dir: &String, partition: usize, v_files: &mut HashMap<LabelId, File>,
     e_files: &mut HashMap<(LabelId, LabelId, LabelId), File>,
 ) {
-    let graph = CsrDB::deserialize(graph_data_dir.as_str(), partition).unwrap();
+    let graph = CsrDB::deserialize(graph_data_dir.as_str(), partition, None).unwrap();
 
     // output_vertices(&graph, output_dir, v_files);
     println!("start output edges");
