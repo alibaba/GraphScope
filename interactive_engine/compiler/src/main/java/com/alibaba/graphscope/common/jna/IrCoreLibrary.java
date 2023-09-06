@@ -242,6 +242,14 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue addPatternMeta(Pointer pattern, FfiPbPointer.ByValue meta);
 
+    Pointer initUnfoldOperator();
+
+    FfiResult.ByValue appendUnfoldOperator(
+            Pointer plan, Pointer unfold, int parent, IntByReference oprIdx);
+
+    FfiResult.ByValue setUnfoldPair(
+            Pointer unfold, FfiNameOrId.ByValue tag, FfiNameOrId.ByValue alias);
+
     FfiResult.ByValue setUnfoldMeta(Pointer unfold, FfiPbPointer.ByValue meta);
 
     Pointer initJoinOperator(FfiJoinKind joinKind);

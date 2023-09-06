@@ -211,6 +211,19 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             return op;
         }
     },
+    UNFOLD_STEP {
+        // unfold()
+        @Override
+        public InterOpBase apply(Step step) {
+            UnfoldStep unfoldStep = (UnfoldStep) step;
+            UnfoldOp op = new UnfoldOp();
+
+            // new OpArg<>(ArgUtils.asNameOrId(tagname))
+            op.setUnfoldTag(new OpArg<>(ArgUtils.asNoneAlias()));
+
+            return op;
+        }
+    },
     AGGREGATE_STEP {
         // count/sum/min/max/fold/mean(avg)
         @Override
@@ -229,6 +242,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                     && aggAlias.alias.opt == FfiNameIdOpt.Name) {
                 step.removeLabel(aggFn.getAlias().alias.name);
             }
+
             return op;
         }
     },
