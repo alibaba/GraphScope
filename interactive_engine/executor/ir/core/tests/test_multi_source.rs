@@ -91,7 +91,7 @@ mod tests {
 
         let sink = default_sink_pb();
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let scan_id = plan
             .append_operator_as_node(scan_opr.into(), vec![0])
             .unwrap();
@@ -164,7 +164,7 @@ mod tests {
 
         let sink = default_sink_pb();
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let left_scan_id = plan
             .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
@@ -252,7 +252,7 @@ mod tests {
 
         let sink = default_sink_pb();
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let left_scan_id = plan
             .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
@@ -331,8 +331,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
-    // TODO: this test would be fixed when multiple joins is supported
     fn test_multi_source_multi_match_multi_join_physical() {
         let plan = multi_source_multi_match_multi_join_logical_plan();
 
@@ -340,8 +338,8 @@ mod tests {
         let mut builder = PlanBuilder::default();
         let _res = plan.add_job_builder(&mut builder, &mut plan_meta);
         let physical_plan = builder.take();
-        // dummy, join1, join2, sink
-        assert_eq!(physical_plan.len(), 4);
+        // dummy, join2, sink
+        assert_eq!(physical_plan.len(), 3);
     }
 
     // join(join(scan1.match1, scan2.match2), scan3.match3)
@@ -356,7 +354,7 @@ mod tests {
 
         let sink = default_sink_pb();
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let scan1_id = plan
             .append_operator_as_node(scan_opr.clone().into(), vec![0])
             .unwrap();
@@ -386,8 +384,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
-    // TODO: this test would be fixed when multiple joins is supported
     fn test_multi_join_physical() {
         let plan = multi_join_logical_plan();
 
@@ -432,7 +428,7 @@ mod tests {
 
         let sink = default_sink_pb();
 
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         let branch2_id = plan
             .append_operator_as_node(dummy_opr.clone().into(), vec![0])
             .unwrap();

@@ -137,6 +137,8 @@ public abstract class Utils {
                 return FfiAggOpt.Min;
             case MAX:
                 return FfiAggOpt.Max;
+            case FIRST_VALUE:
+                return FfiAggOpt.First;
             default:
                 throw new UnsupportedOperationException(
                         "aggregate opt " + aggCall.getAggFunction().kind + " is unsupported yet");

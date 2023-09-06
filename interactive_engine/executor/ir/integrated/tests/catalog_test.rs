@@ -1638,7 +1638,7 @@ mod test {
     }
 
     fn get_patmat_logical_plan(pattern: &Pattern, pb_plan: pb::LogicalPlan) -> LogicalPlan {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_plan(pb_plan.into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(get_sink_of_pattern(pattern).into(), vec![plan.get_max_node_id() - 1])

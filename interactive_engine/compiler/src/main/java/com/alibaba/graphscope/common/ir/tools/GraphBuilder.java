@@ -635,6 +635,8 @@ public class GraphBuilder extends RelBuilder {
                 || (sqlKind == SqlKind.PROCEDURE_CALL)
                 || (sqlKind == SqlKind.NOT)
                 || sqlKind == SqlKind.ARRAY_VALUE_CONSTRUCTOR
+                || sqlKind == SqlKind.IS_NULL
+                || sqlKind == SqlKind.IS_NOT_NULL
                 || sqlKind == SqlKind.EXTRACT;
     }
 

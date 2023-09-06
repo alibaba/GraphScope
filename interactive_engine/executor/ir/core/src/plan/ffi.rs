@@ -592,7 +592,7 @@ fn ptr_to_pb<T: Message + Default>(pb_ptr: FfiPbPointer) -> Result<T, FfiResult>
 /// We have provided  the [`destroy_logical_plan`] api for deallocating the pointer of the logical plan.
 #[no_mangle]
 pub extern "C" fn init_logical_plan() -> *const c_void {
-    let plan = Box::new(LogicalPlan::default());
+    let plan = Box::new(LogicalPlan::with_root());
     Box::into_raw(plan) as *const c_void
 }
 
@@ -1326,6 +1326,7 @@ mod groupby {
         ToList = 5,
         ToSet = 6,
         Avg = 7,
+        First = 8,
     }
 
     /*
