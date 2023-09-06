@@ -23,7 +23,7 @@ use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 
-use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime, Timelike};
+use chrono::{DateTime, Datelike, FixedOffset, NaiveDate, NaiveDateTime, NaiveTime, Timelike};
 use itertools::Itertools;
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
@@ -41,6 +41,7 @@ pub enum RawType {
     DateFormat,
     TimeFormat,
     DateTimeFormat,
+    DateTimeWithTzFormat,
     Blob(usize),
     Vector,
     KV,
@@ -415,12 +416,14 @@ impl PartialOrd for Primitives {
 
 #[derive(Clone, Debug, Hash)]
 pub enum DateFormats {
-    // preserve a date format (ISO fomat) like 2019-01-01
+    // preserve a date format (ISO format) like 2019-01-01
     Date(NaiveDate),
-    // preserve a time format (ISO fomat) like 00:00:00.000
+    // preserve a time format (ISO format) like 00:00:00.000
     Time(NaiveTime),
-    // preserve a date time format (ISO fomat) like 2019-01-01T00:00:00.000
+    // preserve a date time format (ISO format) with UTC timezone, like 2019-01-01 00:00:00.000
     DateTime(NaiveDateTime),
+    // preserve a date time format (ISO format) with specified timezone, like 2019-01-01T00:00:00.000+08:00
+    DateTimeWithTz(DateTime<FixedOffset>),
 }
 
 impl DateFormats {
@@ -430,6 +433,7 @@ impl DateFormats {
             DateFormats::Date(_) => RawType::DateFormat,
             DateFormats::Time(_) => RawType::TimeFormat,
             DateFormats::DateTime(_) => RawType::DateTimeFormat,
+            DateFormats::DateTimeWithTz(_) => RawType::DateTimeWithTzFormat,
         }
     }
 
@@ -439,6 +443,7 @@ impl DateFormats {
             DateFormats::Date(d) => Ok(*d),
             DateFormats::Time(_) => Err(CastError::new::<NaiveTime>(RawType::TimeFormat)),
             DateFormats::DateTime(dt) => Ok(dt.date()),
+            DateFormats::DateTimeWithTz(dt) => Ok(dt.date_naive()),
         }
     }
 
@@ -448,17 +453,30 @@ impl DateFormats {
             DateFormats::Date(_) => Err(CastError::new::<NaiveDate>(RawType::DateFormat)),
             DateFormats::Time(t) => Ok(*t),
             DateFormats::DateTime(dt) => Ok(dt.time()),
+            DateFormats::DateTimeWithTz(dt) => Ok(dt.time()),
         }
     }
 
     #[inline]
     pub fn as_date_time(&self) -> Result<NaiveDateTime, CastError> {
         match self {
-            DateFormats::Date(d) => d
-                .and_hms_opt(0, 0, 0)
-                .ok_or(CastError::new::<NaiveDate>(RawType::DateTimeFormat)),
+            DateFormats::Date(_) => Err(CastError::new::<NaiveDate>(RawType::DateTimeFormat)),
             DateFormats::Time(_) => Err(CastError::new::<NaiveTime>(RawType::DateTimeFormat)),
             DateFormats::DateTime(dt) => Ok(*dt),
+            DateFormats::DateTimeWithTz(dt) => Ok(dt.naive_local()),
+        }
+    }
+
+    #[inline]
+    pub fn as_date_time_with_tz(&self) -> Result<DateTime<FixedOffset>, CastError> {
+        match self {
+            DateFormats::Date(_) => Err(CastError::new::<NaiveDate>(RawType::DateTimeWithTzFormat)),
+            DateFormats::Time(_) => Err(CastError::new::<NaiveTime>(RawType::DateTimeWithTzFormat)),
+            DateFormats::DateTime(dt) => dt
+                .and_local_timezone(FixedOffset::east_opt(0).unwrap())
+                .single()
+                .ok_or(CastError::new::<NaiveDateTime>(RawType::DateTimeWithTzFormat)),
+            DateFormats::DateTimeWithTz(dt) => Ok(*dt),
         }
     }
 
@@ -467,6 +485,7 @@ impl DateFormats {
             DateFormats::Date(d) => Some(d.year()),
             DateFormats::Time(_) => None,
             DateFormats::DateTime(dt) => Some(dt.year()),
+            DateFormats::DateTimeWithTz(dt) => Some(dt.year()),
         }
     }
 
@@ -475,6 +494,7 @@ impl DateFormats {
             DateFormats::Date(d) => Some(d.month()),
             DateFormats::Time(_) => None,
             DateFormats::DateTime(dt) => Some(dt.month()),
+            DateFormats::DateTimeWithTz(dt) => Some(dt.month()),
         }
     }
 
@@ -483,6 +503,7 @@ impl DateFormats {
             DateFormats::Date(d) => Some(d.day()),
             DateFormats::Time(_) => None,
             DateFormats::DateTime(dt) => Some(dt.day()),
+            DateFormats::DateTimeWithTz(dt) => Some(dt.day()),
         }
     }
 
@@ -491,6 +512,7 @@ impl DateFormats {
             DateFormats::Date(_) => None,
             DateFormats::Time(t) => Some(t.hour()),
             DateFormats::DateTime(dt) => Some(dt.hour()),
+            DateFormats::DateTimeWithTz(dt) => Some(dt.hour()),
         }
     }
 
@@ -499,6 +521,7 @@ impl DateFormats {
             DateFormats::Date(_) => None,
             DateFormats::Time(t) => Some(t.minute()),
             DateFormats::DateTime(dt) => Some(dt.minute()),
+            DateFormats::DateTimeWithTz(dt) => Some(dt.minute()),
         }
     }
 
@@ -507,6 +530,7 @@ impl DateFormats {
             DateFormats::Date(_) => None,
             DateFormats::Time(t) => Some(t.second()),
             DateFormats::DateTime(dt) => Some(dt.second()),
+            DateFormats::DateTimeWithTz(dt) => Some(dt.second()),
         }
     }
 
@@ -515,6 +539,7 @@ impl DateFormats {
             DateFormats::Date(_) => None,
             DateFormats::Time(t) => Some(t.nanosecond() / 1_000_000),
             DateFormats::DateTime(dt) => Some(dt.nanosecond() / 1_000_000),
+            DateFormats::DateTimeWithTz(dt) => Some(dt.nanosecond() / 1_000_000),
         }
     }
 
@@ -523,6 +548,7 @@ impl DateFormats {
             DateFormats::Date(d) => d.and_hms_opt(0, 0, 0).map(|dt| dt.timestamp()),
             DateFormats::Time(_) => None,
             DateFormats::DateTime(dt) => Some(dt.timestamp()),
+            DateFormats::DateTimeWithTz(dt) => Some(dt.timestamp()),
         }
     }
 
@@ -533,6 +559,7 @@ impl DateFormats {
                 .map(|dt| dt.timestamp_millis()),
             DateFormats::Time(_) => None,
             DateFormats::DateTime(dt) => Some(dt.timestamp_millis()),
+            DateFormats::DateTimeWithTz(dt) => Some(dt.timestamp_millis()),
         }
     }
 }
@@ -543,14 +570,9 @@ impl PartialEq for DateFormats {
             (DateFormats::Date(l), DateFormats::Date(r)) => l.eq(r),
             (DateFormats::Time(l), DateFormats::Time(r)) => l.eq(r),
             (DateFormats::DateTime(l), DateFormats::DateTime(r)) => l.eq(r),
-            (DateFormats::Date(l), DateFormats::DateTime(r)) => l
-                .and_hms_opt(0, 0, 0)
-                .map(|dt| dt.eq(r))
-                .unwrap_or(false),
-            (DateFormats::DateTime(l), DateFormats::Date(r)) => r
-                .and_hms_opt(0, 0, 0)
-                .map(|dt| l.eq(&dt))
-                .unwrap_or(false),
+            (DateFormats::DateTimeWithTz(l), DateFormats::DateTimeWithTz(r)) => l.eq(r),
+            (DateFormats::DateTime(l), DateFormats::DateTimeWithTz(r)) => l.eq(&r.naive_utc()),
+            (DateFormats::DateTimeWithTz(l), DateFormats::DateTime(r)) => l.naive_utc().eq(r),
             _ => false,
         }
     }
@@ -564,14 +586,9 @@ impl PartialOrd for DateFormats {
             (DateFormats::Date(l), DateFormats::Date(r)) => l.partial_cmp(r),
             (DateFormats::Time(l), DateFormats::Time(r)) => l.partial_cmp(r),
             (DateFormats::DateTime(l), DateFormats::DateTime(r)) => l.partial_cmp(r),
-            (DateFormats::Date(l), DateFormats::DateTime(r)) => l
-                .and_hms_opt(0, 0, 0)
-                .map(|dt| dt.partial_cmp(r))
-                .unwrap_or(None),
-            (DateFormats::DateTime(l), DateFormats::Date(r)) => r
-                .and_hms_opt(0, 0, 0)
-                .map(|dt| l.partial_cmp(&dt))
-                .unwrap_or(None),
+            (DateFormats::DateTimeWithTz(l), DateFormats::DateTimeWithTz(r)) => l.partial_cmp(r),
+            (DateFormats::DateTime(l), DateFormats::DateTimeWithTz(r)) => l.partial_cmp(&r.naive_utc()),
+            (DateFormats::DateTimeWithTz(l), DateFormats::DateTime(r)) => l.naive_utc().partial_cmp(r),
             _ => None,
         }
     }
@@ -1488,14 +1505,20 @@ impl From<NaiveDate> for Object {
 }
 
 impl From<NaiveDateTime> for Object {
-    fn from(date: NaiveDateTime) -> Self {
-        Object::DateFormat(DateFormats::DateTime(date))
+    fn from(date_time: NaiveDateTime) -> Self {
+        Object::DateFormat(DateFormats::DateTime(date_time))
     }
 }
 
 impl From<NaiveTime> for Object {
-    fn from(date: NaiveTime) -> Self {
-        Object::DateFormat(DateFormats::Time(date))
+    fn from(time: NaiveTime) -> Self {
+        Object::DateFormat(DateFormats::Time(time))
+    }
+}
+
+impl From<DateTime<FixedOffset>> for Object {
+    fn from(date_time_with_tz: DateTime<FixedOffset>) -> Self {
+        Object::DateFormat(DateFormats::DateTimeWithTz(date_time_with_tz))
     }
 }
 

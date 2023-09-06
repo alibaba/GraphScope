@@ -111,6 +111,15 @@ impl Encode for DateFormats {
                 writer.write_u8(2)?;
                 writer.write_i64(datetime.timestamp_millis())?;
             }
+            DateFormats::DateTimeWithTz(datetime_with_tz) => {
+                writer.write_u8(3)?;
+                writer.write_i64(
+                    datetime_with_tz
+                        .naive_local()
+                        .timestamp_millis(),
+                )?;
+                writer.write_i32(datetime_with_tz.offset().local_minus_utc())?;
+            }
         }
         Ok(())
     }
@@ -154,6 +163,28 @@ impl Decode for DateFormats {
                     ),
                 )?;
                 Ok(DateFormats::DateTime(date_time))
+            }
+            3 => {
+                let native_local_timestamp_millis = <i64>::read_from(reader)?;
+                let offset = <i32>::read_from(reader)?;
+                let tz = chrono::FixedOffset::east_opt(offset)
+                    .ok_or(io::Error::new(io::ErrorKind::Other, format!("invalid offset {:?}", offset)))?;
+                let date_time = chrono::NaiveDateTime::from_timestamp_millis(native_local_timestamp_millis)
+                    .ok_or(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("invalid datetime {:?}", native_local_timestamp_millis),
+                    ))?
+                    .and_local_timezone(tz)
+                    .single()
+                    .ok_or(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!(
+                            "invalid datetime with timezone {:?} {:?}",
+                            native_local_timestamp_millis, tz
+                        ),
+                    ))?;
+
+                Ok(DateFormats::DateTimeWithTz(date_time))
             }
             _ => Err(io::Error::new(io::ErrorKind::Other, "unreachable")),
         }

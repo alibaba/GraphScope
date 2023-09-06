@@ -47,6 +47,7 @@ impl fmt::Display for CastError {
             RawType::DateFormat => write!(f, "can't cast date into {}", self.target),
             RawType::TimeFormat => write!(f, "can't cast time into {}", self.target),
             RawType::DateTimeFormat => write!(f, "can't cast datetime into {}", self.target),
+            RawType::DateTimeWithTzFormat => write!(f, "can't cast datetime with tz into {}", self.target),
         }
     }
 }

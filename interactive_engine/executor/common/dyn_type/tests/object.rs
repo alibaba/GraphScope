@@ -165,7 +165,9 @@ mod tests {
             .unwrap();
         assert_eq!(time_recovered, time);
 
-        let date_time = chrono::NaiveDateTime::from_timestamp_opt(1602310210, 0).unwrap();
+        let date_time =
+            chrono::NaiveDateTime::parse_from_str("2020-10-10 10:10:10.100", "%Y-%m-%d %H:%M:%S%.f")
+                .unwrap();
         let date_time_obj = Object::from(date_time);
         let date_time_recovered = date_time_obj
             .as_date_format()
@@ -173,5 +175,15 @@ mod tests {
             .as_date_time()
             .unwrap();
         assert_eq!(date_time_recovered, date_time);
+
+        let date_time_with_tz =
+            chrono::DateTime::parse_from_rfc3339("2020-10-09T23:10:10.100-11:00").unwrap();
+        let date_time_with_tz_obj = Object::from(date_time_with_tz);
+        let date_time_with_tz_recovered = date_time_with_tz_obj
+            .as_date_format()
+            .unwrap()
+            .as_date_time_with_tz()
+            .unwrap();
+        assert_eq!(date_time_with_tz_recovered, date_time_with_tz);
     }
 }
