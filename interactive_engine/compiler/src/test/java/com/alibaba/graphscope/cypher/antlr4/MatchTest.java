@@ -268,8 +268,8 @@ public class MatchTest {
         RelNode node = Utils.eval("Match (a:person {name:'小明'}) Return '小明'").build();
         Assert.assertEquals(
                 "GraphLogicalProject($f0=[_UTF-8'小明'], isAppend=[false])\n"
-                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], fusedFilter=[[=(DEFAULT.name, _UTF-8'小明')]], opt=[VERTEX])",
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], fusedFilter=[[=(DEFAULT.name, _UTF-8'小明')]], opt=[VERTEX])",
                 node.explain().trim());
         Assert.assertEquals(
                 SqlTypeName.CHAR,
