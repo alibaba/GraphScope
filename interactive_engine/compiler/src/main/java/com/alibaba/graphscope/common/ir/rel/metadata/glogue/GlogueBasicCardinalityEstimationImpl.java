@@ -2,8 +2,6 @@ package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
 import java.util.Map;
 
-import org.javatuples.Pair;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -11,17 +9,16 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternOrdering;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternOrder;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirection;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 
 public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEstimation {
-    // TODO: should use pattern code as key. PatternOrdering cannot identify a pattern for now.
-    private Map<PatternOrdering, Double> patternCardinality;
+    private Map<Pattern, Double> patternCardinality;
 
     public GlogueBasicCardinalityEstimationImpl() {
-        this.patternCardinality = new HashMap<PatternOrdering, Double>();
+        this.patternCardinality = new HashMap<Pattern, Double>();
     }
 
     public GlogueBasicCardinalityEstimationImpl create(Glogue glogue, GlogueSchema schema) {
@@ -32,14 +29,14 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
                 // single vertex pattern
                 Integer singleVertexPatternType = pattern.getVertexSet().iterator().next().getVertexTypeId();
                 Double singleVertexPatternCount = schema.getVertexTypeCardinality(singleVertexPatternType);
-                this.patternCardinality.put(pattern.getPatternOrdering(), singleVertexPatternCount);
+                this.patternCardinality.put(pattern, singleVertexPatternCount);
                 System.out.println("root vertex pattern: " + pattern + ": " + singleVertexPatternCount);
             }
             for (GlogueEdge edge : glogue.getOutEdges(pattern)) {
                 GlogueExtendIntersectEdge extendIntersectEdge = (GlogueExtendIntersectEdge) edge;
                 Pattern singleEdgePattern = extendIntersectEdge.getDstPattern();
                 // if it is already computed previously, then skip.
-                if (this.containsPatternCode(singleEdgePattern.getPatternOrdering())) {
+                if (this.containsPattern(singleEdgePattern)) {
                     System.out.println("pattern already computed: " + singleEdgePattern);
                     continue;
                 }
@@ -47,7 +44,7 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
                     // single edge pattern
                     EdgeTypeId singleEdgePatternType = singleEdgePattern.getEdgeSet().iterator().next().getEdgeTypeId();
                     Double singleEdgePatternCount = schema.getEdgeTypeCardinality(singleEdgePatternType);
-                    this.patternCardinality.put(singleEdgePattern.getPatternOrdering(), singleEdgePatternCount);
+                    this.patternCardinality.put(singleEdgePattern, singleEdgePatternCount);
                     patternQueue.add(singleEdgePattern);
                     System.out.println("root edge pattern: " + singleEdgePattern + ": " + singleEdgePatternCount);
                 } else {
@@ -63,10 +60,10 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
             for (GlogueEdge edge : glogue.getOutEdges(pattern)) {
                 // each GlogueEdge extends to a new pattern
                 // initial as current pattern count
-                Double estimatedPatternCount = this.patternCardinality.get(pattern.getPatternOrdering());
+                Double estimatedPatternCount = this.patternCardinality.get(pattern);
                 GlogueExtendIntersectEdge extendIntersectEdge = (GlogueExtendIntersectEdge) edge;
                 Pattern newPattern = extendIntersectEdge.getDstPattern();
-                if (this.containsPatternCode(newPattern.getPatternOrdering())) {
+                if (this.containsPattern(newPattern)) {
                     System.out.println("pattern already computed: " + newPattern);
                     continue;
                 }
@@ -78,7 +75,8 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
                     Double edgeTypeCount = schema.getEdgeTypeCardinality(extendEdge);
                     estimatedPatternCount *= edgeTypeCount;
                 }
-                // commonVertices includes all src vertices, and, if the step has more than one extend edge,
+                // commonVertices includes all src vertices, and, if the step has more than one
+                // extend edge,
                 // then the target vertex is also a common vertex.
                 List<Integer> commonVertices = extractExtendSrcVertices(extendStep);
                 System.out.println("common src vertices types: " + commonVertices);
@@ -92,7 +90,7 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
                     estimatedPatternCount /= schema.getVertexTypeCardinality(commonTargetVertex);
                     count -= 1;
                 }
-                this.patternCardinality.put(newPattern.getPatternOrdering(), estimatedPatternCount);
+                this.patternCardinality.put(newPattern, estimatedPatternCount);
                 patternQueue.add(newPattern);
                 System.out.println("new pattern: " + newPattern + ": " + estimatedPatternCount);
             }
@@ -121,20 +119,27 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
         return vertexTypeIdList;
     }
 
-    private boolean containsPatternCode(PatternOrdering patternCode) {
-        return this.patternCardinality.containsKey(patternCode);
+    private boolean containsPattern(Pattern pattern) {
+        return this.patternCardinality.containsKey(pattern);
     }
 
     @Override
-    public double getCardinality(PatternOrdering patternCode) {
-        return this.patternCardinality.get(patternCode);
+    public double getCardinality(Pattern queryPattern) {
+        for (Pattern pattern : this.patternCardinality.keySet()) {
+            if (pattern.equals(queryPattern)) {
+                return this.patternCardinality.get(pattern);
+            }
+        }
+        return 0.0;
     }
 
     @Override
     public String toString() {
-        return "GlogueBasicCardinalityEstimationImpl{" +
-                "patternCardinality=" + patternCardinality +
-                '}';
+        String s = "";
+        for (Pattern pattern : this.patternCardinality.keySet()) {
+            s += pattern + ": " + this.patternCardinality.get(pattern) + "\n";
+        }
+        return s;
     }
 
 }

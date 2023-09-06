@@ -2,28 +2,28 @@ package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 
 public class PatternVertex {
     private Integer vertexTypeId;
-    private Integer position;
+    private Integer id;
 
     public PatternVertex(Integer vertexTypeId) {
         this.vertexTypeId = vertexTypeId;
-        this.position = 0;
+        this.id = 0;
     }
 
-    public PatternVertex(Integer vertexTypeId, int position) {
+    public PatternVertex(Integer vertexTypeId, int id) {
         this.vertexTypeId = vertexTypeId;
-        this.position = position;
+        this.id = id;
     }
 
     public Integer getVertexTypeId() {
         return vertexTypeId;
     }
 
-    public Integer getPosition() {
-        return position;
+    public Integer getId() {
+        return id;
     }
 
     public String toString() {
-        return position.toString() + "[" + vertexTypeId.toString() + "]";
+        return id.toString() + "[" + vertexTypeId.toString() + "]";
     }
 
     public int hashCode() {

@@ -4,20 +4,19 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirec
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 
 public class ExtendEdge {
-    // Notice that this is srcVertexId, not srcVertexPosition
-    private int srcVertexId;
+    private int srcVertexOrder;
     private EdgeTypeId edgeTypeId;
     // the direction of the extend edge
     private PatternDirection direction;
 
-    public ExtendEdge(int srcVertexId, EdgeTypeId edgeTypeId, PatternDirection direction) {
-        this.srcVertexId = srcVertexId;
+    public ExtendEdge(int srcVertexOrder, EdgeTypeId edgeTypeId, PatternDirection direction) {
+        this.srcVertexOrder = srcVertexOrder;
         this.edgeTypeId = edgeTypeId;
         this.direction = direction;
     }
 
-    public int getSrcVertexId() {
-        return srcVertexId;
+    public int getSrcVertexOrder() {
+        return srcVertexOrder;
     }
 
     public EdgeTypeId getEdgeTypeId() {
@@ -30,7 +29,7 @@ public class ExtendEdge {
 
     @Override
     public String toString() {
-        return srcVertexId + edgeTypeId.toString();
+        return srcVertexOrder + edgeTypeId.toString();
     }
 
 

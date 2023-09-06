@@ -37,7 +37,7 @@ public class PatternEdge {
     }
 
     public String toString() {
-        return srcVertex.getPosition() + "->" + dstVertex.getPosition() + "[" + edgeTypeId.toString() + "]";
+        return srcVertex.getId() + "->" + dstVertex.getId() + "[" + edgeTypeId.toString() + "]";
     }
 
     public int hashCode() {

@@ -82,27 +82,28 @@ public class GlogueSchema {
         Map<String, GraphEdge> edgeList = Maps.newHashMap();
 
         
-        DefaultGraphVertex person = new DefaultGraphVertex(11, "person",  List.of(), List.of("name"), 0, -1);
-        DefaultGraphVertex software = new DefaultGraphVertex(22, "software", List.of(), List.of("name"), 0, -1);
+        DefaultGraphVertex person = new DefaultGraphVertex(0, "person",  List.of(), List.of("name"), 0, -1);
+        DefaultGraphVertex software = new DefaultGraphVertex(1, "software", List.of(), List.of("name"), 0, -1);
         vertexList.put("person", person);
         vertexList.put("software", software);
         DefaultEdgeRelation knowsRelation = new DefaultEdgeRelation(person, person);
-        DefaultGraphEdge knows = new DefaultGraphEdge(1111, "knows", List.of(), List.of(knowsRelation), 0);
+        DefaultGraphEdge knows = new DefaultGraphEdge(0, "knows", List.of(), List.of(knowsRelation), 0);
         DefaultEdgeRelation createdRelation = new DefaultEdgeRelation(person, software);
-        DefaultGraphEdge created = new DefaultGraphEdge(1112, "created", List.of(), List.of(createdRelation), 0);
+        DefaultGraphEdge created = new DefaultGraphEdge(1, "created", List.of(), List.of(createdRelation), 0);
         edgeList.put("knows", knows);
         edgeList.put("created", created);
 
         DefaultGraphSchema graphSchema = new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
         HashMap<Integer, Double> vertexTypeCardinality = new HashMap<Integer, Double>();
-        vertexTypeCardinality.put(11, 4.0);
-        vertexTypeCardinality.put(22, 2.0);
+        vertexTypeCardinality.put(0, 4.0);
+        vertexTypeCardinality.put(1, 2.0);
 
         HashMap<EdgeTypeId, Double> edgeTypeCardinality = new HashMap<EdgeTypeId, Double>();
-        edgeTypeCardinality.put(new EdgeTypeId(11, 11, 1111), 2.0);
-        edgeTypeCardinality.put(new EdgeTypeId(11, 22, 1112), 4.0);
+        edgeTypeCardinality.put(new EdgeTypeId(0, 0, 0), 2.0);
+        edgeTypeCardinality.put(new EdgeTypeId(0, 1, 1), 4.0);
 
         GlogueSchema g = new GlogueSchema(graphSchema, vertexTypeCardinality, edgeTypeCardinality);
+        System.out.println("glogue schema: " + g);
         return g;
     }
     
