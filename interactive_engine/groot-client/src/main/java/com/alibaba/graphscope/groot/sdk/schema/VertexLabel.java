@@ -1,5 +1,7 @@
 package com.alibaba.graphscope.groot.sdk.schema;
 
+import com.alibaba.graphscope.proto.groot.PropertyDefPb;
+import com.alibaba.graphscope.proto.groot.TypeDefPb;
 import com.alibaba.graphscope.proto.groot.TypeEnumPb;
 
 import java.util.ArrayList;
@@ -11,6 +13,37 @@ public class VertexLabel extends Label {
         this.properties = properties;
         this.comment = comment;
         this.type = TypeEnumPb.VERTEX;
+    }
+
+    private VertexLabel() {}
+
+    public static VertexLabel fromProto(TypeDefPb proto) {
+        VertexLabel label = new VertexLabel();
+        label.label = proto.getLabel();
+        List<Property> properties = new ArrayList<>();
+        for (PropertyDefPb propertyDefPb : proto.getPropsList()) {
+            properties.add(Property.fromProto(propertyDefPb));
+        }
+        label.properties = properties;
+        label.comment = proto.getComment();
+        label.type = TypeEnumPb.VERTEX;
+        label.id = proto.getLabelId().getId();
+        return label;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("VertexLabel {\n");
+        builder.append("  label='").append(label);
+        builder.append("', id=").append(id);
+        builder.append(", comment='").append(comment);
+        builder.append("', properties={\n");
+        for (Property prop : properties) {
+            builder.append("    ").append(prop.toString()).append("\n");
+        }
+        builder.append("  }\n}");
+        return builder.toString();
     }
 
     public static Builder newBuilder() {

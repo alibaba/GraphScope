@@ -481,6 +481,7 @@ kafka:
     ## Kafka port for client connections
     ##
     port: 9092
+  socketRequestMaxBytes: _1048576000
 
 ## This value is only used when kafka.enabled is set to false
 ##
