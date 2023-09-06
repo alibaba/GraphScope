@@ -21,6 +21,8 @@ import com.google.common.collect.Lists;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
 
+import java.nio.charset.Charset;
+
 public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
 
     @Override
@@ -43,5 +45,11 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
             newType = super.createTypeWithNullability(type, nullable);
         }
         return newType;
+    }
+
+    // change default charset from ISO-8859-1 to UTF-8, to support chinese character
+    @Override
+    public Charset getDefaultCharset() {
+        return Charset.forName("UTF-8");
     }
 }
