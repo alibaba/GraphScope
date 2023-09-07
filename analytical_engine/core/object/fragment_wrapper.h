@@ -154,10 +154,9 @@ gs::rpc::graph::DataTypePb PropertyTypeToPb(const std::string& type) {
 gs::rpc::graph::TypeEnumPb TypeToTypeEnum(const std::string& type) {
   if (type == "VERTEX") {
     return gs::rpc::graph::TypeEnumPb::VERTEX;
-  } else if (type == "EDGE") {
+  } else /* if (type == "EDGE") */ {
     return gs::rpc::graph::TypeEnumPb::EDGE;
   }
-  return gs::rpc::graph::TypeEnumPb::UNSPECIFIED;
 }
 
 void ToPropertyDef(const vineyard::Entry::PropertyDef& prop,

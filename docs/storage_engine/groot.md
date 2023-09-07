@@ -559,6 +559,7 @@ class EdgeRecordKey:
 We also have a java sdk for realtime write and schema management.
 
 APIs including:
+  - Create and inspect graph schema
   - Insert / delete / update vertices
   - Insert / delete / update edges
   - Clear properties of vertices or edges by property name
