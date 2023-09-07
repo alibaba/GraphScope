@@ -5,6 +5,8 @@ import com.alibaba.graphscope.proto.groot.PropertyDefPb;
 
 public class Property {
     private String name;
+
+    private int id;
     private DataTypePb dataType;
 
     private boolean isPrimaryKey;
@@ -27,11 +29,45 @@ public class Property {
         return comment;
     }
 
+    public int getId() {
+        return id;
+    }
+
     private Property(String name, DataTypePb dataType, boolean isPrimaryKey, String comment) {
         this.name = name;
         this.dataType = dataType;
         this.isPrimaryKey = isPrimaryKey;
         this.comment = comment;
+    }
+
+    private Property() {}
+
+    public static Property fromProto(PropertyDefPb proto) {
+        Property property = new Property();
+        property.name = proto.getName();
+        property.dataType = proto.getDataType();
+        property.isPrimaryKey = proto.getPk();
+        property.comment = proto.getComment();
+        property.id = proto.getId();
+        return property;
+    }
+
+    @Override
+    public String toString() {
+        return "Property{"
+                + "name='"
+                + name
+                + '\''
+                + ", id="
+                + id
+                + ", dataType="
+                + dataType
+                + ", isPrimaryKey="
+                + isPrimaryKey
+                + ", comment='"
+                + comment
+                + '\''
+                + '}';
     }
 
     public static Builder newBuilder() {

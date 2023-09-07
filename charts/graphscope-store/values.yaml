@@ -49,7 +49,7 @@ test:
 ## GraphScope Store parameters
 ##
 store:
-  replicaCount: 2
+  replicaCount: 1
 
   ## GraphScope store container's resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
@@ -481,6 +481,7 @@ kafka:
     ## Kafka port for client connections
     ##
     port: 9092
+  socketRequestMaxBytes: _1048576000
 
 ## This value is only used when kafka.enabled is set to false
 ##

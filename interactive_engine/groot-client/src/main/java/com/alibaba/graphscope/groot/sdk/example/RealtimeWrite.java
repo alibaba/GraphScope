@@ -3,11 +3,9 @@ package com.alibaba.graphscope.groot.sdk.example;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.groot.sdk.schema.*;
 import com.alibaba.graphscope.proto.groot.BatchWriteResponse;
-import com.alibaba.graphscope.proto.groot.DataTypePb;
 
 import io.grpc.stub.StreamObserver;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,49 +14,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class RealtimeWrite {
-    private static int startId = 0;
-    private static int recordNum = 10000 + startId;
-
-    public void initSchema(GrootClient client) {
-        VertexLabel.Builder person = VertexLabel.newBuilder();
-        person.setLabel("person");
-        Property id =
-                Property.newBuilder()
-                        .setName("id")
-                        .setDataType(DataTypePb.LONG)
-                        .setPrimaryKey()
-                        .build();
-        Property.Builder name =
-                Property.newBuilder().setName("name").setDataType(DataTypePb.STRING);
-        Property.Builder age = Property.newBuilder().setName("age").setDataType(DataTypePb.INT);
-        person.addProperty(id);
-        person.addProperty(name);
-        person.addProperty(age);
-
-        VertexLabel.Builder software = VertexLabel.newBuilder();
-        Property.Builder lang =
-                Property.newBuilder().setName("lang").setDataType(DataTypePb.STRING);
-
-        software.setLabel("software");
-        software.addProperty(id);
-        software.addProperty(name);
-        software.addProperty(lang);
-
-        EdgeLabel.Builder created = EdgeLabel.newBuilder();
-        created.setLabel("created");
-        created.addRelation("person", "software");
-        Property.Builder weight =
-                Property.newBuilder().setName("weight").setDataType(DataTypePb.LONG);
-        created.addProperty(weight);
-
-        Schema.Builder schema = Schema.newBuilder();
-        schema.addVertexLabel(person);
-        schema.addVertexLabel(software);
-        schema.addEdgeLabel(created);
-
-        System.out.println(client.submitSchema(schema));
-        System.out.println("testAddLabel succeed");
-    }
 
     private static void testAddVerticesEdges(GrootClient client) {
         for (int i = 0; i < 10; ++i) {
@@ -146,45 +101,6 @@ public class RealtimeWrite {
                             new Edge("knows", "person", "person", srcPk, dstPk, properties));
             client.remoteFlush(snapshotId);
         }
-    }
-
-    private static List<Vertex> getVerticesA() {
-        List<Vertex> vertices = new ArrayList<>();
-        for (int i = startId; i < recordNum; ++i) {
-            Map<String, String> properties = new HashMap<>();
-            properties.put("id", String.valueOf(i));
-            properties.put("name", "person-" + i);
-            properties.put("age", String.valueOf(i + 20));
-            vertices.add(new Vertex("person", properties));
-        }
-        return vertices;
-    }
-
-    private static List<Vertex> getVerticesB() {
-        List<Vertex> vertices = new ArrayList<>();
-        for (int i = startId; i < recordNum; ++i) {
-            Map<String, String> properties = new HashMap<>();
-            properties.put("id", String.valueOf(i));
-            properties.put("name", "software-" + i);
-            properties.put("lang", String.valueOf(i + 200));
-            vertices.add(new Vertex("software", properties));
-        }
-        return vertices;
-    }
-
-    private static List<Edge> getEdges() {
-        List<Edge> edges = new ArrayList<>();
-        for (int i = startId; i < recordNum; ++i) {
-            Map<String, String> srcPk = new HashMap<>();
-            Map<String, String> dstPk = new HashMap<>();
-            Map<String, String> properties = new HashMap<>();
-
-            srcPk.put("id", String.valueOf(i));
-            dstPk.put("id", String.valueOf(i));
-            properties.put("weight", String.valueOf(i * 100));
-            edges.add(new Edge("created", "person", "software", srcPk, dstPk, properties));
-        }
-        return edges;
     }
 
     class ClientTask implements Runnable {
@@ -379,20 +295,19 @@ public class RealtimeWrite {
         int port = 55556;
         GrootClient client = GrootClient.newBuilder().addHost(hosts, port).build();
 
-        RealtimeWrite writer = new RealtimeWrite();
-
         // client.dropSchema();
-        // writer.initSchema(client);
+        client.submitSchema(TestUtils.getModernGraphSchema());
 
-        // List<Vertex> verticesA = RealtimeWrite.getVerticesA();
-        // List<Vertex> verticesB = RealtimeWrite.getVerticesB();
-        // List<Edge> edges = RealtimeWrite.getEdges();
+        // List<Vertex> verticesA = TestUtils.getVerticesPerson(0, 100);
+        // List<Vertex> verticesB = TestUtils.getVerticesSoftware(0, 100);
+        // List<Edge> edges = TestUtils.getEdgesCreated(0, 100);
 
         TimeWatch watch = TimeWatch.start();
+        // RealtimeWrite writer = new RealtimeWrite();
         // writer.sequential(client, verticesA, verticesB, edges);
         // writer.parallel(client, verticesA, verticesB, edges);
         // writer.sequentialBatch(client, verticesA, verticesB, edges);
-        //        writer.sequentialAsync(client, verticesA, verticesB, edges);
+        // writer.sequentialAsync(client, verticesA, verticesB, edges);
         // RealtimeWrite.testAddVerticesEdges(client);
         RealtimeWrite.testClearProperties(client);
         watch.status("Total");

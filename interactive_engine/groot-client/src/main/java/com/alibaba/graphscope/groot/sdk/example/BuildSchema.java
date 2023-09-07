@@ -87,14 +87,21 @@ public class BuildSchema {
         System.out.println("testDropSchemaEntirely succeed");
     }
 
+    public static void testGetSchema(GrootClient client) {
+        Schema schema = Schema.fromGraphDef(client.getSchema());
+        System.out.println(schema.toString());
+    }
+
     public static void main(String[] args) throws Exception {
         String hosts = "localhost";
         int port = 55556;
         GrootClient client = GrootClient.newBuilder().addHost(hosts, port).build();
-
-        testAddLabel(client);
-        testDeleteLabel(client);
-        testLoadSchemaFromFile(client);
-        testDropSchemaEntirely(client);
+        //
+        //        testAddLabel(client);
+        //        testDeleteLabel(client);
+        //        testLoadSchemaFromFile(client);
+        //        System.out.println(client.getSchema());
+        testGetSchema(client);
+        //        testDropSchemaEntirely(client);
     }
 }

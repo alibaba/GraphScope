@@ -1,5 +1,8 @@
 package com.alibaba.graphscope.groot.sdk.schema;
 
+import com.alibaba.graphscope.proto.groot.EdgeKindPb;
+import com.alibaba.graphscope.proto.groot.PropertyDefPb;
+import com.alibaba.graphscope.proto.groot.TypeDefPb;
 import com.alibaba.graphscope.proto.groot.TypeEnumPb;
 
 import java.util.ArrayList;
@@ -17,12 +20,59 @@ public class EdgeLabel extends Label {
         this.type = TypeEnumPb.EDGE;
     }
 
+    private EdgeLabel() {}
+
     public List<EdgeRelation> getRelations() {
         return relations;
     }
 
+    public static EdgeLabel fromProto(TypeDefPb proto, List<EdgeKindPb> edgeKindPbs) {
+        EdgeLabel label = new EdgeLabel();
+        label.label = proto.getLabel();
+        List<Property> properties = new ArrayList<>();
+        for (PropertyDefPb propertyDefPb : proto.getPropsList()) {
+            properties.add(Property.fromProto(propertyDefPb));
+        }
+        label.properties = properties;
+        label.comment = proto.getComment();
+        label.type = TypeEnumPb.EDGE;
+        label.id = proto.getLabelId().getId();
+
+        List<EdgeRelation> relations = new ArrayList<>();
+        for (EdgeKindPb edgeKindPb : edgeKindPbs) {
+            String edgeLabel = edgeKindPb.getEdgeLabel();
+            String srcLabel = edgeKindPb.getSrcVertexLabel();
+            String dstLabel = edgeKindPb.getDstVertexLabel();
+            if (edgeLabel.equals(proto.getLabel())) {
+                relations.add(new EdgeRelation(edgeLabel, srcLabel, dstLabel));
+            }
+        }
+        label.relations = relations;
+        return label;
+    }
+
     public static Builder newBuilder() {
         return new Builder();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("EdgeLabel {\n");
+        builder.append("  label='").append(label);
+        builder.append("', id=").append(id);
+        builder.append(", comment='").append(comment);
+        builder.append("', properties={\n");
+        for (Property prop : properties) {
+            builder.append("    ").append(prop.toString()).append("\n");
+        }
+        builder.append("  }\n");
+        builder.append("  relations={\n");
+        for (EdgeRelation relation : relations) {
+            builder.append("    ").append(relation.toString()).append("\n");
+        }
+        builder.append("  }\n}");
+        return builder.toString();
     }
 
     public static class Builder {
@@ -89,10 +139,22 @@ public class EdgeLabel extends Label {
             return dstLabel;
         }
 
-        public EdgeRelation(String edgeLabel, String srcLabel, String dstLabel) {
+        private EdgeRelation(String edgeLabel, String srcLabel, String dstLabel) {
             this.edgeLabel = edgeLabel;
             this.srcLabel = srcLabel;
             this.dstLabel = dstLabel;
+        }
+
+        @Override
+        public String toString() {
+            return "EdgeRelation{"
+                    + "srcLabel='"
+                    + srcLabel
+                    + '\''
+                    + ", dstLabel='"
+                    + dstLabel
+                    + '\''
+                    + '}';
         }
     }
 }
