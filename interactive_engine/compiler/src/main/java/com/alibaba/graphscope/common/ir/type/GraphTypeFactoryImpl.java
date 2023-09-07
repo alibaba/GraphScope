@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.type;
 
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
@@ -24,6 +26,12 @@ import org.apache.calcite.rel.type.RelDataType;
 import java.nio.charset.Charset;
 
 public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
+    private final Configs configs;
+
+    public GraphTypeFactoryImpl(Configs configs) {
+        super();
+        this.configs = configs;
+    }
 
     @Override
     public RelDataType createTypeWithNullability(RelDataType type, boolean nullable) {
@@ -47,9 +55,8 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
         return newType;
     }
 
-    // change default charset from ISO-8859-1 to UTF-8, to support chinese character
     @Override
     public Charset getDefaultCharset() {
-        return Charset.forName("UTF-8");
+        return Charset.forName(FrontendConfig.CALCITE_DEFAULT_CHARSET.get(configs));
     }
 }

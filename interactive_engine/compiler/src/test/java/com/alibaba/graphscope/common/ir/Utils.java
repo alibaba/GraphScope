@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
@@ -39,7 +40,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.net.URL;
 
 public class Utils {
-    public static final RelDataTypeFactory typeFactory = new GraphTypeFactoryImpl();
+    public static final RelDataTypeFactory typeFactory =
+            new GraphTypeFactoryImpl(
+                    new Configs(
+                            ImmutableMap.of(
+                                    FrontendConfig.CALCITE_DEFAULT_CHARSET.getKey(), "UTF-8")));
     public static final RexBuilder rexBuilder = new GraphRexBuilder(typeFactory);
     public static final IrMeta schemaMeta = mockSchemaMeta();
     public static final RelBuilderFactory relBuilderFactory =

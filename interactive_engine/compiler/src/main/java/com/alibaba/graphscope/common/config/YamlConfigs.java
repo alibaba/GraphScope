@@ -190,7 +190,10 @@ public class YamlConfigs extends Configs {
                 .put(
                         "query.execution.timeout.ms",
                         (Configs configs) -> configs.get("compiler.query_timeout"))
-                .put("engine.type", (Configs configs) -> configs.get("compute_engine.type"));
+                .put("engine.type", (Configs configs) -> configs.get("compute_engine.type"))
+                .put(
+                        "calcite.default.charset",
+                        (Configs configs) -> configs.get("compiler.calcite_default_charset"));
         valueGetterMap = mapBuilder.build();
     }
 
