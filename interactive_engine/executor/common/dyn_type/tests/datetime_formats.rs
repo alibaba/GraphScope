@@ -3,33 +3,33 @@ mod tests {
     use std::vec;
 
     use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime};
-    use dyn_type::DateFormats;
+    use dyn_type::DateTimeFormats;
     use pegasus_common::codec::{Decode, Encode};
 
     #[test]
     fn test_dateformat_as() {
         // date as date
         let date = NaiveDate::from_ymd_opt(2020, 10, 10).unwrap();
-        let date_format = DateFormats::Date(date);
+        let date_format = DateTimeFormats::Date(date);
         let date_recovered = date_format.as_date().unwrap();
         assert_eq!(date_recovered, date);
 
         // time as time
         let time = NaiveTime::from_hms_milli_opt(10, 10, 10, 100).unwrap();
-        let time_format = DateFormats::Time(time);
+        let time_format = DateTimeFormats::Time(time);
         let time_recovered = time_format.as_time().unwrap();
         assert_eq!(time_recovered, time);
 
         // datetime as datetime
         let date_time =
             NaiveDateTime::parse_from_str("2020-10-10 10:10:10.100", "%Y-%m-%d %H:%M:%S%.f").unwrap();
-        let date_time_format = DateFormats::DateTime(date_time);
+        let date_time_format = DateTimeFormats::DateTime(date_time);
         let date_time_recovered = date_time_format.as_date_time().unwrap();
         assert_eq!(date_time_recovered, date_time);
 
         // datetime_with_tz as datetime_with_tz
         let date_time_with_tz = DateTime::parse_from_rfc3339("2020-10-09T23:10:10.100-11:00").unwrap();
-        let date_time_with_tz_format = DateFormats::DateTimeWithTz(date_time_with_tz);
+        let date_time_with_tz_format = DateTimeFormats::DateTimeWithTz(date_time_with_tz);
         let date_time_with_tz_recovered = date_time_with_tz_format
             .as_date_time_with_tz()
             .unwrap();
@@ -68,7 +68,7 @@ mod tests {
     fn test_dateformat_extract() {
         // Date: 2020-10-10
         let date = NaiveDate::from_ymd_opt(2020, 10, 10).unwrap();
-        let date_format = DateFormats::Date(date);
+        let date_format = DateTimeFormats::Date(date);
         let year = date_format.year().unwrap();
         assert_eq!(year, 2020);
         let month = date_format.month().unwrap();
@@ -81,7 +81,7 @@ mod tests {
 
         // Time: 10:10:10.100
         let time = NaiveTime::from_hms_milli_opt(10, 10, 10, 100).unwrap();
-        let time_format = DateFormats::Time(time);
+        let time_format = DateTimeFormats::Time(time);
         let hour = time_format.hour().unwrap();
         assert_eq!(hour, 10);
         let minute = time_format.minute().unwrap();
@@ -94,7 +94,7 @@ mod tests {
         // DateTime: 2020-10-10 10:10:10.100
         let date_time =
             NaiveDateTime::parse_from_str("2020-10-10 10:10:10.100", "%Y-%m-%d %H:%M:%S%.f").unwrap();
-        let date_time_format = DateFormats::DateTime(date_time);
+        let date_time_format = DateTimeFormats::DateTime(date_time);
         let year = date_time_format.year().unwrap();
         assert_eq!(year, 2020);
         let month = date_time_format.month().unwrap();
@@ -116,7 +116,7 @@ mod tests {
 
         // DateTimeWithTz: 2020-10-09T23:10:10.100-11:00
         let date_time_with_tz = DateTime::parse_from_rfc3339("2020-10-09T23:10:10.100-11:00").unwrap();
-        let date_time_with_tz_format = DateFormats::DateTimeWithTz(date_time_with_tz);
+        let date_time_with_tz_format = DateTimeFormats::DateTimeWithTz(date_time_with_tz);
         let year = date_time_with_tz_format.year().unwrap();
         assert_eq!(year, 2020);
         let month = date_time_with_tz_format.month().unwrap();
@@ -144,39 +144,39 @@ mod tests {
         // Date comparason
         // 2020-10-10
         let date = NaiveDate::from_ymd_opt(2020, 10, 10).unwrap();
-        let date_format = DateFormats::Date(date);
+        let date_format = DateTimeFormats::Date(date);
         // 2020-10-11
         let date2 = NaiveDate::from_ymd_opt(2020, 10, 11).unwrap();
-        let date_format2 = DateFormats::Date(date2);
+        let date_format2 = DateTimeFormats::Date(date2);
         assert!(date_format < date_format2);
 
         // Time comparason
         // 10:10:10
         let time = NaiveTime::from_hms_opt(10, 10, 10).unwrap();
-        let time_format = DateFormats::Time(time);
+        let time_format = DateTimeFormats::Time(time);
         // 10:10:11
         let time2 = NaiveTime::from_hms_opt(10, 10, 11).unwrap();
-        let time_format2 = DateFormats::Time(time2);
+        let time_format2 = DateTimeFormats::Time(time2);
         assert!(time_format < time_format2);
 
         // DateTime comparason
         // 2020-10-10 10:10:10.100
         let date_time =
             NaiveDateTime::parse_from_str("2020-10-10 10:10:10.100", "%Y-%m-%d %H:%M:%S%.f").unwrap();
-        let date_time_format = DateFormats::DateTime(date_time);
+        let date_time_format = DateTimeFormats::DateTime(date_time);
         // 2020-10-10 10:10:11.100
         let date_time2 =
             NaiveDateTime::parse_from_str("2020-10-10 10:10:11.100", "%Y-%m-%d %H:%M:%S%.f").unwrap();
-        let date_time_format2 = DateFormats::DateTime(date_time2);
+        let date_time_format2 = DateTimeFormats::DateTime(date_time2);
         assert!(date_time_format < date_time_format2);
 
         // DateTimeWithTz comparason
         // 2020-10-09T23:10:10.100-11:00
         let date_time_with_tz = DateTime::parse_from_rfc3339("2020-10-09T23:10:10.100-11:00").unwrap();
-        let date_time_with_tz_format = DateFormats::DateTimeWithTz(date_time_with_tz);
+        let date_time_with_tz_format = DateTimeFormats::DateTimeWithTz(date_time_with_tz);
         // 2020-10-09T23:10:11.100-11:00
         let date_time_with_tz2 = DateTime::parse_from_rfc3339("2020-10-09T23:10:11.100-11:00").unwrap();
-        let date_time_with_tz_format2 = DateFormats::DateTimeWithTz(date_time_with_tz2);
+        let date_time_with_tz_format2 = DateTimeFormats::DateTimeWithTz(date_time_with_tz2);
         assert!(date_time_with_tz_format < date_time_with_tz_format2);
 
         // DateTime and DateTimeWithTz comparison
@@ -195,38 +195,38 @@ mod tests {
         // Date equality
         // 2020-10-10
         let date = NaiveDate::from_ymd_opt(2020, 10, 10).unwrap();
-        let date_format = DateFormats::Date(date);
+        let date_format = DateTimeFormats::Date(date);
         // 2020-10-10
         let date2 = NaiveDate::from_yo_opt(2020, 284).unwrap();
-        let date_format2 = DateFormats::Date(date2);
+        let date_format2 = DateTimeFormats::Date(date2);
         assert_eq!(date_format, date_format2);
 
         // Time equality
         // 10:10:10
         let time = NaiveTime::from_hms_opt(10, 10, 10).unwrap();
-        let time_format = DateFormats::Time(time);
+        let time_format = DateTimeFormats::Time(time);
         // 10:10:10.000
         let time2 = NaiveTime::from_hms_milli_opt(10, 10, 10, 0).unwrap();
-        let time_format2 = DateFormats::Time(time2);
+        let time_format2 = DateTimeFormats::Time(time2);
         assert_eq!(time_format, time_format2);
 
         // DateTime equality
         // 2020-10-10 10:10:10.100
         let date_time =
             NaiveDateTime::parse_from_str("2020-10-10 10:10:10.100", "%Y-%m-%d %H:%M:%S%.f").unwrap();
-        let date_time_format = DateFormats::DateTime(date_time);
+        let date_time_format = DateTimeFormats::DateTime(date_time);
         // 2020-10-10 10:10:10.100
         let date_time2 = NaiveDateTime::from_timestamp_millis(1602324610100).unwrap();
-        let date_time_format2 = DateFormats::DateTime(date_time2);
+        let date_time_format2 = DateTimeFormats::DateTime(date_time2);
         assert_eq!(date_time_format, date_time_format2);
 
         // DateTimeWithTz equality
         // 2020-10-09T23:10:10.100-11:00
         let date_time_with_tz = DateTime::parse_from_rfc3339("2020-10-09T23:10:10.100-11:00").unwrap();
-        let date_time_with_tz_format = DateFormats::DateTimeWithTz(date_time_with_tz);
+        let date_time_with_tz_format = DateTimeFormats::DateTimeWithTz(date_time_with_tz);
         // 2020-10-10T18:10:10.100+08:00
         let date_time_with_tz2 = DateTime::parse_from_rfc3339("2020-10-10T18:10:10.100+08:00").unwrap();
-        let date_time_with_tz_format2 = DateFormats::DateTimeWithTz(date_time_with_tz2);
+        let date_time_with_tz_format2 = DateTimeFormats::DateTimeWithTz(date_time_with_tz2);
         assert_eq!(date_time_with_tz_format, date_time_with_tz_format2);
 
         // DateTime v.s.  DateTimeWithTz
@@ -236,34 +236,34 @@ mod tests {
     #[test]
     fn test_dateformat_ser_de() {
         let date: NaiveDate = NaiveDate::from_ymd_opt(2020, 10, 10).unwrap();
-        let date_format = DateFormats::Date(date);
+        let date_format = DateTimeFormats::Date(date);
         let mut bytes = vec![];
         date_format.write_to(&mut bytes).unwrap();
-        let date_format_de = <DateFormats>::read_from(&mut bytes.as_slice()).unwrap();
+        let date_format_de = <DateTimeFormats>::read_from(&mut bytes.as_slice()).unwrap();
         assert_eq!(date_format, date_format_de);
 
         let time = NaiveTime::from_hms_milli_opt(10, 10, 10, 100).unwrap();
-        let time_format = DateFormats::Time(time);
+        let time_format = DateTimeFormats::Time(time);
         let mut bytes = vec![];
         time_format.write_to(&mut bytes).unwrap();
-        let time_format_de = <DateFormats>::read_from(&mut bytes.as_slice()).unwrap();
+        let time_format_de = <DateTimeFormats>::read_from(&mut bytes.as_slice()).unwrap();
         assert_eq!(time_format, time_format_de);
 
         let date_time =
             NaiveDateTime::parse_from_str("2020-10-10 10:10:10.100", "%Y-%m-%d %H:%M:%S%.f").unwrap();
-        let date_time_format = DateFormats::DateTime(date_time);
+        let date_time_format = DateTimeFormats::DateTime(date_time);
         let mut bytes = vec![];
         date_time_format.write_to(&mut bytes).unwrap();
-        let date_time_format_de = <DateFormats>::read_from(&mut bytes.as_slice()).unwrap();
+        let date_time_format_de = <DateTimeFormats>::read_from(&mut bytes.as_slice()).unwrap();
         assert_eq!(date_time_format, date_time_format_de);
 
         let date_time_with_tz = DateTime::parse_from_rfc3339("2020-10-09T23:10:10.100-11:00").unwrap();
-        let date_time_with_tz_format = DateFormats::DateTimeWithTz(date_time_with_tz);
+        let date_time_with_tz_format = DateTimeFormats::DateTimeWithTz(date_time_with_tz);
         let mut bytes = vec![];
         date_time_with_tz_format
             .write_to(&mut bytes)
             .unwrap();
-        let date_time_with_tz_format_de = <DateFormats>::read_from(&mut bytes.as_slice()).unwrap();
+        let date_time_with_tz_format_de = <DateTimeFormats>::read_from(&mut bytes.as_slice()).unwrap();
         assert_eq!(date_time_with_tz_format, date_time_with_tz_format_de);
     }
 }

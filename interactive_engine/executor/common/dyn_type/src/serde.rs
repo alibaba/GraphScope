@@ -19,7 +19,7 @@ use std::io;
 
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
-use crate::{de_dyn_obj, DateFormats, Object, Primitives};
+use crate::{de_dyn_obj, DateTimeFormats, Object, Primitives};
 use chrono::{Datelike, Timelike};
 
 impl Encode for Primitives {
@@ -91,27 +91,27 @@ fn type_id_from_bytes<R: ReadExt>(reader: &mut R) -> io::Result<TypeId> {
     Ok(unsafe { std::mem::transmute(number) })
 }
 
-impl Encode for DateFormats {
+impl Encode for DateTimeFormats {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
         match self {
-            DateFormats::Date(d) => {
+            DateTimeFormats::Date(d) => {
                 writer.write_u8(0)?;
                 writer.write_i16(d.year() as i16)?;
                 writer.write_u8(d.month() as u8)?;
                 writer.write_u8(d.day() as u8)?;
             }
-            DateFormats::Time(t) => {
+            DateTimeFormats::Time(t) => {
                 writer.write_u8(1)?;
                 writer.write_u8(t.hour() as u8)?;
                 writer.write_u8(t.minute() as u8)?;
                 writer.write_u8(t.second() as u8)?;
                 writer.write_u32(t.nanosecond() as u32)?;
             }
-            DateFormats::DateTime(datetime) => {
+            DateTimeFormats::DateTime(datetime) => {
                 writer.write_u8(2)?;
                 writer.write_i64(datetime.timestamp_millis())?;
             }
-            DateFormats::DateTimeWithTz(datetime_with_tz) => {
+            DateTimeFormats::DateTimeWithTz(datetime_with_tz) => {
                 writer.write_u8(3)?;
                 writer.write_i64(
                     datetime_with_tz
@@ -125,7 +125,7 @@ impl Encode for DateFormats {
     }
 }
 
-impl Decode for DateFormats {
+impl Decode for DateTimeFormats {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
         let e = reader.read_u8()?;
         match e {
@@ -139,7 +139,7 @@ impl Decode for DateFormats {
                         format!("invalid date {:?}-{:?}-{:?}", year, month, day),
                     ),
                 )?;
-                Ok(DateFormats::Date(date))
+                Ok(DateTimeFormats::Date(date))
             }
             1 => {
                 let hour = <u8>::read_from(reader)?;
@@ -152,7 +152,7 @@ impl Decode for DateFormats {
                         io::ErrorKind::Other,
                         format!("invalid time {:?}:{:?}:{:?}.{:?}", hour, minute, second, nano / 1000_000),
                     ))?;
-                Ok(DateFormats::Time(time))
+                Ok(DateTimeFormats::Time(time))
             }
             2 => {
                 let timestamp_millis = <i64>::read_from(reader)?;
@@ -162,7 +162,7 @@ impl Decode for DateFormats {
                         format!("invalid datetime {:?}", timestamp_millis),
                     ),
                 )?;
-                Ok(DateFormats::DateTime(date_time))
+                Ok(DateTimeFormats::DateTime(date_time))
             }
             3 => {
                 let native_local_timestamp_millis = <i64>::read_from(reader)?;
@@ -184,7 +184,7 @@ impl Decode for DateFormats {
                         ),
                     ))?;
 
-                Ok(DateFormats::DateTimeWithTz(date_time))
+                Ok(DateTimeFormats::DateTimeWithTz(date_time))
             }
             _ => Err(io::Error::new(io::ErrorKind::Other, "unreachable")),
         }
@@ -285,7 +285,7 @@ impl Decode for Object {
             }
             6 => Ok(Object::None),
             7 => {
-                let date = <DateFormats>::read_from(reader)?;
+                let date = <DateTimeFormats>::read_from(reader)?;
                 Ok(Object::DateFormat(date))
             }
             _ => Err(io::Error::new(io::ErrorKind::Other, "not supported")),

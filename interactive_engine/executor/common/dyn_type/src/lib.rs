@@ -34,7 +34,7 @@ use std::io;
 
 use dyn_clonable::*;
 pub use error::CastError;
-pub use object::{BorrowObject, DateFormats, Object, OwnedOrRef, Primitives};
+pub use object::{BorrowObject, DateTimeFormats, Object, OwnedOrRef, Primitives};
 pub use serde_dyn::{de_dyn_obj, register_type};
 
 #[clonable]
