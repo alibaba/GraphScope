@@ -76,6 +76,9 @@ kill_service(){
     info "Kill Service success"
 }
 
+# kill service when exit
+trap kill_service EXIT
+
 create_ir_conf(){
     rm ${HQPS_IR_CONF} || true
     echo "engine.type: hiactor" >> ${HQPS_IR_CONF}

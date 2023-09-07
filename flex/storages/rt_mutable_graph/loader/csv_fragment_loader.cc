@@ -193,13 +193,14 @@ static void set_vertex_properties(gs::ColumnBase* col,
                                   std::shared_ptr<arrow::ChunkedArray> array,
                                   const std::vector<vid_t>& vids) {
   auto type = array->type();
+  size_t cur_ind = 0;
   if (type == arrow::int64()) {
     for (auto j = 0; j < array->num_chunks(); ++j) {
       auto casted =
           std::static_pointer_cast<arrow::Int64Array>(array->chunk(j));
       for (auto k = 0; k < casted->length(); ++k) {
         col->set_any(
-            vids[k],
+            vids[cur_ind++],
             std::move(AnyConverter<int64_t>::to_any(casted->Value(k))));
       }
     }
@@ -209,7 +210,7 @@ static void set_vertex_properties(gs::ColumnBase* col,
           std::static_pointer_cast<arrow::Int32Array>(array->chunk(j));
       for (auto k = 0; k < casted->length(); ++k) {
         col->set_any(
-            vids[k],
+            vids[cur_ind++],
             std::move(AnyConverter<int32_t>::to_any(casted->Value(k))));
       }
     }
@@ -218,7 +219,7 @@ static void set_vertex_properties(gs::ColumnBase* col,
       auto casted =
           std::static_pointer_cast<arrow::DoubleArray>(array->chunk(j));
       for (auto k = 0; k < casted->length(); ++k) {
-        col->set_any(vids[k],
+        col->set_any(vids[cur_ind++],
                      std::move(AnyConverter<double>::to_any(casted->Value(k))));
       }
     }
@@ -230,8 +231,13 @@ static void set_vertex_properties(gs::ColumnBase* col,
         auto str = casted->GetView(k);
         std::string_view str_view(str.data(), str.size());
         col->set_any(
-            vids[k],
+            vids[cur_ind++],
             std::move(AnyConverter<std::string_view>::to_any(str_view)));
+      }
+      for (auto k = 0; k < std::min((int64_t) 10, casted->length()); ++k) {
+        VLOG(10) << "set vertex property: " << vids[k] << ", "
+                 << casted->GetString(k) << " "
+                 << col->get(vids[k]).to_string();
       }
     }
   } else if (type == arrow::utf8()) {
@@ -242,7 +248,7 @@ static void set_vertex_properties(gs::ColumnBase* col,
         auto str = casted->GetView(k);
         std::string_view str_view(str.data(), str.size());
         col->set_any(
-            vids[k],
+            vids[cur_ind++],
             std::move(AnyConverter<std::string_view>::to_any(str_view)));
       }
     }
