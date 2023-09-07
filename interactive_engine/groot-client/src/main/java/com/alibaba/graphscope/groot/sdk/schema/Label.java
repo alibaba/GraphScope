@@ -7,6 +7,7 @@ import java.util.List;
 
 public class Label {
     protected String label;
+    protected int id;
     protected List<Property> properties;
     protected String comment;
     protected TypeEnumPb type;
@@ -21,6 +22,19 @@ public class Label {
 
     public String getComment() {
         return comment;
+    }
+
+    public Property getProperty(String name) {
+        for (Property prop : properties) {
+            if (prop.getName().equals(name)) {
+                return prop;
+            }
+        }
+        return null;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public TypeDefPb toProto() {

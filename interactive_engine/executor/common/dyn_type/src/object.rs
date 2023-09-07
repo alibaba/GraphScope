@@ -23,6 +23,7 @@ use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 
+use chrono::{DateTime, Datelike, FixedOffset, NaiveDate, NaiveDateTime, NaiveTime, Timelike};
 use itertools::Itertools;
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
@@ -37,6 +38,10 @@ pub enum RawType {
     ULLong,
     Float,
     String,
+    Date,
+    Time,
+    DateTime,
+    DateTimeWithTz,
     Blob(usize),
     Vector,
     KV,
@@ -409,6 +414,190 @@ impl PartialOrd for Primitives {
     }
 }
 
+#[derive(Clone, Debug, Hash)]
+pub enum DateTimeFormats {
+    // preserve a date format (ISO format) like 2019-01-01
+    Date(NaiveDate),
+    // preserve a time format (ISO format) like 00:00:00.000
+    Time(NaiveTime),
+    // preserve a date time format (ISO format) with UTC timezone, like 2019-01-01 00:00:00.000
+    DateTime(NaiveDateTime),
+    // preserve a date time format (ISO format) with specified timezone, like 2019-01-01T00:00:00.000+08:00
+    DateTimeWithTz(DateTime<FixedOffset>),
+}
+
+impl DateTimeFormats {
+    #[inline]
+    pub fn raw_type(&self) -> RawType {
+        match self {
+            DateTimeFormats::Date(_) => RawType::Date,
+            DateTimeFormats::Time(_) => RawType::Time,
+            DateTimeFormats::DateTime(_) => RawType::DateTime,
+            DateTimeFormats::DateTimeWithTz(_) => RawType::DateTimeWithTz,
+        }
+    }
+
+    #[inline]
+    pub fn as_date(&self) -> Result<NaiveDate, CastError> {
+        match self {
+            DateTimeFormats::Date(d) => Ok(*d),
+            DateTimeFormats::Time(_) => Err(CastError::new::<NaiveTime>(RawType::Time)),
+            DateTimeFormats::DateTime(dt) => Ok(dt.date()),
+            DateTimeFormats::DateTimeWithTz(dt) => Ok(dt.date_naive()),
+        }
+    }
+
+    #[inline]
+    pub fn as_time(&self) -> Result<NaiveTime, CastError> {
+        match self {
+            DateTimeFormats::Date(_) => Err(CastError::new::<NaiveDate>(RawType::Date)),
+            DateTimeFormats::Time(t) => Ok(*t),
+            DateTimeFormats::DateTime(dt) => Ok(dt.time()),
+            DateTimeFormats::DateTimeWithTz(dt) => Ok(dt.time()),
+        }
+    }
+
+    #[inline]
+    pub fn as_date_time(&self) -> Result<NaiveDateTime, CastError> {
+        match self {
+            DateTimeFormats::Date(_) => Err(CastError::new::<NaiveDate>(RawType::DateTime)),
+            DateTimeFormats::Time(_) => Err(CastError::new::<NaiveTime>(RawType::DateTime)),
+            DateTimeFormats::DateTime(dt) => Ok(*dt),
+            DateTimeFormats::DateTimeWithTz(dt) => Ok(dt.naive_local()),
+        }
+    }
+
+    #[inline]
+    pub fn as_date_time_with_tz(&self) -> Result<DateTime<FixedOffset>, CastError> {
+        match self {
+            DateTimeFormats::Date(_) => Err(CastError::new::<NaiveDate>(RawType::DateTimeWithTz)),
+            DateTimeFormats::Time(_) => Err(CastError::new::<NaiveTime>(RawType::DateTimeWithTz)),
+            DateTimeFormats::DateTime(dt) => dt
+                .and_local_timezone(FixedOffset::east_opt(0).unwrap())
+                .single()
+                .ok_or(CastError::new::<NaiveDateTime>(RawType::DateTimeWithTz)),
+            DateTimeFormats::DateTimeWithTz(dt) => Ok(*dt),
+        }
+    }
+
+    pub fn year(&self) -> Option<i32> {
+        match self {
+            DateTimeFormats::Date(d) => Some(d.year()),
+            DateTimeFormats::Time(_) => None,
+            DateTimeFormats::DateTime(dt) => Some(dt.year()),
+            DateTimeFormats::DateTimeWithTz(dt) => Some(dt.year()),
+        }
+    }
+
+    pub fn month(&self) -> Option<u32> {
+        match self {
+            DateTimeFormats::Date(d) => Some(d.month()),
+            DateTimeFormats::Time(_) => None,
+            DateTimeFormats::DateTime(dt) => Some(dt.month()),
+            DateTimeFormats::DateTimeWithTz(dt) => Some(dt.month()),
+        }
+    }
+
+    pub fn day(&self) -> Option<u32> {
+        match self {
+            DateTimeFormats::Date(d) => Some(d.day()),
+            DateTimeFormats::Time(_) => None,
+            DateTimeFormats::DateTime(dt) => Some(dt.day()),
+            DateTimeFormats::DateTimeWithTz(dt) => Some(dt.day()),
+        }
+    }
+
+    pub fn hour(&self) -> Option<u32> {
+        match self {
+            DateTimeFormats::Date(_) => None,
+            DateTimeFormats::Time(t) => Some(t.hour()),
+            DateTimeFormats::DateTime(dt) => Some(dt.hour()),
+            DateTimeFormats::DateTimeWithTz(dt) => Some(dt.hour()),
+        }
+    }
+
+    pub fn minute(&self) -> Option<u32> {
+        match self {
+            DateTimeFormats::Date(_) => None,
+            DateTimeFormats::Time(t) => Some(t.minute()),
+            DateTimeFormats::DateTime(dt) => Some(dt.minute()),
+            DateTimeFormats::DateTimeWithTz(dt) => Some(dt.minute()),
+        }
+    }
+
+    pub fn second(&self) -> Option<u32> {
+        match self {
+            DateTimeFormats::Date(_) => None,
+            DateTimeFormats::Time(t) => Some(t.second()),
+            DateTimeFormats::DateTime(dt) => Some(dt.second()),
+            DateTimeFormats::DateTimeWithTz(dt) => Some(dt.second()),
+        }
+    }
+
+    pub fn millisecond(&self) -> Option<u32> {
+        match self {
+            DateTimeFormats::Date(_) => None,
+            DateTimeFormats::Time(t) => Some(t.nanosecond() / 1_000_000),
+            DateTimeFormats::DateTime(dt) => Some(dt.nanosecond() / 1_000_000),
+            DateTimeFormats::DateTimeWithTz(dt) => Some(dt.nanosecond() / 1_000_000),
+        }
+    }
+
+    pub fn timestamp(&self) -> Option<i64> {
+        match self {
+            DateTimeFormats::Date(d) => d.and_hms_opt(0, 0, 0).map(|dt| dt.timestamp()),
+            DateTimeFormats::Time(_) => None,
+            DateTimeFormats::DateTime(dt) => Some(dt.timestamp()),
+            DateTimeFormats::DateTimeWithTz(dt) => Some(dt.timestamp()),
+        }
+    }
+
+    pub fn timestamp_millis(&self) -> Option<i64> {
+        match self {
+            DateTimeFormats::Date(d) => d
+                .and_hms_opt(0, 0, 0)
+                .map(|dt| dt.timestamp_millis()),
+            DateTimeFormats::Time(_) => None,
+            DateTimeFormats::DateTime(dt) => Some(dt.timestamp_millis()),
+            DateTimeFormats::DateTimeWithTz(dt) => Some(dt.timestamp_millis()),
+        }
+    }
+}
+
+impl PartialEq for DateTimeFormats {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (DateTimeFormats::Date(l), DateTimeFormats::Date(r)) => l.eq(r),
+            (DateTimeFormats::Time(l), DateTimeFormats::Time(r)) => l.eq(r),
+            (DateTimeFormats::DateTime(l), DateTimeFormats::DateTime(r)) => l.eq(r),
+            (DateTimeFormats::DateTimeWithTz(l), DateTimeFormats::DateTimeWithTz(r)) => l.eq(r),
+            (DateTimeFormats::DateTime(l), DateTimeFormats::DateTimeWithTz(r)) => l.eq(&r.naive_utc()),
+            (DateTimeFormats::DateTimeWithTz(l), DateTimeFormats::DateTime(r)) => l.naive_utc().eq(r),
+            _ => false,
+        }
+    }
+}
+
+impl Eq for DateTimeFormats {}
+
+impl PartialOrd for DateTimeFormats {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (DateTimeFormats::Date(l), DateTimeFormats::Date(r)) => l.partial_cmp(r),
+            (DateTimeFormats::Time(l), DateTimeFormats::Time(r)) => l.partial_cmp(r),
+            (DateTimeFormats::DateTime(l), DateTimeFormats::DateTime(r)) => l.partial_cmp(r),
+            (DateTimeFormats::DateTimeWithTz(l), DateTimeFormats::DateTimeWithTz(r)) => l.partial_cmp(r),
+            (DateTimeFormats::DateTime(l), DateTimeFormats::DateTimeWithTz(r)) => {
+                l.partial_cmp(&r.naive_utc())
+            }
+            (DateTimeFormats::DateTimeWithTz(l), DateTimeFormats::DateTime(r)) => {
+                l.naive_utc().partial_cmp(r)
+            }
+            _ => None,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum Object {
     Primitive(Primitives),
@@ -416,6 +605,7 @@ pub enum Object {
     Vector(Vec<Object>),
     KV(BTreeMap<Object, Object>),
     Blob(Box<[u8]>),
+    DateFormat(DateTimeFormats),
     DynOwned(Box<dyn DynType>),
     None,
 }
@@ -430,6 +620,7 @@ impl ToString for Object {
             Object::Vector(v) => format!("{:?}", v),
             Object::KV(kv) => format!("{:?}", kv),
             Object::Blob(b) => format!("{:?}", b),
+            Object::DateFormat(d) => format!("{:?}", d),
             Object::DynOwned(_) => "unknown dynamic type".to_string(),
             Object::None => "".to_string(),
         }
@@ -444,6 +635,7 @@ pub enum BorrowObject<'a> {
     Vector(&'a [Object]),
     KV(&'a BTreeMap<Object, Object>),
     Blob(&'a [u8]),
+    DateFormat(&'a DateTimeFormats),
     /// To borrow from `Object::DynOwned`, and it can be cloned back to `Object::DynOwned`
     DynRef(&'a Box<dyn DynType>),
     None,
@@ -458,6 +650,7 @@ impl<'a> ToString for BorrowObject<'a> {
             Vector(v) => format!("{:?}", v),
             KV(kv) => format!("{:?}", kv),
             Blob(b) => format!("{:?}", b),
+            DateFormat(df) => format!("{:?}", df),
             DynRef(_) => "unknown dynamic type".to_string(),
             None => "None".to_string(),
         }
@@ -495,6 +688,7 @@ impl Object {
             Object::Vector(_) => RawType::Vector,
             Object::KV(_) => RawType::KV,
             Object::Blob(b) => RawType::Blob(b.len()),
+            Object::DateFormat(df) => df.raw_type(),
             Object::DynOwned(_) => RawType::Unknown,
             Object::None => RawType::None,
         }
@@ -507,6 +701,7 @@ impl Object {
             Object::Vector(v) => BorrowObject::Vector(v.as_slice()),
             Object::KV(kv) => BorrowObject::KV(kv),
             Object::Blob(v) => BorrowObject::Blob(v.as_ref()),
+            Object::DateFormat(d) => BorrowObject::DateFormat(d),
             Object::DynOwned(v) => BorrowObject::DynRef(v),
             Object::None => BorrowObject::None,
         }
@@ -648,6 +843,15 @@ impl Object {
         }
     }
 
+    #[inline]
+    pub fn as_date_format(&self) -> Result<&DateTimeFormats, CastError> {
+        match self {
+            Object::DateFormat(d) => Ok(d),
+            Object::DynOwned(x) => try_downcast_ref!(x, DateTimeFormats),
+            _ => Err(CastError::new::<DateTimeFormats>(self.raw_type())),
+        }
+    }
+
     pub fn get<T: DynType + Clone>(&self) -> Result<OwnedOrRef<T>, CastError> {
         match self {
             Object::Primitive(p) => {
@@ -703,6 +907,7 @@ impl<'a> BorrowObject<'a> {
             BorrowObject::Vector(_) => RawType::Vector,
             BorrowObject::KV(_) => RawType::KV,
             BorrowObject::Blob(b) => RawType::Blob(b.len()),
+            BorrowObject::DateFormat(df) => df.raw_type(),
             BorrowObject::DynRef(_) => RawType::Unknown,
             BorrowObject::None => RawType::None,
         }
@@ -844,6 +1049,15 @@ impl<'a> BorrowObject<'a> {
         }
     }
 
+    #[inline]
+    pub fn as_date_format(&self) -> Result<&DateTimeFormats, CastError> {
+        match self {
+            BorrowObject::DateFormat(d) => Ok(d),
+            BorrowObject::DynRef(x) => try_downcast_ref!(x, DateTimeFormats),
+            _ => Err(CastError::new::<DateTimeFormats>(self.raw_type())),
+        }
+    }
+
     pub fn try_to_owned(&self) -> Option<Object> {
         match *self {
             BorrowObject::Primitive(p) => Some(Object::Primitive(p)),
@@ -853,6 +1067,7 @@ impl<'a> BorrowObject<'a> {
             BorrowObject::Blob(b) => Some(Object::Blob(b.to_vec().into_boxed_slice())),
             BorrowObject::DynRef(d) => Some(Object::DynOwned((*d).clone())),
             BorrowObject::None => Some(Object::None),
+            BorrowObject::DateFormat(df) => Some(Object::DateFormat(df.clone())),
         }
     }
 
@@ -1079,6 +1294,9 @@ macro_rules! hash {
             $crate::$ty::None => {
                 "".hash($state);
             }
+            $crate::$ty::DateFormat(df) => {
+                df.hash($state);
+            }
             _ => unimplemented!(),
         }
     };
@@ -1281,6 +1499,30 @@ impl<K: Into<Object>, V: Into<Object>> From<Vec<(K, V)>> for Object {
                 .map(|(k, v)| (k.into(), v.into()))
                 .collect::<BTreeMap<_, _>>(),
         )
+    }
+}
+
+impl From<NaiveDate> for Object {
+    fn from(date: NaiveDate) -> Self {
+        Object::DateFormat(DateTimeFormats::Date(date))
+    }
+}
+
+impl From<NaiveDateTime> for Object {
+    fn from(date_time: NaiveDateTime) -> Self {
+        Object::DateFormat(DateTimeFormats::DateTime(date_time))
+    }
+}
+
+impl From<NaiveTime> for Object {
+    fn from(time: NaiveTime) -> Self {
+        Object::DateFormat(DateTimeFormats::Time(time))
+    }
+}
+
+impl From<DateTime<FixedOffset>> for Object {
+    fn from(date_time_with_tz: DateTime<FixedOffset>) -> Self {
+        Object::DateFormat(DateTimeFormats::DateTimeWithTz(date_time_with_tz))
     }
 }
 
