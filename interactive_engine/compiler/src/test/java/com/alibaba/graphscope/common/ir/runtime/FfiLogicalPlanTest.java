@@ -184,7 +184,8 @@ public class FfiLogicalPlanTest {
         RelNode project =
                 builder.project(ImmutableList.of(caseExpr), ImmutableList.of("case")).build();
         Assert.assertEquals(
-                "GraphLogicalProject(case=[CASE(=(a.name, 'marko'), 1, 3)], isAppend=[false])\n"
+                "GraphLogicalProject(case=[CASE(=(a.name, _UTF-8'marko'), 1, 3)],"
+                        + " isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])",
                 project.explain().trim());

@@ -94,7 +94,7 @@ public class MatchTest {
                 "GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[c], fusedFilter=[[=(DEFAULT.name, 'marko')]], opt=[END])\n"
+                    + " alias=[c], fusedFilter=[[=(DEFAULT.name, _UTF-8'marko')]], opt=[END])\n"
                     + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[knows]}], alias=[DEFAULT], fusedFilter=[[=(DEFAULT.weight,"
                     + " 1.0E0)]], opt=[OUT])\n"
