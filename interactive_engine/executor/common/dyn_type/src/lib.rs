@@ -17,6 +17,7 @@
 extern crate lazy_static;
 extern crate pegasus_common;
 
+extern crate chrono;
 extern crate dyn_clonable;
 
 pub mod arith;
@@ -33,7 +34,7 @@ use std::io;
 
 use dyn_clonable::*;
 pub use error::CastError;
-pub use object::{BorrowObject, Object, OwnedOrRef, Primitives};
+pub use object::{BorrowObject, DateTimeFormats, Object, OwnedOrRef, Primitives};
 pub use serde_dyn::{de_dyn_obj, register_type};
 
 #[clonable]
