@@ -50,19 +50,7 @@ class CSVFragmentLoader : public IFragmentLoader {
     edge_label_num_ = schema_.edge_label_num();
   }
 
-  ~CSVFragmentLoader() {
-    LOG(INFO) << "Performance of CSVFragmentLoader:";
-    LOG(INFO) << "read_vertex_table_time: " << read_vertex_table_time_;
-    LOG(INFO) << "read_edge_table_time: " << read_edge_table_time_;
-    LOG(INFO) << "convert_to_internal_vertex_time: "
-              << convert_to_internal_vertex_time_;
-    LOG(INFO) << "convert_to_internal_edge_time: "
-              << convert_to_internal_edge_time_;
-    LOG(INFO) << "basic_frag_loader_vertex_time: "
-              << basic_frag_loader_vertex_time_;
-    LOG(INFO) << "basic_frag_loader_edge_time: "
-              << basic_frag_loader_edge_time_;
-  }
+  ~CSVFragmentLoader() {}
 
   FragmentLoaderType GetFragmentLoaderType() const override {
     return FragmentLoaderType::kCSVFragmentLoader;
@@ -121,20 +109,16 @@ class CSVFragmentLoader : public IFragmentLoader {
       std::vector<int32_t>& oe_degree,
       std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& edges);
 
-  // Create VertexStreamReader
   std::shared_ptr<arrow::csv::StreamingReader> createVertexStreamReader(
       label_t v_label, const std::string& v_file);
 
-  // Create VertexTableReader
   std::shared_ptr<arrow::csv::TableReader> createVertexTableReader(
       label_t v_label, const std::string& v_file);
 
-  // Create EdgeStreamReader
   std::shared_ptr<arrow::csv::StreamingReader> createEdgeStreamReader(
       label_t src_label_id, label_t dst_label_id, label_t e_label,
       const std::string& e_file);
 
-  // Create EdgeTableReader
   std::shared_ptr<arrow::csv::TableReader> createEdgeTableReader(
       label_t src_label_id, label_t dst_label_id, label_t e_label,
       const std::string& e_file);

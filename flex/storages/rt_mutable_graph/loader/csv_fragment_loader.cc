@@ -81,8 +81,6 @@ static void put_escape_char_option(const LoadingConfig& loading_config,
     LOG(FATAL) << "Escape char should be a single character";
   }
   parse_options.escape_char = escape_str[0];
-  // whether to use escaping
-
   parse_options.escaping = loading_config.GetIsEscaping();
 }
 
@@ -102,11 +100,7 @@ static void put_quote_char_option(const LoadingConfig& loading_config,
     LOG(FATAL) << "Quote char should be a single character";
   }
   parse_options.quote_char = quoting_str[0];
-
-  // isQuoting
   parse_options.quoting = loading_config.GetIsQuoting();
-
-  // double quote
   parse_options.double_quote = loading_config.GetIsDoubleQuoting();
 }
 
@@ -163,7 +157,6 @@ static void check_edge_invariant(
         column_mappings,
     size_t src_col_ind, size_t dst_col_ind, label_t src_label_i,
     label_t dst_label_i, label_t edge_label_i) {
-  // check column mappings consistent,
   // TODO(zhanglei): Check column mappings after multiple property on edge is
   // supported
   if (column_mappings.size() > 1) {
@@ -296,7 +289,6 @@ static void append_edges(
     CHECK(edata_cols.size() == 1);
     auto edata_col = edata_cols[0];
     CHECK(src_col->length() == edata_col->length());
-    // iterate and put data
     size_t cur_ind = old_size;
     auto type = edata_col->type();
     if (type != CppTypeToArrowType<EDATA_T>::TypeValue()) {
@@ -415,7 +407,6 @@ CSVFragmentLoader::createVertexTableReader(label_t v_label,
   arrow::csv::ParseOptions parse_options;
   fillVertexReaderMeta(read_options, parse_options, convert_options, v_file,
                        v_label);
-  // create arrow::io::stream from file
 
   auto read_result = arrow::io::ReadableFile::Open(v_file);
   if (!read_result.ok()) {
@@ -433,17 +424,14 @@ CSVFragmentLoader::createVertexTableReader(label_t v_label,
   return res.ValueOrDie();
 }
 
-// Create VertexStreamReader
 std::shared_ptr<arrow::csv::StreamingReader>
 CSVFragmentLoader::createVertexStreamReader(label_t v_label,
                                             const std::string& v_file) {
-  // Create options.
   arrow::csv::ConvertOptions convert_options;
   arrow::csv::ReadOptions read_options;
   arrow::csv::ParseOptions parse_options;
   fillVertexReaderMeta(read_options, parse_options, convert_options, v_file,
                        v_label);
-  // create arrow::io::stream from file
 
   auto read_result = arrow::io::ReadableFile::Open(v_file);
   if (!read_result.ok()) {
@@ -461,7 +449,6 @@ CSVFragmentLoader::createVertexStreamReader(label_t v_label,
   return res.ValueOrDie();
 }
 
-// Create EdgeTableReader
 std::shared_ptr<arrow::csv::StreamingReader>
 CSVFragmentLoader::createEdgeStreamReader(label_t src_label_id,
                                           label_t dst_label_id,
@@ -523,7 +510,6 @@ void CSVFragmentLoader::addVertexBatch(
     const std::vector<std::shared_ptr<arrow::Array>>& property_cols) {
   size_t row_num = primary_key_col->length();
   CHECK_EQ(primary_key_col->type()->id(), arrow::Type::INT64);
-  // check row num
   auto col_num = property_cols.size();
   for (size_t i = 0; i < col_num; ++i) {
     CHECK_EQ(property_cols[i]->length(), row_num);
@@ -537,7 +523,6 @@ void CSVFragmentLoader::addVertexBatch(
   std::vector<vid_t> vids;
   vids.reserve(row_num);
   for (auto i = 0; i < row_num; ++i) {
-    // add to indexer
     if (!indexer.add(casted_array->Value(i), vid)) {
       LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i) << " for "
                  << schema_.get_vertex_label_name(v_label_id);
@@ -559,9 +544,7 @@ void CSVFragmentLoader::addVertexBatch(
         chunked_array, vids);
   }
 
-  // basic_fragment_loader_.AddVertexBatch(v_label_id, vids, prop_vec);
   t += grape::GetCurrentTime();
-  // basic_frag_loader_vertex_time_.fetch_add(t);
   for (double tmp = basic_frag_loader_vertex_time_;
        !basic_frag_loader_vertex_time_.compare_exchange_weak(tmp, tmp + t);) {}
 
@@ -589,7 +572,6 @@ void CSVFragmentLoader::addVertexBatch(
     auto casted_array = std::static_pointer_cast<arrow::Int64Array>(chunk);
     for (auto j = 0; j < casted_array->length(); ++j) {
       vid_t vid;
-      // add to indexer
       if (!indexer.add(casted_array->Value(j), vid)) {
         LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(j)
                    << " for " << schema_.get_vertex_label_name(v_label_id);
@@ -599,7 +581,6 @@ void CSVFragmentLoader::addVertexBatch(
   }
 
   t += grape::GetCurrentTime();
-  // convert_to_internal_vertex_time_.fetch_add(t);
   for (double tmp = convert_to_internal_vertex_time_;
        !convert_to_internal_vertex_time_.compare_exchange_weak(tmp, tmp + t);) {
   }
@@ -611,9 +592,7 @@ void CSVFragmentLoader::addVertexBatch(
     auto& col_ptrs = table.column_ptrs();
     set_vertex_properties(col_ptrs[i], array, vids);
   }
-  // basic_fragment_loader_.AddVertexBatch(v_label_id, vids, prop_vec);
   t += grape::GetCurrentTime();
-  // basic_frag_loader_vertex_time_.fetch_add(t);
   for (double tmp = basic_frag_loader_vertex_time_;
        !basic_frag_loader_vertex_time_.compare_exchange_weak(tmp, tmp + t);) {}
 
@@ -629,11 +608,9 @@ void CSVFragmentLoader::addVerticesImplWithTableReader(
   size_t primary_key_ind = std::get<2>(primary_key);
   auto reader = createVertexTableReader(v_label_id, v_file);
   std::shared_ptr<arrow::Table> table;
-  // read first batch
   double t = -grape::GetCurrentTime();
   auto result = reader->Read();
   t += grape::GetCurrentTime();
-  // read_vertex_table_time_.fetch_add(t);
   for (double tmp = read_vertex_table_time_;
        !read_vertex_table_time_.compare_exchange_weak(tmp, tmp + t);) {}
 
@@ -646,13 +623,11 @@ void CSVFragmentLoader::addVerticesImplWithTableReader(
   if (table == nullptr) {
     LOG(FATAL) << "Empty file: " << v_file;
   }
-  // get header
   auto header = table->schema()->field_names();
   auto schema_column_names = schema_.get_vertex_property_names(v_label_id);
   CHECK(schema_column_names.size() + 1 == header.size());
   VLOG(10) << "Find header of size: " << header.size();
 
-  // insert vertex properties to basic_fragment_loader_
   auto columns = table->columns();
   CHECK(primary_key_ind < columns.size());
   auto primary_key_column = columns[primary_key_ind];
@@ -672,13 +647,11 @@ void CSVFragmentLoader::addVerticesImplWithStreamReader(
   size_t primary_key_ind = std::get<2>(primary_key);
   auto reader = createVertexStreamReader(v_label_id, v_file);
   std::shared_ptr<arrow::RecordBatch> record_batch;
-  // read first batch
   bool first_batch = true;
   while (true) {
     double t = -grape::GetCurrentTime();
     auto status = reader->ReadNext(&record_batch);
     t += grape::GetCurrentTime();
-    // read_vertex_table_time_.fetch_add(t);
     for (double tmp = read_vertex_table_time_;
          !read_vertex_table_time_.compare_exchange_weak(tmp, tmp + t);) {}
     if (!status.ok()) {
@@ -697,7 +670,6 @@ void CSVFragmentLoader::addVerticesImplWithStreamReader(
       first_batch = false;
     }
 
-    // insert vertex properties to basic_fragment_loader_
     auto columns = record_batch->columns();
     CHECK(primary_key_ind < columns.size());
     auto primary_key_column = columns[primary_key_ind];
@@ -709,7 +681,6 @@ void CSVFragmentLoader::addVerticesImplWithStreamReader(
   }
 }
 
-// AddVerticesImpl
 void CSVFragmentLoader::addVerticesImpl(label_t v_label_id,
                                         const std::string& v_label_name,
                                         const std::vector<std::string> v_files,
@@ -718,7 +689,6 @@ void CSVFragmentLoader::addVerticesImpl(label_t v_label_id,
            << v_label_name;
 
   for (auto& v_file : v_files) {
-    // Create reader.
     if (loading_config_.GetIsBatchReader()) {
       addVerticesImplWithStreamReader(v_file, v_label_id, indexer);
     } else {
@@ -730,7 +700,6 @@ void CSVFragmentLoader::addVerticesImpl(label_t v_label_id,
            << v_label_name;
 }
 
-// AddVertices
 void CSVFragmentLoader::addVertices(label_t v_label_id,
                                     const std::vector<std::string>& v_files) {
   auto primary_keys = schema_.get_vertex_primary_key(v_label_id);
@@ -747,7 +716,6 @@ void CSVFragmentLoader::addVertices(label_t v_label_id,
            << v_files.size() << " files.";
 
   IdIndexer<oid_t, vid_t> indexer;
-  // Match the records read from the file with the schema
 
   addVerticesImpl(v_label_id, v_label_name, v_files, indexer);
 
@@ -773,7 +741,6 @@ void CSVFragmentLoader::addEdgesImplWithTableReader(
   double t = -grape::GetCurrentTime();
   auto result = reader->Read();
   t += grape::GetCurrentTime();
-  // read_edge_table_time_.fetch_add(t);
   for (double tmp = read_edge_table_time_;
        !read_edge_table_time_.compare_exchange_weak(tmp, tmp + t);) {}
 
@@ -811,7 +778,6 @@ void CSVFragmentLoader::addEdgesImplWithTableReader(
   CHECK(property_cols.size() <= 1)
       << "Currently only support at most one property on edge";
   {
-    // add edges to vector
     CHECK(src_col->length() == dst_col->length());
     CHECK(src_col->type() == arrow::int64());
     CHECK(dst_col->type() == arrow::int64());
@@ -819,7 +785,6 @@ void CSVFragmentLoader::addEdgesImplWithTableReader(
     append_edges(src_col, dst_col, src_indexer, dst_indexer, property_cols,
                  parsed_edges, ie_degree, oe_degree);
     t += grape::GetCurrentTime();
-    // convert_to_internal_edge_time_.fetch_add(t);
     for (double tmp = convert_to_internal_edge_time_;
          !convert_to_internal_edge_time_.compare_exchange_weak(tmp, tmp + t);) {
     }
@@ -843,7 +808,6 @@ void CSVFragmentLoader::addEdgesImplWithStreamReader(
     double t = -grape::GetCurrentTime();
     auto status = reader->ReadNext(&record_batch);
     t += grape::GetCurrentTime();
-    // read_edge_table_time_.fetch_add(t);
     for (double tmp = read_edge_table_time_;
          !read_edge_table_time_.compare_exchange_weak(tmp, tmp + t);) {}
     if (!status.ok()) {
@@ -899,7 +863,6 @@ void CSVFragmentLoader::addEdgesImplWithStreamReader(
       append_edges(src_casted_array, dst_casted_array, src_indexer, dst_indexer,
                    property_cols, parsed_edges, ie_degree, oe_degree);
       t += grape::GetCurrentTime();
-      // convert_to_internal_edge_time_.fetch_add(t);
       for (double tmp = convert_to_internal_edge_time_;
            !convert_to_internal_edge_time_.compare_exchange_weak(tmp, tmp + t);
            tmp = convert_to_internal_edge_time_) {}
@@ -915,7 +878,6 @@ void CSVFragmentLoader::addEdgesImpl(label_t src_label_id, label_t dst_label_id,
       src_label_id, dst_label_id, e_label_id);
   auto src_dst_col_pair =
       loading_config_.GetEdgeSrcDstCol(src_label_id, dst_label_id, e_label_id);
-  // We currently only support one src primary key and one dst primary key
   if (src_dst_col_pair.first.size() != 1 ||
       src_dst_col_pair.second.size() != 1) {
     LOG(FATAL) << "We currently only support one src primary key and one "
@@ -962,7 +924,6 @@ void CSVFragmentLoader::addEdgesImpl(label_t src_label_id, label_t dst_label_id,
   VLOG(10) << "Finish putting: " << parsed_edges.size() << " edges";
 }
 
-// AddEdges
 void CSVFragmentLoader::addEdges(label_t src_label_i, label_t dst_label_i,
                                  label_t edge_label_i,
                                  const std::vector<std::string>& filenames) {
@@ -1036,7 +997,6 @@ void CSVFragmentLoader::addEdges(label_t src_label_i, label_t dst_label_i,
   }
 }
 
-// LoadVertices
 void CSVFragmentLoader::loadVertices() {
   auto vertex_sources = loading_config_.GetVertexLoadingMeta();
   if (vertex_sources.empty()) {
@@ -1089,15 +1049,11 @@ void CSVFragmentLoader::fillVertexReaderMeta(
     arrow::csv::ParseOptions& parse_options,
     arrow::csv::ConvertOptions& convert_options, const std::string& v_file,
     label_t v_label) const {
-  auto time_stamp_parser =
-      arrow::TimestampParser::MakeISO8601();  // 2011-08-17T14:26:59.961+0000
+  auto time_stamp_parser = arrow::TimestampParser::MakeISO8601();
   convert_options.timestamp_parsers.emplace_back(time_stamp_parser);
 
-  // set parse_options.delimiter
   put_delimiter_option(loading_config_, parse_options);
-  // set read_options.skip_rows
   bool header_row = put_skip_rows_option(loading_config_, read_options);
-  // set read_options.column_names
   put_column_names_option(loading_config_, header_row, v_file,
                           parse_options.delimiter, read_options);
   put_escape_char_option(loading_config_, parse_options);
@@ -1221,11 +1177,8 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
       arrow::TimestampParser::MakeISO8601();  // 2011-08-17T14:26:59.961+0000
   convert_options.timestamp_parsers.emplace_back(time_stamp_parser);
 
-  // set parse_options.delimiter
   put_delimiter_option(loading_config_, parse_options);
-  // set read_options.skip_rows
   bool header_row = put_skip_rows_option(loading_config_, read_options);
-  // set read_options.column_names
   put_column_names_option(loading_config_, header_row, e_file,
                           parse_options.delimiter, read_options);
   put_escape_char_option(loading_config_, parse_options);
@@ -1349,7 +1302,6 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
   }
 }
 
-// LoadEdges
 void CSVFragmentLoader::loadEdges() {
   auto& edge_sources = loading_config_.GetEdgeLoadingMeta();
 
@@ -1361,7 +1313,6 @@ void CSVFragmentLoader::loadEdges() {
   if (thread_num_ == 1) {
     LOG(INFO) << "Loading edges with single thread...";
     for (auto iter = edge_sources.begin(); iter != edge_sources.end(); ++iter) {
-      // initEdges(iter->first, iter->second);
       auto& src_label_id = std::get<0>(iter->first);
       auto& dst_label_id = std::get<1>(iter->first);
       auto& e_label_id = std::get<2>(iter->first);
@@ -1403,12 +1354,7 @@ void CSVFragmentLoader::loadEdges() {
   }
 }
 
-// implementations for CSVFragmentLoader
 void CSVFragmentLoader::LoadFragment(MutablePropertyFragment& fragment) {
-  // construct different type of basic fragment loader according to different
-  // ed types.
-
-  // First load vertices;
   loadVertices();
   loadEdges();
 
