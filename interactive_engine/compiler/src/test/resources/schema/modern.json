@@ -29,6 +29,14 @@
           },
           "data_type": 4,
           "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 3,
+            "name": "creationDate"
+          },
+          "data_type": 12,
+          "is_primary_key": false
         }
       ]
     },

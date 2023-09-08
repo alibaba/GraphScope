@@ -144,9 +144,11 @@ public class IrSchemaParser {
                 return 8;
             case STRING_LIST:
                 return 9;
-            case UNKNOWN:
+            case DATE:
+                return 12;
             default:
-                return 11;
+                throw new UnsupportedOperationException(
+                        "convert from DataType " + dataType + " to ir core is unsupported yet");
         }
     }
 }

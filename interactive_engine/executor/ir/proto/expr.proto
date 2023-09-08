@@ -140,6 +140,21 @@ message Case {
   Expression else_result_expression = 2;
 }
 
+// extract interval from a given expression which should be of temporal type 
+message Extract {
+  enum Interval {
+    YEAR = 0;
+    MONTH = 1;
+    DAY = 2;
+    HOUR = 3;
+    MINUTE = 4;
+    SECOND = 5;
+  }
+
+  Interval interval = 1;
+  Expression data_time = 2;
+}
+
 // An operator of expression is one of Logical, Arithmetic, Const and Variable.
 message ExprOpr {
   enum Brace {
@@ -157,9 +172,10 @@ message ExprOpr {
     // dynamic param in expression
     DynamicParam param = 9;
     Case case = 10;
+    Extract extract = 11;
   }
   // The data of type of ExprOpr
-  common.IrDataType node_type = 11;
+  common.IrDataType node_type = 12;
 }
 
 // An inner representation of an expression

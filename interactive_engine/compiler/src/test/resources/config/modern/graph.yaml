@@ -43,6 +43,11 @@ schema:
           property_name: lang
           property_type:
             primitive_type: DT_STRING
+        - property_id: 3
+          property_name: creationDate
+          property_type:
+            date:
+              date_format: DF_YYYY_MM_DD
       primary_keys:
         - id
   edge_types:

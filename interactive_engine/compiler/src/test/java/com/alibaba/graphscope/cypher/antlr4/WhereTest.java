@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rules.CoreRules;
+import org.apache.calcite.runtime.CalciteException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -261,5 +262,46 @@ public class WhereTest {
                     + " person]}], alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 after.explain().trim());
+    }
+
+    @Test
+    public void where_9_test() {
+        RelNode where =
+                Utils.eval(
+                                "Match (a:software) With a.creationDate as creationDate Where"
+                                    + " creationDate.month > 1990 and creationDate.day = 12 Return"
+                                    + " creationDate")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(creationDate=[creationDate], isAppend=[false])\n"
+                    + "  LogicalFilter(condition=[AND(>(EXTRACT(FLAG(MONTH), creationDate), 1990),"
+                    + " =(EXTRACT(FLAG(DAY), creationDate), 12))])\n"
+                    + "    GraphLogicalProject(creationDate=[a.creationDate], isAppend=[false])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[software]}],"
+                    + " alias=[a], opt=[VERTEX])",
+                where.explain().trim());
+    }
+
+    // expect to throw exceptions
+    @Test
+    public void where_10_test() {
+        try {
+            RelNode where =
+                    Utils.eval(
+                                    "Match (a:software) With a.name as creationDate Where"
+                                            + " creationDate.month > 1990 and creationDate.day = 12"
+                                            + " Return creationDate")
+                            .build();
+        } catch (CalciteException e) {
+            Assert.assertTrue(
+                    e.getMessage()
+                            .contains(
+                                    "Cannot apply EXTRACT to arguments of type 'EXTRACT(<INTERVAL"
+                                        + " MONTH>, <CHAR(1)>)'. Supported form(s):"
+                                        + " 'EXTRACT(<DATETIME_INTERVAL>, <DATETIME_INTERVAL>)'\n"
+                                        + "'EXTRACT(<DATETIME_INTERVAL>, <DATETIME>)'"));
+            return;
+        }
+        Assert.fail("should have thrown exceptions for property 'name' is not a date type");
     }
 }
