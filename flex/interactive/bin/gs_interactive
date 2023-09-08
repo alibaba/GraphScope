@@ -370,6 +370,10 @@ function update_engine_config_from_yaml(){
   if [[ -n "${default_graph}" ]]; then
     DATABASE_CURRENT_GRAPH_NAME="${default_graph}"
   fi
+  # update hiactor shard num
+  if [[ -n "${compute_engine_shard_num}" ]]; then
+    DATABASE_COMPUTE_ENGINE_SHARD_NUM="${compute_engine_shard_num}"
+  fi
   # compiler
   if [[ -n ${compiler_planner_is_on} ]]; then 
     DATABASE_COMPILER_PLANNER_IS_ON="${compiler_planner_is_on}"
@@ -380,6 +384,7 @@ function update_engine_config_from_yaml(){
   fi
   # append the founded compiler planner rules to DATABASE_COMPILER_PLANNER_RULES
   x=1
+  CURRENT_DATABASE_COMPILER_PLANNER_RULES=""
   while true; do
     compiler_planner_rules_x_key="compiler_planner_rules_${x}"
     compiler_planner_rules_x=$(eval echo "\$${compiler_planner_rules_x_key}")
@@ -387,11 +392,17 @@ function update_engine_config_from_yaml(){
       break
     fi
     # check compiler_planner_rules_x present in DATABASE_COMPILER_PLANNER_RULES, if not, append
-    if [[ ! "${DATABASE_COMPILER_PLANNER_RULES}" =~ "${compiler_planner_rules_x}" ]]; then
-      DATABASE_COMPILER_PLANNER_RULES="${DATABASE_COMPILER_PLANNER_RULES},${compiler_planner_rules_x}"
+    if [[ ! "${CURRENT_DATABASE_COMPILER_PLANNER_RULES}" =~ "${compiler_planner_rules_x}" ]]; then
+      CURRENT_DATABASE_COMPILER_PLANNER_RULES="${CURRENT_DATABASE_COMPILER_PLANNER_RULES},${compiler_planner_rules_x}"
     fi
     x=$((x + 1))
   done
+  # if CURRENT_DATABASE_COMPILER_PLANNER_RULES is not empty,override DATABASE_COMPILER_PLANNER_RULES
+  if [[ -n "${CURRENT_DATABASE_COMPILER_PLANNER_RULES}" ]]; then
+    # remove the first ','
+    CURRENT_DATABASE_COMPILER_PLANNER_RULES=$(echo "${CURRENT_DATABASE_COMPILER_PLANNER_RULES}" | sed 's/^,//g')
+    DATABASE_COMPILER_PLANNER_RULES="${CURRENT_DATABASE_COMPILER_PLANNER_RULES}"
+  fi
   if [[ -n "${compiler_endpoint_address}" ]]; then
     DATABASE_COMPILER_ENDPOINT_ADDRESS="${compiler_endpoint_address}"
   fi
@@ -1106,7 +1117,7 @@ function do_import(){
   info "Graph Schema exists"
   # copy the bulk_load_file to container
   bulk_load_file_name=$(basename "${bulk_load_file}")
-  docker_bulk_load_file="/tmp/${bulk_load_file_name}"
+  docker_bulk_load_file="${HOST_DB_TMP_DIR}/${bulk_load_file_name}"
   docker cp "${bulk_load_file}" "${GIE_DB_CONTAINER_NAME}:${docker_bulk_load_file}"
 
   docker_graph_data_dir="${DATABASE_WORKSPACE}/data//${graph_name}/indices"
@@ -1186,6 +1197,26 @@ function do_destroy() {
   if [ -f "${HOST_DB_ENV_FILE}" ]; then
     rm ${HOST_DB_ENV_FILE}
   fi
+  # rm the temp files used
+  if [ -f "${HOST_DB_TMP_DIR}/graph0.yaml" ]; then
+    rm ${HOST_DB_TMP_DIR}/graph0.yaml
+  fi
+  if [ -f "${HOST_DB_TMP_DIR}/.enable" ]; then
+    rm ${HOST_DB_TMP_DIR}/.enable
+  fi
+  # rm ${HOST_DB_TMP_DIR}/engine_config.yaml ${HOST_DB_TMP_DIR}/real_engine_config.yaml, ${HOST_DB_TMP_DIR}/graph_exists ${HOST_DB_TMP_DIR}/graph_loaded
+  if [ -f "${HOST_DB_TMP_DIR}/engine_config.yaml" ]; then
+    rm ${HOST_DB_TMP_DIR}/engine_config.yaml
+  fi
+  if [ -f "${HOST_DB_TMP_DIR}/real_engine_config.yaml" ]; then
+    rm ${HOST_DB_TMP_DIR}/real_engine_config.yaml
+  fi
+  if [ -f "${HOST_DB_TMP_DIR}/graph_exists" ]; then
+    rm ${HOST_DB_TMP_DIR}/graph_exists
+  fi
+  if [ -f "${HOST_DB_TMP_DIR}/graph_loaded" ]; then
+    rm ${HOST_DB_TMP_DIR}/graph_loaded
+  fi
 
   info "Finish destroy database"
 }
@@ -1242,7 +1273,7 @@ function do_start(){
     esac
   done
   # try parse default_graph from engine_config_file
-  # generate real engine config file, put it at /tmp/real_engine_config.yaml
+  # generate real engine config file, put it at ${HOST_DB_TMP_DIR}/real_engine_config.yaml
   if  [ -z "${graph_name}" ]; then
     graph_name=${DATABASE_CURRENT_GRAPH_NAME}
   else 
@@ -1255,7 +1286,7 @@ function do_start(){
     exit 1
   fi
 
-  real_engine_config_file="/tmp/real_engine_config.yaml"
+  real_engine_config_file="${HOST_DB_TMP_DIR}/real_engine_config.yaml"
   if [ -z "${engine_config_file}" ]; then
     if ! generate_real_engine_conf "${real_engine_config_file}"; then
       err "generate engine config file failed"
@@ -1276,22 +1307,22 @@ function do_start(){
   # check if modern_graph exists in container, get the result as bool
   docker_graph_schema_file="${DATABASE_WORKSPACE}/data/${graph_name}/graph.yaml"
   wal_file="${DATABASE_WORKSPACE}/data/${graph_name}/indices/init_snapshot.bin"
-  if [ -f "/tmp/graph_exists" ]; then
-    if ! rm /tmp/graph_exists; then
-      err "fail to remove /tmp/graph_exists, please remove it manually"
+  if [ -f "${HOST_DB_TMP_DIR}/graph_exists" ]; then
+    if ! rm "${HOST_DB_TMP_DIR}/graph_exists"; then
+      err "fail to remove ${HOST_DB_TMP_DIR}/graph_exists, please remove it manually, maybe sudo rm -rf ${HOST_DB_TMP_DIR}/graph_exists"
       exit 1
     fi
   fi
-  if [ -f "/tmp/graph_loaded" ]; then
-    if ! rm /tmp/graph_loaded; then
-      err "fail to remove /tmp/graph_loaded, please remove it manually"
+  if [ -f "${HOST_DB_TMP_DIR}/graph_loaded" ]; then
+    if ! rm "${HOST_DB_TMP_DIR}/graph_loaded"; then
+      err "fail to remove ${HOST_DB_TMP_DIR}/graph_loaded, please remove it manually, maybe sudo rm -rf ${HOST_DB_TMP_DIR}/graph_loaded"
       exit 1
     fi
   fi
-  docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "( [ -f ${docker_graph_schema_file} ] && echo \"true\" e) || echo \"false\"" > /tmp/graph_exists
-  docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "( [ -f ${wal_file} ] && echo \"true\" e) || echo \"false\"" > /tmp/graph_loaded
-  graph_exists=$(cat /tmp/graph_exists)
-  graph_loaded=$(cat /tmp/graph_loaded)
+  docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "( [ -f ${docker_graph_schema_file} ] && echo \"true\" e) || echo \"false\"" > ${HOST_DB_TMP_DIR}/graph_exists
+  docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "( [ -f ${wal_file} ] && echo \"true\" e) || echo \"false\"" > ${HOST_DB_TMP_DIR}/graph_loaded
+  graph_exists=$(cat ${HOST_DB_TMP_DIR}/graph_exists)
+  graph_loaded=$(cat ${HOST_DB_TMP_DIR}/graph_loaded)
   if [ "${graph_exists}" = "false" ]; then
     # if graph_name is default_graph, we should create it first
     # otherwise, we should tell user to create it first
@@ -1584,7 +1615,7 @@ function do_compile() {
       . ${HOST_DB_ENV_FILE}
   fi
 
-  real_engine_config_file="/tmp/real_engine_config.yaml"
+  real_engine_config_file="${HOST_DB_TMP_DIR}/real_engine_config.yaml"
   # update default graph name
   DATABASE_CURRENT_GRAPH_NAME=${graph_name}
   if ! generate_real_engine_conf "${real_engine_config_file}"; then
@@ -1598,9 +1629,30 @@ function do_compile() {
   docker_graph_dir="${DATABASE_WORKSPACE}/data/${graph_name}"
   docker_graph_schema="${docker_graph_dir}/graph.yaml"
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "[ -d ${docker_graph_dir} ] || (echo -e \"${RED} Graph [${graph_name}] not exists, please create it first.${NC}\" && exit 1)"
+  # Fetch current installed procedures, and check if the procedure is already installed
+  # if not compile_only, we should add the stored_procedure_name to .enable
+  docker_graph_enable_file="${docker_graph_dir}/plugins/.enable"
+  # copy container to host
+  if [ -f "${HOST_DB_TMP_DIR}/.enable" ]; then
+    if ! rm -f ${HOST_DB_TMP_DIR}/.enable; then
+      err "fail to remove ${HOST_DB_TMP_DIR}/.enable, please remove it manually, maybe sudo rm -rf ${HOST_DB_TMP_DIR}/.enable"
+      exit 1
+    fi
+  fi
+  # if docker_graph_enable_file exists. copy it to host
+  docker exec "${GIE_DB_CONTAINER_NAME}" test -e "${docker_graph_enable_file}" && (docker cp "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" "${HOST_DB_TMP_DIR}/.enable")
+
+  if [ ! -f "${HOST_DB_TMP_DIR}/.enable" ]; then
+    touch "${HOST_DB_TMP_DIR}/.enable"
+  fi
+  # check if the stored_procedure_name is already in .enable
+  if grep -q "${stored_procedure_name}" "${HOST_DB_TMP_DIR}/.enable"; then
+    err "stored_procedure_name [${stored_procedure_name}] already exists, please use another name"
+    exit 1
+  fi
 
   container_output_dir="${DATABASE_WORKSPACE}/data/${graph_name}/plugins"
-  cotainer_input_path="/tmp/${file_name}"
+  cotainer_input_path="${HOST_DB_TMP_DIR}/${file_name}"
   # docker cp file to container
   cmd="docker cp ${real_file_path} ${GIE_DB_CONTAINER_NAME}:${cotainer_input_path}"
   eval ${cmd} || exit 1
@@ -1631,22 +1683,12 @@ function do_compile() {
   fi
   info "success generate dynamic lib ${output_file}."
 
-  # if not compile_only, we should add the stored_procedure_name to .enable
-  docker_graph_enable_file="${docker_graph_dir}/plugins/.enable"
-  # copy container to host
-  rm -f /tmp/.enable
-  # if docker_graph_enable_file exists. copy it to host
-  docker exec "${GIE_DB_CONTAINER_NAME}" test -e "${docker_graph_enable_file}" && (docker cp "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" "/tmp/.enable")
-
-  if [ ! -f "/tmp/.enable" ]; then
-    touch "/tmp/.enable"
-  fi
   # if compile_only equal to false
   if [ "${compile_only}" = false ]; then
-    echo "${stored_procedure_name}" >> /tmp/.enable
+    echo "${stored_procedure_name}" >> ${HOST_DB_TMP_DIR}/.enable
   fi
   # copy back 
-  docker cp "/tmp/.enable" "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" || exit 1
+  docker cp "${HOST_DB_TMP_DIR}/.enable" "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" || exit 1
 }
 
 function do_enable(){
@@ -1716,26 +1758,31 @@ function do_enable(){
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "[ -d ${docker_graph_dir} ] || (echo -e \"${RED} Graph ${graph_name} not exists, please create it first.${NC}\" && exit 1)"
   docker_graph_plugin_dir="${docker_graph_dir}/plugins"
   docker_graph_enable_file="${docker_graph_plugin_dir}/.enable"
-  rm -f /tmp/.enable
-  # copy the .enable file to host, and append the stored_procedure_names to it; if the stored_procedure_names already exists, do nothing
-  docker cp "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" "/tmp/.enable" || true
-  if [ ! -f "/tmp/.enable" ]; then
-    touch "/tmp/.enable"
+  if [ -f "${HOST_DB_TMP_DIR}/.enable" ]; then
+    if ! rm -f ${HOST_DB_TMP_DIR}/.enable; then
+      err "fail to remove ${HOST_DB_TMP_DIR}/.enable, please remove it manually, maybe sudo rm -rf ${HOST_DB_TMP_DIR}/.enable"
+      exit 1
+    fi
   fi
-  old_line_num=$(wc -l < /tmp/.enable)
+  # copy the .enable file to host, and append the stored_procedure_names to it; if the stored_procedure_names already exists, do nothing
+  docker cp "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" "${HOST_DB_TMP_DIR}/.enable" || true
+  if [ ! -f "${HOST_DB_TMP_DIR}/.enable" ]; then
+    touch "${HOST_DB_TMP_DIR}/.enable"
+  fi
+  old_line_num=$(wc -l < ${HOST_DB_TMP_DIR}/.enable)
   # split the stored_procedure_names by ',' and append them to .enable file
   IFS=',' read -ra stored_procedure_names_array <<< "${stored_procedure_names}"
   for stored_procedure_name in "${stored_procedure_names_array[@]}"; do
     # check if the stored_procedure_name already exists in .enable file
-    if grep -q "${stored_procedure_name}" "/tmp/.enable"; then
+    if grep -q "${stored_procedure_name}" "${HOST_DB_TMP_DIR}/.enable"; then
       info "stored_procedure_name ${stored_procedure_name} already exists in .enable file, skip"
     else
-      echo "${stored_procedure_name}" >> /tmp/.enable
+      echo "${stored_procedure_name}" >> ${HOST_DB_TMP_DIR}/.enable
     fi
   done
   # copy the .enable file back to container
-  docker cp "/tmp/.enable" "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" || exit 1
-  new_line_num=$(wc -l < /tmp/.enable)
+  docker cp "${HOST_DB_TMP_DIR}/.enable" "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" || exit 1
+  new_line_num=$(wc -l < ${HOST_DB_TMP_DIR}/.enable)
   info "Successfuly enable stored_procedures ${stored_procedure_names} for graph [${graph_name}], ${old_line_num} -> ${new_line_num}"
 }
 
@@ -1823,16 +1870,16 @@ function do_disable(){
   # add the names to .enable file for graph_name 
 
   # copy the .enable file to host, and remove the stored_procedure_names from it
-  docker cp "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" "/tmp/.enable" || exit 1
-  old_line_num=$(wc -l < /tmp/.enable)
+  docker cp "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" "${HOST_DB_TMP_DIR}/.enable" || exit 1
+  old_line_num=$(wc -l < ${HOST_DB_TMP_DIR}/.enable)
   # split the stored_procedure_names by ',' and remove them from .enable file
   IFS=',' read -ra stored_procedure_names_array <<< "${stored_procedure_names}"
   for stored_procedure_name in "${stored_procedure_names_array[@]}"; do
-    sed -i "/${stored_procedure_name}/d" /tmp/.enable
+    sed -i "/${stored_procedure_name}/d" ${HOST_DB_TMP_DIR}/.enable
   done
   # copy the .enable file back to container
-  docker cp "/tmp/.enable" "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" || exit 1
-  new_line_num=$(wc -l < /tmp/.enable)
+  docker cp "${HOST_DB_TMP_DIR}/.enable" "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" || exit 1
+  new_line_num=$(wc -l < ${HOST_DB_TMP_DIR}/.enable)
   info "Successfuly disable stored_procedures ${stored_procedure_names} for graph [${graph_name}], ${old_line_num} -> ${new_line_num}"
 }
 
@@ -1880,10 +1927,9 @@ function do_show(){
   # check if docker_graph_yaml exists, if not ,exit
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "[ -f ${docker_graph_yaml} ] || (echo -e \"${RED}Graph [${graph_name}] not exists, please create it first. ${NC}\" && exit 1)" || exit 1
   # copy to host
-  docker cp "${GIE_DB_CONTAINER_NAME}:${docker_graph_yaml}" "/tmp/graph.yaml" || (echo "fail to copy" && exit 1)
-  # read /tmp/graph.yaml find the enabled_list list, and print the following lines
+  docker cp "${GIE_DB_CONTAINER_NAME}:${docker_graph_yaml}" "${HOST_DB_TMP_DIR}/graph.yaml" || (echo "fail to copy" && exit 1)
   # parse /tmp/graph.yaml and get stored_procedures_enable_lists array
-  eval $(parse_yaml "/tmp/graph.yaml")
+  eval $(parse_yaml "${HOST_DB_TMP_DIR}/graph.yaml")
   x=1
   stored_procedures_enable_lists_array=()
   while true; do
@@ -1903,14 +1949,14 @@ function do_show(){
   docker_graph_enable_file="${docker_graph_plugin_dir}/.enable"
   # check if docker_graph_enable_file exists, if not ,exit
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "[ -f ${docker_graph_enable_file} ] || (echo -e \"${RED}Graph [${graph_name}] has no procedures registered. ${NC}\" && exit 1)" || exit 1
-  docker cp "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" "/tmp/.enable" || exit 1
+  docker cp "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" "${HOST_DB_TMP_DIR}/.enable" || exit 1
   disabled_list=()
   # iterate the .enable file, for each line, check if it is in stored_procedures_enable_lists_array, if not, add it to disabled_list
   while read line; do
     if [[ ! " ${stored_procedures_enable_lists_array[@]} " =~ " ${line} " ]]; then
       disabled_list+=("${line}")
     fi
-  done < /tmp/.enable
+  done < ${HOST_DB_TMP_DIR}/.enable
   info "Disabled Size: ${#disabled_list[@]}"
 
   # print the enabled_list and disabled_list
