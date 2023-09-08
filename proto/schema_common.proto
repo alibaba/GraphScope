@@ -9,9 +9,8 @@ message LabelIdPb {
 }
 
 enum TypeEnumPb {
-    UNSPECIFIED = 0;
-    VERTEX = 1;
-    EDGE = 2;
+    VERTEX = 0;
+    EDGE = 1;
 }
 
 enum DataTypePb {

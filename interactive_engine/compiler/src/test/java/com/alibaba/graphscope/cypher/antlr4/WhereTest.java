@@ -37,8 +37,8 @@ public class WhereTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalProject(a=[a], b=[b], c=[c], isAppend=[false])\n"
-                    + "  LogicalFilter(condition=[OR(AND(=(a.name, 'marko'), <(b.weight, 2.0E0)),"
-                    + " <(+(c.age, 10), a.age))])\n"
+                    + "  LogicalFilter(condition=[OR(AND(=(a.name, _UTF-8'marko'), <(b.weight,"
+                    + " 2.0E0)), <(+(c.age, 10), a.age))])\n"
                     + "    GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[c], opt=[END])\n"
@@ -60,8 +60,9 @@ public class WhereTest {
         Assert.assertEquals(
                 "GraphLogicalProject(a=[a], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                    + " alias=[a], fusedFilter=[[AND(=(DEFAULT.name, 'kli'), OR(=(+(DEFAULT.age,"
-                    + " 1), 29), =(DEFAULT.name, 'marko')))]], opt=[VERTEX])",
+                    + " alias=[a], fusedFilter=[[AND(=(DEFAULT.name, _UTF-8'kli'),"
+                    + " OR(=(+(DEFAULT.age, 1), 29), =(DEFAULT.name, _UTF-8'marko')))]],"
+                    + " opt=[VERTEX])",
                 where.explain().trim());
     }
 
@@ -108,9 +109,9 @@ public class WhereTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalProject(a=[a], isAppend=[false])\n"
-                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], fusedFilter=[[>(CASE(=(DEFAULT.name, 'marko'), 1, >(DEFAULT.age,"
-                    + " 10), 2, 3), 2)]], opt=[VERTEX])",
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], fusedFilter=[[>(CASE(=(DEFAULT.name, _UTF-8'marko'), 1,"
+                        + " >(DEFAULT.age, 10), 2, 3), 2)]], opt=[VERTEX])",
                 where.explain().trim());
     }
 

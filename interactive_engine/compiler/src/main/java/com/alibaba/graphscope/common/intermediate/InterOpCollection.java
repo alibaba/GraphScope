@@ -25,6 +25,7 @@ import com.alibaba.graphscope.common.intermediate.process.SinkOutputProcessor;
 import com.alibaba.graphscope.common.intermediate.process.SubGraphProjectProcessor;
 import com.alibaba.graphscope.common.intermediate.strategy.InterOpStrategy;
 import com.alibaba.graphscope.common.intermediate.strategy.TopKStrategy;
+import com.alibaba.graphscope.common.intermediate.strategy.UnfoldFusionStrategy;
 
 import org.apache.commons.collections.list.UnmodifiableList;
 
@@ -36,7 +37,8 @@ import java.util.Optional;
 // collection of intermediate operators
 public class InterOpCollection {
     private List<InterOpBase> opCollection;
-    private static List<InterOpStrategy> strategies = Arrays.asList(TopKStrategy.INSTANCE);
+    private static List<InterOpStrategy> strategies =
+            Arrays.asList(TopKStrategy.INSTANCE, UnfoldFusionStrategy.INSTANCE);
     // order matters, process SubGraphProject before the SinkOutput
     private static List<InterOpProcessor> processors =
             Arrays.asList(SubGraphProjectProcessor.INSTANCE, SinkOutputProcessor.INSTANCE);

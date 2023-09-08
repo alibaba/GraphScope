@@ -1578,6 +1578,26 @@ impl AsLogical for pb::Pattern {
     }
 }
 
+impl AsLogical for pb::Unfold {
+    fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if let Some(tag) = self.tag.as_mut() {
+            let curr_node = plan_meta.get_curr_node();
+            let tag_id = get_or_set_tag_id(tag, plan_meta)?;
+            // plan_meta.set_tag_nodes(tag_id, plan_meta.get_curr_referred_nodes().to_vec());
+            
+            let tag_nodes = plan_meta.get_tag_nodes(tag_id).to_vec();
+            plan_meta.refer_to_nodes(curr_node, tag_nodes.clone());
+        }
+
+        if let Some(alias) = self.alias.as_mut() {
+            let alias_id = get_or_set_tag_id(alias, plan_meta)?;
+            plan_meta.set_tag_nodes(alias_id, vec![plan_meta.get_curr_node()]);
+        }
+
+        Ok(())
+    }
+}
+
 impl AsLogical for pb::logical_plan::Operator {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         use pb::logical_plan::operator::Opr;
@@ -1598,6 +1618,7 @@ impl AsLogical for pb::logical_plan::Operator {
                 Opr::Sink(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Apply(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Pattern(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::Unfold(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Sample(opr) => opr.preprocess(meta, plan_meta)?,
                 _ => {}
             }

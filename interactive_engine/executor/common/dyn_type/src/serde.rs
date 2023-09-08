@@ -19,7 +19,8 @@ use std::io;
 
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
-use crate::{de_dyn_obj, Object, Primitives};
+use crate::{de_dyn_obj, DateTimeFormats, Object, Primitives};
+use chrono::{Datelike, Timelike};
 
 impl Encode for Primitives {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
@@ -90,6 +91,106 @@ fn type_id_from_bytes<R: ReadExt>(reader: &mut R) -> io::Result<TypeId> {
     Ok(unsafe { std::mem::transmute(number) })
 }
 
+impl Encode for DateTimeFormats {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        match self {
+            DateTimeFormats::Date(d) => {
+                writer.write_u8(0)?;
+                writer.write_i16(d.year() as i16)?;
+                writer.write_u8(d.month() as u8)?;
+                writer.write_u8(d.day() as u8)?;
+            }
+            DateTimeFormats::Time(t) => {
+                writer.write_u8(1)?;
+                writer.write_u8(t.hour() as u8)?;
+                writer.write_u8(t.minute() as u8)?;
+                writer.write_u8(t.second() as u8)?;
+                writer.write_u32(t.nanosecond() as u32)?;
+            }
+            DateTimeFormats::DateTime(datetime) => {
+                writer.write_u8(2)?;
+                writer.write_i64(datetime.timestamp_millis())?;
+            }
+            DateTimeFormats::DateTimeWithTz(datetime_with_tz) => {
+                writer.write_u8(3)?;
+                writer.write_i64(
+                    datetime_with_tz
+                        .naive_local()
+                        .timestamp_millis(),
+                )?;
+                writer.write_i32(datetime_with_tz.offset().local_minus_utc())?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for DateTimeFormats {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let e = reader.read_u8()?;
+        match e {
+            0 => {
+                let year = <i16>::read_from(reader)?;
+                let month = <u8>::read_from(reader)?;
+                let day = <u8>::read_from(reader)?;
+                let date = chrono::NaiveDate::from_ymd_opt(year as i32, month as u32, day as u32).ok_or(
+                    io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("invalid date {:?}-{:?}-{:?}", year, month, day),
+                    ),
+                )?;
+                Ok(DateTimeFormats::Date(date))
+            }
+            1 => {
+                let hour = <u8>::read_from(reader)?;
+                let minute = <u8>::read_from(reader)?;
+                let second = <u8>::read_from(reader)?;
+                let nano = <u32>::read_from(reader)?;
+                let time =
+                    chrono::NaiveTime::from_hms_nano_opt(hour as u32, minute as u32, second as u32, nano)
+                        .ok_or(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("invalid time {:?}:{:?}:{:?}.{:?}", hour, minute, second, nano / 1000_000),
+                    ))?;
+                Ok(DateTimeFormats::Time(time))
+            }
+            2 => {
+                let timestamp_millis = <i64>::read_from(reader)?;
+                let date_time = chrono::NaiveDateTime::from_timestamp_millis(timestamp_millis).ok_or(
+                    io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("invalid datetime {:?}", timestamp_millis),
+                    ),
+                )?;
+                Ok(DateTimeFormats::DateTime(date_time))
+            }
+            3 => {
+                let native_local_timestamp_millis = <i64>::read_from(reader)?;
+                let offset = <i32>::read_from(reader)?;
+                let tz = chrono::FixedOffset::east_opt(offset)
+                    .ok_or(io::Error::new(io::ErrorKind::Other, format!("invalid offset {:?}", offset)))?;
+                let date_time = chrono::NaiveDateTime::from_timestamp_millis(native_local_timestamp_millis)
+                    .ok_or(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("invalid datetime {:?}", native_local_timestamp_millis),
+                    ))?
+                    .and_local_timezone(tz)
+                    .single()
+                    .ok_or(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!(
+                            "invalid datetime with timezone {:?} {:?}",
+                            native_local_timestamp_millis, tz
+                        ),
+                    ))?;
+
+                Ok(DateTimeFormats::DateTimeWithTz(date_time))
+            }
+            _ => Err(io::Error::new(io::ErrorKind::Other, "unreachable")),
+        }
+    }
+}
+
 impl Encode for Object {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
         match self {
@@ -131,6 +232,11 @@ impl Encode for Object {
                 Ok(())
             }
             Object::None => writer.write_u8(6),
+            Object::DateFormat(date) => {
+                writer.write_u8(7)?;
+                date.write_to(writer)?;
+                Ok(())
+            }
         }
     }
 }
@@ -178,6 +284,10 @@ impl Decode for Object {
                 Ok(Object::DynOwned(obj))
             }
             6 => Ok(Object::None),
+            7 => {
+                let date = <DateTimeFormats>::read_from(reader)?;
+                Ok(Object::DateFormat(date))
+            }
             _ => Err(io::Error::new(io::ErrorKind::Other, "not supported")),
         }
     }

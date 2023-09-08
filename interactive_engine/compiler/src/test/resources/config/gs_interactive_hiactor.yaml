@@ -28,3 +28,4 @@ compiler:
       disabled: false   # default false
       port: 8003  # default 7687
   query_timeout: 200 # query timeout in milliseconds, default 2000
+  calcite_default_charset: UTF-8

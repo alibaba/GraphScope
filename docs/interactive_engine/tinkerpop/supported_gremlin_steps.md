@@ -12,6 +12,7 @@
    9. [Match](#match)
    10. [Subgraph](#subgraph)
    11. [Identity](#identity)
+   12. [Unfold](#unfold)
 3. [Syntactic Sugars](#syntactic-sugars)
    1. [PathExpand](#pathexpand)
    2. [Expression](#expression)
@@ -554,7 +555,6 @@ graphName - the name of the side-effect key that will hold the subgraph.
 g.E().subgraph("all")
 g.V().has('name', "marko").outE("knows").subgraph("partial")
 ```
-
 ### Identity
 #### [identity()](https://tinkerpop.apache.org/docs/current/reference/#identity-step)
 The identity()-step maps the current object to itself.
@@ -564,7 +564,14 @@ g.V().identity().values("id")
 g.V().hasLabel("person").as("a").identity().values("id")
 g.V().has("name", "marko").union(identity(), out()).values("id")
 ```
-
+### Unfold
+#### [unfold()](https://tinkerpop.apache.org/docs/current/reference/#unfold-step)
+The unfold()-step unrolls an iterator, iterable or map into a linear form.
+```bash
+g.V().fold().unfold().values("id")
+g.V().fold().as("a").unfold().values("id")
+g.V().has("name", "marko").fold().as("a").select("a").unfold().values("id")
+```
 ## Syntactic Sugars
 The following steps are extended to denote more complex situations.
 ### PathExpand

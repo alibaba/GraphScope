@@ -207,8 +207,8 @@ public class FilterTest {
         RelNode filter = builder.filter(condition1, condition2).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                        + " fusedFilter=[[AND(>(DEFAULT.age, 20), =(DEFAULT.name, 'marko'))]],"
-                        + " opt=[VERTEX])",
+                    + " fusedFilter=[[AND(>(DEFAULT.age, 20), =(DEFAULT.name, _UTF-8'marko'))]],"
+                    + " opt=[VERTEX])",
                 filter.explain().trim());
     }
 

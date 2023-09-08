@@ -84,6 +84,7 @@ traversalMethod
     | traversalMethod_match // match()
     | traversalMethod_subgraph // subgraph()
     | traversalMethod_bothV // bothV()
+    | traversalMethod_unfold // unfold()
     | traversalMethod_aggregate_func
     | traversalMethod_hasNot // hasNot()
     | traversalMethod_coin  // coin()
@@ -455,11 +456,11 @@ traversalMethod_union
     : 'union' LPAREN nestedTraversalExpr RPAREN
     ;
 
-// coin(0.5)
 traversalMethod_identity
     : 'identity' LPAREN RPAREN
     ;
 
+// coin(0.5)
 traversalMethod_coin
 	: 'coin' LPAREN floatLiteral RPAREN
 	;
@@ -499,6 +500,10 @@ traversalMethod_subgraph
 traversalMethod_bothV
 	: 'bothV' LPAREN RPAREN
 	;
+
+traversalMethod_unfold
+    : 'unfold' LPAREN RPAREN
+    ;
 
 traversalMethod_id
 	: 'id' LPAREN RPAREN
