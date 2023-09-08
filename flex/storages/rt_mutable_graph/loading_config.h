@@ -50,7 +50,6 @@ static const char* BATCH_SIZE_KEY = "batch_size";
 // data in batches, otherwise, the reader will read data row by row.
 static const char* BATCH_READER = "batch_reader";
 
-// static unordered_set
 static const std::unordered_set<std::string> CSV_META_KEY_WORDS = {
     DELIMITER,    HEADER_ROW,     INCLUDE_COLUMNS, COLUMN_TYPES,
     ESCAPING,     ESCAPE_CHAR,    QUOTING,         QUOTE_CHAR,
@@ -110,7 +109,7 @@ class LoadingConfig {
   const std::string& GetQuotingChar() const;
   bool GetIsQuoting() const;
   bool GetIsDoubleQuoting() const;
-  int32_t GetBlockSize() const;
+  int32_t GetBatchSize() const;
   bool GetIsBatchReader() const;
   const std::unordered_map<schema_label_type, std::vector<std::string>>&
   GetVertexLoadingMeta() const;

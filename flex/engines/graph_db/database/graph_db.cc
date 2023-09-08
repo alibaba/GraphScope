@@ -67,16 +67,16 @@ void GraphDB::Init(const Schema& schema, const LoadingConfig& load_config,
         double t = -grape::GetCurrentTime();
         loader->LoadFragment(graph);
         t += grape::GetCurrentTime();
-        LOG(INFO) << "Bulk loading finished in " << t << " seconds";
+        VLOG(10) << "Bulk loading finished in " << t << " seconds";
         t = -grape::GetCurrentTime();
         graph.Serialize(data_dir_path.string());
         t += grape::GetCurrentTime();
-        LOG(INFO) << "Serialization finished in " << t << " seconds";
+        VLOG(10) << "Serialization finished in " << t << " seconds";
       }
       double t = -grape::GetCurrentTime();
       graph_.Deserialize(data_dir_path.string());
       t += grape::GetCurrentTime();
-      LOG(INFO) << "Deserialization finished in " << t << " seconds";
+      VLOG(10) << "Deserialization finished in " << t << " seconds";
     } else {
       LOG(INFO) << "Initializing empty graph db";
       auto loader =

@@ -578,36 +578,30 @@ const std::string& LoadingConfig::GetFormat() const { return format_; }
 
 const std::string& LoadingConfig::GetMethod() const { return method_; }
 
-// get escape str
 const std::string& LoadingConfig::GetEscapeChar() const {
   return metadata_.at(reader_options::ESCAPE_CHAR);
 }
 
-// get isEscaping
 bool LoadingConfig::GetIsEscaping() const {
   auto str = metadata_.at(reader_options::ESCAPING);
   return str == "true" || str == "True" || str == "TRUE";
 }
 
-// get quote char
 const std::string& LoadingConfig::GetQuotingChar() const {
   return metadata_.at(reader_options::QUOTE_CHAR);
 }
 
-// get is quoting
 bool LoadingConfig::GetIsQuoting() const {
   auto str = metadata_.at(reader_options::QUOTING);
   return str == "true" || str == "True" || str == "TRUE";
 }
 
-// get isDoubleQuote
 bool LoadingConfig::GetIsDoubleQuoting() const {
   auto str = metadata_.at(reader_options::DOUBLE_QUOTE);
   return str == "true" || str == "True" || str == "TRUE";
 }
 
-// get block size
-int32_t LoadingConfig::GetBlockSize() const {
+int32_t LoadingConfig::GetBatchSize() const {
   if (metadata_.find(reader_options::BATCH_SIZE_KEY) == metadata_.end()) {
     return reader_options::DEFAULT_BLOCK_SIZE;
   }
@@ -615,7 +609,6 @@ int32_t LoadingConfig::GetBlockSize() const {
   return std::stoi(str);
 }
 
-// get whether batch reader
 bool LoadingConfig::GetIsBatchReader() const {
   auto str = metadata_.at(reader_options::BATCH_READER);
   return str == "true" || str == "True" || str == "TRUE";

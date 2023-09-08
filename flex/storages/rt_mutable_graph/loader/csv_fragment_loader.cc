@@ -88,11 +88,11 @@ static void put_escape_char_option(const LoadingConfig& loading_config,
 
 static void put_block_size_option(const LoadingConfig& loading_config,
                                   arrow::csv::ReadOptions& read_options) {
-  auto block_size = loading_config.GetBlockSize();
-  if (block_size <= 0) {
+  auto batch_size = loading_config.GetBatchSize();
+  if (batch_size <= 0) {
     LOG(FATAL) << "Block size should be positive";
   }
-  read_options.block_size = block_size;
+  read_options.block_size = batch_size;
 }
 
 static void put_quote_char_option(const LoadingConfig& loading_config,

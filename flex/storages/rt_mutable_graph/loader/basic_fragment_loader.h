@@ -129,7 +129,7 @@ class BasicFragmentLoader {
   std::vector<LFIndexer<vid_t>> lf_indexers_;
   std::vector<MutableCsrBase*> ie_, oe_;
   std::vector<Table> vertex_data_;
-};  // namespace gs
+};
 }  // namespace gs
 
 #endif  // STORAGES_RT_MUTABLE_GRAPH_LOADER_BASIC_FRAGMENT_LOADER_H_

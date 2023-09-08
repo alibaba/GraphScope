@@ -57,12 +57,6 @@ struct CppTypeToArrowType<Date> {
   static std::shared_ptr<arrow::DataType> TypeValue() { return arrow::int64(); }
 };
 
-void assign_to_any_vector(const std::shared_ptr<arrow::Array>& array,
-                          std::vector<Any>& vec);
-
-void assign_to_any_vector(const std::shared_ptr<arrow::ChunkedArray>& array,
-                          std::vector<Any>& vec);
-
 template <typename T>
 struct CppTypeToPropertyType;
 
