@@ -64,19 +64,10 @@ void GraphDB::Init(const Schema& schema, const LoadingConfig& load_config,
         MutablePropertyFragment graph;
         auto loader = LoaderFactory::CreateFragmentLoader(schema, load_config,
                                                           thread_num);
-        double t = -grape::GetCurrentTime();
         loader->LoadFragment(graph);
-        t += grape::GetCurrentTime();
-        VLOG(10) << "Bulk loading finished in " << t << " seconds";
-        t = -grape::GetCurrentTime();
         graph.Serialize(data_dir_path.string());
-        t += grape::GetCurrentTime();
-        VLOG(10) << "Serialization finished in " << t << " seconds";
       }
-      double t = -grape::GetCurrentTime();
       graph_.Deserialize(data_dir_path.string());
-      t += grape::GetCurrentTime();
-      VLOG(10) << "Deserialization finished in " << t << " seconds";
     } else {
       LOG(INFO) << "Initializing empty graph db";
       auto loader =

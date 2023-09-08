@@ -27,7 +27,6 @@ BasicFragmentLoader::BasicFragmentLoader(const Schema& schema)
   oe_.resize(vertex_label_num_ * vertex_label_num_ * edge_label_num_, NULL);
   lf_indexers_.resize(vertex_label_num_);
 
-  // Init vertex_data_
   init_vertex_data();
 }
 
