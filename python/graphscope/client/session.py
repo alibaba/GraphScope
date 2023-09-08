@@ -1349,7 +1349,6 @@ class Session(object):
         import pickle
 
         handle = base64.b64encode(pickle.dumps(handle))
-        # TODO(hongyi): check parameters and automatically load potential label/weight before launching servers
         config = {
             "edges": edges,
             "edge_weights": edge_weights,
@@ -1359,6 +1358,7 @@ class Session(object):
             "edge_dir": edge_dir,
             "random_node_split": random_node_split,
         }
+        GLTorchGraph.check_params(graph.schema, config)
         config = base64.b64encode(pickle.dumps(config))
         handle, config, endpoints = self._grpc_client.create_learning_instance(
             graph.vineyard_id,
@@ -1366,7 +1366,8 @@ class Session(object):
             config,
             message_pb2.LearningBackend.GRAPHLEARN_TORCH,
         )
-        g = GLTorchGraph(handle, endpoints)
+
+        g = GLTorchGraph(endpoints)
         self._learning_instance_dict[graph.vineyard_id] = g
         graph._attach_learning_instance(g)
         return g
