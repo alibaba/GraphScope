@@ -57,8 +57,13 @@ public class LocalMetaDataReader implements MetaDataReader {
                         GraphConfig.GRAPH_STORED_PROCEDURES_ENABLE_LISTS.get(configs));
         List<InputStream> procedureInputs = Lists.newArrayList();
         if (enableProcedureList.isEmpty()) {
+            logger.info("Load all procedures in {}", procedurePath);
             for (File file : procedureDir.listFiles()) {
-                procedureInputs.add(new FileInputStream(file));
+                // if file is .yaml or .yml file
+                logger.info("Found procedure config {}", file.getName());
+                if (file.getName().endsWith(".yaml") || file.getName().endsWith(".yml")) {
+                    procedureInputs.add(new FileInputStream(file));
+                }
             }
         } else {
             Map<String, InputStream> procedureInputMap =
@@ -81,8 +86,12 @@ public class LocalMetaDataReader implements MetaDataReader {
             throws IOException {
         Map<String, InputStream> procedureInputMap = Maps.newHashMap();
         for (File file : procedureDir.listFiles()) {
+            if (!file.getName().endsWith(".yaml") && !file.getName().endsWith(".yml")) {
+                continue;
+            }
             String procedureName = getProcedureName(file);
             procedureInputMap.put(procedureName, new FileInputStream(file));
+            logger.debug("load procedure {}", procedureName);
         }
         return procedureInputMap;
     }

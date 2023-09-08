@@ -9,4 +9,5 @@ RUN cd /home/graphscope/ && git clone -b main --single-branch https://github.com
     cd GraphScope/flex && mkdir build && cd build && cmake .. -DBUILD_DOC=OFF && sudo make -j install
 
 # install graphscope GIE
-RUN . /home/graphscope/.cargo/env && cd /home/graphscope/GraphScope/interactive_engine/compiler && make build
+RUN . /home/graphscope/.cargo/env && cd /home/graphscope/GraphScope/interactive_engine && \
+    mvn clean install -DskipTests -Drevision=0.0.1-SNAPSHOT -Pexperimental

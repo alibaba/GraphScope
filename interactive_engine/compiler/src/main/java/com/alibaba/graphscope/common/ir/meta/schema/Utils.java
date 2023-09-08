@@ -86,17 +86,19 @@ public abstract class Utils {
                                         "type_id not exist in yaml config");
                 List<GraphProperty> propertyList = Lists.newArrayList();
                 List propertyNodes = (List) elementMap.get("properties");
-                for (Object property : propertyNodes) {
-                    if (property instanceof Map) {
-                        Map<String, Object> propertyMap = (Map<String, Object>) property;
-                        String propertyName = (String) propertyMap.get("property_name");
-                        int propertyId = (int) propertyMap.get("property_id");
-                        propNameToIdMap.put(propertyName, propertyId);
-                        propertyList.add(
-                                new DefaultGraphProperty(
-                                        propertyId,
-                                        propertyName,
-                                        toDataType(propertyMap.get("property_type"))));
+                if (propertyNodes != null) {
+                    for (Object property : propertyNodes) {
+                        if (property instanceof Map) {
+                            Map<String, Object> propertyMap = (Map<String, Object>) property;
+                            String propertyName = (String) propertyMap.get("property_name");
+                            int propertyId = (int) propertyMap.get("property_id");
+                            propNameToIdMap.put(propertyName, propertyId);
+                            propertyList.add(
+                                    new DefaultGraphProperty(
+                                            propertyId,
+                                            propertyName,
+                                            toDataType(propertyMap.get("property_type"))));
+                        }
                     }
                 }
                 List primaryKeyNodes = (List) elementMap.get("primary_keys");
@@ -149,6 +151,8 @@ public abstract class Utils {
                         return DataType.DOUBLE;
                     case "DT_STRING":
                         return DataType.STRING;
+                    case "DT_DATE32":
+                        return DataType.DATE;
                     default:
                         throw new UnsupportedOperationException(
                                 "unsupported primitive type: " + value);

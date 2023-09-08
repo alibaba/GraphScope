@@ -1,0 +1,1 @@
+MATCH(p : person {id: $personId}) RETURN p.firstName, p.lastName;
