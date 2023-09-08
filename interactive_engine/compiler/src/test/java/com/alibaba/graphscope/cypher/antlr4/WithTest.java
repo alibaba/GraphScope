@@ -115,8 +115,8 @@ public class WithTest {
                                         + " 'vadas' THEN 2 ELSE 3 END as d")
                         .build();
         Assert.assertEquals(
-                "GraphLogicalProject(d=[CASE(=(a.name, 'marko'), 1, =(a.name, 'vadas'), 2, 3)],"
-                        + " isAppend=[false])\n"
+                "GraphLogicalProject(d=[CASE(=(a.name, _UTF-8'marko'), 1, =(a.name, _UTF-8'vadas'),"
+                        + " 2, 3)], isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])",
                 project.explain().trim());
@@ -131,7 +131,7 @@ public class WithTest {
                                         + " a.age > 10 THEN 2 ELSE 3 END as d")
                         .build();
         Assert.assertEquals(
-                "GraphLogicalProject(d=[CASE(=(a.name, 'marko'), 1, >(a.age, 10), 2, 3)],"
+                "GraphLogicalProject(d=[CASE(=(a.name, _UTF-8'marko'), 1, >(a.age, 10), 2, 3)],"
                         + " isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])",
@@ -147,8 +147,8 @@ public class WithTest {
                                         + " 'josh' THEN 2 END as d")
                         .build();
         Assert.assertEquals(
-                "GraphLogicalProject(d=[CASE(=(a.name, 'marko'), 1, =(a.name, 'josh'), 2,"
-                        + " null:NULL)], isAppend=[false])\n"
+                "GraphLogicalProject(d=[CASE(=(a.name, _UTF-8'marko'), 1, =(a.name, _UTF-8'josh'),"
+                        + " 2, null:NULL)], isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])",
                 project.explain().trim());

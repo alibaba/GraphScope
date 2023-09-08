@@ -39,4 +39,7 @@ public class FrontendConfig {
 
     public static final Config<Integer> FRONTEND_SERVER_NUM =
             Config.intConfig("frontend.server.num", 1);
+
+    public static final Config<String> CALCITE_DEFAULT_CHARSET =
+            Config.stringConfig("calcite.default.charset", "UTF-8");
 }

@@ -86,4 +86,11 @@ public class YamlConfigTest {
                     + " DefaultGraphProperty{id=2, name=age, dataType=INT}], primaryKeyList=[id]}",
                 graphSchema.getElement("person").toString());
     }
+
+    @Test
+    public void compiler_config_test() throws Exception {
+        YamlConfigs configs =
+                new YamlConfigs("config/gs_interactive_hiactor.yaml", FileLoadType.RESOURCES);
+        Assert.assertEquals("UTF-8", FrontendConfig.CALCITE_DEFAULT_CHARSET.get(configs));
+    }
 }
