@@ -22,9 +22,9 @@
 
 #include "flex/storages/rt_mutable_graph/schema.h"
 
-#include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/storages/rt_mutable_graph/mutable_csr.h"
 #include "flex/storages/rt_mutable_graph/types.h"
+#include "flex/utils/arrow_utils.h"
 #include "flex/utils/id_indexer.h"
 #include "flex/utils/property/table.h"
 #include "flex/utils/yaml_utils.h"
@@ -38,9 +38,6 @@ class MutablePropertyFragment {
   MutablePropertyFragment();
 
   ~MutablePropertyFragment();
-
-  void Init(const Schema& schema, const LoadingConfig& loading_config,
-            int thread_num = 1);
 
   void IngestEdge(label_t src_label, vid_t src_lid, label_t dst_label,
                   vid_t dst_lid, label_t edge_label, timestamp_t ts,
@@ -94,23 +91,6 @@ class MutablePropertyFragment {
 
   const MutableCsrBase* get_ie_csr(label_t label, label_t neighbor_label,
                                    label_t edge_label) const;
-
-  void parseVertexFiles(
-      const std::string& vertex_label,
-      const std::vector<std::string>& filenames,
-      const std::vector<std::pair<size_t, std::string>>& vertex_column_mappings,
-      IdIndexer<oid_t, vid_t>& indexer);
-
-  void initVertices(label_t v_label_i,
-                    const std::vector<std::string>& vertex_files,
-                    const std::vector<std::pair<size_t, std::string>>&
-                        vertex_column_mappings);
-
-  void initEdges(
-      label_t src_label_i, label_t dst_label_i, label_t edge_label_i,
-      const std::vector<std::string>& edge_files,
-      const std::vector<std::pair<size_t, std::string>>& edge_col_mappings,
-      size_t src_col_id, size_t dst_col_id);
 
   Schema schema_;
   std::vector<LFIndexer<vid_t>> lf_indexers_;

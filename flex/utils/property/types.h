@@ -45,9 +45,7 @@ struct Date {
   Date() = default;
   ~Date() = default;
   Date(int64_t x);
-  Date(const char* str);
 
-  void reset(const char* str);
   std::string to_string() const;
 
   int64_t milli_second;
@@ -391,18 +389,6 @@ struct AnyConverter<double> {
     return value.db;
   }
 };
-
-void ParseRecord(const char* line, std::vector<Any>& rec);
-
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int& prop);
-
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst, Date& prop);
-
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
-                  grape::EmptyType& prop);
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst, double& prop);
-
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int64_t& prop);
 
 grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value);
 grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value);

@@ -703,6 +703,51 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
   mmap_array<nbr_t> nbr_list_;
 };
 
+template <typename EDATA_T>
+class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
+  using slice_t = MutableNbrSlice<EDATA_T>;
+
+ public:
+  EmptyCsr() = default;
+  ~EmptyCsr() = default;
+
+  void batch_init(vid_t vnum, const std::vector<int>& degree) override {}
+
+  slice_t get_edges(vid_t i) const override { return slice_t::empty(); }
+
+  void put_generic_edge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
+                        ArenaAllocator& alloc) override {}
+
+  void Serialize(const std::string& path) override {}
+
+  void Deserialize(const std::string& path) override {}
+
+  void batch_put_edge(vid_t src, vid_t dst, const EDATA_T& data,
+                      timestamp_t ts = 0) override {}
+
+  void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
+                   ArenaAllocator& alloc) override {
+    EDATA_T value;
+    arc >> value;
+  }
+
+  void peek_ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
+                        const timestamp_t ts, ArenaAllocator& alloc) override {}
+
+  std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
+      vid_t v) const override {
+    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(
+        MutableNbrSlice<EDATA_T>::empty());
+  }
+  MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
+    return new TypedMutableCsrConstEdgeIter<EDATA_T>(
+        MutableNbrSlice<EDATA_T>::empty());
+  }
+  std::shared_ptr<MutableCsrEdgeIterBase> edge_iter_mut(vid_t v) override {
+    return std::make_shared<TypedMutableCsrEdgeIter<EDATA_T>>(
+        MutableNbrSliceMut<EDATA_T>::empty());
+  }
+};
 }  // namespace gs
 
 #endif  // GRAPHSCOPE_GRAPH_MUTABLE_CSR_H_

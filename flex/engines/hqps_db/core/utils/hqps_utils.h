@@ -31,6 +31,8 @@
 #include "flex/utils/property/column.h"
 #include "flex/utils/property/types.h"
 
+#include "arrow/api.h"
+
 namespace gs {
 
 // demangle a c++ variable's class name
@@ -43,35 +45,6 @@ std::string demangle(const T& t) {
   free(demangled);
   return ret;
 }
-
-// Get PropertyType from Cpp type
-template <typename T>
-struct CppTypeToPropertyType;
-
-template <>
-struct CppTypeToPropertyType<int32_t> {
-  static constexpr PropertyType value = PropertyType::kInt32;
-};
-
-template <>
-struct CppTypeToPropertyType<int64_t> {
-  static constexpr PropertyType value = PropertyType::kInt64;
-};
-
-template <>
-struct CppTypeToPropertyType<double> {
-  static constexpr PropertyType value = PropertyType::kDouble;
-};
-
-template <>
-struct CppTypeToPropertyType<std::string> {
-  static constexpr PropertyType value = PropertyType::kString;
-};
-
-template <>
-struct CppTypeToPropertyType<std::string_view> {
-  static constexpr PropertyType value = PropertyType::kString;
-};
 
 template <typename T>
 struct return_type;

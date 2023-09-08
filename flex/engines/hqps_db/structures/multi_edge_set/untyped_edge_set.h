@@ -23,6 +23,7 @@
 
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/general_vertex_set.h"
+#include "flex/utils/arrow_utils.h"
 #include "grape/grape.h"
 
 namespace gs {

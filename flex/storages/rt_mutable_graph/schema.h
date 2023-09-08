@@ -23,11 +23,6 @@
 
 namespace gs {
 
-static constexpr const char* DT_SIGNED_INT32 = "DT_SIGNED_INT32";
-static constexpr const char* DT_STRING = "DT_STRING";
-static constexpr const char* DT_SIGNED_INT64 = "DT_SIGNED_INT64";
-static constexpr const char* DT_DOUBLE = "DT_DOUBLE";
-
 class Schema {
  public:
   using label_type = label_t;
@@ -37,7 +32,8 @@ class Schema {
   void add_vertex_label(
       const std::string& label, const std::vector<PropertyType>& property_types,
       const std::vector<std::string>& property_names,
-      const std::vector<std::pair<PropertyType, std::string>>& primary_key,
+      const std::vector<std::tuple<PropertyType, std::string, size_t>>&
+          primary_key,
       const std::vector<StorageStrategy>& strategies = {},
       size_t max_vnum = static_cast<size_t>(1) << 32);
 
@@ -69,6 +65,9 @@ class Schema {
 
   const std::vector<PropertyType>& get_vertex_properties(label_t label) const;
 
+  const std::vector<std::string>& get_vertex_property_names(
+      label_t label) const;
+
   const std::vector<StorageStrategy>& get_vertex_storage_strategies(
       const std::string& label) const;
 
@@ -81,11 +80,19 @@ class Schema {
       const std::string& src_label, const std::string& dst_label,
       const std::string& label) const;
 
+  const std::vector<PropertyType>& get_edge_properties(label_t src_label,
+                                                       label_t dst_label,
+                                                       label_t label) const;
+
   PropertyType get_edge_property(label_t src, label_t dst, label_t edge) const;
 
   const std::vector<std::string>& get_edge_property_names(
       const std::string& src_label, const std::string& dst_label,
       const std::string& label) const;
+
+  const std::vector<std::string>& get_edge_property_names(
+      const label_t& src_label, const label_t& dst_label,
+      const label_t& label) const;
 
   bool vertex_has_property(const std::string& label,
                            const std::string& prop) const;
@@ -124,8 +131,10 @@ class Schema {
 
   std::string get_edge_label_name(label_t index) const;
 
-  const std::vector<std::pair<PropertyType, std::string>>&
+  const std::vector<std::tuple<PropertyType, std::string, size_t>>&
   get_vertex_primary_key(label_t index) const;
+
+  const std::string& get_vertex_primary_key_name(label_t index) const;
 
   void Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer);
 
@@ -150,8 +159,9 @@ class Schema {
   IdIndexer<std::string, label_t> elabel_indexer_;
   std::vector<std::vector<PropertyType>> vproperties_;
   std::vector<std::vector<std::string>> vprop_names_;
-  std::vector<std::vector<std::pair<PropertyType, std::string>>>
-      v_primary_keys_;
+  std::vector<std::vector<std::tuple<PropertyType, std::string, size_t>>>
+      v_primary_keys_;  // the third element is the index of the property in the
+                        // vertex property list
   std::vector<std::vector<StorageStrategy>> vprop_storage_;
   std::map<uint32_t, std::vector<PropertyType>> eproperties_;
   std::map<uint32_t, std::vector<std::string>> eprop_names_;
