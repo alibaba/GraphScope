@@ -119,7 +119,7 @@ template <typename T,
           typename std::enable_if<
               (std::is_same_v<T, std::string_view>)>::type* = nullptr>
 void template_set_value(common::Value* value, T v) {
-  value->set_str(v.data(), v.size());
+  value->mutable_str()->assign(v.data(), v.size());
 }
 
 template <typename T,

@@ -47,7 +47,9 @@ GRIN_GRAPH grin_get_graph_from_storage(const char* uri) {
       gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
 
   GRIN_GRAPH_T* g = new GRIN_GRAPH_T();
-  g->g.Init(schema, loading_config);
+  auto loader =
+      gs::LoaderFactory::CreateFragmentLoader(schema, loading_config, 1);
+  loader->LoadFragment(g->g);
   init_cache(g);
   return g;
 }

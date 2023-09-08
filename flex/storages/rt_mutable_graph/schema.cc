@@ -25,7 +25,8 @@ Schema::~Schema() = default;
 void Schema::add_vertex_label(
     const std::string& label, const std::vector<PropertyType>& property_types,
     const std::vector<std::string>& property_names,
-    const std::vector<std::pair<PropertyType, std::string>>& primary_key,
+    const std::vector<std::tuple<PropertyType, std::string, size_t>>&
+        primary_key,
     const std::vector<StorageStrategy>& strategies, size_t max_vnum) {
   label_t v_label_id = vertex_label_to_index(label);
   vproperties_[v_label_id] = property_types;
@@ -103,6 +104,12 @@ const std::vector<std::string>& Schema::get_vertex_property_names(
   return vprop_names_[index];
 }
 
+const std::vector<std::string>& Schema::get_vertex_property_names(
+    label_t label) const {
+  CHECK(label < vprop_names_.size());
+  return vprop_names_[label];
+}
+
 const std::vector<StorageStrategy>& Schema::get_vertex_storage_strategies(
     const std::string& label) const {
   label_t index;
@@ -137,6 +144,15 @@ const std::vector<PropertyType>& Schema::get_edge_properties(
   return eproperties_.at(index);
 }
 
+const std::vector<PropertyType>& Schema::get_edge_properties(
+    label_t src_label, label_t dst_label, label_t label) const {
+  CHECK(src_label < vlabel_indexer_.size());
+  CHECK(dst_label < vlabel_indexer_.size());
+  CHECK(label < elabel_indexer_.size());
+  uint32_t index = generate_edge_label(src_label, dst_label, label);
+  return eproperties_.at(index);
+}
+
 PropertyType Schema::get_edge_property(label_t src, label_t dst,
                                        label_t edge) const {
   uint32_t index = generate_edge_label(src, dst, edge);
@@ -151,6 +167,16 @@ const std::vector<std::string>& Schema::get_edge_property_names(
   CHECK(vlabel_indexer_.get_index(dst_label, dst));
   CHECK(elabel_indexer_.get_index(label, edge));
   uint32_t index = generate_edge_label(src, dst, edge);
+  return eprop_names_.at(index);
+}
+
+const std::vector<std::string>& Schema::get_edge_property_names(
+    const label_t& src_label, const label_t& dst_label,
+    const label_t& label) const {
+  CHECK(src_label < vlabel_indexer_.size());
+  CHECK(dst_label < vlabel_indexer_.size());
+  CHECK(label < elabel_indexer_.size());
+  uint32_t index = generate_edge_label(src_label, dst_label, label);
   return eprop_names_.at(index);
 }
 
@@ -210,7 +236,7 @@ std::string Schema::get_edge_label_name(label_t index) const {
   return ret;
 }
 
-const std::vector<std::pair<PropertyType, std::string>>&
+const std::vector<std::tuple<PropertyType, std::string, size_t>>&
 Schema::get_vertex_primary_key(label_t index) const {
   CHECK(v_primary_keys_.size() > index);
   return v_primary_keys_.at(index);
@@ -511,7 +537,7 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
   // remove primary key from properties.
 
   std::vector<int> primary_key_inds(primary_key_node.size(), -1);
-  std::vector<std::pair<PropertyType, std::string>> primary_keys;
+  std::vector<std::tuple<PropertyType, std::string, size_t>> primary_keys;
   for (auto i = 0; i < primary_key_node.size(); ++i) {
     auto cur_primary_key = primary_key_node[i];
     std::string primary_key_name = primary_key_node[0].as<std::string>();
@@ -531,7 +557,8 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
       return false;
     }
     primary_keys.emplace_back(property_types[primary_key_inds[i]],
-                              property_names[primary_key_inds[i]]);
+                              property_names[primary_key_inds[i]],
+                              primary_key_inds[i]);
     // remove primary key from properties.
     property_names.erase(property_names.begin() + primary_key_inds[i]);
     property_types.erase(property_types.begin() + primary_key_inds[i]);
@@ -738,7 +765,7 @@ bool Schema::vertex_has_primary_key(const std::string& label,
   CHECK(v_label_id < vprop_names_.size());
   auto& keys = v_primary_keys_[v_label_id];
   for (auto i = 0; i < keys.size(); ++i) {
-    if (keys[i].second == prop) {
+    if (std::get<1>(keys[i]) == prop) {
       return true;
     }
   }

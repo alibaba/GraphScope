@@ -8,6 +8,15 @@ loading_config:
     type: csv
     metadata:
       delimiter: "|"  # other loading configuration places here
+      header_row: true # whether to use the first row as the header
+      quoting: false
+      quote_char: '"'
+      double_quote: true
+      escape_char: '\'
+      escaping: false
+      block_size: 4MB
+      batch_reader: true
+
 vertex_mappings:
   - type_name: person  # must align with the schema
     inputs:
@@ -31,7 +40,7 @@ vertex_mappings:
     column_mappings:
       - column:
           index: 0      # can be omitted if the index is the same as the property index
-          name: id    # can be omitted if the name is not known
+          name: id    # can be omitted if the name is not known or header_row is set to true.
         property: id  # must align with the schema
       - column:
           index: 1
