@@ -77,7 +77,7 @@ jobs:
       id: pr-regex-match
       with:
         text: ${{ github.event.pull_request.title }}
-        regex: 'feat.*'
+        regex: 'feat.*|refactor.*'
 
     - if: ${{ steps.pr-regex-match.outputs.match != '' && steps.doc-changes.outputs.src == 'false' }}
       run: |
