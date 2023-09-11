@@ -236,14 +236,16 @@ impl AsPhysical for pb::PathExpand {
         if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
             Err(IrError::InvalidRange(range.lower, range.upper))?
         }
+        // post_process for path_expand, including add repartition, and the properties need to cache, if necessary.
+        let mut path_expand = self.clone();
+        path_expand.post_process(builder, plan_meta)?;
         // PathExpand includes cases of:
-        //  1) EdgeExpand(Opt=Edge) + GetV(NoFilter),
+        //  1) EdgeExpand(Opt=Edge) + GetV(NoFilterNorColumn),
         //  This would be translated into EdgeExpand(Opt=Vertex);
-        //  2) EdgeExpand(Opt=Edge) + GetV(WithFilter),
+        //  2) EdgeExpand(Opt=Edge) + GetV(WithFilterOrColumn),
         //  This would be translated into EdgeExpand(Opt=Vertex) + GetV(Opt=Self);
         //  3) EdgeExpand(Opt=Vertex) + GetV(WithFilter and Opt=Self) TODO: would this case exist after match?
         //  This would be remain unchanged.
-        let mut path_expand = self.clone();
         if let Some(expand_base) = path_expand.base.as_mut() {
             let edge_expand = expand_base.edge_expand.as_mut();
             let getv = expand_base.get_v.as_mut();
@@ -286,8 +288,6 @@ impl AsPhysical for pb::PathExpand {
                     edge_expand, getv
                 )));
             }
-
-            path_expand.post_process(builder, plan_meta)?;
             builder.path_expand(path_expand);
 
             Ok(())
@@ -297,9 +297,131 @@ impl AsPhysical for pb::PathExpand {
     }
 
     fn post_process(&mut self, builder: &mut PlanBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        post_process_vars(builder, plan_meta, false)?;
         if plan_meta.is_partition() {
             builder.shuffle(self.start_tag.clone());
+            if let Some(node_meta) = plan_meta.get_curr_node_meta() {
+                let columns = node_meta.get_columns();
+                let is_all_columns = node_meta.is_all_columns();
+                if !columns.is_empty() || is_all_columns {
+                    let new_params = pb::QueryParams {
+                        tables: vec![],
+                        columns: columns
+                            .clone()
+                            .into_iter()
+                            .map(|column| column.into())
+                            .collect(),
+                        is_all_columns,
+                        limit: None,
+                        predicate: None,
+                        sample_ratio: 1.0,
+                        extra: Default::default(),
+                    };
+
+                    // Notice that, when properties of a `Path` is needed, we need to cache the properties of the vertices/edges in the path.
+                    // For example, `g.V().out("1..3").with("RESULT_OPT, "ALL_V").values("name")`, we need to cache the property of "name" in all the vertices in the path.
+                    // If "RESULT_OPT" is "ALL_V_E", we assume the property of the edges in the path is also needed.
+                    let result_opt: pb::path_expand::ResultOpt =
+                        unsafe { std::mem::transmute(self.result_opt) };
+                    let expand_base = self
+                        .base
+                        .as_mut()
+                        .ok_or(IrError::MissingData("PathExpand::base".to_string()))?;
+                    let getv = expand_base.get_v.as_mut();
+                    let edge_expand = expand_base
+                        .edge_expand
+                        .as_mut()
+                        .ok_or(IrError::MissingData("PathExpand::base.edge_expand".to_string()))?;
+                    match result_opt {
+                        pb::path_expand::ResultOpt::EndV => {
+                            // do nothing
+                        }
+                        // if the result_opt is ALL_V or ALL_V_E, we need to cache the properties of the vertices, or vertices and edges, in the path.
+                        pb::path_expand::ResultOpt::AllV => {
+                            if let Some(getv) = getv {
+                                // case 1:expand (edge) + getv, then cache properties in getv
+                                if let Some(params) = getv.params.as_mut() {
+                                    params.columns = columns
+                                        .clone()
+                                        .into_iter()
+                                        .map(|column| column.into())
+                                        .collect();
+                                    params.is_all_columns = is_all_columns;
+                                } else {
+                                    getv.params = Some(new_params.clone());
+                                }
+                            } else {
+                                // case 2: expand (vertex) + no getv, then cache properties with an extra getv (self)
+                                if edge_expand.expand_opt != pb::edge_expand::ExpandOpt::Vertex as i32 {
+                                    return Err(IrError::ParsePbError(
+                                        format!("Unexpected ExpandBase in PathExpand {:?}", expand_base)
+                                            .into(),
+                                    ));
+                                }
+
+                                let auxilia = pb::GetV {
+                                    tag: None,
+                                    opt: 4, //ItSelf
+                                    params: Some(new_params.clone()),
+                                    alias: edge_expand.alias.clone(),
+                                    meta_data: edge_expand.meta_data.clone(),
+                                };
+                                expand_base.get_v = Some(auxilia);
+                            }
+                        }
+                        pb::path_expand::ResultOpt::AllVE => {
+                            if let Some(getv) = getv {
+                                // case 1:expand (edge) + getv, then cache properties in both expand and getv.
+                                if let Some(params) = getv.params.as_mut() {
+                                    params.columns = columns
+                                        .clone()
+                                        .into_iter()
+                                        .map(|column| column.into())
+                                        .collect();
+                                    params.is_all_columns = is_all_columns;
+                                } else {
+                                    getv.params = Some(new_params.clone());
+                                }
+                                if let Some(params) = edge_expand.params.as_mut() {
+                                    params.columns = columns
+                                        .clone()
+                                        .into_iter()
+                                        .map(|column| column.into())
+                                        .collect();
+                                    params.is_all_columns = is_all_columns;
+                                } else {
+                                    edge_expand.params = Some(new_params.clone());
+                                }
+                            } else {
+                                // case 2: expand (vertex) + no getv, then cache properties of edges in expand, and properties of vertices with an extra getv (self)
+                                if edge_expand.expand_opt != pb::edge_expand::ExpandOpt::Vertex as i32 {
+                                    return Err(IrError::ParsePbError(
+                                        format!("Unexpected ExpandBase in PathExpand {:?}", expand_base)
+                                            .into(),
+                                    ));
+                                }
+                                if let Some(params) = edge_expand.params.as_mut() {
+                                    params.columns = columns
+                                        .clone()
+                                        .into_iter()
+                                        .map(|column| column.into())
+                                        .collect();
+                                    params.is_all_columns = is_all_columns;
+                                } else {
+                                    edge_expand.params = Some(new_params.clone());
+                                }
+                                let auxilia = pb::GetV {
+                                    tag: None,
+                                    opt: 4, //ItSelf
+                                    params: Some(new_params.clone()),
+                                    alias: edge_expand.alias.clone(),
+                                    meta_data: edge_expand.meta_data.clone(),
+                                };
+                                expand_base.get_v = Some(auxilia);
+                            }
+                        }
+                    }
+                }
+            }
         }
         Ok(())
     }
