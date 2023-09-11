@@ -2,16 +2,17 @@ package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
 import java.util.Map;
 
+import org.javatuples.Pair;
+
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternOrder;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirection;
-import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 
 public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEstimation {
@@ -25,98 +26,103 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
         Deque<Pattern> patternQueue = new ArrayDeque<>();
         List<Pattern> roots = glogue.getRoots();
         for (Pattern pattern : roots) {
-            if (pattern.getVertexSet().size() == 1) {
-                // single vertex pattern
-                Integer singleVertexPatternType = pattern.getVertexSet().iterator().next().getVertexTypeId();
-                Double singleVertexPatternCount = schema.getVertexTypeCardinality(singleVertexPatternType);
-                this.patternCardinality.put(pattern, singleVertexPatternCount);
-                System.out.println("root vertex pattern: " + pattern + ": " + singleVertexPatternCount);
-            }
-            for (GlogueEdge edge : glogue.getOutEdges(pattern)) {
-                GlogueExtendIntersectEdge extendIntersectEdge = (GlogueExtendIntersectEdge) edge;
-                Pattern singleEdgePattern = extendIntersectEdge.getDstPattern();
-                // if it is already computed previously, then skip.
-                if (this.containsPattern(singleEdgePattern)) {
-                    System.out.println("pattern already computed: " + singleEdgePattern);
-                    continue;
-                }
-                if (singleEdgePattern.getEdgeSet().size() == 1) {
-                    // single edge pattern
-                    EdgeTypeId singleEdgePatternType = singleEdgePattern.getEdgeSet().iterator().next().getEdgeTypeId();
-                    Double singleEdgePatternCount = schema.getEdgeTypeCardinality(singleEdgePatternType);
-                    this.patternCardinality.put(singleEdgePattern, singleEdgePatternCount);
-                    patternQueue.add(singleEdgePattern);
-                    System.out.println("root edge pattern: " + singleEdgePattern + ": " + singleEdgePatternCount);
-                } else {
-                    System.out.println("TODO: root edge pattern with multiple edges " + singleEdgePattern);
-                }
-            }
+            // single vertex pattern
+            PatternVertex singleVertexPattern = pattern.getVertexSet().iterator().next();
+            Double singleVertexPatternCount = schema.getVertexTypeCardinality(singleVertexPattern.getVertexTypeId());
+            this.patternCardinality.put(pattern, singleVertexPatternCount);
+            System.out.println("root vertex pattern: " + pattern + ": " + singleVertexPatternCount);
+            patternQueue.add(pattern);
         }
 
         while (patternQueue.size() > 0) {
             Pattern pattern = patternQueue.pop();
-            System.out.println("~~~~~~~~pop pattern in queue~~~~~~~~~~");
-            System.out.println("original pattern " + pattern);
+            Double patternCount = this.patternCardinality.get(pattern);
             for (GlogueEdge edge : glogue.getOutEdges(pattern)) {
-                // each GlogueEdge extends to a new pattern
-                // initial as current pattern count
-                Double estimatedPatternCount = this.patternCardinality.get(pattern);
                 GlogueExtendIntersectEdge extendIntersectEdge = (GlogueExtendIntersectEdge) edge;
                 Pattern newPattern = extendIntersectEdge.getDstPattern();
-                if (this.containsPattern(newPattern)) {
-                    System.out.println("pattern already computed: " + newPattern);
-                    continue;
-                }
                 ExtendStep extendStep = extendIntersectEdge.getExtendStep();
-                System.out.println("extend step: " + extendStep.toString());
-                List<EdgeTypeId> extendEdges = extractExtendEdgeTypes(extendStep);
-                System.out.println("extend edge types: " + extendEdges);
-                for (EdgeTypeId extendEdge : extendEdges) {
-                    Double edgeTypeCount = schema.getEdgeTypeCardinality(extendEdge);
-                    estimatedPatternCount *= edgeTypeCount;
+
+                if (this.containsPattern(newPattern)) {
+                    // if the cardinality of the pattern is already computed previously, compute the
+                    // pattern extension cost.
+                    System.out.println("pattern already computed: " + newPattern);
+                    // sort extend edges based on weights
+                    Double extendStepWeight = estimateExtendWeight(schema, extendStep);
+                    extendStep.setWeight(extendStepWeight);
+                } else {
+                    // otherwise, compute the cardinality of the pattern, together with the pattern
+                    // extension cost.
+                    System.out.println("extend step: " + extendStep.toString());
+                    Pair<Double, Double> patternCountWithWeight = estimatePatternCountWithExtendWeight(schema,
+                            patternCount,
+                            extendStep);
+                    this.patternCardinality.put(newPattern, patternCountWithWeight.getValue0());
+                    extendStep.setWeight(patternCountWithWeight.getValue1());
+                    patternQueue.add(newPattern);
+                    System.out.println("new pattern: " + newPattern + ": " + patternCountWithWeight.getValue0());
                 }
-                // commonVertices includes all src vertices, and, if the step has more than one
-                // extend edge,
-                // then the target vertex is also a common vertex.
-                List<Integer> commonVertices = extractExtendSrcVertices(extendStep);
-                System.out.println("common src vertices types: " + commonVertices);
-                for (Integer commonVertex : commonVertices) {
-                    Double vertexTypeCount = schema.getVertexTypeCardinality(commonVertex);
-                    estimatedPatternCount /= vertexTypeCount;
-                }
-                int count = extendStep.getExtendEdges().size();
-                while (count > 1) {
-                    Integer commonTargetVertex = extendStep.getTargetVertexType();
-                    estimatedPatternCount /= schema.getVertexTypeCardinality(commonTargetVertex);
-                    count -= 1;
-                }
-                this.patternCardinality.put(newPattern, estimatedPatternCount);
-                patternQueue.add(newPattern);
-                System.out.println("new pattern: " + newPattern + ": " + estimatedPatternCount);
             }
         }
 
         return this;
     }
 
-    private List<EdgeTypeId> extractExtendEdgeTypes(ExtendStep extendStep) {
-        List<EdgeTypeId> edgeTypeIdList = new ArrayList<>();
-        for (ExtendEdge edge : extendStep.getExtendEdges()) {
-            edgeTypeIdList.add(edge.getEdgeTypeId());
+    /// Given the src pattern and extend step, estimate the cardinality of the
+    /// target pattern by extending the extendStep from srcPattern, together with
+    /// pattern extension cost.
+    /// Return the pair of (targetPatternCardinality, extendStepWeight)
+    private Pair<Double, Double> estimatePatternCountWithExtendWeight(GlogueSchema schema, Double srcPatternCount,
+            ExtendStep extendStep) {
+        initEdgeWeightsInExtendStep(schema, extendStep);
+        // estimate pattern count and also set the weight of the extend step
+        Double commonTargetVertexTypeCount = schema.getVertexTypeCardinality(extendStep.getTargetVertexType());
+        Iterator<ExtendEdge> iter = extendStep.getExtendEdges().iterator();
+        Double targetPatternCount = srcPatternCount * iter.next().getWeight();
+        Double intermediate = targetPatternCount;
+        while (iter.hasNext()) {
+            ExtendEdge extendEdge = iter.next();
+            targetPatternCount *= extendEdge.getWeight() / commonTargetVertexTypeCount;
+            intermediate += targetPatternCount;
         }
-        return edgeTypeIdList;
+        return Pair.with(targetPatternCount, intermediate / srcPatternCount);
     }
 
-    public List<Integer> extractExtendSrcVertices(ExtendStep extendStep) {
-        List<Integer> vertexTypeIdList = new ArrayList<>();
-        for (ExtendEdge edge : extendStep.getExtendEdges()) {
-            if (edge.getDirection().equals(PatternDirection.OUT)) {
-                vertexTypeIdList.add(edge.getEdgeTypeId().getSrcLabelId());
-            } else {
-                vertexTypeIdList.add(edge.getEdgeTypeId().getDstLabelId());
-            }
+    /// Given the src pattern and extend step, estimate the pattern extension cost.
+    /// Return the estimated extendStepWeight.
+    private Double estimateExtendWeight(GlogueSchema schema, ExtendStep extendStep) {
+        initEdgeWeightsInExtendStep(schema, extendStep);
+        Double commonTargetVertexCount = schema.getVertexTypeCardinality(extendStep.getTargetVertexType());
+        Iterator<ExtendEdge> iter = extendStep.getExtendEdges().iterator();
+        Double extendStepWeight = iter.next().getWeight();
+        Double intermediate = 1.0;
+        while (iter.hasNext()) {
+            ExtendEdge extendEdge = iter.next();
+            intermediate *= extendEdge.getWeight() / commonTargetVertexCount;
+            extendStepWeight += intermediate;
         }
-        return vertexTypeIdList;
+        return extendStepWeight;
+
+    }
+
+    private void initEdgeWeightsInExtendStep(GlogueSchema schema, ExtendStep extendStep) {
+        for (ExtendEdge extendEdge : extendStep.getExtendEdges()) {
+            // each extendEdge extends to a new edge
+            // estimate the cardinality by multiplying the edge type cardinality
+            Double extendEdgeCount = schema.getEdgeTypeCardinality(extendEdge.getEdgeTypeId());
+            // each srcVertex is a common vertex when extending the edge
+            // estimate the cardinality by dividing the src vertex type cardinality
+            Integer srcVertexType;
+            if (extendEdge.getDirection().equals(PatternDirection.OUT)) {
+                srcVertexType = extendEdge.getEdgeTypeId().getSrcLabelId();
+            } else {
+                srcVertexType = extendEdge.getEdgeTypeId().getDstLabelId();
+            }
+            Double commonSrcVertexCount = schema.getVertexTypeCardinality(srcVertexType);
+            // Set the ExtendEdge weight: the estimated average pattern cardinality after
+            // extending current expand edge
+            extendEdge.setWeight(extendEdgeCount / commonSrcVertexCount);
+        }
+        extendStep.sortExtendEdges();
     }
 
     private boolean containsPattern(Pattern pattern) {

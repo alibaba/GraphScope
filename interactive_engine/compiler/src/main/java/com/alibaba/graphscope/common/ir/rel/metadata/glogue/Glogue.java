@@ -20,8 +20,11 @@ import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 public class Glogue {
     // the topology of GLogue graph
     private Graph<Pattern, GlogueEdge> glogueGraph;
+    // the cardinality estimation of patterns in Glogue
     private GlogueCardinalityEstimation glogueCardinalityEstimation;
+    // the root patterns in Glogue, i.e., those one-vertex patterns.
     private List<Pattern> roots;
+    // maxPatternId records the max pattern id in Glogue
     private int maxPatternId;
 
     protected Glogue() {
@@ -48,7 +51,7 @@ public class Glogue {
         System.out.println("init glogue:\n" + this);
         while (patternQueue.size() > 0) {
             Pattern pattern = patternQueue.pop();
-            if (pattern.size() >= maxPatternSize) {
+            if (pattern.getVertexNumber() >= maxPatternSize) {
                 continue;
             }
             System.out.println("~~~~~~~~pop pattern in queue~~~~~~~~~~");
@@ -62,7 +65,8 @@ public class Glogue {
                 if (!existingPattern.isPresent()) {
                     this.addPattern(newPattern);
                     System.out.println("add new pattern: " + newPattern);
-                    Map<Integer, Integer> srcToDstPatternMapping = this.computePatternMapping(pattern, newPattern);
+                    Map<Integer, Integer> srcToDstPatternMapping = this.computePatternMapping(pattern, newPattern,
+                            extendStep);
                     this.addPatternEdge(pattern, newPattern, extendStep, srcToDstPatternMapping);
                     patternQueue.add(newPattern);
                 } else {
@@ -70,9 +74,10 @@ public class Glogue {
                             "pattern already exists: " + existingPattern.get());
                     System.out.println("v.s. the new pattern: " + newPattern);
                     if (!this.containsPatternEdge(pattern, existingPattern.get())) {
-                        // notice that the IdMapping should be computed based on pattern and newPattern,
-                        // not pattern and existingPattern
-                        Map<Integer, Integer> srcToDstPatternMapping = this.computePatternMapping(pattern, newPattern);
+                        // notice that the mapping should be computed based on pattern to newPattern,
+                        // rather than pattern to existingPattern
+                        Map<Integer, Integer> srcToDstPatternMapping = this.computePatternMapping(pattern, newPattern,
+                                extendStep);
                         this.addPatternEdge(pattern, existingPattern.get(), extendStep, srcToDstPatternMapping);
                     } else {
                         System.out
@@ -91,15 +96,19 @@ public class Glogue {
 
         System.out.println("GlogueBasicCardinalityEstimationImpl " + this.glogueCardinalityEstimation.toString());
 
+        System.out.println("GlogueEdges:");
+        this.glogueGraph.edgeSet().forEach(edge -> {
+            System.out.println(edge);
+        });
+
         return this;
     }
 
     public Set<GlogueEdge> getOutEdges(Pattern pattern) {
         return glogueGraph.outgoingEdgesOf(pattern);
-
     }
 
-    public Set<GlogueEdge> getInEdge(Pattern pattern) {
+    public Set<GlogueEdge> getInEdges(Pattern pattern) {
         return glogueGraph.incomingEdgesOf(pattern);
     }
 
@@ -140,14 +149,21 @@ public class Glogue {
     /// Compute the mapping from src pattern to dst pattern.
     /// The mapping preserves srcPatternVertexOrder -> dstPatternVertexOrder.
     /// Notice that, the dstPattern should be extended from srcPattern.
-    private Map<Integer, Integer> computePatternMapping(Pattern srcPattern, Pattern dstPattern) {
+    /// Besides, during the mapping computation, the target vertex order will be
+    /// assigned.
+    private Map<Integer, Integer> computePatternMapping(Pattern srcPattern, Pattern dstPattern, ExtendStep extendStep) {
         Map<Integer, Integer> srcToDstPatternMapping = new HashMap<>();
-        for (PatternVertex srcVertex : srcPattern.getVertexSet()) {
-            Integer srcVertexOrder = srcPattern.getVertexOrder(srcVertex);
-            // dstPattern is extended from srcPatter, so they have the same vertex id.
-            PatternVertex dstVertex = dstPattern.getVertexById(srcVertex.getId());
+        for (PatternVertex dstVertex : dstPattern.getVertexSet()) {
             Integer dstVertexOrder = dstPattern.getVertexOrder(dstVertex);
-            srcToDstPatternMapping.put(srcVertexOrder, dstVertexOrder);
+            // srcPattern is extended from dstPattern, so they have the same vertex id.
+            PatternVertex srcVertex = srcPattern.getVertexById(dstVertex.getId());
+            if (srcVertex == null) {
+                // i.e., the dstVertex is a new vertex added in dstPattern
+                extendStep.setTargetVertexOrder(dstVertexOrder);
+            } else {
+                Integer srcVertexOrder = srcPattern.getVertexOrder(srcVertex);
+                srcToDstPatternMapping.put(srcVertexOrder, dstVertexOrder);
+            }
         }
         return srcToDstPatternMapping;
     }

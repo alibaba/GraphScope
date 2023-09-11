@@ -4,10 +4,14 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirec
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 
 public class ExtendEdge {
+    // the src vertex to extend the edge
     private int srcVertexOrder;
+    // the type of the extend edge
     private EdgeTypeId edgeTypeId;
     // the direction of the extend edge
     private PatternDirection direction;
+    // the weight of the extend edge, which indicates the cost to expand the edge.
+    private Double weight;
 
     public ExtendEdge(int srcVertexOrder, EdgeTypeId edgeTypeId, PatternDirection direction) {
         this.srcVertexOrder = srcVertexOrder;
@@ -27,20 +31,17 @@ public class ExtendEdge {
         return direction;
     }
 
-    @Override
-    public String toString() {
-        return srcVertexOrder + edgeTypeId.toString();
+    public void setWeight(Double weight) {
+        this.weight = weight;
     }
 
+    public Double getWeight() {
+        return weight;
+    }
 
-    // // TODO:  be careful here. only validate edgeTypeId is due to the reason that
-    // // we do not want to expand one ExtendStep containing ExtendEdge like [person->person, person<-person]
-    // @Override
-    // public boolean equals(Object obj) {
-    //     if (obj instanceof ExtendEdge) {
-    //         ExtendEdge other = (ExtendEdge) obj;
-    //         return this.edgeTypeId.equals(other.edgeTypeId);
-    //     }
-    //     return false;
-    // }
+    @Override
+    public String toString() {
+        return srcVertexOrder + edgeTypeId.toString() + ": " + weight;
+    }
+
 }

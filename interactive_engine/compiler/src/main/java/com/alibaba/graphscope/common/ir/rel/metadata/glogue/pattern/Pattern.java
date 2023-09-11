@@ -112,8 +112,12 @@ public class Pattern {
         this.id = id;
     }
 
-    public int size() {
-        return this.patternGraph.vertexSet().size();
+    public Integer getVertexNumber() {
+        return this.maxVertexId;
+    }
+
+    public Integer getEdgeNumber() {
+        return this.maxEdgeId;
     }
 
     public Set<PatternVertex> getVertexSet() {
@@ -122,6 +126,89 @@ public class Pattern {
 
     public Set<PatternEdge> getEdgeSet() {
         return this.patternGraph.edgeSet();
+    }
+
+    /// Find all possible ExtendSteps of current pattern based on the given
+    /// GlogueSchema
+    public List<ExtendStep> getExtendSteps(GlogueSchema schema) {
+        // For each vertexType in GlogueSchema (i.e., targetPatternVertexType),
+        // consider all possible extend steps from each vertex in current pattern (i.e.,
+        // srcPatternVertexType) to targetPatternVertexType.
+        List<ExtendStep> extendSteps = new ArrayList<>();
+        // Get all vertex labels from pattern meta as the possible extend target vertex
+        List<Integer> targetVertexTypes = schema.getVertexTypes();
+        // targetVertexTypeId -> List of ExtendEdges extend to targetVertex
+        Map<Integer, List<ExtendEdge>> extendEdgesWithDstType = new HashMap<>();
+        for (Integer targetVertexType : targetVertexTypes) {
+            Set<Integer> consideredGroup = new HashSet<>();
+            for (PatternVertex srcPatternVertex : this.getVertexSet()) {
+                Integer srcVertexOrder = this.getVertexOrder(srcPatternVertex);
+                if (consideredGroup.contains(this.getVertexGroup(srcPatternVertex))) {
+                    // Notice that before consider extend edges, skip if the
+                    // srcPatternVertexType is already considered (i.e., if any
+                    // vertex from the same color group is already considered)
+                    continue;
+                } else {
+                    consideredGroup.add(srcVertexOrder);
+                }
+                Integer srcVertexType = srcPatternVertex.getVertexTypeId();
+                // Get all adjacent edges from srcVertex to targetVertex
+                List<EdgeTypeId> outEdges = schema.getEdgeTypes(srcVertexType, targetVertexType);
+                for (EdgeTypeId outEdge : outEdges) {
+                    if (srcVertexType.equals(outEdge.getSrcLabelId())) {
+                        ExtendEdge extendEdge = new ExtendEdge(
+                                srcVertexOrder,
+                                outEdge,
+                                PatternDirection.OUT);
+                        if (extendEdgesWithDstType.containsKey(outEdge.getDstLabelId())) {
+                            extendEdgesWithDstType.get(outEdge.getDstLabelId()).add(extendEdge);
+                        } else {
+                            extendEdgesWithDstType.put(outEdge.getDstLabelId(),
+                                    new ArrayList<ExtendEdge>(Arrays.asList(extendEdge)));
+                        }
+                    } else {
+                        System.out.println("very weird 111");
+                    }
+                }
+                // Get all adjacent edges from targetVertex to srcVertex
+                // TODO: be very careful here: if we allow "both" direction in schema, e.g.,
+                // person-knows-person, then we need to consider the duplications in outEdges
+                // and inEdges; that is, when extend a new person, then only one edge expanded.
+                List<EdgeTypeId> inEdges = schema.getEdgeTypes(targetVertexType, srcVertexType);
+                for (EdgeTypeId inEdge : inEdges) {
+                    if (srcVertexType.equals(inEdge.getDstLabelId())) {
+                        ExtendEdge extendEdge = new ExtendEdge(
+                                srcVertexOrder,
+                                inEdge,
+                                PatternDirection.IN);
+                        if (extendEdgesWithDstType.containsKey(inEdge.getSrcLabelId())) {
+                            extendEdgesWithDstType.get(inEdge.getSrcLabelId()).add(extendEdge);
+                        } else {
+                            extendEdgesWithDstType.put(inEdge.getSrcLabelId(),
+                                    new ArrayList<ExtendEdge>(Arrays.asList(extendEdge)));
+                        }
+                    } else {
+                        System.out.println("very weird 222");
+                    }
+                }
+            }
+        }
+
+        // get all subsets of extendEdgesWithDstId. Each subset corresponds to a
+        // possible extend.
+        for (Map.Entry entry : extendEdgesWithDstType.entrySet()) {
+            List<ExtendEdge> orginalSet = (List<ExtendEdge>) entry.getValue();
+            for (int k = 1; k <= orginalSet.size(); k++) {
+                List<List<ExtendEdge>> subsets = Combinations.getCombinations(orginalSet, k);
+                // TODO: a subset with duplicated edges, should be filter out?
+                // ! e.g., do we need extend pattern like: person <-> person
+                for (List<ExtendEdge> subset : subsets) {
+                    extendSteps.add(new ExtendStep((Integer) entry.getKey(), subset));
+                }
+            }
+        }
+
+        return extendSteps;
     }
 
     /// Extend current pattern with the given extendStep, and return the new
@@ -202,86 +289,8 @@ public class Pattern {
         return this.patternOrder.getVertexGroup(vertex);
     }
 
-    // Find all possible ExtendSteps of current pattern based on the given Pattern
-    // Meta
-    public List<ExtendStep> getExtendSteps(GlogueSchema schema) {
-        List<ExtendStep> extendSteps = new ArrayList<>();
-        // Get all vertex labels from pattern meta as the possible extend target vertex
-        List<Integer> targetVertexTypes = schema.getVertexTypes();
-        // targetVertexTypeId -> List of ExtendEdges extend to targetVertex
-        Map<Integer, List<ExtendEdge>> extendEdgesWithDstType = new HashMap<>();
-        for (Integer targetVertexType : targetVertexTypes) {
-            // for each targetVertexType, consider possible extend edges from each
-            // srcPatternVertexType to targetVertexType
-            // Notice that before consider extend edges, first check if the
-            // srcPatternVertexType is already considered (i.e., if any
-            // vertex from the same color group is already considered)
-            Set<Integer> consideredGroup = new HashSet<>();
-            for (PatternVertex srcPatternVertex : this.getVertexSet()) {
-                Integer srcVertexOrder = this.getVertexOrder(srcPatternVertex);
-                if (consideredGroup.contains(this.getVertexGroup(srcPatternVertex))) {
-                    continue;
-                } else {
-                    consideredGroup.add(srcVertexOrder);
-                }
-                Integer srcVertexType = srcPatternVertex.getVertexTypeId();
-                // Get all adjacent edges from srcVertex to targetVertex
-                List<EdgeTypeId> outEdges = schema.getEdgeTypes(srcVertexType, targetVertexType);
-                for (EdgeTypeId outEdge : outEdges) {
-                    if (srcVertexType.equals(outEdge.getSrcLabelId())) {
-                        ExtendEdge extendEdge = new ExtendEdge(
-                                srcVertexOrder,
-                                outEdge,
-                                PatternDirection.OUT);
-                        if (extendEdgesWithDstType.containsKey(outEdge.getDstLabelId())) {
-                            extendEdgesWithDstType.get(outEdge.getDstLabelId()).add(extendEdge);
-                        } else {
-                            extendEdgesWithDstType.put(outEdge.getDstLabelId(),
-                                    new ArrayList<ExtendEdge>(Arrays.asList(extendEdge)));
-                        }
-                    } else {
-                        System.out.println("very weird 111");
-                    }
-                }
-                // Get all adjacent edges from targetVertex to srcVertex
-                // TODO: be very careful here: if we allow "both" direction in schema, e.g.,
-                // person-knows-person, then we need to consider the duplications in outEdges
-                // and inEdges; that is, when extend a new person, then only one edge expanded.
-                List<EdgeTypeId> inEdges = schema.getEdgeTypes(targetVertexType, srcVertexType);
-                for (EdgeTypeId inEdge : inEdges) {
-                    if (srcVertexType.equals(inEdge.getDstLabelId())) {
-                        ExtendEdge extendEdge = new ExtendEdge(
-                                srcVertexOrder,
-                                inEdge,
-                                PatternDirection.IN);
-                        if (extendEdgesWithDstType.containsKey(inEdge.getSrcLabelId())) {
-                            extendEdgesWithDstType.get(inEdge.getSrcLabelId()).add(extendEdge);
-                        } else {
-                            extendEdgesWithDstType.put(inEdge.getSrcLabelId(),
-                                    new ArrayList<ExtendEdge>(Arrays.asList(extendEdge)));
-                        }
-                    } else {
-                        System.out.println("very weird 222");
-                    }
-                }
-            }
-        }
-
-        // get all subsets of extendEdgesWithDstId. Each subset corresponds to a
-        // possible extend.
-        for (Map.Entry entry : extendEdgesWithDstType.entrySet()) {
-            List<ExtendEdge> orginalSet = (List<ExtendEdge>) entry.getValue();
-            for (int k = 1; k <= orginalSet.size(); k++) {
-                List<List<ExtendEdge>> subsets = Combinations.getCombinations(orginalSet, k);
-                // TODO: a subset with duplicated edges, should be filter out?
-                // ! e.g., do we need extend pattern like: person <-> person
-                for (List<ExtendEdge> subset : subsets) {
-                    extendSteps.add(new ExtendStep((Integer) entry.getKey(), subset));
-                }
-            }
-        }
-
-        return extendSteps;
+    public int getPatternId() {
+        return this.id;
     }
 
     @Override
