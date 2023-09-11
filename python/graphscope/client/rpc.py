@@ -24,7 +24,6 @@ import threading
 import time
 
 import grpc
-
 from graphscope.client.utils import GS_GRPC_MAX_MESSAGE_LENGTH
 from graphscope.client.utils import GRPCUtils
 from graphscope.client.utils import handle_grpc_error
