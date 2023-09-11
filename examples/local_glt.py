@@ -94,7 +94,7 @@ train_loader = glt.distributed.DistNeighborLoader(
         master_port=glt_graph.train_loader_master_port,
         buffer_size="1GB",
         prefetch_size=1,
-        worker_key="train",
+        worker_key=str(glt_graph.train_loader_master_port),
     ),
 )
 
@@ -117,7 +117,7 @@ test_loader = glt.distributed.DistNeighborLoader(
         master_port=glt_graph.test_loader_master_port,
         buffer_size="1GB",
         prefetch_size=1,
-        worker_key="test",
+        worker_key=str(glt_graph.test_loader_master_port),
     ),
 )
 
