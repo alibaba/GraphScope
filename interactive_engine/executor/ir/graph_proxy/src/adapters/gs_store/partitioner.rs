@@ -69,11 +69,25 @@ impl VineyardMultiPartition {
 
 impl PartitionInfo for VineyardMultiPartition {
     fn get_partition_id<D: PartitionedData>(&self, data: &D) -> GraphProxyResult<PartitionId> {
+        let data = data.get_partition_key_id();
+        trace!(
+            "get partition id for data: {:?}, result {:?}",
+            data,
+            self.graph_partition_manager
+                .get_partition_id(data as VertexId) as PartitionId
+        );
         Ok(self
             .graph_partition_manager
-            .get_partition_id(data.get_partition_key_id() as VertexId) as PartitionId)
+            .get_partition_id(data as VertexId) as PartitionId)
     }
     fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId> {
+        trace!(
+            "get server id for partition id: {:?}, result {:?}",
+            partition_id,
+            self.partition_server_index_mapping
+                .get(&partition_id)
+                .cloned()
+        );
         self.partition_server_index_mapping
             .get(&partition_id)
             .cloned()

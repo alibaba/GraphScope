@@ -56,6 +56,7 @@ public class IrServiceProducer implements ComputeServiceProducer {
         ChannelFetcher channelFetcher =
                 new RpcChannelManagerFetcher(channelManager, executorCount, RoleType.GAIA_RPC);
         com.alibaba.graphscope.common.config.Configs irConfigs = getConfigs();
+        logger.info("IR Config: {}", irConfigs);
         IrMetaFetcher irMetaFetcher = new GrootMetaFetcher(schemaFetcher);
         SnapshotUpdateCommitter updateCommitter = new SnapshotUpdateCommitter(channelManager);
         int frontendId = CommonConfig.NODE_IDX.get(configs);
