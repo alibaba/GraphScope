@@ -256,11 +256,34 @@ impl GraphElement for GraphPath {
     }
 
     fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
-        self.get_path_end().get_property(key)
+        match self {
+            GraphPath::AllPath(path) | GraphPath::SimpleAllPath(path) => {
+                let mut properties = vec![];
+                for v_or_e in path {
+                    if let Some(p) = v_or_e.get_property(key) {
+                        properties.push(p.try_to_owned().unwrap());
+                    }
+                }
+                Some(PropertyValue::Owned(Object::Vector(properties)))
+            }
+
+            GraphPath::EndV((v_or_e, _)) | GraphPath::SimpleEndV((v_or_e, _, _)) => {
+                v_or_e.get_property(key)
+            }
+        }
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        self.get_path_end().get_all_properties()
+        match self {
+            GraphPath::AllPath(_) | GraphPath::SimpleAllPath(_) => {
+                // not supported yet.
+                None
+            }
+
+            GraphPath::EndV((v_or_e, _)) | GraphPath::SimpleEndV((v_or_e, _, _)) => {
+                v_or_e.get_all_properties()
+            }
+        }
     }
 }
 
