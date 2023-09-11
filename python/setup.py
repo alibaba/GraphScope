@@ -238,7 +238,7 @@ def build_learning_engine():
                 name=GLTORCH_EXT_NAME,
                 root_path=glt_root_path,
                 with_cuda=False,
-                with_vineyard=False,
+                with_vineyard=True,
                 release=False,
             )
         )

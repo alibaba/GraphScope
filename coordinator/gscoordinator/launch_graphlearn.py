@@ -67,7 +67,10 @@ def launch_server(handle, config, server_index):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Usage: ./learning.py <handle> <config> <server_index>", file=sys.stderr)
+        print(
+            "Usage: ./launch_graphlearn.py <handle> <config> <server_index>",
+            file=sys.stderr,
+        )
         sys.exit(-1)
 
     handle = decode_arg(sys.argv[1])

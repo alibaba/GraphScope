@@ -531,10 +531,14 @@ class CoordinatorServiceServicer(
     def CreateLearningInstance(self, request, context):
         object_id = request.object_id
         logger.info("Create learning instance with object id %ld", object_id)
-        handle, config = request.handle, request.config
+        handle, config, learning_backend = (
+            request.handle,
+            request.config,
+            request.learning_backend,
+        )
         try:
             endpoints = self._launcher.create_learning_instance(
-                object_id, handle, config
+                object_id, handle, config, learning_backend
             )
             self._object_manager.put(object_id, LearningInstanceManager(object_id))
         except Exception as e:
