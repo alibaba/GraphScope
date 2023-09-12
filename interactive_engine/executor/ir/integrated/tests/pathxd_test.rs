@@ -19,6 +19,7 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use dyn_type::{object, Object};
     use graph_proxy::apis::{Element, GraphElement, ID};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
@@ -872,5 +873,86 @@ mod test {
     #[test]
     fn path_expand_exactly_whole_v_e_w2_test() {
         path_expand_exactly_whole_v_e_query(2)
+    }
+
+    // g.V().hasLabel("person").both("2..3", "knows").values("name")
+    fn init_path_expand_project_request(result_opt: i32) -> JobRequest {
+        let source_opr = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
+            idx_predicate: None,
+            meta_data: None,
+        };
+
+        let edge_expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 2,
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
+            expand_opt: 0,
+            alias: None,
+            meta_data: None,
+        };
+
+        let path_expand_opr = pb::PathExpand {
+            base: Some(edge_expand.into()),
+            start_tag: None,
+            alias: None,
+            hop_range: Some(pb::Range { lower: 2, upper: 3 }),
+            path_opt: 0, // Arbitrary
+            result_opt,
+            condition: None,
+        };
+
+        let project_opr = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_expr_pb("@.name".to_string()).unwrap()),
+                alias: None,
+            }],
+            is_append: true,
+            meta_data: vec![],
+        };
+
+        let mut job_builder = JobBuilder::default();
+        job_builder.add_scan_source(source_opr);
+        job_builder.shuffle(None);
+        job_builder.path_expand(path_expand_opr);
+        job_builder.project(project_opr);
+        job_builder.sink(default_sink_pb());
+
+        job_builder.build().unwrap()
+    }
+
+    #[test]
+    fn path_expand_allv_project_test() {
+        initialize();
+        let request = init_path_expand_project_request(1); // all v
+        let mut results = submit_query(request, 2);
+        let mut result_collection: Vec<Object> = vec![];
+        let mut expected_result_paths: Vec<Object> = vec![
+            Object::Vector(vec![object!("marko"), object!("vadas"), object!("marko")]),
+            Object::Vector(vec![object!("marko"), object!("josh"), object!("marko")]),
+            Object::Vector(vec![object!("vadas"), object!("marko"), object!("vadas")]),
+            Object::Vector(vec![object!("vadas"), object!("marko"), object!("josh")]),
+            Object::Vector(vec![object!("josh"), object!("marko"), object!("vadas")]),
+            Object::Vector(vec![object!("josh"), object!("marko"), object!("josh")]),
+        ];
+
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(properties) = entry.get(None).unwrap().as_object() {
+                        result_collection.push(properties.clone());
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_paths.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_paths);
     }
 }

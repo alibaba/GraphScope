@@ -3050,4 +3050,89 @@ mod test {
 
         assert_eq!(builder, expected_builder);
     }
+
+    #[test]
+    fn path_expand_project_as_physical() {
+        let source_opr = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(query_params(vec!["person".into()], vec![])),
+            idx_predicate: None,
+            meta_data: None,
+        };
+
+        let edge_expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(query_params(vec!["knows".into()], vec![])),
+            expand_opt: 0, // vertex
+            alias: None,
+            meta_data: None,
+        };
+
+        let path_opr = pb::PathExpand {
+            base: Some(edge_expand.clone().into()),
+            start_tag: None,
+            alias: None,
+            hop_range: Some(pb::Range { lower: 1, upper: 4 }),
+            path_opt: 0,   // ARBITRARY
+            result_opt: 1, // ALL_V
+            condition: None,
+        };
+
+        let project_opr = pb::Project {
+            mappings: vec![ExprAlias {
+                expr: Some(str_to_expr_pb("@.name".to_string()).unwrap()),
+                alias: None,
+            }],
+            is_append: true,
+            meta_data: vec![],
+        };
+
+        let mut logical_plan = LogicalPlan::with_node(Node::new(0, source_opr.clone().into()));
+        logical_plan
+            .append_operator_as_node(path_opr.clone().into(), vec![0])
+            .unwrap(); // node 1
+        logical_plan
+            .append_operator_as_node(project_opr.clone().into(), vec![1])
+            .unwrap(); // node 2
+
+        // Case without partition
+        let mut builder = PlanBuilder::default();
+        let mut plan_meta = logical_plan.get_meta().clone();
+        logical_plan
+            .add_job_builder(&mut builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = PlanBuilder::default();
+        expected_builder.add_scan_source(source_opr.clone());
+        expected_builder.path_expand(path_opr.clone());
+        expected_builder.project(project_opr.clone());
+
+        assert_eq!(builder, expected_builder);
+
+        // Case with partition
+        let mut builder = PlanBuilder::default();
+        let mut plan_meta = logical_plan.get_meta().clone().with_partition();
+        logical_plan
+            .add_job_builder(&mut builder, &mut plan_meta)
+            .unwrap();
+
+        // translate `PathExpand(out("knows"))` to `auxilia("name") + PathExpand() with ExpandBase of out("knows")+auxilia("name")`
+        let mut path_expand = path_opr.clone();
+        path_expand.base.as_mut().unwrap().get_v =
+            Some(build_auxilia_with_tag_alias_columns(None, None, vec!["name".into()]));
+
+        let mut expected_builder = PlanBuilder::default();
+        expected_builder.add_scan_source(source_opr);
+        expected_builder.shuffle(None);
+        // post process for path expand: 1. cache properties of path start vertex; 2.
+        expected_builder.get_v(build_auxilia_with_tag_alias_columns(None, None, vec!["name".into()]));
+        expected_builder.path_expand(path_expand);
+        // postprocess for project
+        expected_builder.shuffle(None);
+        expected_builder.get_v(build_auxilia_with_tag_alias_columns(None, None, vec![]));
+        expected_builder.project(project_opr);
+        assert_eq!(builder, expected_builder);
+    }
 }
