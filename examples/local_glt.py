@@ -71,6 +71,7 @@ glt.distributed.init_client(
     master_addr=glt_graph.master_addr,
     master_port=glt_graph.server_client_master_port,
     num_rpc_threads=4,
+    is_dynamic=True,
 )
 
 device = torch.device("cpu")
@@ -86,7 +87,8 @@ train_loader = glt.distributed.DistNeighborLoader(
     collect_features=True,
     to_device=device,
     worker_options=glt.distributed.RemoteDistSamplingWorkerOptions(
-        server_rank=[0],
+        # if server_rank is not specified, the assignment is made automatically
+        # server_rank=[0],
         num_workers=1,
         worker_devices=[torch.device("cpu")],
         worker_concurrency=1,
@@ -109,7 +111,7 @@ test_loader = glt.distributed.DistNeighborLoader(
     collect_features=True,
     to_device=device,
     worker_options=glt.distributed.RemoteDistSamplingWorkerOptions(
-        server_rank=[0],
+        # server_rank=[0],
         num_workers=1,
         worker_devices=[torch.device("cpu")],
         worker_concurrency=1,
