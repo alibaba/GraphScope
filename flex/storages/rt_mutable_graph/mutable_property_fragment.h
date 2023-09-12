@@ -42,7 +42,7 @@ class MutablePropertyFragment {
       const std::vector<std::pair<std::string, std::string>>& vertex_files,
       const std::vector<std::tuple<std::string, std::string, std::string,
                                    std::string>>& edge_files,
-      int thread_num = 1);
+      const std::string& data_dir_path, int thread_num = 1);
 
   void IngestEdge(label_t src_label, vid_t src_lid, label_t dst_label,
                   vid_t dst_lid, label_t edge_label, timestamp_t ts,
@@ -51,6 +51,18 @@ class MutablePropertyFragment {
   const Schema& schema() const;
 
   void Serialize(const std::string& prefix);
+
+  void SerializeSchema(const std::string& prefix);
+
+  void SerializeVertex(const std::string& prefix, size_t index);
+
+  void SerializeVertices(const std::string& prefix);
+
+  void SerializeEdges(const std::string& prefix);
+
+  void SerializeEdge(const std::string& prefix, const std::string& src_label,
+                     const std::string& dst_label,
+                     const std::string& edge_label, size_t index);
 
   void Deserialize(const std::string& prefix);
 

@@ -52,6 +52,7 @@ void MutableCsr<EDATA_T>::Serialize(const std::string& path) {
   }
 
   init_nbr_list_.dump_to_file(path + ".nbr_list", init_nbr_list_.size());
+  init_nbr_list_.release();
 }
 
 template <typename EDATA_T>
@@ -107,6 +108,7 @@ void MutableCsr<std::string>::Serialize(const std::string& path) {
     fflush(fout);
     fclose(fout);
   }
+  nbr_list_.clear();
 }
 
 void MutableCsr<std::string>::Deserialize(const std::string& path) {

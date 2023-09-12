@@ -65,8 +65,11 @@ class Table {
   void Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer,
                  const std::string& prefix, size_t row_num);
 
+  void Serialize(const std::string& prefix, size_t row_num);
+
   void Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader,
                    const std::string& prefix);
+  void Deserialize(const std::string& prefix);
 
   Any at(size_t row_id, size_t col_id);
 

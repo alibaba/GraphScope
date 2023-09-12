@@ -70,6 +70,7 @@ class TypedColumn : public ColumnBase {
 
   void Serialize(const std::string& path, size_t size) override {
     buffer_.dump_to_file(path, size);
+    buffer_.release();
   }
 
   void Deserialize(const std::string& path) override {

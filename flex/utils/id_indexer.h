@@ -692,16 +692,15 @@ void build_lf_indexer(const IdIndexer<int64_t, INDEX_T>& input,
   lf.hash_policy_.set_mod_function_by_index(
       input.hash_policy_.get_mod_function_index());
   lf.num_slots_minus_one_ = input.num_slots_minus_one_;
-  std::vector<std::pair<int64_t,INDEX_T>> res;
+  std::vector<std::pair<int64_t, INDEX_T>> res;
   for (auto oid : input.keys_) {
     size_t index = input.hash_policy_.index_for_hash(
         input.hasher_(oid), input.num_slots_minus_one_);
     for (int8_t distance = 0; input.distances_[index] >= distance;
          ++distance, ++index) {
-      
       INDEX_T ret = input.indices_[index];
       if (input.keys_[ret] == oid) {
-        if(index >= input.num_slots_minus_one_){
+        if (index >= input.num_slots_minus_one_) {
           res.emplace_back(oid, ret);
         } else {
           lf.indices_[index] = ret;
@@ -712,11 +711,11 @@ void build_lf_indexer(const IdIndexer<int64_t, INDEX_T>& input,
   }
   static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
 
-  for(const auto& [oid, lid]: res){
+  for (const auto& [oid, lid] : res) {
     size_t index = input.hash_policy_.index_for_hash(
         input.hasher_(oid), input.num_slots_minus_one_);
     while (true) {
-      if(lf.indices_[index] == sentinel){
+      if (lf.indices_[index] == sentinel) {
         lf.indices_[index] = lid;
         break;
       }

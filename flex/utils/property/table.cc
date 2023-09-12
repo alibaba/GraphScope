@@ -167,6 +167,14 @@ void Table::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer,
   }
 }
 
+void Table::Serialize(const std::string& prefix, size_t row_num) {
+  std::unique_ptr<grape::LocalIOAdaptor> writer(
+      new grape::LocalIOAdaptor(prefix + ".meta"));
+  writer->Open("wb");
+  Serialize(writer, prefix, row_num);
+  writer->Close();
+}
+
 void Table::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader,
                         const std::string& prefix) {
   col_id_indexer_.Deserialize(reader);
@@ -188,6 +196,14 @@ void Table::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader,
   }
 
   buildColumnPtrs();
+}
+
+void Table::Deserialize(const std::string& prefix) {
+  std::unique_ptr<grape::LocalIOAdaptor> reader(
+      new grape::LocalIOAdaptor(prefix + ".meta"));
+  reader->Open();
+  Deserialize(reader, prefix);
+  reader->Close();
 }
 
 Any Table::at(size_t row_id, size_t col_id) {
