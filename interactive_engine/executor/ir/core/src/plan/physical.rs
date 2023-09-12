@@ -316,10 +316,21 @@ impl AsPhysical for pb::PathExpand {
                         sample_ratio: 1.0,
                         extra: Default::default(),
                     };
-
                     // Notice that, when properties of a `Path` is needed, we need to cache the properties of the vertices/edges in the path.
                     // For example, `g.V().out("1..3").with("RESULT_OPT, "ALL_V").values("name")`, we need to cache the property of "name" in all the vertices in the path.
                     // If "RESULT_OPT" is "ALL_V_E", we assume the property of the edges in the path is also needed.
+
+                    // first, cache properties on the path start vertex.
+                    let start_auxilia = pb::GetV {
+                        tag: self.start_tag.clone(),
+                        opt: 4, //ItSelf
+                        params: Some(new_params.clone()),
+                        alias: self.start_tag.clone(),
+                        meta_data: None,
+                    };
+                    builder.get_v(start_auxilia);
+
+                    // then, cache properties during the path expanding.
                     let result_opt: pb::path_expand::ResultOpt =
                         unsafe { std::mem::transmute(self.result_opt) };
                     let expand_base = self
