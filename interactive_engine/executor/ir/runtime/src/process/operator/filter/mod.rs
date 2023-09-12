@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 mod coin;
+mod path_condition;
 mod select;
 
 use pegasus::api::function::FilterFunction;

@@ -29,6 +29,7 @@ use pegasus_common::downcast::AsAny;
 use pegasus_common::impl_as_any;
 
 use crate::apis::{Edge, Element, GraphElement, PropertyValue, Vertex, ID};
+use crate::utils::expr::eval::Context;
 
 #[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
 pub enum VertexOrEdge {
@@ -216,6 +217,12 @@ impl GraphElement for VertexOrEdge {
             VertexOrEdge::V(v) => v.get_all_properties(),
             VertexOrEdge::E(e) => e.get_all_properties(),
         }
+    }
+}
+
+impl Context<VertexOrEdge> for VertexOrEdge {
+    fn get(&self, _tag: Option<&NameOrId>) -> Option<&VertexOrEdge> {
+        Some(&self)
     }
 }
 
