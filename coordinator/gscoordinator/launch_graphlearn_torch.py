@@ -37,14 +37,11 @@ def decode_arg(arg):
 def run_server_proc(proc_rank, handle, config, server_rank, dataset):
     glt.distributed.init_server(
         num_servers=handle["num_servers"],
-        # in server-client mode with dynamic world size, num_clients is not needed.
-        # num_clients=handle["num_clients"],
         server_rank=server_rank,
         dataset=dataset,
         master_addr=handle["master_addr"],
         master_port=handle["server_client_master_port"],
         num_rpc_threads=16,
-        # server_group_name="dist_train_supervised_sage_server",
         is_dynamic=True,
     )
     logger.info(f"-- [Server {server_rank}] Waiting for exit ...")

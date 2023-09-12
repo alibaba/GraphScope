@@ -87,8 +87,6 @@ train_loader = glt.distributed.DistNeighborLoader(
     collect_features=True,
     to_device=device,
     worker_options=glt.distributed.RemoteDistSamplingWorkerOptions(
-        # if server_rank is not specified, the assignment is made automatically
-        # server_rank=[0],
         num_workers=1,
         worker_devices=[torch.device("cpu")],
         worker_concurrency=1,
@@ -111,7 +109,6 @@ test_loader = glt.distributed.DistNeighborLoader(
     collect_features=True,
     to_device=device,
     worker_options=glt.distributed.RemoteDistSamplingWorkerOptions(
-        # server_rank=[0],
         num_workers=1,
         worker_devices=[torch.device("cpu")],
         worker_concurrency=1,
