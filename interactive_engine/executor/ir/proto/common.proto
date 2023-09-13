@@ -85,5 +85,7 @@ enum DataType {
   STRING_ARRAY = 9;
   PAIR_ARRAY = 10;
   NONE = 11;
-  DATE = 12; // todo: define `DATE` as message structure which contains date_format 
+  DATE32 = 12;
+  TIME32 = 13;
+  TIMESTAMP = 14;
 }

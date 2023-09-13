@@ -20,6 +20,7 @@ use std::convert::{TryFrom, TryInto};
 
 use dyn_type::arith::{BitOperand, Exp};
 use dyn_type::object;
+use dyn_type::object::RawType;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::expr_parse::to_suffix_expr;
@@ -54,11 +55,17 @@ pub enum Operand {
     VarMap(Vec<Operand>),
 }
 
+#[derive(Debug, Clone)]
+pub enum Function {
+    Extract((common_pb::extract::Interval, RawType)),
+}
+
 /// An inner representation of `common_pb::ExprOpr` for one-shot translation of `common_pb::ExprOpr`.
 #[derive(Debug, Clone)]
 pub(crate) enum InnerOpr {
     Logical(common_pb::Logical),
     Arith(common_pb::Arithmetic),
+    Function(Function),
     Operand(Operand),
 }
 
@@ -68,6 +75,7 @@ impl ToString for InnerOpr {
             InnerOpr::Logical(logical) => format!("{:?}", logical),
             InnerOpr::Arith(arith) => format!("{:?}", arith),
             InnerOpr::Operand(item) => format!("{:?}", item),
+            InnerOpr::Function(func) => format!("{:?}", func),
         }
     }
 }
@@ -160,6 +168,52 @@ fn apply_arith<'a>(
     })
 }
 
+pub(crate) fn apply_function<'a>(
+    function: &Function, a: BorrowObject<'a>, _b_opt: Option<BorrowObject<'a>>,
+) -> ExprEvalResult<Object> {
+    use common_pb::extract::Interval;
+    match function {
+        Function::Extract((interval, raw_type)) => match interval {
+            Interval::Year => Ok(a
+                .as_date_format(raw_type)?
+                .year()
+                .ok_or(ExprEvalError::GetNoneFromContext)?
+                .into()),
+            Interval::Month => Ok((a
+                .as_date_format(raw_type)?
+                .month()
+                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .into()),
+            Interval::Day => Ok((a
+                .as_date_format(raw_type)?
+                .day()
+                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .into()),
+            Interval::Hour => Ok((a
+                .as_date_format(raw_type)?
+                .hour()
+                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .into()),
+            Interval::Minute => Ok((a
+                .as_date_format(raw_type)?
+                .minute()
+                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .into()),
+            Interval::Second => Ok((a
+                .as_date_format(raw_type)?
+                .second()
+                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .into()),
+            Interval::Millisecond => Ok((a
+                .as_date_format(raw_type)?
+                .millisecond()
+                .ok_or(ExprEvalError::GetNoneFromContext)?
+                as i32)
+                .into()),
+        },
+    }
+}
+
 pub(crate) fn apply_logical<'a>(
     logical: &common_pb::Logical, a: BorrowObject<'a>, b_opt: Option<BorrowObject<'a>>,
 ) -> ExprEvalResult<Object> {
@@ -220,14 +274,17 @@ impl Evaluator {
             let first = _first.unwrap();
             let second = _second.unwrap();
             if let InnerOpr::Logical(logical) = second {
-                let first = match first.eval(context) {
-                    Ok(first) => Ok(first),
-                    Err(err) => match err {
-                        ExprEvalError::GetNoneFromContext => Ok(Object::None),
-                        _ => Err(err),
-                    },
-                };
+                let mut first = first.eval(context);
+                if common_pb::Logical::Isnull.eq(logical) {
+                    match first {
+                        Err(ExprEvalError::GetNoneFromContext) => first = Ok(Object::None),
+                        _ => {}
+                    }
+                }
                 Ok(apply_logical(logical, first?.as_borrow(), None)?)
+            } else if let InnerOpr::Function(function) = second {
+                let first = first.eval(context)?;
+                Ok(apply_function(function, first.as_borrow(), None)?)
             } else {
                 if !second.is_operand() {
                     Err(ExprEvalError::MissingOperands(second.into()))
@@ -240,8 +297,8 @@ impl Evaluator {
             let second = _second.unwrap();
             let third = _third.unwrap();
             if let InnerOpr::Logical(logical) = third {
-                // to deal with two unary operators cases, e.g., !(!true), !(a isNull) etc.
-                if common_pb::Logical::Not.eq(logical) || common_pb::Logical::Isnull.eq(logical) {
+                if third.is_unary() {
+                    // to deal with two unary operators cases, e.g., !(!true), !(isNull(a)),isNull(extract(a)) etc.
                     if let InnerOpr::Logical(inner_logical) = second {
                         let mut inner_first = first.eval(context);
                         if common_pb::Logical::Isnull.eq(inner_logical) {
@@ -258,11 +315,17 @@ impl Evaluator {
                             }
                         }
                         return Ok(apply_logical(logical, first?.as_borrow(), None)?);
+                    } else if let InnerOpr::Function(function) = second {
+                        let inner_first = first.eval(context)?;
+                        return Ok(apply_function(function, inner_first.as_borrow(), None)?);
+                    } else {
+                        return Err(ExprEvalError::OtherErr("invalid expression".to_string()));
                     }
+                } else {
+                    let a = first.eval(context)?;
+                    let b = second.eval(context)?;
+                    Ok(apply_logical(logical, a.as_borrow(), Some(b.as_borrow()))?)
                 }
-                let a = first.eval(context)?;
-                let b = second.eval(context)?;
-                Ok(apply_logical(logical, a.as_borrow(), Some(b.as_borrow()))?)
             } else if let InnerOpr::Arith(arith) = third {
                 let a = first.eval(context)?;
                 let b = second.eval(context)?;
@@ -360,7 +423,17 @@ impl Evaluate for Evaluator {
                                 }
                             }
                         }
-
+                        InnerOpr::Function(function) => {
+                            if opr.is_unary() {
+                                apply_function(function, first?.as_borrow(), None)
+                            } else {
+                                if let Some(second) = stack.pop() {
+                                    apply_function(function, second?.as_borrow(), Some(first?.as_borrow()))
+                                } else {
+                                    Err(ExprEvalError::OtherErr("invalid expression".to_string()))
+                                }
+                            }
+                        }
                         InnerOpr::Arith(arith) => {
                             if let Some(second) = stack.pop() {
                                 apply_arith(arith, second?.as_borrow(), first?.as_borrow())
@@ -468,6 +541,52 @@ impl TryFrom<common_pb::ExprOpr> for Operand {
     }
 }
 
+impl TryFrom<common_pb::ExprOpr> for Function {
+    type Error = ParsePbError;
+
+    fn try_from(value: common_pb::ExprOpr) -> Result<Self, Self::Error> {
+        use common_pb::expr_opr::Item::*;
+        if let Some(item) = value.item {
+            match item {
+                Extract(extract) => {
+                    let interval =
+                        unsafe { std::mem::transmute::<_, common_pb::extract::Interval>(extract.interval) };
+                    let ir_data_type = value
+                        .node_type
+                        .ok_or(ParsePbError::EmptyFieldError("Type is emtpy in Extract".to_string()))?
+                        .r#type
+                        .ok_or(ParsePbError::EmptyFieldError("Type is emtpy in Extract".to_string()))?;
+                    let raw_type = match ir_data_type {
+                        common_pb::ir_data_type::Type::DataType(date_type) => {
+                            let date_type =
+                                unsafe { std::mem::transmute::<_, common_pb::DataType>(date_type) };
+                            // We only support extract from type Date32/Time32/Timestamp/String currently.
+                            // If extract from a String type, it should be formatted as some predefined ISO format, otherwise, the parsing will fail.
+                            match date_type {
+                                common_pb::DataType::Date32 => RawType::Date,
+                                common_pb::DataType::Time32 => RawType::Time,
+                                common_pb::DataType::Timestamp => RawType::DateTime,
+                                common_pb::DataType::String => RawType::String,
+                                _ => Err(ParsePbError::Unsupported(format!(
+                                    "unsupported data type {:?} for Extract",
+                                    date_type
+                                )))?,
+                            }
+                        }
+                        common_pb::ir_data_type::Type::GraphType(_) => Err(ParsePbError::Unsupported(
+                            "unsupported data type GraphType for Extract".to_string(),
+                        ))?,
+                    };
+                    Ok(Function::Extract((interval, raw_type)))
+                }
+                _ => Err(ParsePbError::ParseError("invalid operators for a Function".to_string())),
+            }
+        } else {
+            Err(ParsePbError::from("empty value provided"))
+        }
+    }
+}
+
 impl TryFrom<common_pb::ExprOpr> for InnerOpr {
     type Error = ParsePbError;
 
@@ -484,6 +603,7 @@ impl TryFrom<common_pb::ExprOpr> for InnerOpr {
                 Arith(arith) => {
                     Ok(Self::Arith(unsafe { std::mem::transmute::<_, common_pb::Arithmetic>(*arith) }))
                 }
+                Extract(_) => Ok(Self::Function(unit.clone().try_into()?)),
                 _ => Ok(Self::Operand(unit.clone().try_into()?)),
             }
         } else {
@@ -613,6 +733,19 @@ impl InnerOpr {
     pub fn is_operand(&self) -> bool {
         match self {
             InnerOpr::Operand(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_unary(&self) -> bool {
+        match self {
+            InnerOpr::Logical(logical) => match logical {
+                common_pb::Logical::Not | common_pb::Logical::Isnull => true,
+                _ => false,
+            },
+            InnerOpr::Function(function) => match function {
+                Function::Extract(_) => true,
+            },
             _ => false,
         }
     }
@@ -992,6 +1125,217 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval = Evaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
+            assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
+        }
+    }
+
+    fn prepare_context_with_date() -> Vertices {
+        let map1: HashMap<NameOrId, Object> = vec![
+            (NameOrId::from("date1".to_string()), "2020-08-08".into()),
+            (NameOrId::from("date2".to_string()), (20200808 as i32).into()),
+            (NameOrId::from("time1".to_string()), "10:11:12.100".into()),
+            (NameOrId::from("time2".to_string()), (101112100 as i32).into()),
+            (NameOrId::from("datetime1".to_string()), "2020-08-08T23:11:12.100-11:00".into()),
+            (NameOrId::from("datetime2".to_string()), "2020-08-09 10:11:12.100".into()),
+            (NameOrId::from("datetime3".to_string()), (1602324610100 as i64).into()), // 2020-10-10 10:10:10
+        ]
+        .into_iter()
+        .collect();
+        Vertices { vec: vec![Vertex::new(1, Some(9.into()), DynDetails::new(map1))] }
+    }
+
+    fn prepare_extract(
+        expr_str: &str, interval: common_pb::extract::Interval, data_type: common_pb::DataType,
+    ) -> common_pb::Expression {
+        let mut operators = str_to_expr_pb(expr_str.to_string())
+            .unwrap()
+            .operators;
+        let extract_data_type = common_pb::IrDataType {
+            r#type: Some(common_pb::ir_data_type::Type::DataType(data_type as i32)),
+        };
+        let extract_opr = common_pb::ExprOpr {
+            node_type: Some(extract_data_type),
+            item: Some(common_pb::expr_opr::Item::Extract(common_pb::Extract {
+                interval: interval as i32,
+            })),
+        };
+        operators.push(extract_opr);
+        common_pb::Expression { operators }
+    }
+
+    #[test]
+    fn test_eval_extract() {
+        let ctxt = prepare_context_with_date();
+        let cases = vec![
+            // date1: "2020-08-08"
+            prepare_extract("@0.date1", common_pb::extract::Interval::Year, common_pb::DataType::String),
+            prepare_extract("@0.date1", common_pb::extract::Interval::Month, common_pb::DataType::String),
+            prepare_extract("@0.date1", common_pb::extract::Interval::Day, common_pb::DataType::String),
+            // date2: 20200808
+            prepare_extract("@0.date2", common_pb::extract::Interval::Year, common_pb::DataType::Date32),
+            prepare_extract("@0.date2", common_pb::extract::Interval::Month, common_pb::DataType::Date32),
+            prepare_extract("@0.date2", common_pb::extract::Interval::Day, common_pb::DataType::Date32),
+            // time1: "10:11:12.100"
+            prepare_extract("@0.time1", common_pb::extract::Interval::Hour, common_pb::DataType::String),
+            prepare_extract("@0.time1", common_pb::extract::Interval::Minute, common_pb::DataType::String),
+            prepare_extract("@0.time1", common_pb::extract::Interval::Second, common_pb::DataType::String),
+            prepare_extract(
+                "@0.time1",
+                common_pb::extract::Interval::Millisecond,
+                common_pb::DataType::String,
+            ),
+            // time2: 101112100
+            prepare_extract("@0.time2", common_pb::extract::Interval::Hour, common_pb::DataType::Time32),
+            prepare_extract("@0.time2", common_pb::extract::Interval::Minute, common_pb::DataType::Time32),
+            prepare_extract("@0.time2", common_pb::extract::Interval::Second, common_pb::DataType::Time32),
+            prepare_extract(
+                "@0.time2",
+                common_pb::extract::Interval::Millisecond,
+                common_pb::DataType::Time32,
+            ),
+            // datetime1: "2020-08-08T23:11:12.100-11:00"
+            prepare_extract(
+                "@0.datetime1",
+                common_pb::extract::Interval::Year,
+                common_pb::DataType::String,
+            ),
+            prepare_extract(
+                "@0.datetime1",
+                common_pb::extract::Interval::Month,
+                common_pb::DataType::String,
+            ),
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Day, common_pb::DataType::String),
+            prepare_extract(
+                "@0.datetime1",
+                common_pb::extract::Interval::Hour,
+                common_pb::DataType::String,
+            ),
+            prepare_extract(
+                "@0.datetime1",
+                common_pb::extract::Interval::Minute,
+                common_pb::DataType::String,
+            ),
+            prepare_extract(
+                "@0.datetime1",
+                common_pb::extract::Interval::Second,
+                common_pb::DataType::String,
+            ),
+            prepare_extract(
+                "@0.datetime1",
+                common_pb::extract::Interval::Millisecond,
+                common_pb::DataType::String,
+            ),
+            // datetime2: "2020-08-09 10:11:12.100"
+            prepare_extract(
+                "@0.datetime2",
+                common_pb::extract::Interval::Year,
+                common_pb::DataType::String,
+            ),
+            prepare_extract(
+                "@0.datetime2",
+                common_pb::extract::Interval::Month,
+                common_pb::DataType::String,
+            ),
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Day, common_pb::DataType::String),
+            prepare_extract(
+                "@0.datetime2",
+                common_pb::extract::Interval::Hour,
+                common_pb::DataType::String,
+            ),
+            prepare_extract(
+                "@0.datetime2",
+                common_pb::extract::Interval::Minute,
+                common_pb::DataType::String,
+            ),
+            prepare_extract(
+                "@0.datetime2",
+                common_pb::extract::Interval::Second,
+                common_pb::DataType::String,
+            ),
+            prepare_extract(
+                "@0.datetime2",
+                common_pb::extract::Interval::Millisecond,
+                common_pb::DataType::String,
+            ),
+            // datetime3: 1602324610100, i.e., 2020-10-10 10:10:10
+            prepare_extract(
+                "@0.datetime3",
+                common_pb::extract::Interval::Year,
+                common_pb::DataType::Timestamp,
+            ),
+            prepare_extract(
+                "@0.datetime3",
+                common_pb::extract::Interval::Month,
+                common_pb::DataType::Timestamp,
+            ),
+            prepare_extract(
+                "@0.datetime3",
+                common_pb::extract::Interval::Day,
+                common_pb::DataType::Timestamp,
+            ),
+            prepare_extract(
+                "@0.datetime3",
+                common_pb::extract::Interval::Hour,
+                common_pb::DataType::Timestamp,
+            ),
+            prepare_extract(
+                "@0.datetime3",
+                common_pb::extract::Interval::Minute,
+                common_pb::DataType::Timestamp,
+            ),
+            prepare_extract(
+                "@0.datetime3",
+                common_pb::extract::Interval::Second,
+                common_pb::DataType::Timestamp,
+            ),
+            prepare_extract(
+                "@0.datetime3",
+                common_pb::extract::Interval::Millisecond,
+                common_pb::DataType::Timestamp,
+            ),
+        ];
+
+        let expected = vec![
+            object!(2020),
+            object!(8),
+            object!(8),
+            object!(2020),
+            object!(8),
+            object!(8),
+            object!(10),
+            object!(11),
+            object!(12),
+            object!(100),
+            object!(10),
+            object!(11),
+            object!(12),
+            object!(100),
+            object!(2020),
+            object!(8),
+            object!(8),
+            object!(23),
+            object!(11),
+            object!(12),
+            object!(100),
+            object!(2020),
+            object!(8),
+            object!(9),
+            object!(10),
+            object!(11),
+            object!(12),
+            object!(100),
+            object!(2020),
+            object!(10),
+            object!(10),
+            object!(10),
+            object!(10),
+            object!(10),
+            object!(100),
+        ];
+
+        for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval = Evaluator::try_from(case).unwrap();
+            println!("{:?}", eval.eval::<_, Vertices>(Some(&ctxt)).unwrap());
             assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
         }
     }
