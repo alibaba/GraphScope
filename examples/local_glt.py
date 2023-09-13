@@ -93,7 +93,7 @@ train_loader = glt.distributed.DistNeighborLoader(
         buffer_size="1GB",
         prefetch_size=1,
         glt_graph=glt_graph,
-        
+        option_type='train'
     ),
 )
 
@@ -113,7 +113,8 @@ test_loader = glt.distributed.DistNeighborLoader(
         worker_concurrency=1,
         buffer_size="1GB",
         prefetch_size=1,
-        glt_graph=glt_graph
+        glt_graph=glt_graph,
+        option_type='test'
     ),
 )
 
