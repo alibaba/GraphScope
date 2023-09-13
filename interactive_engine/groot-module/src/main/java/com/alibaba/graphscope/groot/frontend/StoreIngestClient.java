@@ -58,9 +58,9 @@ public class StoreIngestClient extends RpcClient {
                 });
     }
 
-    public void storeClearIngest(CompletionCallback<Void> callback) {
+    public void storeClearIngest(String path, CompletionCallback<Void> callback) {
         this.stub.storeClearIngest(
-                StoreClearIngestRequest.newBuilder().build(),
+                StoreClearIngestRequest.newBuilder().setDataPath(path).build(),
                 new StreamObserver<StoreClearIngestResponse>() {
                     @Override
                     public void onNext(StoreClearIngestResponse storeClearIngestResponse) {

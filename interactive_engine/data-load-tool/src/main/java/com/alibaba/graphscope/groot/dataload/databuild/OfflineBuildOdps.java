@@ -224,6 +224,11 @@ public class OfflineBuildOdps {
                 client.clearIngest(uniquePath);
                 throw ex;
             }
+            try {
+                client.clearIngest(uniquePath);
+            } catch (Exception ex) {
+                logger.error("Clear ingest failed, ignored.");
+            }
         }
     }
 

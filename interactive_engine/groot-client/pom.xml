@@ -181,7 +181,6 @@
                         <argument>com.alibaba.graphscope.groot.sdk.example.RealtimeWrite</argument>
                     </arguments>
                     <mainClass>com.alibaba.graphscope.groot.sdk.example.RealtimeWrite</mainClass>
-                    <complianceLevel>1.11</complianceLevel>
                     <killAfter>-1</killAfter>
                 </configuration>
             </plugin>
