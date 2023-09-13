@@ -165,6 +165,7 @@ where
         }
 
         let conf = parse_conf_req(conf.unwrap());
+        info!("job conf {:?}", conf);
         pegasus::wait_servers_ready(conf.servers());
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         let rpc_sink = RpcSink::new(conf.job_id, tx);

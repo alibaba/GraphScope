@@ -48,7 +48,7 @@ public class StoreIngestClients extends RoleClients<StoreIngestClient> implement
     }
 
     @Override
-    public void clearIngest(int storeId, CompletionCallback<Void> callback) {
-        this.getClient(storeId).storeClearIngest(callback);
+    public void clearIngest(int storeId, String path, CompletionCallback<Void> callback) {
+        this.getClient(storeId).storeClearIngest(path, callback);
     }
 }
