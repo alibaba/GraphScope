@@ -255,7 +255,8 @@ class ShortestPathOp {
     for (auto path : paths) {
       size_t s = path.size();
       std::vector<int32_t> offset(s, 0);
-      Path<vertex_id_t> new_path(std::move(path), std::move(offset));
+      Path<vertex_id_t, label_id_t> new_path(std::move(path),
+                                             std::move(offset));
       path_set.EmplacePath(std::move(new_path));
     }
     return path_set;

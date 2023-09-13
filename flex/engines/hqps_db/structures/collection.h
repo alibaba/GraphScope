@@ -548,7 +548,7 @@ class MinBuilder {
  public:
   MinBuilder(const Collection<T>& set, const GI& graph,
              PropNameArray<T> prop_names) {
-    vec_.resize(set.Size(), std::numeric_limits<T>::max());
+    // vec_.resize(set.Size(), std::numeric_limits<T>::max());
   }
   MinBuilder() {}
   MinBuilder(size_t cap) { vec_.resize(cap, (T) 0); }
@@ -557,6 +557,9 @@ class MinBuilder {
   template <typename IND_ELE_TUPLE, typename DATA_TUPLE>
   void insert(size_t ind, const IND_ELE_TUPLE& tuple, const DATA_TUPLE& data) {
     const auto& cur_ind_ele = gs::get_from_tuple<tag_id>(tuple);
+    VLOG(10) << "Insert min with ind: " << ind
+             << ", value: " << std::get<1>(cur_ind_ele)
+             << ", vec size: " << vec_.size();
     // just count times.
     while (vec_.size() <= ind) {
       vec_.emplace_back(std::numeric_limits<T>::max());

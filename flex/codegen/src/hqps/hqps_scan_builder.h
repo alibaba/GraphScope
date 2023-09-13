@@ -136,10 +136,10 @@ class ScanOpBuilder {
           std::string expr_func_name, expr_code;
           std::vector<codegen::ParamConst> func_call_param_const;
           std::vector<std::pair<int32_t, std::string>> expr_tag_props;
-          common::DataType unused_expr_ret_type;
+          std::vector<common::DataType> unused_expr_ret_type;
           std::tie(expr_func_name, func_call_param_const, expr_tag_props,
                    expr_code, unused_expr_ret_type) = expr_builder.Build();
-          VLOG(10) << "Found expr in edge_expand_opt:  " << expr_func_name;
+          VLOG(10) << "Found expr in scan:  " << expr_func_name;
           // generate code.
           ctx_.AddExprCode(expr_code);
           std::string expr_var_name = ctx_.GetNextExprVarName();

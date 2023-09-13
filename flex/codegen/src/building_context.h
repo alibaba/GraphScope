@@ -113,6 +113,10 @@ struct TagIndMapping {
     return tag_ind_2_tag_ids_;
   }
 
+  const std::vector<int32_t>& GetTagId2TagInds() const {
+    return tag_id_2_tag_inds_;
+  }
+
   // convert tag_ind (us) to tag ids
   std::vector<int32_t> tag_ind_2_tag_ids_;
   // convert tag ids(pb) to tag_inds
