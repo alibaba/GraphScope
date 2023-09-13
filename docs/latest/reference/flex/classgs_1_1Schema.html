@@ -102,8 +102,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:af773661c01ce90ab4fdb0600a320a724"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf7c183608763c5fa090e31a5604fc24"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#abf7c183608763c5fa090e31a5604fc24">~Schema</a> ()</td></tr>
 <tr class="separator:abf7c183608763c5fa090e31a5604fc24"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1c3d6a1b136147429903d5e18dc0cde1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a1c3d6a1b136147429903d5e18dc0cde1">add_vertex_label</a> (const std::string &amp;label, const std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt; &amp;property_types, const std::vector&lt; std::string &gt; &amp;property_names, const std::vector&lt; std::pair&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>, std::string &gt;&gt; &amp;primary_key, const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;strategies={}, size_t max_vnum=static_cast&lt; size_t &gt;(1)&lt;&lt; 32)</td></tr>
-<tr class="separator:a1c3d6a1b136147429903d5e18dc0cde1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f3e18ccc636023323bfd2ec54362693"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a2f3e18ccc636023323bfd2ec54362693">add_vertex_label</a> (const std::string &amp;label, const std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt; &amp;property_types, const std::vector&lt; std::string &gt; &amp;property_names, const std::vector&lt; std::tuple&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>, std::string, size_t &gt;&gt; &amp;primary_key, const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;strategies={}, size_t max_vnum=static_cast&lt; size_t &gt;(1)&lt;&lt; 32)</td></tr>
+<tr class="separator:a2f3e18ccc636023323bfd2ec54362693"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1c7145e696a9ca6ba8e64ede660fd181"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a1c7145e696a9ca6ba8e64ede660fd181">add_edge_label</a> (const std::string &amp;src_label, const std::string &amp;dst_label, const std::string &amp;edge_label, const std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt; &amp;properties, const std::vector&lt; std::string &gt; &amp;prop_names, <a class="el" href="namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8">EdgeStrategy</a> oe=<a class="el" href="namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8ac73de5127566435df5b6cfb220788aa7">EdgeStrategy::kMultiple</a>, <a class="el" href="namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8">EdgeStrategy</a> ie=<a class="el" href="namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8ac73de5127566435df5b6cfb220788aa7">EdgeStrategy::kMultiple</a>)</td></tr>
 <tr class="separator:a1c7145e696a9ca6ba8e64ede660fd181"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab06c8ca6362124bc4fad4b491057fda9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#ab06c8ca6362124bc4fad4b491057fda9">vertex_label_num</a> () const</td></tr>
@@ -122,6 +122,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:aea270c65b66c07b84746adf572c381e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa86200c7746702860012c80a58465cba"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#aa86200c7746702860012c80a58465cba">get_vertex_properties</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label) const</td></tr>
 <tr class="separator:aa86200c7746702860012c80a58465cba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a87789519403940ab6ac378e9bcfc42ab"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a87789519403940ab6ac378e9bcfc42ab">get_vertex_property_names</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label) const</td></tr>
+<tr class="separator:a87789519403940ab6ac378e9bcfc42ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2fa006de842c79c637fd9ef415a40882"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a2fa006de842c79c637fd9ef415a40882">get_vertex_storage_strategies</a> (const std::string &amp;label) const</td></tr>
 <tr class="separator:a2fa006de842c79c637fd9ef415a40882"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a50b1e243c98be74f226fb52c6d6b767e"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a50b1e243c98be74f226fb52c6d6b767e">get_max_vnum</a> (const std::string &amp;label) const</td></tr>
@@ -130,10 +132,14 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:aacdfd140d2b48510b7fdb845f7613709"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1c95a96b6bd7087b886cf01bfc65ed85"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a1c95a96b6bd7087b886cf01bfc65ed85">get_edge_properties</a> (const std::string &amp;src_label, const std::string &amp;dst_label, const std::string &amp;label) const</td></tr>
 <tr class="separator:a1c95a96b6bd7087b886cf01bfc65ed85"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0375b1ee5cccbae234484613696a787"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#ae0375b1ee5cccbae234484613696a787">get_edge_properties</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label) const</td></tr>
+<tr class="separator:ae0375b1ee5cccbae234484613696a787"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab791af3936a7327c94ec0144f38f192c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#ab791af3936a7327c94ec0144f38f192c">get_edge_property</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge) const</td></tr>
 <tr class="separator:ab791af3936a7327c94ec0144f38f192c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afdee69ac9ff68f6ab8eea32b7bd7db15"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#afdee69ac9ff68f6ab8eea32b7bd7db15">get_edge_property_names</a> (const std::string &amp;src_label, const std::string &amp;dst_label, const std::string &amp;label) const</td></tr>
 <tr class="separator:afdee69ac9ff68f6ab8eea32b7bd7db15"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e265d0c015e8ec09f95ea174f34df89"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a4e265d0c015e8ec09f95ea174f34df89">get_edge_property_names</a> (const <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &amp;src_label, const <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &amp;dst_label, const <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &amp;label) const</td></tr>
+<tr class="separator:a4e265d0c015e8ec09f95ea174f34df89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a86c4bb765e95875dd4b5ab00f07a9aaf"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a86c4bb765e95875dd4b5ab00f07a9aaf">vertex_has_property</a> (const std::string &amp;label, const std::string &amp;prop) const</td></tr>
 <tr class="separator:a86c4bb765e95875dd4b5ab00f07a9aaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a30a924160e24b07cb9ceddbf920b33cc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a30a924160e24b07cb9ceddbf920b33cc">vertex_has_primary_key</a> (const std::string &amp;label, const std::string &amp;prop) const</td></tr>
@@ -158,8 +164,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a873d2bc8e6f369be7f90d3cf2dc54ebe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7f968c7daa8e6c01f53bc0342fe9e2e"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#af7f968c7daa8e6c01f53bc0342fe9e2e">get_edge_label_name</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> index) const</td></tr>
 <tr class="separator:af7f968c7daa8e6c01f53bc0342fe9e2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7bd832f860b8497c300d7d4456793adb"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::pair&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>, std::string &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a7bd832f860b8497c300d7d4456793adb">get_vertex_primary_key</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> index) const</td></tr>
-<tr class="separator:a7bd832f860b8497c300d7d4456793adb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed254d7299317ab1ee9a67beae1f8334"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::tuple&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>, std::string, size_t &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#aed254d7299317ab1ee9a67beae1f8334">get_vertex_primary_key</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> index) const</td></tr>
+<tr class="separator:aed254d7299317ab1ee9a67beae1f8334"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a776d2fb5aae87b4d6f731dbb5482cb44"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a776d2fb5aae87b4d6f731dbb5482cb44">get_vertex_primary_key_name</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> index) const</td></tr>
+<tr class="separator:a776d2fb5aae87b4d6f731dbb5482cb44"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4dec6c2aeacea68a8391673263390933"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a4dec6c2aeacea68a8391673263390933">Serialize</a> (std::unique_ptr&lt; grape::LocalIOAdaptor &gt; &amp;writer)</td></tr>
 <tr class="separator:a4dec6c2aeacea68a8391673263390933"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a802c0caae51b82188aee45ab5c28af62"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a802c0caae51b82188aee45ab5c28af62">Deserialize</a> (std::unique_ptr&lt; grape::LocalIOAdaptor &gt; &amp;reader)</td></tr>
@@ -195,8 +203,8 @@ Private Attributes</h2></td></tr>
 <tr class="separator:af56f7fedb0e863fa1d607b160139871b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95e12f4077f24399f84b024b1d4fe2cd"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; std::string &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a95e12f4077f24399f84b024b1d4fe2cd">vprop_names_</a></td></tr>
 <tr class="separator:a95e12f4077f24399f84b024b1d4fe2cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a78b7e874470a9cc66fd68ab8759622cf"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; std::pair&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>, std::string &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a78b7e874470a9cc66fd68ab8759622cf">v_primary_keys_</a></td></tr>
-<tr class="separator:a78b7e874470a9cc66fd68ab8759622cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a208142d4e10c3b93b6633e79f1306f54"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; std::tuple&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>, std::string, size_t &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a208142d4e10c3b93b6633e79f1306f54">v_primary_keys_</a></td></tr>
+<tr class="separator:a208142d4e10c3b93b6633e79f1306f54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a98b4b5a09ac0a8419744eb5ebfa476dc"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a98b4b5a09ac0a8419744eb5ebfa476dc">vprop_storage_</a></td></tr>
 <tr class="separator:a98b4b5a09ac0a8419744eb5ebfa476dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6e6ce96930261a10765c8ba807b9466c"><td class="memItemLeft" align="right" valign="top">std::map&lt; uint32_t, std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a6e6ce96930261a10765c8ba807b9466c">eproperties_</a></td></tr>
@@ -337,8 +345,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a1c3d6a1b136147429903d5e18dc0cde1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1c3d6a1b136147429903d5e18dc0cde1">&#9670;&nbsp;</a></span>add_vertex_label()</h2>
+<a id="a2f3e18ccc636023323bfd2ec54362693"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2f3e18ccc636023323bfd2ec54362693">&#9670;&nbsp;</a></span>add_vertex_label()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -364,7 +372,7 @@ Private Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; std::pair&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>, std::string &gt;&gt; &amp;&#160;</td>
+          <td class="paramtype">const std::vector&lt; std::tuple&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>, std::string, size_t &gt;&gt; &amp;&#160;</td>
           <td class="paramname"><em>primary_key</em>, </td>
         </tr>
         <tr>
@@ -675,7 +683,7 @@ Private Attributes</h2></td></tr>
 </div>
 </div>
 <a id="a1c95a96b6bd7087b886cf01bfc65ed85"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1c95a96b6bd7087b886cf01bfc65ed85">&#9670;&nbsp;</a></span>get_edge_properties()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a1c95a96b6bd7087b886cf01bfc65ed85">&#9670;&nbsp;</a></span>get_edge_properties() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -696,6 +704,40 @@ Private Attributes</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>label</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ae0375b1ee5cccbae234484613696a787"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0375b1ee5cccbae234484613696a787">&#9670;&nbsp;</a></span>get_edge_properties() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt; &amp; gs::Schema::get_edge_properties </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>src_label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>dst_label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
           <td class="paramname"><em>label</em>&#160;</td>
         </tr>
         <tr>
@@ -742,8 +784,42 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a4e265d0c015e8ec09f95ea174f34df89"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4e265d0c015e8ec09f95ea174f34df89">&#9670;&nbsp;</a></span>get_edge_property_names() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::vector&lt; std::string &gt; &amp; gs::Schema::get_edge_property_names </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &amp;&#160;</td>
+          <td class="paramname"><em>src_label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &amp;&#160;</td>
+          <td class="paramname"><em>dst_label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &amp;&#160;</td>
+          <td class="paramname"><em>label</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="afdee69ac9ff68f6ab8eea32b7bd7db15"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afdee69ac9ff68f6ab8eea32b7bd7db15">&#9670;&nbsp;</a></span>get_edge_property_names()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#afdee69ac9ff68f6ab8eea32b7bd7db15">&#9670;&nbsp;</a></span>get_edge_property_names() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -898,14 +974,32 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a7bd832f860b8497c300d7d4456793adb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7bd832f860b8497c300d7d4456793adb">&#9670;&nbsp;</a></span>get_vertex_primary_key()</h2>
+<a id="aed254d7299317ab1ee9a67beae1f8334"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aed254d7299317ab1ee9a67beae1f8334">&#9670;&nbsp;</a></span>get_vertex_primary_key()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const std::vector&lt; std::pair&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>, std::string &gt; &gt; &amp; gs::Schema::get_vertex_primary_key </td>
+          <td class="memname">const std::vector&lt; std::tuple&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>, std::string, size_t &gt; &gt; &amp; gs::Schema::get_vertex_primary_key </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>index</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a776d2fb5aae87b4d6f731dbb5482cb44"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a776d2fb5aae87b4d6f731dbb5482cb44">&#9670;&nbsp;</a></span>get_vertex_primary_key_name()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::string&amp; gs::Schema::get_vertex_primary_key_name </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
           <td class="paramname"><em>index</em></td><td>)</td>
@@ -953,7 +1047,7 @@ Private Attributes</h2></td></tr>
 </div>
 </div>
 <a id="aea270c65b66c07b84746adf572c381e2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aea270c65b66c07b84746adf572c381e2">&#9670;&nbsp;</a></span>get_vertex_property_names()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aea270c65b66c07b84746adf572c381e2">&#9670;&nbsp;</a></span>get_vertex_property_names() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -962,6 +1056,24 @@ Private Attributes</h2></td></tr>
           <td class="memname">const std::vector&lt; std::string &gt; &amp; gs::Schema::get_vertex_property_names </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>label</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a87789519403940ab6ac378e9bcfc42ab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a87789519403940ab6ac378e9bcfc42ab">&#9670;&nbsp;</a></span>get_vertex_property_names() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::vector&lt; std::string &gt; &amp; gs::Schema::get_vertex_property_names </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
           <td class="paramname"><em>label</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -1423,8 +1535,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a78b7e874470a9cc66fd68ab8759622cf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a78b7e874470a9cc66fd68ab8759622cf">&#9670;&nbsp;</a></span>v_primary_keys_</h2>
+<a id="a208142d4e10c3b93b6633e79f1306f54"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a208142d4e10c3b93b6633e79f1306f54">&#9670;&nbsp;</a></span>v_primary_keys_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1433,7 +1545,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt;std::vector&lt;std::pair&lt;<a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>, std::string&gt; &gt; &gt; gs::Schema::v_primary_keys_</td>
+          <td class="memname">std::vector&lt;std::vector&lt;std::tuple&lt;<a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>, std::string, size_t&gt; &gt; &gt; gs::Schema::v_primary_keys_</td>
         </tr>
       </table>
   </td>

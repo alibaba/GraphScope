@@ -1,9 +1,0 @@
-<map id="/opt/gs&#45;for&#45;docs/flex/engines/graph_db/database/wal.h" name="/opt/gs&#45;for&#45;docs/flex/engines/graph_db/database/wal.h">
-<area shape="rect" id="node1" title=" " alt="" coords="603,5,847,47"/>
-<area shape="rect" id="node2" href="$graph__db_8cc.html" title=" " alt="" coords="5,95,211,151"/>
-<area shape="rect" id="node3" href="$insert__transaction_8cc.html" title=" " alt="" coords="235,95,440,151"/>
-<area shape="rect" id="node4" href="$single__edge__insert__transaction_8cc.html" title=" " alt="" coords="465,95,711,151"/>
-<area shape="rect" id="node5" href="$single__vertex__insert__transaction_8cc.html" title=" " alt="" coords="736,95,992,151"/>
-<area shape="rect" id="node6" href="$update__transaction_8cc.html" title=" " alt="" coords="1016,95,1221,151"/>
-<area shape="rect" id="node7" href="$wal_8cc.html" title=" " alt="" coords="1245,95,1451,151"/>
-</map>

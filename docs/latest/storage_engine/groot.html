@@ -16,7 +16,7 @@
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="In-memory immutable graphs on Vineyard" href="vineyard.html" /><link rel="prev" title="GRIN: Graph Retrieval INterface" href="grin.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.08.19 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
         <title>Groot: Persistent Graph Store - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -1093,111 +1093,148 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 </pre></div>
 </div>
 <p>The config file should follow a format that is recognized by Java <code class="docutils literal notranslate"><span class="pre">java.util.Properties</span></code> class. Here is an example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>split.size=256
-separator=\\|
-input.path=/tmp/ldbc_sample
-output.path=/tmp/data_output
-graph.endpoint=1.2.3.4:55555
-column.mapping.config={&quot;person_0_0.csv&quot;:{&quot;label&quot;:&quot;person&quot;,&quot;propertiesColMap&quot;:{&quot;0&quot;:&quot;id&quot;,&quot;1&quot;:&quot;name&quot;}},&quot;person_knows_person_0_0.csv&quot;:{&quot;label&quot;:&quot;knows&quot;,&quot;srcLabel&quot;:&quot;person&quot;,&quot;dstLabel&quot;:&quot;person&quot;,&quot;srcPkColMap&quot;:{&quot;0&quot;:&quot;id&quot;},&quot;dstPkColMap&quot;:{&quot;1&quot;:&quot;id&quot;},&quot;propertiesColMap&quot;:{&quot;2&quot;:&quot;date&quot;}}}
-skip.header=true
-load.after.build=true
-# This is not required when load.after.build=true
-# hadoop.endpoint=127.0.0.1:9000
-# ```
-  
-  Details of the parameters are listed below:
-  
-  | Config key            | Required | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-  |-----------------------|----------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-  | split.size            | false    | 256     | Hadoop map-reduce input data split size in MB                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-  | separator             | false    | \\\\\|  | Separator used to parse each field in a line                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 
-  | input.path            | true     | -       | Input HDFS dir                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-  | output.path           | true     | -       | Output HDFS dir                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-  | graph.endpoint        | true     | -       | RPC endpoint of the graph storage service. You can get the RPC endpoint following this document: [GraphScope Store Service](https://github.com/alibaba/GraphScope/tree/main/charts/graphscope-store)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-  | column.mapping.config | true     | -       | Mapping info for each input file in JSON format. Each key in the first level should be a fileName that can be found in the `input.path`, and the corresponding value defines the mapping info. For a vertex type, the mapping info should includes 1) `label` of the vertex type, 2) `propertiesColMap` that describes the mapping from input field to graph property in the format of `{ columnIdx: &quot;propertyName&quot; }`. For an edge type, the mapping info should includes 1) `label` of the edge type, 2) `srcLabel` of the source vertex type, 3) `dstLabel` of the destination vertex type, 4) `srcPkColMap` that describes the mapping from input field to graph property of the primary keys in the source vertex type, 5) `dstPkColMap` that describes the mapping from input field to graph property of the primary keys in the destination vertex type, 6) `propertiesColMap` that describes the mapping from input field to graph property of the edge type |
-  | skip.header           | false    | true    | Whether to skip the first line of the input file                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-  | load.after.build      | false    | false   | Whether to immediately ingest and commit the builded files                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-  | hadoop.endpoint       | false    | -       | Endpoint of hadoop cluster in the format of &lt;host&gt;:&lt;ip&gt;. Not required when `load.after.build` is set to true                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-
-  After data building completed, you can find the output files in the `output.path` of HDFS. The output files includes a 
-  meta file named `META`, an empty file named `_SUCCESS`, and some data files that one for each partition named in the 
-  pattern of `part-r-xxxxx.sst`. The layout of the output directory should look like:
-  
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">split</span><span class="o">.</span><span class="n">size</span><span class="o">=</span><span class="mi">256</span>
+<span class="n">separator</span><span class="o">=</span>\\<span class="o">|</span>
+<span class="nb">input</span><span class="o">.</span><span class="n">path</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">ldbc_sample</span>
+<span class="n">output</span><span class="o">.</span><span class="n">path</span><span class="o">=/</span><span class="n">tmp</span><span class="o">/</span><span class="n">data_output</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">endpoint</span><span class="o">=</span><span class="mf">1.2.3.4</span><span class="p">:</span><span class="mi">55555</span>
+<span class="n">column</span><span class="o">.</span><span class="n">mapping</span><span class="o">.</span><span class="n">config</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;person_0_0.csv&quot;</span><span class="p">:{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span><span class="s2">&quot;person&quot;</span><span class="p">,</span><span class="s2">&quot;propertiesColMap&quot;</span><span class="p">:{</span><span class="s2">&quot;0&quot;</span><span class="p">:</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="s2">&quot;1&quot;</span><span class="p">:</span><span class="s2">&quot;name&quot;</span><span class="p">}},</span><span class="s2">&quot;person_knows_person_0_0.csv&quot;</span><span class="p">:{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span><span class="s2">&quot;knows&quot;</span><span class="p">,</span><span class="s2">&quot;srcLabel&quot;</span><span class="p">:</span><span class="s2">&quot;person&quot;</span><span class="p">,</span><span class="s2">&quot;dstLabel&quot;</span><span class="p">:</span><span class="s2">&quot;person&quot;</span><span class="p">,</span><span class="s2">&quot;srcPkColMap&quot;</span><span class="p">:{</span><span class="s2">&quot;0&quot;</span><span class="p">:</span><span class="s2">&quot;id&quot;</span><span class="p">},</span><span class="s2">&quot;dstPkColMap&quot;</span><span class="p">:{</span><span class="s2">&quot;1&quot;</span><span class="p">:</span><span class="s2">&quot;id&quot;</span><span class="p">},</span><span class="s2">&quot;propertiesColMap&quot;</span><span class="p">:{</span><span class="s2">&quot;2&quot;</span><span class="p">:</span><span class="s2">&quot;date&quot;</span><span class="p">}}}</span>
+<span class="n">skip</span><span class="o">.</span><span class="n">header</span><span class="o">=</span><span class="n">true</span>
+<span class="n">load</span><span class="o">.</span><span class="n">after</span><span class="o">.</span><span class="n">build</span><span class="o">=</span><span class="n">true</span>
+<span class="c1"># This is not required when load.after.build=true</span>
+<span class="c1"># hadoop.endpoint=127.0.0.1:9000</span>
 </pre></div>
 </div>
-<p>/tmp/data_output
-|- META
-|- _SUCCESS
-|- part-r-00000.sst
-|- part-r-00001.sst
-|- part-r-00002.sst
-…</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
-If `load.after.build=true`, then you can skip step 2 and 3.
-Else, please proceed to ingest and commit.
-
-#### 2. Loading graph partitions
-  
-  Now ingest the offline built data into the graph storage. Run:
-  
+<p>Details of the parameters are listed below:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Config key</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>split.size</p></td>
+<td><p>false</p></td>
+<td><p>256</p></td>
+<td><p>Hadoop map-reduce input data split size in MB</p></td>
+</tr>
+<tr class="row-odd"><td><p>separator</p></td>
+<td><p>false</p></td>
+<td><p>\|</p></td>
+<td><p>Separator used to parse each field in a line</p></td>
+</tr>
+<tr class="row-even"><td><p>input.path</p></td>
+<td><p>true</p></td>
+<td><p>-</p></td>
+<td><p>Input HDFS dir</p></td>
+</tr>
+<tr class="row-odd"><td><p>output.path</p></td>
+<td><p>true</p></td>
+<td><p>-</p></td>
+<td><p>Output HDFS dir</p></td>
+</tr>
+<tr class="row-even"><td><p>graph.endpoint</p></td>
+<td><p>true</p></td>
+<td><p>-</p></td>
+<td><p>RPC endpoint of the graph storage service. You can get the RPC endpoint following this document: <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/charts/graphscope-store">GraphScope Store Service</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>column.mapping.config</p></td>
+<td><p>true</p></td>
+<td><p>-</p></td>
+<td><p>Mapping info for each input file in JSON format. Each key in the first level should be a fileName that can be found in the <code class="docutils literal notranslate"><span class="pre">input.path</span></code>, and the corresponding value defines the mapping info. For a vertex type, the mapping info should includes 1) <code class="docutils literal notranslate"><span class="pre">label</span></code> of the vertex type, 2) <code class="docutils literal notranslate"><span class="pre">propertiesColMap</span></code> that describes the mapping from input field to graph property in the format of <code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">columnIdx:</span> <span class="pre">&quot;propertyName&quot;</span> <span class="pre">}</span></code>. For an edge type, the mapping info should includes 1) <code class="docutils literal notranslate"><span class="pre">label</span></code> of the edge type, 2) <code class="docutils literal notranslate"><span class="pre">srcLabel</span></code> of the source vertex type, 3) <code class="docutils literal notranslate"><span class="pre">dstLabel</span></code> of the destination vertex type, 4) <code class="docutils literal notranslate"><span class="pre">srcPkColMap</span></code> that describes the mapping from input field to graph property of the primary keys in the source vertex type, 5) <code class="docutils literal notranslate"><span class="pre">dstPkColMap</span></code> that describes the mapping from input field to graph property of the primary keys in the destination vertex type, 6) <code class="docutils literal notranslate"><span class="pre">propertiesColMap</span></code> that describes the mapping from input field to graph property of the edge type</p></td>
+</tr>
+<tr class="row-even"><td><p>skip.header</p></td>
+<td><p>false</p></td>
+<td><p>true</p></td>
+<td><p>Whether to skip the first line of the input file</p></td>
+</tr>
+<tr class="row-odd"><td><p>load.after.build</p></td>
+<td><p>false</p></td>
+<td><p>false</p></td>
+<td><p>Whether to immediately ingest and commit the builded files</p></td>
+</tr>
+<tr class="row-even"><td><p>hadoop.endpoint</p></td>
+<td><p>false</p></td>
+<td><p>-</p></td>
+<td><p>Endpoint of hadoop cluster in the format of <host>:<ip>. Not required when <code class="docutils literal notranslate"><span class="pre">load.after.build</span></code> is set to true</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>After data building completed, you can find the output files in the <code class="docutils literal notranslate"><span class="pre">output.path</span></code> of HDFS. The output files includes a
+meta file named <code class="docutils literal notranslate"><span class="pre">META</span></code>, an empty file named <code class="docutils literal notranslate"><span class="pre">_SUCCESS</span></code>, and some data files that one for each partition named in the
+pattern of <code class="docutils literal notranslate"><span class="pre">part-r-xxxxx.sst</span></code>. The layout of the output directory should look like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">data_output</span>
+  <span class="o">|-</span> <span class="n">META</span>
+  <span class="o">|-</span> <span class="n">_SUCCESS</span>
+  <span class="o">|-</span> <span class="n">part</span><span class="o">-</span><span class="n">r</span><span class="o">-</span><span class="mf">00000.</span><span class="n">sst</span>
+  <span class="o">|-</span> <span class="n">part</span><span class="o">-</span><span class="n">r</span><span class="o">-</span><span class="mf">00001.</span><span class="n">sst</span>
+  <span class="o">|-</span> <span class="n">part</span><span class="o">-</span><span class="n">r</span><span class="o">-</span><span class="mf">00002.</span><span class="n">sst</span>
+  <span class="o">...</span>
 </pre></div>
 </div>
-<p>$ ./load_data.sh ingest &lt;path/to/config/file&gt;</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
-<span class="n">The</span> <span class="n">offline</span> <span class="n">built</span> <span class="n">data</span> <span class="n">can</span> <span class="n">be</span> <span class="n">ingested</span> <span class="n">successfully</span> <span class="n">only</span> <span class="n">once</span><span class="p">,</span> <span class="n">otherwise</span> <span class="n">errors</span> <span class="n">will</span> <span class="n">occur</span><span class="o">.</span>
-
-<span class="c1">#### 3. Commit to store service</span>
-
-<span class="n">After</span> <span class="n">data</span> <span class="n">ingested</span> <span class="n">into</span> <span class="n">graph</span> <span class="n">storage</span><span class="p">,</span> <span class="n">you</span> <span class="n">need</span> <span class="n">to</span> <span class="n">commit</span> <span class="n">data</span> <span class="n">loading</span><span class="o">.</span> <span class="n">The</span> <span class="n">data</span> <span class="n">will</span> <span class="ow">not</span> <span class="n">be</span> <span class="n">able</span> <span class="n">to</span> <span class="n">read</span> <span class="n">until</span> <span class="n">committed</span> <span class="n">successfully</span><span class="o">.</span> <span class="n">Run</span><span class="p">:</span>
-
+<p>If <code class="docutils literal notranslate"><span class="pre">load.after.build=true</span></code>, then you can skip step 2 and 3.
+Else, please proceed to ingest and commit.</p>
+</section>
+</section>
+<section id="loading-graph-partitions">
+<h4>2. Loading graph partitions<a class="headerlink" href="#loading-graph-partitions" title="Permalink to this heading">#</a></h4>
+<p>Now ingest the offline built data into the graph storage. Run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ./load_data.sh ingest &lt;path/to/config/file&gt;
 </pre></div>
 </div>
-<p>$ ./load_data.sh commit &lt;path/to/config/file&gt;</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
-**Note: The later committed data will overwrite the earlier committed data which have same vertex types or edge relations.**
+<p>The offline built data can be ingested successfully only once, otherwise errors will occur.</p>
+</section>
+<section id="commit-to-store-service">
+<h4>3. Commit to store service<a class="headerlink" href="#commit-to-store-service" title="Permalink to this heading">#</a></h4>
+<p>After data ingested into graph storage, you need to commit data loading. The data will not be able to read until committed successfully. Run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ./load_data.sh commit &lt;path/to/config/file&gt;
+</pre></div>
+</div>
+<p><strong>Note: The later committed data will overwrite the earlier committed data which have same vertex types or edge relations.</strong></p>
+</section>
+</section>
+<section id="realtime-write">
+<h3>Realtime Write<a class="headerlink" href="#realtime-write" title="Permalink to this heading">#</a></h3>
+<p>Groot graph have several methods for realtime write as follows:</p>
+<section id="id1">
+<h4>Python<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h4>
+<p>Refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/python/graphscope/tests/kubernetes/test_store_service.py">test_store_service.py</a> for examples.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Inserts one vertex</span>
+<span class="k">def</span> <span class="nf">insert_vertex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex</span><span class="p">:</span> <span class="n">VertexRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
+<span class="c1"># Inserts a list of vertices</span>
+<span class="k">def</span> <span class="nf">insert_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
-### Realtime Write
+<span class="c1"># Update one vertex to new properties</span>
+<span class="k">def</span> <span class="nf">update_vertex_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex</span><span class="p">:</span> <span class="n">VertexRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
-Groot graph have several methods for realtime write as follows:
+<span class="c1"># Delele one vertex</span>
+<span class="k">def</span> <span class="nf">delete_vertex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex_pk</span><span class="p">:</span> <span class="n">VertexRecordKey</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
-#### Python
+<span class="c1"># Delete a list of vertices</span>
+<span class="k">def</span> <span class="nf">delete_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex_pks</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
-Refer to [test_store_service.py](https://github.com/alibaba/GraphScope/blob/main/python/graphscope/tests/kubernetes/test_store_service.py) for examples.
+<span class="c1"># Insert one edge</span>
+<span class="k">def</span> <span class="nf">insert_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">:</span> <span class="n">EdgeRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
-```python
-# Inserts one vertex
-def insert_vertex(self, vertex: VertexRecordKey, properties: dict) -&gt; int: pass
+<span class="c1"># Insert a list of edges</span>
+<span class="k">def</span> <span class="nf">insert_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
-# Inserts a list of vertices
-def insert_vertices(self, vertices: list) -&gt; int: pass
+<span class="c1"># Update one edge to new properties</span>
+<span class="k">def</span> <span class="nf">update_edge_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">:</span> <span class="n">EdgeRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
-# Update one vertex to new properties
-def update_vertex_properties(self, vertex: VertexRecordKey, properties: dict) -&gt; int: pass
+<span class="c1"># Delete one edge</span>
+<span class="k">def</span> <span class="nf">delete_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">:</span> <span class="n">EdgeRecordKey</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
-# Delele one vertex
-def delete_vertex(self, vertex_pk: VertexRecordKey) -&gt; int: pass
+<span class="c1"># Delete a list of edges</span>
+<span class="k">def</span> <span class="nf">delete_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge_pks</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
-# Delete a list of vertices
-def delete_vertices(self, vertex_pks: list) -&gt; int: pass
-
-# Insert one edge
-def insert_edge(self, edge: EdgeRecordKey, properties: dict) -&gt; int: pass
-
-# Insert a list of edges
-def insert_edges(self, edges: list) -&gt; int: pass
-
-# Update one edge to new properties
-def update_edge_properties(self, edge: EdgeRecordKey, properties: dict) -&gt; int: pass
-
-# Delete one edge
-def delete_edge(self, edge: EdgeRecordKey) -&gt; int: pass
-
-# Delete a list of edges
-def delete_edges(self, edge_pks: list) -&gt; int: pass
-
-# Make sure the snapshot is avaiable
-def remote_flush(self, snapshot_id: int): pass
+<span class="c1"># Make sure the snapshot is avaiable</span>
+<span class="k">def</span> <span class="nf">remote_flush</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">snapshot_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span> <span class="k">pass</span>
 </pre></div>
 </div>
 <p>We use two utility class called <code class="docutils literal notranslate"><span class="pre">VertexRecordKey</span></code> and <code class="docutils literal notranslate"><span class="pre">EdgeRecordKey</span></code> to denote the key to uniquely identify a record.</p>
@@ -1224,10 +1261,16 @@ def remote_flush(self, snapshot_id: int): pass
 </pre></div>
 </div>
 </section>
-</section>
-<section id="id1">
-<h4>Java<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h4>
+<section id="id2">
+<h4>Java<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h4>
 <p>We also have a java sdk for realtime write and schema management.</p>
+<p>APIs including:</p>
+<ul class="simple">
+<li><p>Create and inspect graph schema</p></li>
+<li><p>Insert / delete / update vertices</p></li>
+<li><p>Insert / delete / update edges</p></li>
+<li><p>Clear properties of vertices or edges by property name</p></li>
+</ul>
 <p>Refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/interactive_engine/groot-client/src/main/java/com/alibaba/graphscope/groot/sdk/example/RealtimeWrite.java">RealtimeWrite.java</a> for examples.</p>
 </section>
 </section>
@@ -1405,7 +1448,13 @@ kubectl<span class="w"> </span>logs<span class="w"> </span>demo-graphscope-store
 <li><a class="reference internal" href="#build-building-a-partitioned-graph">Build: Building a partitioned graph</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id1">Java</a></li>
+<li><a class="reference internal" href="#loading-graph-partitions">2. Loading graph partitions</a></li>
+<li><a class="reference internal" href="#commit-to-store-service">3. Commit to store service</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#realtime-write">Realtime Write</a><ul>
+<li><a class="reference internal" href="#id1">Python</a></li>
+<li><a class="reference internal" href="#id2">Java</a></li>
 </ul>
 </li>
 </ul>

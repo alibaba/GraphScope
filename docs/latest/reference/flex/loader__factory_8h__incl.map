@@ -1,0 +1,52 @@
+<map id="/home/runner/work/GraphScope/GraphScope/flex/storages/rt_mutable_graph/loader/loader_factory.h" name="/home/runner/work/GraphScope/GraphScope/flex/storages/rt_mutable_graph/loader/loader_factory.h">
+<area shape="rect" id="node1" title=" " alt="" coords="726,5,957,76"/>
+<area shape="rect" id="node2" title=" " alt="" coords="323,711,400,738"/>
+<area shape="rect" id="node3" href="$csv__fragment__loader_8h.html" title=" " alt="" coords="1005,124,1209,180"/>
+<area shape="rect" id="node40" href="$i__fragment__loader_8h.html" title=" " alt="" coords="1644,228,1831,284"/>
+<area shape="rect" id="node41" href="$loading__config_8h.html" title=" " alt="" coords="592,339,773,381"/>
+<area shape="rect" id="node4" href="$basic__fragment__loader_8h.html" title=" " alt="" coords="1072,228,1288,284"/>
+<area shape="rect" id="node5" href="$mutable__property__fragment_8h.html" title=" " alt="" coords="1609,332,1796,388"/>
+<area shape="rect" id="node39" title=" " alt="" coords="94,533,189,559"/>
+<area shape="rect" id="node47" title=" " alt="" coords="1313,243,1434,269"/>
+<area shape="rect" id="node48" title=" " alt="" coords="1458,243,1569,269"/>
+<area shape="rect" id="node49" title=" " alt="" coords="686,243,877,269"/>
+<area shape="rect" id="node50" title=" " alt="" coords="901,243,997,269"/>
+<area shape="rect" id="node9" href="$schema_8h.html" title=" " alt="" coords="1383,436,1564,477"/>
+<area shape="rect" id="node6" title=" " alt="" coords="1883,443,1947,470"/>
+<area shape="rect" id="node7" title=" " alt="" coords="3146,443,3201,470"/>
+<area shape="rect" id="node8" title=" " alt="" coords="1773,801,1835,827"/>
+<area shape="rect" id="node10" href="$storages_2rt__mutable__graph_2types_8h.html" title=" " alt="" coords="2889,704,3071,745"/>
+<area shape="rect" id="node12" href="$id__indexer_8h.html" title=" " alt="" coords="1368,622,1528,649"/>
+<area shape="rect" id="node24" title=" " alt="" coords="1560,711,1757,738"/>
+<area shape="rect" id="node26" title=" " alt="" coords="2455,793,2598,835"/>
+<area shape="rect" id="node27" href="$table_8h.html" title=" " alt="" coords="1298,525,1435,567"/>
+<area shape="rect" id="node33" href="$yaml__utils_8h.html" title=" " alt="" coords="708,533,871,559"/>
+<area shape="rect" id="node35" href="$mutable__csr_8h.html" title=" " alt="" coords="2303,615,2484,656"/>
+<area shape="rect" id="node38" href="$arrow__utils_8h.html" title=" " alt="" coords="1090,443,1257,470"/>
+<area shape="rect" id="node11" title=" " alt="" coords="2945,801,3015,827"/>
+<area shape="rect" id="node13" title=" " alt="" coords="1089,801,1156,827"/>
+<area shape="rect" id="node14" title=" " alt="" coords="1328,711,1397,738"/>
+<area shape="rect" id="node15" title=" " alt="" coords="1422,711,1485,738"/>
+<area shape="rect" id="node16" title=" " alt="" coords="615,801,713,827"/>
+<area shape="rect" id="node17" title=" " alt="" coords="2198,711,2290,738"/>
+<area shape="rect" id="node18" title=" " alt="" coords="1161,704,1303,745"/>
+<area shape="rect" id="node19" href="$mmap__array_8h.html" title=" " alt="" coords="577,711,751,738"/>
+<area shape="rect" id="node22" title=" " alt="" coords="785,801,900,827"/>
+<area shape="rect" id="node23" href="$string__view__vector_8h.html" title=" " alt="" coords="928,704,1085,745"/>
+<area shape="rect" id="node25" title=" " alt="" coords="2055,793,2198,835"/>
+<area shape="rect" id="node20" title=" " alt="" coords="189,801,280,827"/>
+<area shape="rect" id="node21" title=" " alt="" coords="356,801,415,827"/>
+<area shape="rect" id="node28" title=" " alt="" coords="1293,622,1344,649"/>
+<area shape="rect" id="node29" href="$column_8h.html" title=" " alt="" coords="977,615,1114,656"/>
+<area shape="rect" id="node30" href="$utils_2property_2types_8h.html" title=" " alt="" coords="1883,704,2021,745"/>
+<area shape="rect" id="node31" title=" " alt="" coords="1956,801,2031,827"/>
+<area shape="rect" id="node32" title=" " alt="" coords="1860,801,1932,827"/>
+<area shape="rect" id="node34" title=" " alt="" coords="323,622,455,649"/>
+<area shape="rect" id="node36" href="$allocators_8h.html" title=" " alt="" coords="2314,711,2473,738"/>
+<area shape="rect" id="node37" title=" " alt="" coords="2599,704,2763,745"/>
+<area shape="rect" id="node42" title=" " alt="" coords="587,443,778,470"/>
+<area shape="rect" id="node43" title=" " alt="" coords="802,443,926,470"/>
+<area shape="rect" id="node44" title=" " alt="" coords="951,443,1065,470"/>
+<area shape="rect" id="node45" title=" " alt="" coords="144,443,293,470"/>
+<area shape="rect" id="node46" title=" " alt="" coords="317,443,512,470"/>
+</map>

@@ -95,8 +95,6 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a63f930ed858d9e064a41af2203bd5795"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a715cc1652766ecbb2befc9876fc5205e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutablePropertyFragment.html#a715cc1652766ecbb2befc9876fc5205e">~MutablePropertyFragment</a> ()</td></tr>
 <tr class="separator:a715cc1652766ecbb2befc9876fc5205e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af12e6e02ae5c088656b7ab3b33a0d6a4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutablePropertyFragment.html#af12e6e02ae5c088656b7ab3b33a0d6a4">Init</a> (const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;<a class="el" href="classgs_1_1MutablePropertyFragment.html#acc80ba94c2048092ee94ab0def70efe4">schema</a>, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config, int thread_num=1)</td></tr>
-<tr class="separator:af12e6e02ae5c088656b7ab3b33a0d6a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f9c3281f00010c461ba916b37cf5932"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutablePropertyFragment.html#a8f9c3281f00010c461ba916b37cf5932">IngestEdge</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> src_lid, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> dst_lid, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts, grape::OutArchive &amp;arc, <a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a> &amp;alloc)</td></tr>
 <tr class="separator:a8f9c3281f00010c461ba916b37cf5932"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acc80ba94c2048092ee94ab0def70efe4"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutablePropertyFragment.html#acc80ba94c2048092ee94ab0def70efe4">schema</a> () const</td></tr>
@@ -137,12 +135,6 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a5a185c8c1d4b40f643754fbd46825088"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b8c79e4a36b2fb1d70e604392b06ac2"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1MutableCsrBase.html">MutableCsrBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutablePropertyFragment.html#a2b8c79e4a36b2fb1d70e604392b06ac2">get_ie_csr</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> neighbor_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label) const</td></tr>
 <tr class="separator:a2b8c79e4a36b2fb1d70e604392b06ac2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a29dc1b1524f42da642395bd039c3ca93"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutablePropertyFragment.html#a29dc1b1524f42da642395bd039c3ca93">parseVertexFiles</a> (const std::string &amp;vertex_label, const std::vector&lt; std::string &gt; &amp;filenames, const std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt; &amp;vertex_column_mappings, <a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; <a class="el" href="namespacegs.html#a4cad570efc8f4ee4a5f8c76d1265b4af">oid_t</a>, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;indexer)</td></tr>
-<tr class="separator:a29dc1b1524f42da642395bd039c3ca93"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a13ed391b115881638a34612939cddf6a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutablePropertyFragment.html#a13ed391b115881638a34612939cddf6a">initVertices</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_i, const std::vector&lt; std::string &gt; &amp;vertex_files, const std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt; &amp;vertex_column_mappings)</td></tr>
-<tr class="separator:a13ed391b115881638a34612939cddf6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7eb5b571cd7e5ea5e29f7bba68f7f05e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutablePropertyFragment.html#a7eb5b571cd7e5ea5e29f7bba68f7f05e">initEdges</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_i, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_i, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label_i, const std::vector&lt; std::string &gt; &amp;edge_files, const std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt; &amp;edge_col_mappings, size_t src_col_id, size_t dst_col_id)</td></tr>
-<tr class="separator:a7eb5b571cd7e5ea5e29f7bba68f7f05e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -770,172 +762,6 @@ Public Attributes</h2></td></tr>
           <td></td>
           <td class="paramtype"><a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a> &amp;&#160;</td>
           <td class="paramname"><em>alloc</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="af12e6e02ae5c088656b7ab3b33a0d6a4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af12e6e02ae5c088656b7ab3b33a0d6a4">&#9670;&nbsp;</a></span>Init()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void gs::MutablePropertyFragment::Init </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;&#160;</td>
-          <td class="paramname"><em>schema</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;&#160;</td>
-          <td class="paramname"><em>loading_config</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>thread_num</em> = <code>1</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a7eb5b571cd7e5ea5e29f7bba68f7f05e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7eb5b571cd7e5ea5e29f7bba68f7f05e">&#9670;&nbsp;</a></span>initEdges()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void gs::MutablePropertyFragment::initEdges </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
-          <td class="paramname"><em>src_label_i</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
-          <td class="paramname"><em>dst_label_i</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
-          <td class="paramname"><em>edge_label_i</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
-          <td class="paramname"><em>edge_files</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>edge_col_mappings</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>src_col_id</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>dst_col_id</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a13ed391b115881638a34612939cddf6a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a13ed391b115881638a34612939cddf6a">&#9670;&nbsp;</a></span>initVertices()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void gs::MutablePropertyFragment::initVertices </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
-          <td class="paramname"><em>v_label_i</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
-          <td class="paramname"><em>vertex_files</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>vertex_column_mappings</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a29dc1b1524f42da642395bd039c3ca93"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a29dc1b1524f42da642395bd039c3ca93">&#9670;&nbsp;</a></span>parseVertexFiles()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void gs::MutablePropertyFragment::parseVertexFiles </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>vertex_label</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
-          <td class="paramname"><em>filenames</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>vertex_column_mappings</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; <a class="el" href="namespacegs.html#a4cad570efc8f4ee4a5f8c76d1265b4af">oid_t</a>, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;&#160;</td>
-          <td class="paramname"><em>indexer</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

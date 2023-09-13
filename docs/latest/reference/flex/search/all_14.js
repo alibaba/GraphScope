@@ -1,13 +1,13 @@
 var searchData=
 [
-  ['uninitializedutils_612',['UninitializedUtils',['../structgs_1_1UninitializedUtils.html',1,'gs']]],
-  ['uninitializedutils_3c_20mutablenbr_3c_20std_3a_3astring_20_3e_20_3e_613',['UninitializedUtils&lt; MutableNbr&lt; std::string &gt; &gt;',['../structgs_1_1UninitializedUtils_3_01MutableNbr_3_01std_1_1string_01_4_01_4.html',1,'gs']]],
-  ['unlikely_614',['unlikely',['../wal_8cc.html#ac6c45889010c1bd68631771b64f18101',1,'wal.cc']]],
-  ['update_5ftransaction_2ecc_615',['update_transaction.cc',['../update__transaction_8cc.html',1,'']]],
-  ['update_5ftransaction_2eh_616',['update_transaction.h',['../update__transaction_8h.html',1,'']]],
-  ['update_5fwal_5flist_5f_617',['update_wal_list_',['../classgs_1_1WalsParser.html#a65ca33dd6776e0d4003f683d29f56771',1,'gs::WalsParser']]],
-  ['update_5fwals_618',['update_wals',['../classgs_1_1WalsParser.html#a078dfc62e9c1a16aa517bc66e4463304',1,'gs::WalsParser']]],
-  ['updated_5fedge_5fdata_5f_619',['updated_edge_data_',['../classgs_1_1UpdateTransaction.html#ac5643a938866a9a7fefd8d45433942b6',1,'gs::UpdateTransaction']]],
-  ['updatetransaction_620',['UpdateTransaction',['../classgs_1_1UpdateTransaction.html',1,'gs::UpdateTransaction'],['../classgs_1_1UpdateTransaction.html#a1ee8be78d6c116e70db7564b48e5e9e7',1,'gs::UpdateTransaction::UpdateTransaction()']]],
-  ['updatewalunit_621',['UpdateWalUnit',['../structgs_1_1UpdateWalUnit.html',1,'gs']]]
+  ['uninitializedutils_692',['UninitializedUtils',['../structgs_1_1UninitializedUtils.html',1,'gs']]],
+  ['uninitializedutils_3c_20mutablenbr_3c_20std_3a_3astring_20_3e_20_3e_693',['UninitializedUtils&lt; MutableNbr&lt; std::string &gt; &gt;',['../structgs_1_1UninitializedUtils_3_01MutableNbr_3_01std_1_1string_01_4_01_4.html',1,'gs']]],
+  ['unlikely_694',['unlikely',['../wal_8cc.html#ac6c45889010c1bd68631771b64f18101',1,'wal.cc']]],
+  ['update_5ftransaction_2ecc_695',['update_transaction.cc',['../update__transaction_8cc.html',1,'']]],
+  ['update_5ftransaction_2eh_696',['update_transaction.h',['../update__transaction_8h.html',1,'']]],
+  ['update_5fwal_5flist_5f_697',['update_wal_list_',['../classgs_1_1WalsParser.html#a65ca33dd6776e0d4003f683d29f56771',1,'gs::WalsParser']]],
+  ['update_5fwals_698',['update_wals',['../classgs_1_1WalsParser.html#a078dfc62e9c1a16aa517bc66e4463304',1,'gs::WalsParser']]],
+  ['updated_5fedge_5fdata_5f_699',['updated_edge_data_',['../classgs_1_1UpdateTransaction.html#ac5643a938866a9a7fefd8d45433942b6',1,'gs::UpdateTransaction']]],
+  ['updatetransaction_700',['UpdateTransaction',['../classgs_1_1UpdateTransaction.html',1,'gs::UpdateTransaction'],['../classgs_1_1UpdateTransaction.html#a1ee8be78d6c116e70db7564b48e5e9e7',1,'gs::UpdateTransaction::UpdateTransaction()']]],
+  ['updatewalunit_701',['UpdateWalUnit',['../structgs_1_1UpdateWalUnit.html',1,'gs']]]
 ];

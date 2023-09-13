@@ -77,17 +77,19 @@ $(function() {
 Functions</h2></td></tr>
 <tr class="memitem:ab848b40e84ac61c397076497b6393029"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#ab848b40e84ac61c397076497b6393029">fetch_src_dst_column_mapping</a> (const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, YAML::Node node, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label_id, const std::string &amp;key, std::vector&lt; size_t &gt; &amp;column_inds)</td></tr>
 <tr class="separator:ab848b40e84ac61c397076497b6393029"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a547164f2776947fc62944f59121f5dc9"><td class="memTemplParams" colspan="2">template&lt;typename FUNC &gt; </td></tr>
-<tr class="memitem:a547164f2776947fc62944f59121f5dc9"><td class="memTemplItemLeft" align="right" valign="top">static bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a547164f2776947fc62944f59121f5dc9">parse_column_mappings</a> (YAML::Node node, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const std::string &amp;label_name, std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt; &amp;column_mappings, FUNC condition)</td></tr>
-<tr class="separator:a547164f2776947fc62944f59121f5dc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a83b814abd63537ee24681e0cb877d6db"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a83b814abd63537ee24681e0cb877d6db">parse_vertex_files</a> (YAML::Node node, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, std::vector&lt; std::string &gt;&gt; &amp;files, std::unordered_map&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt;&gt; &amp;vertex_mapping)</td></tr>
-<tr class="separator:a83b814abd63537ee24681e0cb877d6db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a319aa9cb58bd102f74596e49461df0a6"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a319aa9cb58bd102f74596e49461df0a6">parse_vertices_files_schema</a> (YAML::Node node, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, std::vector&lt; std::string &gt;&gt; &amp;files, std::unordered_map&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt;&gt; &amp;column_mappings)</td></tr>
-<tr class="separator:a319aa9cb58bd102f74596e49461df0a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aafe877a4754d3f2fcb863fd53d0f8433"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#aafe877a4754d3f2fcb863fd53d0f8433">parse_edge_files</a> (YAML::Node node, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; std::tuple&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &gt;, std::vector&lt; std::string &gt;, boost::hash&lt; std::tuple&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &gt;&gt;&gt; &amp;files, std::unordered_map&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a>, std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt;, boost::hash&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a> &gt;&gt; &amp;edge_mapping, std::unordered_map&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a>, std::pair&lt; std::vector&lt; size_t &gt;, std::vector&lt; size_t &gt;&gt;, boost::hash&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a> &gt;&gt; &amp;edge_src_dst_col)</td></tr>
-<tr class="separator:aafe877a4754d3f2fcb863fd53d0f8433"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a64d317dd5b1c3cf03b706dfcc79dd9ef"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a64d317dd5b1c3cf03b706dfcc79dd9ef">parse_edges_files_schema</a> (YAML::Node node, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; std::tuple&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &gt;, std::vector&lt; std::string &gt;, boost::hash&lt; std::tuple&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &gt;&gt;&gt; &amp;files, std::unordered_map&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a>, std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt;, boost::hash&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a> &gt;&gt; &amp;edge_mapping, std::unordered_map&lt; std::tuple&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &gt;, std::pair&lt; std::vector&lt; size_t &gt;, std::vector&lt; size_t &gt;&gt;, boost::hash&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a> &gt;&gt; &amp;edge_src_dst_col)</td></tr>
-<tr class="separator:a64d317dd5b1c3cf03b706dfcc79dd9ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a004330e802874b7dfaf32567139909d6"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a004330e802874b7dfaf32567139909d6">parse_block_size</a> (const std::string &amp;memorySizeStr)</td></tr>
+<tr class="separator:a004330e802874b7dfaf32567139909d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad9e8f5b7f74ba690568ca8538173419"><td class="memTemplParams" colspan="2">template&lt;typename FUNC &gt; </td></tr>
+<tr class="memitem:aad9e8f5b7f74ba690568ca8538173419"><td class="memTemplItemLeft" align="right" valign="top">static bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#aad9e8f5b7f74ba690568ca8538173419">parse_column_mappings</a> (YAML::Node node, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const std::string &amp;label_name, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt; &amp;column_mappings, FUNC condition)</td></tr>
+<tr class="separator:aad9e8f5b7f74ba690568ca8538173419"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0cdd5587dc279e4450f09b8499d5d84"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#af0cdd5587dc279e4450f09b8499d5d84">parse_vertex_files</a> (YAML::Node node, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, std::vector&lt; std::string &gt;&gt; &amp;files, std::unordered_map&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt;&gt; &amp;vertex_mapping)</td></tr>
+<tr class="separator:af0cdd5587dc279e4450f09b8499d5d84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4b9719d87b56a8e5b37f72ba4d809c2"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#ae4b9719d87b56a8e5b37f72ba4d809c2">parse_vertices_files_schema</a> (YAML::Node node, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, std::vector&lt; std::string &gt;&gt; &amp;files, std::unordered_map&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt;&gt; &amp;column_mappings)</td></tr>
+<tr class="separator:ae4b9719d87b56a8e5b37f72ba4d809c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66c122d7f9a62017c749857012cbd722"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a66c122d7f9a62017c749857012cbd722">parse_edge_files</a> (YAML::Node node, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; std::tuple&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &gt;, std::vector&lt; std::string &gt;, boost::hash&lt; std::tuple&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &gt;&gt;&gt; &amp;files, std::unordered_map&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a>, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt;, boost::hash&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a> &gt;&gt; &amp;edge_mapping, std::unordered_map&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a>, std::pair&lt; std::vector&lt; size_t &gt;, std::vector&lt; size_t &gt;&gt;, boost::hash&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a> &gt;&gt; &amp;edge_src_dst_col)</td></tr>
+<tr class="separator:a66c122d7f9a62017c749857012cbd722"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0db27f735995034525e91d2ab200de7b"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a0db27f735995034525e91d2ab200de7b">parse_edges_files_schema</a> (YAML::Node node, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; std::tuple&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &gt;, std::vector&lt; std::string &gt;, boost::hash&lt; std::tuple&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &gt;&gt;&gt; &amp;files, std::unordered_map&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a>, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt;, boost::hash&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a> &gt;&gt; &amp;edge_mapping, std::unordered_map&lt; std::tuple&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> &gt;, std::pair&lt; std::vector&lt; size_t &gt;, std::vector&lt; size_t &gt;&gt;, boost::hash&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a> &gt;&gt; &amp;edge_src_dst_col)</td></tr>
+<tr class="separator:a0db27f735995034525e91d2ab200de7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19c7b64f11668067e1825f2e2867c5f2"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a19c7b64f11668067e1825f2e2867c5f2">parse_bulk_load_config_file</a> (const std::string &amp;config_file, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;load_config)</td></tr>
 <tr class="separator:a19c7b64f11668067e1825f2e2867c5f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19c7b64f11668067e1825f2e2867c5f2"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a19c7b64f11668067e1825f2e2867c5f2">parse_bulk_load_config_file</a> (const std::string &amp;config_file, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;load_config)</td></tr>
@@ -331,6 +333,24 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
+<a id="a004330e802874b7dfaf32567139909d6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a004330e802874b7dfaf32567139909d6">&#9670;&nbsp;</a></span>parse_block_size()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t gs::config_parsing::parse_block_size </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>memorySizeStr</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a19c7b64f11668067e1825f2e2867c5f2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a19c7b64f11668067e1825f2e2867c5f2">&#9670;&nbsp;</a></span>parse_bulk_load_config_file() <span class="overload">[1/2]</span></h2>
 
@@ -415,8 +435,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="a547164f2776947fc62944f59121f5dc9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a547164f2776947fc62944f59121f5dc9">&#9670;&nbsp;</a></span>parse_column_mappings()</h2>
+<a id="aad9e8f5b7f74ba690568ca8538173419"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aad9e8f5b7f74ba690568ca8538173419">&#9670;&nbsp;</a></span>parse_column_mappings()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -447,7 +467,7 @@ template&lt;typename FUNC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt; &amp;&#160;</td>
           <td class="paramname"><em>column_mappings</em>, </td>
         </tr>
         <tr>
@@ -471,8 +491,8 @@ template&lt;typename FUNC &gt; </div>
 
 </div>
 </div>
-<a id="aafe877a4754d3f2fcb863fd53d0f8433"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aafe877a4754d3f2fcb863fd53d0f8433">&#9670;&nbsp;</a></span>parse_edge_files()</h2>
+<a id="a66c122d7f9a62017c749857012cbd722"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a66c122d7f9a62017c749857012cbd722">&#9670;&nbsp;</a></span>parse_edge_files()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -507,7 +527,7 @@ template&lt;typename FUNC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::unordered_map&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a>, std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt;, boost::hash&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a> &gt;&gt; &amp;&#160;</td>
+          <td class="paramtype">std::unordered_map&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a>, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt;, boost::hash&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a> &gt;&gt; &amp;&#160;</td>
           <td class="paramname"><em>edge_mapping</em>, </td>
         </tr>
         <tr>
@@ -615,8 +635,8 @@ template&lt;typename FUNC &gt; </div>
 
 </div>
 </div>
-<a id="a64d317dd5b1c3cf03b706dfcc79dd9ef"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a64d317dd5b1c3cf03b706dfcc79dd9ef">&#9670;&nbsp;</a></span>parse_edges_files_schema()</h2>
+<a id="a0db27f735995034525e91d2ab200de7b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0db27f735995034525e91d2ab200de7b">&#9670;&nbsp;</a></span>parse_edges_files_schema()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -651,7 +671,7 @@ template&lt;typename FUNC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::unordered_map&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a>, std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt;, boost::hash&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a> &gt;&gt; &amp;&#160;</td>
+          <td class="paramtype">std::unordered_map&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a>, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt;, boost::hash&lt; typename <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">LoadingConfig::edge_triplet_type</a> &gt;&gt; &amp;&#160;</td>
           <td class="paramname"><em>edge_mapping</em>, </td>
         </tr>
         <tr>
@@ -747,8 +767,8 @@ template&lt;typename FUNC &gt; </div>
 
 </div>
 </div>
-<a id="a83b814abd63537ee24681e0cb877d6db"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a83b814abd63537ee24681e0cb877d6db">&#9670;&nbsp;</a></span>parse_vertex_files()</h2>
+<a id="af0cdd5587dc279e4450f09b8499d5d84"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af0cdd5587dc279e4450f09b8499d5d84">&#9670;&nbsp;</a></span>parse_vertex_files()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -783,7 +803,7 @@ template&lt;typename FUNC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::unordered_map&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt;&gt; &amp;&#160;</td>
+          <td class="paramtype">std::unordered_map&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt;&gt; &amp;&#160;</td>
           <td class="paramname"><em>vertex_mapping</em>&#160;</td>
         </tr>
         <tr>
@@ -891,8 +911,8 @@ template&lt;typename FUNC &gt; </div>
 
 </div>
 </div>
-<a id="a319aa9cb58bd102f74596e49461df0a6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a319aa9cb58bd102f74596e49461df0a6">&#9670;&nbsp;</a></span>parse_vertices_files_schema()</h2>
+<a id="ae4b9719d87b56a8e5b37f72ba4d809c2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae4b9719d87b56a8e5b37f72ba4d809c2">&#9670;&nbsp;</a></span>parse_vertices_files_schema()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -927,7 +947,7 @@ template&lt;typename FUNC &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::unordered_map&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt;&gt; &amp;&#160;</td>
+          <td class="paramtype">std::unordered_map&lt; <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt;&gt; &amp;&#160;</td>
           <td class="paramname"><em>column_mappings</em>&#160;</td>
         </tr>
         <tr>

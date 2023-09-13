@@ -1,14 +1,8 @@
 var searchData=
 [
-  ['s_1390',['s',['../uniongs_1_1AnyValue.html#a0c9c1b8e00866a56361632a796ad8f3f',1,'gs::AnyValue']]],
-  ['schema_5f_1391',['schema_',['../classgs_1_1LoadingConfig.html#afbcaad0966cc64a654e88237aac952fe',1,'gs::LoadingConfig::schema_()'],['../classgs_1_1MutablePropertyFragment.html#acdb658726d1fd137926d7667e27a69f2',1,'gs::MutablePropertyFragment::schema_()']]],
-  ['scheme_5f_1392',['scheme_',['../classgs_1_1LoadingConfig.html#ad8a9361bb079d2fb722551364b47faca',1,'gs::LoadingConfig']]],
-  ['session_1393',['session',['../structgs_1_1SessionLocalContext.html#a5d40f88ebb1e0f31d2a5c170097d6c13',1,'gs::SessionLocalContext']]],
-  ['size_1394',['size',['../structgs_1_1WalContentUnit.html#ae5d17890ada9514ff15d2b80135b16f7',1,'gs::WalContentUnit::size()'],['../structgs_1_1UpdateWalUnit.html#a90c055c693f778c597ccd08357c9cb02',1,'gs::UpdateWalUnit::size()']]],
-  ['size_5f_1395',['size_',['../classgs_1_1MutableNbrSlice.html#a3cce5a042ca6e532544ab7c47a437e96',1,'gs::MutableNbrSlice::size_()'],['../classgs_1_1MutableNbrSliceMut.html#accca3969046232ad9f33d8b699a01db8',1,'gs::MutableNbrSliceMut::size_()'],['../classgs_1_1MutableAdjlist.html#ac22a809f755a9a6f026174de87033d02',1,'gs::MutableAdjlist::size_()'],['../classgs_1_1MutableAdjlist_3_01std_1_1string_01_4.html#aa6b7c05c60fa2bae89d46f4a44c2cd0f',1,'gs::MutableAdjlist&lt; std::string &gt;::size_()'],['../classgs_1_1mmap__array.html#a915b501494dd31bc79c31510845f0e3c',1,'gs::mmap_array::size_()']]],
-  ['src_5flabel_5f_1396',['src_label_',['../classgs_1_1SingleEdgeInsertTransaction.html#adbf6b02f15efb71d87ad77ed861878e8',1,'gs::SingleEdgeInsertTransaction']]],
-  ['src_5fvid_5f_1397',['src_vid_',['../classgs_1_1SingleEdgeInsertTransaction.html#a9c38d2a1f77ce8c3246670b0e86b800c',1,'gs::SingleEdgeInsertTransaction']]],
-  ['strategy_5f_1398',['strategy_',['../classgs_1_1TypedColumn.html#ad8c7f575941fe1add44c37b4d7ebea53',1,'gs::TypedColumn::strategy_()'],['../classgs_1_1TypedRefColumn.html#a6833e52db22359f9341704d0aa6a85a5',1,'gs::TypedRefColumn::strategy_()']]],
-  ['string_5fitems_5f_1399',['string_items_',['../classgs_1_1mmap__array_3_01std_1_1string__view_01_4.html#a83c9cb7f63a6256cc962ad00db475085',1,'gs::mmap_array&lt; std::string_view &gt;']]],
-  ['sv_5fvec_5f_1400',['sv_vec_',['../classgs_1_1UpdateTransaction.html#a6abdbe5e918de2bb2c6d1becb600cc2d',1,'gs::UpdateTransaction']]]
+  ['read_5fedge_5ftable_5ftime_5f_1548',['read_edge_table_time_',['../classgs_1_1CSVFragmentLoader.html#af74ecd47b82130d9c96eae2bb503643d',1,'gs::CSVFragmentLoader']]],
+  ['read_5fts_5f_1549',['read_ts_',['../classgs_1_1VersionManager.html#a8529758f1ca33647ca8379ed3993e754',1,'gs::VersionManager']]],
+  ['read_5fvertex_5ftable_5ftime_5f_1550',['read_vertex_table_time_',['../classgs_1_1CSVFragmentLoader.html#a70b36e49b40fccccec887f70a5460a40',1,'gs::CSVFragmentLoader']]],
+  ['ring_5fbuf_5fsize_1551',['ring_buf_size',['../namespacegs.html#afc29cf5c8342961bc724945163e127b2',1,'gs']]],
+  ['ring_5findex_5fmask_1552',['ring_index_mask',['../namespacegs.html#a5f7a376fc98cd8979ce79dd8371ad854',1,'gs']]]
 ];

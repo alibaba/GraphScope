@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['walcontentunit_799',['WalContentUnit',['../structgs_1_1WalContentUnit.html',1,'gs']]],
-  ['walheader_800',['WalHeader',['../structgs_1_1WalHeader.html',1,'gs']]],
-  ['walsparser_801',['WalsParser',['../classgs_1_1WalsParser.html',1,'gs']]],
-  ['walwriter_802',['WalWriter',['../classgs_1_1WalWriter.html',1,'gs']]]
+  ['versionmanager_892',['VersionManager',['../classgs_1_1VersionManager.html',1,'gs']]],
+  ['vertex_5fiterator_893',['vertex_iterator',['../classgs_1_1UpdateTransaction_1_1vertex__iterator.html',1,'gs::UpdateTransaction::vertex_iterator'],['../classgs_1_1ReadTransaction_1_1vertex__iterator.html',1,'gs::ReadTransaction::vertex_iterator']]],
+  ['vertex_5frange_894',['vertex_range',['../structgs_1_1ServerApp_1_1vertex__range.html',1,'gs::ServerApp']]]
 ];

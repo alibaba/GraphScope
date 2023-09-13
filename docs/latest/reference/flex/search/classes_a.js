@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['readtransaction_771',['ReadTransaction',['../classgs_1_1ReadTransaction.html',1,'gs']]],
-  ['refcolumnbase_772',['RefColumnBase',['../classgs_1_1RefColumnBase.html',1,'gs']]]
+  ['nbr_5fiterator_866',['nbr_iterator',['../classgs_1_1AdjListView_1_1nbr__iterator.html',1,'gs::AdjListView']]]
 ];

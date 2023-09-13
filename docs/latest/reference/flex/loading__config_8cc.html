@@ -76,55 +76,65 @@ $(function() {
 <div class="textblock"><code>#include &quot;<a class="el" href="loading__config_8h_source.html">flex/storages/rt_mutable_graph/loading_config.h</a>&quot;</code><br />
 <code>#include &lt;yaml-cpp/yaml.h&gt;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
+<code>#include &lt;iostream&gt;</code><br />
+<code>#include &lt;sstream&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;tuple&gt;</code><br />
+<code>#include &quot;flex/engines/hqps_db/core/utils/hqps_utils.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for loading_config.cc:</div>
 <div class="dyncontent">
 <div class="center"><img src="loading__config_8cc__incl.png" border="0" usemap="#_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2storages_2rt__mutable__graph_2loading__config_8cc" alt=""/></div>
 <map name="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2storages_2rt__mutable__graph_2loading__config_8cc" id="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2storages_2rt__mutable__graph_2loading__config_8cc">
-<area shape="rect" title=" " alt="" coords="2120,5,2347,76"/>
-<area shape="rect" href="loading__config_8h.html" title=" " alt="" coords="1797,124,1979,165"/>
-<area shape="rect" title=" " alt="" coords="36,578,127,605"/>
-<area shape="rect" title=" " alt="" coords="2255,578,2313,605"/>
-<area shape="rect" title=" " alt="" coords="2038,399,2170,426"/>
-<area shape="rect" title=" " alt="" coords="2322,131,2377,158"/>
-<area shape="rect" title=" " alt="" coords="1609,221,1799,247"/>
-<area shape="rect" title=" " alt="" coords="1875,221,1999,247"/>
-<area shape="rect" title=" " alt="" coords="2024,221,2139,247"/>
-<area shape="rect" href="schema_8h.html" title=" " alt="" coords="1403,213,1584,255"/>
-<area shape="rect" href="yaml__utils_8h.html" title=" " alt="" coords="1752,310,1915,337"/>
-<area shape="rect" href="storages_2rt__mutable__graph_2types_8h.html" title=" " alt="" coords="1473,303,1655,344"/>
-<area shape="rect" href="id__indexer_8h.html" title=" " alt="" coords="884,399,1044,426"/>
-<area shape="rect" href="table_8h.html" title=" " alt="" coords="1082,303,1219,344"/>
-<area shape="rect" title=" " alt="" coords="1598,399,1669,426"/>
-<area shape="rect" title=" " alt="" coords="905,578,972,605"/>
-<area shape="rect" title=" " alt="" coords="477,489,547,515"/>
-<area shape="rect" title=" " alt="" coords="571,489,634,515"/>
-<area shape="rect" title=" " alt="" coords="992,489,1069,515"/>
-<area shape="rect" title=" " alt="" coords="313,578,410,605"/>
-<area shape="rect" title=" " alt="" coords="658,489,750,515"/>
-<area shape="rect" title=" " alt="" coords="1538,578,1601,605"/>
-<area shape="rect" title=" " alt="" coords="774,481,917,523"/>
-<area shape="rect" href="mmap__array_8h.html" title=" " alt="" coords="1366,489,1541,515"/>
-<area shape="rect" title=" " alt="" coords="700,578,815,605"/>
-<area shape="rect" href="string__view__vector_8h.html" title=" " alt="" coords="245,481,403,523"/>
-<area shape="rect" title=" " alt="" coords="1093,489,1291,515"/>
-<area shape="rect" title=" " alt="" coords="1625,571,1767,612"/>
-<area shape="rect" title=" " alt="" coords="1791,571,1934,612"/>
-<area shape="rect" title=" " alt="" coords="1325,578,1387,605"/>
-<area shape="rect" title=" " alt="" coords="473,578,543,605"/>
-<area shape="rect" title=" " alt="" coords="1411,578,1514,605"/>
-<area shape="rect" title=" " alt="" coords="996,578,1081,605"/>
-<area shape="rect" title=" " alt="" coords="1105,578,1201,605"/>
-<area shape="rect" title=" " alt="" coords="1225,578,1300,605"/>
-<area shape="rect" title=" " alt="" coords="218,578,289,605"/>
-<area shape="rect" title=" " alt="" coords="195,399,245,426"/>
-<area shape="rect" href="column_8h.html" title=" " alt="" coords="1385,392,1522,433"/>
-<area shape="rect" href="utils_2property_2types_8h.html" title=" " alt="" coords="1819,481,1957,523"/>
-<area shape="rect" title=" " alt="" coords="2156,578,2231,605"/>
-<area shape="rect" title=" " alt="" coords="1959,578,2031,605"/>
-<area shape="rect" title=" " alt="" coords="2055,578,2131,605"/>
+<area shape="rect" title=" " alt="" coords="1462,5,1689,76"/>
+<area shape="rect" href="loading__config_8h.html" title=" " alt="" coords="753,124,934,165"/>
+<area shape="rect" title=" " alt="" coords="1259,578,1350,605"/>
+<area shape="rect" title=" " alt="" coords="1177,578,1235,605"/>
+<area shape="rect" title=" " alt="" coords="1480,399,1612,426"/>
+<area shape="rect" title=" " alt="" coords="1574,131,1654,158"/>
+<area shape="rect" title=" " alt="" coords="1678,131,1753,158"/>
+<area shape="rect" title=" " alt="" coords="1777,131,1832,158"/>
+<area shape="rect" title=" " alt="" coords="1857,124,2025,165"/>
+<area shape="rect" title=" " alt="" coords="117,221,308,247"/>
+<area shape="rect" title=" " alt="" coords="384,221,508,247"/>
+<area shape="rect" title=" " alt="" coords="533,221,647,247"/>
+<area shape="rect" title=" " alt="" coords="1065,310,1160,337"/>
+<area shape="rect" title=" " alt="" coords="671,221,821,247"/>
+<area shape="rect" href="schema_8h.html" title=" " alt="" coords="1835,213,2017,255"/>
+<area shape="rect" href="yaml__utils_8h.html" title=" " alt="" coords="1337,310,1499,337"/>
+<area shape="rect" href="arrow__utils_8h.html" title=" " alt="" coords="1115,221,1281,247"/>
+<area shape="rect" title=" " alt="" coords="845,221,1039,247"/>
+<area shape="rect" href="storages_2rt__mutable__graph_2types_8h.html" title=" " alt="" coords="2735,303,2917,344"/>
+<area shape="rect" href="id__indexer_8h.html" title=" " alt="" coords="2343,399,2503,426"/>
+<area shape="rect" href="table_8h.html" title=" " alt="" coords="1857,303,1995,344"/>
+<area shape="rect" title=" " alt="" coords="3320,399,3391,426"/>
+<area shape="rect" title=" " alt="" coords="2833,578,2899,605"/>
+<area shape="rect" title=" " alt="" coords="2637,489,2706,515"/>
+<area shape="rect" title=" " alt="" coords="2731,489,2793,515"/>
+<area shape="rect" title=" " alt="" coords="1642,489,1719,515"/>
+<area shape="rect" title=" " alt="" coords="3159,578,3256,605"/>
+<area shape="rect" title=" " alt="" coords="2920,489,3012,515"/>
+<area shape="rect" title=" " alt="" coords="2019,578,2081,605"/>
+<area shape="rect" title=" " alt="" coords="2469,481,2612,523"/>
+<area shape="rect" href="mmap__array_8h.html" title=" " alt="" coords="2219,489,2393,515"/>
+<area shape="rect" title=" " alt="" coords="2679,578,2794,605"/>
+<area shape="rect" href="string__view__vector_8h.html" title=" " alt="" coords="3037,481,3194,523"/>
+<area shape="rect" title=" " alt="" coords="1845,489,2042,515"/>
+<area shape="rect" title=" " alt="" coords="1852,571,1995,612"/>
+<area shape="rect" title=" " alt="" coords="1685,571,1828,612"/>
+<area shape="rect" title=" " alt="" coords="2205,578,2268,605"/>
+<area shape="rect" title=" " alt="" coords="2955,578,3025,605"/>
+<area shape="rect" title=" " alt="" coords="2292,578,2395,605"/>
+<area shape="rect" title=" " alt="" coords="2419,578,2505,605"/>
+<area shape="rect" title=" " alt="" coords="2529,578,2625,605"/>
+<area shape="rect" title=" " alt="" coords="2106,578,2181,605"/>
+<area shape="rect" title=" " alt="" coords="3064,578,3135,605"/>
+<area shape="rect" title=" " alt="" coords="1901,399,1951,426"/>
+<area shape="rect" href="column_8h.html" title=" " alt="" coords="1688,392,1825,433"/>
+<area shape="rect" href="utils_2property_2types_8h.html" title=" " alt="" coords="1429,481,1567,523"/>
+<area shape="rect" title=" " alt="" coords="1475,578,1550,605"/>
+<area shape="rect" title=" " alt="" coords="1574,578,1646,605"/>
+<area shape="rect" title=" " alt="" coords="1375,578,1451,605"/>
 </map>
 </div>
 </div><table class="memberdecls">
@@ -139,17 +149,19 @@ Namespaces</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:ab848b40e84ac61c397076497b6393029"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#ab848b40e84ac61c397076497b6393029">gs::config_parsing::fetch_src_dst_column_mapping</a> (const Schema &amp;schema, YAML::Node node, label_t label_id, const std::string &amp;key, std::vector&lt; size_t &gt; &amp;column_inds)</td></tr>
 <tr class="separator:ab848b40e84ac61c397076497b6393029"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a547164f2776947fc62944f59121f5dc9"><td class="memTemplParams" colspan="2">template&lt;typename FUNC &gt; </td></tr>
-<tr class="memitem:a547164f2776947fc62944f59121f5dc9"><td class="memTemplItemLeft" align="right" valign="top">static bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a547164f2776947fc62944f59121f5dc9">gs::config_parsing::parse_column_mappings</a> (YAML::Node node, const Schema &amp;schema, const std::string &amp;label_name, std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt; &amp;column_mappings, FUNC condition)</td></tr>
-<tr class="separator:a547164f2776947fc62944f59121f5dc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a83b814abd63537ee24681e0cb877d6db"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a83b814abd63537ee24681e0cb877d6db">gs::config_parsing::parse_vertex_files</a> (YAML::Node node, const Schema &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; label_t, std::vector&lt; std::string &gt;&gt; &amp;files, std::unordered_map&lt; label_t, std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt;&gt; &amp;vertex_mapping)</td></tr>
-<tr class="separator:a83b814abd63537ee24681e0cb877d6db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a319aa9cb58bd102f74596e49461df0a6"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a319aa9cb58bd102f74596e49461df0a6">gs::config_parsing::parse_vertices_files_schema</a> (YAML::Node node, const Schema &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; label_t, std::vector&lt; std::string &gt;&gt; &amp;files, std::unordered_map&lt; label_t, std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt;&gt; &amp;column_mappings)</td></tr>
-<tr class="separator:a319aa9cb58bd102f74596e49461df0a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aafe877a4754d3f2fcb863fd53d0f8433"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#aafe877a4754d3f2fcb863fd53d0f8433">gs::config_parsing::parse_edge_files</a> (YAML::Node node, const Schema &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; std::tuple&lt; label_t, label_t, label_t &gt;, std::vector&lt; std::string &gt;, boost::hash&lt; std::tuple&lt; label_t, label_t, label_t &gt;&gt;&gt; &amp;files, std::unordered_map&lt; typename LoadingConfig::edge_triplet_type, std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt;, boost::hash&lt; typename LoadingConfig::edge_triplet_type &gt;&gt; &amp;edge_mapping, std::unordered_map&lt; typename LoadingConfig::edge_triplet_type, std::pair&lt; std::vector&lt; size_t &gt;, std::vector&lt; size_t &gt;&gt;, boost::hash&lt; typename LoadingConfig::edge_triplet_type &gt;&gt; &amp;edge_src_dst_col)</td></tr>
-<tr class="separator:aafe877a4754d3f2fcb863fd53d0f8433"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a64d317dd5b1c3cf03b706dfcc79dd9ef"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a64d317dd5b1c3cf03b706dfcc79dd9ef">gs::config_parsing::parse_edges_files_schema</a> (YAML::Node node, const Schema &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; std::tuple&lt; label_t, label_t, label_t &gt;, std::vector&lt; std::string &gt;, boost::hash&lt; std::tuple&lt; label_t, label_t, label_t &gt;&gt;&gt; &amp;files, std::unordered_map&lt; typename LoadingConfig::edge_triplet_type, std::vector&lt; std::pair&lt; size_t, std::string &gt;&gt;, boost::hash&lt; typename LoadingConfig::edge_triplet_type &gt;&gt; &amp;edge_mapping, std::unordered_map&lt; std::tuple&lt; label_t, label_t, label_t &gt;, std::pair&lt; std::vector&lt; size_t &gt;, std::vector&lt; size_t &gt;&gt;, boost::hash&lt; typename LoadingConfig::edge_triplet_type &gt;&gt; &amp;edge_src_dst_col)</td></tr>
-<tr class="separator:a64d317dd5b1c3cf03b706dfcc79dd9ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a004330e802874b7dfaf32567139909d6"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a004330e802874b7dfaf32567139909d6">gs::config_parsing::parse_block_size</a> (const std::string &amp;memorySizeStr)</td></tr>
+<tr class="separator:a004330e802874b7dfaf32567139909d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad9e8f5b7f74ba690568ca8538173419"><td class="memTemplParams" colspan="2">template&lt;typename FUNC &gt; </td></tr>
+<tr class="memitem:aad9e8f5b7f74ba690568ca8538173419"><td class="memTemplItemLeft" align="right" valign="top">static bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#aad9e8f5b7f74ba690568ca8538173419">gs::config_parsing::parse_column_mappings</a> (YAML::Node node, const Schema &amp;schema, const std::string &amp;label_name, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt; &amp;column_mappings, FUNC condition)</td></tr>
+<tr class="separator:aad9e8f5b7f74ba690568ca8538173419"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0cdd5587dc279e4450f09b8499d5d84"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#af0cdd5587dc279e4450f09b8499d5d84">gs::config_parsing::parse_vertex_files</a> (YAML::Node node, const Schema &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; label_t, std::vector&lt; std::string &gt;&gt; &amp;files, std::unordered_map&lt; label_t, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt;&gt; &amp;vertex_mapping)</td></tr>
+<tr class="separator:af0cdd5587dc279e4450f09b8499d5d84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4b9719d87b56a8e5b37f72ba4d809c2"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#ae4b9719d87b56a8e5b37f72ba4d809c2">gs::config_parsing::parse_vertices_files_schema</a> (YAML::Node node, const Schema &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; label_t, std::vector&lt; std::string &gt;&gt; &amp;files, std::unordered_map&lt; label_t, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt;&gt; &amp;column_mappings)</td></tr>
+<tr class="separator:ae4b9719d87b56a8e5b37f72ba4d809c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66c122d7f9a62017c749857012cbd722"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a66c122d7f9a62017c749857012cbd722">gs::config_parsing::parse_edge_files</a> (YAML::Node node, const Schema &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; std::tuple&lt; label_t, label_t, label_t &gt;, std::vector&lt; std::string &gt;, boost::hash&lt; std::tuple&lt; label_t, label_t, label_t &gt;&gt;&gt; &amp;files, std::unordered_map&lt; typename LoadingConfig::edge_triplet_type, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt;, boost::hash&lt; typename LoadingConfig::edge_triplet_type &gt;&gt; &amp;edge_mapping, std::unordered_map&lt; typename LoadingConfig::edge_triplet_type, std::pair&lt; std::vector&lt; size_t &gt;, std::vector&lt; size_t &gt;&gt;, boost::hash&lt; typename LoadingConfig::edge_triplet_type &gt;&gt; &amp;edge_src_dst_col)</td></tr>
+<tr class="separator:a66c122d7f9a62017c749857012cbd722"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0db27f735995034525e91d2ab200de7b"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a0db27f735995034525e91d2ab200de7b">gs::config_parsing::parse_edges_files_schema</a> (YAML::Node node, const Schema &amp;schema, const std::string &amp;data_location, std::unordered_map&lt; std::tuple&lt; label_t, label_t, label_t &gt;, std::vector&lt; std::string &gt;, boost::hash&lt; std::tuple&lt; label_t, label_t, label_t &gt;&gt;&gt; &amp;files, std::unordered_map&lt; typename LoadingConfig::edge_triplet_type, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt;&gt;, boost::hash&lt; typename LoadingConfig::edge_triplet_type &gt;&gt; &amp;edge_mapping, std::unordered_map&lt; std::tuple&lt; label_t, label_t, label_t &gt;, std::pair&lt; std::vector&lt; size_t &gt;, std::vector&lt; size_t &gt;&gt;, boost::hash&lt; typename LoadingConfig::edge_triplet_type &gt;&gt; &amp;edge_src_dst_col)</td></tr>
+<tr class="separator:a0db27f735995034525e91d2ab200de7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19c7b64f11668067e1825f2e2867c5f2"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs_1_1config__parsing.html#a19c7b64f11668067e1825f2e2867c5f2">gs::config_parsing::parse_bulk_load_config_file</a> (const std::string &amp;config_file, const Schema &amp;schema, LoadingConfig &amp;load_config)</td></tr>
 <tr class="separator:a19c7b64f11668067e1825f2e2867c5f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>

@@ -1,11 +1,14 @@
 var searchData=
 [
-  ['table_784',['Table',['../classgs_1_1Table.html',1,'gs']]],
-  ['typedcolumn_785',['TypedColumn',['../classgs_1_1TypedColumn.html',1,'gs']]],
-  ['typedemptycolumn_786',['TypedEmptyColumn',['../classgs_1_1TypedEmptyColumn.html',1,'gs']]],
-  ['typedmutablecsrbase_787',['TypedMutableCsrBase',['../classgs_1_1TypedMutableCsrBase.html',1,'gs']]],
-  ['typedmutablecsrbase_3c_20std_3a_3astring_20_3e_788',['TypedMutableCsrBase&lt; std::string &gt;',['../classgs_1_1TypedMutableCsrBase.html',1,'gs']]],
-  ['typedmutablecsrconstedgeiter_789',['TypedMutableCsrConstEdgeIter',['../classgs_1_1TypedMutableCsrConstEdgeIter.html',1,'gs']]],
-  ['typedmutablecsredgeiter_790',['TypedMutableCsrEdgeIter',['../classgs_1_1TypedMutableCsrEdgeIter.html',1,'gs']]],
-  ['typedrefcolumn_791',['TypedRefColumn',['../classgs_1_1TypedRefColumn.html',1,'gs']]]
+  ['schema_869',['Schema',['../classgs_1_1Schema.html',1,'gs']]],
+  ['serverapp_870',['ServerApp',['../classgs_1_1ServerApp.html',1,'gs']]],
+  ['serverappfactory_871',['ServerAppFactory',['../classgs_1_1ServerAppFactory.html',1,'gs']]],
+  ['sessionlocalcontext_872',['SessionLocalContext',['../structgs_1_1SessionLocalContext.html',1,'gs']]],
+  ['sharedlibraryappfactory_873',['SharedLibraryAppFactory',['../classgs_1_1SharedLibraryAppFactory.html',1,'gs']]],
+  ['singleedgeinserttransaction_874',['SingleEdgeInsertTransaction',['../classgs_1_1SingleEdgeInsertTransaction.html',1,'gs']]],
+  ['singlegraphview_875',['SingleGraphView',['../classgs_1_1SingleGraphView.html',1,'gs']]],
+  ['singlemutablecsr_876',['SingleMutableCsr',['../classgs_1_1SingleMutableCsr.html',1,'gs']]],
+  ['singlevertexinserttransaction_877',['SingleVertexInsertTransaction',['../classgs_1_1SingleVertexInsertTransaction.html',1,'gs']]],
+  ['string_5fitem_878',['string_item',['../structgs_1_1string__item.html',1,'gs']]],
+  ['stringviewvector_879',['StringViewVector',['../classgs_1_1StringViewVector.html',1,'gs']]]
 ];

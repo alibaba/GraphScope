@@ -1,7 +1,11 @@
 var searchData=
 [
-  ['uninitializedutils_792',['UninitializedUtils',['../structgs_1_1UninitializedUtils.html',1,'gs']]],
-  ['uninitializedutils_3c_20mutablenbr_3c_20std_3a_3astring_20_3e_20_3e_793',['UninitializedUtils&lt; MutableNbr&lt; std::string &gt; &gt;',['../structgs_1_1UninitializedUtils_3_01MutableNbr_3_01std_1_1string_01_4_01_4.html',1,'gs']]],
-  ['updatetransaction_794',['UpdateTransaction',['../classgs_1_1UpdateTransaction.html',1,'gs']]],
-  ['updatewalunit_795',['UpdateWalUnit',['../structgs_1_1UpdateWalUnit.html',1,'gs']]]
+  ['table_880',['Table',['../classgs_1_1Table.html',1,'gs']]],
+  ['typedcolumn_881',['TypedColumn',['../classgs_1_1TypedColumn.html',1,'gs']]],
+  ['typedemptycolumn_882',['TypedEmptyColumn',['../classgs_1_1TypedEmptyColumn.html',1,'gs']]],
+  ['typedmutablecsrbase_883',['TypedMutableCsrBase',['../classgs_1_1TypedMutableCsrBase.html',1,'gs']]],
+  ['typedmutablecsrbase_3c_20std_3a_3astring_20_3e_884',['TypedMutableCsrBase&lt; std::string &gt;',['../classgs_1_1TypedMutableCsrBase.html',1,'gs']]],
+  ['typedmutablecsrconstedgeiter_885',['TypedMutableCsrConstEdgeIter',['../classgs_1_1TypedMutableCsrConstEdgeIter.html',1,'gs']]],
+  ['typedmutablecsredgeiter_886',['TypedMutableCsrEdgeIter',['../classgs_1_1TypedMutableCsrEdgeIter.html',1,'gs']]],
+  ['typedrefcolumn_887',['TypedRefColumn',['../classgs_1_1TypedRefColumn.html',1,'gs']]]
 ];
