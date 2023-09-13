@@ -120,6 +120,8 @@ public abstract class AbstractBindableTableScan extends TableScan {
         return this.aliasId;
     }
 
+    public TableConfig getTableConfig(){return  this.tableConfig;}
+
     // toString
 
     @Override

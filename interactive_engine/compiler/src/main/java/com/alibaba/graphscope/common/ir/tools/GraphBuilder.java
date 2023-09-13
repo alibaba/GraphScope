@@ -314,6 +314,12 @@ public class GraphBuilder extends RelBuilder {
         return this;
     }
 
+    @Override
+    public GraphBuilder push(RelNode node){
+        super.push(node);
+        return this;
+    }
+
     public RexNode getJoinCondition(RelNode first, RelNode second) {
         List<RexNode> conditions = Lists.newArrayList();
         List<RelDataTypeField> firstFields =
@@ -509,7 +515,7 @@ public class GraphBuilder extends RelBuilder {
                         + aliases);
     }
 
-    private static class ColumnField extends Pair<Integer, RelDataTypeField> {
+    private static class                                                                                                                                    ColumnField extends Pair<Integer, RelDataTypeField> {
         public ColumnField(Integer left, RelDataTypeField right) {
             super(left, right);
         }
@@ -559,6 +565,7 @@ public class GraphBuilder extends RelBuilder {
     public RexNode call(SqlOperator operator, RexNode... operands) {
         return call_(operator, ImmutableList.copyOf(operands));
     }
+
 
     @Override
     public RexNode call(SqlOperator operator, Iterable<? extends RexNode> operands) {
