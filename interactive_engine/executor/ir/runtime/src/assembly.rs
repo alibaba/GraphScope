@@ -159,6 +159,10 @@ impl<P: PartitionInfo, C: ClusterInfo> FnGenerator<P, C> {
         Ok(opr.gen_map()?)
     }
 
+    fn gen_path_condition(&self, opr: pb::PathExpand) -> FnGenResult<RecordFilter> {
+        Ok(opr.gen_filter()?)
+    }
+
     fn gen_coin(&self, opr: algebra_pb::Sample) -> FnGenResult<RecordFilter> {
         Ok(opr.gen_filter()?)
     }
@@ -604,11 +608,9 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     }
                     let times = range.upper - range.lower - 1;
                     if times > 0 {
-                        if let Some(condition) = path.condition.as_ref() {
+                        if path.condition.is_some() {
                             let mut until = IterCondition::max_iters(times as u32);
-                            let func = self
-                                .udf_gen
-                                .gen_filter(algebra_pb::Select { predicate: Some(condition.clone()) })?;
+                            let func = self.udf_gen.gen_path_condition(path.clone())?;
                             until.set_until(func);
                             // Notice that if UNTIL condition set, we expand path without `Emit`
                             stream = stream
