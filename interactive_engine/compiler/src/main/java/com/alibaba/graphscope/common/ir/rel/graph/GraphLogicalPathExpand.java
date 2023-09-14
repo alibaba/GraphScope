@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
+import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphPathType;
@@ -52,6 +53,8 @@ public class GraphLogicalPathExpand extends SingleRel {
 
     private final int aliasId;
 
+    private final AliasNameWithId startAlias;
+
     protected GraphLogicalPathExpand(
             GraphOptCluster cluster,
             @Nullable List<RelHint> hints,
@@ -62,7 +65,8 @@ public class GraphLogicalPathExpand extends SingleRel {
             @Nullable RexNode fetch,
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
-            @Nullable String aliasName) {
+            @Nullable String aliasName,
+            AliasNameWithId startAlias) {
         super(cluster, RelTraitSet.createEmpty(), input);
         this.expand = Objects.requireNonNull(expand);
         this.getV = Objects.requireNonNull(getV);
@@ -74,6 +78,7 @@ public class GraphLogicalPathExpand extends SingleRel {
                 AliasInference.inferDefault(
                         aliasName, AliasInference.getUniqueAliasList(input, true));
         this.aliasId = cluster.getIdGenerator().generate(this.aliasName);
+        this.startAlias = Objects.requireNonNull(startAlias);
     }
 
     public static GraphLogicalPathExpand create(
@@ -86,9 +91,20 @@ public class GraphLogicalPathExpand extends SingleRel {
             @Nullable RexNode fetch,
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
-            String aliasName) {
+            String aliasName,
+            AliasNameWithId startAlias) {
         return new GraphLogicalPathExpand(
-                cluster, hints, input, expand, getV, offset, fetch, resultOpt, pathOpt, aliasName);
+                cluster,
+                hints,
+                input,
+                expand,
+                getV,
+                offset,
+                fetch,
+                resultOpt,
+                pathOpt,
+                aliasName,
+                startAlias);
     }
 
     @Override
@@ -100,7 +116,11 @@ public class GraphLogicalPathExpand extends SingleRel {
                 .itemIf("fetch", fetch, fetch != null)
                 .item("path_opt", getPathOpt())
                 .item("result_opt", getResultOpt())
-                .item("alias", AliasInference.SIMPLE_NAME(getAliasName()));
+                .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
+                .itemIf(
+                        "start_alias",
+                        startAlias.getAliasName(),
+                        startAlias.getAliasName() != AliasInference.DEFAULT_NAME);
     }
 
     public String getAliasName() {
@@ -133,6 +153,10 @@ public class GraphLogicalPathExpand extends SingleRel {
 
     public @Nullable RexNode getFetch() {
         return fetch;
+    }
+
+    public AliasNameWithId getStartAlias() {
+        return startAlias;
     }
 
     @Override
