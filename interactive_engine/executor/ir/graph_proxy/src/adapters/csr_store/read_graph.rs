@@ -60,7 +60,7 @@ pub struct CSRStore {
 }
 
 fn _init_csr() -> CsrDB<usize, usize> {
-    CsrDB::deserialize(&*(CSR_PATH), *PARTITION_ID).unwrap()
+    CsrDB::deserialize(&*(CSR_PATH), *PARTITION_ID, None).unwrap()
 }
 
 impl ReadGraph for CSRStore {

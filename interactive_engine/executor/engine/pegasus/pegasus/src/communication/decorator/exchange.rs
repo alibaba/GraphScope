@@ -446,7 +446,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                 if batch.get_seq() == 0 {
                     // multi source;
                     self.pushes[target].push(batch)?;
-                    let children = DynPeers::all();
+                    let children = DynPeers::all(self.total_peers);
                     for i in 0..self.pushes.len() {
                         let mut new_end = end.clone();
                         if i != target {
