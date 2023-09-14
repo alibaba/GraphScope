@@ -169,6 +169,61 @@ public class ExpressionTest {
         Assert.assertEquals("-(a.age)", node.toString());
     }
 
+    // check the return type of the 'ARRAY_VALUE_CONSTRUCTOR', the return type inference strategy
+    // is:
+    // 1. derive the component type by finding the least restrictive type of the arguments
+    // 2. if the least restrictive type cannot be found, use 'ANY' type
+    // 3. derive the array type by the component type
+    @Test
+    public void array_value_constructor_test() {
+        RexNode node =
+                builder.call(
+                        GraphStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR,
+                        builder.literal(1),
+                        builder.literal(2));
+        Assert.assertEquals("INTEGER ARRAY", node.getType().toString());
+
+        node =
+                builder.call(
+                        GraphStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR,
+                        builder.literal(1),
+                        builder.literal(2.0));
+        Assert.assertEquals("DOUBLE ARRAY", node.getType().toString());
+
+        node =
+                builder.source(mockSourceConfig("a"))
+                        .call(
+                                GraphStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR,
+                                builder.variable("a", "age"),
+                                builder.literal(1));
+        Assert.assertEquals("INTEGER ARRAY", node.getType().toString());
+
+        node =
+                builder.source(mockSourceConfig("a"))
+                        .call(
+                                GraphStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR,
+                                builder.variable("a", "name"),
+                                builder.literal(1));
+        Assert.assertEquals("ANY ARRAY", node.getType().toString());
+    }
+
+    // check the return type of the 'MAP_VALUE_CONSTRUCTOR', the return type inference strategy is:
+    // 1. derive the key or value type by finding the least restrictive type of the arguments
+    // 2. if the least restrictive type cannot be found, use 'ANY' type
+    // 3. derive the map type by the key or value type
+    @Test
+    public void map_value_constructor_test() {
+        RexNode node =
+                builder.source(mockSourceConfig("a"))
+                        .call(
+                                GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
+                                builder.literal("name"),
+                                builder.variable("a", "name"),
+                                builder.literal("age"),
+                                builder.variable("a", "age"));
+        Assert.assertEquals("(CHAR(4), ANY) MAP", node.getType().toString());
+    }
+
     private SourceConfig mockSourceConfig(String alias) {
         return new SourceConfig(
                 GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"), alias);
