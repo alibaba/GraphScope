@@ -13,6 +13,7 @@ import java.util.List;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirection;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 
 public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEstimation {
@@ -28,7 +29,12 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
         for (Pattern pattern : roots) {
             // single vertex pattern
             PatternVertex singleVertexPattern = pattern.getVertexSet().iterator().next();
-            Double singleVertexPatternCount = schema.getVertexTypeCardinality(singleVertexPattern.getVertexTypeId());
+            List<Integer> vertexTypeIds = singleVertexPattern.getVertexTypeIds();
+            if (vertexTypeIds.size() != 1) {
+                throw new RuntimeException("vertex pattern should have only one vertex type");
+            }
+            Double singleVertexPatternCount = schema
+                    .getVertexTypeCardinality(vertexTypeIds.get(0));
             this.patternCardinality.put(pattern, singleVertexPatternCount);
             System.out.println("root vertex pattern: " + pattern + ": " + singleVertexPatternCount);
             patternQueue.add(pattern);
@@ -74,7 +80,7 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
     private Pair<Double, Double> estimatePatternCountWithExtendWeight(GlogueSchema schema, Double srcPatternCount,
             ExtendStep extendStep) {
         initEdgeWeightsInExtendStep(schema, extendStep);
-        // estimate pattern count and also set the weight of the extend step
+        // estimate pattern count and the weight of the extend step
         Double commonTargetVertexTypeCount = schema.getVertexTypeCardinality(extendStep.getTargetVertexType());
         Iterator<ExtendEdge> iter = extendStep.getExtendEdges().iterator();
         Double targetPatternCount = srcPatternCount * iter.next().getWeight();
@@ -89,6 +95,9 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
 
     /// Given the src pattern and extend step, estimate the pattern extension cost.
     /// Return the estimated extendStepWeight.
+    /// Currently, we compute the weight of the extend step in a greedy way;
+    /// we can also compute it in a more accurate way (e.g., enumerate all
+    /// combinations and get the best one)
     private Double estimateExtendWeight(GlogueSchema schema, ExtendStep extendStep) {
         initEdgeWeightsInExtendStep(schema, extendStep);
         Double commonTargetVertexCount = schema.getVertexTypeCardinality(extendStep.getTargetVertexType());

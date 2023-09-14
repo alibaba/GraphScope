@@ -39,9 +39,15 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
         Integer colorId = 0;
 
         Set<Integer> vertexTypeIds = new TreeSet<>();
-        for (PatternVertex vertex : patternGraph.vertexSet()) {
-            if (!vertexTypeIds.contains(vertex.getVertexTypeId())) {
-                vertexTypeIds.add(vertex.getVertexTypeId());
+        for (PatternVertex patternVertex : patternGraph.vertexSet()) {
+            List<Integer> vertexTypeIdsList = patternVertex.getVertexTypeIds();
+            if (vertexTypeIdsList.size() != 1) {
+                throw new IllegalArgumentException("Only support PatternVertex with one vertex type for now");
+            } else {
+                Integer vertexTypeId = vertexTypeIdsList.get(0);
+                if (!vertexTypeIds.contains(vertexTypeId)) {
+                    vertexTypeIds.add(vertexTypeId);
+                }
             }
         }
         for (Integer type : vertexTypeIds) {
@@ -49,12 +55,16 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
             colorId++;
         }
 
-        for (PatternVertex vertex : patternGraph.vertexSet()) {
-            Integer vertexTypeId = vertex.getVertexTypeId();
-            initialColors.put(vertex, initialMapTypeToColor.get(vertexTypeId));
+        for (PatternVertex patternVertex : patternGraph.vertexSet()) {
+            List<Integer> vertexTypeIdsList = patternVertex.getVertexTypeIds();
+            if (vertexTypeIdsList.size() != 1) {
+                throw new IllegalArgumentException("Only support PatternVertex with only one vertex type for now");
+            }
+            Integer vertexTypeId = vertexTypeIdsList.get(0);
+            initialColors.put(patternVertex, initialMapTypeToColor.get(vertexTypeId));
         }
-        ColoringImpl initialColoringImpl = new ColoringImpl<PatternVertex>(initialColors, colorId);
-        ColorRefinementAlgorithm<PatternVertex, PatternEdge> colorRefinementAlgorithm = new ColorRefinementAlgorithm(
+        ColoringImpl<PatternVertex> initialColoringImpl = new ColoringImpl<PatternVertex>(initialColors, colorId);
+        ColorRefinementAlgorithm<PatternVertex, PatternEdge> colorRefinementAlgorithm = new ColorRefinementAlgorithm<PatternVertex, PatternEdge>(
                 patternGraph,
                 initialColoringImpl);
         Coloring<PatternVertex> initColoring = colorRefinementAlgorithm.getColoring();
@@ -108,7 +118,12 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
         mapTypeToGroup = new TreeMap<>();
         Integer groupId = 0;
         for (Set<PatternVertex> coloredPatternVertices : color.getColorClasses()) {
-            Integer vertexTypeId = coloredPatternVertices.iterator().next().getVertexTypeId();
+            List<Integer> vertexTypeIds = coloredPatternVertices.iterator().next()
+                    .getVertexTypeIds();
+            if (vertexTypeIds.size() != 1) {
+                throw new IllegalArgumentException("Only support PatternVertex with only one vertex type for now");
+            }
+            Integer vertexTypeId = vertexTypeIds.get(0);
             if (mapTypeToGroup.containsKey(vertexTypeId)) {
                 mapTypeToGroup.get(vertexTypeId).add(groupId);
             } else {

@@ -1,32 +1,28 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 
-public class PatternVertex {
-    private Integer vertexTypeId;
-    private Integer id;
+import java.util.List;
 
-    public PatternVertex(Integer vertexTypeId) {
-        this.vertexTypeId = vertexTypeId;
-        this.id = 0;
-    }
+public abstract class PatternVertex {
+    public abstract Integer getId();
 
-    public PatternVertex(Integer vertexTypeId, int id) {
-        this.vertexTypeId = vertexTypeId;
-        this.id = id;
-    }
+    public abstract List<Integer> getVertexTypeIds();
 
-    public Integer getVertexTypeId() {
-        return vertexTypeId;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
+    @Override
     public String toString() {
-        return id.toString() + "[" + vertexTypeId.toString() + "]";
+     return getId().toString() + "[" + getVertexTypeIds().toString() + "]";
     }
 
+    @Override
     public int hashCode() {
         return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if (!(o instanceof PatternVertex)) {
+            return false;
+        }
+        PatternVertex other = (PatternVertex) o;
+        return this.getId().equals(other.getId()) && this.getVertexTypeIds().equals(other.getVertexTypeIds());
     }
 }

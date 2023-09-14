@@ -14,6 +14,7 @@ import org.jgrapht.graph.DirectedPseudograph;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 
@@ -42,7 +43,7 @@ public class Glogue {
     public Glogue create(GlogueSchema schema, int maxPatternSize) {
         Deque<Pattern> patternQueue = new ArrayDeque<>();
         for (Integer vertexTypeId : schema.getVertexTypes()) {
-            PatternVertex vertex = new PatternVertex(vertexTypeId);
+            PatternVertex vertex = new SinglePatternVertex(vertexTypeId);
             Pattern new_pattern = new Pattern(vertex);
             this.addPattern(new_pattern);
             this.addRoot(new_pattern);
@@ -67,18 +68,18 @@ public class Glogue {
                     System.out.println("add new pattern: " + newPattern);
                     Map<Integer, Integer> srcToDstPatternMapping = this.computePatternMapping(pattern, newPattern,
                             extendStep);
-                    this.addPatternEdge(pattern, newPattern, extendStep, srcToDstPatternMapping);
+                    this.addEdge(pattern, newPattern, extendStep, srcToDstPatternMapping);
                     patternQueue.add(newPattern);
                 } else {
                     System.out.println(
                             "pattern already exists: " + existingPattern.get());
                     System.out.println("v.s. the new pattern: " + newPattern);
-                    if (!this.containsPatternEdge(pattern, existingPattern.get())) {
+                    if (!this.containsEdge(pattern, existingPattern.get())) {
                         // notice that the mapping should be computed based on pattern to newPattern,
                         // rather than pattern to existingPattern
                         Map<Integer, Integer> srcToDstPatternMapping = this.computePatternMapping(pattern, newPattern,
                                 extendStep);
-                        this.addPatternEdge(pattern, existingPattern.get(), extendStep, srcToDstPatternMapping);
+                        this.addEdge(pattern, existingPattern.get(), extendStep, srcToDstPatternMapping);
                     } else {
                         System.out
                                 .println("edge already exists as well");
@@ -129,7 +130,7 @@ public class Glogue {
         return Optional.empty();
     }
 
-    private boolean containsPatternEdge(Pattern srcPattern, Pattern dstPattern) {
+    private boolean containsEdge(Pattern srcPattern, Pattern dstPattern) {
         return this.glogueGraph.containsEdge(srcPattern, dstPattern);
     }
 
@@ -138,7 +139,7 @@ public class Glogue {
         return this.glogueGraph.addVertex(pattern);
     }
 
-    private boolean addPatternEdge(Pattern srcPattern, Pattern dstPattern, ExtendStep edge,
+    private boolean addEdge(Pattern srcPattern, Pattern dstPattern, ExtendStep edge,
             Map<Integer, Integer> srcToDstIdMapping) {
         GlogueExtendIntersectEdge glogueEdge = new GlogueExtendIntersectEdge(srcPattern, dstPattern, edge,
                 srcToDstIdMapping);
@@ -184,9 +185,9 @@ public class Glogue {
         Pattern p = new Pattern();
 
         // p1 -> s0 <- p2 + p1 -> p2
-        PatternVertex v0 = new PatternVertex(1, 0);
-        PatternVertex v1 = new PatternVertex(0, 1);
-        PatternVertex v2 = new PatternVertex(0, 2);
+        PatternVertex v0 = new SinglePatternVertex(1, 0);
+        PatternVertex v1 = new SinglePatternVertex(0, 1);
+        PatternVertex v2 = new SinglePatternVertex(0, 2);
         // p -> s
         EdgeTypeId e = new EdgeTypeId(0, 1, 1);
         // p -> p
@@ -201,9 +202,9 @@ public class Glogue {
 
         // p0 -> s2 <- p1 + p0 -> p1
         Pattern p2 = new Pattern();
-        PatternVertex v00 = new PatternVertex(0, 0);
-        PatternVertex v11 = new PatternVertex(0, 1);
-        PatternVertex v22 = new PatternVertex(1, 2);
+        PatternVertex v00 = new SinglePatternVertex(0, 0);
+        PatternVertex v11 = new SinglePatternVertex(0, 1);
+        PatternVertex v22 = new SinglePatternVertex(1, 2);
         p2.addVertex(v00);
         p2.addVertex(v11);
         p2.addVertex(v22);

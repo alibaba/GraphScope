@@ -1,55 +1,36 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 
+import java.util.List;
+
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 
-public class PatternEdge {
-    private int id;
-    private EdgeTypeId edgeTypeId;
-    private PatternVertex srcVertex;
-    private PatternVertex dstVertex;
+public abstract class PatternEdge {
 
-    public PatternEdge(EdgeTypeId edgeTypeId, int id) {
-        this.edgeTypeId = edgeTypeId;
-        this.id = id;
-    }
+    public abstract PatternVertex getSrcVertex();
 
-    public PatternEdge(PatternVertex src, PatternVertex dst, EdgeTypeId edgeTypeId, int id) {
-        this.edgeTypeId = edgeTypeId;
-        this.id = id;
-        this.srcVertex = src;
-        this.dstVertex = dst;
-    }
+    public abstract PatternVertex getDstVertex();
 
-    public PatternVertex getSrcVertex() {
-        return srcVertex;
-    }
+    public abstract Integer getId();
 
-    public PatternVertex getDstVertex() {
-        return dstVertex;
-    }
+    public abstract List<EdgeTypeId> getEdgeTypeIds();
 
-    public EdgeTypeId getEdgeTypeId() {
-        return edgeTypeId;
-    }
-
-    public int getId() {
-        return id;
-    }
-
+    @Override
     public String toString() {
-        return srcVertex.getId() + "->" + dstVertex.getId() + "[" + edgeTypeId.toString() + "]";
+        return getSrcVertex().getId() + "->" + getDstVertex().getId() + "[" + getEdgeTypeIds().toString() + "]";
     }
 
+    @Override
     public int hashCode() {
         return toString().hashCode();
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o){
         if (!(o instanceof PatternEdge)) {
             return false;
         }
         PatternEdge other = (PatternEdge) o;
-        return this.edgeTypeId.equals(other.edgeTypeId);
+        return this.getSrcVertex().equals(other.getSrcVertex()) && this.getDstVertex().equals(other.getDstVertex()) && this.getEdgeTypeIds().equals(other.getEdgeTypeIds());
     }
+
 }

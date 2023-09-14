@@ -15,11 +15,8 @@ import org.jgrapht.GraphMapping;
 import org.jgrapht.alg.color.ColorRefinementAlgorithm;
 import org.jgrapht.alg.interfaces.VertexColoringAlgorithm.Coloring;
 import org.jgrapht.alg.isomorphism.ColorRefinementIsomorphismInspector;
-import org.jgrapht.alg.isomorphism.IsomorphicGraphMapping;
-import org.jgrapht.alg.isomorphism.IsomorphismInspector;
 import org.jgrapht.alg.isomorphism.VF2GraphIsomorphismInspector;
 import org.jgrapht.graph.AsUndirectedGraph;
-import org.jgrapht.graph.DirectedPseudograph;
 import org.jgrapht.graph.SimpleDirectedGraph;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendEdge;
@@ -42,26 +39,45 @@ public class Pattern {
     // pattern ordering may not be isomorphic.
     private PatternOrder patternOrder;
 
-    // vertex comparator and edge comparator are used for isomorphism inspector
-    final static Comparator<PatternVertex> vertexComparator = (o1, o2) -> o1.getVertexTypeId()
-            .compareTo(o2.getVertexTypeId());
-    final static Comparator<PatternEdge> edgeComparator = (o1, o2) -> o1.getEdgeTypeId().compareTo(o2.getEdgeTypeId());
+    // vertex type comparator and edge type comparator are used for isomorphism inspector
+    final static Comparator<PatternVertex> vertexTypeComparator = (o1, o2) -> {
+        if (o1.getVertexTypeIds().size() != o2.getVertexTypeIds().size()) {
+            return o1.getVertexTypeIds().size() - o2.getVertexTypeIds().size();
+        } else {
+            ArrayList<Integer> o1List = new ArrayList<>(o1.getVertexTypeIds());
+            o1List.sort(Integer::compareTo);
+            ArrayList<Integer> o2List = new ArrayList<>(o2.getVertexTypeIds());
+            o2List.sort(Integer::compareTo);
+            for (int i = 0; i < o1List.size(); i++) {
+                if (!o1List.get(i).equals(o2List.get(i))) {
+                    return o1List.get(i) - o2List.get(i);
+                }
+            }
+            return 0;
+        }
+    };
+    final static Comparator<PatternEdge> edgeTypeComparator = (o1, o2) -> {
+        if (o1.getEdgeTypeIds().size() != o2.getEdgeTypeIds().size()) {
+            return o1.getEdgeTypeIds().size() - o2.getEdgeTypeIds().size();
+        } else {
+            ArrayList<EdgeTypeId> o1List = new ArrayList<>(o1.getEdgeTypeIds());
+            o1List.sort(Comparator.comparingInt(EdgeTypeId::getSrcLabelId).thenComparingInt(EdgeTypeId::getDstLabelId)
+                    .thenComparingInt(EdgeTypeId::getEdgeLabelId));
+            ArrayList<EdgeTypeId> o2List = new ArrayList<>(o2.getEdgeTypeIds());
+            o2List.sort(Comparator.comparingInt(EdgeTypeId::getSrcLabelId).thenComparingInt(EdgeTypeId::getDstLabelId)
+                    .thenComparingInt(EdgeTypeId::getEdgeLabelId));
+            for (int i = 0; i < o1List.size(); i++) {
+                if (!o1List.get(i).equals(o2List.get(i))) {
+                    return o1List.get(i).compareTo(o2List.get(i));
+                }
+            }
+            return 0;
+        }
+    };
 
     // by default, simple directed graph is used for pattern representation.
     public Pattern() {
         this.patternGraph = new SimpleDirectedGraph<PatternVertex, PatternEdge>(PatternEdge.class);
-        this.maxVertexId = 0;
-        this.maxEdgeId = 0;
-    }
-
-    // If isMultipleEdge is true, then use DirectedPseudograph. This represents a
-    // fuzzy pattern.
-    public Pattern(boolean isMultipleEdge) {
-        if (isMultipleEdge) {
-            this.patternGraph = new DirectedPseudograph<PatternVertex, PatternEdge>(PatternEdge.class);
-        } else {
-            this.patternGraph = new SimpleDirectedGraph<PatternVertex, PatternEdge>(PatternEdge.class);
-        }
         this.maxVertexId = 0;
         this.maxEdgeId = 0;
     }
@@ -74,12 +90,7 @@ public class Pattern {
     }
 
     public Pattern(Pattern pattern) {
-        // TODO: pattern must be DirectedPseudograph or SimpleDirectedGraph?
-        if (pattern.patternGraph.getType().isAllowingMultipleEdges()) {
-            this.patternGraph = new DirectedPseudograph<PatternVertex, PatternEdge>(PatternEdge.class);
-        } else {
-            this.patternGraph = new SimpleDirectedGraph<PatternVertex, PatternEdge>(PatternEdge.class);
-        }
+        this.patternGraph = new SimpleDirectedGraph<PatternVertex, PatternEdge>(PatternEdge.class);
         for (PatternVertex vertex : pattern.getVertexSet()) {
             addVertex(vertex);
         }
@@ -93,15 +104,6 @@ public class Pattern {
 
     public Pattern(PatternVertex vertex) {
         this.patternGraph = new SimpleDirectedGraph<PatternVertex, PatternEdge>(PatternEdge.class);
-        this.patternGraph.addVertex(vertex);
-        this.maxVertexId = 1;
-        this.maxEdgeId = 0;
-        this.encoding();
-    }
-
-    public Pattern(Integer vertexTypeId) {
-        this.patternGraph = new SimpleDirectedGraph<PatternVertex, PatternEdge>(PatternEdge.class);
-        PatternVertex vertex = new PatternVertex(vertexTypeId);
         this.patternGraph.addVertex(vertex);
         this.maxVertexId = 1;
         this.maxEdgeId = 0;
@@ -151,7 +153,12 @@ public class Pattern {
                 } else {
                     consideredGroup.add(srcVertexOrder);
                 }
-                Integer srcVertexType = srcPatternVertex.getVertexTypeId();
+                List<Integer> srcVertexTypes = srcPatternVertex.getVertexTypeIds();
+                if (srcVertexTypes.size() != 1) {
+                    throw new UnsupportedOperationException(
+                            "In ExtendStep, srcPatternVertexType " + srcVertexTypes + " is not supported");
+                }
+                Integer srcVertexType = srcVertexTypes.get(0);
                 // Get all adjacent edges from srcVertex to targetVertex
                 List<EdgeTypeId> outEdges = schema.getEdgeTypes(srcVertexType, targetVertexType);
                 for (EdgeTypeId outEdge : outEdges) {
@@ -167,7 +174,9 @@ public class Pattern {
                                     new ArrayList<ExtendEdge>(Arrays.asList(extendEdge)));
                         }
                     } else {
-                        System.out.println("very weird 111");
+                        throw new UnsupportedOperationException(
+                                "In ExtendStep, srcVertexType " + srcVertexType + " is not equal to outEdge srcLabelId "
+                                        + outEdge.getSrcLabelId());
                     }
                 }
                 // Get all adjacent edges from targetVertex to srcVertex
@@ -188,7 +197,9 @@ public class Pattern {
                                     new ArrayList<ExtendEdge>(Arrays.asList(extendEdge)));
                         }
                     } else {
-                        System.out.println("very weird 222");
+                        throw new UnsupportedOperationException(
+                                "In ExtendStep, srcVertexType " + srcVertexType + " is not equal to inEdge dstLabelId "
+                                        + inEdge.getDstLabelId());
                     }
                 }
             }
@@ -216,7 +227,7 @@ public class Pattern {
     public Pattern extend(ExtendStep extendStep) {
         Pattern newPattern = new Pattern(this);
         Integer targetVertexTypeId = extendStep.getTargetVertexType();
-        PatternVertex targetVertex = new PatternVertex(targetVertexTypeId, newPattern.maxVertexId);
+        PatternVertex targetVertex = new SinglePatternVertex(targetVertexTypeId, newPattern.maxVertexId);
         newPattern.addVertex(targetVertex);
         for (ExtendEdge extendEdge : extendStep.getExtendEdges()) {
             PatternDirection dir = extendEdge.getDirection();
@@ -226,11 +237,11 @@ public class Pattern {
             // TODO: be very careful if we allow "both" direction in schema
             if (dir.equals(PatternDirection.OUT)) {
                 System.out.println("To extend: " + srcVertex + " -> " + targetVertex + " " + edgeTypeId);
-                PatternEdge edge = new PatternEdge(srcVertex, targetVertex, edgeTypeId, newPattern.maxEdgeId);
+                PatternEdge edge = new SinglePatternEdge(srcVertex, targetVertex, edgeTypeId, newPattern.maxEdgeId);
                 newPattern.addEdge(srcVertex, targetVertex, edge);
             } else {
                 System.out.println("To extend: " + targetVertex + " -> " + srcVertex + " " + edgeTypeId);
-                PatternEdge edge = new PatternEdge(targetVertex, srcVertex, edgeTypeId, newPattern.maxEdgeId);
+                PatternEdge edge = new SinglePatternEdge(targetVertex, srcVertex, edgeTypeId, newPattern.maxEdgeId);
                 newPattern.addEdge(targetVertex, srcVertex, edge);
             }
 
@@ -254,7 +265,7 @@ public class Pattern {
     }
 
     public boolean addEdge(PatternVertex srcVertex, PatternVertex dstVertex, EdgeTypeId edgeTypeId) {
-        PatternEdge edge = new PatternEdge(srcVertex, dstVertex, edgeTypeId, this.maxEdgeId);
+        PatternEdge edge = new SinglePatternEdge(srcVertex, dstVertex, edgeTypeId, this.maxEdgeId);
         return addEdge(srcVertex, dstVertex, edge);
     }
 
@@ -319,7 +330,7 @@ public class Pattern {
             }
             if (!this.patternOrder.equals(other.patternOrder)) {
                 VF2GraphIsomorphismInspector isomorphismInspector = new VF2GraphIsomorphismInspector(this.patternGraph,
-                        other.patternGraph, vertexComparator, edgeComparator);
+                        other.patternGraph, vertexTypeComparator, edgeTypeComparator);
                 if (isomorphismInspector.isomorphismExists()) {
                     System.out.println("!!!Notice that different pattern order, but the same pattern!!!");
                     System.out.println("pattern1 v.s. pattern2: \n" + this + "\n" + other);
@@ -332,7 +343,7 @@ public class Pattern {
                 }
             } else {
                 VF2GraphIsomorphismInspector isomorphismInspector = new VF2GraphIsomorphismInspector(this.patternGraph,
-                        other.patternGraph, vertexComparator, edgeComparator);
+                        other.patternGraph, vertexTypeComparator, edgeTypeComparator);
                 if (isomorphismInspector.isomorphismExists()) {
                     return true;
                 } else {
@@ -358,9 +369,9 @@ public class Pattern {
         // v0: software
         // v1: person
         // v2: person
-        PatternVertex v0 = new PatternVertex(1, 0);
-        PatternVertex v1 = new PatternVertex(0, 1);
-        PatternVertex v2 = new PatternVertex(0, 2);
+        PatternVertex v0 = new SinglePatternVertex(1, 0);
+        PatternVertex v1 = new SinglePatternVertex(0, 1);
+        PatternVertex v2 = new SinglePatternVertex(0, 2);
 
         // person -> software
         EdgeTypeId e1 = new EdgeTypeId(0, 1, 1);
@@ -380,9 +391,9 @@ public class Pattern {
         // p0 -> s1 <- p2
         Pattern p1 = new Pattern();
 
-        PatternVertex v00 = new PatternVertex(0, 0);
-        PatternVertex v11 = new PatternVertex(1, 1);
-        PatternVertex v22 = new PatternVertex(0, 2);
+        PatternVertex v00 = new SinglePatternVertex(0, 0);
+        PatternVertex v11 = new SinglePatternVertex(1, 1);
+        PatternVertex v22 = new SinglePatternVertex(0, 2);
         p1.addVertex(v00);
         p1.addVertex(v11);
         p1.addVertex(v22);
@@ -531,7 +542,7 @@ public class Pattern {
         Pattern p5 = new Pattern();
         p5.addVertex(v0);
         p5.addVertex(v1);
-        PatternVertex v222 = new PatternVertex(0, 2);
+        PatternVertex v222 = new SinglePatternVertex(0, 2);
         p5.addVertex(v222);
         p5.addEdge(v1, v0, e1);
         p5.addEdge(v1, v222, e2);
@@ -539,7 +550,7 @@ public class Pattern {
         Pattern p6 = new Pattern();
         p6.addVertex(v0);
         p6.addVertex(v1);
-        PatternVertex v2222 = new PatternVertex(1, 2);
+        PatternVertex v2222 = new SinglePatternVertex(1, 2);
         p6.addVertex(v2222);
         p6.addEdge(v1, v0, e1);
         p6.addEdge(v1, v2222, e1);
@@ -557,9 +568,9 @@ public class Pattern {
                 + colorRefinementIsomorphismInspector56.isomorphismExists());
 
         // software
-        PatternVertex v70 = new PatternVertex(1, 0);
+        PatternVertex v70 = new SinglePatternVertex(1, 0);
         // person
-        PatternVertex v71 = new PatternVertex(0, 1);
+        PatternVertex v71 = new SinglePatternVertex(0, 1);
         // software <- person
         Pattern p7 = new Pattern();
         p7.addVertex(v70);
@@ -567,9 +578,9 @@ public class Pattern {
         p7.addEdge(v71, v70, e1);
 
         // person
-        PatternVertex v80 = new PatternVertex(0, 0);
+        PatternVertex v80 = new SinglePatternVertex(0, 0);
         // software
-        PatternVertex v81 = new PatternVertex(1, 1);
+        PatternVertex v81 = new SinglePatternVertex(1, 1);
         // person -> software
         Pattern p8 = new Pattern();
         p8.addVertex(v80);
