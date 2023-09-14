@@ -106,6 +106,7 @@ public class SchemaManager {
         this.graphDefRef.set(graphDef);
         this.ready = true;
         logger.info("SchemaManager recovered. version [" + graphDef.getVersion() + "]");
+        logger.info(graphDef.toProto().toString());
     }
 
     public void stop() {

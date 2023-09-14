@@ -224,9 +224,11 @@ public class StoreService implements MetricsAgent {
         long snapshotId = storeDataBatch.getSnapshotId();
         List<Map<Integer, OperationBatch>> dataBatch = storeDataBatch.getDataBatch();
         AtomicBoolean hasDdl = new AtomicBoolean(false);
+        int maxRetry = 10;
         for (Map<Integer, OperationBatch> partitionToBatch : dataBatch) {
-            while (!shouldStop && partitionToBatch.size() != 0) {
+            while (!shouldStop && partitionToBatch.size() != 0 && maxRetry > 0) {
                 partitionToBatch = writeStore(snapshotId, partitionToBatch, hasDdl);
+                maxRetry--;
             }
         }
         return hasDdl.get();
@@ -364,12 +366,11 @@ public class StoreService implements MetricsAgent {
     }
 
     public void clearIngest(String dataPath) throws IOException {
-        String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
         if (dataPath == null || dataPath.isEmpty()) {
             logger.warn("Must set a sub-path for clearing.");
             return;
         }
-
+        String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
         Path downloadPath = Paths.get(dataRoot, "download", dataPath);
         try {
             logger.info("Clearing directory {}", downloadPath);

@@ -93,6 +93,7 @@ where
         &self, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
+        debug!("scan_vertex worker_partitions: {:?}", worker_partitions);
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
             let si = params
@@ -174,10 +175,12 @@ where
                     .map(|(_pk, value)| encode_store_prop_val(value.clone()))
                     .collect(),
             };
+            debug!("index_scan_vertex store_indexed_values {:?}", store_indexed_values);
             if let Some(vid) = self
                 .partition_manager
                 .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
             {
+                debug!("index_scan_vertex vid {:?}", vid);
                 Ok(Some(Vertex::new(vid as ID, Some(label_id.clone()), DynDetails::default())))
             } else {
                 Ok(None)
@@ -470,6 +473,7 @@ where
         let store = self.store.clone();
         let outer_id = store.translate_vertex_id(*id as VertexId);
         let pk_val = Object::from(outer_id);
+        trace!("get_primary_key: id: {}, outer_id {:?}, pk_val: {:?}", id, outer_id, pk_val);
         Ok(Some((GS_STORE_PK.into(), pk_val).into()))
     }
 }

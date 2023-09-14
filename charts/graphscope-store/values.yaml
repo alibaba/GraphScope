@@ -497,7 +497,7 @@ javaOpts: ""
 
 graphName: "graphscope"
 
-rpcMaxBytesMb: 4
+rpcMaxBytesMb: 20
 
 engineType: "gaia"
 

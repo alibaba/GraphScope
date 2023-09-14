@@ -249,6 +249,9 @@ public class GraphWriter implements MetricsAgent {
         int labelId = vertexDef.getLabelId();
         Map<Integer, PropertyValue> pkVals =
                 parseRawProperties(vertexDef, vertexRecordKey.getProperties());
+        Map<String, Object> properties = dataRecord.getProperties();
+        Map<Integer, PropertyValue> propertyVals = parseRawProperties(vertexDef, properties);
+        propertyVals.putAll(pkVals);
         long hashId = getPrimaryKeysHashId(labelId, pkVals, vertexDef);
         batchBuilder.addOperation(
                 new DeleteVertexOperation(new VertexId(hashId), new LabelId(labelId)));
@@ -257,12 +260,12 @@ public class GraphWriter implements MetricsAgent {
     private void addUpdateVertexOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
         VertexRecordKey vertexRecordKey = dataRecord.getVertexRecordKey();
-        Map<String, Object> properties = dataRecord.getProperties();
         String label = vertexRecordKey.getLabel();
         GraphElement vertexDef = schema.getElement(label);
         int labelId = vertexDef.getLabelId();
         Map<Integer, PropertyValue> pkVals =
                 parseRawProperties(vertexDef, vertexRecordKey.getProperties());
+        Map<String, Object> properties = dataRecord.getProperties();
         Map<Integer, PropertyValue> propertyVals = parseRawProperties(vertexDef, properties);
         propertyVals.putAll(pkVals);
         long hashId = getPrimaryKeysHashId(labelId, pkVals, vertexDef);
