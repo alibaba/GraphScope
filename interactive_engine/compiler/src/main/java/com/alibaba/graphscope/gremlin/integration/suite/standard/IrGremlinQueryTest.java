@@ -70,6 +70,14 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Map<String, Object>> get_g_V_a_out_b_select_a_b_by_label_id();
 
+    public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_outE_hasLabel_inV_elementMap();
+
+    public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_limit_elementMap();
+
+    public abstract Traversal<Vertex, String> get_g_V_limit_label();
+
+    public abstract Traversal<Vertex, Map<String, Object>> get_g_V_a_out_b_select_by_elementMap();
+
     public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_sum();
 
     public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_max();
@@ -300,6 +308,97 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                 get_g_V_a_out_b_select_a_b_by_label_id();
         printTraversalForm(traversal);
         Assert.assertEquals("{a=person, b=lop}", traversal.next().toString());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_outE_hasLabel_inV_elementMap() {
+        final Traversal<Vertex, Map<Object, Object>> traversal =
+                get_g_V_outE_hasLabel_inV_elementMap();
+        printTraversalForm(traversal);
+        int counter = 0;
+        while (traversal.hasNext()) {
+            Map values = traversal.next();
+            Assert.assertTrue(values.containsKey(T.id));
+            String name = (String) values.get("name");
+            if (name.equals("vadas")) {
+                Assert.assertEquals(27, values.get("age"));
+                Assert.assertEquals("person", values.get(T.label));
+            } else if (name.equals("josh")) {
+                Assert.assertEquals(32, values.get("age"));
+                Assert.assertEquals("person", values.get(T.label));
+            } else {
+                throw new IllegalStateException("It is not possible to reach here: " + values);
+            }
+            ++counter;
+        }
+        Assert.assertEquals(2, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_limit_elementMap() {
+        final Traversal<Vertex, Map<Object, Object>> traversal = get_g_V_limit_elementMap();
+        printTraversalForm(traversal);
+        Map values = traversal.next();
+        Assert.assertTrue(values.containsKey(T.id));
+        String name = (String) values.get("name");
+        if (name.equals("marko")) {
+            Assert.assertEquals(29, values.get("age"));
+            Assert.assertEquals("person", values.get(T.label));
+        } else if (name.equals("josh")) {
+            Assert.assertEquals(32, values.get("age"));
+            Assert.assertEquals("person", values.get(T.label));
+        } else if (name.equals("peter")) {
+            Assert.assertEquals(35, values.get("age"));
+            Assert.assertEquals("person", values.get(T.label));
+        } else if (name.equals("vadas")) {
+            Assert.assertEquals(27, values.get("age"));
+            Assert.assertEquals("person", values.get(T.label));
+        } else if (name.equals("lop")) {
+            Assert.assertEquals("java", values.get("lang"));
+            Assert.assertEquals("software", values.get(T.label));
+        } else {
+            if (!name.equals("ripple")) {
+                throw new IllegalStateException("It is not possible to reach here: " + values);
+            }
+
+            Assert.assertEquals("java", values.get("lang"));
+            Assert.assertEquals("software", values.get(T.label));
+        }
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_limit_label() {
+        final Traversal<Vertex, String> traversal = get_g_V_limit_label();
+        printTraversalForm(traversal);
+        String value = traversal.next();
+        Assert.assertTrue(value.equals("person") || value.equals("software"));
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_a_out_b_select_by_elementMap() {
+        final Traversal<Vertex, Map<String, Object>> traversal =
+                get_g_V_a_out_b_select_by_elementMap();
+        printTraversalForm(traversal);
+
+        Map<String, Object> values = traversal.next();
+
+        Map value1 = (Map) values.get("a");
+        Assert.assertTrue(value1.containsKey(T.id));
+        Assert.assertEquals("marko", value1.get("name"));
+        Assert.assertEquals(29, value1.get("age"));
+        Assert.assertEquals("person", value1.get(T.label));
+
+        Map value2 = (Map) values.get("b");
+        Assert.assertTrue(value2.containsKey(T.id));
+        Assert.assertEquals("josh", value2.get("name"));
+        Assert.assertEquals(32, value2.get("age"));
+        Assert.assertEquals("person", value2.get(T.label));
+
+        Assert.assertTrue(!traversal.hasNext());
     }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
@@ -638,6 +737,32 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                     .select("a", "b")
                     .by(label())
                     .by("name");
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Object>> get_g_V_outE_hasLabel_inV_elementMap() {
+            return g.V().outE().hasLabel("knows").inV().elementMap();
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Object>> get_g_V_limit_elementMap() {
+            return g.V().limit(1).elementMap();
+        }
+
+        @Override
+        public Traversal<Vertex, String> get_g_V_limit_label() {
+            return g.V().limit(1).label();
+        }
+
+        @Override
+        public Traversal<Vertex, Map<String, Object>> get_g_V_a_out_b_select_by_elementMap() {
+            return g.V().has("name", "marko")
+                    .as("a")
+                    .out()
+                    .has("name", "josh")
+                    .as("b")
+                    .select("a", "b")
+                    .by(elementMap());
         }
 
         @Override
