@@ -187,6 +187,8 @@ pub(crate) mod tests {
     pub const TAG_C: KeyId = 2;
     pub const TAG_D: KeyId = 3;
     pub const TAG_E: KeyId = 4;
+    pub const TAG_F: KeyId = 5;
+    pub const TAG_G: KeyId = 6;
 
     pub const PERSON_LABEL: LabelId = 0;
 
@@ -243,6 +245,10 @@ pub(crate) mod tests {
         let mut r1 = Record::new(v1, Some(TAG_A.into()));
         r1.append(v2, Some(TAG_B.into()));
         vec![r1]
+    }
+
+    pub fn to_ir_data_type(data_type: common_pb::DataType) -> common_pb::IrDataType {
+        common_pb::IrDataType { r#type: Some(common_pb::ir_data_type::Type::DataType(data_type as i32)) }
     }
 
     pub fn to_var_pb(tag: Option<NameOrId>, key: Option<NameOrId>) -> common_pb::Variable {

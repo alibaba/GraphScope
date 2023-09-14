@@ -170,7 +170,7 @@ mod tests {
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, GraphElement, Vertex};
     use ir_common::expr_parse::str_to_expr_pb;
-    use ir_common::generated::physical as pb;
+    use ir_common::generated::{common as common_pb, physical as pb};
     use ir_common::NameOrId;
     use pegasus::api::{Map, Sink};
     use pegasus::result::ResultStream;
@@ -181,7 +181,8 @@ mod tests {
     use crate::process::operator::map::FilterMapFuncGen;
     use crate::process::operator::tests::{
         init_source, init_source_with_multi_tags, init_source_with_tag, init_vertex1, init_vertex2,
-        to_expr_var_pb, to_expr_vars_pb, PERSON_LABEL, TAG_A, TAG_B, TAG_C, TAG_D, TAG_E,
+        to_expr_var_pb, to_expr_vars_pb, to_ir_data_type, to_var_pb, PERSON_LABEL, TAG_A, TAG_B, TAG_C,
+        TAG_D, TAG_E, TAG_F, TAG_G,
     };
     use crate::process::record::Record;
 
@@ -814,5 +815,113 @@ mod tests {
         if let Some(Err(_res)) = result.next() {
             assert!(true)
         }
+    }
+
+    #[test]
+    fn project_extract_from_date_test() {
+        // 2010-01-02
+        let date_obj = Object::DateFormat(dyn_type::DateTimeFormats::from_date32(20100102).unwrap());
+        // 12:34:56.100
+        let time_obj = Object::DateFormat(dyn_type::DateTimeFormats::from_time32(123456100).unwrap());
+        // 2020-10-10 10:10:10
+        let datetime_obj =
+            Object::DateFormat(dyn_type::DateTimeFormats::from_timestamp_millis(1602324610100).unwrap());
+        let mut r1 = Record::new(date_obj.clone(), Some(TAG_A.into()));
+        r1.append(time_obj, Some(TAG_B.into()));
+        r1.append(datetime_obj, Some(TAG_C.into()));
+
+        let extract_date_year_opr = common_pb::ExprOpr {
+            node_type: Some(to_ir_data_type(common_pb::DataType::Date32)),
+            item: Some(common_pb::expr_opr::Item::Extract(common_pb::Extract {
+                interval: common_pb::extract::Interval::Year as i32,
+            })),
+        };
+
+        let extract_time_hour_opr = common_pb::ExprOpr {
+            node_type: Some(to_ir_data_type(common_pb::DataType::Time32)),
+            item: Some(common_pb::expr_opr::Item::Extract(common_pb::Extract {
+                interval: common_pb::extract::Interval::Hour as i32,
+            })),
+        };
+
+        let extract_datetime_month_opr = common_pb::ExprOpr {
+            node_type: Some(to_ir_data_type(common_pb::DataType::Timestamp)),
+            item: Some(common_pb::expr_opr::Item::Extract(common_pb::Extract {
+                interval: common_pb::extract::Interval::Month as i32,
+            })),
+        };
+
+        let extract_datetime_minute_opr = common_pb::ExprOpr {
+            node_type: Some(to_ir_data_type(common_pb::DataType::Timestamp)),
+            item: Some(common_pb::expr_opr::Item::Extract(common_pb::Extract {
+                interval: common_pb::extract::Interval::Minute as i32,
+            })),
+        };
+
+        let tag_a_opr = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Var(to_var_pb(Some(TAG_A.into()), None))),
+        };
+        let tag_b_opr = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Var(to_var_pb(Some(TAG_B.into()), None))),
+        };
+        let tag_c_opr = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Var(to_var_pb(Some(TAG_C.into()), None))),
+        };
+
+        let expr1 = common_pb::Expression { operators: vec![extract_date_year_opr, tag_a_opr] };
+
+        let expr2 = common_pb::Expression { operators: vec![extract_time_hour_opr, tag_b_opr] };
+
+        let expr3 =
+            common_pb::Expression { operators: vec![extract_datetime_month_opr, tag_c_opr.clone()] };
+
+        let expr4 =
+            common_pb::Expression { operators: vec![extract_datetime_minute_opr, tag_c_opr.clone()] };
+
+        let source = vec![r1];
+        // To project: year of 2010-01-02, hour of 12:34:56.100, month of 2020-10-10 10:10:10, and minute of 2020-10-10 10:10:10
+        let project_opr_pb = pb::Project {
+            mappings: vec![
+                pb::project::ExprAlias { expr: Some(expr1), alias: Some(TAG_D.into()) },
+                pb::project::ExprAlias { expr: Some(expr2), alias: Some(TAG_E.into()) },
+                pb::project::ExprAlias { expr: Some(expr3), alias: Some(TAG_F.into()) },
+                pb::project::ExprAlias { expr: Some(expr4), alias: Some(TAG_G.into()) },
+            ],
+            is_append: true,
+        };
+
+        let mut result = project_test(source, project_opr_pb);
+        let expected_results = vec![object!(2010), object!(12), object!(10), object!(10)];
+        let mut results = vec![];
+        while let Some(Ok(res)) = result.next() {
+            let year = res
+                .get(Some(TAG_D))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            let hour = res
+                .get(Some(TAG_E))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            let month = res
+                .get(Some(TAG_F))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            let minute = res
+                .get(Some(TAG_G))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            results.push(year.clone());
+            results.push(hour.clone());
+            results.push(month.clone());
+            results.push(minute.clone());
+        }
+        assert_eq!(results, expected_results);
     }
 }
