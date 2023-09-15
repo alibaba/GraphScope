@@ -25,6 +25,7 @@ import com.alibaba.graphscope.groot.dataload.util.OSSFS;
 import com.alibaba.graphscope.groot.dataload.util.VolumeFS;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.proto.groot.DataLoadTargetPb;
+import com.alibaba.graphscope.proto.groot.GraphDefPb;
 import com.aliyun.odps.Odps;
 import com.aliyun.odps.data.TableInfo;
 import com.aliyun.odps.mapred.JobClient;
@@ -103,7 +104,10 @@ public class OfflineBuildOdps {
                         .setPassword(password)
                         .build();
 
-        GraphSchema schema = GraphDef.parseProto(client.prepareDataLoad(targets));
+        GraphDefPb graphDefPb = client.prepareDataLoad(targets);
+        System.out.println("GraphDef: " + graphDefPb);
+        GraphSchema schema = GraphDef.parseProto(graphDefPb);
+
         String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
         // number of reduce task
         int partitionNum = client.getPartitionNum();
@@ -133,7 +137,7 @@ public class OfflineBuildOdps {
         job.set("odps.mr.run.mode", "sql");
         job.set("odps.mr.sql.group.enable", "true");
         job.setFunctionTimeout(2400);
-        job.setMemoryForReducerJVM(2048);
+        job.setMemoryForReducerJVM(4096);
 
         for (Map.Entry<String, GraphElement> entry : tableType.entrySet()) {
             if (entry.getValue() instanceof GraphVertex || entry.getValue() instanceof GraphEdge) {

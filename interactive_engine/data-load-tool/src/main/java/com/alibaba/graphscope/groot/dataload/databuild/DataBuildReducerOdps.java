@@ -97,6 +97,7 @@ public class DataBuildReducerOdps extends ReducerBase {
         }
 
         String chkData = sstFileEmpty ? "0" : "1," + getFileMD5(sstFileName);
+        System.out.println("Checksum: " + chkData);
         writeFile(chkFileName, chkData);
 
         fs.copy(chkFileName, Paths.get(uniquePath, chkFileName).toString());

@@ -50,6 +50,9 @@ public class DataEncoder {
         scratch.putLong(tableId << 1);
         scratch.putLong(hashId);
         scratch.putLong(SNAPSHOT_ID);
+        // System.out.println("EncodeVertexKey: labelId:" + type.getLabelId() + "; tableId:" +
+        // tableId);
+        // System.out.println("scratch: [" + (tableId << 1) + "],[" + hashId + "]");
         flip(scratch);
         return new BytesRef(scratch.array(), 0, scratch.limit());
     }
