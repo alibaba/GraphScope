@@ -143,6 +143,10 @@ message Scan {
     EDGE = 1;
     // Scanning a relational table
     TABLE = 2;
+    // Scanning to get the vertex count
+    VERTEX_COUNT = 3;
+    // Scanning to get the edge count
+    EDGE_COUNT = 4;
   }
   ScanOpt scan_opt = 1;
   // The alias of the item if it is a vertex or edge
