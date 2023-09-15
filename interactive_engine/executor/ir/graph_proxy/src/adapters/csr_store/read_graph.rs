@@ -172,6 +172,32 @@ impl ReadGraph for CSRStore {
         let pk_val = Object::from(outer_id);
         Ok(Some((CSR_STORE_PK.into(), pk_val).into()))
     }
+
+    fn count_vertex(&self, params: &QueryParams) -> GraphProxyResult<u64> {
+        let worker_index = self.cluster_info.get_worker_index()?;
+        let workers_num = self.cluster_info.get_local_worker_num()?;
+        if worker_index % workers_num == 0 {
+            let label_ids = encode_storage_label(&params.labels);
+            let count = self
+                .store
+                .count_all_vertices(label_ids.as_ref());
+            Ok(count as u64)
+        } else {
+            Ok(0)
+        }
+    }
+
+    fn count_edge(&self, params: &QueryParams) -> GraphProxyResult<u64> {
+        let worker_index = self.cluster_info.get_worker_index()?;
+        let workers_num = self.cluster_info.get_local_worker_num()?;
+        if worker_index % workers_num == 0 {
+            let label_ids = encode_storage_label(&params.labels);
+            let count = self.store.count_all_edges(label_ids.as_ref());
+            Ok(count as u64)
+        } else {
+            Ok(0)
+        }
+    }
 }
 
 #[inline]

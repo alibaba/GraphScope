@@ -17,7 +17,7 @@ use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::sync::Arc;
 
-use dyn_type::Object;
+use dyn_type::{object, Object};
 use graph_proxy::apis::graph::PKV;
 use graph_proxy::apis::partitioner::{PartitionInfo, PartitionedData};
 use graph_proxy::apis::{get_graph, ClusterInfo, Edge, QueryParams, Vertex, ID};
@@ -35,6 +35,8 @@ pub enum SourceType {
     Vertex,
     Edge,
     Table,
+    VCount,
+    ECount,
     Dummy,
 }
 
@@ -169,6 +171,14 @@ impl SourceOperator {
                 }
                 Ok(Box::new(e_source.map(move |e| Record::new(e, self.alias.clone()))))
             }
+            SourceType::VCount => {
+                let count = graph.count_vertex(&self.query_params)?;
+                Ok(Box::new(vec![Record::new(object!(count), self.alias.clone())].into_iter()))
+            }
+            SourceType::ECount => {
+                let count = graph.count_edge(&self.query_params)?;
+                Ok(Box::new(vec![Record::new(object!(count), self.alias.clone())].into_iter()))
+            }
             SourceType::Table => Err(FnGenError::unsupported_error(
                 "neither `Edge` nor `Vertex` but `Table` type `Source` opr",
             ))?,
@@ -190,6 +200,8 @@ impl TryFrom<pb::Scan> for SourceOperator {
             algebra_pb::scan::ScanOpt::Vertex => SourceType::Vertex,
             algebra_pb::scan::ScanOpt::Edge => SourceType::Edge,
             algebra_pb::scan::ScanOpt::Table => SourceType::Table,
+            algebra_pb::scan::ScanOpt::VertexCount => SourceType::VCount,
+            algebra_pb::scan::ScanOpt::EdgeCount => SourceType::ECount,
         };
         let query_params = QueryParams::try_from(scan_pb.params)?;
         Ok(SourceOperator {
