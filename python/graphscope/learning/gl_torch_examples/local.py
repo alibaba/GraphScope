@@ -1,13 +1,14 @@
 import time
 
-import graphscope as gs
-import graphscope.learning.graphlearn_torch as glt
 import torch
 import torch.nn.functional as F
-from graphscope.dataset import load_ogbn_arxiv
-from graphscope.learning.graphlearn_torch.typing import Split
 from ogb.nodeproppred import Evaluator
 from torch_geometric.nn import GraphSAGE
+
+import graphscope as gs
+import graphscope.learning.graphlearn_torch as glt
+from graphscope.dataset import load_ogbn_arxiv
+from graphscope.learning.graphlearn_torch.typing import Split
 
 
 @torch.no_grad()
@@ -93,7 +94,7 @@ train_loader = glt.distributed.DistNeighborLoader(
         buffer_size="1GB",
         prefetch_size=1,
         glt_graph=glt_graph,
-        workload_type='train'
+        workload_type="train",
     ),
 )
 
@@ -114,7 +115,7 @@ test_loader = glt.distributed.DistNeighborLoader(
         buffer_size="1GB",
         prefetch_size=1,
         glt_graph=glt_graph,
-        workload_type='test'
+        workload_type="test",
     ),
 )
 
