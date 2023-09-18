@@ -12,36 +12,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef ENGINES_HTTP_SERVER_HANDLER_HQPS_HTTP_HANDLER_H_
+#define ENGINES_HTTP_SERVER_HANDLER_HQPS_HTTP_HANDLER_H_
 
-#ifndef ENGINES_HTTP_SERVER_GRAPH_DB_SERVICE_H_
-#define ENGINES_HTTP_SERVER_GRAPH_DB_SERVICE_H_
-
-#include "flex/engines/http_server/actor_system.h"
-#include "flex/engines/http_server/graph_db_http_handler.h"
+#include <seastar/http/httpd.hh>
 
 namespace server {
 
-class GraphDBService {
+class hqps_http_handler {
  public:
-  static GraphDBService& get() {
-    static GraphDBService instance;
-    return instance;
-  }
-  ~GraphDBService() = default;
+  hqps_http_handler(uint16_t http_port);
 
-  void init(uint32_t num_shards, uint16_t http_port, bool dpdk_mode);
-  void run_and_wait_for_exit();
-  void set_exit_state();
+  void start();
+  void stop();
 
- private:
-  GraphDBService() = default;
+  uint16_t get_port() const;
+
+  bool is_running() const;
 
  private:
-  std::unique_ptr<actor_system> actor_sys_;
-  std::unique_ptr<graph_db_http_handler> http_hdl_;
+  seastar::future<> set_routes();
+
+ private:
+  const uint16_t http_port_;
+  seastar::httpd::http_server_control server_;
   std::atomic<bool> running_{false};
 };
 
 }  // namespace server
 
-#endif  // ENGINES_HTTP_SERVER_GRAPH_DB_SERVICE_H_
+#endif  // ENGINES_HTTP_SERVER_HANDLER_HQPS_HTTP_HANDLER_H_

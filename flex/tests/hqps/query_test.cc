@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
   auto& db = gs::GraphDB::get();
   auto schema = gs::Schema::LoadFromYaml(graph_schema);
   auto loading_config =
-      gs::LoadingConfig::ParseFromYaml(schema, bulk_load_yaml);
+      gs::LoadingConfig::ParseFromYamlFile(schema, bulk_load_yaml);
   db.Init(schema, loading_config, data_dir, 1);
   auto& sess = gs::GraphDB::get().GetSession(0);
 

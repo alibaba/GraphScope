@@ -22,6 +22,22 @@ namespace gs {
 Schema::Schema() = default;
 Schema::~Schema() = default;
 
+void Schema::Clear() {
+  vlabel_indexer_.Clear();
+  elabel_indexer_.Clear();
+  vproperties_.clear();
+  vprop_names_.clear();
+  v_primary_keys_.clear();
+  vprop_storage_.clear();
+  eproperties_.clear();
+  eprop_names_.clear();
+  ie_strategy_.clear();
+  oe_strategy_.clear();
+  max_vnum_.clear();
+  plugin_name_to_id_.clear();
+  plugin_dir_.clear();
+}
+
 void Schema::add_vertex_label(
     const std::string& label, const std::vector<PropertyType>& property_types,
     const std::vector<std::string>& property_names,
@@ -248,7 +264,7 @@ void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) {
   grape::InArchive arc;
   arc << v_primary_keys_ << vproperties_ << vprop_names_ << vprop_storage_
       << eproperties_ << eprop_names_ << ie_strategy_ << oe_strategy_
-      << max_vnum_ << plugin_dir_ << plugin_list_;
+      << max_vnum_ << plugin_dir_ << plugin_name_to_id_;
   CHECK(writer->WriteArchive(arc));
 }
 
@@ -259,7 +275,7 @@ void Schema::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader) {
   CHECK(reader->ReadArchive(arc));
   arc >> v_primary_keys_ >> vproperties_ >> vprop_names_ >> vprop_storage_ >>
       eproperties_ >> eprop_names_ >> ie_strategy_ >> oe_strategy_ >>
-      max_vnum_ >> plugin_dir_ >> plugin_list_;
+      max_vnum_ >> plugin_dir_ >> plugin_name_to_id_;
 }
 
 label_t Schema::vertex_label_to_index(const std::string& label) {
@@ -716,8 +732,9 @@ static bool parse_edges_schema(YAML::Node node, Schema& schema) {
   return true;
 }
 
-static bool parse_schema_config_file(const std::string& path, Schema& schema) {
-  YAML::Node graph_node = YAML::LoadFile(path);
+static bool parse_schema_from_yaml_node(const YAML::Node& graph_node,
+                                        Schema& schema,
+                                        const std::string& parent_dir = "") {
   if (!graph_node || !graph_node.IsMap()) {
     LOG(ERROR) << "graph is not set properly";
     return false;
@@ -742,13 +759,16 @@ static bool parse_schema_config_file(const std::string& path, Schema& schema) {
       return false;
     }
   }
-  // get the directory of path
-  auto parent_dir = std::filesystem::path(path).parent_path().string();
+  LOG(INFO) << "Parse stored_procedures";
 
   if (graph_node["stored_procedures"]) {
     auto stored_procedure_node = graph_node["stored_procedures"];
-    auto directory = stored_procedure_node["directory"].as<std::string>();
+    std::string directory = "plugins";  // default plugin directory
+    if (stored_procedure_node["directory"]) {
+      directory = stored_procedure_node["directory"].as<std::string>();
+    }
     // check is directory
+    LOG(INFO) << "Parse directory: " << directory;
     if (!std::filesystem::exists(directory)) {
       LOG(ERROR) << "plugin directory - " << directory
                  << " not found, try with parent dir:" << parent_dir;
@@ -805,14 +825,29 @@ static bool parse_schema_config_file(const std::string& path, Schema& schema) {
   return true;
 }
 
-}  // namespace config_parsing
+static bool parse_schema_config_file(const std::string& path, Schema& schema) {
+  YAML::Node graph_node = YAML::LoadFile(path);
+  // get the directory of path
+  auto parent_dir = std::filesystem::path(path).parent_path().string();
 
-const std::vector<std::string>& Schema::GetPluginsList() const {
-  return plugin_list_;
+  return parse_schema_from_yaml_node(graph_node, schema, parent_dir);
 }
 
-void Schema::EmplacePlugin(const std::string& plugin) {
-  plugin_list_.emplace_back(plugin);
+}  // namespace config_parsing
+
+const std::unordered_map<std::string, uint8_t>& Schema::GetPlugins() const {
+  return plugin_name_to_id_;
+}
+
+bool Schema::EmplacePlugin(const std::string& plugin) {
+  if (plugin_name_to_id_.find(plugin) == plugin_name_to_id_.end()) {
+    plugin_name_to_id_.emplace(plugin,
+                               plugin_name_to_id_.size() + RESERVED_PLUGIN_NUM);
+    return true;
+  } else {
+    LOG(ERROR) << "Plugin " << plugin << " already exists";
+    return false;
+  }
 }
 
 void Schema::SetPluginDir(const std::string& dir) { plugin_dir_ = dir; }
@@ -887,6 +922,15 @@ Schema Schema::LoadFromYaml(const std::string& schema_config) {
     if (!config_parsing::parse_schema_config_file(schema_config, schema)) {
       LOG(FATAL) << "Failed to parse schema config file: " << schema_config;
     }
+  }
+  return schema;
+}
+
+Result<Schema> Schema::LoadFromYamlNode(const YAML::Node& schema_yaml_node) {
+  Schema schema;
+  if (!config_parsing::parse_schema_from_yaml_node(schema_yaml_node, schema)) {
+    return Result<Schema>(
+        Status(StatusCode::InvalidSchema, "Failed to parse schema"), schema);
   }
   return schema;
 }

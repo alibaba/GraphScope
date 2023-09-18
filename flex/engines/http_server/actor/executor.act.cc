@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
-#include "flex/engines/http_server/executor.act.h"
+#include "flex/engines/http_server/actor/executor.act.h"
 
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/http_server/codegen_proxy.h"
-#include "flex/engines/http_server/stored_procedure.h"
+#include "flex/engines/http_server/workspace_manager.h"
+#include "flex/third_party/nlohmann/json.hpp"
 
 #include <seastar/core/print.hh>
 
@@ -41,7 +42,13 @@ seastar::future<query_result> executor::run_graph_db_query(
   auto ret = gs::GraphDB::get()
                  .GetSession(hiactor::local_shard_id())
                  .Eval(param.content);
-  seastar::sstring content(ret.data(), ret.size());
+  if (!ret.ok()) {
+    LOG(ERROR) << "Eval failed: " << ret.status().error_message();
+    return seastar::make_ready_future<query_result>(
+        seastar::sstring(ret.status().error_message()));
+  }
+  auto result = ret.value();
+  seastar::sstring content(result.data(), result.size());
   return seastar::make_ready_future<query_result>(std::move(content));
 }
 
@@ -54,21 +61,23 @@ seastar::future<query_result> executor::run_hqps_procedure_query(
   LOG(INFO) << "Receive pay load: " << str_length << " bytes";
 
   query::Query cur_query;
-  {
-    CHECK(cur_query.ParseFromArray(str.data(), str.size()));
-    LOG(INFO) << "Parse query: " << cur_query.DebugString();
+  if (!cur_query.ParseFromArray(str_data, str_length)) {
+    LOG(ERROR) << "Fail to parse query from pay load";
+    return seastar::make_ready_future<query_result>(
+        seastar::sstring("Fail to parse query from pay load"));
   }
-  auto& store_procedure_manager = server::StoredProcedureManager::get();
-  return store_procedure_manager.Query(cur_query).then(
-      [&cur_query](results::CollectiveResults&& hqps_result) {
-        LOG(INFO) << "Finish running query: " << cur_query.DebugString();
-        LOG(INFO) << "Query results" << hqps_result.DebugString();
 
-        auto tem_str = hqps_result.SerializeAsString();
-
-        seastar::sstring content(tem_str.data(), tem_str.size());
-        return seastar::make_ready_future<query_result>(std::move(content));
-      });
+  auto ret = gs::GraphDB::get()
+                 .GetSession(hiactor::local_shard_id())
+                 .EvalHqpsProcedure(cur_query);
+  if (!ret.ok()) {
+    LOG(ERROR) << "Eval failed: " << ret.status().error_message();
+    return seastar::make_ready_future<query_result>(
+        seastar::sstring(ret.status().error_message()));
+  }
+  auto result = ret.value();
+  seastar::sstring content(result.data(), result.size());
+  return seastar::make_ready_future<query_result>(std::move(content));
 }
 
 seastar::future<query_result> executor::run_hqps_adhoc_query(
@@ -80,7 +89,18 @@ seastar::future<query_result> executor::run_hqps_adhoc_query(
   LOG(INFO) << "Okay, try to run the query of lib path: " << content.second
             << ", job id: " << content.first
             << "local shard id: " << hiactor::local_shard_id();
-  seastar::sstring result = server::load_and_run(content.first, content.second);
+  // seastar::sstring result = server::load_and_run(content.first,
+  // content.second);
+  auto ret = gs::GraphDB::get()
+                 .GetSession(hiactor::local_shard_id())
+                 .EvalAdhoc(content.second);
+  if (!ret.ok()) {
+    LOG(ERROR) << "Eval failed: " << ret.status().error_message();
+    return seastar::make_ready_future<query_result>(
+        seastar::sstring(ret.status().error_message()));
+  }
+  auto ret_value = ret.value();
+  seastar::sstring result(ret_value.data(), ret_value.size());
   return seastar::make_ready_future<query_result>(std::move(result));
 }
 

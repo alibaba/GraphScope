@@ -1,4 +1,4 @@
-name: modern # then must have a modern dir under ${data} directory
+name: modern_graph # then must have a modern dir under ${data} directory
 store_type: mutable_csr  # v6d, groot, gart
 schema:
   vertex_types:
@@ -30,7 +30,6 @@ schema:
           property_name: id
           property_type:
             primitive_type: DT_SIGNED_INT64
-          x_csr_params:
         - property_id: 1
           property_name: name
           property_type:

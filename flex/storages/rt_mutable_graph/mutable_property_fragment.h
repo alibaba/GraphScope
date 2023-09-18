@@ -45,6 +45,8 @@ class MutablePropertyFragment {
 
   const Schema& schema() const;
 
+  void Clear();
+
   void Serialize(const std::string& prefix);
 
   void Deserialize(const std::string& prefix);

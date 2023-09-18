@@ -17,46 +17,37 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 FLEX_HOME=${SCRIPT_DIR}/../../
 SERVER_BIN=${FLEX_HOME}/build/bin/interactive_server
 GIE_HOME=${FLEX_HOME}/../interactive_engine/
+ADMIN_PORT=7777
+QUERY_PORT=10000
 
 # 
-if [ ! $# -eq 4 ]; then
-  echo "only receives: $# args, need 4"
-  echo "Usage: $0 <INTERACTIVE_WORKSPACE> <GRAPH_NAME> <BULK_LOAD_FILE> <ENGINE_CONFIG>"
+if [ ! $# -eq 3 ]; then
+  echo "only receives: $# args, need 3"
+  echo "Usage: $0 <INTERACTIVE_WORKSPACE> <ENGINE_CONFIG> <GS_TEST_DIR>"
   exit 1
 fi
 
 INTERACTIVE_WORKSPACE=$1
-GRAPH_NAME=$2
-GRAPH_BULK_LOAD_YAML=$3
-ENGINE_CONFIG_PATH=$4
+ENGINE_CONFIG_PATH=$2
+GS_TEST_DIR=$3
 if [ ! -d ${INTERACTIVE_WORKSPACE} ]; then
   echo "INTERACTIVE_WORKSPACE: ${INTERACTIVE_WORKSPACE} not exists"
-  exit 1
-fi
-# check graph is ldbc or movies
-if [ ${GRAPH_NAME} != "ldbc" ] && [ ${GRAPH_NAME} != "movies" ]; then
-  echo "GRAPH_NAME: ${GRAPH_NAME} not supported, use movies or ldbc"
-  exit 1
-fi
-if [ ! -d ${INTERACTIVE_WORKSPACE}/data/${GRAPH_NAME} ]; then
-  echo "GRAPH: ${GRAPH_NAME} not exists"
-  exit 1
-fi
-if [ ! -f ${INTERACTIVE_WORKSPACE}/data/${GRAPH_NAME}/graph.yaml ]; then
-  echo "GRAPH_SCHEMA_FILE: ${BULK_LOAD_FILE} not exists"
-  exit 1
-fi
-if [ ! -f ${GRAPH_BULK_LOAD_YAML} ]; then
-  echo "GRAPH_BULK_LOAD_YAML: ${GRAPH_BULK_LOAD_YAML} not exists"
-  exit 1
+  mkdir -p ${INTERACTIVE_WORKSPACE}
 fi
 if [ ! -f ${ENGINE_CONFIG_PATH} ]; then
   echo "ENGINE_CONFIG: ${ENGINE_CONFIG_PATH} not exists"
   exit 1
 fi
+if [ ! -d ${GS_TEST_DIR} ]; then
+  echo "GS_TEST_DIR: ${GS_TEST_DIR} not exists"
+  exit 1
+fi
 
-GRAPH_SCHEMA_YAML=${INTERACTIVE_WORKSPACE}/data/${GRAPH_NAME}/graph.yaml
+GRAPH_SCHEMA_YAML=${GS_TEST_DIR}/flex/movies/movies_schema.yaml
+GRAPH_BULK_LOAD_YAML=${GS_TEST_DIR}/flex/movies/movies_import.yaml
+RAW_CSV_FILES=${FLEX_HOME}/interactive/examples/movies/
 GRAPH_CSR_DATA_DIR=${HOME}/csr-data-dir/
+TEST_CYPHER_QUERIES="${FLEX_HOME}/interactive/examples/movies/0_get_user.cypher ${FLEX_HOME}/interactive/examples/movies/5_recommend_rule.cypher"
 # rm data dir if exists
 if [ -d ${GRAPH_CSR_DATA_DIR} ]; then
   rm -rf ${GRAPH_CSR_DATA_DIR}
@@ -77,7 +68,6 @@ info() {
 
 kill_service(){
     info "Kill Service first"
-    ps -ef | grep "com.alibaba.graphscope.GraphServer" | awk '{print $2}' | xargs kill -9 || true
     ps -ef | grep "interactive_server" |  awk '{print $2}' | xargs kill -9  || true
     sleep 3
     # check if service is killed
@@ -87,7 +77,6 @@ kill_service(){
 # kill service when exit
 trap kill_service EXIT
 
-
 # start engine service and load ldbc graph
 start_engine_service(){
     #check SERVER_BIN exists
@@ -96,8 +85,8 @@ start_engine_service(){
         exit 1
     fi
 
-    cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} -g ${GRAPH_SCHEMA_YAML} "
-    cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} -l ${GRAPH_BULK_LOAD_YAML} "
+    cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} --enable-admin-service true "
+    cmd="${cmd}  -w ${INTERACTIVE_WORKSPACE} "
 
     echo "Start engine service with command: ${cmd}"
     ${cmd} &
@@ -108,61 +97,19 @@ start_engine_service(){
     info "Start engine service success"
 }
 
-
-start_compiler_service(){
-  echo "try to start compiler service"
-  pushd ${GIE_HOME}/compiler
-  cmd="make run graph.schema=${GRAPH_SCHEMA_YAML} config.path=${ENGINE_CONFIG_PATH}"
-  echo "Start compiler service with command: ${cmd}"
-  ${cmd} &
-  sleep 5
-  # check if Graph Server is running, if not exist
-  ps -ef | grep "com.alibaba.graphscope.GraphServer" | grep -v grep
-  info "Start compiler service success"
-  popd
-}
-
-run_ldbc_test() {
-  echo "run ldbc test"
-  pushd ${GIE_HOME}/compiler
-  cmd="mvn test -Dtest=com.alibaba.graphscope.cypher.integration.ldbc.IrLdbcTest"
-  echo "Start ldbc test: ${cmd}"
-  ${cmd}
-  info "Finish ldbc test"
-  popd
-}
-
-run_simple_test(){
-  echo "run simple test"
-  pushd ${GIE_HOME}/compiler
-  cmd="mvn test -Dtest=com.alibaba.graphscope.cypher.integration.ldbc.SimpleMatchTest"
-  echo "Start simple test: ${cmd}"
-  ${cmd}
-  info "Finish simple test"
-  popd
-}
-
 run_movie_test(){
   echo "run movie test"
-  pushd ${GIE_HOME}/compiler
-  cmd="mvn test -Dtest=com.alibaba.graphscope.cypher.integration.movie.MovieTest"
+  pushd ${FLEX_HOME}/build/
+  cmd="GLOG_v=10 ./tests/hqps/admin_http_test ${ADMIN_PORT} ${QUERY_PORT} ${GRAPH_SCHEMA_YAML} ${GRAPH_BULK_LOAD_YAML} ${RAW_CSV_FILES} ${TEST_CYPHER_QUERIES}"
   echo "Start movie test: ${cmd}"
-  ${cmd}
+  eval ${cmd} || (err "movie test failed"; exit 1)
   info "Finish movie test"
   popd
 }
 
 kill_service
 start_engine_service
-start_compiler_service
-# if GRAPH_NAME equals ldbc
-if [ "${GRAPH_NAME}" == "ldbc" ]; then
-  run_ldbc_test
-  run_simple_test
-else
-  run_movie_test
-fi
-
+run_movie_test
 kill_service
 
 

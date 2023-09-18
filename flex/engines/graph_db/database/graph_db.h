@@ -50,6 +50,12 @@ class GraphDB {
   void Init(const Schema& schema, const LoadingConfig& config,
             const std::string& data_dir, int thread_num = 1);
 
+  /**
+   * @brief Load the graph from data directory.
+   * @param data_dir The directory of graph data.
+   */
+  Result<bool> LoadFromDataDirectory(const std::string& data_dir);
+
   /** @brief Create a transaction to read vertices and edges.
    *
    * @return graph_dir The directory of graph data.
@@ -102,11 +108,11 @@ class GraphDB {
   int SessionNum() const;
 
  private:
-  void registerApp(const std::string& path, uint8_t index = 0);
+  void registerApp(const std::unordered_map<std::string, uint8_t>& plugins);
 
   void ingestWals(const std::vector<std::string>& wals, int thread_num);
 
-  void initApps(const std::vector<std::string>& plugins);
+  void initApps(const std::unordered_map<std::string, uint8_t>& plugins);
 
   friend class GraphDBSession;
 

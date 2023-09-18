@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 #include "flex/engines/http_server/executor_group.actg.h"
-#include "flex/engines/http_server/hqps_service.h"
 #include "flex/engines/http_server/options.h"
+#include "flex/engines/http_server/service/hqps_service.h"
 
 #include <seastar/core/alien.hh>
 #include <seastar/core/print.hh>
 #include <seastar/http/handlers.hh>
-#include "flex/engines/http_server/generated/codegen_actor_ref.act.autogen.h"
-#include "flex/engines/http_server/generated/executor_ref.act.autogen.h"
+#include "flex/engines/http_server/generated/actor/codegen_actor_ref.act.autogen.h"
+#include "flex/engines/http_server/generated/actor/executor_ref.act.autogen.h"
 #include "flex/engines/http_server/types.h"
 
 namespace server {
@@ -152,9 +152,7 @@ class hqps_exit_handler : public seastar::httpd::handler_base {
       std::unique_ptr<seastar::httpd::request> req,
       std::unique_ptr<seastar::httpd::reply> rep) override {
     HQPSService::get().set_exit_state();
-    rep->write_body(
-        "bin",
-        seastar::sstring{"The ldbc snb interactive service is exiting ..."});
+    rep->write_body("bin", seastar::sstring{"HQPS service is exiting ..."});
     return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
         std::move(rep));
   }
@@ -162,6 +160,10 @@ class hqps_exit_handler : public seastar::httpd::handler_base {
 
 hqps_http_handler::hqps_http_handler(uint16_t http_port)
     : http_port_(http_port) {}
+
+uint16_t hqps_http_handler::get_port() const { return http_port_; }
+
+bool hqps_http_handler::is_running() const { return running_.load(); }
 
 void hqps_http_handler::start() {
   auto fut = seastar::alien::submit_to(
@@ -171,26 +173,36 @@ void hqps_http_handler::start() {
             .then([this] { return server_.listen(http_port_); })
             .then([this] {
               fmt::print(
-                  "Ldbc snb interactive http handler is listening on port {} "
+                  "HQPS http handler is listening on port {} "
                   "...\n",
                   http_port_);
             });
       });
   fut.wait();
+  // update running state
+  running_.store(true);
 }
 
 void hqps_http_handler::stop() {
-  auto fut =
-      seastar::alien::submit_to(*seastar::alien::internal::default_instance, 0,
-                                [this] { return server_.stop(); });
+  auto fut = seastar::alien::submit_to(
+      *seastar::alien::internal::default_instance, 0, [this] {
+        LOG(INFO) << "Stopping HQPS http handler ...";
+        return server_.stop();
+      });
   fut.wait();
+  // update running state
+  running_.store(false);
 }
 
 seastar::future<> hqps_http_handler::set_routes() {
   return server_.set_routes([this](seastar::httpd::routes& r) {
+    // To be removed.
+    auto procedure_handler =
+        new hqps_ic_handler(ic_query_group_id, shard_query_concurrency);
     r.add(seastar::httpd::operation_type::POST,
-          seastar::httpd::url("/interactive/query"),
-          new hqps_ic_handler(ic_query_group_id, shard_query_concurrency));
+          seastar::httpd::url("/interactive/query"), procedure_handler);
+    r.add(seastar::httpd::operation_type::POST,
+          seastar::httpd::url("/v1/query"), procedure_handler);
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/interactive/adhoc_query"),
           new hqps_adhoc_query_handler(ic_adhoc_group_id, codegen_group_id,

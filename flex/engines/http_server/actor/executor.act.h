@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ENGINES_HTTP_SERVER_CODEGEN_ACTOR_ACT_H_
-#define ENGINES_HTTP_SERVER_CODEGEN_ACTOR_ACT_H_
+#ifndef ENGINES_HTTP_SERVER_ACTOR_EXECUTOR_ACT_H_
+#define ENGINES_HTTP_SERVER_ACTOR_EXECUTOR_ACT_H_
 
 #include "flex/engines/http_server/types.h"
 
@@ -23,12 +23,16 @@
 
 namespace server {
 
-class ANNOTATION(actor:impl) codegen_actor : public hiactor::actor {
+class ANNOTATION(actor:impl) executor : public hiactor::actor {
  public:
-  codegen_actor(hiactor::actor_base* exec_ctx, const hiactor::byte_t* addr);
-  ~codegen_actor() override;
+  executor(hiactor::actor_base* exec_ctx, const hiactor::byte_t* addr);
+  ~executor() override;
 
-  seastar::future<adhoc_result> ANNOTATION(actor:method) do_codegen(query_param&& param);
+  seastar::future<query_result> ANNOTATION(actor:method) run_graph_db_query(query_param&& param);
+
+  seastar::future<query_result> ANNOTATION(actor:method) run_hqps_procedure_query(query_param&& param);
+
+  seastar::future<query_result> ANNOTATION(actor:method) run_hqps_adhoc_query(adhoc_result&& param);
 
   // DECLARE_RUN_QUERYS;
   /// Declare `do_work` func here, no need to implement.
@@ -38,6 +42,6 @@ class ANNOTATION(actor:impl) codegen_actor : public hiactor::actor {
   int32_t your_private_members_ = 0;
 };
 
-}  // namespace serverP
+}  // namespace server
 
-#endif  // ENGINES_HTTP_SERVER_CODEGEN_ACTOR_ACT_H_
+#endif  // ENGINES_HTTP_SERVER_ACTOR_EXECUTOR_ACT_H_

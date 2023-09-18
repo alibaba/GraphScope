@@ -12,40 +12,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ENGINES_HTTP_SERVER_HQPS_SERVICE_H_
-#define ENGINES_HTTP_SERVER_HQPS_SERVICE_H_
 
-#include <string>
+#ifndef ENGINES_HTTP_SERVER_SERVICE_GRAPH_DB_SERVICE_H_
+#define ENGINES_HTTP_SERVER_SERVICE_GRAPH_DB_SERVICE_H_
 
 #include "flex/engines/http_server/actor_system.h"
-#include "flex/engines/http_server/hqps_http_handler.h"
+#include "flex/engines/http_server/handler/graph_db_http_handler.h"
 
 namespace server {
 
-class HQPSService {
+class GraphDBService {
  public:
-  static HQPSService& get() {
-    static HQPSService instance;
+  static GraphDBService& get() {
+    static GraphDBService instance;
     return instance;
   }
-  ~HQPSService();
+  ~GraphDBService() = default;
 
-  // the store procedure contains <query_id, query_name, store_path>
-  void init(uint32_t num_shards, uint16_t http_port, bool dpdk_mode,
-            bool enable_thread_resource_pool, unsigned external_thread_num);
-
+  void init(uint32_t num_shards, uint16_t http_port, bool dpdk_mode);
   void run_and_wait_for_exit();
   void set_exit_state();
 
  private:
-  HQPSService() = default;
+  GraphDBService() = default;
 
  private:
   std::unique_ptr<actor_system> actor_sys_;
-  std::unique_ptr<hqps_http_handler> http_hdl_;
+  std::unique_ptr<graph_db_http_handler> http_hdl_;
   std::atomic<bool> running_{false};
 };
 
 }  // namespace server
 
-#endif  // ENGINES_HTTP_SERVER_HQPS_SERVICE_H_
+#endif  // ENGINES_HTTP_SERVER_SERVICE_GRAPH_DB_SERVICE_H_

@@ -13,16 +13,20 @@
  * limitations under the License.
  */
 
-#include "flex/engines/http_server/options.h"
+#include "flex/utils/result.h"
 
-namespace server {
+namespace gs {
+Status::Status() noexcept : error_code_(StatusCode::UninitializedStatus) {}
 
-uint32_t shard_query_concurrency = 16;
-uint32_t shard_update_concurrency = 4;
-uint32_t shard_adhoc_concurrency = 4;
-uint32_t shard_admin_graph_concurrency = 1;
-uint32_t shard_admin_procedure_concurrency = 1;
-uint32_t shard_admin_node_concurrency = 1;
-uint32_t shard_admin_service_concurrency = 1;
+Status::Status(StatusCode error_code) noexcept : error_code_(error_code) {}
 
-}  // namespace server
+Status::Status(StatusCode error_code, std::string&& error_msg) noexcept
+    : error_code_(error_code), error_msg_(std::move(error_msg)) {}
+
+std::string Status::error_message() const { return error_msg_; }
+
+bool Status::ok() const { return error_code_ == StatusCode::OK; }
+
+Status Status::OK() { return Status(StatusCode::OK); }
+
+}  // namespace gs

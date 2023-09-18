@@ -988,18 +988,6 @@ struct QPSError {
   std::string GetMessage() { return message; }
 };
 
-class QPSException : public std::exception {
- public:
-  explicit QPSException(std::string&& error_msg)
-      : std::exception(), _err_msg(error_msg) {}
-  ~QPSException() override = default;
-
-  const char* what() const noexcept override { return _err_msg.c_str(); }
-
- private:
-  std::string _err_msg;
-};
-
 template <typename T>
 struct function_traits : public function_traits<decltype(&T::operator())> {};
 // For generic types, directly use the result of the signature of its

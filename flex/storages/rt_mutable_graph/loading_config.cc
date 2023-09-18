@@ -202,6 +202,7 @@ static bool parse_vertex_files(
       std::string file_path = files_node[i].as<std::string>();
       if (!access_file(data_location, file_path)) {
         LOG(ERROR) << "vertex file - " << file_path << " file not found...";
+        return false;
       }
       std::filesystem::path path(file_path);
       files[label_id].emplace_back(std::filesystem::canonical(path));
@@ -404,6 +405,12 @@ static bool parse_bulk_load_config_file(const std::string& config_file,
                                         const Schema& schema,
                                         LoadingConfig& load_config) {
   YAML::Node root = YAML::LoadFile(config_file);
+  return parse_bulk_load_config_yaml(root, schema, load_config);
+}
+
+static bool parse_bulk_load_config_yaml(const YAML::Node& root,
+                                        const Schema& schema,
+                                        LoadingConfig& load_config) {
   std::string data_location;
   load_config.scheme_ = "file";  // default data source is file
   load_config.method_ = "init";
@@ -516,14 +523,31 @@ static bool parse_bulk_load_config_file(const std::string& config_file,
 }
 }  // namespace config_parsing
 
-LoadingConfig LoadingConfig::ParseFromYaml(const Schema& schema,
-                                           const std::string& yaml_file) {
+LoadingConfig LoadingConfig::ParseFromYamlFile(const Schema& schema,
+                                               const std::string& yaml_file) {
   LoadingConfig load_config(schema);
   if (!yaml_file.empty() && std::filesystem::exists(yaml_file)) {
     if (!config_parsing::parse_bulk_load_config_file(yaml_file, schema,
                                                      load_config)) {
       LOG(FATAL) << "Failed to parse bulk load config file: " << yaml_file;
     }
+  }
+  return load_config;
+}
+
+Result<LoadingConfig> LoadingConfig::ParseFromYamlNode(
+    const Schema& schema, const YAML::Node& yaml_node) {
+  LoadingConfig load_config(schema);
+  try {
+    if (!yaml_node.IsNull()) {
+      if (!config_parsing::parse_bulk_load_config_yaml(yaml_node, schema,
+                                                       load_config)) {}
+    }
+  } catch (const YAML::Exception& e) {
+    return gs::Result<LoadingConfig>(
+        gs::Status(gs::StatusCode::InvalidImportFile,
+                   "Failed to parse yaml node: " + std::string(e.what())),
+        load_config);
   }
   return load_config;
 }
