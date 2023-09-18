@@ -143,5 +143,6 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export FLEX_DATA_DIR=${GS_TEST_DIR}/flex/ldbc-sf01-long-date
+        export ENGINE_TYPE=hiactor
         bash hqps_cypher_test.sh ${GS_TEST_DIR}
 
