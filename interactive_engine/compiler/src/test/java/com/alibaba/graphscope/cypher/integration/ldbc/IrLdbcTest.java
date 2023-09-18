@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.cypher.integration.ldbc;
 
+import static org.junit.Assume.assumeTrue;
+
 import com.alibaba.graphscope.cypher.integration.suite.ldbc.LdbcQueries;
 import com.alibaba.graphscope.cypher.integration.suite.ldbc.QueryContext;
 
@@ -23,7 +25,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
@@ -53,8 +54,8 @@ public class IrLdbcTest {
     }
 
     @Test
-    @EnabledIfEnvironmentVariable(named = "ENGINE_TYPE", matches = "hiactor")
     public void run_ldbc_4_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = LdbcQueries.get_ldbc_4_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
@@ -68,8 +69,8 @@ public class IrLdbcTest {
     }
 
     @Test
-    @EnabledIfEnvironmentVariable(named = "ENGINE_TYPE", matches = "hiactor")
     public void run_ldbc_7_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = LdbcQueries.get_ldbc_7_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
@@ -83,8 +84,8 @@ public class IrLdbcTest {
     // }
 
     @Test
-    @EnabledIfEnvironmentVariable(named = "ENGINE_TYPE", matches = "hiactor")
     public void run_ldbc_10_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = LdbcQueries.get_ldbc_10_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
