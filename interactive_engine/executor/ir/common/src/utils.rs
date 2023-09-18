@@ -608,10 +608,10 @@ impl From<Object> for common_pb::Value {
                         + time.nanosecond() as i32 / 1000_000,
                 }),
                 DateTimeFormats::DateTime(dt) => {
-                    common_pb::value::Item::Timestamp(common_pb::Timestamp { item: dt.timestamp() })
+                    common_pb::value::Item::Timestamp(common_pb::Timestamp { item: dt.timestamp_millis() })
                 }
                 DateTimeFormats::DateTimeWithTz(dt) => {
-                    common_pb::value::Item::Timestamp(common_pb::Timestamp { item: dt.timestamp() })
+                    common_pb::value::Item::Timestamp(common_pb::Timestamp { item: dt.timestamp_millis() })
                 }
             },
             _ => unimplemented!(),
