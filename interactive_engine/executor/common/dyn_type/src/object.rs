@@ -1587,6 +1587,12 @@ impl From<DateTime<FixedOffset>> for Object {
     }
 }
 
+impl From<DateTimeFormats> for Object {
+    fn from(date_time_formats: DateTimeFormats) -> Self {
+        Object::DateFormat(date_time_formats)
+    }
+}
+
 pub enum OwnedOrRef<'a, T> {
     Owned(T),
     Ref(&'a T),

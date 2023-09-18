@@ -18,7 +18,7 @@ use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::ops::Deref;
 
-use dyn_type::{Object, Primitives};
+use dyn_type::{DateTimeFormats, Object, Primitives};
 
 use crate::error::ParsePbError;
 use crate::generated::algebra as pb;
@@ -329,6 +329,15 @@ impl TryFrom<common_pb::Value> for Object {
                     }
                     Ok(vec.into())
                 }
+                Date(date) => {
+                    Ok((DateTimeFormats::from_date32(date.item).map_err(|e| format!("{:?}", e))?).into())
+                }
+                Time(time) => {
+                    Ok((DateTimeFormats::from_time32(time.item).map_err(|e| format!("{:?}", e))?).into())
+                }
+                Timestamp(timestamp) => Ok((DateTimeFormats::from_timestamp_millis(timestamp.item)
+                    .map_err(|e| format!("{:?}", e))?)
+                .into()),
             };
         }
 
