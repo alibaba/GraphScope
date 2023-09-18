@@ -53,6 +53,12 @@ if platform.system() == "Darwin":
 
 GL_EXT_NAME = "graphscope.learning.graphlearn.pywrap_graphlearn"
 GLTORCH_EXT_NAME = "graphscope.learning.graphlearn_torch.py_graphlearn_torch"
+GLTORCH_V6D_EXT_NAME = (
+    "graphscope.learning.graphlearn_torch.py_graphlearn_torch_vineyard"
+)
+glt_root_path = os.path.abspath(
+    os.path.join(pkg_root, "..", "learning_engine", "graphlearn-for-pytorch")
+)
 
 
 class BuildProto(Command):
@@ -133,9 +139,34 @@ class BuildGLTorchExt(torch.utils.cpp_extension.BuildExtension if torch else bui
             torch
         ), "Building graphlearn-torch extension requires installing pytorch first. Let WITH_GLTORCH=OFF if you don't need it."
         self.extensions = [
-            ext for ext in self.extensions if ext.name == GLTORCH_EXT_NAME
+            ext for ext in self.extensions if ext.name in [GLTORCH_EXT_NAME, GLTORCH_V6D_EXT_NAME]
         ]
         torch.utils.cpp_extension.BuildExtension.run(self)
+
+    def _get_gcc_use_cxx_abi(self):
+        if hasattr(self, "_gcc_use_cxx_abi"):
+            return self._gcc_use_cxx_abi
+        output = subprocess.run(
+            f"cmake {glt_root_path}", capture_output=True, text=True, shell=True
+        )
+        import re
+
+        match = re.search(r"GCC_USE_CXX11_ABI: (\d)", str(output))
+        if match:
+            self._gcc_use_cxx_abi = match.group(1)
+        else:
+            return None
+
+        return self._gcc_use_cxx_abi
+
+    def _add_gnu_cpp_abi_flag(self, extension):
+        gcc_use_cxx_abi = (
+            self._get_gcc_use_cxx_abi()
+            if extension.name == GLTORCH_V6D_EXT_NAME
+            else str(int(torch._C._GLIBCXX_USE_CXX11_ABI))
+        )
+        print(f"GCC_USE_CXX11_ABI for {extension.name}: {gcc_use_cxx_abi}")
+        self._add_compile_flag(extension, "-D_GLIBCXX_USE_CXX11_ABI=" + gcc_use_cxx_abi)
 
 
 class CustomDevelop(develop):
@@ -224,22 +255,24 @@ def parsed_package_data():
 def build_learning_engine():
     ext_modules = [graphlearn_ext()]
     if torch:
-        glt_root_path = os.path.abspath(
-            os.path.join(pkg_root, "..", "learning_engine", "graphlearn-for-pytorch")
-        )
-
         sys.path.append(
             os.path.join(glt_root_path, "graphlearn_torch", "python", "utils")
         )
-        from build import ext_module as graphlearn_torch_ext
+        from build import glt_ext_module
+        from build import glt_v6d_ext_module
 
         ext_modules.append(
-            graphlearn_torch_ext(
+            glt_ext_module(
                 name=GLTORCH_EXT_NAME,
                 root_path=glt_root_path,
                 with_cuda=False,
-                with_vineyard=True,
                 release=False,
+            )
+        )
+        ext_modules.append(
+            glt_v6d_ext_module(
+                name=GLTORCH_V6D_EXT_NAME,
+                root_path=glt_root_path,
             )
         )
     return ext_modules
