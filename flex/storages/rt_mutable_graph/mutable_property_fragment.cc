@@ -313,7 +313,6 @@ void MutablePropertyFragment::Init(
       SerializeVertex(data_dir_path, v_label_i);
     }
     if (!vertex_files.empty()) {
-      // SerializeVertices(data_dir_path);
       LOG(INFO) << "finished loading vertices";
     }
 
@@ -337,7 +336,6 @@ void MutablePropertyFragment::Init(
       }
     }
     if (!edge_files.empty()) {
-      // SerializeEdges(data_dir_path);
       LOG(INFO) << "finished loading edges";
     }
   } else {
@@ -360,7 +358,6 @@ void MutablePropertyFragment::Init(
         thrd.join();
       }
       if (!vertex_files.empty()) {
-        // SerializeVertices(data_dir_path);
         LOG(INFO) << "finished loading vertices";
       }
     }
@@ -400,7 +397,6 @@ void MutablePropertyFragment::Init(
         thrd.join();
       }
       if (!edge_files.empty()) {
-        // SerializeEdges(data_dir_path);
         LOG(INFO) << "finished loading edges";
       }
     }
@@ -439,27 +435,6 @@ void MutablePropertyFragment::SerializeVertex(const std::string& prefix,
                                 vertex_num(index));
 }
 
-void MutablePropertyFragment::SerializeVertices(const std::string& prefix) {
-  std::string data_dir = prefix + "/data";
-  if (!std::filesystem::exists(data_dir)) {
-    std::filesystem::create_directory(data_dir);
-  }
-  auto io_adaptor = std::unique_ptr<grape::LocalIOAdaptor>(
-      new grape::LocalIOAdaptor(prefix + "/init_snapshot.bin"));
-  io_adaptor->Open("ab");
-  for (size_t i = 0; i < vertex_label_num_; ++i) {
-    lf_indexers_[i].Serialize(data_dir + "/indexer_" + std::to_string(i));
-  }
-  label_t cur_index = 0;
-  for (auto& table : vertex_data_) {
-    table.Serialize(io_adaptor,
-                    data_dir + "/vtable_" + std::to_string(cur_index),
-                    vertex_num(cur_index));
-    ++cur_index;
-  }
-  io_adaptor->Close();
-}
-
 void MutablePropertyFragment::SerializeEdge(const std::string& prefix,
                                             const std::string& src_label,
                                             const std::string& dst_label,
@@ -470,35 +445,6 @@ void MutablePropertyFragment::SerializeEdge(const std::string& prefix,
                         edge_label);
   oe_[index]->Serialize(data_dir + "/oe_" + src_label + "_" + dst_label + "_" +
                         edge_label);
-}
-void MutablePropertyFragment::SerializeEdges(const std::string& prefix) {
-  std::string data_dir = prefix + "/data";
-  if (!std::filesystem::exists(data_dir)) {
-    std::filesystem::create_directory(data_dir);
-  }
-  for (size_t src_label_i = 0; src_label_i != vertex_label_num_;
-       ++src_label_i) {
-    std::string src_label =
-        schema_.get_vertex_label_name(static_cast<label_t>(src_label_i));
-    for (size_t dst_label_i = 0; dst_label_i != vertex_label_num_;
-         ++dst_label_i) {
-      std::string dst_label =
-          schema_.get_vertex_label_name(static_cast<label_t>(dst_label_i));
-      for (size_t e_label_i = 0; e_label_i != edge_label_num_; ++e_label_i) {
-        std::string edge_label =
-            schema_.get_edge_label_name(static_cast<label_t>(e_label_i));
-        if (!schema_.exist(src_label, dst_label, edge_label)) {
-          continue;
-        }
-        size_t index = src_label_i * vertex_label_num_ * edge_label_num_ +
-                       dst_label_i * edge_label_num_ + e_label_i;
-        ie_[index]->Serialize(data_dir + "/ie_" + src_label + "_" + dst_label +
-                              "_" + edge_label);
-        oe_[index]->Serialize(data_dir + "/oe_" + src_label + "_" + dst_label +
-                              "_" + edge_label);
-      }
-    }
-  }
 }
 
 void MutablePropertyFragment::Serialize(const std::string& prefix) {
