@@ -23,6 +23,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
@@ -52,6 +53,7 @@ public class IrLdbcTest {
     }
 
     @Test
+    @EnabledIfEnvironmentVariable(named = "ENGINE_TYPE", matches = "hiactor")
     public void run_ldbc_4_test() {
         QueryContext testQuery = LdbcQueries.get_ldbc_4_test();
         Result result = session.run(testQuery.getQuery());
@@ -66,6 +68,7 @@ public class IrLdbcTest {
     }
 
     @Test
+    @EnabledIfEnvironmentVariable(named = "ENGINE_TYPE", matches = "hiactor")
     public void run_ldbc_7_test() {
         QueryContext testQuery = LdbcQueries.get_ldbc_7_test();
         Result result = session.run(testQuery.getQuery());
@@ -80,6 +83,7 @@ public class IrLdbcTest {
     // }
 
     @Test
+    @EnabledIfEnvironmentVariable(named = "ENGINE_TYPE", matches = "hiactor")
     public void run_ldbc_10_test() {
         QueryContext testQuery = LdbcQueries.get_ldbc_10_test();
         Result result = session.run(testQuery.getQuery());
