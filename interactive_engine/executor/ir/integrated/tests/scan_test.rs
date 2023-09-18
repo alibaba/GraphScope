@@ -242,4 +242,84 @@ mod test {
         // It is almost impossible to sample 6 edges
         assert!(result_count < 6);
     }
+
+    // g.V().count()
+    #[test]
+    fn scan_vertex_count_test() {
+        let params = query_params(vec![], vec![], None);
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 3, // vcount
+            alias: None,
+            params: Some(params),
+            idx_predicate: None,
+        });
+        let expected = 6;
+        let mut result = 0;
+        for record in source_iter {
+            if let Some(object) = record.get(None).unwrap().as_object() {
+                result = object.as_i32().unwrap();
+            }
+        }
+        assert_eq!(result, expected)
+    }
+
+    // g.V().hasLabel("person").count()
+    #[test]
+    fn scan_person_vertex_count_test() {
+        let params = query_params(vec![PERSON_LABEL.into()], vec![], None);
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 3, // vcount
+            alias: None,
+            params: Some(params),
+            idx_predicate: None,
+        });
+        let expected = 4;
+        let mut result = 0;
+        for record in source_iter {
+            if let Some(object) = record.get(None).unwrap().as_object() {
+                result = object.as_i32().unwrap();
+            }
+        }
+        assert_eq!(result, expected)
+    }
+
+    // g.E().count()
+    #[test]
+    fn scan_edge_count_test() {
+        let params = query_params(vec![], vec![], None);
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 4, // ecount
+            alias: None,
+            params: Some(params),
+            idx_predicate: None,
+        });
+        let expected = 6;
+        let mut result = 0;
+        for record in source_iter {
+            if let Some(object) = record.get(None).unwrap().as_object() {
+                result = object.as_i32().unwrap();
+            }
+        }
+        assert_eq!(result, expected)
+    }
+
+    // g.E().hasLabel("knows").count()
+    #[test]
+    fn scan_knows_edge_count_test() {
+        let params = query_params(vec![KNOWS_LABEL.into()], vec![], None);
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 4, // ecount
+            alias: None,
+            params: Some(params),
+            idx_predicate: None,
+        });
+        let expected = 2;
+        let mut result = 0;
+        for record in source_iter {
+            if let Some(object) = record.get(None).unwrap().as_object() {
+                result = object.as_i32().unwrap();
+            }
+        }
+        assert_eq!(result, expected)
+    }
 }
