@@ -23,6 +23,7 @@ use std::sync::Arc;
 
 use ahash::HashMap;
 use dyn_type::{BorrowObject, Object};
+use graph_proxy::apis::VertexOrEdge;
 use graph_proxy::apis::{Edge, Element, GraphElement, GraphPath, PropertyValue, Vertex, ID};
 use ir_common::error::ParsePbError;
 use ir_common::generated::results as result_pb;
@@ -362,6 +363,21 @@ impl Entry for Edge {
     }
 }
 
+impl Entry for VertexOrEdge {
+    fn get_type(&self) -> EntryType {
+        match self {
+            VertexOrEdge::V(_) => EntryType::Vertex,
+            VertexOrEdge::E(_) => EntryType::Edge,
+        }
+    }
+    fn as_vertex(&self) -> Option<&Vertex> {
+        self.as_vertex()
+    }
+    fn as_edge(&self) -> Option<&Edge> {
+        self.as_edge()
+    }
+}
+
 impl Entry for Object {
     fn get_type(&self) -> EntryType {
         EntryType::Object
@@ -488,6 +504,12 @@ impl From<Vertex> for DynEntry {
 
 impl From<Edge> for DynEntry {
     fn from(e: Edge) -> Self {
+        DynEntry::new(e)
+    }
+}
+
+impl From<VertexOrEdge> for DynEntry {
+    fn from(e: VertexOrEdge) -> Self {
         DynEntry::new(e)
     }
 }
