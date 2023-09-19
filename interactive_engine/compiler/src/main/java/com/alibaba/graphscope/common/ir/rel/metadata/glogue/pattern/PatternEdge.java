@@ -14,6 +14,8 @@ public abstract class PatternEdge {
 
     public abstract List<EdgeTypeId> getEdgeTypeIds();
 
+    public abstract boolean isDistinct();
+
     @Override
     public String toString() {
         return getSrcVertex().getId() + "->" + getDstVertex().getId() + "[" + getEdgeTypeIds().toString() + "]";

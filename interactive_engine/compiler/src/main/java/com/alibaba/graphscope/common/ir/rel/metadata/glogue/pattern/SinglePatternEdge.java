@@ -5,8 +5,8 @@ import java.util.List;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 
-public class SinglePatternEdge extends PatternEdge{
-        private int id;
+public class SinglePatternEdge extends PatternEdge {
+    private int id;
     private EdgeTypeId edgeTypeId;
     private PatternVertex srcVertex;
     private PatternVertex dstVertex;
@@ -41,5 +41,10 @@ public class SinglePatternEdge extends PatternEdge{
     @Override
     public Integer getId() {
         return id;
+    }
+
+    @Override
+    public boolean isDistinct() {
+        return true;
     }
 }

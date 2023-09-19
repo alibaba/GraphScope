@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.javatuples.Pair;
 
@@ -13,7 +14,6 @@ import java.util.List;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirection;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 
 public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEstimation {
@@ -29,12 +29,14 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
         for (Pattern pattern : roots) {
             // single vertex pattern
             PatternVertex singleVertexPattern = pattern.getVertexSet().iterator().next();
-            List<Integer> vertexTypeIds = singleVertexPattern.getVertexTypeIds();
-            if (vertexTypeIds.size() != 1) {
-                throw new RuntimeException("vertex pattern should have only one vertex type");
+            if (!singleVertexPattern.isDistinct()) {
+                throw new UnsupportedOperationException(
+                        "In GlogueBasicCardinalityEstimationImpl creation, singleVertexPattern " + singleVertexPattern
+                                + " is not distinct.");
             }
+            Integer vertexTypeId = singleVertexPattern.getVertexTypeIds().get(0);
             Double singleVertexPatternCount = schema
-                    .getVertexTypeCardinality(vertexTypeIds.get(0));
+                    .getVertexTypeCardinality(vertexTypeId);
             this.patternCardinality.put(pattern, singleVertexPatternCount);
             System.out.println("root vertex pattern: " + pattern + ": " + singleVertexPatternCount);
             patternQueue.add(pattern);
@@ -141,7 +143,7 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
     @Override
     public double getCardinality(Pattern queryPattern) {
         for (Pattern pattern : this.patternCardinality.keySet()) {
-            if (pattern.equals(queryPattern)) {
+            if (pattern.isIsomorphicTo(queryPattern)) {
                 return this.patternCardinality.get(pattern);
             }
         }

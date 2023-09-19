@@ -2,6 +2,7 @@ package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 
 public class SinglePatternVertex extends PatternVertex {
@@ -26,5 +27,10 @@ public class SinglePatternVertex extends PatternVertex {
     @Override
     public Integer getId() {
         return id;
+    }
+
+    @Override
+    public boolean isDistinct() {
+        return true;
     }
 }

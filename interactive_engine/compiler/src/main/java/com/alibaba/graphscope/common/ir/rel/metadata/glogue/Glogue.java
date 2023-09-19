@@ -123,7 +123,7 @@ public class Glogue {
 
     private Optional<Pattern> containsPattern(Pattern pattern) {
         for (Pattern p : this.glogueGraph.vertexSet()) {
-            if (p.equals(pattern)) {
+            if (p.isIsomorphicTo(pattern)) {
                 return Optional.of(p);
             }
         }
@@ -198,7 +198,7 @@ public class Glogue {
         p.addEdge(v1, v0, e);
         p.addEdge(v2, v0, e);
         p.addEdge(v1, v2, e1);
-        p.encoding();
+        p.reordering();
 
         // p0 -> s2 <- p1 + p0 -> p1
         Pattern p2 = new Pattern();
@@ -211,7 +211,7 @@ public class Glogue {
         p2.addEdge(v00, v22, e);
         p2.addEdge(v11, v22, e);
         p2.addEdge(v00, v11, e1);
-        p2.encoding();
+        p2.reordering();
 
         System.out.println("Pattern: " + p);
 

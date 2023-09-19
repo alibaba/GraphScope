@@ -39,7 +39,8 @@ public class Pattern {
     // pattern ordering may not be isomorphic.
     private PatternOrder patternOrder;
 
-    // vertex type comparator and edge type comparator are used for isomorphism inspector
+    // vertex type comparator and edge type comparator are used for isomorphism
+    // inspector
     final static Comparator<PatternVertex> vertexTypeComparator = (o1, o2) -> {
         if (o1.getVertexTypeIds().size() != o2.getVertexTypeIds().size()) {
             return o1.getVertexTypeIds().size() - o2.getVertexTypeIds().size();
@@ -86,7 +87,7 @@ public class Pattern {
         this.patternGraph = patternGraph;
         this.maxVertexId = patternGraph.vertexSet().size();
         this.maxEdgeId = patternGraph.edgeSet().size();
-        this.encoding();
+        this.reordering();
     }
 
     public Pattern(Pattern pattern) {
@@ -107,7 +108,7 @@ public class Pattern {
         this.patternGraph.addVertex(vertex);
         this.maxVertexId = 1;
         this.maxEdgeId = 0;
-        this.encoding();
+        this.reordering();
     }
 
     public void setPatternId(int id) {
@@ -153,12 +154,11 @@ public class Pattern {
                 } else {
                     consideredGroup.add(srcVertexOrder);
                 }
-                List<Integer> srcVertexTypes = srcPatternVertex.getVertexTypeIds();
-                if (srcVertexTypes.size() != 1) {
+                if (!srcPatternVertex.isDistinct()) {
                     throw new UnsupportedOperationException(
-                            "In ExtendStep, srcPatternVertexType " + srcVertexTypes + " is not supported");
+                            "In ExtendStep, srcPatternVertex " + srcPatternVertex + " is not supported");
                 }
-                Integer srcVertexType = srcVertexTypes.get(0);
+                Integer srcVertexType = srcPatternVertex.getVertexTypeIds().get(0);
                 // Get all adjacent edges from srcVertex to targetVertex
                 List<EdgeTypeId> outEdges = schema.getEdgeTypes(srcVertexType, targetVertexType);
                 for (EdgeTypeId outEdge : outEdges) {
@@ -246,11 +246,11 @@ public class Pattern {
             }
 
         }
-        newPattern.encoding();
+        newPattern.reordering();
         return newPattern;
     }
 
-    public void encoding() {
+    public void reordering() {
         PatternOrderCanonicalLabelingImpl patternOrder = new PatternOrderCanonicalLabelingImpl(this.patternGraph);
         this.patternOrder = patternOrder;
     }
@@ -311,51 +311,55 @@ public class Pattern {
                 + this.patternGraph.edgeSet().toString() + ", PatternOrder: " + this.patternOrder;
     }
 
-    // this should be based on the canonical labeling of pattern graph
+    private boolean preCheck(Pattern other) {
+        // compare vertex number and edge number
+        if (this.maxVertexId != other.maxVertexId
+                || this.maxEdgeId != other.maxEdgeId) {
+            return false;
+        }
+        // compare pattern order
+        if (this.patternOrder == null) {
+            this.reordering();
+        }
+        if (other.patternOrder == null) {
+            other.reordering();
+        }
+        if (!this.patternOrder.equals(other.patternOrder)) {
+            // TODO: remove this, this is for debugging
+            VF2GraphIsomorphismInspector<PatternVertex, PatternEdge> isomorphismInspector = new VF2GraphIsomorphismInspector<PatternVertex, PatternEdge>(
+                    this.patternGraph,
+                    other.patternGraph, vertexTypeComparator, edgeTypeComparator);
+            if (isomorphismInspector.isomorphismExists()) {
+                System.out.println("!!!Notice that different pattern order, but the same pattern!!!");
+                System.out.println("pattern1 v.s. pattern2: \n" + this + "\n" + other);
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean isIsomorphicTo(Pattern other) {
+        return isIsomorphicTo(other, vertexTypeComparator, edgeTypeComparator);
+    }
+
+    public boolean isIsomorphicTo(Pattern other, Comparator<PatternVertex> vertexComparator,
+            Comparator<PatternEdge> edgeComparator) {
+        if (!this.preCheck(other)) {
+            return false;
+        }
+        VF2GraphIsomorphismInspector<PatternVertex, PatternEdge> isomorphismInspector = new VF2GraphIsomorphismInspector<PatternVertex, PatternEdge>(
+                this.patternGraph, other.patternGraph,
+                vertexComparator, edgeComparator);
+        return isomorphismInspector.isomorphismExists();
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Pattern) {
             Pattern other = (Pattern) obj;
-            // compare vertex number and edge number
-            if (this.maxVertexId != other.maxVertexId
-                    || this.maxEdgeId != other.maxEdgeId) {
-                return false;
-            }
-            // compare pattern order
-            if (this.patternOrder == null) {
-                this.encoding();
-            }
-            if (other.patternOrder == null) {
-                other.encoding();
-            }
-            if (!this.patternOrder.equals(other.patternOrder)) {
-                VF2GraphIsomorphismInspector isomorphismInspector = new VF2GraphIsomorphismInspector(this.patternGraph,
-                        other.patternGraph, vertexTypeComparator, edgeTypeComparator);
-                if (isomorphismInspector.isomorphismExists()) {
-                    System.out.println("!!!Notice that different pattern order, but the same pattern!!!");
-                    System.out.println("pattern1 v.s. pattern2: \n" + this + "\n" + other);
-                    System.out.println(
-                            "pattern order 1 v.s. pattern order 2 " + this.patternOrder + " " +
-                                    other.patternOrder);
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                VF2GraphIsomorphismInspector isomorphismInspector = new VF2GraphIsomorphismInspector(this.patternGraph,
-                        other.patternGraph, vertexTypeComparator, edgeTypeComparator);
-                if (isomorphismInspector.isomorphismExists()) {
-                    return true;
-                } else {
-                    System.out.println(
-                            "It's okay: the same pattern order: " + this.patternOrder + " but not the same pattern");
-                    System.out.println("pattern1 v.s. pattern2: \n" + this + "\n" + other);
-                    System.out.println(
-                            "pattern order 1 v.s. pattern order 2 " + this.patternOrder + " " +
-                                    other.patternOrder);
-                    return false;
-                }
-            }
+            return isIsomorphicTo(other);
         }
         return false;
     }
@@ -595,6 +599,135 @@ public class Pattern {
         PatternOrderCanonicalLabelingImpl canonicalLabelManager8 = new PatternOrderCanonicalLabelingImpl(
                 p8.patternGraph);
         System.out.println("p8 canonical label " + canonicalLabelManager8.toString());
+
+        /// fuzzy pattern test
+        List<Integer> fuzzyVertexTypes = new ArrayList<>();
+        fuzzyVertexTypes.add(0);
+        fuzzyVertexTypes.add(1);
+        List<EdgeTypeId> fuzzEdgeTypeIds = new ArrayList<>();
+        fuzzEdgeTypeIds.add(new EdgeTypeId(0, 0, 0));
+        fuzzEdgeTypeIds.add(new EdgeTypeId(0, 1, 1));
+
+        PatternVertex fuzzyV0 = new FuzzyPatternVertex(fuzzyVertexTypes, 0);
+        PatternVertex fuzzyV1 = new FuzzyPatternVertex(new ArrayList<>(fuzzyVertexTypes), 1);
+        PatternEdge fuzzyE1 = new SinglePatternEdge(fuzzyV0, fuzzyV1, e2, 0);
+        PatternEdge fuzzyE2 = new SinglePatternEdge(fuzzyV1, fuzzyV0, e2, 1);
+        Pattern fuzzyP = new Pattern();
+        fuzzyP.addVertex(fuzzyV0);
+        fuzzyP.addVertex(fuzzyV1);
+        fuzzyP.addEdge(fuzzyV0, fuzzyV1, fuzzyE1);
+        fuzzyP.addEdge(fuzzyV1, fuzzyV0, fuzzyE2);
+
+        System.out.println("fuzzy pattern " + fuzzyP);
+
+        fuzzyP.reordering();
+        System.out.println("fuzzy pattern order " + fuzzyP.patternOrder);
+
+        PatternVertex fuzzyV00 = new FuzzyPatternVertex(fuzzyVertexTypes, 0);
+        PatternVertex singleV11 = new SinglePatternVertex(1, 1);
+        PatternEdge fuzzyE11 = new SinglePatternEdge(fuzzyV00, singleV11, e2, 0);
+        PatternEdge fuzzyE22 = new SinglePatternEdge(singleV11, fuzzyV00, e2, 1);
+        Pattern fuzzyP1 = new Pattern();
+        fuzzyP1.addVertex(fuzzyV00);
+        fuzzyP1.addVertex(singleV11);
+        fuzzyP1.addEdge(fuzzyV00, singleV11, fuzzyE11);
+        fuzzyP1.addEdge(singleV11, fuzzyV00, fuzzyE22);
+
+        System.out.println("fuzzy pattern 1 " + fuzzyP1);
+
+        fuzzyP1.reordering();
+        System.out.println("fuzzy pattern 1 order " + fuzzyP1.patternOrder);
+
+        PatternVertex singleV000 = new SinglePatternVertex(1, 0);
+        PatternVertex singleV111 = new SinglePatternVertex(1, 1);
+        PatternEdge fuzzyEdge111 = new FuzzyPatternEdge(singleV000, singleV111, new ArrayList<>(fuzzEdgeTypeIds), 0);
+        PatternEdge fuzzyEdge222 = new FuzzyPatternEdge(singleV111, singleV000, new ArrayList<>(fuzzEdgeTypeIds), 1);
+        Pattern fuzzyP2 = new Pattern();
+        fuzzyP2.addVertex(singleV000);
+        fuzzyP2.addVertex(singleV111);
+        fuzzyP2.addEdge(singleV000, singleV111, fuzzyEdge111);
+        fuzzyP2.addEdge(singleV111, singleV000, fuzzyEdge222);
+
+        System.out.println("fuzzy pattern 2 " + fuzzyP2);
+
+        fuzzyP2.reordering();
+        System.out.println("fuzzy pattern 2 order " + fuzzyP2.patternOrder);
+
+        PatternVertex fuzzyV0000 = new FuzzyPatternVertex(new ArrayList<>(fuzzyVertexTypes), 0);
+        PatternVertex singleV1111 = new SinglePatternVertex(1, 1);
+        PatternEdge fuzzyEdge1111 = new FuzzyPatternEdge(fuzzyV0000, singleV1111, new ArrayList<>(fuzzEdgeTypeIds), 0);
+        PatternEdge fuzzyEdge2222 = new FuzzyPatternEdge(singleV1111, fuzzyV0000, new ArrayList<>(fuzzEdgeTypeIds), 1);
+        Pattern fuzzyP3 = new Pattern();
+        fuzzyP3.addVertex(fuzzyV0000);
+        fuzzyP3.addVertex(singleV1111);
+        fuzzyP3.addEdge(fuzzyV0000, singleV1111, fuzzyEdge1111);
+        fuzzyP3.addEdge(singleV1111, fuzzyV0000, fuzzyEdge2222);
+
+        System.out.println("fuzzy pattern 3 " + fuzzyP3);
+
+        fuzzyP3.reordering();
+        System.out.println("fuzzy pattern 3 order " + fuzzyP3.patternOrder);
+
+        PatternVertex fuzzyV00000 = new FuzzyPatternVertex(new ArrayList<>(fuzzyVertexTypes), 0);
+        PatternVertex fuzzyV11111 = new FuzzyPatternVertex(new ArrayList<>(fuzzyVertexTypes), 1);
+        PatternEdge fuzzyEdge11111 = new FuzzyPatternEdge(fuzzyV00000, fuzzyV11111, new ArrayList<>(fuzzEdgeTypeIds),
+                0);
+        PatternEdge fuzzyEdge22222 = new FuzzyPatternEdge(fuzzyV11111, fuzzyV00000, new ArrayList<>(fuzzEdgeTypeIds),
+                1);
+        Pattern fuzzyP4 = new Pattern();
+        fuzzyP4.addVertex(fuzzyV00000);
+        fuzzyP4.addVertex(fuzzyV11111);
+        fuzzyP4.addEdge(fuzzyV00000, fuzzyV11111, fuzzyEdge11111);
+        fuzzyP4.addEdge(fuzzyV11111, fuzzyV00000, fuzzyEdge22222);
+
+        System.out.println("fuzzy pattern 4 " + fuzzyP4);
+
+        fuzzyP4.reordering();
+        System.out.println("fuzzy pattern 4 order " + fuzzyP4.patternOrder);
+
+        VF2GraphIsomorphismInspector isomorphismInspectorFuzzy = new VF2GraphIsomorphismInspector(fuzzyP.patternGraph,
+                fuzzyP1.patternGraph, vertexTypeComparator, edgeTypeComparator);
+        System.out.println("fuzzy pattern isomorphic of p v.s. p1 " + isomorphismInspectorFuzzy.isomorphismExists());
+
+        VF2GraphIsomorphismInspector isomorphismInspectorFuzzy1 = new VF2GraphIsomorphismInspector(fuzzyP.patternGraph,
+                fuzzyP2.patternGraph, vertexTypeComparator, edgeTypeComparator);
+        System.out.println("fuzzy pattern isomorphic of p v.s. p2 " + isomorphismInspectorFuzzy1.isomorphismExists());
+
+        VF2GraphIsomorphismInspector isomorphismInspectorFuzzy2 = new VF2GraphIsomorphismInspector(fuzzyP.patternGraph,
+                fuzzyP3.patternGraph, vertexTypeComparator, edgeTypeComparator);
+
+        System.out.println("fuzzy pattern isomorphic of p v.s. p3 " + isomorphismInspectorFuzzy2.isomorphismExists());
+
+        VF2GraphIsomorphismInspector isomorphismInspectorFuzzy3 = new VF2GraphIsomorphismInspector(fuzzyP.patternGraph,
+                fuzzyP4.patternGraph, vertexTypeComparator, edgeTypeComparator);
+
+        System.out.println("fuzzy pattern isomorphic of p v.s. p4 " + isomorphismInspectorFuzzy3.isomorphismExists());
+
+        // test for pattern order
+        PatternVertex v100 = new SinglePatternVertex(0, 0);
+        PatternVertex v101 = new SinglePatternVertex(1, 1);
+        PatternVertex v102 = new SinglePatternVertex(2, 0);
+        PatternVertex v103 = new SinglePatternVertex(3, 1);
+        PatternEdge e100 = new SinglePatternEdge(v100, v101, e1, 0);
+        PatternEdge e101 = new SinglePatternEdge(v102, v103, e1, 0);
+
+        Pattern p100 = new Pattern();
+        p100.addVertex(v100);
+        p100.addVertex(v101);
+        p100.addEdge(v100, v101, e100);
+        p100.reordering();
+        Pattern p101 = new Pattern();
+        p101.addVertex(v102);
+        p101.addVertex(v103);
+        p101.addEdge(v102, v103, e101);
+        p101.reordering();
+
+        System.out.println("p100 " + p100);
+        System.out.println("p101 " + p101);
+
+        VF2GraphIsomorphismInspector isomorphismInspector100101 = new VF2GraphIsomorphismInspector(p100.patternGraph,
+                p101.patternGraph, vertexTypeComparator, edgeTypeComparator);
+        System.out.println("pattern isomorphic of p100 v.s. p101 " + isomorphismInspector100101.isomorphismExists());
 
     }
 }
