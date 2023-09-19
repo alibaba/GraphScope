@@ -138,7 +138,7 @@ struct KeyedT<Collection<T>, PropertySelector<grape::EmptyType>> {
       const PropertySelector<grape::EmptyType>& selector) {
     return builder_t(set);
   }
-  static unkeyed_builder_t create_unkyedkeyed_builder(
+  static unkeyed_builder_t create_unkeyed_builder(
       const Collection<T>& set,
       const PropertySelector<grape::EmptyType>& selector) {
     return unkeyed_builder_t();
@@ -487,6 +487,15 @@ template <typename ELE, typename DATA, typename GI, typename LabelT,
 static inline auto insert_into_builder_v2_impl(
     AdjEdgeSetBuilder<GI, LabelT, VID_T, grape::EmptyType>& builder,
     const ELE& ele, const DATA& data) {
+  return builder.Insert(ele);
+}
+
+// insert to single label edge label.
+template <typename ELE, typename DATA, typename LabelT, typename VID_T,
+          typename EDATA_T>
+static inline auto insert_into_builder_v2_impl(
+    SingleLabelEdgeSetBuilder<VID_T, LabelT, EDATA_T>& builder, const ELE& ele,
+    const DATA& data) {
   return builder.Insert(ele);
 }
 

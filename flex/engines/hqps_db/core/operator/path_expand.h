@@ -21,6 +21,7 @@ limitations under the License.
 #include "flex/engines/hqps_db/core/params.h"
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/row_vertex_set.h"
+#include "flex/engines/hqps_db/structures/path.h"
 
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/property/column.h"
@@ -47,10 +48,35 @@ class PathExpand {
 
   template <typename... T>
   using vertex_set_t = RowVertexSet<label_id_t, vertex_id_t, T...>;
-  // Path expand to vertices with columns.
 
+  // PathExpandPath
+  template <typename... V_SET_T, typename LabelT, typename EDGE_FILTER_T,
+            typename VERTEX_FILTER_T>
+  static auto PathExpandP(
+      const GRAPH_INTERFACE& graph,
+      const RowVertexSet<LabelT, vertex_id_t, V_SET_T...>& vertex_set,
+      PathExpandPOpt<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T>&&
+          path_expand_opt) {
+    // we can choose different path store type with regard to different
+    // result_opt
+    auto& edge_expand_opt = path_expand_opt.edge_expand_opt_;
+    auto& get_v_opt = path_expand_opt.get_v_opt_;
+    auto& range = path_expand_opt.range_;
+
+    auto cur_label = vertex_set.GetLabel();
+
+    std::vector<offset_t> offsets;
+    CompressedPathSet<vertex_id_t, label_id_t> path_set;
+    std::tie(path_set, offsets) = path_expand_from_single_label(
+        graph, cur_label, vertex_set.GetVertices(), range, edge_expand_opt,
+        get_v_opt);
+
+    return std::make_pair(std::move(path_set), std::move(offsets));
+  }
+
+  // Path expand to vertices with columns.
   // PathExpand to vertices with vertex properties also retreived
-  template <typename... V_SET_T, typename EXPR, typename LabelT,
+  template <typename... V_SET_T, typename VERTEX_FILTER_T, typename LabelT,
             typename EDGE_FILTER_T, typename... T,
             typename std::enable_if<(sizeof...(T) > 0)>::type* = nullptr,
             typename RES_SET_T = vertex_set_t<int32_t, T...>,  // int32_t is the
@@ -59,7 +85,8 @@ class PathExpand {
   static RES_T PathExpandV(
       const GRAPH_INTERFACE& graph,
       const RowVertexSet<LabelT, vertex_id_t, V_SET_T...>& vertex_set,
-      PathExpandOpt<LabelT, EXPR, EDGE_FILTER_T, T...>&& path_expand_opt) {
+      PathExpandVOpt<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T, T...>&&
+          path_expand_opt) {
     //
     auto cur_label = vertex_set.GetLabel();
     auto& range = path_expand_opt.range_;
@@ -82,14 +109,15 @@ class PathExpand {
                           std::move(std::get<2>(tuple)));
   }
 
-  // PathExpandV for row vertex set as input.
-  template <typename... V_SET_T, typename EXPR, typename LabelT,
+  // PathExpandV for two_label_vertex set as input.
+  template <typename... V_SET_T, typename VERTEX_FILTER_T, typename LabelT,
             typename EDGE_FILTER_T, typename RES_SET_T = vertex_set_t<int32_t>,
             typename RES_T = std::pair<RES_SET_T, std::vector<offset_t>>>
   static RES_T PathExpandV(
       const GRAPH_INTERFACE& graph,
       const TwoLabelVertexSet<vertex_id_t, LabelT, V_SET_T...>& vertex_set,
-      PathExpandOpt<LabelT, EXPR, EDGE_FILTER_T>&& path_expand_opt) {
+      PathExpandVOpt<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T>&&
+          path_expand_opt) {
     //
     auto& range = path_expand_opt.range_;
     auto& edge_expand_opt = path_expand_opt.edge_expand_opt_;
@@ -152,14 +180,15 @@ class PathExpand {
     return std::make_pair(std::move(row_vertex_set), std::move(res_offsets));
   }
 
-  // PathExpandV for two_label_vertex set as input.
-  template <typename... V_SET_T, typename EXPR, typename LabelT,
+  // PathExpandV for row vertex set as input.
+  template <typename... V_SET_T, typename VERTEX_FILTER_T, typename LabelT,
             typename EDGE_FILTER_T, typename RES_SET_T = vertex_set_t<Dist>,
             typename RES_T = std::pair<RES_SET_T, std::vector<offset_t>>>
   static RES_T PathExpandV(
       const GRAPH_INTERFACE& graph,
       const RowVertexSet<LabelT, vertex_id_t, V_SET_T...>& vertex_set,
-      PathExpandOpt<LabelT, EXPR, EDGE_FILTER_T>&& path_expand_opt) {
+      PathExpandVOpt<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T>&&
+          path_expand_opt) {
     //
     auto cur_label = vertex_set.GetLabel();
     auto& range = path_expand_opt.range_;
@@ -349,6 +378,93 @@ class PathExpand {
   }
 
  private:
+  // Expand Path from single label vertices, only take vertices.
+  template <typename EDGE_FILTER_FUNC, typename VERTEX_FILTER_T,
+            typename... EDATA_T>
+  static auto path_expand_from_single_label(
+      const GRAPH_INTERFACE& graph, label_id_t src_label,
+      const std::vector<vertex_id_t>& vertices_vec, const Range& range,
+      const EdgeExpandOpt<label_id_t, EDGE_FILTER_FUNC>& edge_opt,
+      const SimpleGetVNoPropOpt<label_id_t, VERTEX_FILTER_T>& get_vopt) {
+    std::vector<std::vector<vertex_id_t>> other_vertices;
+    std::vector<std::vector<offset_t>> other_offsets;
+    if (edge_opt.other_label_ != src_label) {
+      LOG(FATAL) << "PathExpand only support one kind labels along path"
+                 << std::to_string(edge_opt.other_label_) << ", "
+                 << std::to_string(src_label);
+    }
+
+    VLOG(10) << "PathExpand with vertices num: " << vertices_vec.size()
+             << " of label: " << std::to_string(src_label)
+             << ", range: " << range.start_ << ", " << range.limit_;
+    CHECK(range.limit_ > range.start_);
+    other_vertices.resize(range.limit_);
+    other_offsets.resize(range.limit_);
+    // distance 0 is the src vertices itself.
+    // init with dist 0
+    {
+      auto& cur_other_vertices = other_vertices[0];
+      auto& cur_other_offsets = other_offsets[0];
+      cur_other_vertices.insert(cur_other_vertices.end(), vertices_vec.begin(),
+                                vertices_vec.end());
+
+      for (auto i = 0; i < vertices_vec.size(); ++i) {
+        cur_other_offsets.emplace_back(i);
+      }
+      cur_other_offsets.emplace_back(vertices_vec.size());
+    }
+    VLOG(10) << " Finish set distance 0 vertices.";
+
+    for (auto i = 1; i < range.limit_; ++i) {
+      auto& cur_other_vertices = other_vertices[i];
+      auto& cur_other_offsets = other_offsets[i];
+      auto& prev_other_vertices = other_vertices[i - 1];
+
+      std::tie(cur_other_vertices, cur_other_offsets) =
+          graph.GetOtherVerticesV2(src_label, edge_opt.other_label_,
+                                   edge_opt.edge_label_, prev_other_vertices,
+                                   gs::to_string(edge_opt.dir_), INT_MAX);
+      VLOG(10) << "PathExpand at distance: " << i << ", got vertices: "
+               << "size : " << cur_other_vertices.size();
+    }
+
+    // create a copy of other_offsets.
+    auto copied_other_offsets(other_offsets);
+    std::vector<label_id_t> labels_vec(range.limit_, src_label);
+    auto path_set = CompressedPathSet<vertex_id_t, label_id_t>(
+        std::move(other_vertices), std::move(other_offsets),
+        std::move(labels_vec), range.start_);
+
+    std::vector<std::vector<offset_t>> offset_amplify(
+        range.limit_, std::vector<offset_t>(copied_other_offsets[0].size(), 0));
+    offset_amplify[0] = copied_other_offsets[0];
+    for (auto i = 1; i < offset_amplify.size(); ++i) {
+      for (auto j = 0; j < offset_amplify[i].size(); ++j) {
+        offset_amplify[i][j] =
+            copied_other_offsets[i][offset_amplify[i - 1][j]];
+      }
+    }
+
+    std::vector<size_t> path_num_cnt;
+    path_num_cnt.resize(vertices_vec.size() + 1, 0);
+    for (auto i = 0; i < vertices_vec.size(); ++i) {
+      for (auto j = range.start_; j < range.limit_; ++j) {
+        auto start = offset_amplify[j][i];
+        auto end = offset_amplify[j][i + 1];
+        path_num_cnt[i] += (end - start);
+      }
+    }
+    std::vector<offset_t> ctx_offsets;
+    ctx_offsets.resize(vertices_vec.size() + 1);
+    ctx_offsets[0] = 0;
+    for (auto i = 0; i < vertices_vec.size(); ++i) {
+      ctx_offsets[i + 1] = ctx_offsets[i] + path_num_cnt[i];
+    }
+    VLOG(10) << "Ctx offsets: " << gs::to_string(ctx_offsets);
+
+    return std::make_pair(std::move(path_set), std::move(ctx_offsets));
+  }
+
   template <typename T, typename... Ts>
   static auto prepend_tuple(std::vector<T>&& first_col,
                             std::vector<std::tuple<Ts...>>&& old_cols) {

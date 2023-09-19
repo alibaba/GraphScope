@@ -203,12 +203,54 @@ static codegen::ParamConst variable_to_param_const(const common::Variable& var,
     param_const.var_name = var.property().key().name();
     param_const.type =
         common_data_type_pb_2_data_type(var.node_type().data_type());
-  } else {
-    param_const.var_name = ctx.GetNextVarName();
-    param_const.type = codegen::DataType::kVertexId;
+  } else if (var.has_tag()) {
+    // check is vertex or is edge from node_type
+    if (var.has_node_type()) {
+      auto node_type = var.node_type();
+      param_const.var_name = ctx.GetNextVarName();
+      if (node_type.type_case() == common::IrDataType::kDataType) {
+        param_const.type =
+            common_data_type_pb_2_data_type(node_type.data_type());
+      } else {
+        auto graph_type = node_type.graph_type();
+        if (graph_type.element_opt() ==
+            common::GraphDataType::GraphElementOpt::
+                GraphDataType_GraphElementOpt_VERTEX) {
+          param_const.type = codegen::DataType::kVertexId;
+        } else if (graph_type.element_opt() ==
+                   common::GraphDataType::GraphElementOpt::
+                       GraphDataType_GraphElementOpt_EDGE) {
+          param_const.type = codegen::DataType::kEdgeId;
+        } else {
+          LOG(FATAL) << "Unexpect graph type";
+        }
+      }
+    } else {
+      LOG(FATAL)
+          << "Node type is not given when converting variable to param const";
+    }
   }
 
   return param_const;
+}
+
+static std::string interval_to_str(const common::Extract::Interval& interval) {
+  switch (interval) {
+  case common::Extract::Interval::Extract_Interval_YEAR:
+    return "Interval::YEAR";
+  case common::Extract::Interval::Extract_Interval_MONTH:
+    return "Interval::MONTH";
+  case common::Extract::Interval::Extract_Interval_DAY:
+    return "Interval::DAY";
+  case common::Extract::Interval::Extract_Interval_HOUR:
+    return "Interval::HOUR";
+  case common::Extract::Interval::Extract_Interval_MINUTE:
+    return "Interval::MINUTE";
+  case common::Extract::Interval::Extract_Interval_SECOND:
+    return "Interval::SECOND";
+  default:
+    LOG(FATAL) << "Unexpected interval" << interval;
+  }
 }
 
 }  // namespace gs
