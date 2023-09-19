@@ -38,6 +38,11 @@ enum class DataType {
   kInt32Array = 6,
   kBoolean = 7,
   kVertexId = 8,
+  kEdgeId = 9,
+  kLength = 10,
+  kTime = 11,
+  kDate = 12,
+  kDateTime = 13,
 };
 
 // a parameter const, the real data will be feed at runtime.
@@ -72,14 +77,18 @@ static codegen::DataType common_data_type_pb_2_data_type(
     return codegen::DataType::kInt32Array;
   case common::DataType::BOOLEAN:
     return codegen::DataType::kBoolean;
+  case common::DataType::DATE:
+    return codegen::DataType::kDate;
   default:
     // LOG(FATAL) << "unknown data type";
-    throw std::runtime_error("unknown data type" +
-                             std::to_string(static_cast<int>(data_type)));
+    throw std::runtime_error(
+        "unknown data type when converting common_data_type to inner data "
+        "type:" +
+        std::to_string(static_cast<int>(data_type)));
   }
 }
 
-static std::string common_data_type_pb_2_str(
+static std::string single_common_data_type_pb_2_str(
     const common::DataType& data_type) {
   switch (data_type) {
   case common::DataType::BOOLEAN:
@@ -96,12 +105,32 @@ static std::string common_data_type_pb_2_str(
     return "std::vector<int64_t>";
   case common::DataType::INT32_ARRAY:
     return "std::vector<int32_t>";
+  case common::DataType::DATE:
+    return "Date";
   default:
     // LOG(FATAL) << "unknown data type";
     // return "";
-    throw std::runtime_error("unknown data type" +
-                             std::to_string(static_cast<int>(data_type)));
+    throw std::runtime_error(
+        "unknown data type when convert common data type to string:" +
+        std::to_string(static_cast<int>(data_type)));
   }
+}
+
+static std::string common_data_type_pb_2_str(
+    const std::vector<common::DataType>& data_types) {
+  std::stringstream ss;
+  if (data_types.size() == 1) {
+    return single_common_data_type_pb_2_str(data_types[0]);
+  }
+  ss << "std::tuple<";
+  for (auto i = 0; i < data_types.size(); ++i) {
+    ss << single_common_data_type_pb_2_str(data_types[i]);
+    if (i + 1 < data_types.size()) {
+      ss << ", ";
+    }
+  }
+  ss << ">;";
+  return ss.str();
 }
 
 static std::string arith_to_str(const common::Arithmetic& arith_type) {
@@ -158,10 +187,17 @@ static std::string data_type_2_string(const codegen::DataType& data_type) {
     return "bool";
   case codegen::DataType::kVertexId:
     return VERTEX_ID_T;
+  case codegen::DataType::kLength:
+    return LENGTH_KEY_T;
+  case codegen::DataType::kEdgeId:
+    return EDGE_ID_T;
+  case codegen::DataType::kDate:
+    return "Date";
   default:
     // LOG(FATAL) << "unknown data type" << static_cast<int>(data_type);
-    throw std::runtime_error("unknown data type" +
-                             std::to_string(static_cast<int>(data_type)));
+    throw std::runtime_error(
+        "unknown data type when convert inner data_type to string: " +
+        std::to_string(static_cast<int>(data_type)));
   }
 }
 
@@ -180,7 +216,7 @@ static std::string decode_type_as_str(const codegen::DataType& data_type) {
     return "get_bool()";
   default:
     // LOG(FATAL) << "unknown data type" << static_cast<int>(data_type);
-    throw std::runtime_error("unknown data type" +
+    throw std::runtime_error("unknown data type when decode type as str: " +
                              std::to_string(static_cast<int>(data_type)));
   }
 }
@@ -205,6 +241,23 @@ static std::string data_type_2_rust_string(const codegen::DataType& data_type) {
     return "ID";
   default:
     LOG(FATAL) << "unknown data type" << static_cast<int>(data_type);
+  }
+}
+
+static common::DataType common_value_2_data_type(const common::Value& value) {
+  switch (value.item_case()) {
+  case common::Value::kI32:
+    return common::DataType::INT32;
+  case common::Value::kI64:
+    return common::DataType::INT64;
+  case common::Value::kBoolean:
+    return common::DataType::BOOLEAN;
+  case common::Value::kF64:
+    return common::DataType::DOUBLE;
+  case common::Value::kStr:
+    return common::DataType::STRING;
+  default:
+    LOG(FATAL) << "unknown value" << value.DebugString();
   }
 }
 

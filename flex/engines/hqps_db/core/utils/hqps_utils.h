@@ -971,6 +971,9 @@ struct Edge<VID_T, grape::EmptyType> {
   }
 };
 
+template <typename VID_T>
+using DefaultEdge = Edge<VID_T, grape::EmptyType>;
+
 struct QPSError {
   std::string message;
   explicit QPSError(std::string msg) : message(std::move(msg)) {}

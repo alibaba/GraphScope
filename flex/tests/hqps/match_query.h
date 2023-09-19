@@ -519,5 +519,109 @@ class MatchQuery9 : public HqpsAppBase<gs::MutableCSRInterface> {
   }
 };
 
+// test path expand
+
+struct Query10expr0 {
+ public:
+  using result_t = bool;
+  Query10expr0() {}
+
+  inline auto operator()(std::string_view var0, int64_t var1) const {
+    return var0 == "Ian" && var1 != 30786325579101;
+  }
+
+ private:
+};
+
+struct Query10expr1 {
+ public:
+  using result_t = bool;
+  Query10expr1() {}
+
+  inline auto operator()(int64_t var0) const {
+    return (true) && (var0 == 30786325579101);
+  }
+
+ private:
+};
+class MatchQuery10 : public HqpsAppBase<gs::MutableCSRInterface> {
+ public:
+  using Engine = SyncEngine<gs::MutableCSRInterface>;
+  using label_id_t = typename gs::MutableCSRInterface::label_id_t;
+  using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  // Query function for query class
+  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+    auto expr0 = gs::make_filter(
+        Query10expr0(), gs::PropertySelector<std::string_view>("firstName"),
+        gs::PropertySelector<int64_t>("id"));
+    auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
+        graph, 1, std::move(expr0));
+
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
+        gs::Direction::Both, (label_id_t) 8, (label_id_t) 1);
+    auto get_v_opt0 = make_getv_opt(gs::VOpt::Itself,
+                                    std::array<label_id_t, 1>{(label_id_t) 1});
+    auto path_opt2 = gs::make_path_expandv_opt(
+        std::move(edge_expand_opt1), std::move(get_v_opt0), gs::Range(1, 4));
+    auto ctx1 = Engine::PathExpandP<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
+        graph, std::move(ctx0), std::move(path_opt2));
+
+    auto get_v_opt3 = make_getv_opt(gs::VOpt::End, std::array<label_id_t, 0>{});
+    auto ctx2 = Engine::template GetV<gs::AppendOpt::Temp, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx1), std::move(get_v_opt3));
+
+    auto expr2 =
+        gs::make_filter(Query10expr1(), gs::PropertySelector<int64_t>("id"));
+    auto get_v_opt4 = make_getv_opt(
+        gs::VOpt::Itself, std::array<label_id_t, 0>{}, std::move(expr2));
+    auto ctx3 = Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx2), std::move(get_v_opt4));
+    auto ctx4 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx3),
+        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                       gs::PropertySelector<grape::EmptyType>("")),
+                   gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
+                       gs::PropertySelector<LengthKey>("length"))});
+
+    GroupKey<0, grape::EmptyType> group_key5(
+        gs::PropertySelector<grape::EmptyType>("None"));
+
+    auto agg_func6 = gs::make_aggregate_prop<gs::AggFunc::MIN>(
+        std::tuple{gs::PropertySelector<grape::EmptyType>("None")},
+        std::integer_sequence<int32_t, 1>{});
+
+    auto ctx5 = Engine::GroupBy(graph, std::move(ctx4), std::tuple{group_key5},
+                                std::tuple{agg_func6});
+    for (auto iter : ctx5) {
+      VLOG(10) << "after groupby: " << gs::to_string(iter.GetAllElement());
+    }
+    auto ctx6 = Engine::Sort(
+        graph, std::move(ctx5), gs::Range(0, 20),
+        std::tuple{
+            gs::OrderingPropPair<gs::SortOrder::ASC, 1, int32_t>(""),
+            gs::OrderingPropPair<gs::SortOrder::ASC, 0, std::string_view>(
+                "lastName"),
+            gs::OrderingPropPair<gs::SortOrder::ASC, 0, int64_t>("id")});
+    auto ctx7 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx6),
+        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
+                       gs::PropertySelector<grape::EmptyType>("")),
+                   gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                       gs::PropertySelector<std::string_view>("firstName")),
+                   gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                       gs::PropertySelector<std::string_view>("lastName")),
+                   gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                       gs::PropertySelector<int64_t>("id"))});
+    return Engine::Sink(ctx7, std::array<int32_t, 4>{4, 5, 6, 7});
+  }
+  // Wrapper query function for query class
+  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
+                                   Decoder& decoder) const override {
+    // decoding params from decoder, and call real query func
+
+    return Query(graph);
+  }
+};
+
 }  // namespace gs
 #endif  // TESTS_HQPS_MATCH_QUERY_H_

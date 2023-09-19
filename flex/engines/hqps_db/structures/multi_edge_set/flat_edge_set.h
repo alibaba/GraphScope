@@ -159,6 +159,7 @@ class FlatEdgeSet {
         label_triplet_ind_(std::move(label_triplet_ind)),
         direction_(direction) {
     CHECK(label_triplet_ind_.size() == vec_.size());
+    CHECK(prop_names_.size() == label_triplet_.size());
     uint8_t max_ind = 0;
     for (auto i = 0; i < label_triplet_ind_.size(); ++i) {
       max_ind = std::max(max_ind, label_triplet_ind_[i]);
@@ -391,7 +392,7 @@ class SingleLabelEdgeSetBuilder {
   static constexpr bool is_general_edge_set_builder = false;
   static constexpr bool is_two_label_set_builder = false;
 
-  SingleLabelEdgeSetBuilder(std::array<LabelT, 3>& label_triplet,
+  SingleLabelEdgeSetBuilder(const std::array<LabelT, 3>& label_triplet,
                             std::vector<std::string> prop_names,
                             Direction direction)
       : label_triplet_(label_triplet),
@@ -404,7 +405,8 @@ class SingleLabelEdgeSetBuilder {
   }
 
   result_t Build() {
-    return result_t(std::move(vec_), label_triplet_, prop_names_, direction_);
+    return result_t(std::move(vec_), std::move(label_triplet_), prop_names_,
+                    direction_);
   }
 
  private:
@@ -647,7 +649,6 @@ class SingleLabelEdgeSet {
   std::vector<std::string> prop_names_;
   Direction direction_;
 };
-
 }  // namespace gs
 
 #endif  // ENGINES_HQPS_ENGINE_DS_MULTI_EDGE_SET_FLAT_EDGE_SET_H_

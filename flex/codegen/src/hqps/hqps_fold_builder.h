@@ -67,7 +67,7 @@ std::pair<std::string, std::string> gen_agg_var_and_code_for_fold(
         VLOG(10) << "aggregate on property " << var_prop.key().name();
         in_prop_names.push_back(var.property().key().name());
         in_prop_types.push_back(
-            common_data_type_pb_2_str(var.node_type().data_type()));
+            single_common_data_type_pb_2_str(var.node_type().data_type()));
       }
     } else {
       // var has no property, which means internal id.

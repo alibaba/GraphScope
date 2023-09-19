@@ -97,7 +97,7 @@ std::vector<std::string> get_yaml_files(const std::string& plugin_dir) {
 }
 
 std::vector<StoredProcedureMeta> parse_from_multiple_yamls(
-  const std::string& plugin_dir,
+    const std::string& plugin_dir,
     const std::vector<std::string>& stored_procedure_yamls) {
   std::vector<StoredProcedureMeta> stored_procedures;
   for (auto cur_yaml : stored_procedure_yamls) {
@@ -112,11 +112,10 @@ std::vector<StoredProcedureMeta> parse_from_multiple_yamls(
       std::string path = root["library"].as<std::string>();
       if (!std::filesystem::exists(path)) {
         // in case the path is relative to plugin_dir, prepend plugin_dir
-        path = plugin_dir + "/"  +path;
+        path = plugin_dir + "/" + path;
         if (!std::filesystem::exists(path)) {
           LOG(ERROR) << "plugin - " << path << " file not found...";
-        }
-        else {
+        } else {
           stored_procedures.push_back({name, path});
         }
       } else {
@@ -177,7 +176,7 @@ std::string load_and_run(int32_t job_id, const std::string& lib_path) {
   gs::Decoder input_decoder(empty.data(), empty.size());
   auto res = temp_stored_procedure->Query(input_decoder);
   LOG(INFO) << "Finish running";
-  LOG(INFO) << res.DebugString();
+  VLOG(10) << res.DebugString();
   std::string res_str;
   res.SerializeToString(&res_str);
   return res_str;

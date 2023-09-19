@@ -369,7 +369,7 @@ namespace config_parsing {
 static PropertyType StringToPropertyType(const std::string& str) {
   if (str == "int32" || str == DT_SIGNED_INT32) {
     return PropertyType::kInt32;
-  } else if (str == "Date") {
+  } else if (str == "Date" || str == DT_DATE) {
     return PropertyType::kDate;
   } else if (str == "String" || str == DT_STRING) {
     return PropertyType::kString;
@@ -435,13 +435,17 @@ static bool parse_vertex_properties(YAML::Node node,
       return false;
     }
     auto prop_type_node = node[i]["property_type"];
-    if (!prop_type_node["primitive_type"]) {
-      LOG(ERROR) << "type of vertex-" << label_name << " prop-" << i - 1
-                 << " is not primitive...";
-      return false;
-    }
-    if (!get_scalar(prop_type_node, "primitive_type", prop_type_str)) {
-      LOG(ERROR) << "type of vertex-" << label_name << " prop-" << i - 1
+    if (prop_type_node["primitive_type"]) {
+      if (!get_scalar(prop_type_node, "primitive_type", prop_type_str)) {
+        LOG(ERROR) << "type of vertex-" << label_name << " prop-" << i - 1
+                   << " is not specified...";
+        return false;
+      }
+    } else if (prop_type_node["date"]) {
+      auto format = prop_type_node["date"].as<std::string>();
+      prop_type_str = DT_DATE;
+    } else {
+      LOG(ERROR) << "Unknown type of vertex-" << label_name << " prop-" << i - 1
                  << " is not specified...";
       return false;
     }
@@ -481,8 +485,13 @@ static bool parse_edge_properties(YAML::Node node,
     if (node[i]["property_type"]) {
       if (!get_scalar(node[i]["property_type"], "primitive_type",
                       prop_type_str)) {
-        LOG(ERROR) << "Only support primitive type for edge property";
-        return false;
+        if (!get_scalar(node[i]["property_type"], "date", prop_type_str)) {
+          LOG(ERROR) << "Fail to parse property type of edge-" << label_name
+                     << " prop-" << i << " ...";
+          return false;
+        } else {
+          prop_type_str = DT_DATE;
+        }
       }
     } else {
       LOG(ERROR) << "type of edge-" << label_name << " prop-" << i - 1

@@ -86,7 +86,7 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         # download dataset
-        git clone -b master --single-branch --depth=1 https://github.com/Graphscope/gstest.git ${GS_TEST_DIR}
+        git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
 
     - name: Sample Query test
       env:
@@ -112,18 +112,18 @@ jobs:
         echo "graph.store: exp" >> /tmp/ir.compiler.properties
         echo "graph.planner.is.on: true" >> /tmp/ir.compiler.properties
         echo "graph.planner.opt: RBO" >> /tmp/ir.compiler.properties
-        echo "graph.planner.rules: FilterMatchRule" >> /tmp/ir.compiler.properties
+        echo "graph.planner.rules: FilterMatchRule,NotMatchToAntiJoinRule" >> /tmp/ir.compiler.properties
 
         cd ${GITHUB_WORKSPACE}/flex/bin
 
-        for i in 2 3 5 6 8 9 11 12;
+        for i in 1 2 3 4 5 6 7 8 9 10 11 12;
         do
           cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/ic${i}_adhoc.cypher -w=/tmp/codgen/"
           cmd=${cmd}" -o=/tmp/plugin --ir_conf=/tmp/ir.compiler.properties "
           cmd=${cmd}" --graph_schema_path=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/ldbc_schema_csr_ic.json"
           cmd=${cmd}" --gie_home=${GIE_HOME}"
           echo $cmd
-          eval ${cmd} 
+          eval ${cmd}
         done
 
         for i in 1 2 3 4 5 6 7 8 9;
@@ -143,5 +143,6 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export FLEX_DATA_DIR=${GS_TEST_DIR}/flex/ldbc-sf01-long-date
+        export ENGINE_TYPE=hiactor
         bash hqps_cypher_test.sh ${GS_TEST_DIR}
 

@@ -55,7 +55,7 @@ std::string sort_pair_pb_to_order_pair(
   CHECK(pair.key().node_type().type_case() == common::IrDataType::kDataType)
       << "sort ordering pair only support primitive";
   sort_prop_type =
-      common_data_type_pb_2_str(pair.key().node_type().data_type());
+      single_common_data_type_pb_2_str(pair.key().node_type().data_type());
   // the type of sorted property.
   sort_prop_name = pair.key().property().key().name();
 
@@ -77,6 +77,10 @@ class SortOpBuilder {
   SortOpBuilder& range(const algebra::Range& limit) {
     lower_ = limit.lower();
     upper_ = limit.upper();
+    if (upper_ == 0) {
+      LOG(WARNING) << "Receive upper limit 0, set to INT_MAX";
+      upper_ = std::numeric_limits<int32_t>::max();
+    }
 
     VLOG(10) << "Sort Range: " << lower_.value()
              << ", upper: " << upper_.value();

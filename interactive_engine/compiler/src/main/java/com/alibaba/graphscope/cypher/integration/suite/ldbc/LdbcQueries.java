@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class LdbcQueries {
+
     public static QueryContext get_ldbc_2_test() {
         String query =
                 "MATCH (p:PERSON{id:"
@@ -111,6 +112,36 @@ public class LdbcQueries {
         return new QueryContext(query, Collections.emptyList());
     }
 
+    public static QueryContext get_ldbc_4_test() {
+        String query =
+                "MATCH (person:PERSON {id:"
+                    + " 10995116278874})-[:KNOWS]-(friend:PERSON)<-[:HASCREATOR]-(post:POST)-[:HASTAG]->(tag:"
+                    + " TAG)\n"
+                    + "WITH DISTINCT tag, post\n"
+                    + "WITH tag,\n"
+                    + "     CASE\n"
+                    + "       WHEN post.creationDate < 1340928000000  AND post.creationDate >="
+                    + " 1338508800000 THEN 1\n"
+                    + "       ELSE 0\n"
+                    + "     END AS valid,\n"
+                    + "     CASE\n"
+                    + "       WHEN 1338508800000 > post.creationDate THEN 1\n"
+                    + "       ELSE 0\n"
+                    + "     END AS inValid\n"
+                    + "WITH tag, sum(valid) AS postCount, sum(inValid) AS inValidPostCount\n"
+                    + "WHERE postCount>0 AND inValidPostCount=0\n"
+                    + "\n"
+                    + "RETURN tag.name AS tagName, postCount\n"
+                    + "ORDER BY postCount DESC, tagName ASC\n"
+                    + "LIMIT 10;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{tagName: \"Norodom_Sihanouk\", postCount: 3}>",
+                        "Record<{tagName: \"George_Clooney\", postCount: 1}>",
+                        "Record<{tagName: \"Louis_Philippe_I\", postCount: 1}>");
+        return new QueryContext(query, expected);
+    }
+
     public static QueryContext get_ldbc_6_test() {
         String query =
                 "MATCH (person:PERSON"
@@ -133,6 +164,142 @@ public class LdbcQueries {
                         "Record<{name: \"Benito_Mussolini\", postCnt: 1}>",
                         "Record<{name: \"Clark_Gable\", postCnt: 1}>",
                         "Record<{name: \"Condoleezza_Rice\", postCnt: 1}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_ldbc_7_test() {
+        String query =
+                "MATCH (person:PERSON {id: 26388279067534})<-[:HASCREATOR]-(message: POST |"
+                        + " COMMENT)<-[like:LIKES]-(liker:PERSON)\n"
+                        + "OPTIONAL MATCH (liker: PERSON)-[k:KNOWS]-(person: PERSON {id:"
+                        + " 26388279067534})\n"
+                        + "WITH liker, message, like.creationDate AS likeTime, person,\n"
+                        + "  CASE\n"
+                        + "      WHEN k is null THEN true\n"
+                        + "      ELSE false\n"
+                        + "     END AS isNew\n"
+                        + "ORDER BY likeTime DESC, message.id ASC\n"
+                        + "WITH liker, person, head(collect(message)) as message,"
+                        + " head(collect(likeTime)) AS likeTime, isNew\n"
+                        + "RETURN\n"
+                        + "    liker.id AS personId,\n"
+                        + "    liker.firstName AS personFirstName,\n"
+                        + "    liker.lastName AS personLastName,\n"
+                        + "    likeTime AS likeCreationDate,\n"
+                        + "    message.id AS commentOrPostId,\n"
+                        + "    message.content AS messageContent,\n"
+                        + "    message.imageFile AS messageImageFile,\n"
+                        + "    (likeTime - message.creationDate)/1000/60 AS minutesLatency,\n"
+                        + "  \tisNew\n"
+                        + "ORDER BY\n"
+                        + "    likeCreationDate DESC,\n"
+                        + "    personId ASC\n"
+                        + "LIMIT 20;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{personId: 32985348834301, personFirstName: \"Anh\","
+                            + " personLastName: \"Nguyen\", likeCreationDate: 1347061100109,"
+                            + " commentOrPostId: 1030792374999, messageContent: \"About David"
+                            + " Foster, llace's unfinished novel, About Paul McCartney,  as a solo"
+                            + " artist and as aAbout \", messageImageFile: \"\", minutesLatency:"
+                            + " 57622, isNew: FALSE}>",
+                        "Record<{personId: 21990232556992, personFirstName: \"Shweta\","
+                            + " personLastName: \"Kumar\", likeCreationDate: 1346511291019,"
+                            + " commentOrPostId: 1030792399080, messageContent: \"About I Only Have"
+                            + " Eyes for You, ou is episode 19 of season two of Buffy the Vampire"
+                            + " Sl\", messageImageFile: \"\", minutesLatency: 5105, isNew: TRUE}>",
+                        "Record<{personId: 15393162790476, personFirstName: \"K.\", personLastName:"
+                            + " \"Rao\", likeCreationDate: 1346463964285, commentOrPostId:"
+                            + " 1030792399080, messageContent: \"About I Only Have Eyes for You, ou"
+                            + " is episode 19 of season two of Buffy the Vampire Sl\","
+                            + " messageImageFile: \"\", minutesLatency: 4317, isNew: TRUE}>",
+                        "Record<{personId: 10995116278184, personFirstName: \"Arjun\","
+                            + " personLastName: \"Kumar\", likeCreationDate: 1346460875173,"
+                            + " commentOrPostId: 1030792399080, messageContent: \"About I Only Have"
+                            + " Eyes for You, ou is episode 19 of season two of Buffy the Vampire"
+                            + " Sl\", messageImageFile: \"\", minutesLatency: 4265, isNew: FALSE}>",
+                        "Record<{personId: 21990232556605, personFirstName: \"Arjun\","
+                            + " personLastName: \"Sen\", likeCreationDate: 1346424083954,"
+                            + " commentOrPostId: 1030792399080, messageContent: \"About I Only Have"
+                            + " Eyes for You, ou is episode 19 of season two of Buffy the Vampire"
+                            + " Sl\", messageImageFile: \"\", minutesLatency: 3652, isNew: TRUE}>",
+                        "Record<{personId: 13194139534142, personFirstName: \"Rahul\","
+                            + " personLastName: \"Reddy\", likeCreationDate: 1346410901910,"
+                            + " commentOrPostId: 1030792399080, messageContent: \"About I Only Have"
+                            + " Eyes for You, ou is episode 19 of season two of Buffy the Vampire"
+                            + " Sl\", messageImageFile: \"\", minutesLatency: 3432, isNew: TRUE}>",
+                        "Record<{personId: 8796093023493, personFirstName: \"Anupam\","
+                            + " personLastName: \"Reddy\", likeCreationDate: 1346402462450,"
+                            + " commentOrPostId: 1030792399080, messageContent: \"About I Only Have"
+                            + " Eyes for You, ou is episode 19 of season two of Buffy the Vampire"
+                            + " Sl\", messageImageFile: \"\", minutesLatency: 3292, isNew: TRUE}>",
+                        "Record<{personId: 24189255811940, personFirstName: \"Arjun\","
+                            + " personLastName: \"Khan\", likeCreationDate: 1346340478487,"
+                            + " commentOrPostId: 1030792399080, messageContent: \"About I Only Have"
+                            + " Eyes for You, ou is episode 19 of season two of Buffy the Vampire"
+                            + " Sl\", messageImageFile: \"\", minutesLatency: 2259, isNew: TRUE}>",
+                        "Record<{personId: 26388279067534, personFirstName: \"Emperor of Brazil\","
+                            + " personLastName: \"Dom Pedro II\", likeCreationDate: 1346329544355,"
+                            + " commentOrPostId: 1030792399080, messageContent: \"About I Only Have"
+                            + " Eyes for You, ou is episode 19 of season two of Buffy the Vampire"
+                            + " Sl\", messageImageFile: \"\", minutesLatency: 2076, isNew: TRUE}>",
+                        "Record<{personId: 687, personFirstName: \"Deepak\", personLastName:"
+                            + " \"Singh\", likeCreationDate: 1346323668418, commentOrPostId:"
+                            + " 1030792399080, messageContent: \"About I Only Have Eyes for You, ou"
+                            + " is episode 19 of season two of Buffy the Vampire Sl\","
+                            + " messageImageFile: \"\", minutesLatency: 1978, isNew: TRUE}>",
+                        "Record<{personId: 13194139533535, personFirstName: \"Shweta\","
+                            + " personLastName: \"Singh\", likeCreationDate: 1346305628827,"
+                            + " commentOrPostId: 1030792399080, messageContent: \"About I Only Have"
+                            + " Eyes for You, ou is episode 19 of season two of Buffy the Vampire"
+                            + " Sl\", messageImageFile: \"\", minutesLatency: 1678, isNew: TRUE}>",
+                        "Record<{personId: 26388279067635, personFirstName: \"John\","
+                                + " personLastName: \"Sheikh\", likeCreationDate: 1346293915386,"
+                                + " commentOrPostId: 893353421832, messageContent: \"\","
+                                + " messageImageFile: \"photo893353421832.jpg\", minutesLatency:"
+                                + " 168543, isNew: FALSE}>",
+                        "Record<{personId: 15393162790406, personFirstName: \"A.\", personLastName:"
+                            + " \"Sharma\", likeCreationDate: 1346280033526, commentOrPostId:"
+                            + " 1030792399080, messageContent: \"About I Only Have Eyes for You, ou"
+                            + " is episode 19 of season two of Buffy the Vampire Sl\","
+                            + " messageImageFile: \"\", minutesLatency: 1251, isNew: TRUE}>",
+                        "Record<{personId: 8796093023060, personFirstName: \"Karim\","
+                            + " personLastName: \"Akhmadiyeva\", likeCreationDate: 1346265643787,"
+                            + " commentOrPostId: 1030792399080, messageContent: \"About I Only Have"
+                            + " Eyes for You, ou is episode 19 of season two of Buffy the Vampire"
+                            + " Sl\", messageImageFile: \"\", minutesLatency: 1011, isNew: TRUE}>",
+                        "Record<{personId: 4398046511667, personFirstName: \"John\","
+                            + " personLastName: \"Chopra\", likeCreationDate: 1346265192141,"
+                            + " commentOrPostId: 1030792399080, messageContent: \"About I Only Have"
+                            + " Eyes for You, ou is episode 19 of season two of Buffy the Vampire"
+                            + " Sl\", messageImageFile: \"\", minutesLatency: 1004, isNew: TRUE}>",
+                        "Record<{personId: 4398046512376, personFirstName: \"Jack\","
+                            + " personLastName: \"Wilson\", likeCreationDate: 1346249759910,"
+                            + " commentOrPostId: 1030792465816, messageContent: \"About Srivijaya,"
+                            + " dated 16 June 682. The kingdom ceased to exiAbout Kingdom of"
+                            + " Hanover,\", messageImageFile: \"\", minutesLatency: 1033, isNew:"
+                            + " TRUE}>",
+                        "Record<{personId: 2199023256816, personFirstName: \"K.\", personLastName:"
+                            + " \"Bose\", likeCreationDate: 1346247410406, commentOrPostId:"
+                            + " 1030792399080, messageContent: \"About I Only Have Eyes for You, ou"
+                            + " is episode 19 of season two of Buffy the Vampire Sl\","
+                            + " messageImageFile: \"\", minutesLatency: 707, isNew: FALSE}>",
+                        "Record<{personId: 26388279067551, personFirstName: \"Anand\","
+                            + " personLastName: \"Rao\", likeCreationDate: 1346235328898,"
+                            + " commentOrPostId: 1030792399080, messageContent: \"About I Only Have"
+                            + " Eyes for You, ou is episode 19 of season two of Buffy the Vampire"
+                            + " Sl\", messageImageFile: \"\", minutesLatency: 506, isNew: TRUE}>",
+                        "Record<{personId: 8796093022764, personFirstName: \"Zheng\","
+                                + " personLastName: \"Xu\", likeCreationDate: 1346205231200,"
+                                + " commentOrPostId: 962072804153, messageContent: \"About Bertolt"
+                                + " Brecht,  – 14 August 1956) was a German poet, playwright, and"
+                                + " theatre director. An influent\", messageImageFile: \"\","
+                                + " minutesLatency: 84681, isNew: TRUE}>",
+                        "Record<{personId: 28587302322631, personFirstName: \"David\","
+                                + " personLastName: \"Fenter\", likeCreationDate: 1346201074886,"
+                                + " commentOrPostId: 893353421832, messageContent: \"\","
+                                + " messageImageFile: \"photo893353421832.jpg\", minutesLatency:"
+                                + " 166995, isNew: FALSE}>");
         return new QueryContext(query, expected);
     }
 
@@ -218,6 +385,69 @@ public class LdbcQueries {
                         "Record<{id: 26388279066662, firstName: \"Alfonso\", lastName:"
                                 + " \"Rodriguez\", commentDate: 20120906124058972, commentId:"
                                 + " 1030792487632, content: \"good\"}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_ldbc_10_test() {
+        String query =
+                "MATCH (person:PERSON {id: 30786325579101})-[:KNOWS*2..3]-(friend:"
+                    + " PERSON)-[:ISLOCATEDIN]->(city:PLACE)\n"
+                    + "WHERE NOT friend=person AND NOT (friend:PERSON)-[:KNOWS]-(person :PERSON"
+                    + " {id: 30786325579101})\n"
+                    + "WITH person, city, friend, friend.birthday as birthday\n"
+                    + "WHERE  (birthday.month=7 AND birthday.day>=21) OR\n"
+                    + "        (birthday.month=8 AND birthday.day<22)\n"
+                    + "WITH DISTINCT friend, city, person\n"
+                    + "\n"
+                    + "OPTIONAL MATCH (friend : PERSON)<-[:HASCREATOR]-(post:POST)\n"
+                    + "WITH friend, city, person, count(post) as postCount\n"
+                    + "\n"
+                    + "OPTIONAL MATCH"
+                    + " (friend)<-[:HASCREATOR]-(post1:POST)-[:HASTAG]->(tag:TAG)<-[:HASINTEREST]-(person:"
+                    + " PERSON {id: 30786325579101})\n"
+                    + "WITH friend, city, postCount, count(post1) as commonPostCount\n"
+                    + "\n"
+                    + "RETURN friend.id AS personId,\n"
+                    + "       friend.firstName AS personFirstName,\n"
+                    + "       friend.lastName AS personLastName,\n"
+                    + "       commonPostCount - (postCount - commonPostCount) AS"
+                    + " commonInterestScore,\n"
+                    + "       friend.gender AS personGender,\n"
+                    + "       city.name AS personCityName\n"
+                    + "ORDER BY commonInterestScore DESC, personId ASC\n"
+                    + "LIMIT 10;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{personId: 10995116278223, personFirstName: \"Guy\","
+                            + " personLastName: \"Akongo\", commonInterestScore: 0, personGender:"
+                            + " \"female\", personCityName: \"Mokolo\"}>",
+                        "Record<{personId: 19791209301505, personFirstName: \"Henry\","
+                            + " personLastName: \"Smith\", commonInterestScore: 0, personGender:"
+                            + " \"male\", personCityName: \"Coventry\"}>",
+                        "Record<{personId: 32985348833798, personFirstName: \"Otto\","
+                                + " personLastName: \"Kerndlova\", commonInterestScore: 0,"
+                                + " personGender: \"male\", personCityName: \"České_Budějovice\"}>",
+                        "Record<{personId: 6597069767635, personFirstName: \"Thomas Ilenda\","
+                            + " personLastName: \"Lita\", commonInterestScore: -1, personGender:"
+                            + " \"female\", personCityName: \"Bandundu\"}>",
+                        "Record<{personId: 19791209300656, personFirstName: \"Francis\","
+                            + " personLastName: \"Aquino\", commonInterestScore: -1, personGender:"
+                            + " \"male\", personCityName: \"Iligan\"}>",
+                        "Record<{personId: 30786325578904, personFirstName: \"Giuseppe\","
+                            + " personLastName: \"Donati\", commonInterestScore: -2, personGender:"
+                            + " \"male\", personCityName: \"Turin\"}>",
+                        "Record<{personId: 24189255811227, personFirstName: \"Bacary\","
+                            + " personLastName: \"Diop\", commonInterestScore: -4, personGender:"
+                            + " \"male\", personCityName: \"Diourbel\"}>",
+                        "Record<{personId: 17592186045405, personFirstName: \"Wei\","
+                                + " personLastName: \"Li\", commonInterestScore: -5, personGender:"
+                                + " \"female\", personCityName: \"Luoyang\"}>",
+                        "Record<{personId: 13194139533984, personFirstName: \"Annemarie\","
+                                + " personLastName: \"Bos\", commonInterestScore: -8, personGender:"
+                                + " \"female\", personCityName: \"Utrecht\"}>",
+                        "Record<{personId: 26388279068275, personFirstName: \"Jean\","
+                            + " personLastName: \"Berty\", commonInterestScore: -13, personGender:"
+                            + " \"male\", personCityName: \"Buea\"}>");
         return new QueryContext(query, expected);
     }
 

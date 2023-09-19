@@ -76,8 +76,16 @@ class GeneralEdgeSetBuilder<2, GI, VID_T, LabelT, std::tuple<T...>,
   }
 
   res_t Build() {
-    return res_t(std::move(vec_), edge_label_, src_labels_, dst_label_,
-                 prop_names_, std::move(label_vec_), direction_);
+    std::vector<std::array<LabelT, 3>> label_triplets;
+    label_triplets.emplace_back(
+        std::array<LabelT, 3>{src_labels_[0], dst_label_, dst_label_});
+    label_triplets.emplace_back(
+        std::array<LabelT, 3>{src_labels_[1], dst_label_, dst_label_});
+    std::vector<std::vector<std::string>> prop_names;
+    prop_names.emplace_back(array_to_vec(prop_names_));
+    prop_names.emplace_back(array_to_vec(prop_names_));
+    return res_t(std::move(vec_), std::move(label_triplets), prop_names,
+                 std::move(label_vec_), direction_);
   }
 
  private:

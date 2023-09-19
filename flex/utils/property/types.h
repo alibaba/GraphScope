@@ -274,6 +274,12 @@ struct AnyConverter<Date> {
     return ret;
   }
 
+  static Any to_any(int64_t value) {
+    Any ret;
+    ret.set_date(value);
+    return ret;
+  }
+
   static AnyValue to_any_value(const Date& value) {
     AnyValue ret;
     ret.d = value;
