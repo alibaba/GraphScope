@@ -204,7 +204,7 @@ message CreateLearningInstanceRequest {
   int64 object_id = 2;
   string handle = 3;
   string config = 4;
-  optional LearningBackend learning_backend = 5; 
+  LearningBackend learning_backend = 5; 
 };
 
 message CreateLearningInstanceResponse {
