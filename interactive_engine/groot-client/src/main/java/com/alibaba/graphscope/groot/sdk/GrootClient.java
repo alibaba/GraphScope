@@ -129,13 +129,18 @@ public class GrootClient {
         submit(requests, callback);
     }
 
-    private long modifyVerticesAndEdge(List<Vertex> vertices, List<Edge> edges, WriteTypePb writeType) {
+    private long modifyVerticesAndEdge(
+            List<Vertex> vertices, List<Edge> edges, WriteTypePb writeType) {
         List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, writeType);
         requests.addAll(getEdgeWriteRequestPbs(edges, writeType));
         return submit(requests);
     }
 
-    private void modifyVerticesAndEdge(List<Vertex> vertices, List<Edge> edges, StreamObserver<BatchWriteResponse> callback, WriteTypePb writeType) {
+    private void modifyVerticesAndEdge(
+            List<Vertex> vertices,
+            List<Edge> edges,
+            StreamObserver<BatchWriteResponse> callback,
+            WriteTypePb writeType) {
         List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, writeType);
         requests.addAll(getEdgeWriteRequestPbs(edges, writeType));
         submit(requests, callback);
@@ -153,15 +158,18 @@ public class GrootClient {
         return modifyVerticesAndEdge(vertices, edges, WriteTypePb.DELETE);
     }
 
-    public void addVerticesAndEdges(List<Vertex> vertices, List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
+    public void addVerticesAndEdges(
+            List<Vertex> vertices, List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
         modifyVerticesAndEdge(vertices, edges, callback, WriteTypePb.INSERT);
     }
 
-    public void updateVerticesAndEdges(List<Vertex> vertices, List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
+    public void updateVerticesAndEdges(
+            List<Vertex> vertices, List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
         modifyVerticesAndEdge(vertices, edges, callback, WriteTypePb.UPDATE);
     }
 
-    public void deleteVerticesAndEdges(List<Vertex> vertices, List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
+    public void deleteVerticesAndEdges(
+            List<Vertex> vertices, List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
         modifyVerticesAndEdge(vertices, edges, callback, WriteTypePb.DELETE);
     }
 

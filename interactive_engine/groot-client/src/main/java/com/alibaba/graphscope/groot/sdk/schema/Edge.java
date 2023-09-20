@@ -12,6 +12,8 @@ public class Edge {
     public Map<String, String> dstPk;
     public Map<String, String> properties;
 
+    public long eid;
+
     /**
      * Construct an edge
      * @param label edge label
@@ -59,6 +61,10 @@ public class Edge {
         this(label, src, dst, null);
     }
 
+    public void setEid(long eid) {
+        this.eid = eid;
+    }
+
     public String getLabel() {
         return label;
     }
@@ -88,6 +94,7 @@ public class Edge {
                 .setLabel(label)
                 .setSrcVertexKey(toVertexRecordKey(srcLabel, srcPk))
                 .setDstVertexKey(toVertexRecordKey(dstLabel, dstPk))
+                .setInnerId(eid)
                 .build();
     }
 
