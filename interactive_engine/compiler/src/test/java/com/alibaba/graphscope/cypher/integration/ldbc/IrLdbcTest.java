@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.cypher.integration.ldbc;
 
+import static org.junit.Assume.assumeTrue;
+
 import com.alibaba.graphscope.cypher.integration.suite.ldbc.LdbcQueries;
 import com.alibaba.graphscope.cypher.integration.suite.ldbc.QueryContext;
 
@@ -52,8 +54,24 @@ public class IrLdbcTest {
     }
 
     @Test
+    public void run_ldbc_4_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = LdbcQueries.get_ldbc_4_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
     public void run_ldbc_6_test() {
         QueryContext testQuery = LdbcQueries.get_ldbc_6_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_ldbc_7_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = LdbcQueries.get_ldbc_7_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
@@ -64,6 +82,14 @@ public class IrLdbcTest {
     //     Result result = session.run(testQuery.getQuery());
     //     Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     // }
+
+    @Test
+    public void run_ldbc_10_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = LdbcQueries.get_ldbc_10_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
 
     @Test
     public void run_ldbc_12_test() {

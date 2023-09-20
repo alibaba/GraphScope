@@ -28,6 +28,7 @@ limitations under the License.
 #include "flex/engines/hqps_db/structures/multi_edge_set/untyped_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/general_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/two_label_vertex_set.h"
+#include "flex/engines/hqps_db/structures/path.h"
 
 namespace gs {
 
@@ -461,6 +462,32 @@ class ProjectOp {
         node.template getProperties<T>(prop_array, repeat_array);
 
     return Collection<T>(std::move(tmp_prop_vec));
+  }
+
+  // apply project on path set，the type must be lengthKey
+  template <typename PROP_T, typename VID_T, typename LabelT,
+            typename std::enable_if<std::is_same_v<PROP_T, LengthKey>>::type* =
+                nullptr>
+  static auto apply_single_project_impl(
+      const GRAPH_INTERFACE& graph, CompressedPathSet<VID_T, LabelT>& node,
+      const std::string& prop_name, const std::vector<size_t>& repeat_array) {
+    VLOG(10) << "Finish fetching properties";
+
+    std::vector<typename LengthKey::length_data_type> lengths_vec;
+    auto path_vec = node.get_all_valid_paths();
+    CHECK(path_vec.size() == repeat_array.size());
+    lengths_vec.reserve(path_vec.size());
+    for (auto i = 0; i < path_vec.size(); ++i) {
+      if (repeat_array[i] > 0) {
+        auto length = path_vec[i].length();
+        for (auto j = 0; j < repeat_array[i]; ++j) {
+          lengths_vec.push_back(length);
+        }
+      }
+    }
+
+    return Collection<typename LengthKey::length_data_type>(
+        std::move(lengths_vec));
   }
 
   // evaluate expression in project op

@@ -87,7 +87,7 @@ create_ir_conf(){
     echo "graph.schema: ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/ldbc_schema_csr_ic.json" >> ${HQPS_IR_CONF}
     echo "graph.planner.is.on: true" >> ${HQPS_IR_CONF}
     echo "graph.planner.opt: RBO" >> ${HQPS_IR_CONF}
-    echo "graph.planner.rules: FilterMatchRule" >> ${HQPS_IR_CONF}
+    echo "graph.planner.rules: FilterMatchRule,NotMatchToAntiJoinRule" >> ${HQPS_IR_CONF}
     echo "gremlin.server.disabled: true" >> ${HQPS_IR_CONF}
     echo "neo4j.bolt.server.port: 7687" >> ${HQPS_IR_CONF}
 
