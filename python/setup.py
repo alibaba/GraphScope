@@ -139,7 +139,9 @@ class BuildGLTorchExt(torch.utils.cpp_extension.BuildExtension if torch else bui
             torch
         ), "Building graphlearn-torch extension requires installing pytorch first. Let WITH_GLTORCH=OFF if you don't need it."
         self.extensions = [
-            ext for ext in self.extensions if ext.name in [GLTORCH_EXT_NAME, GLTORCH_V6D_EXT_NAME]
+            ext
+            for ext in self.extensions
+            if ext.name in [GLTORCH_EXT_NAME, GLTORCH_V6D_EXT_NAME]
         ]
         torch.utils.cpp_extension.BuildExtension.run(self)
 
