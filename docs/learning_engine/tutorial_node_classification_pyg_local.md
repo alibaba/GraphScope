@@ -1,3 +1,10 @@
+# Tutorial: Training a Node Classification Model (PyG) on Your Local Machine
+
+This tutorial presents an end-to-end example that illustrates how GraphScope 
+trains the GraphSAGE model (implemented in PyG) for a node classification task. 
+
+## Load Graph
+```python
 import time
 
 import torch
@@ -10,7 +17,13 @@ import graphscope.learning.graphlearn_torch as glt
 from graphscope.dataset import load_ogbn_arxiv
 from graphscope.learning.graphlearn_torch.typing import Split
 
+gs.set_option(show_log=True)
 
+# load the ogbn_arxiv graph as an example.
+g = load_ogbn_arxiv()
+```
+## Define the evaluation function
+```python
 @torch.no_grad()
 def test(model, test_loader, dataset_name):
     evaluator = Evaluator(name=dataset_name)
@@ -37,12 +50,10 @@ def test(model, test_loader, dataset_name):
         }
     )["acc"]
     return test_acc
+```
 
-
-gs.set_option(show_log=True)
-
-# load the ogbn_arxiv graph as an example.
-g = load_ogbn_arxiv()
+## Launch the Learning Engine
+```python
 glt_graph = gs.graphlearn_torch(
     g,
     edges=[
@@ -71,8 +82,10 @@ glt.distributed.init_client(
     num_rpc_threads=4,
     is_dynamic=True,
 )
+```
 
-
+## Create neighbor loaderfor training, testing and validation
+```python
 device = torch.device("cpu")
 # Create distributed neighbor loader on remote server for training.
 print("-- Creating training dataloader ...")
@@ -115,8 +128,10 @@ test_loader = glt.distributed.DistNeighborLoader(
         workload_type="test",
     ),
 )
+```
 
-# Define model and optimizer.
+## Define the PyG GraphSage Model and optimizer
+```python
 print("-- Initializing model and optimizer ...")
 model = GraphSAGE(
     in_channels=128,
@@ -125,8 +140,10 @@ model = GraphSAGE(
     out_channels=47,
 ).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+```
 
-# Train and test.
+## Train and test
+```python
 print("-- Start training and testing ...")
 epochs = 10
 dataset_name = "ogbn-arxiv"
@@ -150,5 +167,4 @@ for epoch in range(0, epochs):
 
 print("-- Shutdowning ...")
 glt.distributed.shutdown_client()
-
-print("-- Exited ...")
+```
