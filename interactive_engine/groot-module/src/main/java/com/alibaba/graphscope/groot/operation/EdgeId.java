@@ -17,9 +17,9 @@ import com.alibaba.graphscope.proto.groot.EdgeIdPb;
 
 public class EdgeId {
 
-    private VertexId srcId;
-    private VertexId dstId;
-    private long id;
+    public VertexId srcId;
+    public VertexId dstId;
+    public long id;
 
     public EdgeId(VertexId srcId, VertexId dstId, long id) {
         this.srcId = srcId;

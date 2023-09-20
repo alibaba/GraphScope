@@ -205,6 +205,10 @@ public class GraphWriter implements MetricsAgent {
     private void addUpdateEdgeOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
         EdgeId edgeId = getEdgeId(schema, dataRecord, false);
+        if (edgeId.id == 0) {
+                // This is for update edge, if edgeInnerId is 0, generate new id, incase there isn't such a edge
+                edgeId.id = edgeIdGenerator.getNextId();
+        }
         EdgeKind edgeKind = getEdgeKind(schema, dataRecord);
         GraphElement edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
 
@@ -356,7 +360,6 @@ public class GraphWriter implements MetricsAgent {
                     getPrimaryKeysHashId(dstVertexDef.getLabelId(), dstVertexPkVals, dstVertexDef);
             long edgeInnerId =
                     overwrite ? edgeIdGenerator.getNextId() : edgeRecordKey.getEdgeInnerId();
-
             return new EdgeId(
                     new VertexId(srcVertexHashId), new VertexId(dstVertexHashId), edgeInnerId);
         }
