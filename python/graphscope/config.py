@@ -303,6 +303,9 @@ class SessionConfig:
     """Session configuration"""
 
     num_workers: int = 2  # The number of graphscope engine workers.
+    default_local_num_workers: int = (
+        1  # The number of graphscope engine workers when launch local workers.
+    )
 
     reconnect: bool = False  # Connect to an existed GraphScope Cluster
     instance_id: Union[str, None] = None  # Unique id for each GraphScope instance.
@@ -422,6 +425,7 @@ class Config(Serializable):
             self.kubernetes_launcher.waiting_for_delete = value
         elif key == "num_workers":
             self.session.num_workers = value
+            self.session.default_local_num_workers = value
         elif key == "show_log":
             self.session.show_log = value
         elif key == "log_level":
