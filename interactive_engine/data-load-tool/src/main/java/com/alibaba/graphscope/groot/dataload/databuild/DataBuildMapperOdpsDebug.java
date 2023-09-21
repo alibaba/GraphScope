@@ -61,10 +61,10 @@ public class DataBuildMapperOdpsDebug extends MapperBase {
     @Override
     public void map(long recordNum, Record record, TaskContext context) throws IOException {
         TableInfo tableInfo = context.getInputTableInfo();
-        String tableName = tableInfo.getTableName();
-        ColumnMappingInfo info = this.fileToColumnMappingInfo.get(tableName);
+        String identifier = tableInfo.getTableName() + "|" + tableInfo.getPartPath();
+        ColumnMappingInfo info = this.fileToColumnMappingInfo.get(identifier);
         if (info == null) {
-            logger.warn("Mapper: ignore [{}], table info: [{}]", tableName, tableInfo);
+            logger.warn("Mapper: ignore [{}], table info: [{}]", identifier, tableInfo);
             return;
         }
 
@@ -75,9 +75,8 @@ public class DataBuildMapperOdpsDebug extends MapperBase {
         GraphElement type = this.graphSchema.getElement(labelId);
         Map<Integer, Integer> colMap = info.getPropertiesColMap();
         Map<Integer, PropertyValue> properties = Utils.buildProperties(type, items, colMap);
-
         if (type instanceof GraphVertex) {
-            outKey.set(1, getVertexRawKeys((GraphVertex) type, items));
+            outKey.set(1, getVertexRawKeys((GraphVertex) type, colMap, items));
             BytesRef keyRef =
                     Utils.getVertexKeyRef(dataEncoder, (GraphVertex) type, properties, tableId);
             outKey.set(0, getVertexKeyEncoded(keyRef));
@@ -99,9 +98,17 @@ public class DataBuildMapperOdpsDebug extends MapperBase {
         }
     }
 
-    private String getVertexRawKeys(GraphVertex type, String[] items) throws IOException {
+    private String getVertexRawKeys(GraphVertex type, Map<Integer, Integer> colMap, String[] items)
+            throws IOException {
         List<Integer> pkIds = SchemaUtils.getVertexPrimaryKeyList(type);
-        return concatenateItemsByIndices(items, pkIds);
+        List<Integer> indices = new ArrayList<>();
+        colMap.forEach(
+                (idx, propId) -> {
+                    if (pkIds.contains(propId)) {
+                        indices.add(idx);
+                    }
+                });
+        return concatenateItemsByIndices(items, indices);
     }
 
     private String getEdgeRawKeys(ColumnMappingInfo info, String[] items) throws IOException {

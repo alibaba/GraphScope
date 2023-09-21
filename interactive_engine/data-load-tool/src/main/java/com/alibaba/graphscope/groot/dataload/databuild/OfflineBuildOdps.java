@@ -54,7 +54,7 @@ public class OfflineBuildOdps {
         odps = SessionState.get().getOdps();
 
         String configStr = properties.getProperty(DataLoadConfig.COLUMN_MAPPING_CONFIG);
-        configStr = Utils.replaceVars(configStr, Arrays.copyOfRange(args,1, args.length));
+        configStr = Utils.replaceVars(configStr, Arrays.copyOfRange(args, 1, args.length));
 
         String graphEndpoint = properties.getProperty(DataLoadConfig.GRAPH_ENDPOINT);
         String username = properties.getProperty(DataLoadConfig.USER_NAME, "");
@@ -95,7 +95,8 @@ public class OfflineBuildOdps {
         job.setMapOutputKeySchema(SchemaUtils.fromString("key:string"));
         job.setMapOutputValueSchema(SchemaUtils.fromString("value:string"));
 
-        mappingConfig.forEach((name, x) -> InputUtils.addTable(Utils.parseTableURL(odps, name), job));
+        mappingConfig.forEach(
+                (name, x) -> InputUtils.addTable(Utils.parseTableURL(odps, name), job));
 
         String dataSinkType = properties.getProperty(DataLoadConfig.DATA_SINK_TYPE, "VOLUME");
         Map<String, String> config;

@@ -48,14 +48,14 @@ public class Utils {
                 (fileName, fileColumnMapping) -> {
                     ColumnMappingInfo subInfo = fileColumnMapping.toColumnMappingInfo(schema);
                     // Note the project and partition is stripped (if exists)
-                    columnMappingInfo.put(Utils.getTableName(odps, fileName), subInfo);
+                    columnMappingInfo.put(Utils.getTableIdentifier(odps, fileName), subInfo);
                 });
         return columnMappingInfo;
     }
 
-    public static String getTableName(Odps odps, String tableFullName) {
+    public static String getTableIdentifier(Odps odps, String tableFullName) {
         TableInfo info = parseTableURL(odps, tableFullName);
-        return info.getTableName();
+        return info.getTableName() + "|" + info.getPartPath();
     }
 
     /**

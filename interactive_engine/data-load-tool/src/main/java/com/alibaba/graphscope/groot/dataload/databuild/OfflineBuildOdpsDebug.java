@@ -52,7 +52,7 @@ public class OfflineBuildOdpsDebug {
         odps = SessionState.get().getOdps();
 
         String configStr = properties.getProperty(DataLoadConfig.COLUMN_MAPPING_CONFIG);
-        configStr = Utils.replaceVars(configStr, Arrays.copyOfRange(args,1, args.length));
+        configStr = Utils.replaceVars(configStr, Arrays.copyOfRange(args, 1, args.length));
 
         String graphEndpoint = properties.getProperty(DataLoadConfig.GRAPH_ENDPOINT);
         String username = properties.getProperty(DataLoadConfig.USER_NAME, "");
@@ -78,7 +78,8 @@ public class OfflineBuildOdpsDebug {
         job.setMapperClass(DataBuildMapperOdpsDebug.class);
         job.setNumReduceTasks(0);
 
-        mappingConfig.forEach((name, x) -> InputUtils.addTable(Utils.parseTableURL(odps, name), job));
+        mappingConfig.forEach(
+                (name, x) -> InputUtils.addTable(Utils.parseTableURL(odps, name), job));
         String outputTable = properties.getProperty(DataLoadConfig.OUTPUT_TABLE);
         OutputUtils.addTable(Utils.parseTableURL(odps, outputTable), job);
         GraphSchema schema = GraphDef.parseProto(graphDefPb);
@@ -91,7 +92,7 @@ public class OfflineBuildOdpsDebug {
         outputMeta.put(DataLoadConfig.SCHEMA_JSON, schemaJson);
         outputMeta.put(DataLoadConfig.COLUMN_MAPPINGS, mapper.writeValueAsString(info));
         job.set(DataLoadConfig.META_INFO, mapper.writeValueAsString(outputMeta));
-
+        System.out.println(mapper.writeValueAsString(outputMeta));
         JobClient.runJob(job);
     }
 }

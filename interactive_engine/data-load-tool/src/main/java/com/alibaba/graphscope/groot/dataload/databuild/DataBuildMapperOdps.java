@@ -66,10 +66,10 @@ public class DataBuildMapperOdps extends MapperBase {
     @Override
     public void map(long recordNum, Record record, TaskContext context) throws IOException {
         TableInfo tableInfo = context.getInputTableInfo();
-        String tableName = tableInfo.getTableName();
-        ColumnMappingInfo info = this.fileToColumnMappingInfo.get(tableName);
+        String identifier = tableInfo.getTableName() + "|" + tableInfo.getPartPath();
+        ColumnMappingInfo info = this.fileToColumnMappingInfo.get(identifier);
         if (info == null) {
-            logger.warn("Mapper: ignore [{}], table info: [{}]", tableName, tableInfo);
+            logger.warn("Mapper: ignore [{}], table info: [{}]", identifier, tableInfo);
             return;
         }
         String[] items = Utils.parseRecords(record);
