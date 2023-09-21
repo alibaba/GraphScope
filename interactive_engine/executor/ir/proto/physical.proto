@@ -143,10 +143,6 @@ message Scan {
     EDGE = 1;
     // Scanning a relational table
     TABLE = 2;
-    // Scanning to get the vertex count
-    VERTEX_COUNT = 3;
-    // Scanning to get the edge count
-    EDGE_COUNT = 4;
   }
   ScanOpt scan_opt = 1;
   // The alias of the item if it is a vertex or edge
@@ -155,6 +151,8 @@ message Scan {
   algebra.QueryParams params = 3;
   // The optional filtering predicate for the field that have been indexed
   algebra.IndexPredicate idx_predicate = 4;
+  // The flag that indicates to SCAN + COUNT
+  bool is_count_only = 5;
 }
 
 // It is typical to use the operator when:

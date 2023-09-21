@@ -37,6 +37,7 @@ pub enum SourceType {
     Table,
     VCount,
     ECount,
+    TableCount,
     Dummy,
 }
 
@@ -179,7 +180,7 @@ impl SourceOperator {
                 let count = graph.count_edge(&self.query_params)?;
                 Ok(Box::new(vec![Record::new(object!(count), self.alias.clone())].into_iter()))
             }
-            SourceType::Table => Err(FnGenError::unsupported_error(
+            SourceType::Table | SourceType::TableCount => Err(FnGenError::unsupported_error(
                 "neither `Edge` nor `Vertex` but `Table` type `Source` opr",
             ))?,
             SourceType::Dummy => {
@@ -196,12 +197,29 @@ impl TryFrom<pb::Scan> for SourceOperator {
 
     fn try_from(scan_pb: pb::Scan) -> Result<Self, Self::Error> {
         let scan_opt: algebra_pb::scan::ScanOpt = unsafe { ::std::mem::transmute(scan_pb.scan_opt) };
+        let is_count_only = scan_pb.is_count_only;
         let source_type = match scan_opt {
-            algebra_pb::scan::ScanOpt::Vertex => SourceType::Vertex,
-            algebra_pb::scan::ScanOpt::Edge => SourceType::Edge,
-            algebra_pb::scan::ScanOpt::Table => SourceType::Table,
-            algebra_pb::scan::ScanOpt::VertexCount => SourceType::VCount,
-            algebra_pb::scan::ScanOpt::EdgeCount => SourceType::ECount,
+            algebra_pb::scan::ScanOpt::Vertex => {
+                if is_count_only {
+                    SourceType::VCount
+                } else {
+                    SourceType::Vertex
+                }
+            }
+            algebra_pb::scan::ScanOpt::Edge => {
+                if is_count_only {
+                    SourceType::ECount
+                } else {
+                    SourceType::Edge
+                }
+            }
+            algebra_pb::scan::ScanOpt::Table => {
+                if is_count_only {
+                    SourceType::TableCount
+                } else {
+                    SourceType::Table
+                }
+            }
         };
         let query_params = QueryParams::try_from(scan_pb.params)?;
         Ok(SourceOperator {

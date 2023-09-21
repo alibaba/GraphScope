@@ -39,8 +39,14 @@ mod tests {
 
     // join(scan.match1, scan.match2)
     fn single_source_multi_match_join_logical_plan() -> LogicalPlan {
-        let scan_opr =
-            pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None, meta_data: None };
+        let scan_opr = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: None,
+            idx_predicate: None,
+            is_count_only: false,
+            meta_data: None,
+        };
 
         let expand_opr1 = pb::EdgeExpand {
             v_tag: None,
@@ -112,8 +118,14 @@ mod tests {
 
     // join(scan1.match1, scan2.match2)
     fn multi_source_multi_match_join_logical_plan() -> LogicalPlan {
-        let scan_opr =
-            pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None, meta_data: None };
+        let scan_opr = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: None,
+            idx_predicate: None,
+            is_count_only: false,
+            meta_data: None,
+        };
 
         let expand_opr1 = pb::EdgeExpand {
             v_tag: None,
@@ -189,8 +201,14 @@ mod tests {
 
     // join(join(scan1.match1, scan2.match2), scan3.match3)
     fn multi_source_multi_match_multi_join_logical_plan() -> LogicalPlan {
-        let scan_opr =
-            pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None, meta_data: None };
+        let scan_opr = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: None,
+            idx_predicate: None,
+            is_count_only: false,
+            meta_data: None,
+        };
 
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
@@ -344,8 +362,14 @@ mod tests {
 
     // join(join(scan1.match1, scan2.match2), scan3.match3)
     fn multi_join_logical_plan() -> LogicalPlan {
-        let scan_opr =
-            pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None, meta_data: None };
+        let scan_opr = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: None,
+            idx_predicate: None,
+            is_count_only: false,
+            meta_data: None,
+        };
         let join_opr = pb::Join {
             kind: 0,
             left_keys: vec![common_pb::Variable { tag: None, property: None, node_type: None }],
@@ -403,6 +427,7 @@ mod tests {
             alias: Some(0.into()),
             params: None,
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         let scan2_opr = pb::Scan {
@@ -410,6 +435,7 @@ mod tests {
             alias: Some(1.into()),
             params: None,
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         let scan3_opr = pb::Scan {
@@ -417,6 +443,7 @@ mod tests {
             alias: Some(2.into()),
             params: None,
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         let dummy_opr = pb::Root {};
