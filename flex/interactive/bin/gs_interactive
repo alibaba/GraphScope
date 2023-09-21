@@ -224,8 +224,9 @@ DATABASE_CONF_DIR_NAME="conf"
 
 ################### IMAGE VERSION ###################
 GIE_DB_IMAGE_VERSION="v0.0.2"
-GIE_DB_IMAGE_NAME="registry.cn-hongkong.aliyuncs.com/graphscope/${DB_PROD_NAME}"
-GIE_DB_CONTAINER_NAME="${DB_PROD_NAME}-server"
+#GIE_DB_IMAGE_NAME="registry.cn-hongkong.aliyuncs.com/graphscope/${DB_PROD_NAME}"
+GIE_DB_IMAGE_NAME="interactive"
+GIE_DB_CONTAINER_NAME="${DB_PROD_NAME}-server-lei"
 
 
 ####################  Prepare uncreated directories ####################
@@ -639,9 +640,12 @@ function do_gen_conf(){
     esac
   done
 
-  #if output_config_file exists, remove
+  #if output_config_file exists, remove the file, if remove failed, exists
   if [ -f "${output_config_file}" ]; then
-    rm "${output_config_file}"
+    if ! rm "${output_config_file}"; then
+      err "remove ${output_config_file} failed"
+      exit 1
+    fi
   fi
   
   # echo directories
@@ -698,13 +702,19 @@ function generate_real_engine_conf(){
   if [ $# -eq 1 ]; then
     real_engine_config_file=$1
     info "engine config file is not specified, using default engine config"
-    do_gen_conf -o ${real_engine_config_file}
+    if ! do_gen_conf -o ${real_engine_config_file}; then
+      err "generate engine config file failed"
+      exit 1
+    fi
   else
     engine_config_file=$1
     real_engine_config_file=$2
     check_file_exists "${engine_config_file}"
     update_engine_config_from_yaml "${engine_config_file}"
-    do_gen_conf -o ${real_engine_config_file}
+    if ! do_gen_conf -o ${real_engine_config_file}; then
+      err "generate engine config file failed"
+      exit 1
+    fi
   fi
 }
 
@@ -727,6 +737,13 @@ function update_graph_yaml_with_procedure_enabling(){
   echo "stored_procedures:" >> ${HOST_DB_TMP_DIR}/graph0.yaml
   echo "  enable_lists:" >> ${HOST_DB_TMP_DIR}/graph0.yaml
   # copy graph_name's .enable file to ${HOST_DB_TMP_DIR}
+  if [ -f "${HOST_DB_TMP_DIR}/.enable" ]; then
+    if ! rm "${HOST_DB_TMP_DIR}/.enable"; then
+      err "remove ${HOST_DB_TMP_DIR}/.enable failed"
+      exit 1
+    fi
+  fi
+
   docker cp "${GIE_DB_CONTAINER_NAME}:${DATABASE_WORKSPACE}/data/${graph_name}/plugins/.enable" "${HOST_DB_TMP_DIR}/.enable" || true
   # get .enable and .disable file
   local enable_file="${HOST_DB_TMP_DIR}/.enable"
@@ -1124,6 +1141,13 @@ function do_destroy() {
     info "Database has not been created, exit"
     exit 0
   fi
+  # check if the GraphServer and SyncServer are running, if running, echo "Service is running, please stop it first" and exit
+  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "GraphServer" "Service is running, please stop it first: ./bin/gs_interacitve service stop"; then
+    exit 1
+  fi
+  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "sync_server" "Service is running, please stop it first: ./bin/gs_interacitve service stop"; then
+    exit 1
+  fi
 
   # let user confirm to destroy the database
   read -p "Are you sure to destroy the database? [y/n]" -n 1 -r
@@ -1220,9 +1244,15 @@ function do_start(){
 
   real_engine_config_file="/tmp/real_engine_config.yaml"
   if [ -z "${engine_config_file}" ]; then
-    generate_real_engine_conf "${real_engine_config_file}"
+    if ! generate_real_engine_conf "${real_engine_config_file}"; then
+      err "generate engine config file failed"
+      exit 1
+    fi
   else 
-    generate_real_engine_conf "${engine_config_file}" "${real_engine_config_file}"
+    if ! generate_real_engine_conf "${engine_config_file}" "${real_engine_config_file}"; then
+      err "generate engine config file failed"
+      exit 1
+    fi
   fi
 
   # copy engine config file to container
@@ -1233,6 +1263,18 @@ function do_start(){
   # check if modern_graph exists in container, get the result as bool
   docker_graph_schema_file="${DATABASE_WORKSPACE}/data/${graph_name}/graph.yaml"
   wal_file="${DATABASE_WORKSPACE}/data/${graph_name}/indices/init_snapshot.bin"
+  if [ -f "/tmp/graph_exists" ]; then
+    if ! rm /tmp/graph_exists; then
+      err "fail to remove /tmp/graph_exists, please remove it manually"
+      exit 1
+    fi
+  fi
+  if [ -f "/tmp/graph_loaded" ]; then
+    if ! rm /tmp/graph_loaded; then
+      err "fail to remove /tmp/graph_loaded, please remove it manually"
+      exit 1
+    fi
+  fi
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "( [ -f ${docker_graph_schema_file} ] && echo \"true\" e) || echo \"false\"" > /tmp/graph_exists
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "( [ -f ${wal_file} ] && echo \"true\" e) || echo \"false\"" > /tmp/graph_loaded
   graph_exists=$(cat /tmp/graph_exists)
@@ -1447,8 +1489,8 @@ function do_log(){
 # the input and output of the stored procedure
 function do_compile() {
   ensure_container_running
-  if [ $# -lt 4 ]; then
-    err "compile stored_procedure command at least 4 args, but got $#"
+  if [ $# -lt 2 ]; then
+    err "compile stored_procedure command at least 2 args, but got $#"
     compile_usage
     exit 1
   fi
@@ -1533,7 +1575,10 @@ function do_compile() {
   real_engine_config_file="/tmp/real_engine_config.yaml"
   # update default graph name
   DATABASE_CURRENT_GRAPH_NAME=${graph_name}
-  generate_real_engine_conf "${real_engine_config_file}"
+  if ! generate_real_engine_conf "${real_engine_config_file}"; then
+    err "Fail to generate real engine config file, please remove ${real_engine_config_file} and try again"
+    exit 1
+  fi
   # copy to container 
   docker_engine_config="${DATABASE_WORKSPACE}/conf/engine_config.yaml"
   docker cp "${real_engine_config_file}" "${GIE_DB_CONTAINER_NAME}:${docker_engine_config}" || exit 1
@@ -1820,16 +1865,50 @@ function do_show(){
   info "graph_name = ${graph_name}"
   docker_graph_dir="${DATABASE_WORKSPACE}/data/${graph_name}"
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "[ -d ${docker_graph_dir} ] || (echo -e \"${RED}Graph [${graph_name}] not exists, please create it first. ${NC}\" && exit 1)" || exit 1
+  docker_graph_yaml="${docker_graph_dir}/graph.yaml"
+  # check if docker_graph_yaml exists, if not ,exit
+  docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "[ -f ${docker_graph_yaml} ] || (echo -e \"${RED}Graph [${graph_name}] not exists, please create it first. ${NC}\" && exit 1)" || exit 1
+  # copy to host
+  docker cp "${GIE_DB_CONTAINER_NAME}:${docker_graph_yaml}" "/tmp/graph.yaml" || (echo "fail to copy" && exit 1)
+  # read /tmp/graph.yaml find the enabled_list list, and print the following lines
+  # parse /tmp/graph.yaml and get stored_procedures_enable_lists array
+  eval $(parse_yaml "/tmp/graph.yaml")
+  x=1
+  stored_procedures_enable_lists_array=()
+  while true; do
+    procedure_name_key="stored_procedures_enable_lists_${x}"
+    procedure_name_value_x=$(eval echo "\$${procedure_name_key}")
+    if [ -z "${procedure_name_value_x}" ]; then
+      break
+    fi
+    #append value to array
+    stored_procedures_enable_lists_array+=("${procedure_name_value_x}")
+    x=$((x + 1))
+  done
+  info "Enabled Size: ${#stored_procedures_enable_lists_array[@]}"
+
+  # parse the .enabled file
   docker_graph_plugin_dir="${docker_graph_dir}/plugins"
   docker_graph_enable_file="${docker_graph_plugin_dir}/.enable"
   # check if docker_graph_enable_file exists, if not ,exit
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "[ -f ${docker_graph_enable_file} ] || (echo -e \"${RED}Graph [${graph_name}] has no procedures registered. ${NC}\" && exit 1)" || exit 1
   docker cp "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" "/tmp/.enable" || exit 1
-  info "Enabled stored_procedures for graph: [${graph_name}]"
-  # iterate the .enable file and print the stored_procedure_name
-  while read -r line; do
-    emph "Procedure: ${line}"
+  disabled_list=()
+  # iterate the .enable file, for each line, check if it is in stored_procedures_enable_lists_array, if not, add it to disabled_list
+  while read line; do
+    if [[ ! " ${stored_procedures_enable_lists_array[@]} " =~ " ${line} " ]]; then
+      disabled_list+=("${line}")
+    fi
   done < /tmp/.enable
+  info "Disabled Size: ${#disabled_list[@]}"
+
+  # print the enabled_list and disabled_list
+  for procedure_name in "${stored_procedures_enable_lists_array[@]}"; do
+    emph "  ${procedure_name} : [Enabled]"
+  done
+  for procedure_name in "${disabled_list[@]}"; do
+    emph "  ${procedure_name} : [Disabled]"
+  done
 }
 
 function do_database(){
