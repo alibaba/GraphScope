@@ -15,63 +15,73 @@
 
 set -e
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m' # No Color
+err() {
+  echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] -ERROR- $* ${NC}" >&2
+}
+
+info() {
+  echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] -INFO- $* ${NC}"
+}
+
+emph(){
+  echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] -INFO- $* ${NC}"
+}
+
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-FLEX_HOME=${SCRIPT_DIR}/../
-echo "FLEX_HOME root =         ${FLEX_HOME}"
-FLEX_INCLUDE=${FLEX_HOME}/include/flex/
-echo "FLEX_INCLUDE directory = ${CODE_GEN_ROOT}"
 
-# first try to resolve as if we are installed. the try to resolve locally.
+function check_file_exists(){
+  if [ ! -f $1 ]; then
+    err "File $1 not exists."
+    exit 1
+  fi
+}
 
-if [ ! -d ${FLEX_INCLUDE} ]; then
-  echo "try FLEX_HOME ${FLEX_INCLUDE} not exists."
-  echo "try to resolve locally"
-else
-  echo "try FLEX_HOME ${FLEX_INCLUDE} exists."
-  CODEGEN_RUNNER=${FLEX_HOME}/bin/gen_code_from_plan
-  CMAKE_TEMPLATE_PATH=${FLEX_HOME}/lib/flex/CMakeLists.txt.template
-  FLEX_LIB_DIR=${FLEX_HOME}/lib/
-  PEGASUS_COMPILE_PATH=${FLEX_HOME}resources/pegasus/benchmark
-fi
+function find_resources(){
+  # get parent directory as flex_home
+  flex_home=$(dirname ${SCRIPT_DIR})
+  # check whether flex_home is install directory or source directory
+  if [ -d ${flex_home}/lib ]; then
+    info "FLEX_HOME ${flex_home} is install directory."
+    CODEGEN_RUNNER=${flex_home}/bin/gen_code_from_plan
+    CMAKE_TEMPLATE_PATH=${flex_home}/lib/flex/CMakeLists.txt.template
+    PEGASUS_COMPILE_PATH=${flex_home}lib/flex/pegasus/benchmark
+    COMPILER_JAR=${flex_home}/lib/compiler-0.0.1-SNAPSHOT.jar
+    COMPILER_LIB_DIR=${flex_home}/lib
+    IR_CORE_LIB_DIR=${flex_home}/lib
+    FLEX_INCLUDE_PREFIX=${flex_home}/include
+  else 
+    info "FLEX_HOME ${flex_home} is source directory."
+    CODEGEN_RUNNER=${flex_home}/build/codegen/gen_code_from_plan
+    CMAKE_TEMPLATE_PATH=${flex_home}/resources/hqps/CMakeLists.txt.template
+    PEGASUS_COMPILE_PATH=${flex_home}resources/pegasus/benchmark
+    COMPILER_JAR=${flex_home}/../interactive_engine/compiler/target/compiler-0.0.1-SNAPSHOT.jar
+    COMPILER_LIB_DIR=${flex_home}/../interactive_engine/compiler/target/libs
+    IR_CORE_LIB_DIR=${flex_home}/../interactive_engine/executor/ir/target/release/
+    FLEX_INCLUDE_PREFIX=${flex_home}/../
+  fi
 
-FLEX_INCLUDE=${FLEX_HOME}/../
-echo "try to find flex with FLEX_INCLUDE directory = ${FLEX_INCLUDE}"
-if [ ! -d ${FLEX_INCLUDE} ]; then
-  echo "FLEX_INCLUDE directory = ${FLEX_INCLUDE} not exists."
-  echo "Fail to find flex."
-  exit 1
-else
-  CODEGEN_RUNNER=${FLEX_HOME}/build/codegen/gen_code_from_plan
-  CMAKE_TEMPLATE_PATH=${FLEX_HOME}/resources/hqps/CMakeLists.txt.template
-  FLEX_LIB_DIR=${FLEX_HOME}/build/lib/
-  PEGASUS_COMPILE_PATH=${FLEX_HOME}resources/pegasus/benchmark
-fi
+  check_file_exists ${CODEGEN_RUNNER} || (err "Fail to find codegen_runner." && exit 1)
+  check_file_exists ${CMAKE_TEMPLATE_PATH} || (err "Fail to find CMakeLists.txt.template." && exit 1)
+#  check_file_exists ${PEGASUS_COMPILE_PATH} || (err "Fail to find pegasus compile path." && exit 1)
 
-echo "Codegen runner = ${CODEGEN_RUNNER}"
-echo "Cmake template path = ${CMAKE_TEMPLATE_PATH}"
-#check these files exist
-if [ ! -f ${CODEGEN_RUNNER} ]; then
- echo "Codegen runner = ${CODEGEN_RUNNER} not exists."
- echo "Fail to find codegen_runner."
- exit 1
-fi
+  info "Codegen runner = ${CODEGEN_RUNNER}"
+  info "Cmake template path = ${CMAKE_TEMPLATE_PATH}"
+  #if [ ! -f ${PEGASUS_COMPILE_PATH} ]; then
+  #  echo "Pegasus compile path = ${PEGASUS_COMPILE_PATH} not exists."
+  #  exit 1
+  #fi
+}
 
-if [ ! -f ${CMAKE_TEMPLATE_PATH} ]; then
-  echo "Cmake template path = ${CMAKE_TEMPLATE_PATH} not exists."
-  echo "Fail to find CMakeLists.txt.template."
-  exit 1
-fi
-
-#if [ ! -f ${PEGASUS_COMPILE_PATH} ]; then
-#  echo "Pegasus compile path = ${PEGASUS_COMPILE_PATH} not exists."
-#  exit 1
-#fi
 
 cypher_to_plan() {
-  if [ $# -ne 9 ]; then
-    echo "Usage: cypher_to_plan <query_name> <input_file> <output_plan file> <output_yaml_file>"
-    echo "          <ir_compiler_properties> <graph_schema_path> <gie_home>"
-    echo "           <procedure_name> <procedure_description>"    
+  if [ $# -ne 8 ]; then
+    echo "Usage: cypher_to_plan <query_name> <input_file> <output_plan file>"
+    echo "                      <output_yaml_file> <ir_compiler_properties> <graph_schema_path>"
+    echo "                      <procedure_name> <procedure_description>" 
     echo " but receive: "$#
     exit 1
   fi
@@ -81,84 +91,77 @@ cypher_to_plan() {
   output_yaml_file=$4
   ir_compiler_properties=$5
   graph_schema_path=$6
-  GIE_HOME=$7
 
   # get procedure_name and procedure_description
-  procedure_name=$8
-  procedure_description=$9
+  procedure_name=$7
+  procedure_description=$8
 
   # find java executable
-  echo "IR compiler properties = ${ir_compiler_properties}"
+  info "IR compiler properties = ${ir_compiler_properties}"
   #check file exists
   if [ ! -f ${ir_compiler_properties} ]; then
-    echo "IR compiler properties = ${ir_compiler_properties} not exists."
-    echo "Fail to find IR compiler properties."
+    err "IR compiler properties = ${ir_compiler_properties} not exists."
+    err "Fail to find IR compiler properties."
     exit 1
   fi
   JAVA_EXECUTABLE=$(which java)
   if [ -z ${JAVA_EXECUTABLE} ]; then
     # try find from JAVA_HOME
     if [ -z ${JAVA_HOME} ]; then
-      echo "JAVA_HOME not set."
+      err "JAVA_HOME not set."
       exit 1
     else
       JAVA_EXECUTABLE=${JAVA_HOME}/bin/java
     fi
     exit 1
   fi
-  echo "Java executable = ${JAVA_EXECUTABLE}"
-  echo "---------------------------"
-  echo "Find compiler exists"
+  info "Java executable = ${JAVA_EXECUTABLE}"
+  info "---------------------------"
   # read from file ${input_path}
   cypher_query=$(cat ${input_path})
-  echo "Find cypher query:"
-  echo "---------------------------"
-  echo ${cypher_query}
-  echo "---------------------------"
+  info "Find cypher query:"
+  info "---------------------------"
+  emph ${cypher_query}
+  info "---------------------------"
 
   #get abs path of input_path
   real_input_path=$(realpath ${input_path})
   real_output_path=$(realpath ${output_path})
   real_output_yaml=$(realpath ${output_yaml_file})
 
-  compiler_jar=${GIE_HOME}/compiler/target/compiler-0.0.1-SNAPSHOT.jar
-  if [ ! -f ${compiler_jar} ]; then
-    echo "Compiler jar = ${compiler_jar} not exists."
-    echo "Fail to find compiler jar."
+  if [ ! -f ${COMPILER_JAR} ]; then
+    err "Compiler jar = ${COMPILER_JAR} not exists."
     exit 1
   fi
   # add extrac_key_value_config
   extra_config="name:${procedure_name}"
   extra_config="${extra_config},description:${procedure_description}"
 
-  cmd="java -cp ${GIE_HOME}/compiler/target/libs/*:${compiler_jar}"
+  cmd="java -cp ${COMPILER_LIB_DIR}/*:${COMPILER_JAR}"
   cmd="${cmd} -Dgraph.schema=${graph_schema_path}"
-  cmd="${cmd} -Djna.library.path=${GIE_HOME}/executor/ir/target/release/"
+  cmd="${cmd} -Djna.library.path=${IR_CORE_LIB_DIR}"
   cmd="${cmd} com.alibaba.graphscope.common.ir.tools.GraphPlanner ${ir_compiler_properties} ${real_input_path} ${real_output_path} ${real_output_yaml} '${extra_config}'"
-  echo "running physical plan genration with ${cmd}"
+  info "running physical plan genration with ${cmd}"
   eval ${cmd}
 
-  echo "---------------------------"
+  info "---------------------------"
   #check output
   if [ ! -f ${real_output_path} ]; then
-    echo "Output file = ${output_path} not exists."
-    echo "Fail to generate physical plan."
+    err "Output file = ${output_path} not exists, fail to generate physical plan."
     exit 1
   fi
 
   #check output yaml file
   if [ ! -f ${real_output_yaml} ]; then
-    echo "Output yaml file = ${output_yaml_file} not exists."
-    echo "Fail to generate physical plan."
+    err "Output yaml file = ${output_yaml_file} not exists, fail to generate stored procedure config yaml."
     exit 1
   fi
 }
 
 compile_hqps_so() {
   #check input params size eq 2 or 3
-  if [ $# -gt 8 ] || [ $# -lt 5 ]; then
-    echo "Usage: $0 <input_file> <work_dir> <ir_compiler_properties_file>"
-    echo "           <graph_schema_file> <GIE_HOME> "
+  if [ $# -gt 7 ] || [ $# -lt 4 ]; then
+    echo "Usage: $0 <input_file> <work_dir> <ir_compiler_properties_file>  <graph_schema_file> "
     echo "          [output_dir] [stored_procedure_name] [stored_procedure_description]"
     exit 1
   fi
@@ -166,49 +169,43 @@ compile_hqps_so() {
   work_dir=$2
   ir_compiler_properties=$3
   graph_schema_path=$4
-  gie_home=$5
-  if [ $# -ge 6 ]; then
-    output_dir=$6
+  if [ $# -ge 5 ]; then
+    output_dir=$5
   else
     output_dir=${work_dir}
   fi
 
-  if [ $# -ge 7 ]; then
-    procedure_name=$7
+  if [ $# -ge 6 ]; then
+    procedure_name=$6
   else
     procedure_name=""
   fi
 
-  if [ $# -ge 8 ]; then
-    procedure_description=$8
+  if [ $# -ge 7 ]; then
+    procedure_description=$7
   else
     procedure_description=""
   fi
 
-  echo "Input path = ${input_path}"
-  echo "Work dir = ${work_dir}"
-  echo "ir compiler properties = ${ir_compiler_properties}"
-  echo "graph schema path = ${graph_schema_path}"
-  echo "GIE_HOME = ${gie_home}"
-  echo "Output dir = ${output_dir}"
-  echo "Procedure name = ${procedure_name}"
-  echo "Procedure description = ${procedure_description}"
+  info "Input path = ${input_path}"
+  info "Work dir = ${work_dir}"
+  info "ir compiler properties = ${ir_compiler_properties}"
+  info "graph schema path = ${graph_schema_path}"
+  info "Output dir = ${output_dir}"
+  info "Procedure name = ${procedure_name}"
+  info "Procedure description = ${procedure_description}"
 
   last_file_name=$(basename ${input_path})
 
-  echo "last file name: ${last_file_name}"
   # requiest last_file_name suffix is .pb
   if [[ $last_file_name == *.pb ]]; then
     query_name="${last_file_name%.pb}"
-    echo "File has .pb suffix."
   elif [[ $last_file_name == *.cc ]]; then
-    echo "File havs .cc suffix."
     query_name="${last_file_name%.cc}"
   elif [[ $last_file_name == *.cypher ]]; then
-    echo "File has .cypher suffix."
     query_name="${last_file_name%.cypher}"
   else
-    echo "Expect a .pb or .cc file"
+    err "Expect a .pb or .cc file"
     exit 1
   fi
   # if procedure_name is not set, use query_name
@@ -230,39 +227,39 @@ compile_hqps_so() {
     output_so_path="${cur_dir}/lib${procedure_name}.dylib"
     dst_so_path="${output_dir}/lib${procedure_name}.dylib"
   else
-    echo "Not support OS."
+    err "Not support OS."
     exit 1
   fi
 
   #only do codegen when receives a .pb file.
   if [[ $last_file_name == *.pb ]]; then
     cmd="${CODEGEN_RUNNER} -e hqps -i ${input_path} -o ${output_cc_path}"
-    echo "Codegen command = ${cmd}"
+    info "Codegen command = ${cmd}"
     eval ${cmd}
-    echo "----------------------------"
+    info "----------------------------"
   elif [[ $last_file_name == *.cypher ]]; then
-    echo "Generating code from cypher query, procedure name: ${procedure_name}, description: ${procedure_description}"
+    info "Generating code from cypher query, procedure name: ${procedure_name}, description: ${procedure_description}"
     # first do .cypher to .pb
     output_pb_path="${cur_dir}/${procedure_name}.pb"
     output_yaml_path="${cur_dir}/${procedure_name}.yaml"
     cypher_to_plan ${procedure_name} ${input_path} ${output_pb_path} \
-      ${output_yaml_path} ${ir_compiler_properties} ${graph_schema_path} ${gie_home} \
+      ${output_yaml_path} ${ir_compiler_properties} ${graph_schema_path} \
       ${procedure_name} "${procedure_description}"
 
-    echo "----------------------------"
-    echo "Codegen from cypher query done."
-    echo "----------------------------"
+    info "----------------------------"
+    info "Codegen from cypher query done."
+    info "----------------------------"
     cmd="${CODEGEN_RUNNER} -e hqps -i ${output_pb_path} -o ${output_cc_path}"
-    echo "Codegen command = ${cmd}"
+    info "Codegen command = ${cmd}"
     eval ${cmd}
     # then. do .pb to .cc
   elif [[ $last_file_name == *.cc ]]; then
     cp $input_path ${output_cc_path}
   fi
-  echo "Start running cmake and make"
+  info "Start running cmake and make"
   #check output_cc_path exists
   if [ ! -f ${output_cc_path} ]; then
-    echo "Codegen failed, ${output_cc_path} not exists."
+    err "Codegen failed, ${output_cc_path} not exists."
     exit 1
   fi
 
@@ -270,7 +267,7 @@ compile_hqps_so() {
   cp ${CMAKE_TEMPLATE_PATH} ${cur_dir}/CMakeLists.txt
   # run cmake and make in output path.
   pushd ${cur_dir}
-  cmd="cmake . -DQUERY_NAME=${procedure_name} -DFLEX_INCLUDE_PREFIX=${FLEX_INCLUDE} -DFLEX_LIB_DIR=${FLEX_LIB_DIR}"
+  cmd="cmake . -DQUERY_NAME=${query_name} -DFLEX_INCLUDE_PREFIX=${FLEX_INCLUDE_PREFIX}"
   # if CMAKE_CXX_COMPILER is set, use it.
   if [ ! -z ${CMAKE_CXX_COMPILER} ]; then
     cmd="${cmd} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
@@ -279,8 +276,8 @@ compile_hqps_so() {
   if [ ! -z ${CMAKE_C_COMPILER} ]; then
     cmd="${cmd} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
   fi
-  echo "Cmake command = ${cmd}"
-  echo "---------------------------"
+  info "Cmake command = ${cmd}"
+  info "---------------------------"
   eval ${cmd}
 
   ################### now build ##########################
@@ -288,61 +285,60 @@ compile_hqps_so() {
   #n_cores=`nproc`
   n_cores=1
   cmd="make -j"${n_cores}
-  echo "Make command = ${cmd}"
+  info "Make command = ${cmd}"
   eval ${cmd}
-  echo "---------------------------"
+  info "---------------------------"
   #check if build success
   if [ $? -ne 0 ]; then
-    echo "Build failed."
+    err "Build failed."
     exit 1
   fi
   # check output_so_name exists
   if [ ! -f ${output_so_path} ]; then
-    echo "Build failed, ${output_so_path} not exists."
+    err "Build failed, ${output_so_path} not exists."
     exit 1
   fi
-  echo "Finish building, output to ${output_so_path}"
+  info "Finish building, output to ${output_so_path}"
   popd
 
   ################### now copy ##########################
   # if dst_so_path eq output_so_path, skip copying.
   if [ ${dst_so_path} == ${output_so_path} ]; then
-    echo "Output dir is same as work dir, skip copying."
+    info "Output dir is same as work dir, skip copying."
     exit 0
   fi
   # copy output to output_dir
   if [ ! -z ${output_dir} ]; then
     mkdir -p ${output_dir}
   else
-    echo "Output dir not set, skip copying."
+    info "Output dir not set, skip copying."
     exit 0
   fi
   # check output_dir doesn't contains output_so_name
   if [ -f ${dst_so_path} ]; then
-    echo "Output dir ${output_dir} already contains ${procedure_name}.so"
-    echo "Please remove it first."
+    err "Output dir ${output_dir} already contains ${procedure_name}.so, please remove it first."
     exit 1
   fi
   cp ${output_so_path} ${output_dir}
   #check dst_so_path exists
   if [ ! -f ${dst_so_path} ]; then
-    echo "Copy failed, ${dst_so_path} not exists."
+    err "Copy failed, ${dst_so_path} not exists."
     exit 1
   fi
   # copy the generated yaml
   cp ${output_yaml_path} ${output_dir}
   if [ ! -f ${dst_yaml_path} ]; then
-    echo "Copy failed, ${dst_yaml_path} not exists."
+    err "Copy failed, ${dst_yaml_path} not exists."
     exit 1
   fi
-  echo "Finish copying, output to ${dst_so_path}"
+  info "Finish copying, output to ${dst_so_path}"
 }
 
 compile_pegasus_so() {
-  echo "Start compiling pegasus so"
+  info "Start compiling pegasus so"
   #check input params size eq 2 or 3
   if [ $# -ne 4 ] && [ $# -ne 5 ]; then
-    echo "Usage: $0 <input_file> <work_dir> <ir_compiler_properties_file> <graph_schema_file> [output_dir]"
+    err "Usage: $0 <input_file> <work_dir> <ir_compiler_properties_file> <graph_schema_file> [output_dir]"
     exit 1
   fi
   input_path=$1
@@ -354,30 +350,30 @@ compile_pegasus_so() {
   else
     output_dir=${work_dir}
   fi
-  echo "Input path = ${input_path}"
-  echo "Work dir = ${work_dir}"
-  echo "ir compiler properties = ${ir_compiler_properties}"
-  echo "graph schema path = ${graph_schema_path}"
-  echo "Output dir = ${output_dir}"
+  info "Input path = ${input_path}"
+  info "Work dir = ${work_dir}"
+  info "ir compiler properties = ${ir_compiler_properties}"
+  info "graph schema path = ${graph_schema_path}"
+  info "Output dir = ${output_dir}"
 
   last_file_name=$(basename ${input_path})
 
-  echo "last file name: ${last_file_name}"
+  info "last file name: ${last_file_name}"
   # requiest last_file_name suffix is .pb
   if [[ $last_file_name == *.pb ]]; then
     query_name="${last_file_name%.pb}"
-    echo "File has .pb suffix."
+    info "File has .pb suffix."
   elif [[ $last_file_name == *.rs ]]; then
-    echo "File has .rs suffix."
+    info "File has .rs suffix."
     query_name="${last_file_name%.rs}"
   elif [[ $last_file_name == *.cypher ]]; then
-    echo "File has .cypher suffix."
+    info "File has .cypher suffix."
     query_name="${last_file_name%.cypher}"
   elif [[ $last_file_name == *.json ]]; then
-    echo "File has .json suffix."
+    info "File has .json suffix."
     query_name="${last_file_name%.json}"
   else
-    echo "Expect a .pb or .cc file"
+    err "Expect a .pb or .cc file"
     exit 1
   fi
   cur_dir=${work_dir}
@@ -390,23 +386,23 @@ compile_pegasus_so() {
     output_so_path=${PEGASUS_COMPILE_PATH}/target/release/lib.dylib
     dst_so_path=${output_dir}/lib${query_name}.dylib
   else
-    echo "Not support OS."
+    err "Not support OS."
     exit 1
   fi
 
   #only do codegen when receives a .pb file.
   if [[ $last_file_name == *.json ]]; then
     cmd="${CODEGEN_RUNNER} ${input_path} ${output_rs_path}"
-    echo "Codegen command = ${cmd}"
+    info "Codegen command = ${cmd}"
     eval ${cmd}
-    echo "----------------------------"
+    info "----------------------------"
   elif [[ $last_file_name == *.rs ]]; then
     cp $input_path ${output_rs_path}
   fi
-  echo "Start running cmake and make"
+  info "Start running cmake and make"
   #check output_cc_path exists
   if [ ! -f ${output_rs_path} ]; then
-    echo "Codegen failed, ${output_rs_path} not exists."
+    err "Codegen failed, ${output_rs_path} not exists."
     exit 1
   fi
 
@@ -421,15 +417,15 @@ compile_pegasus_so() {
   eval ${cmd}
   #check if build success
   if [ $? -ne 0 ]; then
-    echo "Build failed."
+    err "Build failed."
     exit 1
   fi
   # check output_so_name exists
   if [ ! -f ${output_so_path} ]; then
-    echo "Build failed, ${output_so_path} not exists."
+    err "Build failed, ${output_so_path} not exists."
     exit 1
   fi
-  echo "Finish building, output to "${output_so_path}
+  info "Finish building, output to "${output_so_path}
   popd
 
   ################### now copy ##########################
@@ -437,22 +433,21 @@ compile_pegasus_so() {
   if [ ! -z ${output_dir} ]; then
     mkdir -p ${output_dir}
   else
-    echo "Output dir not set, skip copying."
+    info "Output dir not set, skip copying."
     exit 0
   fi
   # check output_dir doesn't contains output_so_name
   if [ -f ${dst_so_path} ]; then
-    echo "Output dir ${output_dir} already contains ${query_name}.so"
-    echo "Please remove it first."
+    err "Output dir ${output_dir} already contains ${query_name}.so, please remove it first."
     exit 1
   fi
   cp ${output_so_path} ${output_dir}
   #check dst_so_path exists
   if [ ! -f ${dst_so_path} ]; then
-    echo "Copy failed, ${dst_so_path} not exists."
+    err "Copy failed, ${dst_so_path} not exists."
     exit 1
   fi
-  echo "Finish copying, output to ${dst_so_path}"
+  info "Finish copying, output to ${dst_so_path}"
 }
 
 function usage(){
@@ -464,7 +459,6 @@ function usage(){
     -w, --work_dir=WORK_DIR
     --ir_conf=IR_CONF
     --graph_schema_path=GRAPH_SCHEMA_PATH
-    --gie_home=GIE_HOME
     [-o, --output_dir=OUTPUT_DIR]
 EOF
 }
@@ -484,10 +478,6 @@ run() {
       ;;
     -w=* | --work_dir=*)
       WORK_DIR="${i#*=}"
-      shift # past argument=value
-      ;;
-    --gie_home=*)
-      GIE_HOME="${i#*=}"
       shift # past argument=value
       ;;
     --ir_conf=*)
@@ -511,7 +501,7 @@ run() {
       shift # past argument=value
       ;;
     -* | --*)
-      echo "Unknown option $i"
+      err "Unknown option $i"
       exit 1
       ;;
     *) ;;
@@ -524,14 +514,15 @@ run() {
   echo "Work dir               ="${WORK_DIR}
   echo "ir conf                ="${IR_CONF}
   echo "graph_schema_path      ="${GRAPH_SCHEMA_PATH}
-  echo "GIE_HOME               ="${GIE_HOME}
   echo "Output path            ="${OUTPUT_DIR}
   echo "Procedure name         ="${PROCEDURE_NAME}
   echo "Procedure description  ="${PROCEDURE_DESCRIPTION}
 
+  find_resources
+
   # check input exist
   if [ ! -f ${INPUT} ]; then
-    echo "Input file ${INPUT} not exists."
+    err "Input file ${INPUT} not exists."
     exit 1
   fi
 
@@ -553,21 +544,21 @@ run() {
       PROCEDURE_NAME="${PROCEDURE_NAME%.cc}"
       PROCEDURE_NAME="${PROCEDURE_NAME%.pb}"
     fi
-    compile_hqps_so ${INPUT} ${WORK_DIR} ${IR_CONF} ${GRAPH_SCHEMA_PATH} ${GIE_HOME} ${OUTPUT_DIR} ${PROCEDURE_NAME} "${PROCEDURE_DESCRIPTION}"
+    compile_hqps_so ${INPUT} ${WORK_DIR} ${IR_CONF} ${GRAPH_SCHEMA_PATH} ${OUTPUT_DIR} ${PROCEDURE_NAME} "${PROCEDURE_DESCRIPTION}"
 
   # else if engine_type equals pegasus
   elif [ ${ENGINE_TYPE} == "pegasus" ]; then
-    echo "Engine type is pegasus, generating dynamic library for pegasus engine."
+    info "Engine type is pegasus, generating dynamic library for pegasus engine."
     compile_pegasus_so ${INPUT} ${WORK_DIR} ${IR_CONF} ${GRAPH_SCHEMA_PATH} ${OUTPUT_DIR}
   else
-    echo "Unknown engine type "${ENGINE_TYPE}
+    err "Unknown engine type "${ENGINE_TYPE}
     exit 1
   fi
   exit 0
 }
 
 if [ $# -lt 5 ]; then
-  echo "only receives: $# args"
+  err "only receives: $# args"
   usage
   exit 1
 fi

@@ -22,8 +22,8 @@
 
 #include "glog/logging.h"
 
-#include "proto_generated_gie/job_service.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/job_service.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace server {
 
@@ -42,13 +42,11 @@ class CodegenProxy {
   // the last two params are needed temporally, should be remove after all
   // configuration are merged
   void Init(std::string working_dir, std::string codegen_bin,
-            std::string ir_compiler_prop, std::string compiler_graph_schema,
-            std::string gie_home) {
+            std::string ir_compiler_prop, std::string compiler_graph_schema) {
     working_directory_ = working_dir;
     codegen_bin_ = codegen_bin;
     ir_compiler_prop_ = ir_compiler_prop;
     compiler_graph_schema_ = compiler_graph_schema;
-    gie_home_ = gie_home;
     initialized_ = true;
     LOG(INFO) << "CodegenProxy working dir: " << working_directory_
               << ",codegen bin " << codegen_bin_ << ", ir compiler prop "
@@ -86,8 +84,7 @@ class CodegenProxy {
     std::string res_lib_path = work_dir + "/lib" + query_name + ".so";
     std::string cmd = codegen_bin_ + " -e=hqps " + " -i=" + plan_path +
                       " -w=" + work_dir + " --ir_conf=" + ir_compiler_prop_ +
-                      " --graph_schema_path=" + compiler_graph_schema_ +
-                      " --gie_home=" + gie_home_;
+                      " --graph_schema_path=" + compiler_graph_schema_;
     LOG(INFO) << "Start call codegen cmd: [" << cmd << "]";
     auto res = std::system(cmd.c_str());
     if (res != 0) {
@@ -159,7 +156,6 @@ class CodegenProxy {
   std::string codegen_bin_;
   std::string ir_compiler_prop_;
   std::string compiler_graph_schema_;
-  std::string gie_home_;
   std::atomic<int32_t> next_job_id_{0};
   bool initialized_;
 };
