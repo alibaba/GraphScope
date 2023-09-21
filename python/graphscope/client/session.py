@@ -1346,9 +1346,10 @@ class Session(object):
             "num_servers": 1,
             "num_clients": 1,
         }
-        import pickle
 
-        handle = base64.b64encode(pickle.dumps(handle))
+        handle = base64.b64encode(
+            json.dumps(handle).encode("utf-8", errors="ignore")
+        ).decode("utf-8", errors="ignore")
         config = {
             "edges": edges,
             "edge_weights": edge_weights,
@@ -1359,7 +1360,10 @@ class Session(object):
             "random_node_split": random_node_split,
         }
         GLTorchGraph.check_params(graph.schema, config)
-        config = base64.b64encode(pickle.dumps(config))
+        config = GLTorchGraph.transform_config(config)
+        config = base64.b64encode(
+            json.dumps(config).encode("utf-8", errors="ignore")
+        ).decode("utf-8", errors="ignore")
         handle, config, endpoints = self._grpc_client.create_learning_instance(
             graph.vineyard_id,
             handle,

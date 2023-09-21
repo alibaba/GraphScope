@@ -142,3 +142,38 @@ class GLTorchGraph(object):
         GLTorchGraph.check_node_labels(schema, config.get("node_labels"))
         GLTorchGraph.check_random_node_split(config.get("random_node_split"))
         GLTorchGraph.check_edge_weights(schema, config.get("edge_weights"))
+
+    @staticmethod
+    def transform_config(config):
+        # transform config to a format that is compatible with json dumps and loads
+        transformed_config = config.copy()
+        transformed_config["edges"] = [
+            [node for node in edge] for edge in config["edges"]
+        ]
+        if config["edge_weights"]:
+            transformed_config["edge_weights"] = {
+                config["edges"].index(edge): weights
+                for edge, weights in config["edge_weights"].items()
+            }
+        if config["edge_features"]:
+            transformed_config["edge_features"] = {
+                config["edges"].index(edge): features
+                for edge, features in config["edge_features"].items()
+            }
+        return transformed_config
+
+    @staticmethod
+    def reverse_transform_config(config):
+        reversed_config = config.copy()
+        reversed_config["edges"] = [tuple(edge) for edge in config["edges"]]
+        if config["edge_weights"]:
+            reversed_config["edge_weights"] = {
+                reversed_config["edges"][int(index)]: weights
+                for index, weights in config["edge_weights"].items()
+            }
+        if config["edge_features"]:
+            reversed_config["edge_features"] = {
+                reversed_config["edges"][int(index)]: features
+                for index, features in config["edge_features"].items()
+            }
+        return reversed_config

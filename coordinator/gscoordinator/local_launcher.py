@@ -303,9 +303,11 @@ class LocalLauncher(AbstractLauncher):
         return server_list
 
     def _create_graphlearn_torch_instance(self, object_id, handle, config):
-        import pickle
-
-        handle = pickle.loads(base64.b64decode(handle))
+        handle = json.loads(
+            base64.b64decode(handle.encode("utf-8", errors="ignore")).decode(
+                "utf-8", errors="ignore"
+            )
+        )
 
         server_client_master_port = get_free_port("localhost")
         handle["server_client_master_port"] = server_client_master_port
@@ -315,7 +317,9 @@ class LocalLauncher(AbstractLauncher):
         for _ in range(3):
             server_list.append("localhost:" + str(get_free_port("localhost")))
 
-        handle = base64.b64encode(pickle.dumps(handle))
+        handle = base64.b64encode(
+            json.dumps(handle).encode("utf-8", errors="ignore")
+        ).decode("utf-8", errors="ignore")
 
         # launch the server
         env = os.environ.copy()
