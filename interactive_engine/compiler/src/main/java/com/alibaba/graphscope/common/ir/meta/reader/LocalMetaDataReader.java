@@ -59,10 +59,16 @@ public class LocalMetaDataReader implements MetaDataReader {
         if (enableProcedureList.isEmpty()) {
             logger.info("Load all procedures in {}", procedurePath);
             for (File file : procedureDir.listFiles()) {
-                // if file is .yaml or .yml file
                 logger.debug("Found procedure config {}", file.getName());
-                if (file.getName().endsWith(".yaml") || file.getName().endsWith(".yml")) {
-                    procedureInputs.add(new FileInputStream(file));
+                try {
+                    if (FileUtils.getFormatType(file.getAbsolutePath()) == FileFormatType.YAML) {
+                        procedureInputs.add(new FileInputStream(file));
+                    }
+                } catch (Exception e) {
+                    logger.warn(
+                            "procedure config {} has invalid format, error msg: {}",
+                            file.getName(),
+                            e);
                 }
             }
         } else {
@@ -86,12 +92,16 @@ public class LocalMetaDataReader implements MetaDataReader {
             throws IOException {
         Map<String, InputStream> procedureInputMap = Maps.newHashMap();
         for (File file : procedureDir.listFiles()) {
-            if (!file.getName().endsWith(".yaml") && !file.getName().endsWith(".yml")) {
-                continue;
+            try {
+                if (FileUtils.getFormatType(file.getAbsolutePath()) == FileFormatType.YAML) {
+                    String procedureName = getProcedureName(file);
+                    procedureInputMap.put(procedureName, new FileInputStream(file));
+                    logger.debug("load procedure {}", procedureName);
+                }
+            } catch (Exception e) {
+                logger.warn(
+                        "procedure config {} has invalid format, error msg: {}", file.getName(), e);
             }
-            String procedureName = getProcedureName(file);
-            procedureInputMap.put(procedureName, new FileInputStream(file));
-            logger.debug("load procedure {}", procedureName);
         }
         return procedureInputMap;
     }
