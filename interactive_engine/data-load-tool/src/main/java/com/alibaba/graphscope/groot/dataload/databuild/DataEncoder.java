@@ -18,16 +18,14 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
+import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
 import com.alibaba.graphscope.groot.common.util.PkHashUtils;
 import com.alibaba.graphscope.groot.common.util.SchemaUtils;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DataEncoder {
 
@@ -50,9 +48,6 @@ public class DataEncoder {
         scratch.putLong(tableId << 1);
         scratch.putLong(hashId);
         scratch.putLong(SNAPSHOT_ID);
-        // System.out.println("EncodeVertexKey: labelId:" + type.getLabelId() + "; tableId:" +
-        // tableId);
-        // System.out.println("scratch: [" + (tableId << 1) + "],[" + hashId + "]");
         flip(scratch);
         return new BytesRef(scratch.array(), 0, scratch.limit());
     }
@@ -107,7 +102,7 @@ public class DataEncoder {
         return new BytesRef(scratch.array(), 0, scratch.limit());
     }
 
-    private long getHashId(
+    private static long getHashId(
             int labelId, Map<Integer, PropertyValue> operationProperties, List<Integer> pkIds) {
         List<byte[]> pks = new ArrayList<>(pkIds.size());
         for (int pkId : pkIds) {
@@ -139,5 +134,59 @@ public class DataEncoder {
 
     public static void flip(Buffer buffer) {
         buffer.flip();
+    }
+
+    // For testing
+
+    private static void encode(int labelId, long tableId, String pk) {
+        Map<Integer, PropertyValue> propertiesMap = new HashMap<>();
+        propertiesMap.put(0, new PropertyValue(DataType.STRING, pk));
+        List<Integer> pkIds = new ArrayList<>();
+        pkIds.add(0);
+        ByteBuffer scratch = ByteBuffer.allocate(1 << 20);
+        long hashId = getHashId(labelId, propertiesMap, pkIds);
+        scratch.putLong(tableId << 1);
+        scratch.putLong(hashId);
+        scratch.flip();
+        System.out.println("TableId: " + scratch.getLong(0) + " | " + scratch.getLong(8));
+    }
+
+    private static void encodeTest(int id1, String s1, int id2, String s2, long expected) {
+        DataEncoder.encodeTest(id1, 0, s1, id2, 0, s2, 0, expected);
+    }
+
+    private static void encodeTest(
+            int id1,
+            long tableId1,
+            String s1,
+            int id2,
+            long tableId2,
+            String s2,
+            long expectedTableId,
+            long expectedHash) {
+        DataEncoder.encode(id1, tableId1, s1);
+        DataEncoder.encode(id2, tableId2, s2);
+        System.out.println("Expected TableId: " + expectedTableId + "; HashId: " + expectedHash);
+    }
+
+    public static void main(String[] args) {
+        long expectedHash1 = -3968787722979159891L;
+        long expectedTable1 = -9223372036854775698L;
+        int labelId1a = 11;
+        String s1a = "20230911@META_COLUMN@1@22073998@879591@265939259@4592566627";
+        long tableId1 = -4611686018427387857L;
+        int labelId1b = 11;
+        String s1b = "20230911@META_INDEX@1@16229181@824771@232467064@551697979";
+        long tableId2 = -4611686018427387854L;
+
+        long hashId2 = -6575735951890802946L;
+        int labelId2a = 5;
+        String s2a = "db24f92331e97257e4a0ad4ffc464de2M01";
+        int labelId2b = 5;
+        String s2b = "889569174b748f2f4514bf6547f12760M01";
+
+        encodeTest(
+                labelId1a, tableId1, s1a, labelId1b, tableId2, s1b, expectedTable1, expectedHash1);
+        encodeTest(labelId2a, s2a, labelId2b, s2b, hashId2);
     }
 }
