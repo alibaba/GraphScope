@@ -1466,7 +1466,7 @@ def get_default_session() -> Session:
 def get_session_by_id(handle):
     """Return the session by handle."""
     if handle not in _session_dict:
-        raise ValueError("Session {} not exists.".format(handle))
+        raise ValueError(f"Session {handle} not exists.")
     return _session_dict.get(handle)
 
 
@@ -1480,7 +1480,10 @@ class _DefaultSessionStack(object):
     def get_default(self) -> Session:
         if not self.stack:
             logger.info("Creating default session ...")
-            sess = session(cluster_type="hosts", num_workers=1)
+            sess = session(
+                cluster_type="hosts",
+                num_workers=gs_config.session.default_local_num_workers,
+            )
             sess.as_default()
         return self.stack[-1]
 
