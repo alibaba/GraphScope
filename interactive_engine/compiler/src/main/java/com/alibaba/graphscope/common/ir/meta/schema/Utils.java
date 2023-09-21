@@ -90,8 +90,12 @@ public abstract class Utils {
                     for (Object property : propertyNodes) {
                         if (property instanceof Map) {
                             Map<String, Object> propertyMap = (Map<String, Object>) property;
-                            String propertyName = (String) propertyMap.get("property_name");
-                            int propertyId = (int) propertyMap.get("property_id");
+                            String propertyName = (String) Objects.requireNonNull(
+                                        propertyMap.get("property_name"),
+                                        "property_name not exist in yaml config");
+                            int propertyId = (int) Objects.requireNonNull(
+                                        propertyMap.get("property_id"),
+                                        "property_id not exist in yaml config");
                             propNameToIdMap.put(propertyName, propertyId);
                             propertyList.add(
                                     new DefaultGraphProperty(
