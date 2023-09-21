@@ -19,7 +19,7 @@ NETWORKX				?= ON
 BUILD_TEST				?= OFF
 
 # whether to build graphlearn-torch extension (graphlearn is built by default)
-WITH_GLTORCH				?= OFF 
+WITH_GLTORCH				?= ON 
 
 # INSTALL_PREFIX is environment variable, but if it is not set, then set default value
 ifeq ($(INSTALL_PREFIX),)
