@@ -17,13 +17,14 @@
 #
 
 import base64
+import json
 import logging
 import os.path as osp
-import pickle
 import sys
 
 import graphscope.learning.graphlearn_torch as glt
 import torch
+from graphscope.learning.gl_torch_graph import GLTorchGraph
 
 logger = logging.getLogger("graphscope")
 
@@ -31,7 +32,11 @@ logger = logging.getLogger("graphscope")
 def decode_arg(arg):
     if isinstance(arg, dict):
         return arg
-    return pickle.loads(base64.b64decode(arg))
+    return json.loads(
+        base64.b64decode(arg.encode("utf-8", errors="ignore")).decode(
+            "utf-8", errors="ignore"
+        )
+    )
 
 
 def run_server_proc(proc_rank, handle, config, server_rank, dataset):
@@ -80,6 +85,7 @@ if __name__ == "__main__":
     handle = decode_arg(sys.argv[1])
     config = decode_arg(sys.argv[2])
     server_index = int(sys.argv[3])
+    config = GLTorchGraph.reverse_transform_config(config)
 
     logger.info(
         f"launch_graphlearn_torch_server handle: {handle} config: {config} server_index: {server_index}"
