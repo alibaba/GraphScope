@@ -224,9 +224,9 @@ DATABASE_CONF_DIR_NAME="conf"
 
 ################### IMAGE VERSION ###################
 GIE_DB_IMAGE_VERSION="v0.0.2"
-#GIE_DB_IMAGE_NAME="registry.cn-hongkong.aliyuncs.com/graphscope/${DB_PROD_NAME}"
-GIE_DB_IMAGE_NAME="interactive"
-GIE_DB_CONTAINER_NAME="${DB_PROD_NAME}-server-lei"
+GIE_DB_IMAGE_NAME="registry.cn-hongkong.aliyuncs.com/graphscope/${DB_PROD_NAME}"
+#GIE_DB_IMAGE_NAME="interactive"
+GIE_DB_CONTAINER_NAME="${DB_PROD_NAME}-server"
 
 
 ####################  Prepare uncreated directories ####################
