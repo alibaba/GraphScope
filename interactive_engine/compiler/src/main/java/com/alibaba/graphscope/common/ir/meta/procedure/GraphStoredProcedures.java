@@ -20,11 +20,14 @@ import com.alibaba.graphscope.common.ir.meta.reader.MetaDataReader;
 import com.google.common.collect.Maps;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.util.Map;
 
 public class GraphStoredProcedures implements StoredProcedures {
+    private static Logger logger = LoggerFactory.getLogger(GraphStoredProcedures.class);
     private final Map<String, StoredProcedureMeta> storedProcedureMetaMap;
 
     public GraphStoredProcedures(MetaDataReader reader) throws Exception {
@@ -32,6 +35,7 @@ public class GraphStoredProcedures implements StoredProcedures {
         for (InputStream inputStream : reader.getStoredProcedures()) {
             StoredProcedureMeta createdMeta = StoredProcedureMeta.Deserializer.perform(inputStream);
             this.storedProcedureMetaMap.put(createdMeta.getName(), createdMeta);
+            logger.debug("Got stored procedure: {} from reader", createdMeta.getName());
             inputStream.close();
         }
     }

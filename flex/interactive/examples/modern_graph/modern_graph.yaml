@@ -1,9 +1,5 @@
 name: modern # then must have a modern dir under ${data} directory
 store_type: mutable_csr  # v6d, groot, gart
-stored_procedures:
-  directory: plugins  # default plugins, relative to ${workspace}/${name}
-  enable_lists:
-    - ldbc_ic1
 schema:
   vertex_types:
     - type_id: 0

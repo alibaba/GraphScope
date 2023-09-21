@@ -498,21 +498,21 @@ class MutableCSRInterface {
   // get edges with input vids. return a edge list.
   std::vector<mutable_csr_graph_impl::SubGraph<label_id_t, vertex_id_t>>
   GetSubGraph(const label_id_t src_label_id, const label_id_t dst_label_id,
-              const label_id_t edge_label_id,
-              const std::string& direction_str) const {
+              const label_id_t edge_label_id, const std::string& direction_str,
+              const std::vector<std::string>& prop_names) const {
     const MutableCsrBase *csr = nullptr, *other_csr = nullptr;
     if (direction_str == "out" || direction_str == "Out" ||
         direction_str == "OUT") {
       csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
                                            edge_label_id);
-      return std::vector<sub_graph_t>{
-          sub_graph_t{csr, {src_label_id, dst_label_id, edge_label_id}}};
+      return std::vector<sub_graph_t>{sub_graph_t{
+          csr, {src_label_id, dst_label_id, edge_label_id}, prop_names}};
     } else if (direction_str == "in" || direction_str == "In" ||
                direction_str == "IN") {
       csr = db_session_.graph().get_ie_csr(src_label_id, dst_label_id,
                                            edge_label_id);
-      return std::vector<sub_graph_t>{
-          sub_graph_t{csr, {src_label_id, dst_label_id, edge_label_id}}};
+      return std::vector<sub_graph_t>{sub_graph_t{
+          csr, {src_label_id, dst_label_id, edge_label_id}, prop_names}};
     } else if (direction_str == "both" || direction_str == "Both" ||
                direction_str == "BOTH") {
       csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
@@ -520,8 +520,11 @@ class MutableCSRInterface {
       other_csr = db_session_.graph().get_ie_csr(src_label_id, dst_label_id,
                                                  edge_label_id);
       return std::vector<sub_graph_t>{
-          sub_graph_t{csr, {src_label_id, dst_label_id, edge_label_id}},
-          sub_graph_t{other_csr, {dst_label_id, src_label_id, edge_label_id}}};
+          sub_graph_t{
+              csr, {src_label_id, dst_label_id, edge_label_id}, prop_names},
+          sub_graph_t{other_csr,
+                      {dst_label_id, src_label_id, edge_label_id},
+                      prop_names}};
     } else {
       throw std::runtime_error("Not implemented - " + direction_str);
     }
