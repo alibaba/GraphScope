@@ -150,7 +150,10 @@ class BuildGLTorchExt(torch.utils.cpp_extension.BuildExtension if torch else bui
         if hasattr(self, "_gcc_use_cxx_abi"):
             return self._gcc_use_cxx_abi
         output = subprocess.run(
-            [shutil.which("cmake"), "."], capture_output=True, text=True
+            [shutil.which("cmake"), "."],
+            cwd=glt_root_path,
+            capture_output=True,
+            text=True,
         )
         import re
 
