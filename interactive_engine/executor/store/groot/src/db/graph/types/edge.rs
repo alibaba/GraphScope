@@ -152,6 +152,7 @@ pub struct EdgeInfoIter {
 
 impl EdgeInfoIter {
     pub fn next(&mut self) -> Option<EdgeInfoRef> {
+        debug!("EdgeInfoIter::next");
         loop {
             let info = self.inner.next()?.as_ref();
             if info.is_alive_at(self.si) {
@@ -161,6 +162,7 @@ impl EdgeInfoIter {
     }
 
     pub fn next_info(&mut self) -> Option<Arc<EdgeInfo>> {
+        debug!("EdgeInfoIter::next_info");
         loop {
             let info = self.inner.next()?;
             if info.is_alive_at(self.si) {
@@ -204,6 +206,7 @@ impl EdgeTypeManager {
     }
 
     pub fn get_edge(&self, si: SnapshotId, label: LabelId) -> GraphResult<EdgeInfoRef> {
+        debug!("EdgeTypeManager::get_edge");
         let guard = epoch::pin();
         let inner = self.get_inner(&guard);
         let info = res_unwrap!(inner.get_edge(si, label), get_edge, si, label)?;
@@ -212,6 +215,7 @@ impl EdgeTypeManager {
     }
 
     pub fn get_edge_info(&self, si: SnapshotId, label: LabelId) -> GraphResult<Arc<EdgeInfo>> {
+        debug!("EdgeTypeManager::get_edge_info");
         let guard = &epoch::pin();
         let inner = self.get_inner(guard);
         let ret = res_unwrap!(inner.get_edge_info(si, label), get_edge, si, label)?;
@@ -219,6 +223,7 @@ impl EdgeTypeManager {
     }
 
     pub fn get_all_edges(&self, si: SnapshotId) -> EdgeInfoIter {
+        debug!("EdgeTypeManager::get_all_edges");
         let guard = epoch::pin();
         let inner = self.get_inner(&guard);
         let iter = inner.get_all_edges();
@@ -348,6 +353,7 @@ impl EdgeManagerInner {
     }
 
     fn get_edge(&self, si: SnapshotId, label: LabelId) -> GraphResult<&EdgeInfo> {
+        debug!("EdgeManagerInner::get_edge {:?}", label);
         if let Some(info) = self.info_map.get(&label) {
             if info.lifetime.is_alive_at(si) {
                 return Ok(info.as_ref());
@@ -362,16 +368,17 @@ impl EdgeManagerInner {
     }
 
     fn get_edge_info(&self, si: SnapshotId, label: LabelId) -> GraphResult<Arc<EdgeInfo>> {
+        debug!("EdgeManagerInner::get_edge_info {:?}", label);
         if let Some(info) = self.info_map.get(&label) {
             if info.lifetime.is_alive_at(si) {
                 return Ok(info.clone());
             }
             let msg = format!("edge#{} is not alive at {}", label, si);
-            let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge, si, label);
+            let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge_info, si, label);
             return Err(err);
         }
         let msg = format!("edge#{} not found", label);
-        let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge, si, label);
+        let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge_info, si, label);
         Err(err)
     }
 
@@ -391,6 +398,7 @@ impl EdgeManagerInner {
     }
 
     fn get_all_edges(&self) -> Values<LabelId, Arc<EdgeInfo>> {
+        debug!("EdgeManagerInner::get_all_edges");
         self.info_map.values()
     }
 

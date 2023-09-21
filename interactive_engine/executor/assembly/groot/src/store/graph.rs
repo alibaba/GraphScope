@@ -368,7 +368,7 @@ fn delete_vertex<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operati
 }
 
 fn overwrite_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
-    trace!("overwrite_edge");
+    debug!("overwrite_edge");
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let edge_id_pb = parse_pb::<EdgeIdPb>(data_operation_pb.get_keyBlob())?;
@@ -388,7 +388,7 @@ fn overwrite_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operat
 }
 
 fn update_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
-    trace!("update_edge");
+    debug!("update_edge");
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let edge_id_pb = parse_pb::<EdgeIdPb>(data_operation_pb.get_keyBlob())?;
@@ -405,7 +405,7 @@ fn update_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operation
 fn clear_edge_properties<G: MultiVersionGraph>(
     graph: &G, snapshot_id: i64, op: &OperationPb,
 ) -> GraphResult<()> {
-    trace!("update_edge");
+    debug!("clear_edge_properties");
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let edge_id_pb = parse_pb::<EdgeIdPb>(data_operation_pb.get_keyBlob())?;
@@ -420,7 +420,7 @@ fn clear_edge_properties<G: MultiVersionGraph>(
 }
 
 fn delete_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
-    trace!("delete_edge");
+    debug!("delete_edge");
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let edge_id_pb = parse_pb::<EdgeIdPb>(data_operation_pb.get_keyBlob())?;

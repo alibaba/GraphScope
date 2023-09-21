@@ -129,6 +129,50 @@ public class GrootClient {
         submit(requests, callback);
     }
 
+    private long modifyVerticesAndEdge(
+            List<Vertex> vertices, List<Edge> edges, WriteTypePb writeType) {
+        List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, writeType);
+        requests.addAll(getEdgeWriteRequestPbs(edges, writeType));
+        return submit(requests);
+    }
+
+    private void modifyVerticesAndEdge(
+            List<Vertex> vertices,
+            List<Edge> edges,
+            StreamObserver<BatchWriteResponse> callback,
+            WriteTypePb writeType) {
+        List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, writeType);
+        requests.addAll(getEdgeWriteRequestPbs(edges, writeType));
+        submit(requests, callback);
+    }
+
+    public long addVerticesAndEdges(List<Vertex> vertices, List<Edge> edges) {
+        return modifyVerticesAndEdge(vertices, edges, WriteTypePb.INSERT);
+    }
+
+    public long updateVerticesAndEdges(List<Vertex> vertices, List<Edge> edges) {
+        return modifyVerticesAndEdge(vertices, edges, WriteTypePb.UPDATE);
+    }
+
+    public long deleteVerticesAndEdges(List<Vertex> vertices, List<Edge> edges) {
+        return modifyVerticesAndEdge(vertices, edges, WriteTypePb.DELETE);
+    }
+
+    public void addVerticesAndEdges(
+            List<Vertex> vertices, List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
+        modifyVerticesAndEdge(vertices, edges, callback, WriteTypePb.INSERT);
+    }
+
+    public void updateVerticesAndEdges(
+            List<Vertex> vertices, List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
+        modifyVerticesAndEdge(vertices, edges, callback, WriteTypePb.UPDATE);
+    }
+
+    public void deleteVerticesAndEdges(
+            List<Vertex> vertices, List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
+        modifyVerticesAndEdge(vertices, edges, callback, WriteTypePb.DELETE);
+    }
+
     /**
      * Add vertex by realtime write
      * @param vertex vertex that contains label and pk properties and other properties
