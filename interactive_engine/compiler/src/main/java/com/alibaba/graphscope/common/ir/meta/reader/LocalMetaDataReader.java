@@ -60,7 +60,7 @@ public class LocalMetaDataReader implements MetaDataReader {
             logger.info("Load all procedures in {}", procedurePath);
             for (File file : procedureDir.listFiles()) {
                 // if file is .yaml or .yml file
-                logger.info("Found procedure config {}", file.getName());
+                logger.debug("Found procedure config {}", file.getName());
                 if (file.getName().endsWith(".yaml") || file.getName().endsWith(".yml")) {
                     procedureInputs.add(new FileInputStream(file));
                 }
