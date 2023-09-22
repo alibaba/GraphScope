@@ -644,6 +644,8 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
   for (auto i = 0; i < vertex_type_pair_node.size(); ++i) {
     std::string src_label_name, dst_label_name;
     auto cur_node = vertex_type_pair_node[i];
+    EdgeStrategy cur_ie = ie;
+    EdgeStrategy cur_oe = oe;
     if (!get_scalar(cur_node, "source_vertex", src_label_name)) {
       LOG(ERROR) << "Expect field source_vertex for edge [" << edge_label_name
                  << "] in vertex_type_pair_relations";
@@ -661,11 +663,22 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
                  << "] to [" << dst_label_name << "] already exists";
       return false;
     }
+    // if x_csr_params presents, overwrite the default strategy
+    if (cur_node["x_csr_params"]) {
+      auto csr_node = cur_node["x_csr_params"];
+      std::string ie_str, oe_str;
+      if (get_scalar(csr_node, "outgoing_edge_strategy", oe_str)) {
+        cur_oe = StringToEdgeStrategy(oe_str);
+      }
+      if (get_scalar(csr_node, "incoming_edge_strategy", ie_str)) {
+        cur_ie = StringToEdgeStrategy(ie_str);
+      }
+    }
     VLOG(10) << "edge " << edge_label_name << " from " << src_label_name
              << " to " << dst_label_name << " with " << property_types.size()
              << " properties";
     schema.add_edge_label(src_label_name, dst_label_name, edge_label_name,
-                          property_types, prop_names, oe, ie);
+                          property_types, prop_names, cur_oe, cur_ie);
   }
 
   // check the type_id equals to storage's label_id
