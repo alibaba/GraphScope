@@ -192,6 +192,7 @@ public abstract class Utils {
     }
 
     public static final Common.DataType protoBasicDataType(RelDataType basicType) {
+        if (basicType instanceof GraphLabelType) return Common.DataType.INT32;
         switch (basicType.getSqlTypeName()) {
             case NULL:
                 return Common.DataType.NONE;
@@ -243,17 +244,10 @@ public abstract class Utils {
                     DataType.GraphDataType.Builder builder = DataType.GraphDataType.newBuilder();
                     builder.setElementOpt(
                             protoElementOpt(((GraphSchemaType) dataType).getScanOpt()));
-                    if (dataType instanceof GraphSchemaTypeList) {
-                        ((GraphSchemaTypeList) dataType)
-                                .forEach(
-                                        k -> {
-                                            builder.addGraphDataType(
-                                                    protoElementType(k, isColumnId));
-                                        });
-                    } else {
-                        builder.addGraphDataType(
-                                protoElementType((GraphSchemaType) dataType, isColumnId));
-                    }
+                    ((GraphSchemaType) dataType)
+                            .getSchemaTypeAsList()
+                            .forEach(
+                                    k -> builder.addGraphDataType(protoElementType(k, isColumnId)));
                     return DataType.IrDataType.newBuilder().setGraphType(builder.build()).build();
                 }
                 throw new UnsupportedOperationException(
@@ -322,14 +316,17 @@ public abstract class Utils {
 
     public static final DataType.GraphDataType.GraphElementLabel protoElementLabel(
             GraphLabelType labelType) {
+        Preconditions.checkArgument(
+                labelType.getLabelsEntry().size() == 1,
+                "can not convert label=" + labelType + " to proto 'GraphElementLabel'");
+        GraphLabelType.Entry entry = labelType.getSingleLabelEntry();
         DataType.GraphDataType.GraphElementLabel.Builder builder =
-                DataType.GraphDataType.GraphElementLabel.newBuilder()
-                        .setLabel(labelType.getLabelId());
-        if (labelType.getSrcLabelId() != null) {
-            builder.setSrcLabel(Int32Value.of(labelType.getSrcLabelId()));
+                DataType.GraphDataType.GraphElementLabel.newBuilder().setLabel(entry.getLabelId());
+        if (entry.getSrcLabelId() != null) {
+            builder.setSrcLabel(Int32Value.of(entry.getSrcLabelId()));
         }
-        if (labelType.getDstLabelId() != null) {
-            builder.setDstLabel(Int32Value.of(labelType.getDstLabelId()));
+        if (entry.getDstLabelId() != null) {
+            builder.setDstLabel(Int32Value.of(entry.getDstLabelId()));
         }
         return builder.build();
     }
