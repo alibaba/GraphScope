@@ -29,6 +29,7 @@ if (MPI_FOUND)
     include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
 else ()
     message(WARNING "mpi not found, build without mpi")
+endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
