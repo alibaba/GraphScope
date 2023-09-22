@@ -967,6 +967,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
