@@ -17,23 +17,27 @@
 package com.alibaba.graphscope.common.ir.type;
 
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import org.apache.calcite.linq4j.Ord;
-import org.apache.calcite.rel.type.RelDataTypeFamily;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rel.type.RelRecordType;
-import org.apache.calcite.rel.type.StructKind;
+import org.apache.calcite.rel.type.*;
+import org.apache.commons.lang3.ObjectUtils;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Denote DataType of an entity or a relation, including opt, label and attributes
  */
 public class GraphSchemaType extends RelRecordType {
-    protected GraphOpt.Source scanOpt;
-    protected GraphLabelType labelType;
+    private final GraphOpt.Source scanOpt;
+    private final GraphLabelType labelType;
+    private final List<GraphSchemaType> fuzzySchemaTypes;
 
     /**
      * @param scanOpt   entity or relation
@@ -43,11 +47,6 @@ public class GraphSchemaType extends RelRecordType {
     public GraphSchemaType(
             GraphOpt.Source scanOpt, GraphLabelType labelType, List<RelDataTypeField> fields) {
         this(scanOpt, labelType, fields, false);
-    }
-
-    protected GraphSchemaType(
-            GraphOpt.Source scanOpt, List<RelDataTypeField> fields, boolean isNullable) {
-        this(scanOpt, GraphLabelType.DEFAULT, fields, isNullable);
     }
 
     /**
@@ -62,9 +61,75 @@ public class GraphSchemaType extends RelRecordType {
             GraphLabelType labelType,
             List<RelDataTypeField> fields,
             boolean isNullable) {
+        this(scanOpt, labelType, fields, ImmutableList.of(), isNullable);
+    }
+
+    protected GraphSchemaType(
+            GraphOpt.Source scanOpt,
+            GraphLabelType labelType,
+            List<RelDataTypeField> fields,
+            List<GraphSchemaType> fuzzySchemaTypes,
+            boolean isNullable) {
         super(StructKind.NONE, fields, isNullable);
         this.scanOpt = scanOpt;
+        this.fuzzySchemaTypes = Objects.requireNonNull(fuzzySchemaTypes);
         this.labelType = labelType;
+    }
+
+    public static GraphSchemaType create(
+            List<GraphSchemaType> list, RelDataTypeFactory typeFactory) {
+        return create(list, typeFactory, false);
+    }
+
+    public static GraphSchemaType create(
+            List<GraphSchemaType> list, RelDataTypeFactory typeFactory, boolean isNullable) {
+        ObjectUtils.requireNonEmpty(list, "schema type list should not be empty");
+        if (list.size() == 1) {
+            return list.get(0);
+        }
+        GraphOpt.Source scanOpt = list.get(0).getScanOpt();
+        List<String> labelOpts = Lists.newArrayList();
+        List<RelDataTypeField> fields = Lists.newArrayList();
+        List<RelDataTypeField> commonFields = Lists.newArrayList(list.get(0).getFieldList());
+        List<GraphLabelType.Entry> fuzzyEntries = Lists.newArrayList();
+        for (GraphSchemaType type : list) {
+            Preconditions.checkArgument(
+                    !type.fuzzy(),
+                    "fuzzy label types nested in list of "
+                            + GraphSchemaType.class
+                            + " is considered to be invalid here");
+            labelOpts.add(
+                    "{label="
+                            + type.getLabelType().getLabelsString()
+                            + ", opt="
+                            + type.scanOpt
+                            + "}");
+            if (type.getScanOpt() != scanOpt) {
+                throw new IllegalArgumentException(
+                        "fuzzy label types should have the same opt, but is " + labelOpts);
+            }
+            fields.addAll(type.getFieldList());
+            commonFields.retainAll(type.getFieldList());
+            fuzzyEntries.addAll(type.getLabelType().getLabelsEntry());
+        }
+        fields =
+                fields.stream()
+                        .distinct()
+                        .map(
+                                k -> {
+                                    if (!commonFields.contains(
+                                            k)) { // can be optional for some labels
+                                        return new RelDataTypeFieldImpl(
+                                                k.getName(),
+                                                k.getIndex(),
+                                                typeFactory.createTypeWithNullability(
+                                                        k.getType(), true));
+                                    }
+                                    return k;
+                                })
+                        .collect(Collectors.toList());
+        return new GraphSchemaType(
+                scanOpt, new GraphLabelType(fuzzyEntries), fields, list, isNullable);
     }
 
     public GraphOpt.Source getScanOpt() {
@@ -118,5 +183,15 @@ public class GraphSchemaType extends RelRecordType {
     @Override
     public RelDataTypeFamily getFamily() {
         return scanOpt;
+    }
+
+    public List<GraphSchemaType> getSchemaTypes() {
+        return ObjectUtils.isEmpty(this.fuzzySchemaTypes)
+                ? ImmutableList.of(this)
+                : Collections.unmodifiableList(this.fuzzySchemaTypes);
+    }
+
+    public boolean fuzzy() {
+        return this.labelType.getLabelsEntry().size() > 1;
     }
 }

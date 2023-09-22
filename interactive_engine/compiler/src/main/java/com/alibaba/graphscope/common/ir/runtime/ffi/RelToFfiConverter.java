@@ -35,7 +35,6 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
@@ -442,7 +441,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
 
     private Pointer ffiQueryParams(AbstractBindableTableScan tableScan) {
         Set<Integer> uniqueLabelIds =
-                getGraphLabels(tableScan).stream()
+                getGraphLabels(tableScan).getLabelsEntry().stream()
                         .map(k -> k.getLabelId())
                         .collect(Collectors.toSet());
         Pointer params = LIB.initQueryParams();
@@ -570,7 +569,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
 
     private void addFilterToFfiBinder(Pointer ptrSentence, AbstractBindableTableScan tableScan) {
         Set<Integer> uniqueLabelIds =
-                getGraphLabels(tableScan).stream()
+                getGraphLabels(tableScan).getLabelsEntry().stream()
                         .map(k -> k.getLabelId())
                         .collect(Collectors.toSet());
         // add labels as select operator
@@ -602,20 +601,14 @@ public class RelToFfiConverter implements GraphRelShuttle {
         }
     }
 
-    private List<GraphLabelType> getGraphLabels(AbstractBindableTableScan tableScan) {
+    private GraphLabelType getGraphLabels(AbstractBindableTableScan tableScan) {
         List<RelDataTypeField> fields = tableScan.getRowType().getFieldList();
         Preconditions.checkArgument(
                 !fields.isEmpty() && fields.get(0).getType() instanceof GraphSchemaType,
                 "data type of graph operators should be %s ",
                 GraphSchemaType.class);
         GraphSchemaType schemaType = (GraphSchemaType) fields.get(0).getType();
-        List<GraphLabelType> labelTypes = new ArrayList<>();
-        if (schemaType instanceof GraphSchemaTypeList) {
-            ((GraphSchemaTypeList) schemaType).forEach(k -> labelTypes.add(k.getLabelType()));
-        } else {
-            labelTypes.add(schemaType.getLabelType());
-        }
-        return labelTypes;
+        return schemaType.getLabelType();
     }
 
     private void checkFfiResult(FfiResult res) {

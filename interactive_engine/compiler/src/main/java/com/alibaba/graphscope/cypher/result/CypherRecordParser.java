@@ -19,7 +19,6 @@ package com.alibaba.graphscope.cypher.result;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
 import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
@@ -224,18 +223,20 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         }
     }
 
-    private String getLabelName(Common.NameOrId nameOrId, List<GraphLabelType> labelTypes) {
+    private String getLabelName(Common.NameOrId nameOrId, @Nullable GraphLabelType labelTypes) {
         switch (nameOrId.getItemCase()) {
             case NAME:
                 return nameOrId.getName();
             case ID:
             default:
                 List<Integer> labelIds = new ArrayList<>();
-                for (GraphLabelType labelType : labelTypes) {
-                    if (labelType.getLabelId() == nameOrId.getId()) {
-                        return labelType.getLabel();
+                if (labelTypes != null) {
+                    for (GraphLabelType.Entry labelType : labelTypes.getLabelsEntry()) {
+                        if (labelType.getLabelId() == nameOrId.getId()) {
+                            return labelType.getLabel();
+                        }
+                        labelIds.add(labelType.getLabelId());
                     }
-                    labelIds.add(labelType.getLabelId());
                 }
                 logger.warn(
                         "label id={} not found, expected ids are {}", nameOrId.getId(), labelIds);
@@ -243,16 +244,18 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         }
     }
 
-    private String getSrcLabelName(Common.NameOrId nameOrId, List<GraphLabelType> labelTypes) {
+    private String getSrcLabelName(Common.NameOrId nameOrId, @Nullable GraphLabelType labelTypes) {
         switch (nameOrId.getItemCase()) {
             case NAME:
                 return nameOrId.getName();
             case ID:
             default:
                 List<Integer> labelIds = new ArrayList<>();
-                for (GraphLabelType labelType : labelTypes) {
-                    if (labelType.getSrcLabelId() == nameOrId.getId()) {
-                        return labelType.getSrcLabel();
+                if (labelTypes != null) {
+                    for (GraphLabelType.Entry labelType : labelTypes.getLabelsEntry()) {
+                        if (labelType.getSrcLabelId() == nameOrId.getId()) {
+                            return labelType.getSrcLabel();
+                        }
                     }
                 }
                 logger.warn(
@@ -263,16 +266,18 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         }
     }
 
-    private String getDstLabelName(Common.NameOrId nameOrId, List<GraphLabelType> labelTypes) {
+    private String getDstLabelName(Common.NameOrId nameOrId, @Nullable GraphLabelType labelTypes) {
         switch (nameOrId.getItemCase()) {
             case NAME:
                 return nameOrId.getName();
             case ID:
             default:
                 List<Integer> labelIds = new ArrayList<>();
-                for (GraphLabelType labelType : labelTypes) {
-                    if (labelType.getDstLabelId() == nameOrId.getId()) {
-                        return labelType.getDstLabel();
+                if (labelTypes != null) {
+                    for (GraphLabelType.Entry labelType : labelTypes.getLabelsEntry()) {
+                        if (labelType.getDstLabelId() == nameOrId.getId()) {
+                            return labelType.getDstLabel();
+                        }
                     }
                 }
                 logger.warn(
@@ -283,18 +288,12 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         }
     }
 
-    private List<GraphLabelType> getLabelTypes(RelDataType dataType) {
-        List<GraphLabelType> labelTypes = Lists.newArrayList();
-        if (dataType instanceof GraphSchemaTypeList) {
-            ((GraphSchemaTypeList) dataType)
-                    .forEach(
-                            k -> {
-                                labelTypes.add(k.getLabelType());
-                            });
-        } else if (dataType instanceof GraphSchemaType) {
-            labelTypes.add(((GraphSchemaType) dataType).getLabelType());
+    private @Nullable GraphLabelType getLabelTypes(RelDataType dataType) {
+        if (dataType instanceof GraphSchemaType) {
+            return ((GraphSchemaType) dataType).getLabelType();
+        } else {
+            return null;
         }
-        return labelTypes;
     }
 
     private RelDataType getVertexType(RelDataType graphPathType) {

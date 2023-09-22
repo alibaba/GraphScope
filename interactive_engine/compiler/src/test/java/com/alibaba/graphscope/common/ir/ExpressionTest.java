@@ -18,10 +18,11 @@ package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
-import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
-import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
+import com.alibaba.graphscope.common.ir.tools.config.*;
+import com.alibaba.graphscope.common.ir.type.GraphProperty;
+import com.google.common.collect.ImmutableList;
 
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.junit.Assert;
@@ -172,5 +173,61 @@ public class ExpressionTest {
     private SourceConfig mockSourceConfig(String alias) {
         return new SourceConfig(
                 GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"), alias);
+    }
+
+    @Test
+    public void label_1_test() {
+        RelNode node =
+                builder.source(new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(true), "a"))
+                        .expand(new ExpandConfig(GraphOpt.Expand.OUT, new LabelConfig(true), "b"))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.literal("age"),
+                                        builder.variable("b", "weight")))
+                        .getV(new GetVConfig(GraphOpt.GetV.END))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.literal("software"),
+                                        builder.variable(null, GraphProperty.LABEL_KEY)))
+                        .build();
+        System.out.println(node.explain());
+        // System.out.println(node.getRowType());
+    }
+
+//    @Test
+//    public void label_2_test() {
+//        RexNode var =
+//                builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
+//                        .variable(null, GraphProperty.LABEL_KEY);
+//        RexNode inNode =
+//                builder.getRexBuilder().makeIn(var, ImmutableList.of(builder.literal("person")));
+//        RelNode node =
+//                builder.filter(inNode)
+//                        .filter(
+//                                builder.getRexBuilder()
+//                                        .makeIn(var, ImmutableList.of(builder.literal("software"))))
+//                        .build();
+//        System.out.println(node.explain());
+//    }
+
+    @Test
+    public void label_3_test() {
+        RexNode var =
+                builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
+                        .variable(null, GraphProperty.ID_KEY);
+        RexNode inNode =
+                builder.getRexBuilder()
+                        .makeIn(var, ImmutableList.of(builder.literal(1), builder.literal(2)));
+        RelNode node =
+                builder.filter(inNode)
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.variable(null, "name"),
+                                        builder.literal("marko")))
+                        .build();
+        System.out.println(node.explain());
     }
 }

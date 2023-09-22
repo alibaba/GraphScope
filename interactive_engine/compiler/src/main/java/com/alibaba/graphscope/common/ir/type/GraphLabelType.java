@@ -16,81 +16,165 @@
 
 package com.alibaba.graphscope.common.ir.type;
 
+import com.google.common.collect.ImmutableList;
+
+import org.apache.calcite.sql.type.AbstractSqlType;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Maintain label for each Entity or Relation: Entity(label), Relation(Label, srcLabel, dstLabel).
  */
-public class GraphLabelType {
-    public static GraphLabelType DEFAULT = new GraphLabelType();
+public class GraphLabelType extends AbstractSqlType {
+    private final List<Entry> labels;
 
-    private String label;
-    private Integer labelId;
-    @Nullable private String srcLabel;
-    @Nullable private Integer srcLabelId;
-    @Nullable private String dstLabel;
-    @Nullable private Integer dstLabelId;
-
-    public GraphLabelType() {
-        this.label = StringUtils.EMPTY;
-        this.labelId = -1;
+    public GraphLabelType(Entry label) {
+        this(ImmutableList.of(label));
     }
 
-    public GraphLabelType label(String label) {
-        Objects.requireNonNull(label);
-        this.label = label;
-        return this;
+    public GraphLabelType(List<Entry> labels) {
+        this(labels, SqlTypeName.CHAR);
     }
 
-    public GraphLabelType labelId(int labelId) {
-        this.labelId = labelId;
-        return this;
+    public GraphLabelType(Entry label, SqlTypeName typeName) {
+        this(ImmutableList.of(label), typeName);
     }
 
-    public GraphLabelType srcLabel(String srcLabel) {
-        this.srcLabel = srcLabel;
-        return this;
+    public GraphLabelType(List<Entry> labels, SqlTypeName typeName) {
+        super(typeName, false, null);
+        this.labels = ObjectUtils.requireNonEmpty(labels);
+        this.computeDigest();
     }
 
-    public GraphLabelType srcLabelId(int srcLabelId) {
-        this.srcLabelId = srcLabelId;
-        return this;
+    public Entry getSingleLabelEntry() {
+        return labels.get(0);
     }
 
-    public GraphLabelType dstLabel(String dstLabel) {
-        this.dstLabel = dstLabel;
-        return this;
+    public List<Entry> getLabelsEntry() {
+        return Collections.unmodifiableList(labels);
     }
 
-    public GraphLabelType dstLabelId(int dstLabelId) {
-        this.dstLabelId = dstLabelId;
-        return this;
+    public List<String> getLabelsString() {
+        return getLabelsEntry().stream()
+                .map(k -> k.toString())
+                .collect(Collectors.toUnmodifiableList());
     }
 
-    public String getLabel() {
-        return label;
+    @Override
+    protected void generateTypeString(StringBuilder stringBuilder, boolean b) {
+        stringBuilder.append(getLabelsString());
     }
 
-    public Integer getLabelId() {
-        return labelId;
+    public void removeLabels(List<Entry> labelsToRemove) {
+        this.labels.removeAll(labelsToRemove);
     }
 
-    public @Nullable String getSrcLabel() {
-        return srcLabel;
-    }
+    public static class Entry {
+        private String label;
+        private Integer labelId;
+        @Nullable private String srcLabel;
+        @Nullable private Integer srcLabelId;
+        @Nullable private String dstLabel;
+        @Nullable private Integer dstLabelId;
 
-    public @Nullable Integer getSrcLabelId() {
-        return srcLabelId;
-    }
+        public Entry() {
+            this.label = StringUtils.EMPTY;
+            this.labelId = -1;
+        }
 
-    public @Nullable String getDstLabel() {
-        return dstLabel;
-    }
+        public Entry label(String label) {
+            Objects.requireNonNull(label);
+            this.label = label;
+            return this;
+        }
 
-    public @Nullable Integer getDstLabelId() {
-        return dstLabelId;
+        public Entry labelId(int labelId) {
+            this.labelId = labelId;
+            return this;
+        }
+
+        public Entry srcLabel(String srcLabel) {
+            this.srcLabel = srcLabel;
+            return this;
+        }
+
+        public Entry srcLabelId(int srcLabelId) {
+            this.srcLabelId = srcLabelId;
+            return this;
+        }
+
+        public Entry dstLabel(String dstLabel) {
+            this.dstLabel = dstLabel;
+            return this;
+        }
+
+        public Entry dstLabelId(int dstLabelId) {
+            this.dstLabelId = dstLabelId;
+            return this;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public Integer getLabelId() {
+            return labelId;
+        }
+
+        public @Nullable String getSrcLabel() {
+            return srcLabel;
+        }
+
+        public @Nullable Integer getSrcLabelId() {
+            return srcLabelId;
+        }
+
+        public @Nullable String getDstLabel() {
+            return dstLabel;
+        }
+
+        public @Nullable Integer getDstLabelId() {
+            return dstLabelId;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            if (srcLabel == null || dstLabel == null) {
+                builder.append("VertexLabel(");
+                builder.append(label);
+                builder.append(")");
+            } else {
+                builder.append("EdgeLabel(");
+                builder.append(label + ", " + srcLabel + ", " + dstLabel);
+                builder.append(")");
+            }
+            return builder.toString();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Entry entry = (Entry) o;
+            return Objects.equals(label, entry.label)
+                    && Objects.equals(labelId, entry.labelId)
+                    && Objects.equals(srcLabel, entry.srcLabel)
+                    && Objects.equals(srcLabelId, entry.srcLabelId)
+                    && Objects.equals(dstLabel, entry.dstLabel)
+                    && Objects.equals(dstLabelId, entry.dstLabelId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(label, labelId, srcLabel, srcLabelId, dstLabel, dstLabelId);
+        }
     }
 }

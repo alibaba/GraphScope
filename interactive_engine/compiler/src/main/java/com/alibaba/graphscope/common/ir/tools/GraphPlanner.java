@@ -72,7 +72,7 @@ public class GraphPlanner {
     private final RelOptPlanner optPlanner;
     private final RexBuilder rexBuilder;
     private final AtomicLong idGenerator;
-    private static final RelBuilderFactory relBuilderFactory =
+    public static final RelBuilderFactory relBuilderFactory =
             (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
                     GraphBuilder.create(null, (GraphOptCluster) cluster, schema);
 
@@ -258,6 +258,7 @@ public class GraphPlanner {
         // write physical plan to file
         try (PhysicalBuilder<byte[]> physicalBuilder = summary.getPhysicalBuilder()) {
             FileUtils.writeByteArrayToFile(new File(args[2]), physicalBuilder.build());
+            physicalBuilder.explain();
         }
         // write stored procedure meta to file
         LogicalPlan logicalPlan = summary.getLogicalPlan();
