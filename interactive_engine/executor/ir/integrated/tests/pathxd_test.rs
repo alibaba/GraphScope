@@ -959,4 +959,122 @@ mod test {
         result_collection.sort();
         assert_eq!(result_collection, expected_result_paths);
     }
+
+    // g.V().hasLabel("person").both("2..3", "knows").unfold()
+    fn init_path_expand_unfold_request(result_opt: i32) -> JobRequest {
+        let source_opr = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
+            idx_predicate: None,
+            meta_data: None,
+        };
+
+        let edge_expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 2,
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
+            expand_opt: 0,
+            alias: None,
+            meta_data: None,
+        };
+
+        let path_expand_opr = pb::PathExpand {
+            base: Some(edge_expand.into()),
+            start_tag: None,
+            alias: None,
+            hop_range: Some(pb::Range { lower: 2, upper: 3 }),
+            path_opt: 0, // Arbitrary
+            result_opt,
+            condition: None,
+        };
+
+        let unfold_opr = pb::Unfold { tag: None, alias: None, meta_data: None };
+
+        let mut job_builder = JobBuilder::default();
+        job_builder.add_scan_source(source_opr);
+        job_builder.shuffle(None);
+        job_builder.path_expand(path_expand_opr);
+        job_builder.unfold(unfold_opr);
+        job_builder.sink(default_sink_pb());
+
+        job_builder.build().unwrap()
+    }
+
+    #[test]
+    fn path_expand_allv_unfold_test() {
+        initialize();
+        let request = init_path_expand_unfold_request(1); // all v
+        let mut results = submit_query(request, 2);
+
+        let mut expected_result_collection: Vec<String> = vec![
+            vec!["v1", "v2", "v1"],
+            vec!["v1", "v4", "v1"],
+            vec!["v2", "v1", "v2"],
+            vec!["v2", "v1", "v4"],
+            vec!["v4", "v1", "v2"],
+            vec!["v4", "v1", "v4"],
+        ]
+        .into_iter()
+        .flat_map(|ids| ids.into_iter().map(|id| id.to_string()))
+        .collect();
+        let mut result_collection = vec![];
+
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(v) = entry.get(None).unwrap().as_vertex() {
+                        result_collection.push(format!("v{}", v.id()));
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_collection.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_collection);
+    }
+
+    #[test]
+    fn path_expand_allve_unfold_test() {
+        initialize();
+        let request = init_path_expand_unfold_request(2); // all ve
+        let mut results = submit_query(request, 2);
+
+        let mut expected_result_collection: Vec<String> = vec![
+            vec!["v1", "e[1->2]", "v2", "e[1->2]", "v1"],
+            vec!["v1", "e[1->4]", "v4", "e[1->4]", "v1"],
+            vec!["v2", "e[1->2]", "v1", "e[1->2]", "v2"],
+            vec!["v2", "e[1->2]", "v1", "e[1->4]", "v4"],
+            vec!["v4", "e[1->4]", "v1", "e[1->2]", "v2"],
+            vec!["v4", "e[1->4]", "v1", "e[1->4]", "v4"],
+        ]
+        .into_iter()
+        .flat_map(|ids| ids.into_iter().map(|id| id.to_string()))
+        .collect();
+
+        let mut result_collection = vec![];
+
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(v) = entry.get(None).unwrap().as_vertex() {
+                        result_collection.push(format!("v{}", v.id()));
+                    } else if let Some(e) = entry.get(None).unwrap().as_edge() {
+                        result_collection.push(format!("e[{}->{}]", e.src_id, e.dst_id));
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_collection.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_collection);
+    }
 }

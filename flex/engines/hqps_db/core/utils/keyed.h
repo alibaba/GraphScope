@@ -383,6 +383,21 @@ struct KeyedAggT<GI, UnTypedEdgeSet<VID_T, LabelT, typename GI::sub_graph_t>,
   }
 };
 
+template <typename GI, typename VID_T, typename LabelT, typename EDATA_T,
+          int tag_id>
+struct KeyedAggT<GI, FlatEdgeSet<VID_T, LabelT, EDATA_T>, AggFunc::COUNT,
+                 std::tuple<grape::EmptyType>,
+                 std::integer_sequence<int32_t, tag_id>> {
+  using agg_res_t = Collection<size_t>;
+  using aggregate_res_builder_t = CountBuilder<tag_id>;
+
+  static aggregate_res_builder_t create_agg_builder(
+      const FlatEdgeSet<VID_T, LabelT, EDATA_T>& set, const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
+    return CountBuilder<tag_id>();
+  }
+};
+
 template <typename LabelT, typename KEY_T, typename VID_T, typename... T,
           typename ELE, typename DATA>
 static inline auto insert_into_builder_v2_impl(

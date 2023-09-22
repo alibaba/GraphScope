@@ -64,7 +64,8 @@ public class SinkOutputProcessor implements InterOpProcessor {
                 continue;
             } else if (cur instanceof ExpandOp
                     || cur instanceof ScanFusionOp
-                    || cur instanceof GetVOp) {
+                    || cur instanceof GetVOp
+                    || cur instanceof UnfoldOp) {
                 sinkArg.addColumnName(ArgUtils.asNoneNameOrId());
                 break;
             } else if (cur instanceof ProjectOp) {

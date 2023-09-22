@@ -311,7 +311,7 @@ setup(
         "parse": parse_version,
     },
     setup_requires=[
-        "setuptools_scm>=5.0.0",
+        "setuptools_scm>=5.0.0,<8",
     ],
     package_dir=resolve_graphscope_package_dir(),
     packages=find_graphscope_packages(),

@@ -343,9 +343,11 @@ class FlatEdgeSet {
         new_label_triplet_ind.emplace_back(label_triplet_ind_[i]);
       }
     }
+    auto copied_label_triplet = label_triplet_;
 
-    return self_type_t(std::move(new_vec), label_triplet_, prop_names_,
-                       std::move(new_label_triplet_ind), direction_);
+    return self_type_t(std::move(new_vec), std::move(copied_label_triplet),
+                       prop_names_, std::move(new_label_triplet_ind),
+                       direction_);
   }
 
   void Repeat(std::vector<offset_t>& cur_offset,
