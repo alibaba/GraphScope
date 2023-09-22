@@ -71,6 +71,10 @@ public abstract class ExternalStorage {
             chkFile.delete();
             return;
         }
+        if (chkArray.length != 2) {
+            throw new IOException(
+                    "Checksum format error: content: [" + chkArray + "]; path: " + chkPath);
+        }
         String chkMD5Value = chkArray[1];
         downloadDataSimple(srcPath, dstPath);
         String sstMD5Value = getFileMD5(dstPath);

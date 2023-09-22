@@ -14,15 +14,12 @@
 package com.alibaba.graphscope.groot.dataload.databuild;
 
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
-import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
-import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.common.util.UuidUtils;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.proto.groot.DataLoadTargetPb;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.hadoop.conf.Configuration;
@@ -55,8 +52,7 @@ public class OfflineBuild {
         }
         String inputPath = properties.getProperty(DataLoadConfig.INPUT_PATH);
         String outputPath = properties.getProperty(DataLoadConfig.OUTPUT_PATH);
-        String columnMappingConfigStr =
-                properties.getProperty(DataLoadConfig.COLUMN_MAPPING_CONFIG);
+        String configStr = properties.getProperty(DataLoadConfig.COLUMN_MAPPING_CONFIG);
         String graphEndpoint = properties.getProperty(DataLoadConfig.GRAPH_ENDPOINT);
 
         String uniquePath =
@@ -65,51 +61,29 @@ public class OfflineBuild {
         String username = properties.getProperty(DataLoadConfig.USER_NAME, "");
         String password = properties.getProperty(DataLoadConfig.PASS_WORD, "");
 
-        GrootClient client =
-                GrootClient.newBuilder()
-                        .setHosts(graphEndpoint)
-                        .setUsername(username)
-                        .setPassword(password)
-                        .build();
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, FileColumnMapping> columnMappingConfig =
-                objectMapper.readValue(
-                        columnMappingConfigStr,
-                        new TypeReference<Map<String, FileColumnMapping>>() {});
+        GrootClient client = Utils.getClient(graphEndpoint, username, password);
 
-        List<DataLoadTargetPb> targets = new ArrayList<>();
-        for (FileColumnMapping fileColumnMapping : columnMappingConfig.values()) {
-            DataLoadTargetPb.Builder builder = DataLoadTargetPb.newBuilder();
-            builder.setLabel(fileColumnMapping.getLabel());
-            if (fileColumnMapping.getSrcLabel() != null) {
-                builder.setSrcLabel(fileColumnMapping.getSrcLabel());
-            }
-            if (fileColumnMapping.getDstLabel() != null) {
-                builder.setDstLabel(fileColumnMapping.getDstLabel());
-            }
-            targets.add(builder.build());
-        }
+        Map<String, FileColumnMapping> columnMappingConfig = Utils.parseColumnMapping(configStr);
+        List<DataLoadTargetPb> targets = Utils.getDataLoadTargets(columnMappingConfig);
         GraphSchema schema = GraphDef.parseProto(client.prepareDataLoad(targets));
-        String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
         int partitionNum = client.getPartitionNum();
 
-        Map<String, ColumnMappingInfo> columnMappingInfos = new HashMap<>();
+        Map<String, ColumnMappingInfo> info = new HashMap<>();
         columnMappingConfig.forEach(
                 (fileName, fileColumnMapping) -> {
-                    columnMappingInfos.put(fileName, fileColumnMapping.toColumnMappingInfo(schema));
+                    info.put(fileName, fileColumnMapping.toColumnMappingInfo(schema));
                 });
-        String ldbcCustomize = properties.getProperty(DataLoadConfig.LDBC_CUSTOMIZE, "true");
-        long splitSize =
-                Long.parseLong(properties.getProperty(DataLoadConfig.SPLIT_SIZE, "256"))
-                        * 1024
-                        * 1024;
-        boolean loadAfterBuild =
-                properties
-                        .getProperty(DataLoadConfig.LOAD_AFTER_BUILD, "false")
-                        .equalsIgnoreCase("true");
-        boolean skipHeader =
-                properties.getProperty(DataLoadConfig.SKIP_HEADER, "true").equalsIgnoreCase("true");
+
+        String _tmp = properties.getProperty(DataLoadConfig.SPLIT_SIZE, "256");
+        long splitSize = Long.parseLong(_tmp) * 1024 * 1024;
+        _tmp = properties.getProperty(DataLoadConfig.LOAD_AFTER_BUILD, "false");
+        boolean loadAfterBuild = Utils.parseBoolean(_tmp);
+        _tmp = properties.getProperty(DataLoadConfig.SKIP_HEADER, "true");
+        boolean skipHeader = Utils.parseBoolean(_tmp);
         String separator = properties.getProperty(DataLoadConfig.SEPARATOR, "\\|");
+
+        ObjectMapper mapper = new ObjectMapper();
+        String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
 
         Configuration conf = new Configuration();
         conf.setBoolean("mapreduce.map.speculative", false);
@@ -117,9 +91,8 @@ public class OfflineBuild {
         conf.setLong(CombineTextInputFormat.SPLIT_MINSIZE_PERNODE, splitSize);
         conf.setLong(CombineTextInputFormat.SPLIT_MINSIZE_PERRACK, splitSize);
         conf.setStrings(DataLoadConfig.SCHEMA_JSON, schemaJson);
-        String mappings = objectMapper.writeValueAsString(columnMappingInfos);
+        String mappings = mapper.writeValueAsString(info);
         conf.setStrings(DataLoadConfig.COLUMN_MAPPINGS, mappings);
-        conf.setBoolean(DataLoadConfig.LDBC_CUSTOMIZE, ldbcCustomize.equalsIgnoreCase("true"));
         conf.set(DataLoadConfig.SEPARATOR, separator);
         conf.setBoolean(DataLoadConfig.SKIP_HEADER, skipHeader);
         Job job = Job.getInstance(conf, "build graph data");
@@ -150,34 +123,25 @@ public class OfflineBuild {
 
         FileSystem fs = outputDir.getFileSystem(job.getConfiguration());
         FSDataOutputStream os = fs.create(new Path(outputDir, "META"));
-        os.writeUTF(objectMapper.writeValueAsString(outputMeta));
+        os.writeUTF(mapper.writeValueAsString(outputMeta));
         os.flush();
         os.close();
 
         if (loadAfterBuild) {
             String dataPath = fs.makeQualified(outputDir).toString();
-
-            logger.info("start ingesting data");
-            client.ingestData(dataPath);
-
-            logger.info("commit bulk load");
-            Map<Long, DataLoadTargetPb> tableToTarget = new HashMap<>();
-            for (ColumnMappingInfo columnMappingInfo : columnMappingInfos.values()) {
-                long tableId = columnMappingInfo.getTableId();
-                int labelId = columnMappingInfo.getLabelId();
-                GraphElement graphElement = schema.getElement(labelId);
-                String label = graphElement.getLabel();
-                DataLoadTargetPb.Builder builder = DataLoadTargetPb.newBuilder();
-                builder.setLabel(label);
-                if (graphElement instanceof GraphEdge) {
-                    builder.setSrcLabel(
-                            schema.getElement(columnMappingInfo.getSrcLabelId()).getLabel());
-                    builder.setDstLabel(
-                            schema.getElement(columnMappingInfo.getDstLabelId()).getLabel());
+            logger.info("start ingesting data from " + dataPath);
+            try {
+                client.ingestData(dataPath);
+                logger.info("start committing bulk load");
+                Map<Long, DataLoadTargetPb> tableToTarget = Utils.getTableToTargets(schema, info);
+                client.commitDataLoad(tableToTarget, uniquePath);
+            } finally {
+                try {
+                    client.clearIngest(uniquePath);
+                } catch (Exception e) {
+                    logger.warn("Clear ingest failed, ignored");
                 }
-                tableToTarget.put(tableId, builder.build());
             }
-            client.commitDataLoad(tableToTarget, uniquePath);
         }
     }
 }
