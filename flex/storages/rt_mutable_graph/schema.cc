@@ -705,7 +705,8 @@ static bool parse_schema_config_file(const std::string& path, Schema& schema) {
     return false;
   }
   if (!expect_config(graph_node, "store_type", std::string("mutable_csr"))) {
-    return false;
+    LOG(WARNING) << "store_type is not set properly, use default value: "
+                 << "mutable_csr";
   }
   auto schema_node = graph_node["schema"];
 
@@ -723,21 +724,60 @@ static bool parse_schema_config_file(const std::string& path, Schema& schema) {
       return false;
     }
   }
+  // get the directory of path
+  auto parent_dir = std::filesystem::path(path).parent_path().string();
 
   if (graph_node["stored_procedures"]) {
     auto stored_procedure_node = graph_node["stored_procedures"];
     auto directory = stored_procedure_node["directory"].as<std::string>();
     // check is directory
     if (!std::filesystem::exists(directory)) {
-      LOG(WARNING) << "plugin directory - " << directory << " not found...";
+      LOG(ERROR) << "plugin directory - " << directory
+                 << " not found, try with parent dir:" << parent_dir;
+      directory = parent_dir + "/" + directory;
+      if (!std::filesystem::exists(directory)) {
+        LOG(ERROR) << "plugin directory - " << directory << " not found...";
+        return true;
+      }
     }
+    schema.SetPluginDir(directory);
     std::vector<std::string> files_got;
     if (!get_sequence(stored_procedure_node, "enable_lists", files_got)) {
       LOG(ERROR) << "stored_procedures is not set properly";
+      return true;
     }
+    std::vector<std::string> all_procedure_yamls = get_yaml_files(directory);
+    std::vector<std::string> all_procedure_names;
+    {
+      // get all procedure names
+      for (auto& f : all_procedure_yamls) {
+        YAML::Node procedure_node = YAML::LoadFile(f);
+        if (!procedure_node || !procedure_node.IsMap()) {
+          LOG(ERROR) << "procedure is not set properly";
+          return false;
+        }
+        std::string procedure_name;
+        if (!get_scalar(procedure_node, "name", procedure_name)) {
+          LOG(ERROR) << "name is not set properly for " << f;
+          return false;
+        }
+        all_procedure_names.push_back(procedure_name);
+      }
+    }
+
     for (auto& f : files_got) {
-      if (!std::filesystem::exists(f)) {
-        LOG(ERROR) << "plugin - " << f << " file not found...";
+      auto real_file = directory + "/" + f;
+      if (!std::filesystem::exists(real_file)) {
+        LOG(ERROR) << "plugin - " << real_file << " file not found...";
+        // it seems that f is not the filename, but the plugin name, try to find
+        // the plugin in the directory
+        if (std::find(all_procedure_names.begin(), all_procedure_names.end(),
+                      f) == all_procedure_names.end()) {
+          LOG(ERROR) << "plugin - " << f << " not found...";
+        } else {
+          VLOG(1) << "plugin - " << f << " found...";
+          schema.EmplacePlugin(f);
+        }
       } else {
         schema.EmplacePlugin(std::filesystem::canonical(f));
       }
@@ -756,6 +796,10 @@ const std::vector<std::string>& Schema::GetPluginsList() const {
 void Schema::EmplacePlugin(const std::string& plugin) {
   plugin_list_.emplace_back(plugin);
 }
+
+void Schema::SetPluginDir(const std::string& dir) { plugin_dir_ = dir; }
+
+std::string Schema::GetPluginDir() const { return plugin_dir_; }
 
 // check whether prop in vprop_names, or is the primary key
 bool Schema::vertex_has_property(const std::string& label,

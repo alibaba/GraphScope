@@ -54,8 +54,8 @@ jobs:
         cd flex/engines/graph_db/grin
         mkdir build && cd build
         cmake .. && sudo make -j$(nproc)
-        export FLEX_DATA_DIR=../../../../storages/rt_mutable_graph/modern_graph/
-        ./run_grin_test
+        export FLEX_DATA_DIR=../../../../interactive/examples/modern_graph/
+        ./run_grin_test 'flex://schema_file=../../../../interactive/examples/modern_graph/modern_graph.yaml&bulk_load_file=../../../../interactive/examples/modern_graph/bulk_load.yaml'
 
     - name: Test Graph Loading on modern graph
       env:
