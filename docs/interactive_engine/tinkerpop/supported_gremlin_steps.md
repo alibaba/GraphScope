@@ -571,6 +571,7 @@ The unfold()-step unrolls an iterator, iterable or map into a linear form.
 g.V().fold().unfold().values("id")
 g.V().fold().as("a").unfold().values("id")
 g.V().has("name", "marko").fold().as("a").select("a").unfold().values("id")
+g.V().out("1..3", "knows").with('RESULT_OPT', 'ALL_V').unfold()
 ```
 ## Syntactic Sugars
 The following steps are extended to denote more complex situations.

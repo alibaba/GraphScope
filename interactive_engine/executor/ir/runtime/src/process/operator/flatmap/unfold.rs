@@ -81,10 +81,24 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
                 }
                 Ok(Box::new(res.into_iter()))
             }
-            EntryType::Path => Err(FnExecError::unsupported_error(&format!(
-                "unfold path entry {:?} in UnfoldOperator",
-                input.get(self.tag),
-            )))?,
+            EntryType::Path => {
+                let entry = input.get(self.tag).unwrap();
+                let path = entry
+                    .as_graph_path()
+                    .ok_or(FnExecError::unexpected_data_error("downcast path entry in UnfoldOperatro"))?;
+                let path_vec = if let Some(path) = path.get_path() {
+                    path.clone()
+                } else {
+                    vec![path.get_path_end().clone()]
+                };
+                let mut res = Vec::with_capacity(path_vec.len());
+                for item in path_vec {
+                    let mut new_entry = input.clone();
+                    new_entry.append(item, self.alias);
+                    res.push(new_entry)
+                }
+                Ok(Box::new(res.into_iter()))
+            }
             _ => Err(FnExecError::unexpected_data_error(&format!(
                 "unfold entry {:?} in UnfoldOperator",
                 input.get(self.tag)
