@@ -260,7 +260,7 @@ def parsed_package_data():
 
 def build_learning_engine():
     ext_modules = [graphlearn_ext()]
-    if torch:
+    if torch and os.path.exists(glt_root_path):
         sys.path.append(
             os.path.join(glt_root_path, "graphlearn_torch", "python", "utils")
         )
