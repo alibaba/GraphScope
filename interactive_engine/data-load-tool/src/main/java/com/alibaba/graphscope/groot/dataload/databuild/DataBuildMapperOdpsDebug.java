@@ -137,7 +137,7 @@ public class DataBuildMapperOdpsDebug extends MapperBase {
         ByteBuffer buffer = ByteBuffer.wrap(keyRef.getBytes());
         long tableId = buffer.getLong(0);
         long hashId = buffer.getLong(8);
-        return tableId + "|" + hashId;
+        return tableId + "/" + hashId;
     }
 
     private String getEdgeKeyEncoded(BytesRef keyRef) {
@@ -146,6 +146,6 @@ public class DataBuildMapperOdpsDebug extends MapperBase {
         long srcHashId = buffer.getLong(8);
         long dstHashId = buffer.getLong(16);
         long eid = buffer.getLong(24);
-        return tableId + "|" + srcHashId + "|" + dstHashId + "|" + eid;
+        return tableId + "/" + srcHashId + "/" + dstHashId + "/" + eid;
     }
 }
