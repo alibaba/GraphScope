@@ -19,6 +19,7 @@ import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
+import com.alibaba.graphscope.groot.common.util.SchemaUtils;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.data.TableInfo;
 import com.aliyun.odps.mapred.MapperBase;
@@ -29,25 +30,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
+import java.nio.ByteBuffer;
 import java.util.*;
 
-public class DataBuildMapperOdps extends MapperBase {
-    private static final Logger logger = LoggerFactory.getLogger(DataBuildMapperOdps.class);
-    public static final SimpleDateFormat DST_FMT = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-    public static String charSet = "ISO8859-1";
-
+public class DataBuildMapperOdpsDebug extends MapperBase {
+    private static final Logger logger = LoggerFactory.getLogger(DataBuildMapperOdpsDebug.class);
     private GraphSchema graphSchema;
     private DataEncoder dataEncoder;
     private Map<String, ColumnMappingInfo> fileToColumnMappingInfo;
 
     private Record outKey;
-    private Record outVal;
 
     @Override
     public void setup(TaskContext context) throws IOException {
-        outKey = context.createMapOutputKeyRecord();
-        outVal = context.createMapOutputValueRecord();
+        outKey = context.createOutputRecord();
 
         String metaData = context.getJobConf().get(DataLoadConfig.META_INFO);
         ObjectMapper objectMapper = new ObjectMapper();
@@ -60,7 +56,6 @@ public class DataBuildMapperOdps extends MapperBase {
         fileToColumnMappingInfo =
                 objectMapper.readValue(
                         columnMappingsJson, new TypeReference<Map<String, ColumnMappingInfo>>() {});
-        DST_FMT.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
     }
 
     @Override
@@ -72,6 +67,7 @@ public class DataBuildMapperOdps extends MapperBase {
             logger.warn("Mapper: ignore [{}], table info: [{}]", identifier, tableInfo);
             return;
         }
+
         String[] items = Utils.parseRecords(record);
 
         int labelId = info.getLabelId();
@@ -79,27 +75,77 @@ public class DataBuildMapperOdps extends MapperBase {
         GraphElement type = this.graphSchema.getElement(labelId);
         Map<Integer, Integer> colMap = info.getPropertiesColMap();
         Map<Integer, PropertyValue> properties = Utils.buildProperties(type, items, colMap);
-
-        BytesRef valRef = this.dataEncoder.encodeProperties(labelId, properties);
-        outVal.set(new Object[] {new String(valRef.getBytes(), charSet)});
         if (type instanceof GraphVertex) {
+            outKey.set(1, getVertexRawKeys((GraphVertex) type, colMap, items));
             BytesRef keyRef =
                     Utils.getVertexKeyRef(dataEncoder, (GraphVertex) type, properties, tableId);
-            outKey.set(new Object[] {new String(keyRef.getBytes(), charSet)});
-            context.write(outKey, outVal);
+            outKey.set(0, getVertexKeyEncoded(keyRef));
+            context.write(outKey);
         } else if (type instanceof GraphEdge) {
+            outKey.set(1, getEdgeRawKeys(info, items));
             BytesRef out =
                     Utils.getEdgeKeyRef(
                             dataEncoder, graphSchema, info, items, properties, tableId, true);
-            outKey.set(new Object[] {new String(out.getBytes(), charSet)});
-            context.write(outKey, outVal);
+            outKey.set(0, getEdgeKeyEncoded(out));
+            context.write(outKey);
             BytesRef in =
                     Utils.getEdgeKeyRef(
                             dataEncoder, graphSchema, info, items, properties, tableId, false);
-            outKey.set(new Object[] {new String(in.getBytes(), charSet)});
-            context.write(outKey, outVal);
+            outKey.set(0, getEdgeKeyEncoded(in));
+            context.write(outKey);
         } else {
             throw new IllegalArgumentException("Invalid label " + labelId);
         }
+    }
+
+    private String getVertexRawKeys(GraphVertex type, Map<Integer, Integer> colMap, String[] items)
+            throws IOException {
+        List<Integer> pkIds = SchemaUtils.getVertexPrimaryKeyList(type);
+        List<Integer> indices = new ArrayList<>();
+        colMap.forEach(
+                (idx, propId) -> {
+                    if (pkIds.contains(propId)) {
+                        indices.add(idx);
+                    }
+                });
+        return concatenateItemsByIndices(items, indices);
+    }
+
+    private String getEdgeRawKeys(ColumnMappingInfo info, String[] items) throws IOException {
+        Map<Integer, Integer> srcPkColMap = info.getSrcPkColMap();
+        Map<Integer, Integer> dstPkColMap = info.getDstPkColMap();
+
+        List<Integer> pkIds = new ArrayList<>(srcPkColMap.keySet());
+        pkIds.addAll(dstPkColMap.keySet());
+        return concatenateItemsByIndices(items, pkIds);
+    }
+
+    private static String concatenateItemsByIndices(String[] array, List<Integer> indices)
+            throws IOException {
+        StringBuilder builder = new StringBuilder();
+        if (indices.isEmpty()) {
+            throw new IOException("indices are empty!");
+        }
+        for (int index : indices) {
+            builder.append(array[index]).append(",");
+        }
+        builder.deleteCharAt(builder.length() - 1);
+        return builder.toString();
+    }
+
+    private String getVertexKeyEncoded(BytesRef keyRef) {
+        ByteBuffer buffer = ByteBuffer.wrap(keyRef.getBytes());
+        long tableId = buffer.getLong(0);
+        long hashId = buffer.getLong(8);
+        return tableId + "/" + hashId;
+    }
+
+    private String getEdgeKeyEncoded(BytesRef keyRef) {
+        ByteBuffer buffer = ByteBuffer.wrap(keyRef.getBytes());
+        long tableId = buffer.getLong(0);
+        long srcHashId = buffer.getLong(8);
+        long dstHashId = buffer.getLong(16);
+        long eid = buffer.getLong(24);
+        return tableId + "/" + srcHashId + "/" + dstHashId + "/" + eid;
     }
 }
