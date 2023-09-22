@@ -352,6 +352,22 @@ class Collection {
     LOG(WARNING) << " Not implemented";
   }
 
+  std::vector<offset_t> Dedup() {
+    std::vector<offset_t> offsets;
+    std::vector<T> new_vec;
+    std::unordered_map<T, size_t, boost::hash<T>> map;
+    for (size_t ind = 0; ind < vec_.size(); ++ind) {
+      offsets.emplace_back(new_vec.size());
+      auto ret = map.insert({vec_[ind], ind});
+      if (ret.second == true) {
+        new_vec.emplace_back(vec_[ind]);
+      }
+    }
+    offsets.emplace_back(new_vec.size());
+    vec_.swap(new_vec);
+    return offsets;
+  }
+
   iterator begin() const { return iterator(vec_, 0); }
 
   iterator end() const { return iterator(vec_, vec_.size()); }

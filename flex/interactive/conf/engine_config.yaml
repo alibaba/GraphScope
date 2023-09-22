@@ -9,5 +9,5 @@ compiler:
     rules:
       - FilterIntoJoinRule
       - FilterMatchRule
-      - NotExistToAntiJoinRule
+      - NotMatchToAntiJoinRule
   query_timeout: 20000 # query timeout in milliseconds, default 2000

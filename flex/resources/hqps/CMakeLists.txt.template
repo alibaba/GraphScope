@@ -23,6 +23,13 @@ else()
         message(FATAL_ERROR "FLEX_INCLUDE_PREFIX not set")
 endif()
 
+# try to find mpi, if not found warnning
+find_package(MPI)
+if (MPI_FOUND)
+    include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
+else ()
+    message(WARNING "mpi not found, build without mpi")
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Wl,-rpath,$ORIGIN -O3 -flto -Werror=unused-result -fPIC -no-pie")
