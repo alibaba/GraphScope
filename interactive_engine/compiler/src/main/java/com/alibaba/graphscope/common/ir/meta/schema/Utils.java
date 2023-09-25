@@ -160,15 +160,14 @@ public abstract class Utils {
                     case "DT_STRING":
                         return DataType.STRING;
                     case "DT_DATE32":
-                        return DataType.DATE;
+                        return DataType.DATE32;
+                    case "DT_TIME32":
+                        return DataType.TIME32;
+                    case "TIMESTAMP":
+                        return DataType.TIMESTAMP;
                     default:
                         throw new UnsupportedOperationException(
                                 "unsupported primitive type: " + value);
-                }
-            } else if ((value = typeMap.get("date")) instanceof Map) {
-                Object format = ((Map) value).get("date_format");
-                if (format != null && format.toString().equals("DF_YYYY_MM_DD")) {
-                    return DataType.DATE;
                 }
             }
         }
@@ -274,7 +273,11 @@ public abstract class Utils {
             case 9:
                 return DataType.STRING_LIST;
             case 12:
-                return DataType.DATE;
+                return DataType.DATE32;
+            case 13:
+                return DataType.TIME32;
+            case 14:
+                return DataType.TIMESTAMP;
             default:
                 throw new UnsupportedOperationException(
                         "convert from ir core type " + ordinal + " to DataType is unsupported yet");
