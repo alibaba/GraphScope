@@ -18,7 +18,6 @@ use std::sync::Arc;
 use graph_proxy::apis::cluster_info::ClusterInfo;
 use graph_proxy::apis::partitioner::{PartitionInfo, PartitionKeyId};
 use graph_proxy::GraphProxyResult;
-use pegasus::server_id;
 
 pub type WorkerId = u64;
 
