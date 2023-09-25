@@ -111,7 +111,7 @@ static std::string logical_to_str(const common::Logical& logical) {
   case common::Logical::WITHIN:
     return "< WithIn > ";
   case common::Logical::ISNULL:
-    return "IsNull";
+    return "NONE ==";  // Convert
   default:
     throw std::runtime_error("unknown logical");
   }
