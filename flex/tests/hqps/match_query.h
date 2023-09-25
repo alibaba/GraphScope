@@ -623,5 +623,64 @@ class MatchQuery10 : public HqpsAppBase<gs::MutableCSRInterface> {
   }
 };
 
+struct MatchQuery11Expr0 {
+ public:
+  using result_t = bool;
+  MatchQuery11Expr0() {}
+
+  inline auto operator()(Date var0) const {
+    return gs::DateTimeExtractor<Interval::MONTH>::extract(var0) == 7;
+  }
+
+ private:
+};
+
+struct MatchQuery11Expr1 {
+ public:
+  using result_t = int64_t;
+  MatchQuery11Expr1() {}
+
+  inline auto operator()(Date var1) const {
+    return gs::DateTimeExtractor<Interval::MONTH>::extract(var1);
+  }
+
+ private:
+};
+
+// Auto generated query class definition
+class MatchQuery11 : public HqpsAppBase<gs::MutableCSRInterface> {
+ public:
+  using Engine = SyncEngine<gs::MutableCSRInterface>;
+  using label_id_t = typename gs::MutableCSRInterface::label_id_t;
+  using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  // Query function for query class
+  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+    auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
+        graph, 1, Filter<TruePredicate>());
+
+    auto ctx1 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx0),
+        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+            gs::PropertySelector<Date>("birthday"))});
+    auto expr0 = gs::make_filter(MatchQuery11Expr0(),
+                                 gs::PropertySelector<Date>("None"));
+    auto ctx2 = Engine::template Select<INPUT_COL_ID(0)>(graph, std::move(ctx1),
+                                                         std::move(expr0));
+
+    auto ctx3 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx2),
+        std::tuple{gs::make_mapper_with_expr<0>(
+            MatchQuery11Expr1(), gs::PropertySelector<Date>("None"))});
+    return Engine::Sink(ctx3, std::array<int32_t, 1>{2});
+  }
+  // Wrapper query function for query class
+  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
+                                   Decoder& decoder) const override {
+    // decoding params from decoder, and call real query func
+
+    return Query(graph);
+  }
+};
+
 }  // namespace gs
 #endif  // TESTS_HQPS_MATCH_QUERY_H_
