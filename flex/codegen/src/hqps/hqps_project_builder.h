@@ -214,6 +214,10 @@ std::string project_variable_mapping_to_string(BuildingContext& ctx,
       } else if (prop.item_case() == common::Property::kLen) {
         prop_names.push_back("length");
         data_types.push_back(codegen::DataType::kLength);
+      } else if (prop.item_case() == common::Property::kLabel) {
+        // return the label id.
+        prop_names.push_back("label");
+        data_types.push_back(codegen::DataType::kLabelId);
       } else {
         LOG(FATAL) << "Unknown property type" << prop.DebugString();
       }

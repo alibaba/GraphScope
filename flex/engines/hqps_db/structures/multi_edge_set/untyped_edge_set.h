@@ -195,6 +195,26 @@ class UnTypedEdgeSet {
                     src_vertices_.size());
   }
 
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> res;
+    res.reserve(Size());
+    for (auto i = 0; i < src_vertices_.size(); ++i) {
+      auto label_ind = label_indices_[i];
+      auto label = src_labels_[label_ind];
+      if (adj_lists_.find(label) != adj_lists_.end()) {
+        auto& sub_graphs = adj_lists_.at(label);
+        for (auto& sub_graph : sub_graphs) {
+          auto edge_iters = sub_graph.get_edges(src_vertices_[i]);
+          auto edge_label = sub_graph.GetEdgeLabel();
+          for (auto j = 0; j < edge_iters.Size(); ++j) {
+            res.emplace_back(edge_label);
+          }
+        }
+      }
+    }
+    return res;
+  }
+
   size_t Size() const {
     if (size_ == 0) {
       auto iter_vec = generate_iters();

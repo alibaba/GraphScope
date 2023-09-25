@@ -378,10 +378,11 @@ class SinkOp {
     }
   }
 
-  // sink collection of pod
+  // sink collection of pod, expect for LabelKey type
   template <size_t Ind, size_t act_tag_id, typename T,
-            typename std::enable_if<(!gs::is_vector<T>::value) &&
-                                    (!gs::is_tuple<T>::value)>::type* = nullptr>
+            typename std::enable_if<
+                (!gs::is_vector<T>::value) && (!gs::is_tuple<T>::value) &&
+                (!std::is_same<T, LabelKey>::value)>::type* = nullptr>
   static void sink_col_impl(results::CollectiveResults& results_vec,
                             const Collection<T>& collection,
                             const std::vector<size_t>& repeat_offsets,
@@ -412,6 +413,43 @@ class SinkOp {
           auto common_value_ptr =
               new_col->mutable_entry()->mutable_element()->mutable_object();
           template_set_value<T>(common_value_ptr, collection.Get(i));
+        }
+      }
+    }
+  }
+
+  // sink collection of LabelKey
+  template <size_t Ind, size_t act_tag_id>
+  static void sink_col_impl(results::CollectiveResults& results_vec,
+                            const Collection<LabelKey>& collection,
+                            const std::vector<size_t>& repeat_offsets,
+                            int32_t tag_id) {
+    if (repeat_offsets.empty()) {
+      CHECK(collection.Size() == results_vec.results_size())
+          << "size neq " << collection.Size() << " "
+          << results_vec.results_size();
+      for (auto i = 0; i < collection.Size(); ++i) {
+        auto row = results_vec.mutable_results(i);
+        CHECK(row->record().columns_size() == Ind);
+        auto record = row->mutable_record();
+        auto new_col = record->add_columns();
+        new_col->mutable_name_or_id()->set_id(tag_id);
+        auto obj =
+            new_col->mutable_entry()->mutable_element()->mutable_object();
+        obj->set_i32(collection.Get(i).label_id);
+      }
+    } else {
+      CHECK(repeat_offsets.size() == collection.Size());
+      size_t cur_ind = 0;
+      for (auto i = 0; i < collection.Size(); ++i) {
+        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+          auto row = results_vec.mutable_results(cur_ind++);
+          auto record = row->mutable_record();
+          auto new_col = record->add_columns();
+          new_col->mutable_name_or_id()->set_id(tag_id);
+          auto obj =
+              new_col->mutable_entry()->mutable_element()->mutable_object();
+          obj->set_i32(collection.Get(i).label_id);
         }
       }
     }
