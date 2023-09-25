@@ -185,12 +185,12 @@ gid=$(id -g)
 HOST_DB_RUNNING_FILE="${HOST_DB_HOME}/.running"
 HOST_DB_ENV_FILE="${HOST_DB_HOME}/.env"
 
-DOCKER_DB_GRAPHSCOPE_HOME="/home/graphscope/GraphScope"
-DOCKER_DB_GIE_HOME="${DOCKER_DB_GRAPHSCOPE_HOME}/interactive_engine/"
-DOCKER_DB_SERVER_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/flex/build/bin/sync_server"
-DOCKER_DB_GRAPH_IMPORT_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/flex/build/tests/rt_mutable_graph/test_graph_loading"
+DOCKER_DB_GRAPHSCOPE_HOME="/opt/flex"
+DOCKER_DB_GIE_HOME="${DOCKER_DB_GRAPHSCOPE_HOME}"
+DOCKER_DB_SERVER_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/sync_server"
+DOCKER_DB_GRAPH_IMPORT_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/graph_loader"
 DOCKER_DB_COMPILER_BIN="com.alibaba.graphscope.GraphServer"
-DOCKER_DB_GEN_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/flex/bin/load_plan_and_gen.sh"
+DOCKER_DB_GEN_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/load_plan_and_gen.sh"
 HOST_DB_TMP_DIR="/tmp"
 
 #################### DEFINE DEFAULT CONSTATNS ####################
@@ -206,7 +206,7 @@ DATABASE_PORTS=""
 ## compiler related default configuration
 DATABASE_COMPILER_PLANNER_IS_ON="true"
 DATABASE_COMPILER_PLANNER_OPT="RBO"
-DATABASE_COMPILER_PLANNER_RULES="FilterMatchRule,FilterIntoJoinRule,NotExistToAntiJoinRule"
+DATABASE_COMPILER_PLANNER_RULES="FilterIntoJoinRule,FilterMatchRule,NotMatchToAntiJoinRule"
 DATABASE_COMPILER_ENDPOINT_ADDRESS="localhost"
 DATABASE_COMPILER_BOLT_PORT="7687"
 DATABASE_COMPILER_QUERY_TIMEOUT="20000"
@@ -223,7 +223,6 @@ DATABASE_CONF_DIR_NAME="conf"
 
 
 ################### IMAGE VERSION ###################
-GIE_DB_IMAGE_VERSION="v0.0.2"
 GIE_DB_IMAGE_NAME="registry.cn-hongkong.aliyuncs.com/graphscope/${DB_PROD_NAME}"
 #GIE_DB_IMAGE_NAME="interactive"
 GIE_DB_CONTAINER_NAME="${DB_PROD_NAME}-server"
@@ -814,11 +813,20 @@ function do_init(){
 
   check_file_exists "${config_file}"
 
-  # parse yaml config
-  # eval $(parse_yaml "${config_file}")
-
   # Parse the configuration presented in yaml, and override the default values.
   update_init_config_from_yaml "${config_file}"
+
+  #if $HOST_DB_ENV_FILE exists, remove it
+  if [ -f "${HOST_DB_ENV_FILE}" ]; then
+    if ! rm "${HOST_DB_ENV_FILE}"; then
+      err "remove ${HOST_DB_ENV_FILE} failed"
+      exit 1
+    fi
+  fi
+  if ! touch "${HOST_DB_ENV_FILE}"; then
+    err "create ${HOST_DB_ENV_FILE} failed"
+    exit 1
+  fi
 
   #0. Found workspace
   info "Found docker db home: ${DATABASE_WORKSPACE}"
@@ -892,7 +900,11 @@ function do_init(){
   cmd="${cmd} ${port_cmd} ${mount_cmd} ${GIE_DB_IMAGE_NAME_TAG} bash"
   
   info "Running cmd: ${cmd}"
-  eval ${cmd} || docker rm "${GIE_DB_CONTAINER_NAME}"
+  # eval $cmd, exit if failed
+  if ! eval $cmd; then
+    err "Fail to init database."
+    exit 1
+  fi
 
   info "Finish init database"
 
@@ -901,6 +913,7 @@ function do_init(){
   docker exec -u graphscope "${GIE_DB_CONTAINER_NAME}" bash -c "sudo chown -R graphscope:graphscope ${DATABASE_WORKSPACE}" || exit 1
   docker exec -u graphscope "${GIE_DB_CONTAINER_NAME}" bash -c "mkdir -p ${DATABASE_WORKSPACE}/logs" || exit 1
   docker exec -u graphscope "${GIE_DB_CONTAINER_NAME}" bash -c "mkdir -p ${DATABASE_WORKSPACE}/conf" || exit 1
+  docker exec -u graphscope "${GIE_DB_CONTAINER_NAME}" bash -c "mkdir -p ${DATABASE_WORKSPACE}/data" || exit 1
 
   # create default_graph
   do_create -g ${DATABASE_DEFAULT_GRAPH_NAME} -c ${HOST_DB_HOME}/examples/modern_graph/modern_graph.yaml
@@ -1311,7 +1324,6 @@ function do_start(){
   cmd="docker exec ${GIE_DB_CONTAINER_NAME} bash -c \""
   cmd="${cmd} ${DOCKER_DB_SERVER_BIN} -c ${dst_engine_config_file}"
   cmd="${cmd} -g ${graph_schema_file}  --data-path ${csr_data_dir}"
-  cmd="${cmd} --gie-home ${DOCKER_DB_GIE_HOME}"
   cmd="${cmd} > ${docker_server_log_path} 2>&1  & \""
   echo "Running cmd: ${cmd}"
   # eval command, if fails exist
@@ -1324,8 +1336,8 @@ function do_start(){
   # start compiler
   docker_compiler_log_path="${DATABASE_WORKSPACE}/logs/compiler.log"
   cmd="docker exec ${GIE_DB_CONTAINER_NAME} bash -c \""
-  cmd=${cmd}"java -cp \"${DOCKER_DB_GIE_HOME}/compiler/target/libs/*:${DOCKER_DB_GIE_HOME}/compiler/target/compiler-0.0.1-SNAPSHOT.jar\" "
-  cmd=${cmd}" -Djna.library.path=${DOCKER_DB_GIE_HOME}/executor/ir/target/release"
+  cmd=${cmd}"java -cp \"${DOCKER_DB_GIE_HOME}/lib/*:${DOCKER_DB_GIE_HOME}/lib/compiler-0.0.1-SNAPSHOT.jar\" "
+  cmd=${cmd}" -Djna.library.path=${DOCKER_DB_GIE_HOME}/lib/"
   cmd=${cmd}" -Dgraph.schema=${graph_schema_file}"
   # should error be reported?
   # cmd=${cmd}" -Dgraph.stored.procedures.uri=file:${docker_graph_plugin_dir}"
@@ -1600,7 +1612,6 @@ function do_compile() {
   cmd=${cmd}" --work_dir=/tmp/codegen/"
   cmd=${cmd}" --ir_conf=${docker_engine_config}"
   cmd=${cmd}" --graph_schema_path=${docker_graph_schema}"
-  cmd=${cmd}" --gie_home=${DOCKER_DB_GIE_HOME}"
   cmd=${cmd}" --output_dir=${container_output_dir}"
   cmd=${cmd}" --procedure_name=${stored_procedure_name}"
   if [ ! -z "${stored_procedure_desc}" ]; then

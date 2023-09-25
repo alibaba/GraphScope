@@ -16,8 +16,8 @@
 #define ENGINES_HQPS_APP_CYPHER_APP_BASE_H_
 
 #include "flex/engines/hqps_db/database/mutable_csr_interface.h"
+#include "flex/proto_generated_gie/results.pb.h"
 #include "flex/utils/app_utils.h"
-#include "proto_generated_gie/results.pb.h"
 
 namespace gs {
 

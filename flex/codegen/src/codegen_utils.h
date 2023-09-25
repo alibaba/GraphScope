@@ -25,7 +25,7 @@ limitations under the License.
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 #include "glog/logging.h"
 
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 
