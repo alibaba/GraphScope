@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.cypher.integration.suite.ldbc;
+package com.alibaba.graphscope.cypher.integration.suite.simple;
+
+import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
 
 import java.util.Arrays;
 import java.util.List;
@@ -126,6 +128,14 @@ public class SimpleMatchQueries {
                         "Record<{postId: 32903}>",
                         "Record<{postId: 33041}>",
                         "Record<{postId: 33042}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_simple_match_query_10_test() {
+        String query =
+                "Match (a {name:\"marko\"})-[b]-(c {name: \"lop\"}) Return labels(a) as a, type(b)"
+                        + " as b";
+        List<String> expected = Arrays.asList("Record<{a: \"person\", b: \"knows\"}>");
         return new QueryContext(query, expected);
     }
 }
