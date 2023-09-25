@@ -199,6 +199,15 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
             }
             // each type should have the same number of groups
             else {
+                // first compare if types are the same
+                List<List<Integer>> thisTypeList = new ArrayList<>(this.mapTypeToGroup.keySet());
+                List<List<Integer>> otherTypeList = new ArrayList<>(other.mapTypeToGroup.keySet());
+                thisTypeList.sort(vertexTypeListComparator);
+                otherTypeList.sort(vertexTypeListComparator);
+                if (!thisTypeList.equals(otherTypeList)) {
+                    return false;
+                }
+                // then compare the number of groups for each type
                 for (List<Integer> vertexTypeIds : this.mapTypeToGroup.keySet()) {
                     if (this.mapTypeToGroup.get(vertexTypeIds).size() != other.mapTypeToGroup.get(vertexTypeIds)
                             .size()) {

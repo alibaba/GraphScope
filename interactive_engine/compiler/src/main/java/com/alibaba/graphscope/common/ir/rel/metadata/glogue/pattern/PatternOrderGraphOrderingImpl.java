@@ -78,15 +78,24 @@ public class PatternOrderGraphOrderingImpl extends PatternOrder {
         @Override
         public int compare(PatternVertex v1, PatternVertex v2) {
             // sort by (degree, outDegree, inDegree, vertexType, position)
-            if (graph.degreeOf(v1) - graph.degreeOf(v2) != 0) {
+            if (graph.degreeOf(v1) != graph.degreeOf(v2)) {
                 return graph.degreeOf(v1) - graph.degreeOf(v2);
-            } else if (graph.outDegreeOf(v1) - graph.outDegreeOf(v2) != 0) {
+            } else if (graph.outDegreeOf(v1) != graph.outDegreeOf(v2)) {
                 return graph.outDegreeOf(v1) - graph.outDegreeOf(v2);
-            } else if (v1.getVertexTypeId() - v2.getVertexTypeId() != 0) {
-                return v1.getVertexTypeId() - v2.getVertexTypeId();
-            } else {
-                return v1.getId() - v2.getId();
+            } else if (graph.inDegreeOf(v1) != graph.inDegreeOf(v2)) {
+                return graph.inDegreeOf(v1) - graph.inDegreeOf(v2);
+            } else if (v1.getVertexTypeIds().size() != v2.getVertexTypeIds().size()) {
+                return v1.getVertexTypeIds().size() - v2.getVertexTypeIds().size();
+            } else if (v1.getVertexTypeIds() != v2.getVertexTypeIds()) {
+                v1.getVertexTypeIds().sort(Integer::compareTo);
+                v2.getVertexTypeIds().sort(Integer::compareTo);
+                for (int i = 0; i < v1.getVertexTypeIds().size(); i++) {
+                    if (v1.getVertexTypeIds().get(i) != v2.getVertexTypeIds().get(i)) {
+                        return v1.getVertexTypeIds().get(i) - v2.getVertexTypeIds().get(i);
+                    }
+                }
             }
+            return v1.getId() - v2.getId();
         }
     }
 
