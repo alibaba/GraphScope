@@ -617,18 +617,8 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
                              property_types, prop_names)) {
     return false;
   }
-  EdgeStrategy ie = EdgeStrategy::kMultiple;
-  EdgeStrategy oe = EdgeStrategy::kMultiple;
-  {
-    auto csr_node = node["x_csr_params"];
-    std::string ie_str, oe_str;
-    if (get_scalar(node, "outgoing_edge_strategy", oe_str)) {
-      oe = StringToEdgeStrategy(oe_str);
-    }
-    if (get_scalar(node, "incoming_edge_strategy", ie_str)) {
-      ie = StringToEdgeStrategy(ie_str);
-    }
-  }
+  EdgeStrategy default_ie = EdgeStrategy::kMultiple;
+  EdgeStrategy default_oe = EdgeStrategy::kMultiple;
 
   // get vertex type pair relation
   auto vertex_type_pair_node = node["vertex_type_pair_relations"];
@@ -644,8 +634,8 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
   for (auto i = 0; i < vertex_type_pair_node.size(); ++i) {
     std::string src_label_name, dst_label_name;
     auto cur_node = vertex_type_pair_node[i];
-    EdgeStrategy cur_ie = ie;
-    EdgeStrategy cur_oe = oe;
+    EdgeStrategy cur_ie = default_ie;
+    EdgeStrategy cur_oe = default_oe;
     if (!get_scalar(cur_node, "source_vertex", src_label_name)) {
       LOG(ERROR) << "Expect field source_vertex for edge [" << edge_label_name
                  << "] in vertex_type_pair_relations";
