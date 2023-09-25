@@ -1129,6 +1129,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], columns)),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         }
     }
@@ -1636,6 +1637,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         let select_opr = pb::Select { predicate: str_to_expr_pb("@.id == 10".to_string()).ok() };
@@ -1692,6 +1694,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -1730,6 +1733,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -1793,6 +1797,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -1882,6 +1887,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -1994,6 +2000,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -2026,6 +2033,7 @@ mod test {
             alias: Some(0.into()),
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -2115,6 +2123,7 @@ mod test {
             alias: Some(0.into()),
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -2180,6 +2189,7 @@ mod test {
             alias: Some(0.into()),
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -2250,6 +2260,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         let expand_opr = pb::EdgeExpand {
@@ -2309,6 +2320,7 @@ mod test {
             alias: Some(0.into()),
             params: None,
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -2426,6 +2438,7 @@ mod test {
             alias: Some(0.into()),
             params: None,
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -3058,6 +3071,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 

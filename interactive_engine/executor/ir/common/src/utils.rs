@@ -824,6 +824,7 @@ impl From<pb::Scan> for physical_pb::Scan {
             alias: scan.alias.map(|tag| tag.try_into().unwrap()),
             params: scan.params,
             idx_predicate: scan.idx_predicate,
+            is_count_only: scan.is_count_only,
         }
     }
 }
