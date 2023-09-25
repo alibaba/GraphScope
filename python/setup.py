@@ -149,7 +149,7 @@ class BuildGLTorchExt(torch.utils.cpp_extension.BuildExtension if torch else bui
     def _get_gcc_use_cxx_abi(self):
         if hasattr(self, "_gcc_use_cxx_abi"):
             return self._gcc_use_cxx_abi
-        build_dir = os.path.join(glt_root_path, 'cmake-build')
+        build_dir = os.path.join(glt_root_path, "cmake-build")
         os.makedirs(build_dir, exist_ok=True)
         output = subprocess.run(
             [shutil.which("cmake"), ".."],
