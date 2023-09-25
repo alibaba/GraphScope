@@ -259,9 +259,8 @@ static void set_vertex_properties(gs::ColumnBase* col,
         auto casted =
             std::static_pointer_cast<arrow::TimestampArray>(array->chunk(j));
         for (auto k = 0; k < casted->length(); ++k) {
-          col->set_any(
-              vids[cur_ind++],
-              std::move(AnyConverter<Date>::to_any(casted->Value(k))));
+          col->set_any(vids[cur_ind++],
+                       std::move(AnyConverter<Date>::to_any(casted->Value(k))));
         }
       }
     } else {
@@ -390,21 +389,15 @@ static void append_edges(
       // iterate and put data
       size_t cur_ind = old_size;
       auto type = edata_col->type();
-      // if (type != CppTypeToArrowType<EDATA_T>::TypeValue()) {
-      //   LOG(FATAL) << "Inconsistent data type, expect "
-      //              << CppTypeToArrowType<EDATA_T>::TypeValue()->ToString()
-      //              << ", but got " << type->ToString();
-      // }
 
       using arrow_array_type =
           typename gs::CppTypeToArrowType<EDATA_T>::ArrayType;
-       if (type->Equals(arrow::timestamp(arrow::TimeUnit::MILLI))) {
+      if (type->Equals(arrow::timestamp(arrow::TimeUnit::MILLI))) {
         for (auto i = 0; i < edata_col->num_chunks(); ++i) {
           auto chunk = edata_col->chunk(i);
           auto casted_chunk = std::static_pointer_cast<arrow_array_type>(chunk);
           for (auto j = 0; j < casted_chunk->length(); ++j) {
-            std::get<2>(parsed_edges[cur_ind++]) =
-                casted_chunk->Value(j);
+            std::get<2>(parsed_edges[cur_ind++]) = casted_chunk->Value(j);
           }
         }
       } else if (type->Equals(arrow::large_utf8()) ||
@@ -431,7 +424,7 @@ static void append_edges(
   dst_col_thread.join();
   edata_col_thread.join();
   VLOG(10) << "Finish inserting:  " << src_col->length() << " edges";
-}  // namespace gs
+}
 
 // Create VertexTableReader
 std::shared_ptr<arrow::csv::TableReader>
@@ -1085,9 +1078,10 @@ void CSVFragmentLoader::fillVertexReaderMeta(
     arrow::csv::ParseOptions& parse_options,
     arrow::csv::ConvertOptions& convert_options, const std::string& v_file,
     label_t v_label) const {
-  // auto time_stamp_parser = arrow::TimestampParser::MakeISO8601();
-  auto time_stamp_parser = std::make_shared<LDBCTimeStampParser>();
-  convert_options.timestamp_parsers.emplace_back(time_stamp_parser);
+  convert_options.timestamp_parsers.emplace_back(
+      std::make_shared<LDBCTimeStampParser>());
+  convert_options.timestamp_parsers.emplace_back(
+      arrow::TimestampParser::MakeISO8601());
 
   put_delimiter_option(loading_config_, parse_options);
   bool header_row = put_skip_rows_option(loading_config_, read_options);
@@ -1212,10 +1206,10 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
     arrow::csv::ParseOptions& parse_options,
     arrow::csv::ConvertOptions& convert_options, const std::string& e_file,
     label_t src_label_id, label_t dst_label_id, label_t label_id) const {
-  // auto time_stamp_parser =
-  // arrow::TimestampParser::MakeISO8601();  // 2011-08-17T14:26:59.961+0000
-  auto time_stamp_parser = std::make_shared<LDBCTimeStampParser>();
-  convert_options.timestamp_parsers.emplace_back(time_stamp_parser);
+  convert_options.timestamp_parsers.emplace_back(
+      std::make_shared<LDBCTimeStampParser>());
+  convert_options.timestamp_parsers.emplace_back(
+      arrow::TimestampParser::MakeISO8601());
 
   put_delimiter_option(loading_config_, parse_options);
   bool header_row = put_skip_rows_option(loading_config_, read_options);
