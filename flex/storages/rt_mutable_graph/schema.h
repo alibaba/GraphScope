@@ -148,6 +148,10 @@ class Schema {
 
   void EmplacePlugin(const std::string& plugin_name);
 
+  void SetPluginDir(const std::string& plugin_dir);
+
+  std::string GetPluginDir() const;
+
  private:
   label_t vertex_label_to_index(const std::string& label);
 
@@ -169,6 +173,7 @@ class Schema {
   std::map<uint32_t, EdgeStrategy> ie_strategy_;
   std::vector<size_t> max_vnum_;
   std::vector<std::string> plugin_list_;
+  std::string plugin_dir_;
 };
 
 }  // namespace gs

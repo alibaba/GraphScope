@@ -133,15 +133,19 @@ ANALYTICAL_MACOS=(
 )
 
 _install_apache_arrow_ubuntu() {
-  log "Installing apache-arrow."
-  ${SUDO} apt-get install -y lsb-release
-  # shellcheck disable=SC2046,SC2019,SC2018
-  wget -c https://apache.jfrog.io/artifactory/arrow/"$(lsb_release --id --short | tr 'A-Z' 'a-z')"/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb \
-    -P /tmp/
-  ${SUDO} apt-get install -y -V /tmp/apache-arrow-apt-source-latest-"$(lsb_release --codename --short)".deb
-  ${SUDO} apt-get update -y
-  ${SUDO} apt-get install -y libarrow-dev
-  rm /tmp/apache-arrow-apt-source-latest-*.deb
+  if ! command -v dpkg -s libarrow-dev &>/dev/null; then
+    log "Installing apache-arrow."
+    ${SUDO} apt-get install -y lsb-release
+    # shellcheck disable=SC2046,SC2019,SC2018
+    wget -c https://apache.jfrog.io/artifactory/arrow/"$(lsb_release --id --short | tr 'A-Z' 'a-z')"/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb \
+      -P /tmp/
+    ${SUDO} apt-get install -y -V /tmp/apache-arrow-apt-source-latest-"$(lsb_release --codename --short)".deb
+    ${SUDO} apt-get update -y
+    ${SUDO} apt-get install -y libarrow-dev
+    rm /tmp/apache-arrow-apt-source-latest-*.deb
+  else
+    log "apache-arrow (libarrow-dev) already installed, skip."
+  fi
 }
 
 _install_java_maven_ubuntu() {

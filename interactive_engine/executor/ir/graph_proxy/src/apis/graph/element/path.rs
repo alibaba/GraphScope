@@ -159,6 +159,13 @@ impl GraphPath {
         }
     }
 
+    pub fn get_path(&self) -> Option<&Vec<VertexOrEdge>> {
+        match self {
+            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => Some(p),
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
+        }
+    }
+
     pub fn take_path(self) -> Option<Vec<VertexOrEdge>> {
         match self {
             GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => Some(p),
@@ -359,6 +366,8 @@ impl Decode for VertexOrEdge {
         }
     }
 }
+
+impl_as_any!(VertexOrEdge);
 
 impl Encode for GraphPath {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {

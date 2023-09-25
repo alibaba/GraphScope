@@ -25,9 +25,9 @@ limitations under the License.
 #include "flex/codegen/src/hqps/hqps_expr_builder.h"
 #include "flex/codegen/src/hqps/hqps_group_by_builder.h"
 #include "flex/codegen/src/pb_parser/query_params_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 
@@ -67,7 +67,7 @@ std::pair<std::string, std::string> gen_agg_var_and_code_for_fold(
         VLOG(10) << "aggregate on property " << var_prop.key().name();
         in_prop_names.push_back(var.property().key().name());
         in_prop_types.push_back(
-            common_data_type_pb_2_str(var.node_type().data_type()));
+            single_common_data_type_pb_2_str(var.node_type().data_type()));
       }
     } else {
       // var has no property, which means internal id.

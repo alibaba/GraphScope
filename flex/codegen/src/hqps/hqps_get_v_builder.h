@@ -23,10 +23,10 @@ limitations under the License.
 #include "flex/codegen/src/codegen_utils.h"
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/pb_parser/name_id_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/expr.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/expr.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 #include <boost/format.hpp>
 
@@ -136,7 +136,7 @@ class GetVOpBuilder {
       auto& expr_oprs = expr.operators();
       expr_builder.AddAllExprOpr(expr_oprs);
       expr_builder.set_return_type(common::DataType::BOOLEAN);
-      common::DataType unused_expr_ret_type;
+      std::vector<common::DataType> unused_expr_ret_type;
       if (!expr_builder.empty()) {
         std::tie(expr_name_, expr_call_param_, tag_propertys_, expr_code_,
                  unused_expr_ret_type) = expr_builder.Build();

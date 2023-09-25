@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 public class SstOutputFormat extends FileOutputFormat<BytesWritable, BytesWritable> {
 
@@ -60,7 +61,11 @@ public class SstOutputFormat extends FileOutputFormat<BytesWritable, BytesWritab
             try {
                 sstFileWriter.put(key.copyBytes(), value.copyBytes());
             } catch (RocksDBException e) {
-                throw new IOException(e);
+                ByteBuffer buffer = ByteBuffer.wrap(key.copyBytes());
+                long tableId = buffer.getLong(0) >> 1;
+                long hashId = buffer.getLong(8);
+                throw new IOException(
+                        "Write SST Error! TableId: [" + tableId + "], hashId: [" + hashId + "]", e);
             }
         }
 

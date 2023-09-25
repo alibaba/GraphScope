@@ -26,8 +26,9 @@
 #include "flex/engines/hqps_db/structures/multi_edge_set/flat_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/general_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_edge_set/untyped_edge_set.h"
+#include "flex/engines/hqps_db/structures/path.h"
 
-#include "proto_generated_gie/results.pb.h"
+#include "flex/proto_generated_gie/results.pb.h"
 
 namespace gs {
 
@@ -122,10 +123,22 @@ void template_set_value(common::Value* value, T v) {
   value->mutable_str()->assign(v.data(), v.size());
 }
 
+template <typename T, typename std::enable_if<
+                          (std::is_same_v<T, std::string>)>::type* = nullptr>
+void template_set_value(common::Value* value, T v) {
+  value->set_str(v.data(), v.size());
+}
+
 template <typename T,
           typename std::enable_if<(std::is_same_v<T, double>)>::type* = nullptr>
 void template_set_value(common::Value* value, T v) {
   value->set_f64(v);
+}
+
+template <typename T, typename std::enable_if<
+                          (std::is_same_v<T, gs::Date>)>::type* = nullptr>
+void template_set_value(common::Value* value, gs::Date v) {
+  value->set_i64(v.milli_second);
 }
 
 template <size_t Is = 0, typename... T>
@@ -151,7 +164,14 @@ void template_set_tuple_value(results::Collection* collection,
                               const std::vector<T>& t) {
   for (auto i = 0; i < t.size(); ++i) {
     auto cur_ele = collection->add_collection()->mutable_object();
-    template_set_value(cur_ele, t[i]);
+    // if is tuple
+    if constexpr (gs::is_tuple<T>::value) {
+      LOG(WARNING) << "PLEASE FIXME: tuple in vector is not supported "
+                      "yet.";
+      template_set_value(cur_ele, gs::to_string(t[i]));
+    } else {
+      template_set_value(cur_ele, t[i]);
+    }
   }
 }
 
@@ -567,12 +587,12 @@ class SinkOp {
     }
   }
 
-  template <size_t Ind, size_t act_tag_id, typename VID_T, typename LabelT,
-            typename CSR_ITER>
-  static void sink_col_impl(
-      results::CollectiveResults& results_vec,
-      const UnTypedEdgeSet<VID_T, LabelT, CSR_ITER>& edge_set,
-      const std::vector<size_t>& repeat_offsets, int32_t tag_id) {
+  template <size_t Ind, size_t act_tag_id, typename EDGE_SET_T,
+            typename std::enable_if<EDGE_SET_T::is_edge_set>::type* = nullptr>
+  static void sink_col_impl(results::CollectiveResults& results_vec,
+                            const EDGE_SET_T& edge_set,
+                            const std::vector<size_t>& repeat_offsets,
+                            int32_t tag_id) {
     if (repeat_offsets.empty()) {
       CHECK(edge_set.Size() == results_vec.results_size())
           << "size neq " << edge_set.Size() << " "
@@ -623,20 +643,18 @@ class SinkOp {
     }
   }
 
-  // sink for general edge set.
-  template <size_t Ind, size_t act_tag_id, size_t edge_label_num, typename GI,
-            typename VID_T, typename LabelT, typename... PROP_TUPLE>
-  static void sink_col_impl(
-      results::CollectiveResults& results_vec,
-      const GeneralEdgeSet<edge_label_num, GI, VID_T, LabelT, PROP_TUPLE...>&
-          edge_set,
-      const std::vector<size_t>& repeat_offsets, int32_t tag_id) {
+  // sink for compressed path set
+  template <size_t Ind, size_t act_tag_id, typename VID_T, typename LabelT>
+  static void sink_col_impl(results::CollectiveResults& results_vec,
+                            const CompressedPathSet<VID_T, LabelT>& path_set,
+                            const std::vector<size_t>& repeat_offsets,
+                            int32_t tag_id) {
     if (repeat_offsets.empty()) {
-      CHECK(edge_set.Size() == results_vec.results_size())
-          << "size neq " << edge_set.Size() << " "
+      CHECK(path_set.Size() == results_vec.results_size())
+          << "size neq " << path_set.Size() << " "
           << results_vec.results_size();
-      auto iter = edge_set.begin();
-      auto end_iter = edge_set.end();
+      auto iter = path_set.begin();
+      auto end_iter = path_set.end();
       for (auto i = 0; i < results_vec.results_size(); ++i) {
         // auto& row = results_vec[i];
         auto row = results_vec.mutable_results(i);
@@ -646,19 +664,18 @@ class SinkOp {
         auto record = row->mutable_record();
         auto new_col = record->add_columns();
         new_col->mutable_name_or_id()->set_id(tag_id);
-        auto mutable_edge =
-            new_col->mutable_entry()->mutable_element()->mutable_edge();
+        auto mutable_path =
+            new_col->mutable_entry()->mutable_element()->mutable_graph_path();
         CHECK(iter != end_iter);
-        mutable_edge->set_src_id(iter.GetSrc());
-        mutable_edge->set_dst_id(iter.GetDst());
+        auto cur_path = iter.GetElement();
+        add_path_to_pb(cur_path, *mutable_path);
         ++iter;
-        // todo: set properties.
       }
     } else {
-      CHECK(repeat_offsets.size() == edge_set.Size());
+      CHECK(repeat_offsets.size() == path_set.Size());
       size_t cur_ind = 0;
-      auto iter = edge_set.begin();
-      auto end_iter = edge_set.end();
+      auto iter = path_set.begin();
+      auto end_iter = path_set.end();
       for (auto i = 0; i < repeat_offsets.size(); ++i) {
         CHECK(iter != end_iter);
         for (auto j = 0; j < repeat_offsets[i]; ++j) {
@@ -670,14 +687,23 @@ class SinkOp {
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
           new_col->mutable_name_or_id()->set_id(tag_id);
-          auto mutable_edge =
-              new_col->mutable_entry()->mutable_element()->mutable_edge();
-          mutable_edge->set_src_id(iter.GetSrc());
-          mutable_edge->set_dst_id(iter.GetDst());
+          auto mutable_path =
+              new_col->mutable_entry()->mutable_element()->mutable_graph_path();
+          auto cur_path = iter.GetElement();
+          add_path_to_pb(cur_path, *mutable_path);
           // todo: set properties.
         }
         ++iter;
       }
+    }
+  }
+
+  template <typename VID_T, typename LabelT>
+  static void add_path_to_pb(const Path<VID_T, LabelT>& path,
+                             results::GraphPath& mutable_path) {
+    auto& vertices = path.GetVertices();
+    for (auto i = 0; i < vertices.size(); ++i) {
+      mutable_path.add_path()->mutable_vertex()->set_id(vertices[i]);
     }
   }
 };

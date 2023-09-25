@@ -24,9 +24,9 @@ limitations under the License.
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/hqps/hqps_expr_builder.h"
 #include "flex/codegen/src/pb_parser/query_params_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 
@@ -63,6 +63,8 @@ std::string agg_func_pb_2_str(
     return "gs::AggFunc::TO_LIST";
   case physical::GroupBy::AggFunc::Aggregate::GroupBy_AggFunc_Aggregate_TO_SET:
     return "gs::AggFunc::TO_SET";
+  case physical::GroupBy::AggFunc::Aggregate::GroupBy_AggFunc_Aggregate_FIRST:
+    return "gs::AggFunc::FIRST";
   default:
     LOG(FATAL) << "Unsupported aggregate function";
   }
@@ -94,7 +96,7 @@ std::pair<std::string, std::string> gen_agg_var_and_code(
         VLOG(10) << "aggregate on property " << var_prop.key().name();
         in_prop_names.push_back(var.property().key().name());
         in_prop_types.push_back(
-            common_data_type_pb_2_str(var.node_type().data_type()));
+            single_common_data_type_pb_2_str(var.node_type().data_type()));
       }
     } else {
       // var has no property, which means internal id.
@@ -163,8 +165,8 @@ class GroupByOpBuilder {
       } else if (prop.item_case() == common::Property::kKey) {
         auto& prop_key = prop.key();
         prop_name = prop_key.name();
-        prop_type =
-            common_data_type_pb_2_str(key_alias_key.node_type().data_type());
+        prop_type = single_common_data_type_pb_2_str(
+            key_alias_key.node_type().data_type());
       } else {
         LOG(FATAL)
             << "Current only support key_alias on internal id or property";

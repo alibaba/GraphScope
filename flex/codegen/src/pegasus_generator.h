@@ -18,10 +18,10 @@ limitations under the License.
 #include <string>
 #include <vector>
 
+#include "flex/proto_generated_gie/physical.pb.h"
 #include "google/protobuf/message.h"
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/util/json_util.h"
-#include "proto_generated_gie/physical.pb.h"
 
 #include "flex/codegen/src/building_context.h"
 #include "flex/codegen/src/pegasus/pegasus_dedup_builder.h"

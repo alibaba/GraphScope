@@ -205,6 +205,11 @@ public class GraphWriter implements MetricsAgent {
     private void addUpdateEdgeOperation(
             OperationBatch.Builder batchBuilder, GraphSchema schema, DataRecord dataRecord) {
         EdgeId edgeId = getEdgeId(schema, dataRecord, false);
+        if (edgeId.id == 0) {
+            // This is for update edge, if edgeInnerId is 0, generate new id, incase there isn't
+            // such a edge
+            edgeId.id = edgeIdGenerator.getNextId();
+        }
         EdgeKind edgeKind = getEdgeKind(schema, dataRecord);
         GraphElement edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
 
@@ -252,7 +257,7 @@ public class GraphWriter implements MetricsAgent {
         Map<String, Object> properties = dataRecord.getProperties();
         Map<Integer, PropertyValue> propertyVals = parseRawProperties(vertexDef, properties);
         propertyVals.putAll(pkVals);
-        long hashId = getPrimaryKeysHashId(labelId, pkVals, vertexDef);
+        long hashId = getPrimaryKeysHashId(labelId, propertyVals, vertexDef);
         batchBuilder.addOperation(
                 new DeleteVertexOperation(new VertexId(hashId), new LabelId(labelId)));
     }
@@ -268,7 +273,7 @@ public class GraphWriter implements MetricsAgent {
         Map<String, Object> properties = dataRecord.getProperties();
         Map<Integer, PropertyValue> propertyVals = parseRawProperties(vertexDef, properties);
         propertyVals.putAll(pkVals);
-        long hashId = getPrimaryKeysHashId(labelId, pkVals, vertexDef);
+        long hashId = getPrimaryKeysHashId(labelId, propertyVals, vertexDef);
         batchBuilder.addOperation(
                 new UpdateVertexOperation(
                         new VertexId(hashId), new LabelId(labelId), propertyVals));
@@ -356,7 +361,6 @@ public class GraphWriter implements MetricsAgent {
                     getPrimaryKeysHashId(dstVertexDef.getLabelId(), dstVertexPkVals, dstVertexDef);
             long edgeInnerId =
                     overwrite ? edgeIdGenerator.getNextId() : edgeRecordKey.getEdgeInnerId();
-
             return new EdgeId(
                     new VertexId(srcVertexHashId), new VertexId(dstVertexHashId), edgeInnerId);
         }
