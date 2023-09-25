@@ -316,16 +316,29 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
             case STR:
                 return value.getStr();
             case I32:
+                return parseLabelValue(value.getI32(), type);
             case I64:
-                long labelId = value.getI64();
-                for (GraphLabelType.Entry entry : type.getLabelsEntry()) {
-                    if (entry.getLabelId() == labelId) {
-                        return entry.getLabel();
-                    }
-                }
+                return parseLabelValue(value.getI64(), type);
             default:
                 throw new IllegalArgumentException(
-                        "cannot parse label value=" + value + " from expected type=" + type);
+                        "cannot parse label value with type=" + value.getItemCase().name());
         }
+    }
+
+    private String parseLabelValue(long labelId, GraphLabelType type) {
+        List<Object> expectedLabelIds = Lists.newArrayList();
+        for (GraphLabelType.Entry entry : type.getLabelsEntry()) {
+            if (entry.getLabelId() == labelId) {
+                return entry.getLabel();
+            }
+            expectedLabelIds.add(entry.getLabelId());
+        }
+        throw new IllegalArgumentException(
+                "cannot parse label value="
+                        + labelId
+                        + " from expected type="
+                        + type
+                        + ", expected ids are "
+                        + expectedLabelIds);
     }
 }
