@@ -20,7 +20,6 @@ use std::convert::{TryFrom, TryInto};
 
 use dyn_type::arith::{BitOperand, Exp};
 use dyn_type::object;
-use dyn_type::object::RawType;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::expr_parse::to_suffix_expr;
@@ -57,7 +56,7 @@ pub enum Operand {
 
 #[derive(Debug, Clone)]
 pub enum Function {
-    Extract((common_pb::extract::Interval, RawType)),
+    Extract(common_pb::extract::Interval),
 }
 
 /// An inner representation of `common_pb::ExprOpr` for one-shot translation of `common_pb::ExprOpr`.
@@ -173,39 +172,39 @@ pub(crate) fn apply_function<'a>(
 ) -> ExprEvalResult<Object> {
     use common_pb::extract::Interval;
     match function {
-        Function::Extract((interval, raw_type)) => match interval {
+        Function::Extract(interval) => match interval {
             Interval::Year => Ok(a
-                .as_date_format(raw_type)?
+                .as_date_format()?
                 .year()
                 .ok_or(ExprEvalError::GetNoneFromContext)?
                 .into()),
             Interval::Month => Ok((a
-                .as_date_format(raw_type)?
+                .as_date_format()?
                 .month()
                 .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
                 .into()),
             Interval::Day => Ok((a
-                .as_date_format(raw_type)?
+                .as_date_format()?
                 .day()
                 .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
                 .into()),
             Interval::Hour => Ok((a
-                .as_date_format(raw_type)?
+                .as_date_format()?
                 .hour()
                 .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
                 .into()),
             Interval::Minute => Ok((a
-                .as_date_format(raw_type)?
+                .as_date_format()?
                 .minute()
                 .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
                 .into()),
             Interval::Second => Ok((a
-                .as_date_format(raw_type)?
+                .as_date_format()?
                 .second()
                 .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
                 .into()),
             Interval::Millisecond => Ok((a
-                .as_date_format(raw_type)?
+                .as_date_format()?
                 .millisecond()
                 .ok_or(ExprEvalError::GetNoneFromContext)?
                 as i32)
@@ -541,52 +540,6 @@ impl TryFrom<common_pb::ExprOpr> for Operand {
     }
 }
 
-impl TryFrom<common_pb::ExprOpr> for Function {
-    type Error = ParsePbError;
-
-    fn try_from(value: common_pb::ExprOpr) -> Result<Self, Self::Error> {
-        use common_pb::expr_opr::Item::*;
-        if let Some(item) = value.item {
-            match item {
-                Extract(extract) => {
-                    let interval =
-                        unsafe { std::mem::transmute::<_, common_pb::extract::Interval>(extract.interval) };
-                    let ir_data_type = value
-                        .node_type
-                        .ok_or(ParsePbError::EmptyFieldError("Type is emtpy in Extract".to_string()))?
-                        .r#type
-                        .ok_or(ParsePbError::EmptyFieldError("Type is emtpy in Extract".to_string()))?;
-                    let raw_type = match ir_data_type {
-                        common_pb::ir_data_type::Type::DataType(date_type) => {
-                            let date_type =
-                                unsafe { std::mem::transmute::<_, common_pb::DataType>(date_type) };
-                            // We only support extract from type Date32/Time32/Timestamp/String currently.
-                            // If extract from a String type, it should be formatted as some predefined ISO format, otherwise, the parsing will fail.
-                            match date_type {
-                                common_pb::DataType::Date32 => RawType::Date,
-                                common_pb::DataType::Time32 => RawType::Time,
-                                common_pb::DataType::Timestamp => RawType::DateTime,
-                                common_pb::DataType::String => RawType::String,
-                                _ => Err(ParsePbError::Unsupported(format!(
-                                    "unsupported data type {:?} for Extract",
-                                    date_type
-                                )))?,
-                            }
-                        }
-                        common_pb::ir_data_type::Type::GraphType(_) => Err(ParsePbError::Unsupported(
-                            "unsupported data type GraphType for Extract".to_string(),
-                        ))?,
-                    };
-                    Ok(Function::Extract((interval, raw_type)))
-                }
-                _ => Err(ParsePbError::ParseError("invalid operators for a Function".to_string())),
-            }
-        } else {
-            Err(ParsePbError::from("empty value provided"))
-        }
-    }
-}
-
 impl TryFrom<common_pb::ExprOpr> for InnerOpr {
     type Error = ParsePbError;
 
@@ -603,7 +556,9 @@ impl TryFrom<common_pb::ExprOpr> for InnerOpr {
                 Arith(arith) => {
                     Ok(Self::Arith(unsafe { std::mem::transmute::<_, common_pb::Arithmetic>(*arith) }))
                 }
-                Extract(_) => Ok(Self::Function(unit.clone().try_into()?)),
+                Extract(extract) => Ok(Self::Function(Function::Extract(unsafe {
+                    std::mem::transmute::<_, common_pb::extract::Interval>(extract.interval)
+                }))),
                 _ => Ok(Self::Operand(unit.clone().try_into()?)),
             }
         } else {
@@ -1132,29 +1087,39 @@ mod tests {
     fn prepare_context_with_date() -> Vertices {
         let map1: HashMap<NameOrId, Object> = vec![
             (NameOrId::from("date1".to_string()), "2020-08-08".into()),
-            (NameOrId::from("date2".to_string()), (20200808 as i32).into()),
+            (
+                NameOrId::from("date2".to_string()),
+                chrono::NaiveDate::from_ymd_opt(2020, 8, 8)
+                    .unwrap()
+                    .into(),
+            ),
             (NameOrId::from("time1".to_string()), "10:11:12.100".into()),
-            (NameOrId::from("time2".to_string()), (101112100 as i32).into()),
+            (
+                NameOrId::from("time2".to_string()),
+                chrono::NaiveTime::from_hms_milli_opt(10, 11, 12, 100)
+                    .unwrap()
+                    .into(),
+            ),
             (NameOrId::from("datetime1".to_string()), "2020-08-08T23:11:12.100-11:00".into()),
             (NameOrId::from("datetime2".to_string()), "2020-08-09 10:11:12.100".into()),
-            (NameOrId::from("datetime3".to_string()), (1602324610100 as i64).into()), // 2020-10-10 10:10:10
+            (
+                NameOrId::from("datetime3".to_string()),
+                chrono::NaiveDateTime::from_timestamp_millis(1602324610100)
+                    .unwrap()
+                    .into(),
+            ), // 2020-10-10 10:10:10
         ]
         .into_iter()
         .collect();
         Vertices { vec: vec![Vertex::new(1, Some(9.into()), DynDetails::new(map1))] }
     }
 
-    fn prepare_extract(
-        expr_str: &str, interval: common_pb::extract::Interval, data_type: common_pb::DataType,
-    ) -> common_pb::Expression {
+    fn prepare_extract(expr_str: &str, interval: common_pb::extract::Interval) -> common_pb::Expression {
         let mut operators = str_to_expr_pb(expr_str.to_string())
             .unwrap()
             .operators;
-        let extract_data_type = common_pb::IrDataType {
-            r#type: Some(common_pb::ir_data_type::Type::DataType(data_type as i32)),
-        };
         let extract_opr = common_pb::ExprOpr {
-            node_type: Some(extract_data_type),
+            node_type: None,
             item: Some(common_pb::expr_opr::Item::Extract(common_pb::Extract {
                 interval: interval as i32,
             })),
@@ -1168,131 +1133,47 @@ mod tests {
         let ctxt = prepare_context_with_date();
         let cases = vec![
             // date1: "2020-08-08"
-            prepare_extract("@0.date1", common_pb::extract::Interval::Year, common_pb::DataType::String),
-            prepare_extract("@0.date1", common_pb::extract::Interval::Month, common_pb::DataType::String),
-            prepare_extract("@0.date1", common_pb::extract::Interval::Day, common_pb::DataType::String),
+            prepare_extract("@0.date1", common_pb::extract::Interval::Year),
+            prepare_extract("@0.date1", common_pb::extract::Interval::Month),
+            prepare_extract("@0.date1", common_pb::extract::Interval::Day),
             // date2: 20200808
-            prepare_extract("@0.date2", common_pb::extract::Interval::Year, common_pb::DataType::Date32),
-            prepare_extract("@0.date2", common_pb::extract::Interval::Month, common_pb::DataType::Date32),
-            prepare_extract("@0.date2", common_pb::extract::Interval::Day, common_pb::DataType::Date32),
+            prepare_extract("@0.date2", common_pb::extract::Interval::Year),
+            prepare_extract("@0.date2", common_pb::extract::Interval::Month),
+            prepare_extract("@0.date2", common_pb::extract::Interval::Day),
             // time1: "10:11:12.100"
-            prepare_extract("@0.time1", common_pb::extract::Interval::Hour, common_pb::DataType::String),
-            prepare_extract("@0.time1", common_pb::extract::Interval::Minute, common_pb::DataType::String),
-            prepare_extract("@0.time1", common_pb::extract::Interval::Second, common_pb::DataType::String),
-            prepare_extract(
-                "@0.time1",
-                common_pb::extract::Interval::Millisecond,
-                common_pb::DataType::String,
-            ),
+            prepare_extract("@0.time1", common_pb::extract::Interval::Hour),
+            prepare_extract("@0.time1", common_pb::extract::Interval::Minute),
+            prepare_extract("@0.time1", common_pb::extract::Interval::Second),
+            prepare_extract("@0.time1", common_pb::extract::Interval::Millisecond),
             // time2: 101112100
-            prepare_extract("@0.time2", common_pb::extract::Interval::Hour, common_pb::DataType::Time32),
-            prepare_extract("@0.time2", common_pb::extract::Interval::Minute, common_pb::DataType::Time32),
-            prepare_extract("@0.time2", common_pb::extract::Interval::Second, common_pb::DataType::Time32),
-            prepare_extract(
-                "@0.time2",
-                common_pb::extract::Interval::Millisecond,
-                common_pb::DataType::Time32,
-            ),
+            prepare_extract("@0.time2", common_pb::extract::Interval::Hour),
+            prepare_extract("@0.time2", common_pb::extract::Interval::Minute),
+            prepare_extract("@0.time2", common_pb::extract::Interval::Second),
+            prepare_extract("@0.time2", common_pb::extract::Interval::Millisecond),
             // datetime1: "2020-08-08T23:11:12.100-11:00"
-            prepare_extract(
-                "@0.datetime1",
-                common_pb::extract::Interval::Year,
-                common_pb::DataType::String,
-            ),
-            prepare_extract(
-                "@0.datetime1",
-                common_pb::extract::Interval::Month,
-                common_pb::DataType::String,
-            ),
-            prepare_extract("@0.datetime1", common_pb::extract::Interval::Day, common_pb::DataType::String),
-            prepare_extract(
-                "@0.datetime1",
-                common_pb::extract::Interval::Hour,
-                common_pb::DataType::String,
-            ),
-            prepare_extract(
-                "@0.datetime1",
-                common_pb::extract::Interval::Minute,
-                common_pb::DataType::String,
-            ),
-            prepare_extract(
-                "@0.datetime1",
-                common_pb::extract::Interval::Second,
-                common_pb::DataType::String,
-            ),
-            prepare_extract(
-                "@0.datetime1",
-                common_pb::extract::Interval::Millisecond,
-                common_pb::DataType::String,
-            ),
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Year),
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Month),
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Day),
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Hour),
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Minute),
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Second),
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Millisecond),
             // datetime2: "2020-08-09 10:11:12.100"
-            prepare_extract(
-                "@0.datetime2",
-                common_pb::extract::Interval::Year,
-                common_pb::DataType::String,
-            ),
-            prepare_extract(
-                "@0.datetime2",
-                common_pb::extract::Interval::Month,
-                common_pb::DataType::String,
-            ),
-            prepare_extract("@0.datetime2", common_pb::extract::Interval::Day, common_pb::DataType::String),
-            prepare_extract(
-                "@0.datetime2",
-                common_pb::extract::Interval::Hour,
-                common_pb::DataType::String,
-            ),
-            prepare_extract(
-                "@0.datetime2",
-                common_pb::extract::Interval::Minute,
-                common_pb::DataType::String,
-            ),
-            prepare_extract(
-                "@0.datetime2",
-                common_pb::extract::Interval::Second,
-                common_pb::DataType::String,
-            ),
-            prepare_extract(
-                "@0.datetime2",
-                common_pb::extract::Interval::Millisecond,
-                common_pb::DataType::String,
-            ),
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Year),
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Month),
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Day),
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Hour),
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Minute),
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Second),
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Millisecond),
             // datetime3: 1602324610100, i.e., 2020-10-10 10:10:10
-            prepare_extract(
-                "@0.datetime3",
-                common_pb::extract::Interval::Year,
-                common_pb::DataType::Timestamp,
-            ),
-            prepare_extract(
-                "@0.datetime3",
-                common_pb::extract::Interval::Month,
-                common_pb::DataType::Timestamp,
-            ),
-            prepare_extract(
-                "@0.datetime3",
-                common_pb::extract::Interval::Day,
-                common_pb::DataType::Timestamp,
-            ),
-            prepare_extract(
-                "@0.datetime3",
-                common_pb::extract::Interval::Hour,
-                common_pb::DataType::Timestamp,
-            ),
-            prepare_extract(
-                "@0.datetime3",
-                common_pb::extract::Interval::Minute,
-                common_pb::DataType::Timestamp,
-            ),
-            prepare_extract(
-                "@0.datetime3",
-                common_pb::extract::Interval::Second,
-                common_pb::DataType::Timestamp,
-            ),
-            prepare_extract(
-                "@0.datetime3",
-                common_pb::extract::Interval::Millisecond,
-                common_pb::DataType::Timestamp,
-            ),
+            prepare_extract("@0.datetime3", common_pb::extract::Interval::Year),
+            prepare_extract("@0.datetime3", common_pb::extract::Interval::Month),
+            prepare_extract("@0.datetime3", common_pb::extract::Interval::Day),
+            prepare_extract("@0.datetime3", common_pb::extract::Interval::Hour),
+            prepare_extract("@0.datetime3", common_pb::extract::Interval::Minute),
+            prepare_extract("@0.datetime3", common_pb::extract::Interval::Second),
+            prepare_extract("@0.datetime3", common_pb::extract::Interval::Millisecond),
         ];
 
         let expected = vec![

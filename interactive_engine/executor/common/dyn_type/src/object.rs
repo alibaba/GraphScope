@@ -891,14 +891,9 @@ impl Object {
     }
 
     #[inline]
-    pub fn as_date_format(&self, raw_type: &RawType) -> Result<DateTimeFormats, CastError> {
+    pub fn as_date_format(&self) -> Result<DateTimeFormats, CastError> {
         match self {
-            Object::Primitive(p) => match raw_type {
-                RawType::Date => DateTimeFormats::from_date32(p.as_i32()?),
-                RawType::Time => DateTimeFormats::from_time32(p.as_i32()?),
-                RawType::DateTime => DateTimeFormats::from_timestamp_millis(p.as_i64()?),
-                _ => Err(CastError::new::<DateTimeFormats>(p.raw_type())),
-            },
+            Object::Primitive(p) => Err(CastError::new::<DateTimeFormats>(p.raw_type())),
             Object::String(str) => DateTimeFormats::from_str(str),
             Object::DateFormat(d) => Ok((*d).clone()),
             Object::DynOwned(x) => try_downcast_ref!(x, DateTimeFormats).map(|dt| dt.clone()),
@@ -1104,14 +1099,9 @@ impl<'a> BorrowObject<'a> {
     }
 
     #[inline]
-    pub fn as_date_format(&self, raw_type: &RawType) -> Result<DateTimeFormats, CastError> {
+    pub fn as_date_format(&self) -> Result<DateTimeFormats, CastError> {
         match self {
-            BorrowObject::Primitive(p) => match raw_type {
-                RawType::Date => DateTimeFormats::from_date32(p.as_i32()?),
-                RawType::Time => DateTimeFormats::from_time32(p.as_i32()?),
-                RawType::DateTime => DateTimeFormats::from_timestamp_millis(p.as_i64()?),
-                _ => Err(CastError::new::<DateTimeFormats>(p.raw_type())),
-            },
+            BorrowObject::Primitive(p) => Err(CastError::new::<DateTimeFormats>(p.raw_type())),
             BorrowObject::String(str) => DateTimeFormats::from_str(str),
             BorrowObject::DateFormat(d) => Ok((*d).clone()),
             BorrowObject::DynRef(x) => try_downcast_ref!(x, DateTimeFormats).map(|dt| dt.clone()),
