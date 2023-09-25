@@ -43,12 +43,12 @@ public final class PkHashUtils {
     }
 
     /**
-     * Generates 64 bit hash from byte array of the given length and seed.
+     * Generates 64-bit hash from byte array of the given length and seed.
      *
      * @param data byte array to hash
      * @param length length of the array to hash
      * @param seed initial seed value
-     * @return 64 bit hash of the given array
+     * @return 64-bit hash of the given array
      */
     private static long hash64(final byte[] data, int length, int seed) {
         final long m = 0xc6a4a7935bd1e995L;
@@ -103,11 +103,11 @@ public final class PkHashUtils {
     }
 
     /**
-     * Generates 64 bit hash from byte array with default seed value.
+     * Generates 64-bit hash from byte array with default seed value.
      *
      * @param data byte array to hash
      * @param length length of the array to hash
-     * @return 64 bit hash of the given string
+     * @return 64-bit hash of the given string
      */
     private static long hash64(final byte[] data, int length) {
         return hash64(data, length, 0xc70f6907);

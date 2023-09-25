@@ -19,9 +19,9 @@ limitations under the License.
 #include <type_traits>
 
 #include "flex/codegen/src/string_utils.h"
+#include "flex/proto_generated_gie/common.pb.h"
 #include "glog/logging.h"
 #include "google/protobuf/any.h"
-#include "proto_generated_gie/common.pb.h"
 
 namespace gs {
 

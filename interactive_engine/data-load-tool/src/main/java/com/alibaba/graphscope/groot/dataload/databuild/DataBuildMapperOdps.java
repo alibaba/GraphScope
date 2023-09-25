@@ -16,12 +16,11 @@
 package com.alibaba.graphscope.groot.dataload.databuild;
 
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
-import com.alibaba.graphscope.groot.common.exception.PropertyDefNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
-import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
 import com.aliyun.odps.data.Record;
+import com.aliyun.odps.data.TableInfo;
 import com.aliyun.odps.mapred.MapperBase;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -66,114 +65,41 @@ public class DataBuildMapperOdps extends MapperBase {
 
     @Override
     public void map(long recordNum, Record record, TaskContext context) throws IOException {
-        String tableName = context.getInputTableInfo().getTableName();
-        ColumnMappingInfo columnMappingInfo = this.fileToColumnMappingInfo.get(tableName);
-        if (columnMappingInfo == null) {
-            logger.warn(
-                    "Mapper: ignore [{}], table info is [{}]",
-                    tableName,
-                    context.getInputTableInfo());
+        TableInfo tableInfo = context.getInputTableInfo();
+        String identifier = tableInfo.getTableName() + "|" + tableInfo.getPartPath();
+        ColumnMappingInfo info = this.fileToColumnMappingInfo.get(identifier);
+        if (info == null) {
+            logger.warn("Mapper: ignore [{}], table info: [{}]", identifier, tableInfo);
             return;
         }
+        String[] items = Utils.parseRecords(record);
 
-        int labelId = columnMappingInfo.getLabelId();
-        long tableId = columnMappingInfo.getTableId();
-        int columnCount = record.getColumnCount();
-        String[] items = new String[columnCount];
-        for (int i = 0; i < columnCount; i++) {
-            if (record.get(i) == null) {
-                //                items[i] = "";
-                items[i] = null;
-            } else {
-                items[i] = record.get(i).toString();
-            }
-        }
-        Map<Integer, Integer> propertiesColumnMapping = columnMappingInfo.getPropertiesColMap();
+        int labelId = info.getLabelId();
+        long tableId = info.getTableId();
         GraphElement type = this.graphSchema.getElement(labelId);
-        Map<Integer, PropertyValue> propertiesMap =
-                buildPropertiesMap(type, items, propertiesColumnMapping);
-        BytesRef valRef = this.dataEncoder.encodeProperties(labelId, propertiesMap);
+        Map<Integer, Integer> colMap = info.getPropertiesColMap();
+        Map<Integer, PropertyValue> properties = Utils.buildProperties(type, items, colMap);
+
+        BytesRef valRef = this.dataEncoder.encodeProperties(labelId, properties);
         outVal.set(new Object[] {new String(valRef.getBytes(), charSet)});
         if (type instanceof GraphVertex) {
             BytesRef keyRef =
-                    this.dataEncoder.encodeVertexKey((GraphVertex) type, propertiesMap, tableId);
+                    Utils.getVertexKeyRef(dataEncoder, (GraphVertex) type, properties, tableId);
             outKey.set(new Object[] {new String(keyRef.getBytes(), charSet)});
             context.write(outKey, outVal);
         } else if (type instanceof GraphEdge) {
-            int srcLabelId = columnMappingInfo.getSrcLabelId();
-            Map<Integer, Integer> srcPkColMap = columnMappingInfo.getSrcPkColMap();
-            GraphElement srcType = this.graphSchema.getElement(srcLabelId);
-            Map<Integer, PropertyValue> srcPkMap = buildPropertiesMap(srcType, items, srcPkColMap);
-
-            int dstLabelId = columnMappingInfo.getDstLabelId();
-            Map<Integer, Integer> dstPkColMap = columnMappingInfo.getDstPkColMap();
-            GraphElement dstType = this.graphSchema.getElement(dstLabelId);
-            Map<Integer, PropertyValue> dstPkMap = buildPropertiesMap(dstType, items, dstPkColMap);
-
-            BytesRef outEdgeKeyRef =
-                    this.dataEncoder.encodeEdgeKey(
-                            (GraphVertex) srcType,
-                            srcPkMap,
-                            (GraphVertex) dstType,
-                            dstPkMap,
-                            (GraphEdge) type,
-                            propertiesMap,
-                            tableId,
-                            true);
-            outKey.set(new Object[] {new String(outEdgeKeyRef.getBytes(), charSet)});
+            BytesRef out =
+                    Utils.getEdgeKeyRef(
+                            dataEncoder, graphSchema, info, items, properties, tableId, true);
+            outKey.set(new Object[] {new String(out.getBytes(), charSet)});
             context.write(outKey, outVal);
-            BytesRef inEdgeKeyRef =
-                    this.dataEncoder.encodeEdgeKey(
-                            (GraphVertex) srcType,
-                            srcPkMap,
-                            (GraphVertex) dstType,
-                            dstPkMap,
-                            (GraphEdge) type,
-                            propertiesMap,
-                            tableId,
-                            false);
-            outKey.set(new Object[] {new String(inEdgeKeyRef.getBytes(), charSet)});
+            BytesRef in =
+                    Utils.getEdgeKeyRef(
+                            dataEncoder, graphSchema, info, items, properties, tableId, false);
+            outKey.set(new Object[] {new String(in.getBytes(), charSet)});
             context.write(outKey, outVal);
         } else {
-            throw new IllegalArgumentException(
-                    "invalid label [" + labelId + "], only support VertexType and EdgeType");
+            throw new IllegalArgumentException("Invalid label " + labelId);
         }
-    }
-
-    private Map<Integer, PropertyValue> buildPropertiesMap(
-            GraphElement typeDef, String[] items, Map<Integer, Integer> columnMapping) {
-        Map<Integer, PropertyValue> operationProperties = new HashMap<>(columnMapping.size());
-        columnMapping.forEach(
-                (colIdx, propertyId) -> {
-                    GraphProperty propertyDef = typeDef.getProperty(propertyId);
-                    if (propertyDef == null) {
-                        throw new PropertyDefNotFoundException(
-                                "property ["
-                                        + propertyId
-                                        + "] not found in ["
-                                        + typeDef.getLabel()
-                                        + "]");
-                    }
-                    if (colIdx >= items.length) {
-                        throw new IllegalArgumentException(
-                                "label ["
-                                        + typeDef.getLabel()
-                                        + "], invalid mapping ["
-                                        + colIdx
-                                        + "] -> ["
-                                        + propertyId
-                                        + "], data ["
-                                        + Arrays.toString(items)
-                                        + "]");
-                    }
-                    String val = items[colIdx];
-                    PropertyValue propertyValue = null;
-                    if (val != null) {
-                        DataType dataType = propertyDef.getDataType();
-                        propertyValue = new PropertyValue(dataType, val);
-                    }
-                    operationProperties.put(propertyId, propertyValue);
-                });
-        return operationProperties;
     }
 }

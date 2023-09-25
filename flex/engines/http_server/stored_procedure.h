@@ -25,8 +25,8 @@
 #include <utility>
 #include "glog/logging.h"
 
-#include "proto_generated_gie/results.pb.h"
-#include "proto_generated_gie/stored_procedure.pb.h"
+#include "flex/proto_generated_gie/results.pb.h"
+#include "flex/proto_generated_gie/stored_procedure.pb.h"
 
 #include <hiactor/util/data_type.hh>
 #include <seastar/core/print.hh>

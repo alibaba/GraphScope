@@ -2072,6 +2072,7 @@ mod test {
                 extra: HashMap::new(),
             }),
             idx_predicate: Some(vec!["software".to_string()].into()),
+            is_count_only: false,
             meta_data: None,
         };
         scan.preprocess(&meta, &mut plan_meta).unwrap();
@@ -2151,6 +2152,7 @@ mod test {
                 extra: HashMap::new(),
             }),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -2197,6 +2199,7 @@ mod test {
                 extra: HashMap::new(),
             }),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -2229,6 +2232,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2284,6 +2288,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2361,6 +2366,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2482,6 +2488,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         let mut opr_id = plan
@@ -2620,6 +2627,7 @@ mod test {
                 extra: Default::default(),
             }),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -2648,6 +2656,7 @@ mod test {
                 extra: Default::default(),
             }),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -2685,6 +2694,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2762,6 +2772,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2825,6 +2836,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2883,6 +2895,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2930,6 +2943,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2989,6 +3003,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -3080,6 +3095,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -3126,6 +3142,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -3222,6 +3239,7 @@ mod test {
             alias: Some("v".into()),
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -3301,6 +3319,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 

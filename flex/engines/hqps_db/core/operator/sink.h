@@ -28,7 +28,7 @@
 #include "flex/engines/hqps_db/structures/multi_edge_set/untyped_edge_set.h"
 #include "flex/engines/hqps_db/structures/path.h"
 
-#include "proto_generated_gie/results.pb.h"
+#include "flex/proto_generated_gie/results.pb.h"
 
 namespace gs {
 

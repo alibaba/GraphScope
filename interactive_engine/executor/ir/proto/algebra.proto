@@ -243,7 +243,9 @@ message Scan {
   QueryParams params = 3;
   // The optional filtering predicate for the field that have been indexed
   IndexPredicate idx_predicate = 4;
-  MetaData meta_data = 5;
+  // The flag that indicates SCAN + COUNT
+  bool is_count_only = 5;
+  MetaData meta_data = 6;
 }
 
 // It is typical to use the operator together with EdgeExpand or PathExpand, with the functionality of

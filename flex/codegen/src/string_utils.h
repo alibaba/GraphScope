@@ -19,7 +19,7 @@ limitations under the License.
 #include <string>
 
 #include "flex/codegen/src/pb_parser/internal_struct.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 #include "glog/logging.h"
 namespace gs {

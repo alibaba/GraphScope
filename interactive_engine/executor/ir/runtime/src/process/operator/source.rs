@@ -17,7 +17,7 @@ use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::sync::Arc;
 
-use dyn_type::Object;
+use dyn_type::{object, Object};
 use graph_proxy::apis::graph::PKV;
 use graph_proxy::apis::partitioner::{PartitionInfo, PartitionedData};
 use graph_proxy::apis::{get_graph, ClusterInfo, Edge, QueryParams, Vertex, ID};
@@ -46,6 +46,7 @@ pub struct SourceOperator {
     primary_key_values: Option<PKV>,
     alias: Option<KeyId>,
     source_type: SourceType,
+    is_count_only: bool,
 }
 
 impl Default for SourceOperator {
@@ -56,6 +57,7 @@ impl Default for SourceOperator {
             primary_key_values: None,
             alias: None,
             source_type: SourceType::Dummy,
+            is_count_only: false,
         }
     }
 }
@@ -127,48 +129,61 @@ impl SourceOperator {
 
         match self.source_type {
             SourceType::Vertex => {
-                let mut v_source = Box::new(std::iter::empty()) as Box<dyn Iterator<Item = Vertex> + Send>;
-                if let Some(ref seeds) = self.src {
-                    if let Some(src) = seeds.get(&(worker_index as u64)) {
-                        if !src.is_empty() {
-                            v_source = graph.get_vertex(src, &self.query_params)?;
-                        }
-                    }
-                } else if let Some(ref indexed_values) = self.primary_key_values {
-                    if self.query_params.labels.is_empty() {
-                        Err(FnGenError::unsupported_error(
-                            "Empty label in `IndexScan` self.query_params.labels",
-                        ))?
-                    }
-                    let mut source_vertices = vec![];
-                    for label in &self.query_params.labels {
-                        if let Some(v) =
-                            graph.index_scan_vertex(*label, indexed_values, &self.query_params)?
-                        {
-                            source_vertices.push(v);
-                        }
-                    }
-                    v_source = Box::new(source_vertices.into_iter());
+                if self.is_count_only {
+                    let count = graph.count_vertex(&self.query_params)?;
+                    Ok(Box::new(vec![Record::new(object!(count), self.alias.clone())].into_iter()))
                 } else {
-                    // parallel scan, and each worker should scan the partitions assigned to it in self.v_params.partitions
-                    v_source = graph.scan_vertex(&self.query_params)?;
-                };
-                Ok(Box::new(v_source.map(move |v| Record::new(v, self.alias.clone()))))
+                    let mut v_source =
+                        Box::new(std::iter::empty()) as Box<dyn Iterator<Item = Vertex> + Send>;
+                    if let Some(ref seeds) = self.src {
+                        if let Some(src) = seeds.get(&(worker_index as u64)) {
+                            if !src.is_empty() {
+                                v_source = graph.get_vertex(src, &self.query_params)?;
+                            }
+                        }
+                    } else if let Some(ref indexed_values) = self.primary_key_values {
+                        if self.query_params.labels.is_empty() {
+                            Err(FnGenError::unsupported_error(
+                                "Empty label in `IndexScan` self.query_params.labels",
+                            ))?
+                        }
+                        let mut source_vertices = vec![];
+                        for label in &self.query_params.labels {
+                            if let Some(v) =
+                                graph.index_scan_vertex(*label, indexed_values, &self.query_params)?
+                            {
+                                source_vertices.push(v);
+                            }
+                        }
+                        v_source = Box::new(source_vertices.into_iter());
+                    } else {
+                        // parallel scan, and each worker should scan the partitions assigned to it in self.v_params.partitions
+                        v_source = graph.scan_vertex(&self.query_params)?;
+                    };
+                    Ok(Box::new(v_source.map(move |v| Record::new(v, self.alias.clone()))))
+                }
             }
             SourceType::Edge => {
-                let mut e_source = Box::new(std::iter::empty()) as Box<dyn Iterator<Item = Edge> + Send>;
-                if let Some(ref seeds) = self.src {
-                    if let Some(src) = seeds.get(&(worker_index as u64)) {
-                        if !src.is_empty() {
-                            e_source = graph.get_edge(src, &self.query_params)?;
-                        }
-                    }
+                if self.is_count_only {
+                    let count = graph.count_edge(&self.query_params)?;
+                    Ok(Box::new(vec![Record::new(object!(count), self.alias.clone())].into_iter()))
                 } else {
-                    // parallel scan, and each worker should scan the partitions assigned to it in self.e_params.partitions
-                    e_source = graph.scan_edge(&self.query_params)?;
+                    let mut e_source =
+                        Box::new(std::iter::empty()) as Box<dyn Iterator<Item = Edge> + Send>;
+                    if let Some(ref seeds) = self.src {
+                        if let Some(src) = seeds.get(&(worker_index as u64)) {
+                            if !src.is_empty() {
+                                e_source = graph.get_edge(src, &self.query_params)?;
+                            }
+                        }
+                    } else {
+                        // parallel scan, and each worker should scan the partitions assigned to it in self.e_params.partitions
+                        e_source = graph.scan_edge(&self.query_params)?;
+                    }
+                    Ok(Box::new(e_source.map(move |e| Record::new(e, self.alias.clone()))))
                 }
-                Ok(Box::new(e_source.map(move |e| Record::new(e, self.alias.clone()))))
             }
+
             SourceType::Table => Err(FnGenError::unsupported_error(
                 "neither `Edge` nor `Vertex` but `Table` type `Source` opr",
             ))?,
@@ -198,6 +213,7 @@ impl TryFrom<pb::Scan> for SourceOperator {
             primary_key_values: None,
             alias: scan_pb.alias,
             source_type,
+            is_count_only: scan_pb.is_count_only,
         })
     }
 }

@@ -43,8 +43,13 @@ mod test {
     // g.V()
     #[test]
     fn scan_test() {
-        let source_iter =
-            scan_gen(pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None });
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: None,
+            idx_predicate: None,
+            is_count_only: false,
+        });
         let mut result_ids = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -71,6 +76,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            is_count_only: false,
         });
         let mut result_ids = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
@@ -96,6 +102,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into(), SOFTWARE_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            is_count_only: false,
         });
         let mut result_ids = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
@@ -123,6 +130,7 @@ mod test {
             alias: None,
             params: None,
             idx_predicate: Some(vec![1].into()),
+            is_count_only: false,
         });
 
         let mut result_ids = vec![];
@@ -146,6 +154,7 @@ mod test {
             alias: None,
             params: None,
             idx_predicate: Some(vec![1, 2].into()),
+            is_count_only: false,
         });
 
         let mut result_ids = vec![];
@@ -167,8 +176,13 @@ mod test {
     fn scan_sample_test() {
         let mut params = query_params(vec![], vec![], None);
         params.sample_ratio = 0.1;
-        let source_iter =
-            scan_gen(pb::Scan { scan_opt: 0, alias: None, params: Some(params), idx_predicate: None });
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(params),
+            idx_predicate: None,
+            is_count_only: false,
+        });
         let mut result_count = 0;
         for record in source_iter {
             if let Some(_element) = record.get(None).unwrap().as_vertex() {
@@ -182,8 +196,13 @@ mod test {
     // g.E()
     #[test]
     fn scan_edge_test() {
-        let source_iter =
-            scan_gen(pb::Scan { scan_opt: 1, alias: None, params: None, idx_predicate: None });
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 1,
+            alias: None,
+            params: None,
+            idx_predicate: None,
+            is_count_only: false,
+        });
         let mut result_ids = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -210,6 +229,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            is_count_only: false,
         });
         let mut result_ids = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
@@ -231,8 +251,13 @@ mod test {
     fn scan_edge_sample_test() {
         let mut params = query_params(vec![], vec![], None);
         params.sample_ratio = 0.1;
-        let source_iter =
-            scan_gen(pb::Scan { scan_opt: 1, alias: None, params: Some(params), idx_predicate: None });
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 1,
+            alias: None,
+            params: Some(params),
+            idx_predicate: None,
+            is_count_only: false,
+        });
         let mut result_count = 0;
         for record in source_iter {
             if let Some(_element) = record.get(None).unwrap().as_edge() {
@@ -241,5 +266,89 @@ mod test {
         }
         // It is almost impossible to sample 6 edges
         assert!(result_count < 6);
+    }
+
+    // g.V().count()
+    #[test]
+    fn scan_vertex_count_test() {
+        let params = query_params(vec![], vec![], None);
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 0, // vertex
+            alias: None,
+            params: Some(params),
+            idx_predicate: None,
+            is_count_only: true,
+        });
+        let expected = 6;
+        let mut result = 0;
+        for record in source_iter {
+            if let Some(object) = record.get(None).unwrap().as_object() {
+                result = object.as_i32().unwrap();
+            }
+        }
+        assert_eq!(result, expected)
+    }
+
+    // g.V().hasLabel("person").count()
+    #[test]
+    fn scan_person_vertex_count_test() {
+        let params = query_params(vec![PERSON_LABEL.into()], vec![], None);
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 0, // vertex
+            alias: None,
+            params: Some(params),
+            idx_predicate: None,
+            is_count_only: true,
+        });
+        let expected = 4;
+        let mut result = 0;
+        for record in source_iter {
+            if let Some(object) = record.get(None).unwrap().as_object() {
+                result = object.as_i32().unwrap();
+            }
+        }
+        assert_eq!(result, expected)
+    }
+
+    // g.E().count()
+    #[test]
+    fn scan_edge_count_test() {
+        let params = query_params(vec![], vec![], None);
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 1, // edge
+            alias: None,
+            params: Some(params),
+            idx_predicate: None,
+            is_count_only: true,
+        });
+        let expected = 6;
+        let mut result = 0;
+        for record in source_iter {
+            if let Some(object) = record.get(None).unwrap().as_object() {
+                result = object.as_i32().unwrap();
+            }
+        }
+        assert_eq!(result, expected)
+    }
+
+    // g.E().hasLabel("knows").count()
+    #[test]
+    fn scan_knows_edge_count_test() {
+        let params = query_params(vec![KNOWS_LABEL.into()], vec![], None);
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 1, // edge
+            alias: None,
+            params: Some(params),
+            idx_predicate: None,
+            is_count_only: true,
+        });
+        let expected = 2;
+        let mut result = 0;
+        for record in source_iter {
+            if let Some(object) = record.get(None).unwrap().as_object() {
+                result = object.as_i32().unwrap();
+            }
+        }
+        assert_eq!(result, expected)
     }
 }
