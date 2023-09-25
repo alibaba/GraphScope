@@ -41,6 +41,7 @@ mod test {
             alias: source_alias.map(|tag| tag.into()),
             params: Some(query_params(vec![], vec![], None)),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
