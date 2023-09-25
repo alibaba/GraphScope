@@ -116,7 +116,6 @@ jobs:
           cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/ic${i}_adhoc.cypher -w=/tmp/codgen/"
           cmd=${cmd}" -o=/tmp/plugin --ir_conf=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml "
           cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
-          cmd=${cmd}" --gie_home=${GIE_HOME}"
           echo $cmd
           eval ${cmd}
         done
@@ -126,7 +125,6 @@ jobs:
           cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/simple_match_${i}.cypher -w=/tmp/codgen/"
           cmd=${cmd}" -o=/tmp/plugin --ir_conf=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml "
           cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
-          cmd=${cmd}" --gie_home=${GIE_HOME}"
           echo $cmd
           eval ${cmd}
         done

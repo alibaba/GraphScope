@@ -7,7 +7,7 @@ compiler:
     is_on: true
     opt: RBO
     rules:
-      - FilterMatchRule
       - FilterIntoJoinRule
-      - NotExistToAntiJoinRule
+      - FilterMatchRule
+      - NotMatchToAntiJoinRule
   query_timeout: 20000 # query timeout in milliseconds, default 2000

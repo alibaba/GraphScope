@@ -156,7 +156,6 @@ void init_codegen_proxy(const bpo::variables_map& vm,
                         const std::string& engine_config_file) {
   std::string codegen_dir = parse_codegen_dir(vm);
   std::string codegen_bin;
-  std::string gie_home;
   if (vm.count("codegen-bin") == 0) {
     LOG(INFO) << "codegen-bin is not specified";
     codegen_bin = find_codegen_bin();
@@ -167,16 +166,8 @@ void init_codegen_proxy(const bpo::variables_map& vm,
       LOG(FATAL) << "codegen bin not exists: " << codegen_bin;
     }
   }
-  if (vm.count("gie-home") == 0) {
-    LOG(FATAL) << "gie-home is not specified";
-  } else {
-    gie_home = vm["gie-home"].as<std::string>();
-    if (!std::filesystem::exists(gie_home)) {
-      LOG(FATAL) << "gie-home not exists: " << gie_home;
-    }
-  }
   server::CodegenProxy::get().Init(codegen_dir, codegen_bin, engine_config_file,
-                                   graph_schema_file, gie_home);
+                                   graph_schema_file);
 }
 }  // namespace gs
 
@@ -191,8 +182,7 @@ int main(int argc, char** argv) {
                                    "codegen binary path")(
       "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
       "data-path,a", bpo::value<std::string>(), "data directory path")(
-      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file")(
-      "gie-home,h", bpo::value<std::string>(), "path to gie home");
+      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();

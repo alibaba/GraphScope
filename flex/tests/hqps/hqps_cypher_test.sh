@@ -97,7 +97,6 @@ start_engine_service(){
 
     cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} -g ${GRAPH_SCHEMA_YAML} "
     cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} -l ${GRAPH_BULK_LOAD_YAML} "
-    cmd="${cmd} --gie-home ${GIE_HOME}"
 
     echo "Start engine service with command: ${cmd}"
     ${cmd} &
