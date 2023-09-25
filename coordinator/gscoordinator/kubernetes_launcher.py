@@ -1291,7 +1291,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._learning_instance_processes[object_id] = []
         for pod_index, pod in enumerate(self._pod_name_list):
             container = LEARNING_CONTAINER_NAME
-            sub_cmd = f"python3 -m gscoordinator.learning {handle} {config} {pod_index}"
+            sub_cmd = f"python3 -m gscoordinator.launch_graphlearn {handle} {config} {pod_index}"
             cmd = f"kubectl -n {self._namespace} exec -it -c {container} {pod} -- {sub_cmd}"
             logger.debug("launching learning server: %s", " ".join(cmd))
             proc = subprocess.Popen(
@@ -1321,7 +1321,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             self._api_client, object_id, pod_host_ip_list
         )
 
-    def create_learning_instance(self, object_id, handle, config):
+    def create_learning_instance(self, object_id, handle, config, learning_backend):
         pod_name_list, _, pod_host_ip_list = self._allocate_learning_engine(object_id)
         if not pod_name_list or not pod_host_ip_list:
             raise RuntimeError("Failed to allocate learning engine")
