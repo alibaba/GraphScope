@@ -23,10 +23,7 @@ import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.antlr4.GenericLiteralVisitor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -50,7 +47,8 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
         int lower = Integer.valueOf(ranges[0]);
         int upper = Integer.valueOf(ranges[1]);
         // set path_opt and result_opt
-        List<GremlinGSParser.TraversalMethod_withContext> nextWith = getNextWith((GremlinGSParser.TraversalMethodContext) ctx.getParent());
+        List<GremlinGSParser.TraversalMethod_withContext> nextWith =
+                getNextWith((GremlinGSParser.TraversalMethodContext) ctx.getParent());
         nextWith.forEach(k -> visitTraversalMethod_with(k));
         // set expand config, getV config, range
         return builder.expand(new ExpandConfig(GraphOpt.Expand.OUT, getExpandLabelConfig(labels)))
@@ -68,7 +66,8 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
         int lower = Integer.valueOf(ranges[0]);
         int upper = Integer.valueOf(ranges[1]);
         // set path_opt and result_opt
-        List<GremlinGSParser.TraversalMethod_withContext> nextWith = getNextWith((GremlinGSParser.TraversalMethodContext) ctx.getParent());
+        List<GremlinGSParser.TraversalMethod_withContext> nextWith =
+                getNextWith((GremlinGSParser.TraversalMethodContext) ctx.getParent());
         nextWith.forEach(k -> visitTraversalMethod_with(k));
         // set expand config, getV config, range
         return builder.expand(new ExpandConfig(GraphOpt.Expand.IN, getExpandLabelConfig(labels)))
@@ -86,7 +85,8 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
         int lower = Integer.valueOf(ranges[0]);
         int upper = Integer.valueOf(ranges[1]);
         // set path_opt and result_opt
-        List<GremlinGSParser.TraversalMethod_withContext> nextWith = getNextWith((GremlinGSParser.TraversalMethodContext) ctx.getParent());
+        List<GremlinGSParser.TraversalMethod_withContext> nextWith =
+                getNextWith((GremlinGSParser.TraversalMethodContext) ctx.getParent());
         nextWith.forEach(k -> visitTraversalMethod_with(k));
         // set expand config, getV config, range
         return builder.expand(new ExpandConfig(GraphOpt.Expand.BOTH, getExpandLabelConfig(labels)))
@@ -98,21 +98,25 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
     public PathExpandConfig.Builder visitTraversalMethod_with(
             GremlinGSParser.TraversalMethod_withContext ctx) {
         String optKey = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
-        Object optValue = GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral());
+        Object optValue =
+                GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral());
         switch (optKey.toUpperCase()) {
             case "PATH_OPT":
-                return builder.pathOpt(GraphOpt.PathExpandPath.valueOf(String.valueOf(optValue).toUpperCase()));
+                return builder.pathOpt(
+                        GraphOpt.PathExpandPath.valueOf(String.valueOf(optValue).toUpperCase()));
             case "RESULT_OPT":
-                return builder.resultOpt(GraphOpt.PathExpandResult.valueOf(String.valueOf(optValue).toUpperCase()));
+                return builder.resultOpt(
+                        GraphOpt.PathExpandResult.valueOf(String.valueOf(optValue).toUpperCase()));
             default:
                 return builder;
         }
     }
 
-    private List<GremlinGSParser.TraversalMethod_withContext> getNextWith(GremlinGSParser.TraversalMethodContext curCtx) {
+    private List<GremlinGSParser.TraversalMethod_withContext> getNextWith(
+            GremlinGSParser.TraversalMethodContext curCtx) {
         List<GremlinGSParser.TraversalMethod_withContext> nextWith = Lists.newArrayList();
         TraversalMethodIterator methodIterator = new TraversalMethodIterator(curCtx);
-        while(methodIterator.hasNext()) {
+        while (methodIterator.hasNext()) {
             GremlinGSParser.TraversalMethodContext next = methodIterator.next();
             if (next.traversalMethod_with() != null) {
                 nextWith.add(next.traversalMethod_with());
@@ -122,7 +126,6 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
         }
         return nextWith;
     }
-
 
     private LabelConfig getExpandLabelConfig(String[] labels) {
         if (labels.length <= 1) {
@@ -134,35 +137,6 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
                 expandLabels.addLabel(labels[i]);
             }
             return expandLabels;
-        }
-    }
-
-    private static class TraversalMethodIterator implements Iterator<GremlinGSParser.TraversalMethodContext> {
-        private GremlinGSParser.TraversalMethodContext _next;
-        public TraversalMethodIterator(GremlinGSParser.TraversalMethodContext start) {
-            this._next = start;
-        }
-
-        @Override
-        public boolean hasNext() {
-            ParseTree parent = getParent(getParent(_next));
-            return parent != null && parent.getChildCount() >= 3;
-        }
-
-        @Override
-        public GremlinGSParser.TraversalMethodContext next() {
-            ParseTree parent = getParent(getParent(_next));
-            if (parent == null || parent.getChildCount() < 3) return null;
-            _next = (GremlinGSParser.TraversalMethodContext) parent.getChild(2);
-            return _next;
-        }
-
-        private @Nullable ParseTree getParent(ParseTree child) {
-            Class<? extends ParseTree> parentClass = GremlinGSParser.ChainedTraversalContext.class;
-            while (child != null && child.getParent() != null && !child.getParent().getClass().equals(parentClass)) {
-                child = child.getParent();
-            }
-            return (child != null && child.getParent() != null && child.getParent().getClass().equals(parentClass)) ? child.getParent() : null;
         }
     }
 }

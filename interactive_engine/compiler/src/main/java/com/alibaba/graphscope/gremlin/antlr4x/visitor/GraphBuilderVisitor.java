@@ -27,17 +27,25 @@ import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.alibaba.graphscope.gremlin.antlr4.GenericLiteralVisitor;
+import com.alibaba.graphscope.gremlin.antlr4.TraversalEnumParser;
 import com.alibaba.graphscope.gremlin.exception.InvalidGremlinScriptException;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.tinkerpop.gremlin.structure.Column;
+import org.apache.tinkerpop.gremlin.structure.T;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -51,13 +59,27 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     @Override
     public GraphBuilder visitTraversalSourceSpawnMethod_V(
             GremlinGSParser.TraversalSourceSpawnMethod_VContext ctx) {
-        return builder.source(new SourceConfig(GraphOpt.Source.VERTEX));
+        return builder.source(
+                new SourceConfig(
+                        GraphOpt.Source.VERTEX,
+                        new LabelConfig(true),
+                        getNextTag(
+                                new TraversalMethodIterator(
+                                        (GremlinGSParser.TraversalSourceSpawnMethodContext)
+                                                ctx.getParent()))));
     }
 
     @Override
     public GraphBuilder visitTraversalSourceSpawnMethod_E(
             GremlinGSParser.TraversalSourceSpawnMethod_EContext ctx) {
-        return builder.source(new SourceConfig(GraphOpt.Source.EDGE));
+        return builder.source(
+                new SourceConfig(
+                        GraphOpt.Source.EDGE,
+                        new LabelConfig(true),
+                        getNextTag(
+                                new TraversalMethodIterator(
+                                        (GremlinGSParser.TraversalSourceSpawnMethodContext)
+                                                ctx.getParent()))));
     }
 
     @Override
@@ -191,36 +213,75 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     @Override
     public GraphBuilder visitTraversalMethod_outE(GremlinGSParser.TraversalMethod_outEContext ctx) {
         return builder.expand(
-                new ExpandConfig(GraphOpt.Expand.OUT, getLabelConfig(ctx.stringLiteralList())));
+                new ExpandConfig(
+                        GraphOpt.Expand.OUT,
+                        getLabelConfig(ctx.stringLiteralList()),
+                        getNextTag(
+                                new TraversalMethodIterator(
+                                        (GremlinGSParser.TraversalMethodContext)
+                                                ctx.getParent()))));
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_inE(GremlinGSParser.TraversalMethod_inEContext ctx) {
         return builder.expand(
-                new ExpandConfig(GraphOpt.Expand.IN, getLabelConfig(ctx.stringLiteralList())));
+                new ExpandConfig(
+                        GraphOpt.Expand.IN,
+                        getLabelConfig(ctx.stringLiteralList()),
+                        getNextTag(
+                                new TraversalMethodIterator(
+                                        (GremlinGSParser.TraversalMethodContext)
+                                                ctx.getParent()))));
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_bothE(
             GremlinGSParser.TraversalMethod_bothEContext ctx) {
         return builder.expand(
-                new ExpandConfig(GraphOpt.Expand.BOTH, getLabelConfig(ctx.stringLiteralList())));
+                new ExpandConfig(
+                        GraphOpt.Expand.BOTH,
+                        getLabelConfig(ctx.stringLiteralList()),
+                        getNextTag(
+                                new TraversalMethodIterator(
+                                        (GremlinGSParser.TraversalMethodContext)
+                                                ctx.getParent()))));
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_outV(GremlinGSParser.TraversalMethod_outVContext ctx) {
-        return builder.getV(new GetVConfig(GraphOpt.GetV.START));
+        return builder.getV(
+                new GetVConfig(
+                        GraphOpt.GetV.START,
+                        new LabelConfig(true),
+                        getNextTag(
+                                new TraversalMethodIterator(
+                                        (GremlinGSParser.TraversalMethodContext)
+                                                ctx.getParent()))));
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_inV(GremlinGSParser.TraversalMethod_inVContext ctx) {
-        return builder.getV(new GetVConfig(GraphOpt.GetV.END));
+        return builder.getV(
+                new GetVConfig(
+                        GraphOpt.GetV.END,
+                        new LabelConfig(true),
+                        getNextTag(
+                                new TraversalMethodIterator(
+                                        (GremlinGSParser.TraversalMethodContext)
+                                                ctx.getParent()))));
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_otherV(
             GremlinGSParser.TraversalMethod_otherVContext ctx) {
-        return builder.getV(new GetVConfig(GraphOpt.GetV.OTHER));
+        return builder.getV(
+                new GetVConfig(
+                        GraphOpt.GetV.OTHER,
+                        new LabelConfig(true),
+                        getNextTag(
+                                new TraversalMethodIterator(
+                                        (GremlinGSParser.TraversalMethodContext)
+                                                ctx.getParent()))));
     }
 
     @Override
@@ -229,14 +290,21 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
         if (peek instanceof GraphLogicalPathExpand) {
             GraphLogicalPathExpand pathExpand = (GraphLogicalPathExpand) peek;
             GraphLogicalExpand expand = (GraphLogicalExpand) pathExpand.getExpand();
+            String tag =
+                    getNextTag(
+                            new TraversalMethodIterator(
+                                    (GremlinGSParser.TraversalMethodContext) ctx.getParent()));
             switch (expand.getOpt()) {
                 case OUT:
-                    return builder.getV(new GetVConfig(GraphOpt.GetV.END));
+                    return builder.getV(
+                            new GetVConfig(GraphOpt.GetV.END, new LabelConfig(true), tag));
                 case IN:
-                    return builder.getV(new GetVConfig(GraphOpt.GetV.START));
+                    return builder.getV(
+                            new GetVConfig(GraphOpt.GetV.START, new LabelConfig(true), tag));
                 case BOTH:
                 default:
-                    return builder.getV(new GetVConfig(GraphOpt.GetV.OTHER));
+                    return builder.getV(
+                            new GetVConfig(GraphOpt.GetV.OTHER, new LabelConfig(true), tag));
             }
         }
         throw new InvalidGremlinScriptException("endV should follow with path expand");
@@ -244,31 +312,61 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
 
     @Override
     public GraphBuilder visitTraversalMethod_out(GremlinGSParser.TraversalMethod_outContext ctx) {
-        if(pathExpandPattern(ctx.stringLiteralList())){
-            return builder.pathExpand(new PathExpandBuilderVisitor(this).visitTraversalMethod_out(ctx).build());
+        if (pathExpandPattern(ctx.stringLiteralList())) {
+            return builder.pathExpand(
+                    new PathExpandBuilderVisitor(this).visitTraversalMethod_out(ctx).build());
         } else {
-            return builder.expand(new ExpandConfig(GraphOpt.Expand.OUT, getLabelConfig(ctx.stringLiteralList())))
-                    .getV(new GetVConfig(GraphOpt.GetV.END));
+            return builder.expand(
+                            new ExpandConfig(
+                                    GraphOpt.Expand.OUT, getLabelConfig(ctx.stringLiteralList())))
+                    .getV(
+                            new GetVConfig(
+                                    GraphOpt.GetV.END,
+                                    new LabelConfig(true),
+                                    getNextTag(
+                                            new TraversalMethodIterator(
+                                                    (GremlinGSParser.TraversalMethodContext)
+                                                            ctx.getParent()))));
         }
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_in(GremlinGSParser.TraversalMethod_inContext ctx) {
-        if(pathExpandPattern(ctx.stringLiteralList())){
-            return builder.pathExpand(new PathExpandBuilderVisitor(this).visitTraversalMethod_in(ctx).build());
+        if (pathExpandPattern(ctx.stringLiteralList())) {
+            return builder.pathExpand(
+                    new PathExpandBuilderVisitor(this).visitTraversalMethod_in(ctx).build());
         } else {
-            return builder.expand(new ExpandConfig(GraphOpt.Expand.IN, getLabelConfig(ctx.stringLiteralList())))
-                    .getV(new GetVConfig(GraphOpt.GetV.START));
+            return builder.expand(
+                            new ExpandConfig(
+                                    GraphOpt.Expand.IN, getLabelConfig(ctx.stringLiteralList())))
+                    .getV(
+                            new GetVConfig(
+                                    GraphOpt.GetV.START,
+                                    new LabelConfig(true),
+                                    getNextTag(
+                                            new TraversalMethodIterator(
+                                                    (GremlinGSParser.TraversalMethodContext)
+                                                            ctx.getParent()))));
         }
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_both(GremlinGSParser.TraversalMethod_bothContext ctx) {
-        if(pathExpandPattern(ctx.stringLiteralList())){
-            return builder.pathExpand(new PathExpandBuilderVisitor(this).visitTraversalMethod_both(ctx).build());
+        if (pathExpandPattern(ctx.stringLiteralList())) {
+            return builder.pathExpand(
+                    new PathExpandBuilderVisitor(this).visitTraversalMethod_both(ctx).build());
         } else {
-            return builder.expand(new ExpandConfig(GraphOpt.Expand.BOTH, getLabelConfig(ctx.stringLiteralList())))
-                    .getV(new GetVConfig(GraphOpt.GetV.OTHER));
+            return builder.expand(
+                            new ExpandConfig(
+                                    GraphOpt.Expand.BOTH, getLabelConfig(ctx.stringLiteralList())))
+                    .getV(
+                            new GetVConfig(
+                                    GraphOpt.GetV.OTHER,
+                                    new LabelConfig(true),
+                                    getNextTag(
+                                            new TraversalMethodIterator(
+                                                    (GremlinGSParser.TraversalMethodContext)
+                                                            ctx.getParent()))));
         }
     }
 
@@ -278,32 +376,42 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     }
 
     @Override
-    public GraphBuilder visitTraversalMethod_valueMap(GremlinGSParser.TraversalMethod_valueMapContext ctx) {
-        String[] properties = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
-        List<String> propertyList = Lists.newArrayList();
-        if (properties == null || properties.length == 0) {
-            RexGraphVariable curVar = builder.variable((String) null);
-            RelDataType dataType = curVar.getType();
-            Preconditions.checkArgument(dataType instanceof GraphSchemaType, "can not get property from type=", dataType);
-            dataType.getFieldList().forEach(k -> propertyList.add(k.getName()));
-        } else {
-            for (int i = 0; i < properties.length; ++i) {
-                propertyList.add(properties[i]);
-            }
-        }
-        RexNode expr = builder.call(GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
-                propertyList.stream().flatMap(k ->
-                        Stream.of(
-                                builder.literal(k),
-                                builder.variable(null, k))).collect(Collectors.toList()));
-        return builder.project(expr);
+    public GraphBuilder visitTraversalMethod_as(GremlinGSParser.TraversalMethod_asContext ctx) {
+        return builder;
     }
 
     @Override
-    public GraphBuilder visitTraversalMethod_values(GremlinGSParser.TraversalMethod_valuesContext ctx) {
+    public GraphBuilder visitTraversalMethod_valueMap(
+            GremlinGSParser.TraversalMethod_valueMapContext ctx) {
+        RexNode expr =
+                builder.call(
+                        GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
+                        getProperties(ctx, null).stream()
+                                .flatMap(
+                                        k ->
+                                                Stream.of(
+                                                        builder.literal(k),
+                                                        builder.variable(null, k)))
+                                .collect(Collectors.toList()));
+        String tag = getNextTag(
+                new TraversalMethodIterator(
+                        (GremlinGSParser.TraversalMethodContext) ctx.getParent()));
+        return builder.project(
+                ImmutableList.of(expr), tag == null ? ImmutableList.of() : ImmutableList.of(tag), true);
+    }
+
+    @Override
+    public GraphBuilder visitTraversalMethod_values(
+            GremlinGSParser.TraversalMethod_valuesContext ctx) {
         if (ctx.getChildCount() == 4 && ctx.stringLiteral() != null) {
-            RexNode expr = builder.variable(null, GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
-            return builder.project(expr);
+            RexNode expr =
+                    builder.variable(
+                            null, GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+            String tag = getNextTag(
+                    new TraversalMethodIterator(
+                            (GremlinGSParser.TraversalMethodContext) ctx.getParent()));
+            return builder.project(
+                    ImmutableList.of(expr), tag == null ? ImmutableList.of() : ImmutableList.of(tag), true);
         }
         throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [values('..')]");
     }
@@ -311,28 +419,116 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     @Override
     public GraphBuilder visitTraversalMethod_elementMap(
             GremlinGSParser.TraversalMethod_elementMapContext ctx) {
-        String[] properties = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
-        List<String> propertyList = Lists.newArrayList(GraphProperty.LABEL_KEY, GraphProperty.ID_KEY);
-        if (properties == null || properties.length == 0) {
-            RexGraphVariable curVar = builder.variable((String) null);
-            RelDataType dataType = curVar.getType();
-            Preconditions.checkArgument(dataType instanceof GraphSchemaType, "can not get property from type=", dataType);
-            dataType.getFieldList().forEach(k -> propertyList.add(k.getName()));
-        } else {
-            for (String property : properties) {
-                propertyList.add(property);
+        RexNode expr =
+                builder.call(
+                        GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
+                        getProperties(ctx, null).stream()
+                                .flatMap(
+                                        k ->
+                                                Stream.of(
+                                                        builder.literal(k),
+                                                        builder.variable(null, k)))
+                                .collect(Collectors.toList()));
+        String tag = getNextTag(
+                new TraversalMethodIterator(
+                        (GremlinGSParser.TraversalMethodContext) ctx.getParent()));
+        return builder.project(
+                ImmutableList.of(expr), tag == null ? ImmutableList.of() : ImmutableList.of(tag), true);
+    }
+
+    @Override
+    public GraphBuilder visitTraversalMethod_select(
+            GremlinGSParser.TraversalMethod_selectContext ctx) {
+        String tag = getNextTag(
+                new TraversalMethodIterator(
+                        (GremlinGSParser.TraversalMethodContext) ctx.getParent()));
+        RexNode expr;
+        if (ctx.stringLiteral() != null) {
+            List<String> selectTags =
+                    Lists.newArrayList(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+            if (ctx.stringLiteralList() != null) {
+                String[] tags = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
+                selectTags.addAll(Arrays.asList(tags));
             }
+            GremlinGSParser.TraversalMethod_selectby_listContext listCtx =
+                    ctx.traversalMethod_selectby_list();
+            List<GremlinGSParser.TraversalMethod_selectbyContext> byCtxs =
+                    listCtx == null
+                            ? ImmutableList.of()
+                            : listCtx.getRuleContexts(
+                                    GremlinGSParser.TraversalMethod_selectbyContext.class);
+            Map<String, RexNode> keyValueMap = Maps.newLinkedHashMap();
+            for (int i = 0; i < selectTags.size(); ++i) {
+                String selectTag = selectTags.get(i);
+                keyValueMap.put(selectTag, convertSelectByCtx(byCtxs, i, selectTag));
+            }
+            Preconditions.checkArgument(
+                    !keyValueMap.isEmpty(), "keyValue should not be empty in select");
+
+            if (keyValueMap.size() == 1) {
+                expr = keyValueMap.entrySet().iterator().next().getValue();
+            } else {
+                List<RexNode> mapParameters = Lists.newArrayList();
+                keyValueMap.forEach(
+                        (k, v) -> {
+                            mapParameters.add(builder.literal(k));
+                            mapParameters.add(v);
+                        });
+                expr = builder.call(GraphStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR, mapParameters);
+            }
+        } else if (ctx.traversalColumn() != null) {
+            Column column =
+                    TraversalEnumParser.parseTraversalEnumFromContext(
+                            Column.class, ctx.traversalColumn());
+            expr = builder.variable(column.name());
+        } else {
+            throw new UnsupportedEvalException(
+                    GremlinGSParser.TraversalMethod_selectbyContext.class,
+                    ctx.getText() + " is unsupported yet");
         }
-        RexNode expr = builder.call(GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
-                propertyList.stream().flatMap(k ->
-                        Stream.of(
-                                builder.literal(k),
-                                builder.variable(null, k))).collect(Collectors.toList()));
-        return builder.project(expr);
+        return builder.project(ImmutableList.of(expr), tag == null ? ImmutableList.of() : ImmutableList.of(tag), true);
     }
 
     public GraphBuilder getGraphBuilder() {
         return this.builder;
+    }
+
+    private RexNode convertSelectByCtx(
+            List<GremlinGSParser.TraversalMethod_selectbyContext> byCtxs, int i, String tag) {
+        int ctxCnt = byCtxs.size();
+        if (ctxCnt == 0) {
+            return builder.variable(tag);
+        }
+        GremlinGSParser.TraversalMethod_selectbyContext byCtx = byCtxs.get(i % ctxCnt);
+        int byChildCount = byCtx.getChildCount();
+        if (byChildCount == 3) { // select(..).by()
+            return builder.variable(tag);
+        } else if (byChildCount == 4 && byCtx.stringLiteral() != null) { // select(..).by('name')
+            return builder.variable(
+                    tag, GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
+        } else if (byChildCount == 4
+                && byCtx.traversalToken() != null) { // select(..).by(T.label/T.id)
+            T token =
+                    TraversalEnumParser.parseTraversalEnumFromContext(
+                            T.class, byCtx.traversalToken());
+            return builder.variable(tag, token.getAccessor());
+        } else if (byCtx.traversalMethod_valueMap() != null) { // select(..).by(valueMap('name'))
+            return builder.call(
+                    GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
+                    getProperties(byCtx.traversalMethod_valueMap(), tag).stream()
+                            .flatMap(k -> Stream.of(builder.literal(k), builder.variable(tag, k)))
+                            .collect(Collectors.toList()));
+        } else if (byCtx.traversalMethod_elementMap()
+                != null) { // select(..).by(elementMap('name'))
+            return builder.call(
+                    GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
+                    getProperties(byCtx.traversalMethod_elementMap(), tag).stream()
+                            .flatMap(k -> Stream.of(builder.literal(k), builder.variable(tag, k)))
+                            .collect(Collectors.toList()));
+        }
+        throw new UnsupportedEvalException(
+                GremlinGSParser.TraversalMethod_selectbyContext.class,
+                byCtx.getText() + " is unsupported yet in select");
     }
 
     private boolean pathExpandPattern(GremlinGSParser.StringLiteralListContext ctx) {
@@ -355,5 +551,61 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
             }
             return labelConfig;
         }
+    }
+
+    private List<String> getProperties(
+            GremlinGSParser.TraversalMethod_valueMapContext ctx, @Nullable String tag) {
+        String[] properties = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
+        return (properties == null || properties.length == 0)
+                ? getAllProperties(tag)
+                : Arrays.asList(properties);
+    }
+
+    private List<String> getProperties(
+            GremlinGSParser.TraversalMethod_elementMapContext ctx, @Nullable String tag) {
+        String[] properties = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
+        List<String> propertyList =
+                Lists.newArrayList(GraphProperty.LABEL_KEY, GraphProperty.ID_KEY);
+        if (properties == null || properties.length == 0) {
+            propertyList.addAll(getAllProperties(tag));
+        } else {
+            propertyList.addAll(Arrays.asList(properties));
+        }
+        return propertyList;
+    }
+
+    private List<String> getAllProperties(@Nullable String tag) {
+        RexGraphVariable curVar = builder.variable(tag);
+        RelDataType dataType = curVar.getType();
+        Preconditions.checkArgument(
+                dataType instanceof GraphSchemaType, "can not get property from type=", dataType);
+        return dataType.getFieldList().stream().map(k -> k.getName()).collect(Collectors.toList());
+    }
+
+    protected @Nullable String getNextTag(TraversalMethodIterator methodIterator) {
+        List<String> tags = Lists.newArrayList();
+        while (methodIterator.hasNext()) {
+            GremlinGSParser.TraversalMethodContext next = methodIterator.next();
+            if (next.traversalMethod_as() != null) {
+                tags.add(
+                        GenericLiteralVisitor.getStringLiteral(
+                                next.traversalMethod_as().stringLiteral()));
+            } else if (next.traversalMethod_has() != null
+                    || next.traversalMethod_hasId() != null
+                    || next.traversalMethod_hasLabel() != null
+                    || next.traversalMethod_hasNot() != null
+                    || next.traversalMethod_is() != null
+                    || next.traversalMethod_where() != null
+                    || next.traversalMethod_not() != null
+                    || next.traversalMethod_identity() != null
+                    || next.traversalMethod_limit() != null
+                    || next.traversalMethod_order() != null
+                    || next.traversalMethod_dedup() != null) {
+                // continue
+            } else {
+                break;
+            }
+        }
+        return tags.isEmpty() ? null : tags.get(tags.size() - 1);
     }
 }
