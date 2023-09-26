@@ -1645,8 +1645,8 @@ function do_compile() {
   if [ ! -f "${HOST_DB_TMP_DIR}/.enable" ]; then
     touch "${HOST_DB_TMP_DIR}/.enable"
   fi
-  # check if the stored_procedure_name is already in .enable
-  if grep -q "${stored_procedure_name}" "${HOST_DB_TMP_DIR}/.enable"; then
+  # check if the stored_procedure_name is already in .enable, exact match
+  if grep -q "^${stored_procedure_name}$" "${HOST_DB_TMP_DIR}/.enable"; then
     err "stored_procedure_name [${stored_procedure_name}] already exists, please use another name"
     exit 1
   fi
