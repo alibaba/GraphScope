@@ -238,6 +238,13 @@ struct LengthKey {
   using length_data_type = int32_t;
 };
 
+struct LabelKey {
+  using label_data_type = int32_t;
+  int32_t label_id;
+  LabelKey() = default;
+  LabelKey(int32_t id) : label_id(id) {}
+};
+
 template <typename T>
 struct is_label_key_prop : std::false_type {};
 

@@ -628,6 +628,126 @@ struct MatchQuery11Expr0 {
   using result_t = bool;
   MatchQuery11Expr0() {}
 
+  inline auto operator()(int64_t id) const { return (true) && (id == 933); }
+
+ private:
+};
+struct MatchQuery11Expr1 {
+ public:
+  using result_t = bool;
+  MatchQuery11Expr1() {}
+
+  inline auto operator()(int64_t id) const {
+    return (true) && (id == 2199023256077);
+  }
+
+ private:
+};
+
+class MatchQuery11 : public HqpsAppBase<gs::MutableCSRInterface> {
+ public:
+  using Engine = SyncEngine<gs::MutableCSRInterface>;
+  using label_id_t = typename gs::MutableCSRInterface::label_id_t;
+  using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  // Query function for query class
+  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+    auto expr0 = gs::make_filter(MatchQuery11Expr0(),
+                                 gs::PropertySelector<int64_t>("id"));
+    auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
+        graph, std::array<label_id_t, 8>{0, 1, 2, 3, 4, 5, 6, 7},
+        std::move(expr0));
+
+    auto edge_expand_opt0 = gs::make_edge_expand_multie_opt<
+        label_id_t, std::tuple<grape::EmptyType>, std::tuple<grape::EmptyType>,
+        std::tuple<grape::EmptyType>, std::tuple<grape::EmptyType>,
+        std::tuple<grape::EmptyType>, std::tuple<grape::EmptyType>,
+        std::tuple<grape::EmptyType>, std::tuple<grape::EmptyType>,
+        std::tuple<grape::EmptyType>, std::tuple<int64_t>, std::tuple<int64_t>,
+        std::tuple<int64_t>, std::tuple<grape::EmptyType>,
+        std::tuple<grape::EmptyType>, std::tuple<grape::EmptyType>,
+        std::tuple<grape::EmptyType>, std::tuple<int32_t>, std::tuple<int64_t>,
+        std::tuple<int32_t>, std::tuple<grape::EmptyType>,
+        std::tuple<grape::EmptyType>>(
+        gs::Direction::Both,
+        std::array<std::array<label_id_t, 3>, 21>{
+            std::array<label_id_t, 3>{2, 2, 2},
+            std::array<label_id_t, 3>{2, 3, 2},
+            std::array<label_id_t, 3>{1, 7, 6},
+            std::array<label_id_t, 3>{6, 6, 13},
+            std::array<label_id_t, 3>{4, 3, 3},
+            std::array<label_id_t, 3>{2, 0, 7},
+            std::array<label_id_t, 3>{1, 0, 7},
+            std::array<label_id_t, 3>{3, 0, 7},
+            std::array<label_id_t, 3>{5, 0, 7},
+            std::array<label_id_t, 3>{1, 1, 8},
+            std::array<label_id_t, 3>{1, 2, 9},
+            std::array<label_id_t, 3>{1, 3, 9},
+            std::array<label_id_t, 3>{0, 0, 11},
+            std::array<label_id_t, 3>{7, 6, 12},
+            std::array<label_id_t, 3>{2, 1, 0},
+            std::array<label_id_t, 3>{3, 1, 0},
+            std::array<label_id_t, 3>{1, 5, 10},
+            std::array<label_id_t, 3>{4, 1, 4},
+            std::array<label_id_t, 3>{1, 5, 14},
+            std::array<label_id_t, 3>{3, 7, 1},
+            std::array<label_id_t, 3>{4, 1, 5}},
+        std::tuple{PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<int64_t>>{"creationDate"},
+                   PropTupleArrayT<std::tuple<int64_t>>{"creationDate"},
+                   PropTupleArrayT<std::tuple<int64_t>>{"creationDate"},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<int32_t>>{"workFrom"},
+                   PropTupleArrayT<std::tuple<int64_t>>{"joinDate"},
+                   PropTupleArrayT<std::tuple<int32_t>>{"classYear"},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{},
+                   PropTupleArrayT<std::tuple<grape::EmptyType>>{}});
+    auto ctx1 =
+        Engine::template EdgeExpandE<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
+            graph, std::move(ctx0), std::move(edge_expand_opt0));
+
+    auto get_v_opt1 =
+        make_getv_opt(gs::VOpt::Other, std::array<label_id_t, 0>{});
+    auto ctx2 = Engine::template GetV<gs::AppendOpt::Temp, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx1), std::move(get_v_opt1));
+    auto expr1 = gs::make_filter(MatchQuery11Expr1(),
+                                 gs::PropertySelector<int64_t>("id"));
+    auto get_v_opt2 = make_getv_opt(
+        gs::VOpt::Itself, std::array<label_id_t, 0>{}, std::move(expr1));
+    auto ctx3 = Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
+        graph, std::move(ctx2), std::move(get_v_opt2));
+    auto ctx4 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx3),
+        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(2)>(
+                       gs::PropertySelector<LabelKey>("label")),
+                   gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
+                       gs::PropertySelector<LabelKey>("label"))});
+    return Engine::Sink(ctx4, std::array<int32_t, 2>{0, 1});
+  }
+  // Wrapper query function for query class
+  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
+                                   Decoder& decoder) const override {
+    // decoding params from decoder, and call real query func
+
+    return Query(graph);
+  }
+};
+
+struct MatchQuery12Expr0 {
+ public:
+  using result_t = bool;
+  MatchQuery12Expr0() {}
+
   inline auto operator()(Date var0) const {
     return gs::DateTimeExtractor<Interval::MONTH>::extract(var0) == 7;
   }
@@ -635,10 +755,10 @@ struct MatchQuery11Expr0 {
  private:
 };
 
-struct MatchQuery11Expr1 {
+struct MatchQuery12Expr1 {
  public:
   using result_t = int64_t;
-  MatchQuery11Expr1() {}
+  MatchQuery12Expr1() {}
 
   inline auto operator()(Date var1) const {
     return gs::DateTimeExtractor<Interval::MONTH>::extract(var1);
@@ -647,8 +767,7 @@ struct MatchQuery11Expr1 {
  private:
 };
 
-// Auto generated query class definition
-class MatchQuery11 : public HqpsAppBase<gs::MutableCSRInterface> {
+class MatchQuery12 : public HqpsAppBase<gs::MutableCSRInterface> {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
@@ -662,7 +781,7 @@ class MatchQuery11 : public HqpsAppBase<gs::MutableCSRInterface> {
         graph, std::move(ctx0),
         std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
             gs::PropertySelector<Date>("birthday"))});
-    auto expr0 = gs::make_filter(MatchQuery11Expr0(),
+    auto expr0 = gs::make_filter(MatchQuery12Expr0(),
                                  gs::PropertySelector<Date>("None"));
     auto ctx2 = Engine::template Select<INPUT_COL_ID(0)>(graph, std::move(ctx1),
                                                          std::move(expr0));
@@ -670,7 +789,7 @@ class MatchQuery11 : public HqpsAppBase<gs::MutableCSRInterface> {
     auto ctx3 = Engine::Project<PROJ_TO_NEW>(
         graph, std::move(ctx2),
         std::tuple{gs::make_mapper_with_expr<0>(
-            MatchQuery11Expr1(), gs::PropertySelector<Date>("None"))});
+            MatchQuery12Expr1(), gs::PropertySelector<Date>("None"))});
     return Engine::Sink(ctx3, std::array<int32_t, 1>{2});
   }
   // Wrapper query function for query class

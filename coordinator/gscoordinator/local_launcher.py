@@ -33,6 +33,7 @@ from graphscope.framework.utils import get_free_port
 from graphscope.framework.utils import get_java_version
 from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import is_free_port
+from graphscope.proto import message_pb2
 from graphscope.proto import types_pb2
 
 from gscoordinator.launcher import AbstractLauncher
@@ -245,7 +246,19 @@ class LocalLauncher(AbstractLauncher):
         )
         return process
 
-    def create_learning_instance(self, object_id, handle, config):
+    def create_learning_instance(self, object_id, handle, config, learning_backend):
+        if learning_backend == message_pb2.LearningBackend.GRAPHLEARN:
+            return self._create_graphlearn_instance(
+                object_id=object_id, handle=handle, config=config
+            )
+        elif learning_backend == message_pb2.LearningBackend.GRAPHLEARN_TORCH:
+            return self._create_graphlearn_torch_instance(
+                object_id=object_id, handle=handle, config=config
+            )
+        else:
+            raise ValueError("invalid learning backend")
+
+    def _create_graphlearn_instance(self, object_id, handle, config):
         # prepare argument
         handle = json.loads(
             base64.b64decode(handle.encode("utf-8", errors="ignore")).decode(
@@ -275,16 +288,76 @@ class LocalLauncher(AbstractLauncher):
             cmd = [
                 sys.executable,
                 "-m",
-                "gscoordinator.learning",
+                "gscoordinator.launch_graphlearn",
                 handle,
                 config,
                 str(index),
             ]
-            logger.debug("launching learning server: %s", " ".join(cmd))
+            logger.debug("launching graphlearn server: %s", " ".join(cmd))
 
             proc = self._popen_helper(cmd, cwd=None, env=env)
             stdout_watcher = PipeWatcher(proc.stdout, sys.stdout)
             stdout_watcher.suppress(not logger.isEnabledFor(logging.DEBUG))
+            setattr(proc, "stdout_watcher", stdout_watcher)
+            self._learning_instance_processes[object_id].append(proc)
+        return server_list
+
+    def _create_graphlearn_torch_instance(self, object_id, handle, config):
+        handle = json.loads(
+            base64.b64decode(handle.encode("utf-8", errors="ignore")).decode(
+                "utf-8", errors="ignore"
+            )
+        )
+
+        server_client_master_port = get_free_port("localhost")
+        handle["server_client_master_port"] = server_client_master_port
+
+        server_list = [f"localhost:{server_client_master_port}"]
+        # for train, val and test
+        for _ in range(3):
+            server_list.append("localhost:" + str(get_free_port("localhost")))
+
+        handle = base64.b64encode(
+            json.dumps(handle).encode("utf-8", errors="ignore")
+        ).decode("utf-8", errors="ignore")
+
+        # launch the server
+        env = os.environ.copy()
+        # set coordinator dir to PYTHONPATH
+        python_path = (
+            env.get("PYTHONPATH", "")
+            + os.pathsep
+            + os.path.dirname(os.path.dirname(__file__))
+        )
+        env["PYTHONPATH"] = python_path
+
+        self._learning_instance_processes[object_id] = []
+        for index in range(self._num_workers):
+            cmd = [
+                sys.executable,
+                "-m",
+                "gscoordinator.launch_graphlearn_torch",
+                handle,
+                config,
+                str(index),
+            ]
+            logger.debug("launching graphlearn_torch server: %s", " ".join(str(cmd)))
+
+            proc = subprocess.Popen(
+                cmd,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+                errors="replace",
+                universal_newlines=True,
+                bufsize=1,
+            )
+            stdout_watcher = PipeWatcher(
+                proc.stdout,
+                sys.stdout,
+                suppressed=(not logger.isEnabledFor(logging.DEBUG)),
+            )
             setattr(proc, "stdout_watcher", stdout_watcher)
             self._learning_instance_processes[object_id].append(proc)
         return server_list

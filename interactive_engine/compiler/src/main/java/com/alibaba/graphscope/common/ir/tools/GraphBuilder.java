@@ -418,12 +418,13 @@ public class GraphBuilder extends RelBuilder {
                             + "]");
         }
         if (property.equals(GraphProperty.LABEL_KEY)) {
+            GraphSchemaType schemaType = (GraphSchemaType) aliasField.getType();
             return RexGraphVariable.of(
                     aliasField.getIndex(),
                     new GraphProperty(GraphProperty.Opt.LABEL),
                     columnField.left,
                     varName,
-                    getTypeFactory().createSqlType(SqlTypeName.CHAR));
+                    schemaType.getLabelType());
         } else if (property.equals(GraphProperty.ID_KEY)) {
             return RexGraphVariable.of(
                     aliasField.getIndex(),

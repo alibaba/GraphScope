@@ -173,6 +173,16 @@ class FlatEdgeSet {
 
   iterator end() const { return iterator(vec_, vec_.size()); }
 
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> res;
+    res.reserve(vec_.size());
+    for (auto i = 0; i < vec_.size(); ++i) {
+      auto ind = label_triplet_ind_[i];
+      res.emplace_back(label_triplet_[ind][2]);
+    }
+    return res;
+  }
+
   template <size_t col_ind, typename... index_ele_tuple_t_>
   flat_t Flat(
       std::vector<std::tuple<index_ele_tuple_t_...>>& index_ele_tuple) const {
@@ -497,6 +507,15 @@ class SingleLabelEdgeSet {
   iterator begin() const { return iterator(vec_, 0); }
 
   iterator end() const { return iterator(vec_, vec_.size()); }
+
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> res;
+    res.reserve(vec_.size());
+    for (auto i = 0; i < vec_.size(); ++i) {
+      res.emplace_back(label_triplet_[2]);
+    }
+    return res;
+  }
 
   template <size_t col_ind, typename... index_ele_tuple_t_>
   flat_t Flat(

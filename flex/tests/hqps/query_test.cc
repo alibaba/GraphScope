@@ -214,5 +214,18 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Finish MatchQuery10 test";
   }
 
+  {
+    gs::MatchQuery12 query;
+    std::vector<char> encoder_array;
+    gs::Encoder input_encoder(encoder_array);
+    std::vector<char> output_array;
+    gs::Encoder output(output_array);
+    gs::Decoder input(encoder_array.data(), encoder_array.size());
+
+    gs::MutableCSRInterface graph(sess);
+    query.Query(graph, input);
+    LOG(INFO) << "Finish MatchQuery10 test";
+  }
+
   LOG(INFO) << "Finish context test.";
 }
