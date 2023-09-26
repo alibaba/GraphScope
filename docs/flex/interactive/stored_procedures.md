@@ -1,6 +1,6 @@
 # Stored Procedures
 
-Stored procedures in GraphScope Interactive offer a powerful way to encapsulate and reuse complex graph operations. This document provides a guide on how to compile, enable, and manage these procedures.
+Stored procedures in GraphScope Interactive offer a powerful way to encapsulate and reuse complex graph operations. This document provides a guide on how to compile, enable, and manage these procedures. We will take movies graph for example.
 
 ## Compiling a Stored Procedure
 To compile a stored procedure, use the following command:
@@ -21,9 +21,9 @@ Note:
 - The compilation process described above will automatically **enable** the compiled stored procedures (the subsequent section will instruct how to enable stored procedures). If you wish to compile without enabling them, use the `--compile_only` flag.
 
 
-For example, You can compile the `count_vertex_num` procedure on the builtin modern graph with the following command.
+For example, You can compile the `actor` procedure on the builtin movies graph with the following command.
 ```bash
-bin/gs_interactive procedure compile -n count_vertex_num -i ./examples/modern_graph/count_vertex_num.cypher
+bin/gs_interactive procedure compile -g movies -n actor -i ./examples/movies/actor.cypher
 ```
 
 
@@ -43,13 +43,13 @@ bin/gs_interactive procedure enable -g {graph_name} -c stored_procedures.yaml
 The above `stored_procedures.yaml` file configures which stored procedures are enabled for the current interactive service. Here's an example:
 
 ```yaml
-count_vertex_num
+actor
 ```
 
 You can also specify the procedures you want to enable through command line arguments.
 
 ```bash
-bin/gs_interactive procedure enable -n count_vertex_num
+bin/gs_interactive procedure enable -g movies -n actor
 ```
 
 If you want to enable multiple procedures at once, you can either add multiple lines in the `YAML` file or separate the names of the procedures with commas and pass them to the `-n` option.
@@ -62,23 +62,23 @@ Remember to **restart** the service for the enabling to take effect.
 ## Disabling Stored Procedures
 To disable stored procedures, simply using:
 ```bash
-bin/gs_interactive procedure disable -g modern -c stored_procedures.yaml
+bin/gs_interactive procedure disable -g movies -c stored_procedures.yaml
 ```
-For example, you can disable `count_vertex_num` procedure via the following `YAML` file.
+For example, you can disable `actor` procedure via the following `YAML` file.
 
 ```yaml
-count_vertex_num
+actor
 ```
 
 You can also specify the procedures you want to enable through command line arguments.
 
 ```bash
-bin/gs_interactive procedure disable -n {procedure_name} -g {graph_name}
+bin/gs_interactive procedure disable -g {graph_name} -n {procedure_name}
 ```
 
-For example, disable `count_vertex_num` by
+For example, disable `actor` by
 ```bash
-bin/gs_interactive procedure disable -n count_vertex_num
+bin/gs_interactive procedure disable -g movies -n actor
 ```
 If `graph_name` is not given, the default graph will be used.
 
@@ -113,7 +113,7 @@ Or, in the Cypher shell, run:
 ## Querying Stored Procedures
 Once you've enabled a stored procedure, you can easily invoke it using its designated name and required parameters within the Cypher shell. For instance:
 ```bash
-@neo4j> CALL count_vertex_num(1L);
+@neo4j> CALL actor(1L);
 # The capitalized "L" ensures that the vertex_id is passed to the engine as a long type.
 ```
 
