@@ -41,7 +41,8 @@ class Req {
     if (num_of_reqs_ == warmup_num_ || num_of_reqs_ >= reqs_.size()) {
       num_of_reqs_ = reqs_.size();
     }
-    std::cout << warmup_num_ << " " << num_of_reqs_ << "\n";
+    std::cout << "warmup count: " << warmup_num_
+              << "; benchmark count: " << num_of_reqs_ << "\n";
   }
   void load(const std::string& file) {
     std::cout << "load queries from " << file << "\n";
@@ -98,7 +99,7 @@ class Req {
         [&](server::executor_ref& ref) { return do_query(ref); });
   }
 
-  void statisified() {
+  void output() {
     std::vector<long long> vec(29, 0);
     std::vector<int> count(29, 0);
     std::vector<std::vector<long long>> ts(29);
@@ -241,6 +242,6 @@ int main(int argc, char** argv) {
                                                                      begin)
                    .count()
             << "\n";
-  Req::get().statisified();
+  Req::get().output();
   // std::cout << timer.get_time() / 1us << " microseconds\n";
 }
