@@ -20,7 +20,6 @@ import com.alibaba.graphscope.gremlin.integration.suite.utils.__;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
-import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Assert;
@@ -177,11 +176,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         @Override
         public Traversal<Vertex, Long> get_pattern_1_test() {
             return g.V().match(
-                            __.as("a").out("KNOWS").as("b"),
-                            __.as("b")
-                                    .outE("KNOWS")
-                                    .inV()
-                                    .as("c"))
+                            __.as("a").out("KNOWS").as("b"), __.as("b").outE("KNOWS").inV().as("c"))
                     .count();
         }
 
@@ -227,17 +222,9 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         @Override
         public Traversal<Vertex, Long> get_pattern_5_test() {
             return g.V().match(
-                            __.as("a")
-                                    .has("gender", "male")
-                                    .out("KNOWS")
-                                    .as("b"),
-                            __.as("b")
-                                    .has("gender", "female")
-                                    .out("KNOWS")
-                                    .as("c"),
-                            __.as("a")
-                                    .out("KNOWS")
-                                    .as("c"))
+                            __.as("a").has("gender", "male").out("KNOWS").as("b"),
+                            __.as("b").has("gender", "female").out("KNOWS").as("c"),
+                            __.as("a").out("KNOWS").as("c"))
                     .count();
         }
 
@@ -258,17 +245,10 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         public Traversal<Vertex, Long> get_pattern_7_test() {
             return g.V().match(
                             __.as("a").out("KNOWS").as("b"),
-                            __.as("b")
-                                    .has("gender", "male")
-                                    .outE("KNOWS")
-                                    .inV()
-                                    .as("c"),
+                            __.as("b").has("gender", "male").outE("KNOWS").inV().as("c"),
                             __.as("a").out("KNOWS").as("c"),
                             __.as("c").out("KNOWS").as("d"),
-                            __.as("b")
-                                    .outE("KNOWS")
-                                    .inV()
-                                    .as("d"))
+                            __.as("b").outE("KNOWS").inV().as("d"))
                     .count();
         }
 
@@ -308,9 +288,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
                                     .endV()
                                     .as("b"),
                             ((IrCustomizedTraversal)
-                                            __.as("b")
-                                                    .has("gender", "female")
-                                                    .outE("KNOWS"))
+                                            __.as("b").has("gender", "female").outE("KNOWS"))
                                     .inV()
                                     .as("c"),
                             ((IrCustomizedTraversal) __.as("a").out("1..2", "KNOWS"))
@@ -348,10 +326,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         public Traversal<Vertex, Long> get_pattern_14_test() {
             return g.V().match(
                             __.as("a").out("KNOWS").as("b"),
-                            __.as("b")
-                                    .hasLabel("PERSON")
-                                    .has("gender", "male")
-                                    .as("b"),
+                            __.as("b").hasLabel("PERSON").has("gender", "male").as("b"),
                             __.as("b").out("KNOWS").as("c"))
                     .count();
         }
