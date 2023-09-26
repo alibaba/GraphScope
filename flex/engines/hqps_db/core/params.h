@@ -15,12 +15,14 @@
 #ifndef ENGINES_HQPS_ENGINE_PARAMS_H_
 #define ENGINES_HQPS_ENGINE_PARAMS_H_
 
+#include <time.h>
 #include <climits>
 #include <iostream>
 #include <string>
 // #include "grape/grape.h"
 #include "flex/engines/hqps_db/core/utils/hqps_type.h"
 #include "flex/storages/rt_mutable_graph/types.h"
+#include "flex/utils/property/types.h"
 
 #include "grape/types.h"
 namespace gs {
@@ -231,6 +233,18 @@ struct LabelKeyProperty {
   LabelKeyProperty(std::string&& n) : name(std::move(n)){};
 };
 
+// Denote the length of a path
+struct LengthKey {
+  using length_data_type = int32_t;
+};
+
+struct LabelKey {
+  using label_data_type = int32_t;
+  int32_t label_id;
+  LabelKey() = default;
+  LabelKey(int32_t id) : label_id(id) {}
+};
+
 template <typename T>
 struct is_label_key_prop : std::false_type {};
 
@@ -308,6 +322,80 @@ enum PathOpt {
 enum ResultOpt {
   EndV = 0,  // Get the end vertex of path. i.e. [3],[4]
   AllV = 1,  // Get all the vertex on path. i.e. [1,2,3],[1,2,4]
+};
+
+enum Interval {
+  YEAR = 0,
+  MONTH = 1,
+  DAY = 2,
+  HOUR = 3,
+  MINUTE = 4,
+  SECOND = 5,
+};
+
+template <Interval interval>
+struct DateTimeExtractor;
+
+// Extract Year, month, day, hour, minute, second from Date
+
+template <>
+struct DateTimeExtractor<Interval::YEAR> {
+  static int32_t extract(const Date& date) {
+    auto millon_second = date.milli_second / 1000;
+    struct tm tm;
+    gmtime_r((time_t*) (&millon_second), &tm);
+    return tm.tm_year + 1900;
+  }
+};
+
+template <>
+struct DateTimeExtractor<Interval::MONTH> {
+  static int32_t extract(const Date& date) {
+    auto millon_second = date.milli_second / 1000;
+    struct tm tm;
+    gmtime_r((time_t*) (&millon_second), &tm);
+    return tm.tm_mon + 1;
+  }
+};
+
+template <>
+struct DateTimeExtractor<Interval::DAY> {
+  static int32_t extract(const Date& date) {
+    auto millon_second = date.milli_second / 1000;
+    struct tm tm;
+    gmtime_r((time_t*) (&millon_second), &tm);
+    return tm.tm_mday;
+  }
+};
+
+template <>
+struct DateTimeExtractor<Interval::HOUR> {
+  static int32_t extract(const Date& date) {
+    auto millon_second = date.milli_second / 1000;
+    struct tm tm;
+    gmtime_r((time_t*) (&millon_second), &tm);
+    return tm.tm_hour;
+  }
+};
+
+template <>
+struct DateTimeExtractor<Interval::MINUTE> {
+  static int32_t extract(const Date& date) {
+    auto millon_second = date.milli_second / 1000;
+    struct tm tm;
+    gmtime_r((time_t*) (&millon_second), &tm);
+    return tm.tm_min;
+  }
+};
+
+template <>
+struct DateTimeExtractor<Interval::SECOND> {
+  static int32_t extract(const Date& date) {
+    auto millon_second = date.milli_second / 1000;
+    struct tm tm;
+    gmtime_r((time_t*) (&millon_second), &tm);
+    return tm.tm_sec;
+  }
 };
 
 struct TruePredicate {
@@ -541,6 +629,8 @@ auto make_edge_expandv_opt(Direction dir, LabelT edge_label, LabelT other_label,
   return EdgeExpandOpt(dir, edge_label, other_label, std::move(func));
 }
 
+// Template can not have to variadic template parameters.
+// so we make filter_t as a tuple.
 template <typename LabelT, size_t num_labels, typename FILTER_T, typename... T>
 struct GetVOpt;
 
@@ -583,6 +673,9 @@ struct GetVOpt<LabelT, num_labels, Filter<EXPR, SELECTOR...>, T...> {
 template <typename LabelT, typename EXPR, typename... T>
 using SimpleGetVOpt = GetVOpt<LabelT, 1, EXPR, T...>;
 
+template <typename LabelT, typename EXPR>
+using SimpleGetVNoPropOpt = GetVOpt<LabelT, 1, EXPR>;
+
 // make get_v opt with labels and props and expr(filters)
 template <typename... T, typename LabelT, size_t num_labels, typename EXPR,
           typename... SELECTOR>
@@ -620,13 +713,13 @@ auto make_getv_opt(VOpt v_opt, std::array<LabelT, num_labels>&& v_labels,
 //       v_opt, std::array<std::string, 1>{v_label});
 // }
 
-// Path expand with only one dst label.
-// Path expand with until condition.
-template <typename LabelT, typename EXPR, typename EDGE_FILTER_T,
+// Path expand with only one dst label, with until condition, and resulting
+// vertices.
+template <typename LabelT, typename EDGE_FILTER_T, typename VERTEX_FILTER_T,
           typename UNTIL_CONDITION, typename... T>
 struct PathExpandOptImpl {
   PathExpandOptImpl(EdgeExpandOpt<LabelT, EDGE_FILTER_T>&& edge_expand_opt,
-                    SimpleGetVOpt<LabelT, EXPR, T...>&& get_v_opt,
+                    SimpleGetVOpt<LabelT, VERTEX_FILTER_T, T...>&& get_v_opt,
                     Range&& range, UNTIL_CONDITION&& until_condition,
                     PathOpt path_opt = PathOpt::Arbitrary,
                     ResultOpt result_opt = ResultOpt::EndV)
@@ -638,30 +731,48 @@ struct PathExpandOptImpl {
         result_opt_(result_opt) {}
 
   EdgeExpandOpt<LabelT, EDGE_FILTER_T> edge_expand_opt_;
-  SimpleGetVOpt<LabelT, EXPR, T...> get_v_opt_;
+  SimpleGetVOpt<LabelT, VERTEX_FILTER_T, T...> get_v_opt_;
   Range range_;  // Range for result vertices, default is [0,INT_MAX)
   UNTIL_CONDITION until_condition_;
   PathOpt path_opt_;      // Single path or not.
   ResultOpt result_opt_;  // Get all vertices on Path or only ending vertices.
 };
 
-template <typename LabelT, typename EXPR, typename EDGE_FILTER_T, typename... T>
-using PathExpandOpt =
-    PathExpandOptImpl<LabelT, EXPR, EDGE_FILTER_T, Filter<TruePredicate>, T...>;
+template <typename LabelT, typename EDGE_FILTER_T, typename VERTEX_FILTER_T,
+          typename... T>
+using PathExpandVOpt = PathExpandOptImpl<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T,
+                                         Filter<TruePredicate>, T...>;
+
+template <typename LabelT, typename EDGE_FILTER_T, typename VERTEX_FILTER_T>
+using PathExpandPOpt = PathExpandOptImpl<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T,
+                                         Filter<TruePredicate>>;
 
 // opt used for simple path opt.
-template <typename LabelT, typename EXPR, typename EDGE_FILTER_T,
+template <typename LabelT, typename VERTEX_FILTER_T, typename EDGE_FILTER_T,
           typename UNTIL_CONDITION, typename... T>
 using ShortestPathOpt =
-    PathExpandOptImpl<LabelT, EXPR, EDGE_FILTER_T, UNTIL_CONDITION, T...>;
+    PathExpandOptImpl<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T, UNTIL_CONDITION,
+                      T...>;
 
-template <typename LabelT, typename EXPR, typename EDGE_FILTER_T, typename... T>
-auto make_path_expand_opt(
+template <typename LabelT, typename EDGE_FILTER_T, typename VERTEX_FILTER_T,
+          typename... T>
+auto make_path_expandv_opt(
     EdgeExpandOpt<LabelT, EDGE_FILTER_T>&& edge_expand_opt,
-    SimpleGetVOpt<LabelT, EXPR, T...>&& get_v_opt, Range&& range,
+    SimpleGetVOpt<LabelT, VERTEX_FILTER_T, T...>&& get_v_opt, Range&& range,
     PathOpt path_opt = PathOpt::Arbitrary,
     ResultOpt result_opt = ResultOpt::EndV) {
-  return PathExpandOpt<LabelT, EXPR, EDGE_FILTER_T, T...>(
+  return PathExpandVOpt<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T, T...>(
+      std::move(edge_expand_opt), std::move(get_v_opt), std::move(range),
+      Filter<TruePredicate>(), path_opt, result_opt);
+}
+
+template <typename LabelT, typename EDGE_FILTER_T, typename VERTEX_FILTER_T>
+auto make_path_expandp_opt(
+    EdgeExpandOpt<LabelT, EDGE_FILTER_T>&& edge_expand_opt,
+    SimpleGetVNoPropOpt<LabelT, VERTEX_FILTER_T>&& get_v_opt, Range&& range,
+    PathOpt path_opt = PathOpt::Arbitrary,
+    ResultOpt result_opt = ResultOpt::EndV) {
+  return PathExpandPOpt<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T>(
       std::move(edge_expand_opt), std::move(get_v_opt), std::move(range),
       Filter<TruePredicate>(), path_opt, result_opt);
 }

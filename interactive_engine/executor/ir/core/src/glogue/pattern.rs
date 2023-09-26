@@ -678,6 +678,7 @@ fn generate_source_operator(
         alias: Some((source_vertex_id as KeyId).into()),
         params: Some(source_vertex_param),
         idx_predicate: None,
+        is_count_only: false,
         meta_data: None,
     };
     Ok(source_scan.into())

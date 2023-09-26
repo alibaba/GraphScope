@@ -1050,11 +1050,17 @@ void test_vertex_property_value(const char* uri_str) {
 }
 
 void test_perf(const char* uri_str) { test_vertex_property_value(uri_str); }
-
+// uri_str =
+//"flex://"
+//    "../../../../storages/rt_mutable_graph/modern_graph/?schema_file={schema_file}&bulk_load_file={bulk_load_file}";
 int main(int argc, char** argv) {
-  const char* uri_str =
-      "flex://"
-      "../../../../storages/rt_mutable_graph/modern_graph/";
+  if (argc != 2) {
+    printf("Usage: %s <uri>\n", argv[0]);
+    return 1;
+  }
+  const char* uri_str = argv[1];
+  //print uri
+  printf("uri: %s\n", uri_str);
 
   test_index(uri_str);
   test_property(uri_str);

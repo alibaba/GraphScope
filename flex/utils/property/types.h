@@ -45,9 +45,7 @@ struct Date {
   Date() = default;
   ~Date() = default;
   Date(int64_t x);
-  Date(const char* str);
 
-  void reset(const char* str);
   std::string to_string() const;
 
   int64_t milli_second;
@@ -153,6 +151,28 @@ struct Any {
   template <typename T>
   static Any From(const T& value) {
     return AnyConverter<T>::to_any(value);
+  }
+
+  bool operator==(const Any& other) const {
+    if (type == other.type) {
+      if (type == PropertyType::kInt32) {
+        return value.i == other.value.i;
+      } else if (type == PropertyType::kInt64) {
+        return value.l == other.value.l;
+      } else if (type == PropertyType::kDate) {
+        return value.d.milli_second == other.value.d.milli_second;
+      } else if (type == PropertyType::kString) {
+        return value.s == other.value.s;
+      } else if (type == PropertyType::kEmpty) {
+        return true;
+      } else if (type == PropertyType::kDouble) {
+        return value.db == other.value.db;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
   }
 
   PropertyType type;
@@ -276,6 +296,12 @@ struct AnyConverter<Date> {
     return ret;
   }
 
+  static Any to_any(int64_t value) {
+    Any ret;
+    ret.set_date(value);
+    return ret;
+  }
+
   static AnyValue to_any_value(const Date& value) {
     AnyValue ret;
     ret.d = value;
@@ -391,18 +417,6 @@ struct AnyConverter<double> {
     return value.db;
   }
 };
-
-void ParseRecord(const char* line, std::vector<Any>& rec);
-
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int& prop);
-
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst, Date& prop);
-
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
-                  grape::EmptyType& prop);
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst, double& prop);
-
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int64_t& prop);
 
 grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value);
 grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value);

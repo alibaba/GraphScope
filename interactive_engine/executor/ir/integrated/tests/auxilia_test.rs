@@ -43,7 +43,8 @@ mod test {
     fn source_gen(alias: Option<KeyId>) -> Box<dyn Iterator<Item = Record> + Send> {
         let graph = create_exp_store(Arc::new(TestCluster {}));
         register_graph(graph);
-        let scan_opr_pb = pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None };
+        let scan_opr_pb =
+            pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None, is_count_only: false };
         let source = SourceOperator::new(scan_opr_pb.into(), Arc::new(TestRouter::default())).unwrap();
         source.gen_source(0).unwrap()
     }

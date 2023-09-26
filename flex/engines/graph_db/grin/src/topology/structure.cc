@@ -35,9 +35,33 @@ GRIN_GRAPH grin_get_graph_from_storage(const char* uri) {
     return GRIN_NULL_GRAPH;
   }
   _uri = _uri.substr(pos + 3);
-  std::string graph_schema_path = _uri + "/modern_graph.yaml";
-  std::string data_path = uri;
-  std::string bulk_load_config_path = _uri + "/bulk_load.yaml";
+  LOG(INFO) << "Params: " << _uri;
+  std::string graph_schema_path, bulk_load_config_path;
+  if (pos != std::string::npos) {
+    auto params = _uri;
+    std::vector<std::string> param_list;
+    boost::split(param_list, params, boost::is_any_of("&"));
+    for (auto& param : param_list) {
+      std::vector<std::string> kv;
+      boost::split(kv, param, boost::is_any_of("="));
+      if (kv.size() != 2) {
+        return GRIN_NULL_GRAPH;
+      }
+      if (kv[0] == "schema_file") {
+        graph_schema_path = kv[1];
+      } else if (kv[0] == "bulk_load_file") {
+        bulk_load_config_path = kv[1];
+      }
+    }
+  } else {
+    return GRIN_NULL_GRAPH;
+  }
+  VLOG(10) << "Schema file: " << graph_schema_path;
+  VLOG(10) << "Bulk load file: " << bulk_load_config_path;
+  if (graph_schema_path.empty() || bulk_load_config_path.empty()) {
+    return GRIN_NULL_GRAPH;
+  }
+  // get schema_file from
   if (!std::filesystem::exists(graph_schema_path) ||
       !(std::filesystem::exists(bulk_load_config_path))) {
     return GRIN_NULL_GRAPH;
@@ -47,7 +71,9 @@ GRIN_GRAPH grin_get_graph_from_storage(const char* uri) {
       gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
 
   GRIN_GRAPH_T* g = new GRIN_GRAPH_T();
-  g->g.Init(schema, loading_config);
+  auto loader =
+      gs::LoaderFactory::CreateFragmentLoader(schema, loading_config, 1);
+  loader->LoadFragment(g->g);
   init_cache(g);
   return g;
 }

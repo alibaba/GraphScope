@@ -159,6 +159,7 @@ class FlatEdgeSet {
         label_triplet_ind_(std::move(label_triplet_ind)),
         direction_(direction) {
     CHECK(label_triplet_ind_.size() == vec_.size());
+    CHECK(prop_names_.size() == label_triplet_.size());
     uint8_t max_ind = 0;
     for (auto i = 0; i < label_triplet_ind_.size(); ++i) {
       max_ind = std::max(max_ind, label_triplet_ind_[i]);
@@ -171,6 +172,16 @@ class FlatEdgeSet {
   iterator begin() const { return iterator(vec_, 0); }
 
   iterator end() const { return iterator(vec_, vec_.size()); }
+
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> res;
+    res.reserve(vec_.size());
+    for (auto i = 0; i < vec_.size(); ++i) {
+      auto ind = label_triplet_ind_[i];
+      res.emplace_back(label_triplet_[ind][2]);
+    }
+    return res;
+  }
 
   template <size_t col_ind, typename... index_ele_tuple_t_>
   flat_t Flat(
@@ -342,9 +353,11 @@ class FlatEdgeSet {
         new_label_triplet_ind.emplace_back(label_triplet_ind_[i]);
       }
     }
+    auto copied_label_triplet = label_triplet_;
 
-    return self_type_t(std::move(new_vec), label_triplet_, prop_names_,
-                       std::move(new_label_triplet_ind), direction_);
+    return self_type_t(std::move(new_vec), std::move(copied_label_triplet),
+                       prop_names_, std::move(new_label_triplet_ind),
+                       direction_);
   }
 
   void Repeat(std::vector<offset_t>& cur_offset,
@@ -391,7 +404,7 @@ class SingleLabelEdgeSetBuilder {
   static constexpr bool is_general_edge_set_builder = false;
   static constexpr bool is_two_label_set_builder = false;
 
-  SingleLabelEdgeSetBuilder(std::array<LabelT, 3>& label_triplet,
+  SingleLabelEdgeSetBuilder(const std::array<LabelT, 3>& label_triplet,
                             std::vector<std::string> prop_names,
                             Direction direction)
       : label_triplet_(label_triplet),
@@ -404,7 +417,8 @@ class SingleLabelEdgeSetBuilder {
   }
 
   result_t Build() {
-    return result_t(std::move(vec_), label_triplet_, prop_names_, direction_);
+    return result_t(std::move(vec_), std::move(label_triplet_), prop_names_,
+                    direction_);
   }
 
  private:
@@ -493,6 +507,15 @@ class SingleLabelEdgeSet {
   iterator begin() const { return iterator(vec_, 0); }
 
   iterator end() const { return iterator(vec_, vec_.size()); }
+
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> res;
+    res.reserve(vec_.size());
+    for (auto i = 0; i < vec_.size(); ++i) {
+      res.emplace_back(label_triplet_[2]);
+    }
+    return res;
+  }
 
   template <size_t col_ind, typename... index_ele_tuple_t_>
   flat_t Flat(
@@ -647,113 +670,6 @@ class SingleLabelEdgeSet {
   std::vector<std::string> prop_names_;
   Direction direction_;
 };
-
-// template <typename VID_T, typename LabelT>
-// class FlatEdgeSet<VID_T, LabelT, grape::EmptyType> {
-//  public:
-//   // TODO: use std::tuple<VID_T,VID_T> is enough
-//   using ele_tuple_t = std::tuple<VID_T, VID_T, grape::EmptyType>;
-//   using index_ele_tuple_t = std::tuple<size_t, ele_tuple_t>;
-//   using iterator = FlatEdgeSetIter<VID_T, grape::EmptyType>;
-//   using self_type_t = FlatEdgeSet<VID_T, LabelT, grape::EmptyType>;
-//   using flat_t = self_type_t;
-//   using data_tuple_t = ele_tuple_t;
-
-//   static constexpr bool is_multi_label = false;
-//   static constexpr bool is_collection = false;
-//   static constexpr bool is_edge_set = true;
-//   static constexpr bool is_multi_src = false;
-//   static constexpr bool is_multi_dst_label = false;
-
-//   FlatEdgeSet(std::vector<ele_tuple_t>&& vec,
-//               std::vector<std::array<LabelT, 3>>&& label_triplet,
-//               std::vector<LabelT>&& label_triplet_ind, Direction& dire)
-//       : vec_(std::move(vec)),
-//         label_triplet_(std::move(label_triplet)),
-//         label_triplet_ind_(std::move(label_triplet_ind)),
-//         direction_(dire) {
-//     CHECK(label_triplet_ind_.size() == vec_.size());
-//   }
-
-//   iterator begin() const { return iterator(vec_, 0); }
-
-//   iterator end() const { return iterator(vec_, vec_.size()); }
-
-//   template <size_t col_ind, typename... index_ele_tuple_t_>
-//   flat_t Flat(
-//       std::vector<std::tuple<index_ele_tuple_t_...>>& index_ele_tuple)
-//       const
-//       {
-//     std::vector<std::tuple<VID_T, VID_T, grape::EmptyType>> res;
-//     std::vector<int32_t> label_triplet_ind;
-//     res.reserve(index_ele_tuple.size());
-//     label_triplet_ind.reserve(index_ele_tuple.size());
-//     for (auto i = 0; i < index_ele_tuple.size(); ++i) {
-//       auto cur_ind_ele = std::get<col_ind>(index_ele_tuple[i]);
-//       res.push_back(std::get<1>(cur_ind_ele));
-//       label_triplet_ind.push_back(label_triplet_ind_[std::get<0>(cur_ind_ele)]);
-//     }
-//     return FlatEdgeSet(std::move(res), label_triplet_,
-//     std::move(label_triplet_ind));
-//   }
-//   template <typename... PropT>
-//   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
-//                         PropNameArray<PropT...>& prop_names,
-//                         std::vector<size_t>& repeat_array) {
-//     fillBuiltinPropsImpl(tuples, prop_names, repeat_array,
-//                          std::make_index_sequence<sizeof...(PropT)>());
-//   }
-
-//   // fill builtin props withour repeat array.
-//   template <typename... PropT>
-//   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
-//                         PropNameArray<PropT...>& prop_names) {
-//     std::vector<size_t> repeat_array(vec_.size(), 1);
-//     fillBuiltinPropsImpl(tuples, prop_names, repeat_array,
-//                          std::make_index_sequence<sizeof...(PropT)>());
-//   }
-
-//   template <typename EXPR, size_t num_labels>
-//   std::pair<RowVertexSet<LabelT, VID_T, grape::EmptyType>,
-//   std::vector<size_t>> GetVertices(VOpt v_opt, std::array<LabelT,
-//   num_labels>& labels,
-//               EXPR& expr) const {
-//     // We only contains one label for dst vertices.
-//     CHECK(v_opt == VOpt::End);
-//     std::vector<offset_t> offsets;
-//     std::vector<VID_T> vids;
-//     offsets.reserve(Size());
-//     offsets.emplace_back(0);
-//     // TODO: check labels.
-//     bool flag = false;
-//     for (auto l : labels) {
-//       if (l == dst_label_) {
-//         flag = true;
-//       }
-//     }
-//     if (flag) {
-//       for (auto iter : *this) {
-//         vids.emplace_back(iter.GetDst());
-//         offsets.emplace_back(vids.size());
-//       }
-//     } else {
-//       size_t size = Size();
-//       for (auto i = 0; i < size; ++i) {
-//         offsets.emplace_back(0);
-//       }
-//     }
-//     auto set = make_default_row_vertex_set(std::move(vids), dst_label_);
-//     return std::make_pair(std::move(set), std::move(offsets));
-//   }
-
-//   size_t Size() const { return vec_.size(); }
-
-//  private:
-//   std::vector<ele_tuple_t> vec_;
-//   std::vector<std::array<label_t, 3>> label_triplet_;
-//   std::vector<LabelT> label_triplet_ind_;
-//   Direction direction_;
-// };
 }  // namespace gs
 
 #endif  // ENGINES_HQPS_ENGINE_DS_MULTI_EDGE_SET_FLAT_EDGE_SET_H_

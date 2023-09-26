@@ -19,6 +19,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 set(DEFAULT_BUILD_TYPE "Release")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -mno-avx512f -fPIC")
+set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0")
 
 
 add_compile_definitions(FLEX_VERSION="${FLEX_VERSION}")
@@ -60,6 +61,20 @@ endif ()
 find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly
              context program_options regex thread)
+
+#find arrow----------------------------------------------------------------------
+include("cmake/FindArrow.cmake")
+if (NOT ARROW_FOUND)
+    message(FATAL_ERROR "arrow not found, please install the arrow library")
+else ()
+    include_directories(SYSTEM ${ARROW_INCLUDE_DIRS})
+    if (TARGET arrow_shared)
+        set(ARROW_SHARED_LIB arrow_shared)
+    endif()
+    if (TARGET arrow_static)
+        set(ARROW_STATIC_LIB arrow_static)
+    endif()
+endif ()
 
 # Find Doxygen
 if (BUILD_DOC)

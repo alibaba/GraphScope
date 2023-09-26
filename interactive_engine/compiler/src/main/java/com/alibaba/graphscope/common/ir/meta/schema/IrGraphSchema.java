@@ -36,6 +36,7 @@ public class IrGraphSchema implements GraphSchema {
     private final boolean isColumnId;
 
     public IrGraphSchema(MetaDataReader dataReader) throws Exception {
+        this.isColumnId = false;
         SchemaInputStream schemaInputStream = dataReader.getGraphSchema();
         String content =
                 new String(
@@ -44,19 +45,19 @@ public class IrGraphSchema implements GraphSchema {
         switch (schemaInputStream.getFormatType()) {
             case YAML:
                 this.graphSchema = Utils.buildSchemaFromYaml(content);
-                this.schemeJson = IrSchemaParser.getInstance().parse(this.graphSchema);
+                this.schemeJson =
+                        IrSchemaParser.getInstance().parse(this.graphSchema, this.isColumnId);
                 break;
             case JSON:
             default:
                 this.graphSchema = Utils.buildSchemaFromJson(content);
                 this.schemeJson = content;
         }
-        this.isColumnId = false;
     }
 
     public IrGraphSchema(GraphSchema graphSchema, boolean isColumnId) {
         this.graphSchema = graphSchema;
-        this.schemeJson = IrSchemaParser.getInstance().parse(graphSchema);
+        this.schemeJson = IrSchemaParser.getInstance().parse(graphSchema, isColumnId);
         this.isColumnId = isColumnId;
     }
 

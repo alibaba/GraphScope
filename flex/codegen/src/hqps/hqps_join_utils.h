@@ -22,10 +22,10 @@ limitations under the License.
 #include "flex/codegen/src/codegen_utils.h"
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/pb_parser/name_id_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/expr.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/expr.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 namespace gs {
 
 namespace internal {

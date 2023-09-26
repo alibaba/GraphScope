@@ -217,4 +217,13 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     ReturnTypes.explicit(SqlTypeName.ANY).andThen(SqlTypeTransforms.TO_ARRAY),
                     GraphInferTypes.FIRST_KNOWN,
                     OperandTypes.ANY);
+
+    public static final SqlFunction EXTRACT =
+            new SqlFunction(
+                    "EXTRACT",
+                    SqlKind.EXTRACT,
+                    ReturnTypes.BIGINT_NULLABLE,
+                    null,
+                    GraphOperandTypes.INTERVALINTERVAL_INTERVALDATETIME,
+                    SqlFunctionCategory.SYSTEM);
 }

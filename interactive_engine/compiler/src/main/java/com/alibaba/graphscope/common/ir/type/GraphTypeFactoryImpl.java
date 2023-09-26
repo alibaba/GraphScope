@@ -16,32 +16,51 @@
 
 package com.alibaba.graphscope.common.ir.type;
 
-import com.google.common.collect.Lists;
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
 
+import java.nio.charset.Charset;
+
 public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
+    private final Configs configs;
+
+    public GraphTypeFactoryImpl(Configs configs) {
+        super();
+        this.configs = configs;
+    }
 
     @Override
     public RelDataType createTypeWithNullability(RelDataType type, boolean nullable) {
         RelDataType newType;
-        if (type instanceof GraphSchemaTypeList) {
-            GraphSchemaTypeList schemaTypeList = (GraphSchemaTypeList) type;
-            newType =
-                    GraphSchemaTypeList.create(
-                            Lists.newArrayList(schemaTypeList.listIterator()), nullable);
-        } else if (type instanceof GraphSchemaType) {
+        if (type instanceof GraphSchemaType) {
             GraphSchemaType schemaType = (GraphSchemaType) type;
-            newType =
-                    new GraphSchemaType(
-                            schemaType.getScanOpt(),
-                            schemaType.getLabelType(),
-                            schemaType.getFieldList(),
-                            nullable);
+            if (schemaType.getSchemaTypeAsList().size() > 1) { // fuzzy schema type
+                newType =
+                        new GraphSchemaType(
+                                schemaType.getScanOpt(),
+                                schemaType.getLabelType(),
+                                schemaType.getFieldList(),
+                                schemaType.getSchemaTypeAsList(),
+                                nullable);
+            } else {
+                newType =
+                        new GraphSchemaType(
+                                schemaType.getScanOpt(),
+                                schemaType.getLabelType(),
+                                schemaType.getFieldList(),
+                                nullable);
+            }
         } else {
             newType = super.createTypeWithNullability(type, nullable);
         }
         return newType;
+    }
+
+    @Override
+    public Charset getDefaultCharset() {
+        return Charset.forName(FrontendConfig.CALCITE_DEFAULT_CHARSET.get(configs));
     }
 }

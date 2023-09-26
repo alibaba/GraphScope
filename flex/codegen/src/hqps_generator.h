@@ -33,7 +33,7 @@ limitations under the License.
 #include "flex/codegen/src/hqps/hqps_select_builder.h"
 #include "flex/codegen/src/hqps/hqps_sink_builder.h"
 #include "flex/codegen/src/hqps/hqps_sort_builder.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 
@@ -289,6 +289,11 @@ class QueryGenerator {
       // physical::PhysicalOpr::MetaData meta_data; //fake meta
       auto opr = op.opr();
       switch (opr.op_kind_case()) {
+      case physical::PhysicalOpr::Operator::kRoot: {
+        LOG(INFO) << "Skip root_scan";
+        break;
+      }
+
       case physical::PhysicalOpr::Operator::kScan: {  // scan
         // TODO: meta_data is not found in scan
         physical::PhysicalOpr::MetaData meta_data;
@@ -299,6 +304,7 @@ class QueryGenerator {
         ss << BuildScanOp(ctx_, scan_op, meta_data) << std::endl;
         break;
       }
+
       case physical::PhysicalOpr::Operator::kEdge: {  // edge expand
         physical::EdgeExpand real_edge_expand = opr.edge();
         // try to use infomation from later operator
@@ -411,30 +417,30 @@ class QueryGenerator {
       case physical::PhysicalOpr::Operator::kPath: {
         physical::PhysicalOpr::MetaData meta_data;
         LOG(INFO) << "Found a path operator";
-        if (FUSE_PATH_EXPAND_V) {
-          if (i + 1 < size) {
-            auto& path_op = opr.path();
-            auto& next_op = plan_.plan(i + 1).opr();
-            CHECK(next_op.op_kind_case() ==
-                  physical::PhysicalOpr::Operator::kVertex)
-                << "PathExpand must be followed by GetV";
+        auto& path_op = opr.path();
+        if (FUSE_PATH_EXPAND_V && !path_op.has_alias() && (i + 1 < size)) {
+          auto& next_op = plan_.plan(i + 1).opr();
+          if (next_op.op_kind_case() ==
+              physical::PhysicalOpr::Operator::kVertex) {
+            LOG(INFO) << " Fusing path expand and get_v";
             auto& get_v_op = next_op.vertex();
             int32_t get_v_res_alias = -1;
             if (get_v_op.has_alias()) {
               get_v_res_alias = get_v_op.alias().value();
             }
 
-            auto res = BuildPathExpandOp<LabelT>(ctx_, path_op, meta_datas,
-                                                 get_v_res_alias);
+            auto res = BuildPathExpandVOp<LabelT>(ctx_, path_op, meta_datas,
+                                                  get_v_res_alias);
             ss << res;
             i += 1;  // jump one step
             break;
-          } else {
-            LOG(FATAL) << "PathExpand is the last operator";
           }
-        } else {
-          LOG(FATAL) << "Currently not supported: PathExpand without Getv";
         }
+        LOG(INFO) << " PathExpand to Path";
+        // otherwise, just expand path
+        auto res = BuildPathExpandPathOp<LabelT>(ctx_, path_op, meta_datas);
+        ss << res;
+        break;
       }
 
       case physical::PhysicalOpr::Operator::kApply: {
@@ -568,6 +574,7 @@ static std::array<std::string, 4> BuildJoinOp(
         left_task_generator.GenerateSubTask();
     left_res_ctx_name = ctx.GetCurCtxName();
   }
+  LOG(INFO) << "Finish building left code";
 
   {
     // right code
@@ -585,6 +592,7 @@ static std::array<std::string, 4> BuildJoinOp(
       ctx.AddParameterVar(right_param_var);
     }
   }
+  LOG(INFO) << "Finish building right code";
 
   // join code.
   {
@@ -626,6 +634,21 @@ static std::array<std::string, 4> BuildJoinOp(
     cur_ss << ");";
     join_code = cur_ss.str();
   }
+  {
+    // The tags in right ctx should be added to left ctx.
+    // after join, the tags/columns from right ctx will be appended to left
+    // ctx.
+    auto right_tag_inds = right_context.GetTagIdAndIndMapping();
+    auto left_tag_inds = ctx.GetTagIdAndIndMapping();
+    for (auto right_tag : right_tag_inds.GetTagInd2TagIds()) {
+      left_tag_inds.CreateOrGetTagInd(right_tag);
+    }
+    VLOG(10) << "Merging right tag ids to left, got : "
+             << gs::to_string(left_tag_inds.GetTagInd2TagIds()) << std::endl
+             << gs::to_string(left_tag_inds.GetTagId2TagInds());
+    ctx.UpdateTagIdAndIndMapping(left_tag_inds);
+  }
+  LOG(INFO) << "Finish building join code";
   return std::array<std::string, 4>{copy_context_code, left_plan_code,
                                     right_plan_code, join_code};
 }

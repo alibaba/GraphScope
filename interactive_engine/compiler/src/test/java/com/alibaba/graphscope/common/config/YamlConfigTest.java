@@ -81,9 +81,25 @@ public class YamlConfigTest {
         IrGraphSchema graphSchema = new IrGraphSchema(new LocalMetaDataReader(configs));
         Assert.assertEquals(
                 "DefaultGraphVertex{labelId=0, label=person,"
-                    + " propertyList=[DefaultGraphProperty{id=0, name=id, dataType=LONG},"
-                    + " DefaultGraphProperty{id=1, name=name, dataType=STRING},"
-                    + " DefaultGraphProperty{id=2, name=age, dataType=INT}], primaryKeyList=[id]}",
+                        + " propertyList=[DefaultGraphProperty{id=0, name=id, dataType=LONG},"
+                        + " DefaultGraphProperty{id=1, name=name, dataType=STRING},"
+                        + " DefaultGraphProperty{id=2, name=age, dataType=INT}],"
+                        + " primaryKeyList=[id]}",
                 graphSchema.getElement("person").toString());
+        Assert.assertEquals(
+                "DefaultGraphVertex{labelId=1, label=software,"
+                        + " propertyList=[DefaultGraphProperty{id=0, name=id, dataType=LONG},"
+                        + " DefaultGraphProperty{id=1, name=name, dataType=STRING},"
+                        + " DefaultGraphProperty{id=2, name=lang, dataType=STRING},"
+                        + " DefaultGraphProperty{id=3, name=creationDate, dataType=DATE}],"
+                        + " primaryKeyList=[id]}",
+                graphSchema.getElement("software").toString());
+    }
+
+    @Test
+    public void compiler_config_test() throws Exception {
+        YamlConfigs configs =
+                new YamlConfigs("config/gs_interactive_hiactor.yaml", FileLoadType.RESOURCES);
+        Assert.assertEquals("UTF-8", FrontendConfig.CALCITE_DEFAULT_CHARSET.get(configs));
     }
 }

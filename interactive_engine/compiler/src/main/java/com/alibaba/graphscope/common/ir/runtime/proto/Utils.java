@@ -22,11 +22,14 @@ import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
+import com.google.common.base.Preconditions;
 import com.google.protobuf.Int32Value;
 
+import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.NlsString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -189,6 +192,7 @@ public abstract class Utils {
     }
 
     public static final Common.DataType protoBasicDataType(RelDataType basicType) {
+        if (basicType instanceof GraphLabelType) return Common.DataType.INT32;
         switch (basicType.getSqlTypeName()) {
             case NULL:
                 return Common.DataType.NONE;
@@ -224,6 +228,8 @@ public abstract class Utils {
                                         + elementType.getSqlTypeName()
                                         + " is unsupported yet");
                 }
+            case DATE:
+                return Common.DataType.DATE;
             default:
                 throw new UnsupportedOperationException(
                         "basic type " + basicType.getSqlTypeName() + " is unsupported yet");
@@ -238,17 +244,10 @@ public abstract class Utils {
                     DataType.GraphDataType.Builder builder = DataType.GraphDataType.newBuilder();
                     builder.setElementOpt(
                             protoElementOpt(((GraphSchemaType) dataType).getScanOpt()));
-                    if (dataType instanceof GraphSchemaTypeList) {
-                        ((GraphSchemaTypeList) dataType)
-                                .forEach(
-                                        k -> {
-                                            builder.addGraphDataType(
-                                                    protoElementType(k, isColumnId));
-                                        });
-                    } else {
-                        builder.addGraphDataType(
-                                protoElementType((GraphSchemaType) dataType, isColumnId));
-                    }
+                    ((GraphSchemaType) dataType)
+                            .getSchemaTypeAsList()
+                            .forEach(
+                                    k -> builder.addGraphDataType(protoElementType(k, isColumnId)));
                     return DataType.IrDataType.newBuilder().setGraphType(builder.build()).build();
                 }
                 throw new UnsupportedOperationException(
@@ -317,15 +316,41 @@ public abstract class Utils {
 
     public static final DataType.GraphDataType.GraphElementLabel protoElementLabel(
             GraphLabelType labelType) {
+        Preconditions.checkArgument(
+                labelType.getLabelsEntry().size() == 1,
+                "can not convert label=" + labelType + " to proto 'GraphElementLabel'");
+        GraphLabelType.Entry entry = labelType.getSingleLabelEntry();
         DataType.GraphDataType.GraphElementLabel.Builder builder =
-                DataType.GraphDataType.GraphElementLabel.newBuilder()
-                        .setLabel(labelType.getLabelId());
-        if (labelType.getSrcLabelId() != null) {
-            builder.setSrcLabel(Int32Value.of(labelType.getSrcLabelId()));
+                DataType.GraphDataType.GraphElementLabel.newBuilder().setLabel(entry.getLabelId());
+        if (entry.getSrcLabelId() != null) {
+            builder.setSrcLabel(Int32Value.of(entry.getSrcLabelId()));
         }
-        if (labelType.getDstLabelId() != null) {
-            builder.setDstLabel(Int32Value.of(labelType.getDstLabelId()));
+        if (entry.getDstLabelId() != null) {
+            builder.setDstLabel(Int32Value.of(entry.getDstLabelId()));
         }
         return builder.build();
+    }
+
+    public static final OuterExpression.Extract.Interval protoInterval(RexLiteral literal) {
+        Preconditions.checkArgument(
+                literal.getType().getSqlTypeName() == SqlTypeName.SYMBOL,
+                "interval should be an literal of 'SYMBOL' type");
+        TimeUnit timeUnit = literal.getValueAs(TimeUnit.class);
+        switch (timeUnit) {
+            case YEAR:
+                return OuterExpression.Extract.Interval.YEAR;
+            case MONTH:
+                return OuterExpression.Extract.Interval.MONTH;
+            case DAY:
+                return OuterExpression.Extract.Interval.DAY;
+            case HOUR:
+                return OuterExpression.Extract.Interval.HOUR;
+            case MINUTE:
+                return OuterExpression.Extract.Interval.MINUTE;
+            case SECOND:
+                return OuterExpression.Extract.Interval.SECOND;
+            default:
+                throw new UnsupportedOperationException("unsupported interval type " + timeUnit);
+        }
     }
 }

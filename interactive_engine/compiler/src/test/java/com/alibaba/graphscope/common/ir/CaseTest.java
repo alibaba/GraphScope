@@ -49,7 +49,7 @@ public class CaseTest {
                                 builder.literal("marko")),
                         builder.literal(1),
                         builder.literal(3));
-        Assert.assertEquals("CASE(=(a.name, 'marko'), 1, 3)", caseExpr.toString());
+        Assert.assertEquals("CASE(=(a.name, _UTF-8'marko'), 1, 3)", caseExpr.toString());
         Assert.assertEquals(SqlTypeName.INTEGER, caseExpr.getType().getSqlTypeName());
     }
 
@@ -73,7 +73,7 @@ public class CaseTest {
                                 builder.literal("marko")),
                         rexBuilder.makeGraphDynamicParam("value", 0),
                         builder.literal(3));
-        Assert.assertEquals("CASE(=(a.name, 'marko'), ?0, 3)", caseExpr.toString());
+        Assert.assertEquals("CASE(=(a.name, _UTF-8'marko'), ?0, 3)", caseExpr.toString());
         Assert.assertEquals(SqlTypeName.INTEGER, caseExpr.getType().getSqlTypeName());
         Assert.assertEquals(
                 SqlTypeName.INTEGER,

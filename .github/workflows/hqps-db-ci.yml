@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.4
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.6
     steps:
     - uses: actions/checkout@v3
 
@@ -78,15 +78,21 @@ jobs:
         which cargo
 
         # build compiler
-        cd ${GIE_HOME}/compiler
-        make build
+        cd ${GIE_HOME}/
+        mvn clean install -Pexperimental -DskipTests
 
-    - name: Prepare dataset
+    - name: Prepare dataset and workspace
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         # download dataset
-        git clone -b master --single-branch --depth=1 https://github.com/Graphscope/gstest.git ${GS_TEST_DIR}
+        git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
+        mkdir -p ${INTERACTIVE_WORKSPACE}/data/ldbc
+        GRAPH_SCHEMA_YAML=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml
+        cp ${GRAPH_SCHEMA_YAML} ${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml
+        mkdir -p ${INTERACTIVE_WORKSPACE}/data/movies
+        cp ${GS_TEST_DIR}/flex/movies/movies_schema.yaml ${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml
 
     - name: Sample Query test
       env:
@@ -102,46 +108,67 @@ jobs:
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         HOME : /home/graphscope/
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         GIE_HOME=${GITHUB_WORKSPACE}/interactive_engine
-
-        # create tmp ir.compiler.properties
-        touch /tmp/ir.compiler.properties
-        echo "engine.type: hiactor" >> /tmp/ir.compiler.properties
-        echo "graph.schema: ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/ldbc_schema_csr_ic.json" >> /tmp/ir.compiler.properties
-        echo "graph.store: exp" >> /tmp/ir.compiler.properties
-        echo "graph.planner.is.on: true" >> /tmp/ir.compiler.properties
-        echo "graph.planner.opt: RBO" >> /tmp/ir.compiler.properties
-        echo "graph.planner.rules: FilterMatchRule" >> /tmp/ir.compiler.properties
-
         cd ${GITHUB_WORKSPACE}/flex/bin
 
-        for i in 2 3 5 6 8 9 11 12;
+        for i in 1 2 3 4 5 6 7 8 9 10 11 12;
         do
           cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/ic${i}_adhoc.cypher -w=/tmp/codgen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=/tmp/ir.compiler.properties "
-          cmd=${cmd}" --graph_schema_path=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/ldbc_schema_csr_ic.json"
-          cmd=${cmd}" --gie_home=${GIE_HOME}"
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml "
+          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
           echo $cmd
-          eval ${cmd} 
+          eval ${cmd}
         done
 
         for i in 1 2 3 4 5 6 7 8 9;
         do
           cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/simple_match_${i}.cypher -w=/tmp/codgen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=/tmp/ir.compiler.properties "
-          cmd=${cmd}" --graph_schema_path=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/ldbc_schema_csr_ic.json"
-          cmd=${cmd}" --gie_home=${GIE_HOME}"
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml "
+          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
           echo $cmd
           eval ${cmd}
         done
 
-    - name: Run End-to-End cypher adhoc query test
+        # test movie graph, 8,9,10 are not supported now
+        # change the default_graph config in ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml to movies
+        sed -i 's/default_graph: ldbc/default_graph: movies/g' ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml
+        for i in 1 2 3 4 5 6 7 11 12 13 14 15;
+        do
+          cmd="./load_plan_and_gen.sh -e=hqps -i=../tests/hqps/queries/movie/query${i}.cypher -w=/tmp/codgen/"
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml "
+          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml"
+          echo $cmd
+          eval ${cmd}
+        done
+
+    - name: Run End-to-End cypher adhoc ldbc query test
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         HOME : /home/graphscope/
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export FLEX_DATA_DIR=${GS_TEST_DIR}/flex/ldbc-sf01-long-date
-        bash hqps_cypher_test.sh ${GS_TEST_DIR}
+        export ENGINE_TYPE=hiactor
+        # change the default_graph config in ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml to ldbc
+        sed -i 's/default_graph: movies/default_graph: ldbc/g' ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml
+        bash hqps_cypher_test.sh ${INTERACTIVE_WORKSPACE} ldbc ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_bulk_load.yaml \
+              ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml
+
+    - name: Run End-to-End cypher adhoc movie query test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        HOME : /home/graphscope/
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
+        export FLEX_DATA_DIR=../../interactive/examples/movies/
+        export ENGINE_TYPE=hiactor
+        # change the default_graph config in ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml to movies
+        sed -i 's/default_graph: ldbc/default_graph: movies/g' ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml
+        bash hqps_cypher_test.sh ${INTERACTIVE_WORKSPACE} movies ${GS_TEST_DIR}/flex/movies/movies_import.yaml \
+          ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml
+
 

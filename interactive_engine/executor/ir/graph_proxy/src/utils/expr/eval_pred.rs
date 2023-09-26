@@ -490,9 +490,12 @@ fn process_predicates(
                 }
                 Item::Arith(_) => return Ok(None),
                 Item::Param(param) => {
-                    return Err(ExprError::Unsupported(format!("Dynamic Param {:?}", param)))
+                    return Err(ExprError::unsupported(format!("Dynamic Param {:?}", param)))
                 }
                 Item::Case(case) => return Err(ExprError::unsupported(format!("Case When {:?}", case))),
+                Item::Extract(extract) => {
+                    return Err(ExprError::unsupported(format!("Extract {:?}", extract)))
+                }
             }
         }
     }

@@ -24,9 +24,9 @@ limitations under the License.
 #include "flex/codegen/src/codegen_utils.h"
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/pb_parser/query_params_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 // #define FAST_SCAN
 
@@ -89,6 +89,53 @@ class ScanOpBuilder {
     return *this;
   }
 
+  ScanOpBuilder& idx_predicate(const algebra::IndexPredicate& predicate) {
+    // check query_params not has predicate.
+    if (query_params_.has_predicate()) {
+      VLOG(10) << "query params already has predicate";
+      return *this;
+    }
+    // Currently we only support one predicate.
+    if (predicate.or_predicates_size() < 1) {
+      VLOG(10) << "No predicate in index predicate";
+      return *this;
+    }
+    if (predicate.or_predicates_size() != 1) {
+      throw std::runtime_error(
+          std::string("Currently only support one predicate"));
+    }
+    auto or_predicate = predicate.or_predicates(0);
+    if (or_predicate.predicates_size() != 1) {
+      throw std::runtime_error(
+          std::string("Currently only support one and predicate"));
+    }
+    auto triplet = or_predicate.predicates(0);
+    // add index predicate to query params
+    auto* new_predicate = query_params_.mutable_predicate();
+    {
+      auto first_op = new_predicate->add_operators();
+      common::Variable variable;
+      auto& property = triplet.key();
+      *(variable.mutable_property()) = property;
+      variable.mutable_node_type()->set_data_type(common::DataType::INT64);
+      *(first_op->mutable_var()) = variable;
+    }
+    {
+      auto second = new_predicate->add_operators();
+      second->set_logical(common::Logical::EQ);
+      second->mutable_node_type()->set_data_type(common::DataType::BOOLEAN);
+    }
+    {
+      auto third = new_predicate->add_operators();
+      auto& value = triplet.value();
+      third->mutable_node_type()->set_data_type(common::DataType::INT64);
+      *(third->mutable_const_()) = value;
+    }
+    VLOG(10) << "Add index predicate to query params: "
+             << query_params_.DebugString();
+    return *this;
+  }
+
   std::string Build() const {
     std::string label_name;
     std::vector<int32_t> labels_ids;
@@ -136,10 +183,10 @@ class ScanOpBuilder {
           std::string expr_func_name, expr_code;
           std::vector<codegen::ParamConst> func_call_param_const;
           std::vector<std::pair<int32_t, std::string>> expr_tag_props;
-          common::DataType unused_expr_ret_type;
+          std::vector<common::DataType> unused_expr_ret_type;
           std::tie(expr_func_name, func_call_param_const, expr_tag_props,
                    expr_code, unused_expr_ret_type) = expr_builder.Build();
-          VLOG(10) << "Found expr in edge_expand_opt:  " << expr_func_name;
+          VLOG(10) << "Found expr in scan:  " << expr_func_name;
           // generate code.
           ctx_.AddExprCode(expr_code);
           std::string expr_var_name = ctx_.GetNextExprVarName();
@@ -275,7 +322,9 @@ static std::string BuildScanOp(
   } else {
     builder.resAlias(-1);
   }
-  return builder.queryParams(scan_pb.params()).Build();
+  return builder.queryParams(scan_pb.params())
+      .idx_predicate(scan_pb.idx_predicate())
+      .Build();
 }
 
 }  // namespace gs

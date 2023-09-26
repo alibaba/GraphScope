@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.runtime.CalciteException;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.junit.Assert;
 import org.junit.Test;
@@ -93,7 +94,7 @@ public class MatchTest {
                 "GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[c], fusedFilter=[[=(DEFAULT.name, 'marko')]], opt=[END])\n"
+                    + " alias=[c], fusedFilter=[[=(DEFAULT.name, _UTF-8'marko')]], opt=[END])\n"
                     + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
                     + " tables=[knows]}], alias=[DEFAULT], fusedFilter=[[=(DEFAULT.weight,"
                     + " 1.0E0)]], opt=[OUT])\n"
@@ -236,5 +237,58 @@ public class MatchTest {
                         + " dataType=INTEGER}]",
                 plan.getDynamicParams().toString());
         Assert.assertEquals("RecordType(BIGINT id, CHAR(1) name)", plan.getOutputType().toString());
+    }
+
+    @Test
+    public void match_12_test() {
+        try {
+            RelNode node = Utils.eval("Match (a:人类) Return a").build();
+        } catch (CalciteException e) {
+            Assert.assertEquals("Table '人类' not found", e.getMessage());
+            return;
+        }
+        Assert.fail();
+    }
+
+    @Test
+    public void match_13_test() {
+        try {
+            RelNode node = Utils.eval("Match (a:person {名称:'marko'}) Return a").build();
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(
+                    "{property=名称} not found; expected properties are: [id, name, age]",
+                    e.getMessage());
+            return;
+        }
+        Assert.fail();
+    }
+
+    @Test
+    public void match_14_test() {
+        RelNode node = Utils.eval("Match (a:person {name:'小明'}) Return '小明'").build();
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[_UTF-8'小明'], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], fusedFilter=[[=(DEFAULT.name, _UTF-8'小明')]], opt=[VERTEX])",
+                node.explain().trim());
+        Assert.assertEquals(
+                SqlTypeName.CHAR,
+                node.getRowType().getFieldList().get(0).getType().getSqlTypeName());
+    }
+
+    @Test
+    public void match_15_test() {
+        RelNode node = Utils.eval("Match (a)-[b]-(c) Return labels(a), type(b)").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(~label=[a.~label], ~label0=[b.~label], isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[c], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[b], opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                node.explain().trim());
     }
 }

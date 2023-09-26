@@ -480,7 +480,7 @@ class GroupByOp {
       size_t ind = 0;
       if (key_tuple_set.find(key_tuple) != key_tuple_set.end()) {
         // already exist
-        auto ind = key_tuple_set[key_tuple];
+        ind = key_tuple_set[key_tuple];
       } else {
         // not exist
         ind = cur_ind++;

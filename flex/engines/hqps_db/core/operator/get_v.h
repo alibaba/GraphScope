@@ -23,8 +23,8 @@ limitations under the License.
 #include "flex/engines/hqps_db/structures/multi_vertex_set/multi_label_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/row_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/two_label_vertex_set.h"
-
 #include "flex/storages/rt_mutable_graph/types.h"
+
 #include "grape/utils/bitset.h"
 
 namespace gs {
@@ -60,6 +60,18 @@ class GetVertex {
       GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
     VLOG(10) << "[Get no PropertyV from edge set]" << set.Size();
     return GetNoPropVSetFromSingleDstEdgeSet(graph, set, std::move(get_v_opt));
+  }
+
+  // get no prop v from PathSet.
+  template <typename SET_T, typename LabelT, size_t num_labels,
+            typename EXPRESSION,
+            typename std::enable_if<(SET_T::is_path_set)>::type* = nullptr>
+  static auto GetNoPropVFromPathSet(
+      const GRAPH_INTERFACE& graph, const SET_T& set,
+      GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
+    VLOG(10) << "Get no PropertyV from path set, size: " << set.Size();
+    return GetNoPropVFromPathSetImpl(graph, set, get_v_opt.v_opt_,
+                                     get_v_opt.v_labels_, get_v_opt.filter_);
   }
 
   // get no prop v from untyped edge set, with no predicate.
@@ -212,6 +224,44 @@ class GetVertex {
   }
 
  private:
+  // get no prop v from path set.
+  template <size_t num_labels, typename EXPRESSION, typename... SELECTOR>
+  static auto GetNoPropVFromPathSetImpl(
+      const GRAPH_INTERFACE& graph,
+      const CompressedPathSet<vertex_id_t, label_id_t>& set, VOpt v_opt,
+      std::array<label_id_t, num_labels>& req_labels,
+      Filter<EXPRESSION, SELECTOR...>& filter) {
+    auto req_label_vec = array_to_vec(req_labels);
+    auto labels = set.GetLabels();
+    // remove duplicate from labels
+    std::sort(labels.begin(), labels.end());
+    labels.erase(std::unique(labels.begin(), labels.end()), labels.end());
+    // Can only be one label.
+    CHECK(labels.size() == 1);
+    // if req_labels is empty, then use the label from path set.
+    if (req_label_vec.empty()) {
+      req_label_vec.push_back(labels[0]);
+    }
+    // check if the label is in v_labels.
+    auto label = labels[0];
+    auto it = std::find(labels.begin(), labels.end(), label);
+    if (it == labels.end()) {
+      LOG(WARNING) << "Label: " << label << " is not in path labels";
+      // create an empty row vertex set.
+      auto res_set =
+          make_default_row_vertex_set<vertex_id_t, label_id_t>({}, label);
+      // create offsets.
+      auto offsets = std::vector<offset_t>(set.Size() + 1);
+      for (auto i = 0; i < offsets.size(); ++i) {
+        offsets[i] = 0;
+      }
+      return std::make_pair(std::move(res_set), std::move(offsets));
+    }
+    auto property_getters_array =
+        get_prop_getters_from_selectors(graph, labels, filter.selectors_);
+    return set.GetVertices(v_opt, filter.expr_, property_getters_array);
+  }
+
   // User-defined expression
   // for vertex set with multiple labels, i.e. two_label or general vertex set.
   // do project.

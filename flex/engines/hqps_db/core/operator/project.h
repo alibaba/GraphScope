@@ -28,6 +28,7 @@ limitations under the License.
 #include "flex/engines/hqps_db/structures/multi_edge_set/untyped_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/general_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/two_label_vertex_set.h"
+#include "flex/engines/hqps_db/structures/path.h"
 
 namespace gs {
 
@@ -290,8 +291,31 @@ class ProjectOp {
 
   ///////////////////Project implementation for all data structures.
 
+  /// Special case for project for labelKey
+  template <
+      typename T, typename NODE_T,
+      typename std::enable_if<std::is_same_v<T, LabelKey>>::type* = nullptr>
+  static auto apply_single_project_impl(
+      const GRAPH_INTERFACE& graph, NODE_T& node, const std::string& prop_name,
+      const std::vector<size_t>& repeat_array) {
+    auto size = node.Size();
+    auto label_vec = node.GetLabelVec();
+    std::vector<T> res_prop_vec;
+    CHECK(label_vec.size() == repeat_array.size())
+        << "label size: " << label_vec.size()
+        << " repeat size: " << repeat_array.size();
+    for (auto i = 0; i < repeat_array.size(); ++i) {
+      for (auto j = 0; j < repeat_array[i]; ++j) {
+        res_prop_vec.emplace_back(label_vec[i]);
+      }
+    }
+    return Collection<T>(std::move(res_prop_vec));
+  }
+
   // single label vertex set.
-  template <typename T, typename LabelT, typename VID_T, typename... SET_T>
+  template <
+      typename T, typename LabelT, typename VID_T, typename... SET_T,
+      typename std::enable_if<(!std::is_same_v<T, LabelKey>)>::type* = nullptr>
   static auto apply_single_project_impl(
       const GRAPH_INTERFACE& graph,
       RowVertexSetImpl<LabelT, VID_T, SET_T...>& node,
@@ -314,8 +338,10 @@ class ProjectOp {
   }
 
   // single keyed label vertex set.
-  template <typename T, typename LabelT, typename KEY_T, typename VID_T,
-            typename... SET_T>
+  template <
+      typename T, typename LabelT, typename KEY_T, typename VID_T,
+      typename... SET_T,
+      typename std::enable_if<(!std::is_same_v<T, LabelKey>)>::type* = nullptr>
   static auto apply_single_project_impl(
       const GRAPH_INTERFACE& graph,
       KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, SET_T...>& node,
@@ -339,7 +365,9 @@ class ProjectOp {
   }
 
   // project for two label vertex set.
-  template <typename T, typename VID_T, typename LabelT, typename... SET_T>
+  template <
+      typename T, typename VID_T, typename LabelT, typename... SET_T,
+      typename std::enable_if<(!std::is_same_v<T, LabelKey>)>::type* = nullptr>
   static auto apply_single_project_impl(
       const GRAPH_INTERFACE& graph,
       TwoLabelVertexSetImpl<VID_T, LabelT, SET_T...>& node,
@@ -378,7 +406,9 @@ class ProjectOp {
   }
 
   // general vertex set.
-  template <typename T, typename VID_T, typename LabelT>
+  template <
+      typename T, typename VID_T, typename LabelT,
+      typename std::enable_if<(!std::is_same_v<T, LabelKey>)>::type* = nullptr>
   static auto apply_single_project_impl(
       const GRAPH_INTERFACE& graph, GeneralVertexSet<VID_T, LabelT>& node,
       const std::string& prop_name_, const std::vector<size_t>& repeat_array) {
@@ -418,8 +448,10 @@ class ProjectOp {
   }
 
   // single label edge set
-  template <typename T, typename NODE_T,
-            typename std::enable_if<NODE_T::is_edge_set>::type* = nullptr>
+  template <
+      typename T, typename NODE_T,
+      typename std::enable_if<NODE_T::is_edge_set &&
+                              (!std::is_same_v<T, LabelKey>)>::type* = nullptr>
   static auto apply_single_project_impl(
       const GRAPH_INTERFACE& graph, NODE_T& node, const std::string& prop_name,
       const std::vector<size_t>& repeat_array) {
@@ -448,7 +480,9 @@ class ProjectOp {
   }
 
   /// Apply project on untyped edge set.
-  template <typename T, typename VID_T, typename LabelT, typename SUB_GRAPH_T>
+  template <
+      typename T, typename VID_T, typename LabelT, typename SUB_GRAPH_T,
+      typename std::enable_if<(!std::is_same_v<T, LabelKey>)>::type* = nullptr>
   static auto apply_single_project_impl(
       const GRAPH_INTERFACE& graph,
       UnTypedEdgeSet<VID_T, LabelT, SUB_GRAPH_T>& node,
@@ -461,6 +495,32 @@ class ProjectOp {
         node.template getProperties<T>(prop_array, repeat_array);
 
     return Collection<T>(std::move(tmp_prop_vec));
+  }
+
+  // apply project on path set，the type must be lengthKey
+  template <typename PROP_T, typename VID_T, typename LabelT,
+            typename std::enable_if<std::is_same_v<PROP_T, LengthKey>>::type* =
+                nullptr>
+  static auto apply_single_project_impl(
+      const GRAPH_INTERFACE& graph, CompressedPathSet<VID_T, LabelT>& node,
+      const std::string& prop_name, const std::vector<size_t>& repeat_array) {
+    VLOG(10) << "Finish fetching properties";
+
+    std::vector<typename LengthKey::length_data_type> lengths_vec;
+    auto path_vec = node.get_all_valid_paths();
+    CHECK(path_vec.size() == repeat_array.size());
+    lengths_vec.reserve(path_vec.size());
+    for (auto i = 0; i < path_vec.size(); ++i) {
+      if (repeat_array[i] > 0) {
+        auto length = path_vec[i].length();
+        for (auto j = 0; j < repeat_array[i]; ++j) {
+          lengths_vec.push_back(length);
+        }
+      }
+    }
+
+    return Collection<typename LengthKey::length_data_type>(
+        std::move(lengths_vec));
   }
 
   // evaluate expression in project op

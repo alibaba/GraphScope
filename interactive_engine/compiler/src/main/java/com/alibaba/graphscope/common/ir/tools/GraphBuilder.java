@@ -56,6 +56,7 @@ import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.BasicSqlType;
+import org.apache.calcite.sql.type.IntervalSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.Litmus;
@@ -423,12 +424,13 @@ public class GraphBuilder extends RelBuilder {
                             + "]");
         }
         if (property.equals(GraphProperty.LABEL_KEY)) {
+            GraphSchemaType schemaType = (GraphSchemaType) aliasField.getType();
             return RexGraphVariable.of(
                     aliasField.getIndex(),
                     new GraphProperty(GraphProperty.Opt.LABEL),
                     columnField.left,
                     varName,
-                    getTypeFactory().createSqlType(SqlTypeName.CHAR));
+                    schemaType.getLabelType());
         } else if (property.equals(GraphProperty.ID_KEY)) {
             return RexGraphVariable.of(
                     aliasField.getIndex(),
@@ -587,6 +589,20 @@ public class GraphBuilder extends RelBuilder {
         RelDataType returnType = operator.inferReturnType(callBinding);
         // derive unknown types of operands
         operandList = inferOperandTypes(operator, returnType, operandList);
+        if (operator.getKind() == SqlKind.EXTRACT) {
+            RexNode intervalOperand = operandList.get(0);
+            if (intervalOperand instanceof RexLiteral
+                    && ((RexLiteral) intervalOperand).isNull()
+                    && intervalOperand.getType() instanceof IntervalSqlType) {
+                IntervalSqlType intervalType = (IntervalSqlType) intervalOperand.getType();
+                List<RexNode> newOperands = Lists.newArrayList();
+                newOperands.add(
+                        getRexBuilder()
+                                .makeFlag(intervalType.getIntervalQualifier().getStartUnit()));
+                newOperands.add(operandList.get(1));
+                operandList = newOperands;
+            }
+        }
         final RexBuilder builder = cluster.getRexBuilder();
         return builder.makeCall(returnType, operator, operandList);
     }
@@ -628,7 +644,8 @@ public class GraphBuilder extends RelBuilder {
                 || (sqlKind == SqlKind.NOT)
                 || sqlKind == SqlKind.ARRAY_VALUE_CONSTRUCTOR
                 || sqlKind == SqlKind.IS_NULL
-                || sqlKind == SqlKind.IS_NOT_NULL;
+                || sqlKind == SqlKind.IS_NOT_NULL
+                || sqlKind == SqlKind.EXTRACT;
     }
 
     @Override

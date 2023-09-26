@@ -380,9 +380,11 @@ public class ClientService extends ClientGrpc.ClientImplBase {
         int storeCount = this.metaService.getStoreCount();
         AtomicInteger counter = new AtomicInteger(storeCount);
         AtomicBoolean finished = new AtomicBoolean(false);
+        String dataPath = request.getDataPath();
         for (int i = 0; i < storeCount; i++) {
             this.storeIngestor.clearIngest(
                     i,
+                    dataPath,
                     new CompletionCallback<Void>() {
                         @Override
                         public void onCompleted(Void res) {

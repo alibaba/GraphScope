@@ -18,6 +18,7 @@ package com.alibaba.graphscope.groot.dataload.databuild;
 import org.rocksdb.*;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 public class SstRecordWriter {
     private final SstFileWriter sstFileWriter;
@@ -41,10 +42,15 @@ public class SstRecordWriter {
     }
 
     public void write(String key, String value) throws IOException {
+        byte[] keyBytes = key.getBytes(charSet);
         try {
-            sstFileWriter.put(key.getBytes(charSet), value.getBytes(charSet));
+            sstFileWriter.put(keyBytes, value.getBytes(charSet));
         } catch (RocksDBException e) {
-            throw new IOException(e);
+            ByteBuffer buffer = ByteBuffer.wrap(keyBytes);
+            long tableId = buffer.getLong(0) >> 1;
+            long hashId = buffer.getLong(8);
+            throw new IOException(
+                    "Write SST Error! TableId: [" + tableId + "], hashId: [" + hashId + "]", e);
         }
         this.isEmpty = false;
     }

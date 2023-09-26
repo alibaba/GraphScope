@@ -17,11 +17,14 @@
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
+import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariable;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
+import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.cypher.antlr4.visitor.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
@@ -31,12 +34,16 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexDynamicParam;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexSubQuery;
+import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -198,8 +205,16 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                 throw new IllegalArgumentException("cannot get property from an literal");
             } else {
                 String aliasName = ctx.oC_Atom().oC_Variable().getText();
+                RexGraphVariable variable = builder.variable(aliasName);
                 String propertyName = ctx.oC_PropertyLookup().oC_PropertyKeyName().getText();
-                return new ExprVisitorResult(builder.variable(aliasName, propertyName));
+                RexNode expr =
+                        (variable.getType() instanceof GraphSchemaType)
+                                ? builder.variable(aliasName, propertyName)
+                                : builder.call(
+                                        GraphStdOperatorTable.EXTRACT,
+                                        createIntervalLiteral(propertyName),
+                                        variable);
+                return new ExprVisitorResult(expr);
             }
         }
     }
@@ -306,6 +321,24 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         List<CypherGSParser.OC_ExpressionContext> exprCtx = ctx.oC_Expression();
         String functionName = ctx.oC_FunctionName().getText();
         switch (functionName.toUpperCase()) {
+            case "LABELS":
+                RexNode labelVar = builder.variable(exprCtx.get(0).getText());
+                Preconditions.checkArgument(
+                        labelVar.getType() instanceof GraphSchemaType
+                                && ((GraphSchemaType) labelVar.getType()).getScanOpt()
+                                        == GraphOpt.Source.VERTEX,
+                        "'labels' can only be applied on vertex type");
+                return new ExprVisitorResult(
+                        builder.variable(exprCtx.get(0).getText(), GraphProperty.LABEL_KEY));
+            case "TYPE":
+                RexNode typeVar = builder.variable(exprCtx.get(0).getText());
+                Preconditions.checkArgument(
+                        typeVar.getType() instanceof GraphSchemaType
+                                && ((GraphSchemaType) typeVar.getType()).getScanOpt()
+                                        == GraphOpt.Source.EDGE,
+                        "'type' can only be applied on edge type");
+                return new ExprVisitorResult(
+                        builder.variable(exprCtx.get(0).getText(), GraphProperty.LABEL_KEY));
             case "LENGTH":
                 Preconditions.checkArgument(
                         !exprCtx.isEmpty(), "LENGTH function should have one argument");
@@ -347,6 +380,8 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     private FunctionType getFunctionType(String functionName) {
         switch (functionName.toUpperCase()) {
+            case "LABELS":
+            case "TYPE":
             case "LENGTH":
             case "HEAD":
                 return FunctionType.SIMPLE;
@@ -507,5 +542,12 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     public ImmutableMap<Integer, String> getDynamicParams() {
         return this.paramsBuilder.build();
+    }
+
+    private RexLiteral createIntervalLiteral(String fieldName) {
+        TimeUnit timeUnit = TimeUnit.valueOf(fieldName.toUpperCase());
+        SqlIntervalQualifier intervalQualifier =
+                new SqlIntervalQualifier(timeUnit, null, SqlParserPos.ZERO);
+        return builder.getRexBuilder().makeIntervalLiteral(null, intervalQualifier);
     }
 }

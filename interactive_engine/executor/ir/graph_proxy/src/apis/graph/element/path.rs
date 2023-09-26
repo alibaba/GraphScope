@@ -29,6 +29,7 @@ use pegasus_common::downcast::AsAny;
 use pegasus_common::impl_as_any;
 
 use crate::apis::{Edge, Element, GraphElement, PropertyValue, Vertex, ID};
+use crate::utils::expr::eval::Context;
 
 #[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
 pub enum VertexOrEdge {
@@ -158,6 +159,13 @@ impl GraphPath {
         }
     }
 
+    pub fn get_path(&self) -> Option<&Vec<VertexOrEdge>> {
+        match self {
+            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => Some(p),
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
+        }
+    }
+
     pub fn take_path(self) -> Option<Vec<VertexOrEdge>> {
         match self {
             GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => Some(p),
@@ -219,6 +227,12 @@ impl GraphElement for VertexOrEdge {
     }
 }
 
+impl Context<VertexOrEdge> for VertexOrEdge {
+    fn get(&self, _tag: Option<&NameOrId>) -> Option<&VertexOrEdge> {
+        Some(&self)
+    }
+}
+
 impl Element for GraphPath {
     fn as_graph_element(&self) -> Option<&dyn GraphElement> {
         Some(self)
@@ -256,11 +270,34 @@ impl GraphElement for GraphPath {
     }
 
     fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
-        self.get_path_end().get_property(key)
+        match self {
+            GraphPath::AllPath(path) | GraphPath::SimpleAllPath(path) => {
+                let mut properties = vec![];
+                for v_or_e in path {
+                    if let Some(p) = v_or_e.get_property(key) {
+                        properties.push(p.try_to_owned().unwrap());
+                    }
+                }
+                Some(PropertyValue::Owned(Object::Vector(properties)))
+            }
+
+            GraphPath::EndV((v_or_e, _)) | GraphPath::SimpleEndV((v_or_e, _, _)) => {
+                v_or_e.get_property(key)
+            }
+        }
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        self.get_path_end().get_all_properties()
+        match self {
+            GraphPath::AllPath(_) | GraphPath::SimpleAllPath(_) => {
+                // not supported yet.
+                None
+            }
+
+            GraphPath::EndV((v_or_e, _)) | GraphPath::SimpleEndV((v_or_e, _, _)) => {
+                v_or_e.get_all_properties()
+            }
+        }
     }
 }
 
@@ -329,6 +366,8 @@ impl Decode for VertexOrEdge {
         }
     }
 }
+
+impl_as_any!(VertexOrEdge);
 
 impl Encode for GraphPath {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {

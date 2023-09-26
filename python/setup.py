@@ -18,6 +18,7 @@
 
 import os
 import platform
+import shutil
 import site
 import subprocess
 import sys
@@ -32,6 +33,12 @@ from setuptools.command.develop import develop
 from setuptools.command.sdist import sdist
 from wheel.bdist_wheel import bdist_wheel
 
+try:
+    import torch
+    import torch.utils.cpp_extension
+except ImportError:
+    torch = None
+
 # Enables --editable install with --user
 # https://github.com/pypa/pip/issues/7953
 site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
@@ -44,6 +51,15 @@ if platform.system() == "Darwin":
         os.environ["ARCHFLAGS"] = "-arch arm64"
     else:
         os.environ["ARCHFLAGS"] = "-arch x86_64"
+
+GL_EXT_NAME = "graphscope.learning.graphlearn.pywrap_graphlearn"
+GLTORCH_EXT_NAME = "graphscope.learning.graphlearn_torch.py_graphlearn_torch"
+GLTORCH_V6D_EXT_NAME = (
+    "graphscope.learning.graphlearn_torch.py_graphlearn_torch_vineyard"
+)
+glt_root_path = os.path.abspath(
+    os.path.join(pkg_root, "..", "learning_engine", "graphlearn-for-pytorch")
+)
 
 
 class BuildProto(Command):
@@ -111,10 +127,54 @@ class CustomBuildPy(build_py):
         build_py.run(self)
 
 
-class CustomBuildExt(build_ext):
+class BuildGLExt(build_ext):
     def run(self):
+        self.extensions = [ext for ext in self.extensions if ext.name == GL_EXT_NAME]
         self.run_command("build_proto")
         build_ext.run(self)
+
+
+class BuildGLTorchExt(torch.utils.cpp_extension.BuildExtension if torch else build_ext):
+    def run(self):
+        assert (
+            torch
+        ), "Building graphlearn-torch extension requires installing pytorch first. Let WITH_GLTORCH=OFF if you don't need it."
+        self.extensions = [
+            ext
+            for ext in self.extensions
+            if ext.name in [GLTORCH_EXT_NAME, GLTORCH_V6D_EXT_NAME]
+        ]
+        torch.utils.cpp_extension.BuildExtension.run(self)
+
+    def _get_gcc_use_cxx_abi(self):
+        if hasattr(self, "_gcc_use_cxx_abi"):
+            return self._gcc_use_cxx_abi
+        build_dir = os.path.join(glt_root_path, "cmake-build")
+        os.makedirs(build_dir, exist_ok=True)
+        output = subprocess.run(
+            [shutil.which("cmake"), ".."],
+            cwd=build_dir,
+            capture_output=True,
+            text=True,
+        )
+        import re
+
+        match = re.search(r"GCC_USE_CXX11_ABI: (\d)", str(output))
+        if match:
+            self._gcc_use_cxx_abi = match.group(1)
+        else:
+            return None
+
+        return self._gcc_use_cxx_abi
+
+    def _add_gnu_cpp_abi_flag(self, extension):
+        gcc_use_cxx_abi = (
+            self._get_gcc_use_cxx_abi()
+            if extension.name == GLTORCH_V6D_EXT_NAME
+            else str(int(torch._C._GLIBCXX_USE_CXX11_ABI))
+        )
+        print(f"GCC_USE_CXX11_ABI for {extension.name}: {gcc_use_cxx_abi}")
+        self._add_compile_flag(extension, "-D_GLIBCXX_USE_CXX11_ABI=" + gcc_use_cxx_abi)
 
 
 class CustomDevelop(develop):
@@ -201,6 +261,32 @@ def parsed_package_data():
 
 
 def build_learning_engine():
+    ext_modules = [graphlearn_ext()]
+    if torch and os.path.exists(os.path.join(glt_root_path, "graphlearn_torch")):
+        sys.path.append(
+            os.path.join(glt_root_path, "graphlearn_torch", "python", "utils")
+        )
+        from build import glt_ext_module
+        from build import glt_v6d_ext_module
+
+        ext_modules.append(
+            glt_ext_module(
+                name=GLTORCH_EXT_NAME,
+                root_path=glt_root_path,
+                with_cuda=False,
+                release=False,
+            )
+        )
+        ext_modules.append(
+            glt_v6d_ext_module(
+                name=GLTORCH_V6D_EXT_NAME,
+                root_path=glt_root_path,
+            )
+        )
+    return ext_modules
+
+
+def graphlearn_ext():
     import numpy
 
     ROOT_PATH = os.path.abspath(
@@ -252,8 +338,9 @@ def build_learning_engine():
         # KNN not enabled
         # ROOT_PATH + "/graphlearn/python/c/py_contrib.cc",
     ]
-    ext = Extension(
-        "graphscope.learning.graphlearn.pywrap_graphlearn",
+
+    return Extension(
+        GL_EXT_NAME,
         sources,
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
@@ -261,7 +348,6 @@ def build_learning_engine():
         library_dirs=library_dirs,
         libraries=libraries,
     )
-    return [ext]
 
 
 def parse_version(root, **kwargs):
@@ -311,14 +397,15 @@ setup(
         "parse": parse_version,
     },
     setup_requires=[
-        "setuptools_scm>=5.0.0",
+        "setuptools_scm>=5.0.0,<8",
     ],
     package_dir=resolve_graphscope_package_dir(),
     packages=find_graphscope_packages(),
     package_data=parsed_package_data(),
     ext_modules=build_learning_engine(),
     cmdclass={
-        "build_ext": CustomBuildExt,
+        "build_ext": BuildGLExt,
+        "build_gltorch_ext": BuildGLTorchExt,
         "build_proto": BuildProto,
         "build_py": CustomBuildPy,
         "bdist_wheel": CustomBDistWheel,

@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.result;
 
 import com.alibaba.graphscope.common.jna.type.FfiKeyType;
 import com.alibaba.graphscope.gaia.proto.Common;
+import com.alibaba.graphscope.gremlin.plugin.step.ExpandFusionStep;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
 import com.google.common.collect.Lists;
 
@@ -130,15 +131,32 @@ public abstract class LabelParser {
                             ? parent
                             : (Step) traversalOrStep;
         }
-        do {
-            tagStep = tagStep.getPreviousStep();
-        } while (tagStep != EmptyStep.instance()
-                && !ObjectUtils.isEmpty(tag)
-                && !tagStep.getLabels().contains(tag));
+        tagStep = tagStep.getPreviousStep();
+        while (tagStep != EmptyStep.instance()) {
+            if (ObjectUtils.isEmpty(tag) || tagStep.getLabels().contains(tag)) {
+                while (tagStep != EmptyStep.instance()
+                        && GremlinResultAnalyzer.isSameInAndOutputType(tagStep)) {
+                    tagStep = tagStep.getPreviousStep();
+                }
+                break;
+            } else {
+                tagStep = tagStep.getPreviousStep();
+            }
+        }
         if (tagStep instanceof GraphStep) {
             return ((GraphStep) tagStep).returnsVertex()
                     ? LabelType.VERTEX_LABEL
                     : LabelType.EDGE_LABEL;
+        } else if (tagStep instanceof ExpandFusionStep) {
+            switch (((ExpandFusionStep) tagStep).getExpandOpt()) {
+                case Vertex:
+                    return LabelType.VERTEX_LABEL;
+                case Edge:
+                    return LabelType.EDGE_LABEL;
+                case Degree:
+                default:
+                    return LabelType.NONE;
+            }
         } else if (tagStep instanceof VertexStep) {
             return ((VertexStep) tagStep).returnsVertex()
                     ? LabelType.VERTEX_LABEL

@@ -31,6 +31,8 @@
 #include "flex/utils/property/column.h"
 #include "flex/utils/property/types.h"
 
+#include "arrow/api.h"
+
 namespace gs {
 
 // demangle a c++ variable's class name
@@ -43,35 +45,6 @@ std::string demangle(const T& t) {
   free(demangled);
   return ret;
 }
-
-// Get PropertyType from Cpp type
-template <typename T>
-struct CppTypeToPropertyType;
-
-template <>
-struct CppTypeToPropertyType<int32_t> {
-  static constexpr PropertyType value = PropertyType::kInt32;
-};
-
-template <>
-struct CppTypeToPropertyType<int64_t> {
-  static constexpr PropertyType value = PropertyType::kInt64;
-};
-
-template <>
-struct CppTypeToPropertyType<double> {
-  static constexpr PropertyType value = PropertyType::kDouble;
-};
-
-template <>
-struct CppTypeToPropertyType<std::string> {
-  static constexpr PropertyType value = PropertyType::kString;
-};
-
-template <>
-struct CppTypeToPropertyType<std::string_view> {
-  static constexpr PropertyType value = PropertyType::kString;
-};
 
 template <typename T>
 struct return_type;
@@ -875,6 +848,13 @@ struct to_string_impl<std::string> {
 };
 
 template <>
+struct to_string_impl<LabelKey> {
+  static inline std::string to_string(const LabelKey& label_key) {
+    return std::to_string(label_key.label_id);
+  }
+};
+
+template <>
 struct to_string_impl<Direction> {
   static inline std::string to_string(const Direction& opt) {
     if (opt == Direction::In) {
@@ -997,6 +977,9 @@ struct Edge<VID_T, grape::EmptyType> {
     return std::to_string(src) + "->" + std::to_string(dst) + "(" + ")";
   }
 };
+
+template <typename VID_T>
+using DefaultEdge = Edge<VID_T, grape::EmptyType>;
 
 struct QPSError {
   std::string message;

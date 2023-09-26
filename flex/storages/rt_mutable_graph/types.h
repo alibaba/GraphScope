@@ -31,6 +31,12 @@ using vid_t = uint32_t;
 using oid_t = int64_t;
 using label_t = uint8_t;
 
+static constexpr const char* DT_SIGNED_INT32 = "DT_SIGNED_INT32";
+static constexpr const char* DT_SIGNED_INT64 = "DT_SIGNED_INT64";
+static constexpr const char* DT_DOUBLE = "DT_DOUBLE";
+static constexpr const char* DT_STRING = "DT_STRING";
+static constexpr const char* DT_DATE = "DT_DATE32";
+
 }  // namespace gs
 
 #endif  // STORAGES_RT_MUTABLE_GRAPH_TYPES_H_

@@ -59,6 +59,7 @@ class Table {
 
   size_t col_num() const;
   std::vector<std::shared_ptr<ColumnBase>>& columns();
+  std::vector<ColumnBase*>& column_ptrs();
 
   void insert(size_t index, const std::vector<Any>& values);
 

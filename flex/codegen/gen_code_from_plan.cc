@@ -80,7 +80,7 @@ void deserialize_plan_and_gen_hqps(const std::string& input_file_path,
   auto stream = std::istringstream(content_str);
   CHECK(plan_pb.ParseFromArray(content_str.data(), content_str.size()));
   LOG(INFO) << "deserilized plan size : " << plan_pb.ByteSizeLong();
-  LOG(INFO) << "deserilized plan : " << plan_pb.DebugString();
+  VLOG(1) << "deserilized plan : " << plan_pb.DebugString();
   BuildingContext context;
   QueryGenerator<uint8_t> query_generator(context, plan_pb);
   auto res = query_generator.GenerateQuery();

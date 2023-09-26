@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.4
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.6
     steps:
     - uses: actions/checkout@v3
 
@@ -54,17 +54,18 @@ jobs:
         cd flex/engines/graph_db/grin
         mkdir build && cd build
         cmake .. && sudo make -j$(nproc)
-        export FLEX_DATA_DIR=../../../../storages/rt_mutable_graph/modern_graph/
-        ./run_grin_test
+        export FLEX_DATA_DIR=../../../../interactive/examples/modern_graph/
+        ./run_grin_test 'flex://schema_file=../../../../interactive/examples/modern_graph/modern_graph.yaml&bulk_load_file=../../../../interactive/examples/modern_graph/bulk_load.yaml'
 
     - name: Test Graph Loading on modern graph
       env:
-        FLEX_DATA_DIR: ${{ github.workspace }}/flex/storages/rt_mutable_graph/modern_graph/
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
       run: |
+        rm -rf /tmp/csr-data-dir/
         cd ${GITHUB_WORKSPACE}/flex/build/
-        SCHEMA_FILE=../storages/rt_mutable_graph/modern_graph/modern_graph.yaml
-        BULK_LOAD_FILE=../storages/rt_mutable_graph/modern_graph/bulk_load.yaml
-        GLOG_v=10 ./tests/rt_mutable_graph/test_graph_loading  ${SCHEMA_FILE} ${BULK_LOAD_FILE} /tmp/csr-data-dir/
+        SCHEMA_FILE=../interactive/examples/modern_graph/modern_graph.yaml
+        BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
+        GLOG_v=10 ./bin/graph_loader  ${SCHEMA_FILE} ${BULK_LOAD_FILE} /tmp/csr-data-dir/
 
     - name: Test Graph Loading on LDBC SNB sf0.1
       env:
@@ -79,4 +80,4 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex/build/
         SCHEMA_FILE=${FLEX_DATA_DIR}/audit_graph_schema.yaml
         BULK_LOAD_FILE=${FLEX_DATA_DIR}/audit_bulk_load.yaml
-        GLOG_v=10 ./tests/rt_mutable_graph/test_graph_loading  ${SCHEMA_FILE} ${BULK_LOAD_FILE} /tmp/csr-data-dir/ 2
+        GLOG_v=10 ./bin/graph_loader  ${SCHEMA_FILE} ${BULK_LOAD_FILE} /tmp/csr-data-dir/ 2

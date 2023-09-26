@@ -28,6 +28,8 @@ import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 
+import java.util.List;
+
 /**
  * convert an expression in calcite to logical expression in ir_core
  */
@@ -49,6 +51,8 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
             return visitCase(call);
         } else if (operator.getKind() == SqlKind.ARRAY_VALUE_CONSTRUCTOR) {
             return visitArrayValueConstructor(call);
+        } else if (operator.getKind() == SqlKind.EXTRACT) {
+            return visitExtract(call);
         } else if (call.getOperands().size() == 1) {
             return visitUnaryOperator(call);
         } else {
@@ -95,6 +99,23 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                                 .setVars(varsBuilder)
                                 .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
                 .build();
+    }
+
+    private OuterExpression.Expression visitExtract(RexCall call) {
+        List<RexNode> operands = call.getOperands();
+        Preconditions.checkArgument(
+                operands.size() == 2 && operands.get(0) instanceof RexLiteral,
+                "'EXTRACT' operator has invalid operands " + operands);
+        OuterExpression.Expression.Builder exprBuilder = OuterExpression.Expression.newBuilder();
+        exprBuilder.addOperators(
+                OuterExpression.ExprOpr.newBuilder()
+                        .setExtract(
+                                OuterExpression.Extract.newBuilder()
+                                        .setInterval(
+                                                Utils.protoInterval((RexLiteral) operands.get(0)))
+                                        .setDataTime(operands.get(1).accept(this)))
+                        .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)));
+        return exprBuilder.build();
     }
 
     private OuterExpression.Expression visitUnaryOperator(RexCall call) {

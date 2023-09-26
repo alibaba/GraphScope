@@ -81,7 +81,7 @@ public class GraphPlanner {
         this.plannerConfig = PlannerConfig.create(this.graphConfig);
         logger.debug("planner config: " + this.plannerConfig);
         this.optPlanner = createRelOptPlanner(this.plannerConfig);
-        this.rexBuilder = new GraphRexBuilder(new GraphTypeFactoryImpl());
+        this.rexBuilder = new GraphRexBuilder(new GraphTypeFactoryImpl(graphConfig));
         this.idGenerator = new AtomicLong(FrontendConfig.FRONTEND_SERVER_ID.get(graphConfig));
     }
 

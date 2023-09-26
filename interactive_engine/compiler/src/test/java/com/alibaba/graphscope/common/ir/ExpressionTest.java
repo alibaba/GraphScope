@@ -115,7 +115,7 @@ public class ExpressionTest {
         RexNode var = builder.source(mockSourceConfig("a")).variable("a", "age");
         RexNode equal = builder.call(GraphStdOperatorTable.EQUALS, var, builder.literal("X"));
         Assert.assertEquals(equal.getType().getSqlTypeName(), SqlTypeName.BOOLEAN);
-        Assert.assertEquals("=(a.age, 'X')", equal.toString());
+        Assert.assertEquals("=(a.age, _UTF-8'X')", equal.toString());
     }
 
     // a.age + 10 == 30
@@ -138,7 +138,7 @@ public class ExpressionTest {
         RexNode equal2 = builder.call(GraphStdOperatorTable.EQUALS, var2, builder.literal("x"));
         RexNode node = builder.call(GraphStdOperatorTable.AND, equal1, equal2);
         Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.BOOLEAN);
-        Assert.assertEquals("AND(>(a.age, 10), =(a.name, 'x'))", node.toString());
+        Assert.assertEquals("AND(>(a.age, 10), =(a.name, _UTF-8'x'))", node.toString());
     }
 
     // a.age % 10

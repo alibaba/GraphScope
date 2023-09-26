@@ -21,7 +21,6 @@ import static java.util.Objects.requireNonNull;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 
 import org.apache.calcite.linq4j.tree.Expression;
@@ -76,27 +75,32 @@ public class GraphOptTable implements RelOptTable {
         }
         if (element instanceof GraphVertex) {
             GraphLabelType labelType =
-                    (new GraphLabelType()).label(element.getLabel()).labelId(element.getLabelId());
+                    new GraphLabelType(
+                            new GraphLabelType.Entry()
+                                    .label(element.getLabel())
+                                    .labelId(element.getLabelId()));
             return new GraphSchemaType(GraphOpt.Source.VERTEX, labelType, fields);
         } else if (element instanceof GraphEdge) {
             GraphEdge edge = (GraphEdge) element;
             List<EdgeRelation> relations = edge.getRelationList();
             List<GraphSchemaType> fuzzyTypes = new ArrayList<>();
             for (EdgeRelation relation : relations) {
-                GraphLabelType labelType =
-                        (new GraphLabelType())
+                GraphLabelType.Entry labelEntry =
+                        new GraphLabelType.Entry()
                                 .label(element.getLabel())
                                 .labelId(element.getLabelId());
                 GraphVertex src = relation.getSource();
                 GraphVertex dst = relation.getTarget();
-                labelType.srcLabel(src.getLabel()).dstLabel(dst.getLabel());
-                labelType.srcLabelId(src.getLabelId()).dstLabelId(dst.getLabelId());
-                fuzzyTypes.add(new GraphSchemaType(GraphOpt.Source.EDGE, labelType, fields));
+                labelEntry.srcLabel(src.getLabel()).dstLabel(dst.getLabel());
+                labelEntry.srcLabelId(src.getLabelId()).dstLabelId(dst.getLabelId());
+                fuzzyTypes.add(
+                        new GraphSchemaType(
+                                GraphOpt.Source.EDGE, new GraphLabelType(labelEntry), fields));
             }
             ObjectUtils.requireNonEmpty(fuzzyTypes);
             return (fuzzyTypes.size() == 1)
                     ? fuzzyTypes.get(0)
-                    : GraphSchemaTypeList.create(fuzzyTypes);
+                    : GraphSchemaType.create(fuzzyTypes, getRelOptSchema().getTypeFactory());
         } else {
             throw new IllegalArgumentException("element should be vertex or edge");
         }
@@ -108,14 +112,21 @@ public class GraphOptTable implements RelOptTable {
         switch (property.getDataType()) {
             case BOOL:
                 return typeFactory.createSqlType(SqlTypeName.BOOLEAN);
+            case CHAR:
             case STRING:
                 return typeFactory.createSqlType(SqlTypeName.CHAR);
+            case SHORT:
             case INT:
                 return typeFactory.createSqlType(SqlTypeName.INTEGER);
             case LONG:
                 return typeFactory.createSqlType(SqlTypeName.BIGINT);
+            case FLOAT:
+                return typeFactory.createSqlType(SqlTypeName.FLOAT);
             case DOUBLE:
                 return typeFactory.createSqlType(SqlTypeName.DOUBLE);
+            case DATE:
+                return typeFactory.createSqlType(
+                        SqlTypeName.DATE); // todo: support Time and DateTime in GraphSchema
             default:
                 throw new UnsupportedOperationException(
                         "type " + property.getDataType().name() + " not supported");

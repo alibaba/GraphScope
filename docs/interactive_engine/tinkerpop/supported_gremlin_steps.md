@@ -571,6 +571,7 @@ The unfold()-step unrolls an iterator, iterable or map into a linear form.
 g.V().fold().unfold().values("id")
 g.V().fold().as("a").unfold().values("id")
 g.V().has("name", "marko").fold().as("a").select("a").unfold().values("id")
+g.V().out("1..3", "knows").with('RESULT_OPT', 'ALL_V').unfold()
 ```
 ## Syntactic Sugars
 The following steps are extended to denote more complex situations.
@@ -578,7 +579,7 @@ The following steps are extended to denote more complex situations.
 In Graph querying, expanding a multiple-hops path from a starting point is called `PathExpand`, which is commonly used in graph scenarios. In addition, there are different requirements for expanding strategies in different scenarios, i.e. it is required to output a simple path or all vertices explored along the expanding path. We introduce the with()-step to configure the corresponding behaviors of the `PathExpand`-step.
 
 #### out()
-Expand a multiple-hops path along the outgoing edges, which length is within the given range.
+Expand a multiple-hops path along the outgoing edges, which length is within the given range. 
 
 Parameters: </br>
 lengthRange - the lower and the upper bounds of the path length, </br> edgeLabels - the edge labels to traverse.
@@ -603,6 +604,9 @@ g.V().out("1..10", "knows")
 # expand hops within the range of [1, 10) along the outgoing edges which label is `knows` or `created`,
 # vertices can be duplicated and only the end vertex should be kept
 g.V().out("1..10", "knows", "created")
+# expand hops within the range of [1, 10) along the outgoing edges,
+# and project the properties "id" and "name" of every vertex along the path
+g.V().out("1..10").with('RESULT_OPT', 'ALL_V').values("name")
 ```
 Running Example:
 ```bash
@@ -615,6 +619,12 @@ gremlin> g.V().out("1..3", "knows").with('RESULT_OPT', 'ALL_V_E')
 gremlin> g.V().out("1..3", "knows").with('RESULT_OPT', 'END_V').endV()
 ==>v[2]
 ==>v[4]
+gremlin> g.V().out("1..3", "knows").with('RESULT_OPT', 'ALL_V').values("name")
+==>[marko, vadas]
+==>[marko, josh]
+gremlin> g.V().out("1..3", "knows").with('RESULT_OPT', 'ALL_V').valueMap("id","name")
+==>{id=[[1, 2]], name=[[marko, vadas]]}
+==>{id=[[1, 4]], name=[[marko, josh]]}
 ```
 #### in()
 Expand a multiple-hops path along the incoming edges, which length is within the given range.

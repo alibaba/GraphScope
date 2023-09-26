@@ -19,7 +19,7 @@ set(CODE_GEN_PROTOBUF_FILES
 )
 
 #create directory first
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/proto_generated_gie)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/flex/proto_generated_gie)
 
 # proto gen for gie proto
 protobuf_generate(APPEND_PATH
@@ -28,7 +28,7 @@ protobuf_generate(APPEND_PATH
         OUT_VAR PROTO_SRCS_GIE
         PROTOS ${CODE_GEN_PROTOBUF_FILES}
         IMPORT_DIRS ${GIE_COMPILER_PROTO_DIR}
-        PROTOC_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/proto_generated_gie
+        PROTOC_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/flex/proto_generated_gie
 )
 
 add_library(hqps_plan_proto SHARED ${PROTO_SRCS_GIE})
@@ -43,13 +43,13 @@ install(TARGETS hqps_plan_proto
         LIBRARY DESTINATION lib)
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DESTINATION include/flex/
+        DESTINATION include/flex/engines/
         FILES_MATCHING
         PATTERN "*.h"
 )
 #install proto_generated_files
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/proto_generated_gie/
-        DESTINATION include/flex/
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/flex/proto_generated_gie/
+        DESTINATION include/flex/proto_generated_gie/
         FILES_MATCHING
         PATTERN "*.h"
 )
