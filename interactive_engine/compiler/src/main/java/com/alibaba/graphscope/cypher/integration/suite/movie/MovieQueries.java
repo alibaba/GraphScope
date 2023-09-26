@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.cypher.integration.suite.ldbc;
+package com.alibaba.graphscope.cypher.integration.suite.movie;
+
+import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
 
 import java.util.Arrays;
 import java.util.List;
