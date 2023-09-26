@@ -244,7 +244,7 @@ public abstract class Utils {
                     builder.setElementOpt(
                             protoElementOpt(((GraphSchemaType) dataType).getScanOpt()));
                     ((GraphSchemaType) dataType)
-                            .getSchemaTypes()
+                            .getSchemaTypeAsList()
                             .forEach(
                                     k -> builder.addGraphDataType(protoElementType(k, isColumnId)));
                     return DataType.IrDataType.newBuilder().setGraphType(builder.build()).build();

@@ -36,4 +36,15 @@ public class GraphBuilderTest {
         RelNode node = visitor.visit(parseTree).build();
         System.out.println(node.explain());
     }
+
+    @Test
+    public void g_V_out_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        GraphBuilderVisitor visitor = new GraphBuilderVisitor(builder);
+        ParseTree parseTree =
+                new GremlinAntlr4Parser()
+                        .parse("g.V().hasLabel('person').in('1..2', 'knows').with('result_opt', 'all_v').endV()");
+        RelNode node = visitor.visit(parseTree).build();
+        System.out.println(node.explain());
+    }
 }

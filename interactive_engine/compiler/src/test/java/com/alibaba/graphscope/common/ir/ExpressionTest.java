@@ -170,50 +170,110 @@ public class ExpressionTest {
         Assert.assertEquals("-(a.age)", node.toString());
     }
 
-    private SourceConfig mockSourceConfig(String alias) {
-        return new SourceConfig(
-                GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"), alias);
-    }
-
     @Test
     public void label_1_test() {
         RelNode node =
                 builder.source(new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(true), "a"))
-                        .expand(new ExpandConfig(GraphOpt.Expand.OUT, new LabelConfig(true), "b"))
-                        .filter(
-                                builder.call(
-                                        GraphStdOperatorTable.EQUALS,
-                                        builder.literal("age"),
-                                        builder.variable("b", "weight")))
-                        .getV(new GetVConfig(GraphOpt.GetV.END))
                         .filter(
                                 builder.call(
                                         GraphStdOperatorTable.EQUALS,
                                         builder.literal("software"),
                                         builder.variable(null, GraphProperty.LABEL_KEY)))
                         .build();
-        System.out.println(node.explain());
-        // System.out.println(node.getRowType());
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[software]}], alias=[a],"
+                        + " opt=[VERTEX])",
+                node.explain().trim());
     }
 
-//    @Test
-//    public void label_2_test() {
-//        RexNode var =
-//                builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
-//                        .variable(null, GraphProperty.LABEL_KEY);
-//        RexNode inNode =
-//                builder.getRexBuilder().makeIn(var, ImmutableList.of(builder.literal("person")));
-//        RelNode node =
-//                builder.filter(inNode)
-//                        .filter(
-//                                builder.getRexBuilder()
-//                                        .makeIn(var, ImmutableList.of(builder.literal("software"))))
-//                        .build();
-//        System.out.println(node.explain());
-//    }
+    // check property after updating the label type
+    @Test
+    public void label_2_test() {
+        try {
+            RelNode node =
+                    builder.source(
+                                    new SourceConfig(
+                                            GraphOpt.Source.VERTEX, new LabelConfig(true), "a"))
+                            .filter(
+                                    builder.call(
+                                            GraphStdOperatorTable.EQUALS,
+                                            builder.variable(null, "age"),
+                                            builder.literal(1)))
+                            .filter(
+                                    builder.call(
+                                            GraphStdOperatorTable.EQUALS,
+                                            builder.literal("software"),
+                                            builder.variable(null, GraphProperty.LABEL_KEY)))
+                            .build();
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(
+                    "{property=age} not found; expected properties are: [id, name, lang,"
+                            + " creationDate]",
+                    e.getMessage());
+            return;
+        }
+        Assert.fail();
+    }
 
     @Test
     public void label_3_test() {
+        RelNode node =
+                builder.source(new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(true), "a"))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.variable(null, GraphProperty.ID_KEY),
+                                        builder.literal(1)))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.literal("software"),
+                                        builder.variable(null, GraphProperty.LABEL_KEY)))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.AND,
+                                        builder.call(
+                                                GraphStdOperatorTable.EQUALS,
+                                                builder.variable(null, "~id"),
+                                                builder.literal(3)),
+                                        builder.call(
+                                                GraphStdOperatorTable.EQUALS,
+                                                builder.variable(null, GraphProperty.ID_KEY),
+                                                builder.literal(2))))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.variable(null, "lang"),
+                                        builder.literal("a")))
+                        .build();
+        System.out.println(node.explain().trim());
+    }
+
+    private SourceConfig mockSourceConfig(String alias) {
+        return new SourceConfig(
+                GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"), alias);
+    }
+
+    //    @Test
+    //    public void label_2_test() {
+    //        RexNode var =
+    //                builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
+    //                        .variable(null, GraphProperty.LABEL_KEY);
+    //        RexNode inNode =
+    //                builder.getRexBuilder().makeIn(var,
+    // ImmutableList.of(builder.literal("person")));
+    //        RelNode node =
+    //                builder.filter(inNode)
+    //                        .filter(
+    //                                builder.getRexBuilder()
+    //                                        .makeIn(var,
+    // ImmutableList.of(builder.literal("software"))))
+    //                        .build();
+    //        System.out.println(node.explain());
+    //    }
+
+    @Test
+    public void label_4_test() {
         RexNode var =
                 builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
                         .variable(null, GraphProperty.ID_KEY);

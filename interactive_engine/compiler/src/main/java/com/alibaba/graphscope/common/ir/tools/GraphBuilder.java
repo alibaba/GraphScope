@@ -700,7 +700,6 @@ public class GraphBuilder extends RelBuilder {
 
     private AbstractBindableTableScan fuseFilters(
             AbstractBindableTableScan tableScan, RexNode condition) {
-        ImmutableList originalFilters = tableScan.getFilters();
         List<Comparable> labelValues = Lists.newArrayList();
         List<RexNode> uniqueKeyFilters = Lists.newArrayList();
         List<RexNode> extraFilters = Lists.newArrayList();
@@ -766,7 +765,14 @@ public class GraphBuilder extends RelBuilder {
                                     return null;
                                 }
                             };
-                    if (!ObjectUtils.isEmpty(originalFilters)) {
+                    if (tableScan instanceof GraphLogicalSource) {
+                        GraphLogicalSource source = (GraphLogicalSource) tableScan;
+                        if (source.getUniqueKeyFilters() != null) {
+                            builder.filter(source.getUniqueKeyFilters());
+                        }
+                    }
+                    ImmutableList originalFilters = tableScan.getFilters();
+                    if (ObjectUtils.isNotEmpty(originalFilters)) {
                         originalFilters.forEach(k -> ((RexNode) k).accept(propertyChecker));
                         builder.filter(originalFilters);
                     }
@@ -782,21 +788,20 @@ public class GraphBuilder extends RelBuilder {
             if (source.getUniqueKeyFilters() != null) {
                 uniqueKeyFilters.add(0, source.getUniqueKeyFilters());
             }
+            // todo: check if unique key filters have common keys, otherwise throw errors
             source.setUniqueKeyFilters(
                     RexUtil.composeConjunction(this.getRexBuilder(), uniqueKeyFilters));
         }
         if (!extraFilters.isEmpty()) {
-            if (ObjectUtils.isEmpty(originalFilters)) {
-                tableScan.setFilters(
-                        ImmutableList.of(
-                                RexUtil.composeConjunction(this.getRexBuilder(), extraFilters)));
-            } else {
-                List<RexNode> combineFilters = Lists.newArrayList(originalFilters);
-                combineFilters.addAll(extraFilters);
-                tableScan.setFilters(
-                        ImmutableList.of(
-                                RexUtil.composeConjunction(this.getRexBuilder(), combineFilters)));
+            ImmutableList originalFilters = tableScan.getFilters();
+            if (ObjectUtils.isNotEmpty(originalFilters)) {
+                for (int i = 0; i < originalFilters.size(); ++i) {
+                    extraFilters.add(i, (RexNode) originalFilters.get(i));
+                }
             }
+            tableScan.setFilters(
+                    ImmutableList.of(
+                            RexUtil.composeConjunction(this.getRexBuilder(), extraFilters)));
         }
         return tableScan;
     }
@@ -817,26 +822,24 @@ public class GraphBuilder extends RelBuilder {
                     RexNode left = rexCall.getOperands().get(0);
                     RexNode right = rexCall.getOperands().get(1);
                     if (left.getType() instanceof GraphLabelType && right instanceof RexLiteral) {
-                        filtersToRemove.add(condition);
+                        filtersToRemove.add(conjunction);
                         labelValues.addAll(
                                 getValuesAsList(((RexLiteral) right).getValueAs(Comparable.class)));
                         break;
                     } else if (left instanceof RexLiteral
                             && right.getType() instanceof GraphLabelType) {
-                        filtersToRemove.add(condition);
+                        filtersToRemove.add(conjunction);
                         labelValues.addAll(
                                 getValuesAsList(((RexLiteral) left).getValueAs(Comparable.class)));
                         break;
                     }
                     if (tableScan instanceof GraphLogicalSource) {
                         if (isUniqueKey(left) && right instanceof RexLiteral) {
-                            filtersToRemove.add(condition);
-                            uniqueKeyFilters.add(condition);
-                            break;
+                            filtersToRemove.add(conjunction);
+                            uniqueKeyFilters.add(conjunction);
                         } else if (left instanceof RexLiteral && isUniqueKey(right)) {
-                            filtersToRemove.add(condition);
-                            uniqueKeyFilters.add(condition);
-                            break;
+                            filtersToRemove.add(conjunction);
+                            uniqueKeyFilters.add(conjunction);
                         }
                     }
                 }

@@ -95,7 +95,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
         for (RelOptTable table : tables) {
             GraphSchemaType type = (GraphSchemaType) table.getRowType();
             // flat fuzzy labels to the list
-            tableTypes.addAll(type.getSchemaTypes());
+            tableTypes.addAll(type.getSchemaTypeAsList());
         }
         ObjectUtils.requireNonEmpty(tableTypes);
         GraphSchemaType graphType =

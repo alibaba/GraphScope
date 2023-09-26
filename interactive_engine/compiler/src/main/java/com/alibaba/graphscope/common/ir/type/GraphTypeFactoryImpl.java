@@ -37,8 +37,14 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
         RelDataType newType;
         if (type instanceof GraphSchemaType) {
             GraphSchemaType schemaType = (GraphSchemaType) type;
-            if (schemaType.getSchemaTypes().size() > 1) {
-                newType = GraphSchemaType.create(schemaType.getSchemaTypes(), this, nullable);
+            if (schemaType.getSchemaTypeAsList().size() > 1) { // fuzzy schema type
+                newType =
+                        new GraphSchemaType(
+                                schemaType.getScanOpt(),
+                                schemaType.getLabelType(),
+                                schemaType.getFieldList(),
+                                schemaType.getSchemaTypeAsList(),
+                                nullable);
             } else {
                 newType =
                         new GraphSchemaType(

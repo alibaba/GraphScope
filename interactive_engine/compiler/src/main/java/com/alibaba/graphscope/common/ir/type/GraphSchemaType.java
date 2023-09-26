@@ -185,13 +185,13 @@ public class GraphSchemaType extends RelRecordType {
         return scanOpt;
     }
 
-    public List<GraphSchemaType> getSchemaTypes() {
+    public List<GraphSchemaType> getSchemaTypeAsList() {
         return ObjectUtils.isEmpty(this.fuzzySchemaTypes)
                 ? ImmutableList.of(this)
                 : Collections.unmodifiableList(this.fuzzySchemaTypes);
     }
 
     public boolean fuzzy() {
-        return this.labelType.getLabelsEntry().size() > 1;
+        return this.labelType.getLabelsEntry().size() > 1 || this.fuzzySchemaTypes.size() > 1;
     }
 }
