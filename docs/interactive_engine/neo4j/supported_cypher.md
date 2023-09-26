@@ -98,6 +98,8 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | Branch | Use with `Project` and `Return` | CASE WHEN  | CASE WHEN |  <input type="checkbox" disabled  />| planned |
 | Scalar | Returns the length of a path | length() | length() | <input type="checkbox" disabled checked /> | |
 | List | Fold expressions into a single list | [] | [] | <input type="checkbox" disabled checked /> |   |
+| Labels | Get label name of a vertex type | labels() | labels() | <input type="checkbox" disabled checked /> |   |
+| Type | Get label name of an edge type | type() | type() | <input type="checkbox" disabled checked /> |   |
 
 
 

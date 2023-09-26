@@ -848,6 +848,13 @@ struct to_string_impl<std::string> {
 };
 
 template <>
+struct to_string_impl<LabelKey> {
+  static inline std::string to_string(const LabelKey& label_key) {
+    return std::to_string(label_key.label_id);
+  }
+};
+
+template <>
 struct to_string_impl<Direction> {
   static inline std::string to_string(const Direction& opt) {
     if (opt == Direction::In) {

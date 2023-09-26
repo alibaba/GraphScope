@@ -15,8 +15,8 @@
  */
 package com.alibaba.graphscope.cypher.integration.ldbc;
 
-import com.alibaba.graphscope.cypher.integration.suite.ldbc.QueryContext;
-import com.alibaba.graphscope.cypher.integration.suite.ldbc.SimpleMatchQueries;
+import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
+import com.alibaba.graphscope.cypher.integration.suite.simple.SimpleMatchQueries;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -96,6 +96,13 @@ public class SimpleMatchTest {
     @Test
     public void run_simple_match_9_test() {
         QueryContext testQuery = SimpleMatchQueries.get_simple_match_query_9_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_simple_match_10_test() {
+        QueryContext testQuery = SimpleMatchQueries.get_simple_match_query_10_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }

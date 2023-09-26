@@ -950,6 +950,16 @@ class RowVertexSetImpl {
 
   const LabelT& GetLabel() const { return v_label_; }
 
+  const std::vector<LabelKey> GetLabelVec() {
+    std::vector<LabelKey> res;
+    // fill res with v_label_
+    res.reserve(vids_.size());
+    for (auto i = 0; i < vids_.size(); ++i) {
+      res.emplace_back(v_label_);
+    }
+    return res;
+  }
+
   const std::vector<lid_t>& GetVertices() const { return vids_; }
 
   std::vector<lid_t>& GetMutableVertices() { return vids_; }
@@ -1243,6 +1253,16 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
   }
 
   const LabelT& GetLabel() const { return v_label_; }
+
+  const std::vector<LabelKey> GetLabelVec() {
+    std::vector<LabelKey> res;
+    // fill res with v_label_
+    res.reserve(vids_.size());
+    for (auto i = 0; i < vids_.size(); ++i) {
+      res.emplace_back(v_label_);
+    }
+    return res;
+  }
 
   const std::vector<lid_t>& GetVertices() const { return vids_; }
   std::vector<lid_t>& GetMutableVertices() { return vids_; }

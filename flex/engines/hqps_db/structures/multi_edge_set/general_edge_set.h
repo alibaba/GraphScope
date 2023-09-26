@@ -428,6 +428,15 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
 
   iterator end() const { return iterator(vids_, adj_lists_, vids_.size()); }
 
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> res;
+    res.reserve(Size());
+    for (auto i = 0; i < Size(); ++i) {
+      res.emplace_back(edge_label_);
+    }
+    return res;
+  }
+
   size_t Size() const {
     if (size_ == 0) {
       for (auto i = 0; i < adj_lists_.size(); ++i) {
@@ -610,6 +619,15 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
         size_(0),
         dir_(other.dir_) {
     bitsets_.swap(other.bitsets_);
+  }
+
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> res;
+    res.reserve(Size());
+    for (auto i = 0; i < Size(); ++i) {
+      res.emplace_back(edge_label_);
+    }
+    return res;
   }
 
   iterator begin() const { return iterator(vids_, adj_lists_, 0); }

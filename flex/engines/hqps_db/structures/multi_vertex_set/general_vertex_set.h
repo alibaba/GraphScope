@@ -78,7 +78,7 @@ auto general_project_vertices_impl(
             break;
           }
         } else {
-          if (expr(eles)) {
+          if (expr(std::get<0>(eles))) {
             res_bitsets[label_id].set_bit(res_vec.size());
             res_vec.push_back(old_vec[i]);
             break;
@@ -380,6 +380,20 @@ class GeneralVertexSet {
   const std::vector<LabelT>& GetLabels() const { return label_names_; }
 
   LabelT GetLabel(size_t i) const { return label_names_[i]; }
+
+  const std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> res;
+    // fill res with vertex labels
+    for (auto i = 0; i < vec_.size(); ++i) {
+      for (auto j = 0; j < bitsets_.size(); ++j) {
+        if (bitsets_[j].get_bit(i)) {
+          res.emplace_back(label_names_[j]);
+          break;
+        }
+      }
+    }
+    return res;
+  }
 
   // generate label indices.
   std::vector<uint8_t> GenerateLabelIndices() const {
