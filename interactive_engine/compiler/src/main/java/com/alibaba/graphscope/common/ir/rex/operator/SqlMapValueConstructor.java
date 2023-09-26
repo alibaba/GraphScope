@@ -37,8 +37,12 @@ public class SqlMapValueConstructor extends SqlMultisetValueConstructor {
     }
 
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+        RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+        List<RelDataType> argTypes = opBinding.collectOperandTypes();
         Pair<RelDataType, RelDataType> type =
-                getComponentTypes(opBinding.getTypeFactory(), opBinding.collectOperandTypes());
+                Pair.of(
+                        getComponentType(typeFactory, Util.quotientList(argTypes, 2, 0)),
+                        getComponentType(typeFactory, Util.quotientList(argTypes, 2, 1)));
         return SqlTypeUtil.createMapType(opBinding.getTypeFactory(), type.left, type.right, false);
     }
 
@@ -51,22 +55,16 @@ public class SqlMapValueConstructor extends SqlMultisetValueConstructor {
         return true;
     }
 
-    private static Pair<@Nullable RelDataType, @Nullable RelDataType> getComponentTypes(
+    @Override
+    protected @Nullable RelDataType getComponentType(
             RelDataTypeFactory typeFactory, List<RelDataType> argTypes) {
-        RelDataType leftType, rightType;
-        if (argTypes.isEmpty()) {
-            leftType = typeFactory.createSqlType(SqlTypeName.ANY);
-            rightType = typeFactory.createSqlType(SqlTypeName.ANY);
-        } else {
-            leftType = typeFactory.leastRestrictive(Util.quotientList(argTypes, 2, 0));
-            rightType = typeFactory.leastRestrictive(Util.quotientList(argTypes, 2, 1));
-            if (leftType == null) {
-                leftType = typeFactory.createSqlType(SqlTypeName.ANY);
-            }
-            if (rightType == null) {
-                rightType = typeFactory.createSqlType(SqlTypeName.ANY);
-            }
+        try {
+            RelDataType componentType = typeFactory.leastRestrictive(argTypes);
+            return (componentType == null)
+                    ? typeFactory.createSqlType(SqlTypeName.ANY)
+                    : componentType;
+        } catch (Exception e) {
+            return typeFactory.createSqlType(SqlTypeName.ANY);
         }
-        return Pair.of(leftType, rightType);
     }
 }

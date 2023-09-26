@@ -24,6 +24,7 @@ import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.fun.SqlMultisetValueConstructor;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
@@ -36,15 +37,7 @@ public class SqlArrayValueConstructor extends SqlMultisetValueConstructor {
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
         RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
         List<RelDataType> argTypes = opBinding.collectOperandTypes();
-        RelDataType componentType;
-        if (argTypes.isEmpty()) {
-            componentType = typeFactory.createSqlType(SqlTypeName.ANY);
-        } else {
-            componentType = getComponentType(typeFactory, argTypes);
-            if (componentType == null) {
-                componentType = typeFactory.createSqlType(SqlTypeName.ANY);
-            }
-        }
+        RelDataType componentType = getComponentType(typeFactory, argTypes);
         return SqlTypeUtil.createArrayType(typeFactory, componentType, false);
     }
 
@@ -52,5 +45,18 @@ public class SqlArrayValueConstructor extends SqlMultisetValueConstructor {
     @Override
     public boolean checkOperandTypes(SqlCallBinding callBinding, boolean throwOnFailure) {
         return true;
+    }
+
+    @Override
+    protected @Nullable RelDataType getComponentType(
+            RelDataTypeFactory typeFactory, List<RelDataType> argTypes) {
+        try {
+            RelDataType componentType = typeFactory.leastRestrictive(argTypes);
+            return (componentType == null)
+                    ? typeFactory.createSqlType(SqlTypeName.ANY)
+                    : componentType;
+        } catch (Exception e) {
+            return typeFactory.createSqlType(SqlTypeName.ANY);
+        }
     }
 }
