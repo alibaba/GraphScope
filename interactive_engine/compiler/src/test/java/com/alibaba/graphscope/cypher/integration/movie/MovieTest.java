@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.cypher.integration.movie;
 
-import com.alibaba.graphscope.cypher.integration.suite.movie.MovieQueries;
 import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
+import com.alibaba.graphscope.cypher.integration.suite.movie.MovieQueries;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
