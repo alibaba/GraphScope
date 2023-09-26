@@ -24,7 +24,7 @@ std::shared_ptr<arrow::DataType> PropertyTypeToArrowType(PropertyType type) {
   case PropertyType::kDouble:
     return arrow::float64();
   case PropertyType::kDate:
-    return arrow::int64();  // currently we only support use timestamp as input.
+    return arrow::timestamp(arrow::TimeUnit::MILLI);
   case PropertyType::kString:
     return arrow::large_utf8();
   case PropertyType::kEmpty:
