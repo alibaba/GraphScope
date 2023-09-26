@@ -16,7 +16,7 @@ limitations under the License.
 #define CODEGEN_SRC_PB_PARSER_NAME_ID_PARSER_H_
 
 #include <string>
-#include "proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
 
 namespace gs {
 

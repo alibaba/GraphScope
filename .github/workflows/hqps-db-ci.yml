@@ -81,12 +81,16 @@ jobs:
         cd ${GIE_HOME}/compiler
         make build
 
-    - name: Prepare dataset
+    - name: Prepare dataset and workspace
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
+        mkdir -p ${INTERACTIVE_WORKSPACE}/data/ldbc
+        GRAPH_SCHEMA_YAML=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml
+        cp ${GRAPH_SCHEMA_YAML} ${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml
 
     - name: Sample Query test
       env:
@@ -102,26 +106,16 @@ jobs:
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         HOME : /home/graphscope/
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         GIE_HOME=${GITHUB_WORKSPACE}/interactive_engine
-
-        # create tmp ir.compiler.properties
-        touch /tmp/ir.compiler.properties
-        echo "engine.type: hiactor" >> /tmp/ir.compiler.properties
-        echo "graph.schema: ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/ldbc_schema_csr_ic.json" >> /tmp/ir.compiler.properties
-        echo "graph.store: exp" >> /tmp/ir.compiler.properties
-        echo "graph.planner.is.on: true" >> /tmp/ir.compiler.properties
-        echo "graph.planner.opt: RBO" >> /tmp/ir.compiler.properties
-        echo "graph.planner.rules: FilterMatchRule,NotMatchToAntiJoinRule" >> /tmp/ir.compiler.properties
-
         cd ${GITHUB_WORKSPACE}/flex/bin
 
         for i in 1 2 3 4 5 6 7 8 9 10 11 12;
         do
           cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/ic${i}_adhoc.cypher -w=/tmp/codgen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=/tmp/ir.compiler.properties "
-          cmd=${cmd}" --graph_schema_path=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/ldbc_schema_csr_ic.json"
-          cmd=${cmd}" --gie_home=${GIE_HOME}"
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml "
+          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
           echo $cmd
           eval ${cmd}
         done
@@ -129,9 +123,8 @@ jobs:
         for i in 1 2 3 4 5 6 7 8 9;
         do
           cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/simple_match_${i}.cypher -w=/tmp/codgen/"
-          cmd=${cmd}" -o=/tmp/plugin --ir_conf=/tmp/ir.compiler.properties "
-          cmd=${cmd}" --graph_schema_path=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/ldbc_schema_csr_ic.json"
-          cmd=${cmd}" --gie_home=${GIE_HOME}"
+          cmd=${cmd}" -o=/tmp/plugin --ir_conf=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml "
+          cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
           echo $cmd
           eval ${cmd}
         done
@@ -140,9 +133,10 @@ jobs:
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         HOME : /home/graphscope/
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export FLEX_DATA_DIR=${GS_TEST_DIR}/flex/ldbc-sf01-long-date
         export ENGINE_TYPE=hiactor
-        bash hqps_cypher_test.sh ${GS_TEST_DIR}
+        bash hqps_cypher_test.sh ${GS_TEST_DIR} ${INTERACTIVE_WORKSPACE}
 

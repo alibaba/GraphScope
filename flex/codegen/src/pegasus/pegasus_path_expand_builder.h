@@ -22,9 +22,9 @@ limitations under the License.
 #include "flex/codegen/src/codegen_utils.h"
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/pegasus/pegasus_repartition_builder.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/expr.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/expr.pb.h"
 
 namespace gs {
 namespace pegasus {

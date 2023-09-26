@@ -18,8 +18,8 @@ package com.alibaba.graphscope.cypher.integration.ldbc;
 
 import static org.junit.Assume.assumeTrue;
 
+import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
 import com.alibaba.graphscope.cypher.integration.suite.ldbc.LdbcQueries;
-import com.alibaba.graphscope.cypher.integration.suite.ldbc.QueryContext;
 
 import org.junit.AfterClass;
 import org.junit.Assert;

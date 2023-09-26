@@ -275,4 +275,20 @@ public class MatchTest {
                 SqlTypeName.CHAR,
                 node.getRowType().getFieldList().get(0).getType().getSqlTypeName());
     }
+
+    @Test
+    public void match_15_test() {
+        RelNode node = Utils.eval("Match (a)-[b]-(c) Return labels(a), type(b)").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(~label=[a.~label], ~label0=[b.~label], isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[c], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[b], opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                node.explain().trim());
+    }
 }

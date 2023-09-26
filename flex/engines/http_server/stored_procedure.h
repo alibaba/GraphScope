@@ -25,8 +25,8 @@
 #include <utility>
 #include "glog/logging.h"
 
-#include "proto_generated_gie/results.pb.h"
-#include "proto_generated_gie/stored_procedure.pb.h"
+#include "flex/proto_generated_gie/results.pb.h"
+#include "flex/proto_generated_gie/stored_procedure.pb.h"
 
 #include <hiactor/util/data_type.hh>
 #include <seastar/core/print.hh>
@@ -34,6 +34,7 @@
 #include "flex/engines/hqps_db/app/hqps_app_base.h"
 #include "flex/engines/hqps_db/database/mutable_csr_interface.h"
 #include "flex/utils/app_utils.h"
+#include "flex/utils/yaml_utils.h"
 
 #include <seastar/core/print.hh>
 
@@ -83,7 +84,9 @@ struct StoredProcedureMeta {
 std::vector<StoredProcedureMeta> parse_stored_procedures(
     const std::string& stored_procedure_yaml);
 std::vector<StoredProcedureMeta> parse_from_multiple_yamls(
-    const std::string& plugin_dir, const std::vector<std::string>& stored_procedure_yamls);
+    const std::string& plugin_dir,
+    const std::vector<std::string>& stored_procedure_yamls,
+    const std::vector<std::string>& valid_procedure_names);
 
 enum class StoredProcedureType {
   kCypher = 0,
@@ -142,17 +145,18 @@ class CypherStoredProcedure;
 std::shared_ptr<BaseStoredProcedure> create_stored_procedure_impl(
     int32_t procedure_id, const std::string& procedure_path);
 
-std::vector<std::string> get_yaml_files(const std::string& plugin_dir);
-
 class StoredProcedureManager {
  public:
   static StoredProcedureManager& get();
   StoredProcedureManager() {}
 
   // expect multiple query.yaml under this directory.
-  void LoadFromPluginDir(const std::string& plugin_dir) {
-    auto yaml_files = get_yaml_files(plugin_dir);
-    auto stored_procedures = parse_from_multiple_yamls(plugin_dir, yaml_files);
+  void LoadFromPluginDir(
+      const std::string& plugin_dir,
+      const std::vector<std::string>& valid_procedure_names) {
+    auto yaml_files = gs::get_yaml_files(plugin_dir);
+    auto stored_procedures = parse_from_multiple_yamls(plugin_dir, yaml_files,
+                                                       valid_procedure_names);
     CreateStoredProcedures(stored_procedures);
   }
 

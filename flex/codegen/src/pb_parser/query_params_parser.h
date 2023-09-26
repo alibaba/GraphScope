@@ -18,8 +18,8 @@ limitations under the License.
 #include <vector>
 
 #include "flex/codegen/src/graph_types.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
 
 namespace gs {
 

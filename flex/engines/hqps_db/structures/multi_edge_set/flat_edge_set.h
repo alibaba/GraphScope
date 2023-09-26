@@ -173,6 +173,16 @@ class FlatEdgeSet {
 
   iterator end() const { return iterator(vec_, vec_.size()); }
 
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> res;
+    res.reserve(vec_.size());
+    for (auto i = 0; i < vec_.size(); ++i) {
+      auto ind = label_triplet_ind_[i];
+      res.emplace_back(label_triplet_[ind][2]);
+    }
+    return res;
+  }
+
   template <size_t col_ind, typename... index_ele_tuple_t_>
   flat_t Flat(
       std::vector<std::tuple<index_ele_tuple_t_...>>& index_ele_tuple) const {
@@ -343,9 +353,11 @@ class FlatEdgeSet {
         new_label_triplet_ind.emplace_back(label_triplet_ind_[i]);
       }
     }
+    auto copied_label_triplet = label_triplet_;
 
-    return self_type_t(std::move(new_vec), label_triplet_, prop_names_,
-                       std::move(new_label_triplet_ind), direction_);
+    return self_type_t(std::move(new_vec), std::move(copied_label_triplet),
+                       prop_names_, std::move(new_label_triplet_ind),
+                       direction_);
   }
 
   void Repeat(std::vector<offset_t>& cur_offset,
@@ -495,6 +507,15 @@ class SingleLabelEdgeSet {
   iterator begin() const { return iterator(vec_, 0); }
 
   iterator end() const { return iterator(vec_, vec_.size()); }
+
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> res;
+    res.reserve(vec_.size());
+    for (auto i = 0; i < vec_.size(); ++i) {
+      res.emplace_back(label_triplet_[2]);
+    }
+    return res;
+  }
 
   template <size_t col_ind, typename... index_ele_tuple_t_>
   flat_t Flat(

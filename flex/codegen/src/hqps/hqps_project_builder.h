@@ -26,9 +26,9 @@ limitations under the License.
 #include "flex/codegen/src/hqps/hqps_expr_builder.h"
 #include "flex/codegen/src/pb_parser/query_params_parser.h"
 #include "flex/codegen/src/string_utils.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 static constexpr const char* PROJECT_MAPPER_VAR_TEMPLATE_STR =
@@ -214,6 +214,10 @@ std::string project_variable_mapping_to_string(BuildingContext& ctx,
       } else if (prop.item_case() == common::Property::kLen) {
         prop_names.push_back("length");
         data_types.push_back(codegen::DataType::kLength);
+      } else if (prop.item_case() == common::Property::kLabel) {
+        // return the label id.
+        prop_names.push_back("label");
+        data_types.push_back(codegen::DataType::kLabelId);
       } else {
         LOG(FATAL) << "Unknown property type" << prop.DebugString();
       }

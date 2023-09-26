@@ -43,7 +43,13 @@ mod test {
 
     // g.V()
     fn source_gen(alias: Option<KeyId>) -> Box<dyn Iterator<Item = Record> + Send> {
-        source_gen_with_scan_opr(pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None })
+        source_gen_with_scan_opr(pb::Scan {
+            scan_opt: 0,
+            alias,
+            params: None,
+            idx_predicate: None,
+            is_count_only: false,
+        })
     }
 
     fn source_gen_with_scan_opr(scan_opr_pb: pb::Scan) -> Box<dyn Iterator<Item = Record> + Send> {
@@ -688,6 +694,7 @@ mod test {
                     alias: Some(TAG_A.into()),
                     params: None,
                     idx_predicate: Some(vec![1].into()),
+                    is_count_only: false,
                 });
                 let mut stream = input.input_from(source_iter)?;
                 let flatmap_func1 = expand1.gen_flat_map().unwrap();
@@ -767,6 +774,7 @@ mod test {
                     alias: Some(TAG_A.into()),
                     params: None,
                     idx_predicate: Some(vec![1].into()),
+                    is_count_only: false,
                 });
                 let mut stream = input.input_from(source_iter)?;
                 let flatmap_func1 = expand1.gen_flat_map().unwrap();
@@ -848,6 +856,7 @@ mod test {
                     alias: Some(TAG_A.into()),
                     params: None,
                     idx_predicate: Some(vec![1].into()),
+                    is_count_only: false,
                 });
                 let mut stream = input.input_from(source_iter)?;
                 let flatmap_func1 = expand1.gen_flat_map().unwrap();
@@ -994,6 +1003,7 @@ mod test {
                     alias: Some(TAG_A.into()),
                     params: None,
                     idx_predicate: Some(vec![1].into()),
+                    is_count_only: false,
                 });
                 let mut stream = input.input_from(source_iter)?;
                 let flatmap_func1 = expand1.gen_flat_map().unwrap();

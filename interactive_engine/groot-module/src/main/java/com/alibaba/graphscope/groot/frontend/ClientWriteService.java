@@ -42,7 +42,7 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
         String writeSession = request.getClientId();
         int writeRequestsCount = request.getWriteRequestsCount();
         List<WriteRequest> writeRequests = new ArrayList<>(writeRequestsCount);
-        logger.info(
+        logger.debug(
                 "received batchWrite request. requestId ["
                         + requestId
                         + "] writeSession ["

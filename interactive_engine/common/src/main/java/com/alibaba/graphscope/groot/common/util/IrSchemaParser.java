@@ -38,7 +38,7 @@ public class IrSchemaParser {
 
     private IrSchemaParser() {}
 
-    public String parse(GraphSchema graphSchema) {
+    public String parse(GraphSchema graphSchema, boolean isColumnId) {
         List<GraphVertex> vertices = graphSchema.getVertexList();
         List<GraphEdge> edges = graphSchema.getEdgeList();
         List entities = new ArrayList();
@@ -49,7 +49,7 @@ public class IrSchemaParser {
         schemaMap.put("entities", entities);
         schemaMap.put("relations", relations);
         schemaMap.put("is_table_id", true);
-        schemaMap.put("is_column_id", true);
+        schemaMap.put("is_column_id", isColumnId);
         return JSON.toJson(schemaMap);
     }
 

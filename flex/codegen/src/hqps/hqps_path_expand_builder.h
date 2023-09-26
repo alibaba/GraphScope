@@ -23,9 +23,9 @@ limitations under the License.
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/hqps/hqps_get_v_builder.h"
 #include "flex/codegen/src/pb_parser/expand_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/expr.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/expr.pb.h"
 
 // #ifndef HOP_RANGE_PARAM
 // #define HOP_RANGE_PARAM

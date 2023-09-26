@@ -21,7 +21,12 @@
 #include <string>
 #include <vector>
 
+#include "glog/logging.h"
+
 namespace gs {
+
+std::vector<std::string> get_yaml_files(const std::string& plugin_dir);
+
 namespace config_parsing {
 template <typename T>
 bool get_scalar(YAML::Node node, const std::string& key, T& value) {

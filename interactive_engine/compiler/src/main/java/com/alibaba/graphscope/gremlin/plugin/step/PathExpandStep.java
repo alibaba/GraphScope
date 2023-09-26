@@ -103,7 +103,7 @@ public class PathExpandStep extends ExpandFusionStep<Vertex> {
                 throw new ExtendGremlinStepException(
                         "value "
                                 + originalVal
-                                + " is invalid, use ALL_V, END_V, ALL_VE instead (case"
+                                + " is invalid, use ALL_V, END_V, ALL_V_E instead (case"
                                 + " insensitive)");
             }
         } else if (key.equals("Until")) {

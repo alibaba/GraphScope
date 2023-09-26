@@ -298,6 +298,12 @@ class AdjEdgeSet {
     return builder_t(src_label_, dst_label_, edge_label_, prop_names_, dir_);
   }
 
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> label_vec(Size());
+    std::fill(label_vec.begin(), label_vec.end(), {edge_label_});
+    return label_vec;
+  }
+
   iterator begin() const { return iterator(vids_, adj_lists_, 0); }
 
   iterator end() const { return iterator(vids_, adj_lists_, vids_.size()); }
@@ -413,6 +419,12 @@ class AdjEdgeSet<GI, VID_T, LabelT, grape::EmptyType> {
   iterator begin() const { return iterator(vids_, adj_lists_, 0); }
 
   iterator end() const { return iterator(vids_, adj_lists_, vids_.size()); }
+
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> label_vec(Size());
+    std::fill(label_vec.begin(), label_vec.end(), {edge_label_});
+    return label_vec;
+  }
 
   size_t Size() const { return size_; }
 

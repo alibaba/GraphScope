@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 pub mod condition;
-mod elem;
+pub mod elem;
 mod filter;
 mod multi_version;
 pub mod prelude;

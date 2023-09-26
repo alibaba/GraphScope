@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.cypher.integration.suite.ldbc;
 
+import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

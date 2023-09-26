@@ -19,9 +19,9 @@ limitations under the License.
 #include <type_traits>
 
 #include "flex/codegen/src/string_utils.h"
+#include "flex/proto_generated_gie/common.pb.h"
 #include "glog/logging.h"
 #include "google/protobuf/any.h"
-#include "proto_generated_gie/common.pb.h"
 
 namespace gs {
 
@@ -43,6 +43,7 @@ enum class DataType {
   kTime = 11,
   kDate = 12,
   kDateTime = 13,
+  kLabelId = 14
 };
 
 // a parameter const, the real data will be feed at runtime.
@@ -193,6 +194,8 @@ static std::string data_type_2_string(const codegen::DataType& data_type) {
     return EDGE_ID_T;
   case codegen::DataType::kDate:
     return "Date";
+  case codegen::DataType::kLabelId:
+    return "LabelKey";
   default:
     // LOG(FATAL) << "unknown data type" << static_cast<int>(data_type);
     throw std::runtime_error(

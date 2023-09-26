@@ -81,6 +81,12 @@ pub trait ReadGraph: Send + Sync {
         &self, direction: Direction, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Statement<ID, Edge>>>;
 
+    /// Count vertices with query parameters, and return the number of vertices.
+    fn count_vertex(&self, params: &QueryParams) -> GraphProxyResult<u64>;
+
+    /// Count edges with query parameters, and return the number of edges.
+    fn count_edge(&self, params: &QueryParams) -> GraphProxyResult<u64>;
+
     /// Get primary key value(s) with the given global_id,
     /// and return the primary key value(s) if exists
     fn get_primary_key(&self, id: &ID) -> GraphProxyResult<Option<PKV>>;

@@ -380,7 +380,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           cd ${GITHUB_WORKSPACE}/python
-          pip3 install -r requirements.txt
+          pip3 install -r requirements.txt -r requirements-dev.txt
           pip3 install pytest pytest-cov pytest-timeout
 
           # build python client proto
@@ -571,7 +571,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           cd ${GITHUB_WORKSPACE}/python
-          pip3 install -r requirements.txt
+          pip3 install -r requirements.txt -r requirements-dev.txt
           pip3 install pytest pytest-cov pytest-timeout
 
           # build python client proto
