@@ -99,7 +99,7 @@ public class LocalMetaDataReader implements MetaDataReader {
                     logger.debug("load procedure {}", procedureName);
                 }
             } catch (Exception e) {
-                logger.warn(
+                logger.debug(
                         "procedure config {} has invalid format, error msg: {}", file.getName(), e);
             }
         }
