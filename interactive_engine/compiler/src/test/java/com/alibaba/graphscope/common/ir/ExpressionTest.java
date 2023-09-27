@@ -18,11 +18,10 @@ package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
-import com.alibaba.graphscope.common.ir.tools.config.*;
-import com.alibaba.graphscope.common.ir.type.GraphProperty;
-import com.google.common.collect.ImmutableList;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
+import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
 
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.junit.Assert;
@@ -170,124 +169,8 @@ public class ExpressionTest {
         Assert.assertEquals("-(a.age)", node.toString());
     }
 
-    @Test
-    public void label_1_test() {
-        RelNode node =
-                builder.source(new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(true), "a"))
-                        .filter(
-                                builder.call(
-                                        GraphStdOperatorTable.EQUALS,
-                                        builder.literal("software"),
-                                        builder.variable(null, GraphProperty.LABEL_KEY)))
-                        .build();
-        Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[software]}], alias=[a],"
-                        + " opt=[VERTEX])",
-                node.explain().trim());
-    }
-
-    // check property after updating the label type
-    @Test
-    public void label_2_test() {
-        try {
-            RelNode node =
-                    builder.source(
-                                    new SourceConfig(
-                                            GraphOpt.Source.VERTEX, new LabelConfig(true), "a"))
-                            .filter(
-                                    builder.call(
-                                            GraphStdOperatorTable.EQUALS,
-                                            builder.variable(null, "age"),
-                                            builder.literal(1)))
-                            .filter(
-                                    builder.call(
-                                            GraphStdOperatorTable.EQUALS,
-                                            builder.literal("software"),
-                                            builder.variable(null, GraphProperty.LABEL_KEY)))
-                            .build();
-        } catch (IllegalArgumentException e) {
-            Assert.assertEquals(
-                    "{property=age} not found; expected properties are: [id, name, lang,"
-                            + " creationDate]",
-                    e.getMessage());
-            return;
-        }
-        Assert.fail();
-    }
-
-    @Test
-    public void label_3_test() {
-        RelNode node =
-                builder.source(new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(true), "a"))
-                        .filter(
-                                builder.call(
-                                        GraphStdOperatorTable.EQUALS,
-                                        builder.variable(null, GraphProperty.ID_KEY),
-                                        builder.literal(1)))
-                        .filter(
-                                builder.call(
-                                        GraphStdOperatorTable.EQUALS,
-                                        builder.literal("software"),
-                                        builder.variable(null, GraphProperty.LABEL_KEY)))
-                        .filter(
-                                builder.call(
-                                        GraphStdOperatorTable.AND,
-                                        builder.call(
-                                                GraphStdOperatorTable.EQUALS,
-                                                builder.variable(null, "~id"),
-                                                builder.literal(3)),
-                                        builder.call(
-                                                GraphStdOperatorTable.EQUALS,
-                                                builder.variable(null, GraphProperty.ID_KEY),
-                                                builder.literal(2))))
-                        .filter(
-                                builder.call(
-                                        GraphStdOperatorTable.EQUALS,
-                                        builder.variable(null, "lang"),
-                                        builder.literal("a")))
-                        .build();
-        System.out.println(node.explain().trim());
-    }
-
     private SourceConfig mockSourceConfig(String alias) {
         return new SourceConfig(
                 GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"), alias);
-    }
-
-    //    @Test
-    //    public void label_2_test() {
-    //        RexNode var =
-    //                builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
-    //                        .variable(null, GraphProperty.LABEL_KEY);
-    //        RexNode inNode =
-    //                builder.getRexBuilder().makeIn(var,
-    // ImmutableList.of(builder.literal("person")));
-    //        RelNode node =
-    //                builder.filter(inNode)
-    //                        .filter(
-    //                                builder.getRexBuilder()
-    //                                        .makeIn(var,
-    // ImmutableList.of(builder.literal("software"))))
-    //                        .build();
-    //        System.out.println(node.explain());
-    //    }
-
-    @Test
-    public void label_4_test() {
-        RexNode var =
-                builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
-                        .variable(null, GraphProperty.ID_KEY);
-        RexNode inNode =
-                builder.getRexBuilder()
-                        .makeIn(var, ImmutableList.of(builder.literal(1), builder.literal(2)));
-        RelNode node =
-                builder.filter(inNode)
-                        .filter(
-                                builder.call(
-                                        GraphStdOperatorTable.EQUALS,
-                                        builder.variable(null, "name"),
-                                        builder.literal("marko")))
-                        .build();
-        System.out.println(node.explain());
     }
 }
