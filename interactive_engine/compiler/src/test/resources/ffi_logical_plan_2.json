@@ -83,6 +83,7 @@
               "extra": {}
             },
             "idx_predicate": null,
+            "is_count_only": false,
             "meta_data": {
               "type": {
                 "type": {

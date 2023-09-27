@@ -1,7 +1,7 @@
 apt update -y
 
 apt install -y \
-      ninja-build ragel libhwloc-dev libnuma-dev libpciaccess-dev vim wget \
+      ninja-build ragel libhwloc-dev libnuma-dev libpciaccess-dev vim wget curl \
       git g++ libgoogle-glog-dev cmake libopenmpi-dev default-jdk libcrypto++-dev \
       libboost-all-dev libxml2-dev
 apt install -y xfslibs-dev libgnutls28-dev liblz4-dev maven openssl pkg-config \
@@ -14,6 +14,12 @@ git checkout v0.3.2
 mkdir build && cd build && cmake ..
 make -j && make install
 cp /usr/local/lib/libgrape-lite.so /usr/lib/libgrape-lite.so
+
+pushd /tmp && apt-get install -y -V ca-certificates lsb-release wget
+curl -o apache-arrow-apt-source-latest.deb https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+apt-get install -y ./apache-arrow-apt-source-latest.deb
+apt-get update && apt-get install -y libarrow-dev=6.0.1-1
+popd
 
 cd ../..
 git clone https://github.com/alibaba/hiactor.git

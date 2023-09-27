@@ -188,6 +188,9 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     }
 
     protected AnyValue parseValue(Common.Value value, @Nullable RelDataType dataType) {
+        if (dataType instanceof GraphLabelType) {
+            return Values.stringValue(parseLabelValue(value, (GraphLabelType) dataType));
+        }
         switch (value.getItemCase()) {
             case BOOLEAN:
                 return value.getBoolean() ? BooleanValue.TRUE : BooleanValue.FALSE;
@@ -306,5 +309,36 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         return (graphPathType instanceof GraphPathType)
                 ? ((GraphPathType) graphPathType).getComponentType().getExpandType()
                 : graphPathType;
+    }
+
+    private String parseLabelValue(Common.Value value, GraphLabelType type) {
+        switch (value.getItemCase()) {
+            case STR:
+                return value.getStr();
+            case I32:
+                return parseLabelValue(value.getI32(), type);
+            case I64:
+                return parseLabelValue(value.getI64(), type);
+            default:
+                throw new IllegalArgumentException(
+                        "cannot parse label value with type=" + value.getItemCase().name());
+        }
+    }
+
+    private String parseLabelValue(long labelId, GraphLabelType type) {
+        List<Object> expectedLabelIds = Lists.newArrayList();
+        for (GraphLabelType.Entry entry : type.getLabelsEntry()) {
+            if (entry.getLabelId() == labelId) {
+                return entry.getLabel();
+            }
+            expectedLabelIds.add(entry.getLabelId());
+        }
+        throw new IllegalArgumentException(
+                "cannot parse label value="
+                        + labelId
+                        + " from expected type="
+                        + type
+                        + ", expected ids are "
+                        + expectedLabelIds);
     }
 }

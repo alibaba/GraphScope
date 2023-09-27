@@ -138,7 +138,7 @@ struct KeyedT<Collection<T>, PropertySelector<grape::EmptyType>> {
       const PropertySelector<grape::EmptyType>& selector) {
     return builder_t(set);
   }
-  static unkeyed_builder_t create_unkyedkeyed_builder(
+  static unkeyed_builder_t create_unkeyed_builder(
       const Collection<T>& set,
       const PropertySelector<grape::EmptyType>& selector) {
     return unkeyed_builder_t();
@@ -383,6 +383,21 @@ struct KeyedAggT<GI, UnTypedEdgeSet<VID_T, LabelT, typename GI::sub_graph_t>,
   }
 };
 
+template <typename GI, typename VID_T, typename LabelT, typename EDATA_T,
+          int tag_id>
+struct KeyedAggT<GI, FlatEdgeSet<VID_T, LabelT, EDATA_T>, AggFunc::COUNT,
+                 std::tuple<grape::EmptyType>,
+                 std::integer_sequence<int32_t, tag_id>> {
+  using agg_res_t = Collection<size_t>;
+  using aggregate_res_builder_t = CountBuilder<tag_id>;
+
+  static aggregate_res_builder_t create_agg_builder(
+      const FlatEdgeSet<VID_T, LabelT, EDATA_T>& set, const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
+    return CountBuilder<tag_id>();
+  }
+};
+
 template <typename LabelT, typename KEY_T, typename VID_T, typename... T,
           typename ELE, typename DATA>
 static inline auto insert_into_builder_v2_impl(
@@ -487,6 +502,15 @@ template <typename ELE, typename DATA, typename GI, typename LabelT,
 static inline auto insert_into_builder_v2_impl(
     AdjEdgeSetBuilder<GI, LabelT, VID_T, grape::EmptyType>& builder,
     const ELE& ele, const DATA& data) {
+  return builder.Insert(ele);
+}
+
+// insert to single label edge label.
+template <typename ELE, typename DATA, typename LabelT, typename VID_T,
+          typename EDATA_T>
+static inline auto insert_into_builder_v2_impl(
+    SingleLabelEdgeSetBuilder<VID_T, LabelT, EDATA_T>& builder, const ELE& ele,
+    const DATA& data) {
   return builder.Insert(ele);
 }
 

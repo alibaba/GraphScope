@@ -186,8 +186,11 @@ static void set_vertex_properties(gs::ColumnBase* col,
                                   std::shared_ptr<arrow::ChunkedArray> array,
                                   const std::vector<vid_t>& vids) {
   auto type = array->type();
+  auto col_type = col->type();
   size_t cur_ind = 0;
-  if (type == arrow::int64()) {
+  if (col_type == PropertyType::kInt64) {
+    CHECK(type == arrow::int64())
+        << "Inconsistent data type, expect int64, but got " << type->ToString();
     for (auto j = 0; j < array->num_chunks(); ++j) {
       auto casted =
           std::static_pointer_cast<arrow::Int64Array>(array->chunk(j));
@@ -197,7 +200,9 @@ static void set_vertex_properties(gs::ColumnBase* col,
             std::move(AnyConverter<int64_t>::to_any(casted->Value(k))));
       }
     }
-  } else if (type == arrow::int32()) {
+  } else if (col_type == PropertyType::kInt32) {
+    CHECK(type == arrow::int32())
+        << "Inconsistent data type, expect int32, but got " << type->ToString();
     for (auto j = 0; j < array->num_chunks(); ++j) {
       auto casted =
           std::static_pointer_cast<arrow::Int32Array>(array->chunk(j));
@@ -207,7 +212,10 @@ static void set_vertex_properties(gs::ColumnBase* col,
             std::move(AnyConverter<int32_t>::to_any(casted->Value(k))));
       }
     }
-  } else if (type == arrow::float64()) {
+  } else if (col_type == PropertyType::kDouble) {
+    CHECK(type == arrow::float64())
+        << "Inconsistent data type, expect double, but got "
+        << type->ToString();
     for (auto j = 0; j < array->num_chunks(); ++j) {
       auto casted =
           std::static_pointer_cast<arrow::DoubleArray>(array->chunk(j));
@@ -216,34 +224,48 @@ static void set_vertex_properties(gs::ColumnBase* col,
                      std::move(AnyConverter<double>::to_any(casted->Value(k))));
       }
     }
-  } else if (type == arrow::large_utf8()) {
-    for (auto j = 0; j < array->num_chunks(); ++j) {
-      auto casted =
-          std::static_pointer_cast<arrow::LargeStringArray>(array->chunk(j));
-      for (auto k = 0; k < casted->length(); ++k) {
-        auto str = casted->GetView(k);
-        std::string_view str_view(str.data(), str.size());
-        col->set_any(
-            vids[cur_ind++],
-            std::move(AnyConverter<std::string_view>::to_any(str_view)));
+  } else if (col_type == PropertyType::kString) {
+    CHECK(type == arrow::large_utf8() || type == arrow::utf8())
+        << "Inconsistent data type, expect string, but got "
+        << type->ToString();
+    if (type == arrow::large_utf8()) {
+      for (auto j = 0; j < array->num_chunks(); ++j) {
+        auto casted =
+            std::static_pointer_cast<arrow::LargeStringArray>(array->chunk(j));
+        for (auto k = 0; k < casted->length(); ++k) {
+          auto str = casted->GetView(k);
+          std::string_view str_view(str.data(), str.size());
+          col->set_any(
+              vids[cur_ind++],
+              std::move(AnyConverter<std::string_view>::to_any(str_view)));
+        }
       }
-      for (auto k = 0; k < std::min((int64_t) 10, casted->length()); ++k) {
-        VLOG(10) << "set vertex property: " << vids[k] << ", "
-                 << casted->GetString(k) << " "
-                 << col->get(vids[k]).to_string();
+    } else {
+      for (auto j = 0; j < array->num_chunks(); ++j) {
+        auto casted =
+            std::static_pointer_cast<arrow::StringArray>(array->chunk(j));
+        for (auto k = 0; k < casted->length(); ++k) {
+          auto str = casted->GetView(k);
+          std::string_view str_view(str.data(), str.size());
+          col->set_any(
+              vids[cur_ind++],
+              std::move(AnyConverter<std::string_view>::to_any(str_view)));
+        }
       }
     }
-  } else if (type == arrow::utf8()) {
-    for (auto j = 0; j < array->num_chunks(); ++j) {
-      auto casted =
-          std::static_pointer_cast<arrow::StringArray>(array->chunk(j));
-      for (auto k = 0; k < casted->length(); ++k) {
-        auto str = casted->GetView(k);
-        std::string_view str_view(str.data(), str.size());
-        col->set_any(
-            vids[cur_ind++],
-            std::move(AnyConverter<std::string_view>::to_any(str_view)));
+  } else if (col_type == PropertyType::kDate) {
+    if (type == arrow::int64()) {
+      for (auto j = 0; j < array->num_chunks(); ++j) {
+        auto casted =
+            std::static_pointer_cast<arrow::Int64Array>(array->chunk(j));
+        for (auto k = 0; k < casted->length(); ++k) {
+          col->set_any(vids[cur_ind++],
+                       std::move(AnyConverter<Date>::to_any(casted->Value(k))));
+        }
       }
+    } else {
+      LOG(FATAL) << "Not implemented: converting " << type->ToString() << " to "
+                 << col_type;
     }
   } else {
     LOG(FATAL) << "Not support type: " << type->ToString();
@@ -1175,6 +1197,7 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
     label_t src_label_id, label_t dst_label_id, label_t label_id) const {
   auto time_stamp_parser =
       arrow::TimestampParser::MakeISO8601();  // 2011-08-17T14:26:59.961+0000
+
   convert_options.timestamp_parsers.emplace_back(time_stamp_parser);
 
   put_delimiter_option(loading_config_, parse_options);

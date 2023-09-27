@@ -16,7 +16,7 @@ limitations under the License.
 #define CODEGEN_SRC_PB_PARSER_EXPAND_PARSER_H_
 
 #include "flex/codegen/src/pb_parser/internal_struct.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 

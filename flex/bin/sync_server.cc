@@ -120,11 +120,11 @@ std::tuple<uint32_t, uint32_t> parse_from_server_config(
                    << engine_type_str;
       }
     }
-    auto shard_num_node = engine_node["shared_num"];
+    auto shard_num_node = engine_node["shard_num"];
     if (shard_num_node) {
       shard_num = shard_num_node.as<uint32_t>();
     } else {
-      LOG(INFO) << "shared_num not found, use default value "
+      LOG(INFO) << "shard_num not found, use default value "
                 << DEFAULT_SHARD_NUM;
     }
     auto host_node = engine_node["hosts"];
@@ -151,26 +151,11 @@ std::tuple<uint32_t, uint32_t> parse_from_server_config(
   }
 }
 
-void load_plugins(const bpo::variables_map& vm) {
-  if (vm.count("plugin-dir") == 0) {
-    LOG(INFO) << "plugin-dir is not specified";
-    return;
-  }
-  std::string plugin_dir = vm["plugin-dir"].as<std::string>();
-  if (!std::filesystem::exists(plugin_dir)) {
-    LOG(FATAL) << "plugin dir not exists: " << plugin_dir;
-  }
-  LOG(INFO) << "plugin dir: " << plugin_dir;
-  if (!plugin_dir.empty()) {
-    LOG(INFO) << "Load plugins from dir: " << plugin_dir;
-    server::StoredProcedureManager::get().LoadFromPluginDir(plugin_dir);
-  }
-}
-
-void init_codegen_proxy(const bpo::variables_map& vm) {
+void init_codegen_proxy(const bpo::variables_map& vm,
+                        const std::string& graph_schema_file,
+                        const std::string& engine_config_file) {
   std::string codegen_dir = parse_codegen_dir(vm);
   std::string codegen_bin;
-  std::string gie_home;
   if (vm.count("codegen-bin") == 0) {
     LOG(INFO) << "codegen-bin is not specified";
     codegen_bin = find_codegen_bin();
@@ -181,36 +166,8 @@ void init_codegen_proxy(const bpo::variables_map& vm) {
       LOG(FATAL) << "codegen bin not exists: " << codegen_bin;
     }
   }
-  std::string ir_compiler_properties;
-  std::string compiler_graph_schema;
-  if (vm.count("ir-compiler-prop") == 0) {
-    LOG(FATAL) << "ir-compiler-prop is not specified";
-  } else {
-    ir_compiler_properties = vm["ir-compiler-prop"].as<std::string>();
-    if (!std::filesystem::exists(ir_compiler_properties)) {
-      LOG(FATAL) << "ir-compiler-prop not exists: " << ir_compiler_properties;
-    }
-  }
-  if (vm.count("compiler-graph-schema") == 0) {
-    LOG(FATAL) << "compiler-graph-schema is not specified";
-  } else {
-    compiler_graph_schema = vm["compiler-graph-schema"].as<std::string>();
-    if (!std::filesystem::exists(compiler_graph_schema)) {
-      LOG(FATAL) << "compiler-graph-schema not exists: "
-                 << compiler_graph_schema;
-    }
-  }
-  if (vm.count("gie-home") == 0) {
-    LOG(FATAL) << "gie-home is not specified";
-  } else {
-    gie_home = vm["gie-home"].as<std::string>();
-    if (!std::filesystem::exists(gie_home)) {
-      LOG(FATAL) << "gie-home not exists: " << gie_home;
-    }
-  }
-  server::CodegenProxy::get().Init(codegen_dir, codegen_bin,
-                                   ir_compiler_properties,
-                                   compiler_graph_schema, gie_home);
+  server::CodegenProxy::get().Init(codegen_dir, codegen_bin, engine_config_file,
+                                   graph_schema_file);
 }
 }  // namespace gs
 
@@ -225,13 +182,7 @@ int main(int argc, char** argv) {
                                    "codegen binary path")(
       "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
       "data-path,a", bpo::value<std::string>(), "data directory path")(
-      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file")(
-      "plugin-dir,p", bpo::value<std::string>(), "plugin directory path")(
-      "gie-home,h", bpo::value<std::string>(), "path to gie home")(
-      "ir-compiler-prop,i", bpo::value<std::string>(),
-      "ir compiler property file")("compiler-graph-schema,z",
-                                   bpo::value<std::string>(),
-                                   "compiler graph schema file");
+      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -251,9 +202,10 @@ int main(int argc, char** argv) {
   std::string data_path;
   std::string bulk_load_config_path;
   std::string plugin_dir;
+  std::string server_config_path;
 
   if (vm.count("server-config") != 0) {
-    std::string server_config_path = vm["server-config"].as<std::string>();
+    server_config_path = vm["server-config"].as<std::string>();
     // check file exists
     if (!std::filesystem::exists(server_config_path)) {
       LOG(ERROR) << "server-config not exists: " << server_config_path;
@@ -294,8 +246,12 @@ int main(int argc, char** argv) {
   LOG(INFO) << "Finished loading graph, elapsed " << t0 << " s";
 
   // loading plugin
-  gs::load_plugins(vm);
-  gs::init_codegen_proxy(vm);
+  if (!schema.GetPluginDir().empty() && !schema.GetPluginsList().empty()) {
+    server::StoredProcedureManager::get().LoadFromPluginDir(
+        schema.GetPluginDir(), schema.GetPluginsList());
+  }
+
+  gs::init_codegen_proxy(vm, graph_schema_path, server_config_path);
 
   server::HQPSService::get().init(shard_num, http_port, false);
   server::HQPSService::get().run_and_wait_for_exit();

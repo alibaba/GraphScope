@@ -37,6 +37,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec!["id".into()], None)),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         let select_opr = pb::Select { predicate: Some(str_to_expr_pb("@.id == 1".to_string()).unwrap()) };
@@ -100,6 +101,7 @@ mod test {
             alias: None,
             params: Some(query_params_all_columns(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -126,6 +128,7 @@ mod test {
             alias: Some(TAG_A.into()),
             params: Some(query_params_all_columns(vec![], vec![], None)),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 

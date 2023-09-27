@@ -192,6 +192,7 @@ public abstract class Utils {
     }
 
     public static final Common.DataType protoBasicDataType(RelDataType basicType) {
+        if (basicType instanceof GraphLabelType) return Common.DataType.INT32;
         switch (basicType.getSqlTypeName()) {
             case NULL:
                 return Common.DataType.NONE;
