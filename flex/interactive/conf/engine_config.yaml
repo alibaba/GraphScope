@@ -1,5 +1,4 @@
 log_level: INFO # default INFO
-default_graph: modern  # configure the graph to be loaded while starting the service, if graph name not specified
 compute_engine:
   shard_num: 1  # the number of shared workers, default 1
 compiler:

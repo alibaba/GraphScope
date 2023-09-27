@@ -19,46 +19,49 @@ SERVER_BIN=${FLEX_HOME}/build/bin/sync_server
 GIE_HOME=${FLEX_HOME}/../interactive_engine/
 
 # 
-if [ $# -lt 2 ]; then
-  echo "only receives: $# args, need 2"
-  echo "Usage: $0 <GS_TEST_DIR> <INTERACTIVE_WORKSPACE>"
+if [ ! $# -eq 4 ]; then
+  echo "only receives: $# args, need 4"
+  echo "Usage: $0 <INTERACTIVE_WORKSPACE> <GRAPH_NAME> <BULK_LOAD_FILE> <ENGINE_CONFIG>"
   exit 1
 fi
 
-GS_TEST_DIR=$1
-INTERACTIVE_WORKSPACE=$2
-if [ ! -d ${GS_TEST_DIR} ]; then
-  echo "GS_TEST_DIR: ${GS_TEST_DIR} not exists"
-  exit 1
-fi
+INTERACTIVE_WORKSPACE=$1
+GRAPH_NAME=$2
+GRAPH_BULK_LOAD_YAML=$3
+ENGINE_CONFIG_PATH=$4
 if [ ! -d ${INTERACTIVE_WORKSPACE} ]; then
   echo "INTERACTIVE_WORKSPACE: ${INTERACTIVE_WORKSPACE} not exists"
   exit 1
 fi
-
-ENGINE_CONFIG_PATH=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml
-ORI_GRAPH_SCHEMA_YAML=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml
-GRAPH_SCHEMA_YAML=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml
-GRAPH_BULK_LOAD_YAML=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_bulk_load.yaml
-COMPILER_GRAPH_SCHEMA=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml
-GRAPH_CSR_DATA_DIR=${HOME}/csr-data-dir/
-# check if GRAPH_SCHEMA_YAML exists
-if [ ! -f ${GRAPH_SCHEMA_YAML} ]; then
-  echo "GRAPH_SCHEMA_YAML: ${GRAPH_SCHEMA_YAML} not found"
+# check graph is ldbc or movies
+if [ ${GRAPH_NAME} != "ldbc" ] && [ ${GRAPH_NAME} != "movies" ]; then
+  echo "GRAPH_NAME: ${GRAPH_NAME} not supported, use movies or ldbc"
   exit 1
 fi
-
-# check if GRAPH_BULK_LOAD_YAML exists
+if [ ! -d ${INTERACTIVE_WORKSPACE}/data/${GRAPH_NAME} ]; then
+  echo "GRAPH: ${GRAPH_NAME} not exists"
+  exit 1
+fi
+if [ ! -f ${INTERACTIVE_WORKSPACE}/data/${GRAPH_NAME}/graph.yaml ]; then
+  echo "GRAPH_SCHEMA_FILE: ${BULK_LOAD_FILE} not exists"
+  exit 1
+fi
 if [ ! -f ${GRAPH_BULK_LOAD_YAML} ]; then
-  echo "GRAPH_BULK_LOAD_YAML: ${GRAPH_BULK_LOAD_YAML} not found"
+  echo "GRAPH_BULK_LOAD_YAML: ${GRAPH_BULK_LOAD_YAML} not exists"
+  exit 1
+fi
+if [ ! -f ${ENGINE_CONFIG_PATH} ]; then
+  echo "ENGINE_CONFIG: ${ENGINE_CONFIG_PATH} not exists"
   exit 1
 fi
 
-# check if COMPILER_GRAPH_SCHEMA exists
-if [ ! -f ${COMPILER_GRAPH_SCHEMA} ]; then
-  echo "COMPILER_GRAPH_SCHEMA: ${COMPILER_GRAPH_SCHEMA} not found"
-  exit 1
+GRAPH_SCHEMA_YAML=${INTERACTIVE_WORKSPACE}/data/${GRAPH_NAME}/graph.yaml
+GRAPH_CSR_DATA_DIR=${HOME}/csr-data-dir/
+# rm data dir if exists
+if [ -d ${GRAPH_CSR_DATA_DIR} ]; then
+  rm -rf ${GRAPH_CSR_DATA_DIR}
 fi
+
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -92,8 +95,6 @@ start_engine_service(){
         err "SERVER_BIN not found"
         exit 1
     fi
-    # export FLEX_DATA_DIR
-    export FLEX_DATA_DIR=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/
 
     cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} -g ${GRAPH_SCHEMA_YAML} "
     cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} -l ${GRAPH_BULK_LOAD_YAML} "
@@ -111,7 +112,7 @@ start_engine_service(){
 start_compiler_service(){
   echo "try to start compiler service"
   pushd ${GIE_HOME}/compiler
-  cmd="make run graph.schema=${COMPILER_GRAPH_SCHEMA} config.path=${ENGINE_CONFIG_PATH}"
+  cmd="make run graph.schema=${GRAPH_SCHEMA_YAML} config.path=${ENGINE_CONFIG_PATH}"
   echo "Start compiler service with command: ${cmd}"
   ${cmd} &
   sleep 5
@@ -141,11 +142,27 @@ run_simple_test(){
   popd
 }
 
+run_movie_test(){
+  echo "run movie test"
+  pushd ${GIE_HOME}/compiler
+  cmd="mvn test -Dtest=com.alibaba.graphscope.cypher.integration.movie.MovieTest"
+  echo "Start movie test: ${cmd}"
+  ${cmd}
+  info "Finish movie test"
+  popd
+}
+
 kill_service
 start_engine_service
 start_compiler_service
-run_ldbc_test
-run_simple_test
+# if GRAPH_NAME equals ldbc
+if [ "${GRAPH_NAME}" == "ldbc" ]; then
+  run_ldbc_test
+  run_simple_test
+else
+  run_movie_test
+fi
+
 kill_service
 
 
