@@ -135,7 +135,7 @@ public class GraphBuilderTest {
 
     @Test
     public void g_V_has_name_neq_marko_test() {
-        RelNode node = eval("g.V().has('name', eq('marko'))");
+        RelNode node = eval("g.V().has('name', neq('marko'))");
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                         + " alias=[DEFAULT], fusedFilter=[[<>(DEFAULT.name, _UTF-8'marko')]],"
@@ -149,6 +149,16 @@ public class GraphBuilderTest {
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                         + " alias=[DEFAULT], fusedFilter=[[>(DEFAULT.age, 17)]], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    // hasNot('age') -> age is null
+    @Test
+    public void g_V_hasNot_age_test() {
+        RelNode node = eval("g.V().hasNot('age')");
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                        + " alias=[DEFAULT], fusedFilter=[[IS NULL(DEFAULT.age)]], opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -178,8 +188,8 @@ public class GraphBuilderTest {
         RelNode node = eval("g.V().has('age', within(17, 20))");
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                    + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[17, 20])]],"
-                    + " opt=[VERTEX])",
+                        + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[17, 20])]],"
+                        + " opt=[VERTEX])",
                 node.explain().trim());
     }
 
