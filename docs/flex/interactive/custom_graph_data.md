@@ -17,7 +17,7 @@ bin/gs_interactive destroy
 
 To create a new graph, you will need the original data of the graph. We currently support files in CSV format. Fortunately, we have prepared it for you, and you can find it in the directory `{INTERACTIVE_HOME}/examples/movies/`. 
 
-First of all, You need to add configuration in the `{INTERACTIVE_HOME}/conf/interactive.yaml` file to allow interactive to find these original files. Since we are deploying the standalone version using Docker, you can use a similar approach to Docker mounts.
+To begin, ensure you've adjusted the settings in the `{INTERACTIVE_HOME}/conf/interactive.yaml` file. By utilizing Docker's volume mount feature, you can map an external folder containing the the CSV files of `movies` to the internal directory at `/home/graphscope/movies`. It's crucial that the internal data path starts with `/home/graphscope` and concludes with `movies`, reflecting the name of your graph. If you're looking to import custom data, you can do volume mapping in a similar way.
 
 ```yaml
 version: v0.0.2
@@ -128,7 +128,7 @@ To import your data, utilize the `import` functionality of the administrative to
 bin/gs_interactive database import -g movies -c examples/movies/import.yaml
 ```
 
-The `bulk_load.yaml` file maps raw data fields to the schema of the "modern" graph created in Step 1. Here's an illustrative example:
+The `import.yaml` file maps raw data fields to the schema of the "modern" graph created in Step 1. Here's an illustrative example:
 
 ```yaml
 graph: movies

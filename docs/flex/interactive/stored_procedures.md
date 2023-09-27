@@ -2,6 +2,9 @@
 
 Stored procedures in GraphScope Interactive offer a powerful way to encapsulate and reuse complex graph operations. This document provides a guide on how to compile, enable, and manage these procedures. We will take movies graph for example.
 
+Note:
+- For the following command, If `-g {graph_name}` is not given, the default modern graph will be used.
+
 ## Compiling a Stored Procedure
 To compile a stored procedure, use the following command:
 ```bash
@@ -31,14 +34,23 @@ Restart the service is **necessary** to activate the stored procedures:
 
 ```bash
 bin/gs_interactive service restart
-# If service hasn't been launched, just start
-bin/gs_interactive service start
 ```
 
 ## Enabling Stored Procedures
-The following command is used to enable the stored procedure:
+
+To enable single stored procedure, simple using:
+
 ```bash
+bin/gs_interactive procedure enable -g {graph_name} -n {procedure_name}
+```
+
+If you want to enable multiple procedures at once, just using the following command:
+
+```bash
+# enable all procedures listed in stored_procedures.yaml
 bin/gs_interactive procedure enable -g {graph_name} -c stored_procedures.yaml
+# or use comma to separate procedure names for -n option
+bin/gs_interactive procedure enable -g {graph_name} -n '{proc1},{proc2}'
 ```
 The above `stored_procedures.yaml` file configures which stored procedures are enabled for the current interactive service. Here's an example:
 
@@ -46,41 +58,33 @@ The above `stored_procedures.yaml` file configures which stored procedures are e
 actor
 ```
 
-You can also specify the procedures you want to enable through command line arguments.
-
-```bash
-bin/gs_interactive procedure enable -g movies -n actor
-```
-
-If you want to enable multiple procedures at once, you can either add multiple lines in the `YAML` file or separate the names of the procedures with commas and pass them to the `-n` option.
-
 Note:
 - The `enable` functionality preserves the status of currently enabled stored procedures. In other words, a previously enabled stored procedure will remain enabled after executing the enabling command, regardless of whether it appears in the provided list or not.
 
 Remember to **restart** the service for the enabling to take effect.
 
 ## Disabling Stored Procedures
-To disable stored procedures, simply using:
+
+To disable a single stored procedures, simply using:
+
 ```bash
+bin/gs_interactive procedure disable -g {graph_name} -n {procedure_name}
+```
+
+If you want to disable multiple procedures at once, just using the following command:
+
+
+```bash
+# disable all procedures listed in stored_procedures.yaml
 bin/gs_interactive procedure disable -g movies -c stored_procedures.yaml
+# or use comma to separate procedure names for -n option
+bin/gs_interactive procedure disable -g {graph_name} -n '{proc1},{proc2}'
 ```
 For example, you can disable `actor` procedure via the following `YAML` file.
 
 ```yaml
 actor
 ```
-
-You can also specify the procedures you want to enable through command line arguments.
-
-```bash
-bin/gs_interactive procedure disable -g {graph_name} -n {procedure_name}
-```
-
-For example, disable `actor` by
-```bash
-bin/gs_interactive procedure disable -g movies -n actor
-```
-If `graph_name` is not given, the default graph will be used.
 
 
 The following command makes it easy to disable all stored procedures:

@@ -61,7 +61,7 @@ Entity data pertains to the properties associated with vertices and edges. In Gr
 In the `gs_interactive_image.yaml`, a primitive type, such as `DT_STRING`, can be written as:
 ```yaml
 property_data_type:
-	primitive_type: DT_STRING
+  primitive_type: DT_STRING
 ```
 
 ### Array Types
@@ -73,7 +73,7 @@ It's crucial that all elements within a single array share the same type. In `gs
 ```yaml
 property_data_type:
   array:
-		component_type: 
-			primitive_type: DT_UNSIGNED_INT64
-		max_length: 10  # overflowed elements will be truncated
+    component_type: 
+      primitive_type: DT_UNSIGNED_INT64
+      max_length: 10  # overflowed elements will be truncated
 ```

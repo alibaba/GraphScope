@@ -16,8 +16,8 @@ GraphScope Interactive boasts several key features:
 1. **Exceptional Query Throughput**: As highlighted, GraphScope Interactive's foundation is laid on benchmarking triumphs, enabling it to process tens of thousands of queries swiftly.
 2. **Versatility in Language Support**: GraphScope Interactive supports the use of Neo4j's declarative query language, Cypher, for crafting stored procedures. For those who prefer a more comprehensive approach, C++ programming is also supported for stored procedure development.
 3. **Future-Ready Expansion Capabilities**: Drawing from the prowess of GraphScope Flex, GraphScope Interactive is primed for adaptability:
-  a. Support for Multiple Query Languages: In the near future, GraphScope Interactive will extend its language support to include [Gremlin](https://tinkerpop.apache.org/gremlin.html), and [GQL](https://www.gqlstandards.org/), further enhancing its versatility.
-  b. Scalability: GraphScope Interactive possesses the potential for distributed processing. This means it can be expanded with few effort to handle larger-scale graphs, ensuring it remains effective as your data grows.
+    * Support for Multiple Query Languages: In the near future, GraphScope Interactive will extend its language support to include [Gremlin](https://tinkerpop.apache.org/gremlin.html), and [GQL](https://www.gqlstandards.org/), further enhancing its versatility.
+    * Scalability: GraphScope Interactive possesses the potential for distributed processing. This means it can be expanded with few effort to handle larger-scale graphs, ensuring it remains effective as your data grows.
 
 ## Property Graph Model and Graph Queries
 
@@ -28,9 +28,9 @@ GraphScope Interactive supports the property graph model, which allows for the r
 
 ## The Cypher Query Language
 
-GraphScope Interactive supports Cypher, a graph query language developed by Neo4j. Cypher is designed specifically for working with graph data and provides an efficient and scalable solution for querying and manipulating graph data. It offers a visual way of matching patterns and relationships, making it intuitive and easy to use. 
+GraphScope Interactive supports Cypher, a graph query language developed by Neo4j. Not only does Cypher provide an efficient and scalable solution for querying and manipulating graph data, but it also offers a visual way of matching patterns and relationships, making it intuitive and easy to use.
 
-The application of Cypher in GraphScope can be categorized into two main areas:
+The application of Cypher in GraphScope Interactive can be categorized into two main areas:
 1. **On-the-Fly Read Queries**: Users can submit Cypher read queries directly to the engine. These queries are then automatically compiled into a dynamic library for execution, providing immediate results.
 2. **Stored Procedures**: Users can create a Cypher file with specified parameters denoted as `${param_name}`. Using the admin tool, this code can be compiled into a stored procedure and registered within the system. This stored procedure can then be invoked for future use via Cypher's CALL clause.
 
