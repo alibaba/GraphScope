@@ -201,54 +201,65 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalPredicate_startingWith(
             GremlinGSParser.TraversalPredicate_startingWithContext ctx) {
-        String posixRegex = "^" + ctx.getText();
+        String posixRegex = "^" + GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
         return builder.call(
-                GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE, builder.literal(posixRegex));
+                GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
+                propertyKey,
+                builder.literal(posixRegex));
     }
 
     @Override
     public RexNode visitTraversalPredicate_notStartingWith(
             GremlinGSParser.TraversalPredicate_notStartingWithContext ctx) {
-        String posixRegex = "^" + ctx.getText();
+        String posixRegex = "^" + GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
         return builder.not(
                 builder.call(
                         GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
+                        propertyKey,
                         builder.literal(posixRegex)));
     }
 
     @Override
     public RexNode visitTraversalPredicate_endingWith(
             GremlinGSParser.TraversalPredicate_endingWithContext ctx) {
-        String posixRegex = ctx.getText() + "$";
+        String posixRegex = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()) + "$";
         return builder.call(
-                GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE, builder.literal(posixRegex));
+                GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
+                propertyKey,
+                builder.literal(posixRegex));
     }
 
     @Override
     public RexNode visitTraversalPredicate_notEndingWith(
             GremlinGSParser.TraversalPredicate_notEndingWithContext ctx) {
-        String posixRegex = ctx.getText() + "$";
+        String posixRegex = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()) + "$";
         return builder.not(
                 builder.call(
                         GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
+                        propertyKey,
                         builder.literal(posixRegex)));
     }
 
     @Override
     public RexNode visitTraversalPredicate_containing(
             GremlinGSParser.TraversalPredicate_containingContext ctx) {
-        String posixRegex = ".*" + ctx.getText() + "*.";
+        String posixRegex =
+                ".*" + GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()) + "*.";
         return builder.call(
-                GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE, builder.literal(posixRegex));
+                GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
+                propertyKey,
+                builder.literal(posixRegex));
     }
 
     @Override
     public RexNode visitTraversalPredicate_notContaining(
             GremlinGSParser.TraversalPredicate_notContainingContext ctx) {
-        String posixRegex = ".*" + ctx.getText() + "*.";
+        String posixRegex =
+                ".*" + GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()) + "*.";
         return builder.not(
                 builder.call(
                         GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
+                        propertyKey,
                         builder.literal(posixRegex)));
     }
 }

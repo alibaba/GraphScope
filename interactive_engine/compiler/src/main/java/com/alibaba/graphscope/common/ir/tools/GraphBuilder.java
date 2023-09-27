@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
+import static java.util.Objects.requireNonNull;
+
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
@@ -30,13 +32,14 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphRelCollations;
-import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.rex.*;
+import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.*;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
+
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelFieldCollation;
@@ -62,8 +65,6 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Integrate interfaces to build algebra structures,
@@ -650,7 +651,8 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.IS_NULL
                 || sqlKind == SqlKind.IS_NOT_NULL
                 || sqlKind == SqlKind.EXTRACT
-                || sqlKind == SqlKind.SEARCH;
+                || sqlKind == SqlKind.SEARCH
+                || sqlKind == SqlKind.POSIX_REGEX_CASE_SENSITIVE;
     }
 
     @Override

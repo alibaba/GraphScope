@@ -63,7 +63,7 @@ public class SqlMapValueConstructor extends SqlMultisetValueConstructor {
             return (componentType == null)
                     ? typeFactory.createSqlType(SqlTypeName.ANY)
                     : componentType;
-        } catch (Exception e) {
+        } catch (AssertionError e) {
             return typeFactory.createSqlType(SqlTypeName.ANY);
         }
     }

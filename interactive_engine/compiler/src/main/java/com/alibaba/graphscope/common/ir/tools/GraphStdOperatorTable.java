@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.rex.operator.SqlArrayValueConstructor;
 import com.alibaba.graphscope.common.ir.rex.operator.SqlMapValueConstructor;
 
 import org.apache.calcite.sql.*;
+import org.apache.calcite.sql.fun.ExtSqlPosixRegexOperator;
 import org.apache.calcite.sql.fun.SqlMonotonicBinaryOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.*;
@@ -222,4 +223,8 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     SqlFunctionCategory.SYSTEM);
 
     public static final SqlOperator MAP_VALUE_CONSTRUCTOR = new SqlMapValueConstructor();
+
+    public static final SqlOperator POSIX_REGEX_CASE_SENSITIVE =
+            new ExtSqlPosixRegexOperator(
+                    "POSIX REGEX CASE SENSITIVE", SqlKind.POSIX_REGEX_CASE_SENSITIVE, true, false);
 }

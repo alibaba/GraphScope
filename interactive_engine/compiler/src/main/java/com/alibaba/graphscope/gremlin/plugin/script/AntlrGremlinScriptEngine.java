@@ -29,6 +29,7 @@ import com.alibaba.graphscope.common.antlr4.SyntaxErrorListener;
 import com.alibaba.graphscope.grammar.GremlinGSLexer;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
+
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.DefaultErrorStrategy;
@@ -42,11 +43,12 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Reader;
+
 import javax.script.AbstractScriptEngine;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.SimpleBindings;
-import java.io.Reader;
 
 public class AntlrGremlinScriptEngine extends AbstractScriptEngine implements GremlinScriptEngine {
     private Logger logger = LoggerFactory.getLogger(AntlrGremlinScriptEngine.class);
