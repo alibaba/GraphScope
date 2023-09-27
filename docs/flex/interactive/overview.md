@@ -5,6 +5,15 @@ GraphScope Interactive is a specialized construction of [GraphScope Flex](https:
 
 ## A Solid Foundation
 
+:::{figure-md}
+
+<img src="../../images/gs_interactive_arch.png"
+     alt="GraphScope Interactive in Flex"
+     width="80%">
+
+GraphScope Interactive in Flex
+:::
+
 GraphScope Interactive stands on the shoulders of two pivotal pillars:
 1. **GraphScope Flex**: GraphScope Flex is a new architecture of GraphScope that provides a solid foundation for GraphScope Interactive. It is designed to handle high-QPS (Queries Per Second) scenarios, making it an ideal base for the high-throughput demands of GraphScope Interactive.
 2. **Record-Breaking Benchmarking Results**: GraphScope Interactive is built upon the [record-breaking LDBC SNB Interactive benchmarking results](https://ldbcouncil.org/benchmarks/snb-interactive/), which has achieved a throughput of 33,180.87 ops/s for the benchmarking,  making it one of the most efficient systems for graph query processing.
