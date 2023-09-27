@@ -66,7 +66,7 @@ public class GraphLogicalGetV extends AbstractBindableTableScan {
         return new GraphLogicalGetV(
                 (GraphOptCluster) getCluster(),
                 getHints(),
-                this.input,
+                inputs.get(0),
                 this.getOpt(),
                 this.tableConfig,
                 this.getAliasName());

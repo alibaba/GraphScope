@@ -66,7 +66,7 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
         return new GraphLogicalExpand(
                 (GraphOptCluster) getCluster(),
                 getHints(),
-                this.input,
+                inputs.get(0),
                 this.getOpt(),
                 this.tableConfig,
                 this.getAliasName());

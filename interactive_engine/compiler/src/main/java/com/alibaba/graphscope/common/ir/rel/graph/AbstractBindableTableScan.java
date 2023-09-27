@@ -50,7 +50,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
     // for field trimmer
     protected @Nullable ImmutableIntList project;
 
-    protected final @Nullable RelNode input;
+    protected @Nullable RelNode input;
 
     protected final TableConfig tableConfig;
 
@@ -134,6 +134,14 @@ public abstract class AbstractBindableTableScan extends TableScan {
     @Override
     public List<RelNode> getInputs() {
         return this.input == null ? ImmutableList.of() : ImmutableList.of(this.input);
+    }
+
+    @Override
+    public void replaceInput(int ordinalInParent, RelNode p) {
+        if (this.input == null) return;
+        assert ordinalInParent == 0;
+        this.input = p;
+        this.recomputeDigest();
     }
 
     public void setFilters(ImmutableList<RexNode> filters) {
