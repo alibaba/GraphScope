@@ -25,20 +25,7 @@ import com.alibaba.graphscope.groot.discovery.FileDiscovery;
 import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.graphscope.groot.discovery.ZkDiscovery;
-import com.alibaba.graphscope.groot.frontend.BackupClient;
-import com.alibaba.graphscope.groot.frontend.BatchDdlClient;
-import com.alibaba.graphscope.groot.frontend.ClientBackupService;
-import com.alibaba.graphscope.groot.frontend.ClientService;
-import com.alibaba.graphscope.groot.frontend.ClientWriteService;
-import com.alibaba.graphscope.groot.frontend.FrontendSnapshotService;
-import com.alibaba.graphscope.groot.frontend.GrootDdlService;
-import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
-import com.alibaba.graphscope.groot.frontend.SchemaClient;
-import com.alibaba.graphscope.groot.frontend.SchemaWriter;
-import com.alibaba.graphscope.groot.frontend.StoreIngestClient;
-import com.alibaba.graphscope.groot.frontend.StoreIngestClients;
-import com.alibaba.graphscope.groot.frontend.StoreIngestor;
-import com.alibaba.graphscope.groot.frontend.WriteSessionGenerator;
+import com.alibaba.graphscope.groot.frontend.*;
 import com.alibaba.graphscope.groot.frontend.write.DefaultEdgeIdGenerator;
 import com.alibaba.graphscope.groot.frontend.write.EdgeIdGenerator;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
@@ -118,6 +105,8 @@ public class Frontend extends NodeBase {
         DdlExecutors ddlExecutors = new DdlExecutors();
         BatchDdlClient batchDdlClient =
                 new BatchDdlClient(ddlExecutors, snapshotCache, schemaWriter);
+        RoleClients<StoreStateClient> storeStateClients = new RoleClients<>(this.channelManager, RoleType.STORE, StoreStateClient::new);
+
         this.clientService =
                 new ClientService(
                         snapshotCache,

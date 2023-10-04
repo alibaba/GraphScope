@@ -33,6 +33,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -446,5 +447,13 @@ public class StoreService implements MetricsAgent {
     @Override
     public String[] getMetricKeys() {
         return new String[] {PARTITION_WRITE_PER_SECOND_MS};
+    }
+
+    public long[] getDiskStatus() {
+        String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
+        File file = new File(dataRoot);
+        long total = file.getTotalSpace();
+        long usable = file.getUsableSpace();
+        return new long[] {total, usable};
     }
 }

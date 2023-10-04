@@ -50,6 +50,8 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     private MetaService metaService;
     private BatchDdlClient batchDdlClient;
 
+    private StoreStateFetcher storeStateFetcher;
+
     public ClientService(
             SnapshotCache snapshotCache,
             MetricsAggregator metricsAggregator,
@@ -71,6 +73,45 @@ public class ClientService extends ClientGrpc.ClientImplBase {
         responseObserver.onNext(
                 GetPartitionNumResponse.newBuilder().setPartitionNum(partitionCount).build());
         responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getStoreState(GetStoreStateRequest request,
+                              StreamObserver<GetStoreStateResponse> responseObserver) {
+
+        GetStoreStateResponse response = GetStoreStateResponse.newBuilder().build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+
+        logger.info("getStoreState");
+        int storeCount = this.metaService.getStoreCount();
+        for (int i = 0; i < storeCount; i++) {
+            this.storeStateFetcher.getDiskState(
+                    new CompletionCallback<Void>() {
+                        @Override
+                        public void onCompleted(Void res) {
+                            if (!finished.get() && counter.decrementAndGet() == 0) {
+                                finish(null);
+                            }
+                        }
+
+                        @Override
+                        public void onError(Throwable t) {
+                            logger.error("failed clear ingest", t);
+                            finish(t);
+                        }
+
+                        private void finish(Throwable t) {
+                            logger.info("ingest finished. Error [" + t + "]");
+                            if (t != null) {
+                                responseObserver.onError(t);
+                            } else {
+//                                responseObserver.onNext();
+                                responseObserver.onCompleted();
+                            }
+                        }
+                    });
+        }
     }
 
     @Override
