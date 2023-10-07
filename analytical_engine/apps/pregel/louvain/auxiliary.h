@@ -17,6 +17,7 @@
 #define ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_AUXILIARY_H_
 
 #include <map>
+#include <utility>
 #include <vector>
 
 #include "grape/grape.h"
