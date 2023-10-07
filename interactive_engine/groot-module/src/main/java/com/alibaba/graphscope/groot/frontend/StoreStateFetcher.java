@@ -13,13 +13,8 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
-import com.alibaba.graphscope.groot.CompletionCallback;
-
-import java.util.Map;
+import com.alibaba.graphscope.proto.groot.GetStoreStateResponse;
 
 public interface StoreStateFetcher {
-    void getDiskState(int storeId, CompletionCallback<Void> callback);
+    GetStoreStateResponse getDiskState(int storeId);
 }
-
-
-

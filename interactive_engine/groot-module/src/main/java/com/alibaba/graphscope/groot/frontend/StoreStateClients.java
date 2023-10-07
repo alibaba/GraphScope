@@ -13,15 +13,13 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
-import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
+import com.alibaba.graphscope.proto.groot.GetStoreStateResponse;
 
 import io.grpc.ManagedChannel;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 public class StoreStateClients extends RoleClients<StoreStateClient> implements StoreStateFetcher {
@@ -33,7 +31,7 @@ public class StoreStateClients extends RoleClients<StoreStateClient> implements 
         super(channelManager, targetRole, clientBuilder);
     }
 
-    public void getDiskState (int storeId, CompletionCallback<Void> callback) {
-        this.getClient(storeId).getStoreState(callback);
+    public GetStoreStateResponse getDiskState(int storeId) {
+        return this.getClient(storeId).getStoreState();
     }
 }

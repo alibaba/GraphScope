@@ -105,7 +105,8 @@ public class Frontend extends NodeBase {
         DdlExecutors ddlExecutors = new DdlExecutors();
         BatchDdlClient batchDdlClient =
                 new BatchDdlClient(ddlExecutors, snapshotCache, schemaWriter);
-        RoleClients<StoreStateClient> storeStateClients = new RoleClients<>(this.channelManager, RoleType.STORE, StoreStateClient::new);
+        StoreStateFetcher storeStateClients =
+                new StoreStateClients(this.channelManager, RoleType.STORE, StoreStateClient::new);
 
         this.clientService =
                 new ClientService(
@@ -113,7 +114,8 @@ public class Frontend extends NodeBase {
                         metricsAggregator,
                         storeIngestClients,
                         this.metaService,
-                        batchDdlClient);
+                        batchDdlClient,
+                        storeStateClients);
         GrootDdlService clientDdlService = new GrootDdlService(snapshotCache, batchDdlClient);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
         WriteSessionGenerator writeSessionGenerator = new WriteSessionGenerator(configs);

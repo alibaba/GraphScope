@@ -57,12 +57,14 @@ public class ClientService extends ClientGrpc.ClientImplBase {
             MetricsAggregator metricsAggregator,
             StoreIngestor storeIngestor,
             MetaService metaService,
-            BatchDdlClient batchDdlClient) {
+            BatchDdlClient batchDdlClient,
+            StoreStateFetcher storeStateFetcher) {
         this.snapshotCache = snapshotCache;
         this.metricsAggregator = metricsAggregator;
         this.storeIngestor = storeIngestor;
         this.metaService = metaService;
         this.batchDdlClient = batchDdlClient;
+        this.storeStateFetcher = storeStateFetcher;
     }
 
     @Override
@@ -76,42 +78,17 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     }
 
     @Override
-    public void getStoreState(GetStoreStateRequest request,
-                              StreamObserver<GetStoreStateResponse> responseObserver) {
-
-        GetStoreStateResponse response = GetStoreStateResponse.newBuilder().build();
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
-
+    public void getStoreState(
+            GetStoreStateRequest request, StreamObserver<GetStoreStateResponse> responseObserver) {
+        GetStoreStateResponse.Builder response = GetStoreStateResponse.newBuilder();
         logger.info("getStoreState");
         int storeCount = this.metaService.getStoreCount();
         for (int i = 0; i < storeCount; i++) {
-            this.storeStateFetcher.getDiskState(
-                    new CompletionCallback<Void>() {
-                        @Override
-                        public void onCompleted(Void res) {
-                            if (!finished.get() && counter.decrementAndGet() == 0) {
-                                finish(null);
-                            }
-                        }
-
-                        @Override
-                        public void onError(Throwable t) {
-                            logger.error("failed clear ingest", t);
-                            finish(t);
-                        }
-
-                        private void finish(Throwable t) {
-                            logger.info("ingest finished. Error [" + t + "]");
-                            if (t != null) {
-                                responseObserver.onError(t);
-                            } else {
-//                                responseObserver.onNext();
-                                responseObserver.onCompleted();
-                            }
-                        }
-                    });
+            GetStoreStateResponse curResponse = this.storeStateFetcher.getDiskState(i);
+            response.mergeFrom(curResponse);
         }
+        responseObserver.onNext(response.build());
+        responseObserver.onCompleted();
     }
 
     @Override

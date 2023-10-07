@@ -13,46 +13,22 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
-import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.ManagedChannel;
-import io.grpc.stub.StreamObserver;
-
-import java.util.Map;
 
 public class StoreStateClient extends RpcClient {
 
-    private StateServiceGrpc.StateServiceStub stub;
+    private StateServiceGrpc.StateServiceBlockingStub stub;
 
     public StoreStateClient(ManagedChannel channel) {
         super(channel);
-        this.stub = StateServiceGrpc.newStub(channel);
+        this.stub = StateServiceGrpc.newBlockingStub(channel);
     }
 
-    public void getStoreState(CompletionCallback<Void> callback) {
+    public GetStoreStateResponse getStoreState() {
         GetStoreStateRequest.Builder builder = GetStoreStateRequest.newBuilder();
-
-        this.stub.getState(
-                builder.build(),
-                new StreamObserver<GetStoreStateResponse>() {
-                    @Override
-                    public void onNext(GetStoreStateResponse value) {
-                        callback.onCompleted(null);
-                    }
-
-                    @Override
-                    public void onError(Throwable t) {
-                        callback.onError(t);
-                    }
-
-                    @Override
-                    public void onCompleted() {}
-                });
+        return this.stub.getState(builder.build());
     }
-
 }
-
-
-
