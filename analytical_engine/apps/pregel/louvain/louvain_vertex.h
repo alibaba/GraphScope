@@ -41,7 +41,6 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
   using fragment_t = FRAG_T;
   using oid_t = typename fragment_t::oid_t;
   using vid_t = typename fragment_t::vid_t;
-  using edata_t = double;
   using vertex_t = typename fragment_t::vertex_t;
   using adj_list_t = typename fragment_t::const_adj_list_t;
   using compute_context_t = PregelComputeContext<fragment_t, VD_T, MD_T>;
@@ -49,6 +48,7 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
   using state_t = LouvainNodeState<vid_t>;
 
  public:
+  using edata_t = typename context_t::edata_t;
   using vd_t = VD_T;
   using md_t = MD_T;
 
@@ -78,8 +78,12 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
     return context_->GetVertexState(this->vertex_).use_fake_edges;
   }
 
-  const std::map<vid_t, edata_t>& fake_edges() const {
+  const std::vector<std::pair<vid_t, edata_t>>& fake_edges() const {
     return context_->GetVertexState(this->vertex_).fake_edges;
+  }
+
+  std::vector<std::pair<vid_t, edata_t>>&& move_fake_edges() {
+    return std::move(context_->GetVertexState(this->vertex_).fake_edges);
   }
 
   edata_t get_edge_value(const vid_t& dst_id) {
@@ -95,7 +99,17 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
         }
       }
     } else {
-      return this->fake_edges().at(dst_id);
+      auto edges = this->fake_edges();
+      auto iter = std::find_if(edges.begin(), edges.end(),
+                               [dst_id](const std::pair<vid_t, edata_t>& p) {
+                                 return p.first == dst_id;
+                               });
+      if (iter != edges.end()) {
+        return iter->second;
+      } else {
+        LOG(ERROR) << "Warning: Cannot find a edge from " << this->id()
+                   << " to " << dst_id;
+      }
     }
     return edata_t();
   }
@@ -117,19 +131,24 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
       }
     } else {
       auto edges = this->fake_edges();
-      for (auto gid : dst_ids) {
-        if (edges.find(gid) != edges.end()) {
-          ret += edges.at(gid);
-        } else {
-          LOG(ERROR) << "Warning: Cannot find a edge from " << this->id()
-                     << " to " << gid;
+      for (auto edge : edges) {
+        if (dst_ids.find(edge.first) != dst_ids.end()) {
+          ret += edge.second;
         }
       }
+      // for (auto gid : dst_ids) {
+      //   if (edges.find(gid) != edges.end()) {
+      //     ret += edges.at(gid);
+      //   } else {
+      //     LOG(ERROR) << "Warning: Cannot find a edge from " << this->id()
+      //                << " to " << gid;
+      //   }
+      // }
     }
     return ret;
   }
 
-  void set_fake_edges(std::map<vid_t, edata_t>&& edges) {
+  void set_fake_edges(std::vector<std::pair<vid_t, edata_t>>&& edges) {
     state_t& ref_state = this->state();
     ref_state.fake_edges = std::move(edges);
     ref_state.use_fake_edges = true;

@@ -46,7 +46,7 @@ constexpr int phase_one_minor_step_2 = 2;
 template <typename VID_T>
 struct LouvainNodeState {
   using vid_t = VID_T;
-  using edata_t = double;
+  using edata_t = float;
 
   vid_t community = 0;
   edata_t community_sigma_total;
@@ -65,7 +65,7 @@ struct LouvainNodeState {
   bool use_fake_edges = false;
   bool is_alived_community = true;
 
-  std::map<vid_t, edata_t> fake_edges;
+  std::vector<std::pair<vid_t, edata_t>> fake_edges;
   std::vector<vid_t> nodes_in_community;
   edata_t total_edge_weight;
 
@@ -89,7 +89,7 @@ struct LouvainNodeState {
 template <typename VID_T>
 struct LouvainMessage {
   using vid_t = VID_T;
-  using edata_t = double;
+  using edata_t = float;
 
   vid_t community_id;
   edata_t community_sigma_total;
@@ -102,7 +102,7 @@ struct LouvainMessage {
   // the community compress its member's data and make self a new vertex for
   // next phase.
   edata_t internal_weight = 0;
-  std::map<vid_t, edata_t> edges;
+  std::vector<std::pair<vid_t, edata_t>> edges;
   std::vector<vid_t> nodes_in_self_community;
 
   LouvainMessage()
@@ -123,7 +123,7 @@ struct LouvainMessage {
 
   ~LouvainMessage() = default;
 
-  // for message manager to serialize and diserialize LouvainMessage
+  // for message manager to serialize and deserialize LouvainMessage
   friend grape::InArchive& operator<<(grape::InArchive& in_archive,
                                       const LouvainMessage& u) {
     in_archive << u.community_id;
@@ -151,7 +151,7 @@ struct LouvainMessage {
 };
 
 /**
- * Determine if progress is still being made or if the computaion should halt.
+ * Determine if progress is still being made or if the computation should halt.
  *
  * @param history change history of the pass.
  * @param min_progress The minimum delta X required to be considered progress.
