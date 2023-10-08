@@ -149,6 +149,10 @@ public class StoreService implements MetricsAgent {
         return this.idToPartition;
     }
 
+    public int getStoreId() {
+        return storeId;
+    }
+
     public void stop() {
         this.shouldStop = true;
         if (this.idToPartition != null) {

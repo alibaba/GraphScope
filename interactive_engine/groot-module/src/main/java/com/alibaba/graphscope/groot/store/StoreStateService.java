@@ -24,7 +24,8 @@ public class StoreStateService extends StateServiceGrpc.StateServiceImplBase {
                         .setTotalSpace(spaces[0])
                         .setUsableSpace(spaces[1])
                         .build();
-        builder.putPartitionStates(0, state);
+
+        builder.putPartitionStates(storeService.getStoreId(), state);
         responseObserver.onNext(builder.build());
         responseObserver.onCompleted();
     }
