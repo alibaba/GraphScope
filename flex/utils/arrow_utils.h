@@ -146,6 +146,47 @@ class LDBCTimeStampParser : public arrow::TimestampParser {
   virtual const char* format() const override { return "EmptyFormat"; }
 };
 
+class LDBCLongDateParser : public arrow::TimestampParser {
+ public:
+  LDBCLongDateParser() = default;
+
+  ~LDBCLongDateParser() override {}
+
+  bool operator()(const char* s, size_t length, arrow::TimeUnit::type out_unit,
+                  int64_t* out) const override {
+    *out = 0;
+    if (out_unit == arrow::TimeUnit::NANO) {
+      length -= 6;
+    } else if (out_unit == arrow::TimeUnit::MICRO) {
+      length -= 3;
+    }
+    if (length >= 20) {
+      return false;
+    }
+    for (size_t i = 0; i < length; ++i) {
+      if (s[i] > '9' || s[i] < '0') {
+        return false;
+      }
+      *out = (*out) * 10 + (s[i] - '0');
+    }
+    if (*out < 0) {
+      return false;
+    }
+    if (out_unit == arrow::TimeUnit::SECOND) {
+      *out = (*out) * 1000;
+      if (*out < 0) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  virtual const char* kind() const override { return "LDBC LongDate parser"; }
+
+  virtual const char* format() const override { return "EmptyFormat"; }
+};
+
 // convert c++ type to arrow type. support other types likes emptyType, Date
 template <typename T>
 struct CppTypeToArrowType {};

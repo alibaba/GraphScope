@@ -1081,6 +1081,8 @@ void CSVFragmentLoader::fillVertexReaderMeta(
   convert_options.timestamp_parsers.emplace_back(
       std::make_shared<LDBCTimeStampParser>());
   convert_options.timestamp_parsers.emplace_back(
+      std::make_shared<LDBCLongDateParser>());
+  convert_options.timestamp_parsers.emplace_back(
       arrow::TimestampParser::MakeISO8601());
 
   put_delimiter_option(loading_config_, parse_options);
@@ -1208,6 +1210,8 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
     label_t src_label_id, label_t dst_label_id, label_t label_id) const {
   convert_options.timestamp_parsers.emplace_back(
       std::make_shared<LDBCTimeStampParser>());
+  convert_options.timestamp_parsers.emplace_back(
+      std::make_shared<LDBCLongDateParser>());
   convert_options.timestamp_parsers.emplace_back(
       arrow::TimestampParser::MakeISO8601());
 
