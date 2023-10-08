@@ -34,7 +34,7 @@ from graphscope.proto import ddl_service_pb2
 from graphscope.proto import ddl_service_pb2_grpc
 from graphscope.proto import write_service_pb2
 from graphscope.proto import write_service_pb2_grpc
-from graphscope.proto.groot.sdk import client_pb2_grpc
+from graphscope.proto.groot.sdk import client_service_pb2_grpc
 from graphscope.proto.groot.sdk import model_pb2
 
 
@@ -101,7 +101,7 @@ class Connection:
         channel = grpc.insecure_channel(addr, options=options)
         self._ddl_service_stub = ddl_service_pb2_grpc.GrootDdlServiceStub(channel)
         self._write_service_stub = write_service_pb2_grpc.ClientWriteStub(channel)
-        self._client_service_stub = client_pb2_grpc.ClientStub(channel)
+        self._client_service_stub = client_service_pb2_grpc.ClientStub(channel)
         self._client_id = None
         self._metadata = self._encode_metadata(username, password)
         gremlin_url = f"ws://{self._gremlin_endpoint}/gremlin"
