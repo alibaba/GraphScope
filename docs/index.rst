@@ -47,6 +47,12 @@ and the vineyard store that offers efficient in-memory data transfers.
 
 .. toctree::
    :maxdepth: 1
+   :caption: GraphScope Flex
+
+   flex/interactive_intro
+
+.. toctree::
+   :maxdepth: 1
    :caption: Graph Analytical Engine
 
    analytical_engine/getting_started
