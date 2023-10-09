@@ -803,3 +803,36 @@ def generate_graphar_info_from_schema(path, schema, graphar_options):
     with open(graph_info_path, "w") as f:
         yaml.dump(graph_info, f, Dumper=Dumper, default_flow_style=False)
     return graph_info_path
+
+def get_oid_type_from_graph_info(path):
+    if "file://" in path:
+        path = path.replace("file://", "")
+    with open(path, "r") as f:
+        graph_info = yaml.safe_load(f)
+    if "vertices" not in graph_info:
+        raise ValueError("Invalid graph info file, no vertices found.")
+    vertex_info_path = graph_info["vertices"][0]
+    if "prefix" in graph_info:
+        prefix = graph_info["prefix"]
+    else:
+        prefix = os.path.dirname(path)
+    with open(os.path.join(prefix, vertex_info_path), "r") as f:
+        vertex_info = yaml.safe_load(f)
+    property_groups = vertex_info["property_groups"]
+    if len(property_groups) == 0:
+        raise ValueError("Invalid vertex info file, no property groups found.")
+    data_type = None
+    for property_group in property_groups:
+        properties = property_group["properties"]
+        if len(properties) == 0:
+            raise ValueError("Invalid vertex info file, no properties found.")
+        for property in properties:
+            if property["is_primary"]:
+                data_type = property["data_type"]
+                break
+    if data_type == "int64":
+        return "int64_t"
+    elif data_type == "string":
+        return "std::string"
+    else:
+        raise ValueError("Invalid vertex info file, primary key is not int64 or string.")

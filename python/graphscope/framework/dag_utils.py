@@ -1081,7 +1081,7 @@ def gremlin_to_subgraph(
     return op
 
 
-def archive_graph(graph, path):
+def save_to_graphar(graph, path):
     """Archive a graph to gar format with a path.
 
     Args:

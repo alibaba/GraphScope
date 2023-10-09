@@ -1156,9 +1156,10 @@ class Graph(GraphInterface):
     def _load_from_graphar(path, sess, **kwargs):
         # graphar now only support global vertex map.
         vertex_map = utils.vertex_map_type_to_enum("global")
+        oid_type = utils.get_oid_type_from_graph_info(path)
         config = {
             types_pb2.OID_TYPE: utils.s_to_attr(
-                "int64_t"
+                oid_type
             ),  # grahar use vertex index as oid, so it always be int64_t
             types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
             types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
