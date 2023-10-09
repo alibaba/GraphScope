@@ -32,6 +32,7 @@ service Client {
   rpc getPartitionNum(GetPartitionNumRequest) returns (GetPartitionNumResponse);
   rpc getLoggerInfo(GetLoggerInfoRequest) returns (GetLoggerInfoResponse);
   rpc clearIngest(ClearIngestRequest) returns (ClearIngestResponse);
+  rpc getStoreState(GetStoreStateRequest) returns (GetStoreStateResponse);
 }
 
 message GetSchemaRequest {
@@ -115,3 +116,4 @@ message ClearIngestRequest {
 
 message ClearIngestResponse {
 }
+
