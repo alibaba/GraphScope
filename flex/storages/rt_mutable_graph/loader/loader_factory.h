@@ -45,7 +45,7 @@ class LoaderFactory {
                        loader_initializer_t initializer);
 
  private:
-  static std::unordered_map<std::string, loader_initializer_t>& known_loaders_;
+  static std::unordered_map<std::string, loader_initializer_t>& getKnownLoaders();
 };
 }  // namespace gs
 

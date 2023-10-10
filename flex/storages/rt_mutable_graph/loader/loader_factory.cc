@@ -24,6 +24,7 @@ void LoaderFactory::Finalize() {}
 std::shared_ptr<IFragmentLoader> LoaderFactory::CreateFragmentLoader(
     const Schema& schema, const LoadingConfig& loading_config, int thread_num) {
   auto format = loading_config.GetFormat();
+  auto& known_loaders_ = getKnownLoaders();
   auto iter = known_loaders_.find(format);
   if (iter != known_loaders_.end()) {
     return iter->second(schema, loading_config, thread_num);
@@ -38,11 +39,18 @@ std::shared_ptr<IFragmentLoader> LoaderFactory::CreateFragmentLoader(
   // }
 }
 
-bool IOFactory::Register(const std::string& loader_type,
+bool LoaderFactory::Register(const std::string& loader_type,
                          LoaderFactory::loader_initializer_t initializer) {
   LOG(INFO) << "Registering loader: " << loader_type;
+  auto& known_loaders_ = getKnownLoaders();
   known_loaders_.emplace(loader_type, initializer);
+  LOG(INFO) << "found: " << std::to_string( known_loaders_.find(loader_type) != known_loaders_.end());
   return true;
+}
+
+std::unordered_map<std::string, LoaderFactory::loader_initializer_t>& LoaderFactory::getKnownLoaders(){
+  static std::unordered_map<std::string, LoaderFactory::loader_initializer_t>* known_loaders_ = new std::unordered_map<std::string, loader_initializer_t>();
+  return *known_loaders_;
 }
 
 }  // namespace gs
