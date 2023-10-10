@@ -254,6 +254,39 @@ impl From<String> for common_pb::Variable {
     }
 }
 
+impl From<i32> for pb::index_predicate::PkValue {
+    fn from(value: i32) -> Self {
+        let val: common_pb::Value = value.into();
+        val.into()
+    }
+}
+
+impl From<i64> for pb::index_predicate::PkValue {
+    fn from(value: i64) -> Self {
+        let val: common_pb::Value = value.into();
+        val.into()
+    }
+}
+
+impl From<String> for pb::index_predicate::PkValue {
+    fn from(value: String) -> Self {
+        let val: common_pb::Value = value.into();
+        val.into()
+    }
+}
+
+impl From<common_pb::Value> for pb::index_predicate::PkValue {
+    fn from(value: common_pb::Value) -> Self {
+        pb::index_predicate::PkValue { item: Some(pb::index_predicate::pk_value::Item::Value(value)) }
+    }
+}
+
+impl From<common_pb::DynamicParam> for pb::index_predicate::PkValue {
+    fn from(param: common_pb::DynamicParam) -> Self {
+        pb::index_predicate::PkValue { item: Some(pb::index_predicate::pk_value::Item::DynParam(param)) }
+    }
+}
+
 impl From<i64> for pb::index_predicate::AndPredicate {
     fn from(id: i64) -> Self {
         pb::index_predicate::AndPredicate {
@@ -350,22 +383,35 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
             let (key, value) = (predicate.key.as_ref(), predicate.value.as_ref());
             let key = key.ok_or("key is empty in kv_pair in indexed_scan")?;
             if let Some(common_pb::property::Item::Id(_id_key)) = key.item.as_ref() {
-                let value = value.ok_or("value is empty in kv_pair in indexed_scan")?;
+                let value_item = value
+                    .ok_or(ParsePbError::EmptyFieldError(
+                        "`Value` is empty in kv_pair in indexed_scan".to_string(),
+                    ))?
+                    .item
+                    .as_ref()
+                    .ok_or(ParsePbError::EmptyFieldError(
+                        "`Value.item` is emtpy in kv_pair in indexed_scan".to_string(),
+                    ))?;
 
-                match &value.item {
-                    Some(common_pb::value::Item::I64(v)) => {
-                        global_ids.push(*v);
-                    }
-                    Some(common_pb::value::Item::I64Array(arr)) => {
-                        global_ids.extend(arr.item.iter().cloned())
-                    }
-                    Some(common_pb::value::Item::I32(v)) => {
-                        global_ids.push(*v as i64);
-                    }
-                    Some(common_pb::value::Item::I32Array(arr)) => {
-                        global_ids.extend(arr.item.iter().map(|i| *i as i64));
-                    }
-                    _ => Err(ParsePbError::Unsupported(
+                match value_item {
+                    pb::index_predicate::pk_value::Item::Value(value) => match value.item.as_ref() {
+                        Some(common_pb::value::Item::I64(v)) => {
+                            global_ids.push(*v);
+                        }
+                        Some(common_pb::value::Item::I64Array(arr)) => {
+                            global_ids.extend(arr.item.iter().cloned())
+                        }
+                        Some(common_pb::value::Item::I32(v)) => {
+                            global_ids.push(*v as i64);
+                        }
+                        Some(common_pb::value::Item::I32Array(arr)) => {
+                            global_ids.extend(arr.item.iter().map(|i| *i as i64));
+                        }
+                        _ => Err(ParsePbError::Unsupported(
+                            "indexed value other than integer (I32, I64) and integer array".to_string(),
+                        ))?,
+                    },
+                    pb::index_predicate::pk_value::Item::DynParam(_) => Err(ParsePbError::Unsupported(
                         "indexed value other than integer (I32, I64) and integer array".to_string(),
                     ))?,
                 }
@@ -390,7 +436,7 @@ impl TryFrom<pb::IndexPredicate> for Vec<(NameOrId, Object)> {
                 .key
                 .clone()
                 .ok_or("key is empty in kv_pair in indexed_scan")?;
-            let value = predicate
+            let value_pb = predicate
                 .value
                 .clone()
                 .ok_or("value is empty in kv_pair in indexed_scan")?;
@@ -399,6 +445,13 @@ impl TryFrom<pb::IndexPredicate> for Vec<(NameOrId, Object)> {
                 _ => Err(ParsePbError::Unsupported(
                     "Other keys rather than property key in kv_pair in indexed_scan".to_string(),
                 ))?,
+            };
+            let value = match value_pb.item {
+                Some(pb::index_predicate::pk_value::Item::Value(value)) => value,
+                _ => Err(ParsePbError::Unsupported(format!(
+                    "unsupported indexed predicate value {:?}",
+                    value_pb
+                )))?,
             };
             let obj_val = Object::try_from(value)?;
             primary_key_values.push((key, obj_val));

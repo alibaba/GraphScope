@@ -1755,7 +1755,10 @@ mod scan {
     fn parse_equiv_predicate(
         key: FfiProperty, value: FfiConst,
     ) -> Result<pb::index_predicate::Triplet, FfiResult> {
-        Ok(pb::index_predicate::Triplet { key: key.try_into()?, value: Some(value.try_into()?), cmp: None })
+        let pk_value = pb::index_predicate::PkValue {
+            item: Some(pb::index_predicate::pk_value::Item::Value(value.try_into()?)),
+        };
+        Ok(pb::index_predicate::Triplet { key: key.try_into()?, value: Some(pk_value), cmp: None })
     }
 
     #[no_mangle]

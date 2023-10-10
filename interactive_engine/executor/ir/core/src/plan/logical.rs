@@ -847,7 +847,6 @@ fn triplet_to_index_predicate(
     let schema = meta.schema.as_ref().unwrap();
     let mut key = None;
     let mut is_eq = false;
-    let mut value = None;
     if let Some(item) = &operators.get(0).unwrap().item {
         match item {
             common_pb::expr_opr::Item::Var(var) => {
@@ -900,22 +899,35 @@ fn triplet_to_index_predicate(
     if let Some(item) = &operators.get(2).unwrap().item {
         match item {
             common_pb::expr_opr::Item::Const(c) => {
-                value = Some(c.clone());
+                let idx_pred = pb::IndexPredicate {
+                    or_predicates: vec![pb::index_predicate::AndPredicate {
+                        predicates: vec![pb::index_predicate::Triplet {
+                            key,
+                            value: Some(c.clone().into()),
+                            cmp: None,
+                        }],
+                    }],
+                };
+                return Ok(Some(idx_pred));
+            }
+            common_pb::expr_opr::Item::Param(param) => {
+                let idx_pred = pb::IndexPredicate {
+                    or_predicates: vec![pb::index_predicate::AndPredicate {
+                        predicates: vec![pb::index_predicate::Triplet {
+                            key,
+                            value: Some(param.clone().into()),
+                            cmp: None,
+                        }],
+                    }],
+                };
+
+                return Ok(Some(idx_pred));
             }
             _ => { /*do nothing*/ }
         }
-    };
-    if value.is_none() {
-        return Ok(None);
     }
 
-    let idx_pred = pb::IndexPredicate {
-        or_predicates: vec![pb::index_predicate::AndPredicate {
-            predicates: vec![pb::index_predicate::Triplet { key, value, cmp: None }],
-        }],
-    };
-
-    Ok(Some(idx_pred))
+    Ok(None)
 }
 
 fn get_table_id_from_pb(schema: &Schema, name: &common_pb::NameOrId) -> Option<KeyId> {
@@ -1392,7 +1404,14 @@ impl AsLogical for pb::IndexPredicate {
                             }
                             common_pb::property::Item::Label(_) => {
                                 if let Some(val) = pred.value.as_mut() {
-                                    preprocess_label(val, meta, plan_meta)?;
+                                    if let Some(item) = val.item.as_mut() {
+                                        match item {
+                                            pb::index_predicate::pk_value::Item::Value(val) => {
+                                                preprocess_label(val, meta, plan_meta)?
+                                            }
+                                            pb::index_predicate::pk_value::Item::DynParam(_) => {}
+                                        }
+                                    }
                                 }
                             }
                             _ => {}

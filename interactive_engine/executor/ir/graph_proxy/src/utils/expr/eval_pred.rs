@@ -168,16 +168,24 @@ impl TryFrom<pb::index_predicate::Triplet> for Predicates {
     type Error = ParsePbError;
 
     fn try_from(triplet: pb::index_predicate::Triplet) -> Result<Self, Self::Error> {
+        let value = if let Some(value) = &triplet.value {
+            match &value.item {
+                Some(pb::index_predicate::pk_value::Item::Value(v)) => Some(v.clone()),
+                _ => Err(ParsePbError::Unsupported(format!(
+                    "unsupported indexed predicate value {:?}",
+                    value
+                )))?,
+            }
+        } else {
+            None
+        };
         let partial = Partial::SingleItem {
             left: triplet
                 .key
                 .map(|var| var.try_into())
                 .transpose()?,
             cmp: Some(common_pb::Logical::Eq),
-            right: triplet
-                .value
-                .map(|val| val.try_into())
-                .transpose()?,
+            right: value.map(|val| val.try_into()).transpose()?,
         };
 
         Option::<Predicates>::from(partial)
