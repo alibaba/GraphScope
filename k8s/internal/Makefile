@@ -19,11 +19,7 @@ endif
 
 # x86_64 or arm64
 ARCH := $(shell uname -m)
-ifeq ($(ARCH), arm64)
-	MACOS_WHEEL_VERSION := 12_0
-else
-	MACOS_WHEEL_VERSION := 11_0
-endif
+MACOS_WHEEL_VERSION := 12_0
 
 BUILD_PROGRESS    = auto
 
