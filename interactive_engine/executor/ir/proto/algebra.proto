@@ -191,10 +191,16 @@ message Limit {
 // where the values referred by k1, k2, ... are indexed and hence the
 // predicate can be efficiently verified by leveraging the index.
 message IndexPredicate {
+  message PkValue {
+    oneof item {
+      common.Value value = 1;
+      common.DynamicParam dyn_param = 2;
+    }
+  }
   // A triplet defines that a key must be **equal** to a given constant value.
   message Triplet {
     common.Property key = 1;
-    common.Value value = 2;
+    PkValue value = 2;
     // TODO(longbin) More comparators (gt, ge, lt, le, ne) other than equivalence (eq) may be required
     common.None cmp = 3;
   }
