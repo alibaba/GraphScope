@@ -22,11 +22,30 @@
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 
 namespace gs {
+
+/**
+ * @brief LoaderFactory is a factory class to create IFragmentLoader.
+ * Support Using dynamicly built library as plugin.
+ */
 class LoaderFactory {
  public:
+  using loader_initializer_t = std::shared_ptr<IFragmentLoader> (*)(
+      const Schema& schema, const LoadingConfig& loading_config,
+      int thread_num);
+
+  static void Init();
+
+  static void Finalize();
+
   static std::shared_ptr<IFragmentLoader> CreateFragmentLoader(
       const Schema& schema, const LoadingConfig& loading_config,
       int thread_num);
+
+  static bool Register(const std::string& loader_type,
+                       loader_initializer_t initializer);
+
+ private:
+  static std::unordered_map<std::string, loader_initializer_t>& known_loaders_;
 };
 }  // namespace gs
 

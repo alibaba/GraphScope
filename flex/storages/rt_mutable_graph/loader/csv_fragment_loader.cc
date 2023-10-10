@@ -503,6 +503,14 @@ static void append_edges(
   VLOG(10) << "Finish inserting:  " << src_col->length() << " edges";
 }
 
+std::shared_ptr<IFragmentLoader> CSVFragmentLoader::Make(
+    const Schema& schema, const LoadingConfig& loading_config,
+    int32_t thread_num) {
+  VLOG(10) << "CSVFragmentLoader has been registered: " << registered_;
+  return std::make_shared<CSVFragmentLoader>(schema, loading_config,
+                                             thread_num);
+}
+
 // Create VertexTableReader
 std::shared_ptr<arrow::csv::TableReader>
 CSVFragmentLoader::createVertexTableReader(label_t v_label,
@@ -1600,5 +1608,9 @@ void CSVFragmentLoader::LoadFragment(MutablePropertyFragment& fragment) {
 
   return basic_fragment_loader_.LoadFragment(fragment);
 }
+
+const bool CSVFragmentLoader::registered_ = LoaderFactory::Register(
+    "csv",
+    static_cast<LoaderFactory::loader_initializer_t>(&CSVFragmentLoader::Make));
 
 }  // namespace gs

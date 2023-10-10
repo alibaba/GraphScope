@@ -19,6 +19,7 @@
 
 #include "flex/storages/rt_mutable_graph/loader/basic_fragment_loader.h"
 #include "flex/storages/rt_mutable_graph/loader/i_fragment_loader.h"
+#include "flex/storages/rt_mutable_graph/loader/loader_factory.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 
@@ -49,6 +50,10 @@ class CSVFragmentLoader : public IFragmentLoader {
     vertex_label_num_ = schema_.vertex_label_num();
     edge_label_num_ = schema_.edge_label_num();
   }
+
+  static std::shared_ptr<IFragmentLoader> Make(
+      const Schema& schema, const LoadingConfig& loading_config,
+      int32_t thread_num);
 
   ~CSVFragmentLoader() {}
 
@@ -150,6 +155,8 @@ class CSVFragmentLoader : public IFragmentLoader {
       convert_to_internal_edge_time_;
   std::atomic<double> basic_frag_loader_vertex_time_,
       basic_frag_loader_edge_time_;
+
+  static const bool registered_;
 };
 
 }  // namespace gs

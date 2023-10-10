@@ -17,14 +17,32 @@
 
 namespace gs {
 
+void LoaderFactory::Init() {}
+
+void LoaderFactory::Finalize() {}
+
 std::shared_ptr<IFragmentLoader> LoaderFactory::CreateFragmentLoader(
     const Schema& schema, const LoadingConfig& loading_config, int thread_num) {
-  if (loading_config.GetFormat() == "csv") {
-    return std::make_shared<CSVFragmentLoader>(schema, loading_config,
-                                               thread_num);
+  auto format = loading_config.GetFormat();
+  auto iter = known_loaders_.find(format);
+  if (iter != known_loaders_.end()) {
+    return iter->second(schema, loading_config, thread_num);
   } else {
-    LOG(FATAL) << "Unsupported format: " << loading_config.GetFormat();
+    LOG(FATAL) << "Unsupported format: " << format;
   }
+  // if (loading_config.GetFormat() == "csv") {
+  //   return std::make_shared<CSVFragmentLoader>(schema, loading_config,
+  //                                              thread_num);
+  // } else {
+  //   LOG(FATAL) << "Unsupported format: " << loading_config.GetFormat();
+  // }
+}
+
+bool IOFactory::Register(const std::string& loader_type,
+                         LoaderFactory::loader_initializer_t initializer) {
+  LOG(INFO) << "Registering loader: " << loader_type;
+  known_loaders_.emplace(loader_type, initializer);
+  return true;
 }
 
 }  // namespace gs
