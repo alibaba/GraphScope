@@ -137,9 +137,8 @@ class BuildGLExt(build_ext):
 class BuildGLTorchExt(torch.utils.cpp_extension.BuildExtension if torch else build_ext):
     def run(self):
         if torch is None:
-            print(
-                "Building graphlearn-torch extension requires installing pytorch first. Let WITH_GLTORCH=OFF if you don't need it."
-            )
+            print("Building graphlearn-torch extension requires pytorch")
+            print("Set WITH_GLTORCH=OFF if you don't need it.")
             return
         self.extensions = [
             ext
