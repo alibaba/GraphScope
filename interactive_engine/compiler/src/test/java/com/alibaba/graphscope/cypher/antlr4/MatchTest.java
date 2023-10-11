@@ -300,7 +300,8 @@ public class MatchTest {
                                         + " Return a, c")
                         .build();
         Assert.assertEquals(
-                "  GraphLogicalSingleMatch(input=[null],"
+                "GraphLogicalProject(a=[a], c=[c], isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[c], fusedFilter=[[=(DEFAULT.name, ?0)]], opt=[END])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
