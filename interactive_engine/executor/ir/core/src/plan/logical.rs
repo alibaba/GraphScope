@@ -2241,6 +2241,62 @@ mod test {
     }
 
     #[test]
+    fn scan_pred_to_idx_pred_with_dyn_param() {
+        let mut plan_meta = PlanMeta::default();
+        plan_meta.set_curr_node(0);
+        plan_meta.curr_node_meta_mut();
+        plan_meta.refer_to_nodes(0, vec![0]);
+        let meta = StoreMeta {
+            schema: Some(
+                Schema::from_json(std::fs::File::open("resource/modern_schema_pk.json").unwrap()).unwrap(),
+            ),
+        };
+        // predicate: @.name == $person_name
+        let dyn_param =
+            common_pb::DynamicParam { name: "person_name".to_string(), index: 0, data_type: None };
+        let dyn_param_opr = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Param(dyn_param.clone())),
+        };
+        let mut predicate = str_to_expr_pb("@.name == ".to_string()).unwrap();
+        predicate.operators.push(dyn_param_opr);
+
+        let mut scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                tables: vec!["person".into()],
+                columns: vec![],
+                is_all_columns: false,
+                limit: None,
+                predicate: Some(predicate),
+                sample_ratio: 1.0,
+                extra: HashMap::new(),
+            }),
+            idx_predicate: None,
+            is_count_only: false,
+            meta_data: None,
+        };
+
+        scan.preprocess(&meta, &mut plan_meta).unwrap();
+        assert!(scan.params.unwrap().predicate.is_none());
+        assert_eq!(
+            scan.idx_predicate.unwrap(),
+            pb::IndexPredicate {
+                or_predicates: vec![pb::index_predicate::AndPredicate {
+                    predicates: vec![pb::index_predicate::Triplet {
+                        key: Some(common_pb::Property {
+                            item: Some(common_pb::property::Item::Key("name".into())),
+                        }),
+                        value: Some(dyn_param.into()),
+                        cmp: None,
+                    }]
+                }]
+            }
+        );
+    }
+
+    #[test]
     fn column_maintain_case1() {
         let mut plan = LogicalPlan::with_root();
         // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
