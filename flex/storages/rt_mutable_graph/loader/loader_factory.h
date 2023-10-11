@@ -41,11 +41,13 @@ class LoaderFactory {
       const Schema& schema, const LoadingConfig& loading_config,
       int thread_num);
 
-  static bool Register(const std::string& loader_type,
+  static bool Register(const std::string& scheme_type,
+                       const std::string& format_type,
                        loader_initializer_t initializer);
 
  private:
-  static std::unordered_map<std::string, loader_initializer_t>& getKnownLoaders();
+  static std::unordered_map<std::string, loader_initializer_t>&
+  getKnownLoaders();
 };
 }  // namespace gs
 

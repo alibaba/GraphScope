@@ -57,10 +57,6 @@ class CSVFragmentLoader : public IFragmentLoader {
 
   ~CSVFragmentLoader() {}
 
-  FragmentLoaderType GetFragmentLoaderType() const override {
-    return FragmentLoaderType::kCSVFragmentLoader;
-  }
-
   void LoadFragment(MutablePropertyFragment& fragment) override;
 
  private:

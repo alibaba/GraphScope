@@ -39,17 +39,22 @@ std::shared_ptr<IFragmentLoader> LoaderFactory::CreateFragmentLoader(
   // }
 }
 
-bool LoaderFactory::Register(const std::string& loader_type,
-                         LoaderFactory::loader_initializer_t initializer) {
-  LOG(INFO) << "Registering loader: " << loader_type;
+// the key of map should be scheme + format.
+bool LoaderFactory::Register(const std::string& scheme_type,
+                             const std::string& format,
+                             LoaderFactory::loader_initializer_t initializer) {
+  LOG(INFO) << "Registering loader: " << scheme_type << ", format:" << format;
   auto& known_loaders_ = getKnownLoaders();
-  known_loaders_.emplace(loader_type, initializer);
-  LOG(INFO) << "found: " << std::to_string( known_loaders_.find(loader_type) != known_loaders_.end());
+  auto key = scheme_type + format;
+  known_loaders_.emplace(key, initializer);
   return true;
 }
 
-std::unordered_map<std::string, LoaderFactory::loader_initializer_t>& LoaderFactory::getKnownLoaders(){
-  static std::unordered_map<std::string, LoaderFactory::loader_initializer_t>* known_loaders_ = new std::unordered_map<std::string, loader_initializer_t>();
+std::unordered_map<std::string, LoaderFactory::loader_initializer_t>&
+LoaderFactory::getKnownLoaders() {
+  static std::unordered_map<std::string, LoaderFactory::loader_initializer_t>*
+      known_loaders_ =
+          new std::unordered_map<std::string, loader_initializer_t>();
   return *known_loaders_;
 }
 

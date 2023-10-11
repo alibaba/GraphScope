@@ -1610,7 +1610,7 @@ void CSVFragmentLoader::LoadFragment(MutablePropertyFragment& fragment) {
 }
 
 const bool CSVFragmentLoader::registered_ = LoaderFactory::Register(
-    "csv",
+    "file", "csv",
     static_cast<LoaderFactory::loader_initializer_t>(&CSVFragmentLoader::Make));
 
 }  // namespace gs
