@@ -14,6 +14,9 @@
  */
 
 #include "flex/storages/rt_mutable_graph/loader/loader_factory.h"
+#include <memory>
+#include <utility>
+#include <dlfcn.h>
 
 namespace gs {
 
@@ -22,7 +25,7 @@ void LoaderFactory::Init() {
   if (getenv("FLEX_OTHER_LOADERS")) {
     auto other_loaders = getenv("FLEX_OTHER_LOADERS");
     std::vector<std::string> adaptors;
-    ::boost::split(adaptors, other_io_adaptors,
+    ::boost::split(adaptors, other_loaders,
                    ::boost::is_any_of(std::string(1, ':')));
     for (auto const& adaptor : adaptors) {
       if (!adaptor.empty()) {
@@ -34,6 +37,9 @@ void LoaderFactory::Init() {
         }
       }
     }
+  }
+  else {
+    LOG(INFO) << "No extra loaders provided";
   }
 }
 

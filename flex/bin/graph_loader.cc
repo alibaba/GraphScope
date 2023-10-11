@@ -41,6 +41,9 @@ int main(int argc, char** argv) {
   double t0 = -grape::GetCurrentTime();
   auto& db = gs::GraphDB::get();
 
+  //Init LoadFactory
+  gs::LoaderFactory::Init();
+
   auto schema = gs::Schema::LoadFromYaml(schema_file);
   auto bulk_load_config =
       gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
