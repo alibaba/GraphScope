@@ -769,9 +769,11 @@ public class GraphBuilder extends RelBuilder {
                                 }
                             };
                     if (tableScan instanceof GraphLogicalSource) {
-                        GraphLogicalSource source = (GraphLogicalSource) tableScan;
-                        if (source.getUniqueKeyFilters() != null) {
-                            builder.filter(source.getUniqueKeyFilters());
+                        RexNode originalUniqueKeyFilters =
+                                ((GraphLogicalSource) tableScan).getUniqueKeyFilters();
+                        if (originalUniqueKeyFilters != null) {
+                            originalUniqueKeyFilters.accept(propertyChecker);
+                            builder.filter(originalUniqueKeyFilters);
                         }
                     }
                     ImmutableList originalFilters = tableScan.getFilters();
@@ -788,12 +790,11 @@ public class GraphBuilder extends RelBuilder {
         }
         if (tableScan instanceof GraphLogicalSource && !uniqueKeyFilters.isEmpty()) {
             GraphLogicalSource source = (GraphLogicalSource) tableScan;
-            if (source.getUniqueKeyFilters() != null) {
-                uniqueKeyFilters.add(0, source.getUniqueKeyFilters());
-            }
-            // todo: check if unique key filters have common keys, otherwise throw errors
+            Preconditions.checkArgument(
+                    source.getUniqueKeyFilters() == null,
+                    "can not add unique key filters if original is not empty");
             source.setUniqueKeyFilters(
-                    RexUtil.composeConjunction(this.getRexBuilder(), uniqueKeyFilters));
+                    RexUtil.composeDisjunction(this.getRexBuilder(), uniqueKeyFilters));
         }
         if (!extraFilters.isEmpty()) {
             ImmutableList originalFilters = tableScan.getFilters();
@@ -813,7 +814,7 @@ public class GraphBuilder extends RelBuilder {
             AbstractBindableTableScan tableScan,
             RexNode condition,
             List<Comparable> labelValues,
-            List<RexNode> uniqueKeyFilters,
+            List<RexNode> uniqueKeyFilters, // unique key filters int the list are composed by 'OR'
             List<RexNode> filters) {
         List<RexNode> conjunctions = RelOptUtil.conjunctions(condition);
         List<RexNode> filtersToRemove = Lists.newArrayList();
@@ -836,13 +837,26 @@ public class GraphBuilder extends RelBuilder {
                                 getValuesAsList(((RexLiteral) left).getValueAs(Comparable.class)));
                         break;
                     }
-                    if (tableScan instanceof GraphLogicalSource) {
-                        if (isUniqueKey(left) && right instanceof RexLiteral) {
-                            filtersToRemove.add(conjunction);
-                            uniqueKeyFilters.add(conjunction);
-                        } else if (left instanceof RexLiteral && isUniqueKey(right)) {
-                            filtersToRemove.add(conjunction);
-                            uniqueKeyFilters.add(conjunction);
+                }
+            }
+        }
+        if (tableScan instanceof GraphLogicalSource
+                && ((GraphLogicalSource) tableScan).getUniqueKeyFilters() == null) {
+            // try to extract unique key filters from the original condition
+            List<RexNode> disjunctions = RelOptUtil.disjunctions(condition);
+            for (RexNode disjunction : disjunctions) {
+                if (disjunction instanceof RexCall) {
+                    RexCall rexCall = (RexCall) disjunction;
+                    if (rexCall.getOperator().getKind() == SqlKind.EQUALS
+                            || rexCall.getOperator().getKind() == SqlKind.SEARCH) {
+                        RexNode left = rexCall.getOperands().get(0);
+                        RexNode right = rexCall.getOperands().get(1);
+                        if (isUniqueKey(left) && isLiteralOrDynamicParams(right)) {
+                            filtersToRemove.add(disjunction);
+                            uniqueKeyFilters.add(disjunction);
+                        } else if (isLiteralOrDynamicParams(left) && isUniqueKey(right)) {
+                            filtersToRemove.add(disjunction);
+                            uniqueKeyFilters.add(disjunction);
                         }
                     }
                 }
@@ -855,12 +869,17 @@ public class GraphBuilder extends RelBuilder {
     }
 
     private boolean isUniqueKey(RexNode rexNode) {
+        // todo: support primary keys
         if (rexNode instanceof RexGraphVariable) {
             RexGraphVariable variable = (RexGraphVariable) rexNode;
             return variable.getProperty() != null
                     && variable.getProperty().getOpt() == GraphProperty.Opt.ID;
         }
         return false;
+    }
+
+    private boolean isLiteralOrDynamicParams(RexNode node) {
+        return node instanceof RexLiteral || node instanceof RexDynamicParam;
     }
 
     private List<Comparable> getValuesAsList(Comparable value) {

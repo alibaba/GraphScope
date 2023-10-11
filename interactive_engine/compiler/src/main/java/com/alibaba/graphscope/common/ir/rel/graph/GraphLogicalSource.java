@@ -31,7 +31,6 @@ import java.util.Objects;
 public class GraphLogicalSource extends AbstractBindableTableScan {
     private final GraphOpt.Source opt;
     private @Nullable RexNode uniqueKeyFilters;
-    private @Nullable RexNode primaryKeyFilters;
 
     protected GraphLogicalSource(
             GraphOptCluster cluster,
@@ -67,15 +66,7 @@ public class GraphLogicalSource extends AbstractBindableTableScan {
         this.uniqueKeyFilters = Objects.requireNonNull(uniqueKeyFilters);
     }
 
-    public void setPrimaryKeyFilters(RexNode primaryKeyFilters) {
-        this.primaryKeyFilters = Objects.requireNonNull(primaryKeyFilters);
-    }
-
     public @Nullable RexNode getUniqueKeyFilters() {
         return uniqueKeyFilters;
-    }
-
-    public @Nullable RexNode getPrimaryKeyFilters() {
-        return primaryKeyFilters;
     }
 }
