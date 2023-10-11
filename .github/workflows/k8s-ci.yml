@@ -581,7 +581,7 @@ jobs:
         run: |
           export GS_TEST_DIR=${GITHUB_WORKSPACE}/interactive_engine/tests/src/main/resources
           minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.30' \
-                         --cpus='12' --memory='32000mb' --disk-size='40000mb' \
+                         --cpus='12' --memory='32000mb' --disk-size='60000mb' \
                          --mount=true --mount-string="${GS_TEST_DIR}:${GS_TEST_DIR}"
 
           export GS_REGISTRY=""
@@ -590,7 +590,6 @@ jobs:
           minikube image load graphscope/analytical:${SHORT_SHA}
           minikube image load graphscope/interactive-frontend:${SHORT_SHA}
           minikube image load graphscope/interactive-executor:${SHORT_SHA}
-          minikube image load graphscope/learning:${SHORT_SHA}
 
           export PYTHONPATH=${GITHUB_WORKSPACE}/python:${PYTHONPATH}
           cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install --quiet -DskipTests -Drust.compile.skip=true -P graphscope
@@ -683,7 +682,7 @@ jobs:
 
           # prepare minikube cluster
           minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.30' \
-          --cpus='12' --memory='32000mb' --disk-size='40000mb' \
+          --cpus='12' --memory='32000mb' --disk-size='60000mb' \
           --mount=true --mount-string="${STORE_DATA_PATH}:${STORE_DATA_PATH}"
           minikube image load ${GIE_IMAGE}:${SHORT_SHA}
 
