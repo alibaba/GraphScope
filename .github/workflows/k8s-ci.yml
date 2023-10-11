@@ -375,7 +375,9 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/k8s
           # Use a dummy builder image (tag=ci, which is actually a busybox) to reduce time and space to pull the builder
-          make graphscope CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+          make analytical CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+          make interactive CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+          make coordinator CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
 
       - name: Install Python dependencies
         run: |
@@ -428,8 +430,8 @@ jobs:
           echo "Loaded frontend"
           minikube image load graphscope/interactive-executor:${SHORT_SHA}
           echo "Loaded executor"
-          minikube image load graphscope/learning:${SHORT_SHA}
-          echo "loaded learning"
+          # minikube image load graphscope/learning:${SHORT_SHA}
+          # echo "loaded learning"
 
       - uses: dashanji/kubernetes-log-export-action@v5
         env:
