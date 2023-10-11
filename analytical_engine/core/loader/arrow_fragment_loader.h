@@ -272,10 +272,79 @@ class ArrowFragmentLoader : public vineyard::ArrowFragmentLoader<OID_T, VID_T> {
     return Base::addVerticesAndEdges(frag_id, std::move(raw_v_e_tables));
   }
 
+  bl::result<vineyard::ObjectID> AddDataToExistedVLable(
+      vineyard::ObjectID frag_id, label_id_t label_id) {
+    BOOST_LEAF_CHECK(initPartitioner());
+    BOOST_LEAF_AUTO(raw_v_e_tables, LoadVertexEdgeTables());
+    return Base::addDataToExistedVLabel(frag_id, label_id,
+                                        std::move(raw_v_e_tables));
+  }
+
+  bl::result<vineyard::ObjectID> AddDataToExistedELable(
+      vineyard::ObjectID frag_id, label_id_t label_id) {
+    BOOST_LEAF_CHECK(initPartitioner());
+    BOOST_LEAF_AUTO(raw_v_e_tables, LoadVertexEdgeTables());
+    return Base::addDataToExistedELabel(frag_id, label_id,
+                                        std::move(raw_v_e_tables));
+  }
+
   boost::leaf::result<vineyard::ObjectID> AddLabelsToFragmentAsFragmentGroup(
       vineyard::ObjectID frag_id) {
     BOOST_LEAF_AUTO(new_frag_id, AddLabelsToFragment(frag_id));
     VY_OK_OR_RAISE(client_.Persist(new_frag_id));
+    return vineyard::ConstructFragmentGroup(client_, new_frag_id, comm_spec_);
+  }
+
+  bl::result<vineyard::ObjectID> ExtendLabelData(vineyard::ObjectID frag_id,
+                                                 int extend_type) {
+    // find duplicate label id
+    assert(extend_type);
+    auto frag = std::dynamic_pointer_cast<vineyard::ArrowFragmentBase>(
+        client_.GetObject(frag_id));
+    vineyard::PropertyGraphSchema schema = frag->schema();
+    std::vector<std::string> labels;
+    label_id_t target_label_id = -1;
+    if (extend_type == 1)
+      labels = schema.GetVertexLabels();
+    else if (extend_type == 2)
+      labels = schema.GetEdgeLabels();
+
+    std::map<std::string, label_id_t> label_set;
+    for (size_t i = 0; i < labels.size(); ++i)
+      label_set[labels[i]] = i;
+
+    if (extend_type == 1) {
+      for (size_t i = 0; i < graph_info_->vertices.size(); ++i) {
+        auto it = label_set.find(graph_info_->vertices[i]->label);
+        if (it != label_set.end()) {
+          target_label_id = it->second;
+          break;
+        }
+      }
+    } else if (extend_type == 2) {
+      for (size_t i = 0; i < graph_info_->edges.size(); ++i) {
+        auto it = label_set.find(graph_info_->edges[i]->label);
+        if (it != label_set.end()) {
+          target_label_id = it->second;
+          break;
+        }
+      }
+    } else {
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                      "extend type is invalid");
+    }
+
+    if (target_label_id == -1)
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                      "label not found");
+    vineyard::ObjectID new_frag_id;
+    if (extend_type == 1) {
+      BOOST_LEAF_ASSIGN(new_frag_id,
+                        AddDataToExistedVLable(frag_id, target_label_id));
+    } else if (extend_type == 2) {
+      BOOST_LEAF_ASSIGN(new_frag_id,
+                        AddDataToExistedELable(frag_id, target_label_id));
+    }
     return vineyard::ConstructFragmentGroup(client_, new_frag_id, comm_spec_);
   }
 
