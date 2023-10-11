@@ -17,7 +17,25 @@
 
 namespace gs {
 
-void LoaderFactory::Init() {}
+void LoaderFactory::Init() {
+  // get env VINEYARD_OTHER_IO_ADAPTORS
+  if (getenv("FLEX_OTHER_LOADERS")) {
+    auto other_loaders = getenv("FLEX_OTHER_LOADERS");
+    std::vector<std::string> adaptors;
+    ::boost::split(adaptors, other_io_adaptors,
+                   ::boost::is_any_of(std::string(1, ':')));
+    for (auto const& adaptor : adaptors) {
+      if (!adaptor.empty()) {
+        if (dlopen(adaptor.c_str(), RTLD_GLOBAL | RTLD_NOW) == nullptr) {
+          LOG(WARNING) << "Failed to load io adaptors " << adaptor
+                       << ", reason = " << dlerror();
+        } else {
+          LOG(INFO) << "Loaded io adaptors " << adaptor;
+        }
+      }
+    }
+  }
+}
 
 void LoaderFactory::Finalize() {}
 
