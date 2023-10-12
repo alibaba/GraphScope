@@ -638,7 +638,8 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.ARRAY_VALUE_CONSTRUCTOR
                 || sqlKind == SqlKind.IS_NULL
                 || sqlKind == SqlKind.IS_NOT_NULL
-                || sqlKind == SqlKind.EXTRACT;
+                || sqlKind == SqlKind.EXTRACT
+                || sqlKind == SqlKind.POSIX_REGEX_CASE_SENSITIVE;
     }
 
     @Override
