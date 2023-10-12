@@ -121,15 +121,15 @@ class DatasetConfig:
 class EngineConfig:
     """Engine configuration"""
 
-    enabled_engines: str = "gae,gie,gle"  # A set of engines to enable.
+    enabled_engines: str = "gae,gie"  # A set of engines to enable.
     # Node selector for engine pods, default is None.
     node_selector: Union[str, None] = None
 
-    enable_gae: bool = True  # Enable or disable analytical engine.
+    enable_gae: bool = False  # Enable or disable analytical engine.
     # Enable or disable analytical engine with java support.
     enable_gae_java: bool = False
-    enable_gie: bool = True  # Enable or disable interactive engine.
-    enable_gle: bool = True  # Enable or disable learning engine.
+    enable_gie: bool = False  # Enable or disable interactive engine.
+    enable_gle: bool = False  # Enable or disable learning engine.
 
     preemptive: bool = True
 
