@@ -255,7 +255,7 @@ public class FilterTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                    + " opt=[VERTEX])",
+                        + " opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -275,7 +275,7 @@ public class FilterTest {
         } catch (IllegalArgumentException e) {
             Assert.assertEquals(
                     "cannot find common labels between values= [XX] and label="
-                        + " [[VertexLabel(software), VertexLabel(person)]]",
+                            + " [[VertexLabel(software), VertexLabel(person)]]",
                     e.getMessage());
             return;
         }
@@ -301,7 +301,7 @@ public class FilterTest {
         } catch (IllegalArgumentException e) {
             Assert.assertEquals(
                     "cannot find common labels between values= [software] and label="
-                        + " [[VertexLabel(person)]]",
+                            + " [[VertexLabel(person)]]",
                     e.getMessage());
             return;
         }
@@ -327,7 +327,7 @@ public class FilterTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                    + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[VERTEX])",
+                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -352,7 +352,7 @@ public class FilterTest {
         } catch (IllegalArgumentException e) {
             Assert.assertEquals(
                     "{property=age} not found; expected properties are: [id, name, lang,"
-                        + " creationDate]",
+                            + " creationDate]",
                     e.getMessage());
             return;
         }
@@ -373,7 +373,7 @@ public class FilterTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                    + " opt=[VERTEX])",
+                        + " opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -394,8 +394,8 @@ public class FilterTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                    + " alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id,"
-                    + " Sarg[1, 2, 3])])",
+                        + " alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id,"
+                        + " Sarg[1, 2, 3])])",
                 node.explain().trim());
     }
 }

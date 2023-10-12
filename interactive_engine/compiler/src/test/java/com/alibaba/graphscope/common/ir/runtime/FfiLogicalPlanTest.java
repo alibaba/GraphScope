@@ -218,8 +218,8 @@ public class FfiLogicalPlanTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                    + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[1, 2, 3])]],"
-                    + " opt=[VERTEX])",
+                        + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[1, 2, 3])]],"
+                        + " opt=[VERTEX])",
                 node.explain().trim());
         try (PhysicalBuilder<byte[]> ffiBuilder =
                 new FfiPhysicalBuilder(
@@ -247,8 +247,8 @@ public class FfiLogicalPlanTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                    + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[[1..10]])]],"
-                    + " opt=[VERTEX])",
+                        + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[[1..10]])]],"
+                        + " opt=[VERTEX])",
                 node.explain().trim());
         try (PhysicalBuilder<byte[]> ffiBuilder =
                 new FfiPhysicalBuilder(
@@ -275,8 +275,8 @@ public class FfiLogicalPlanTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                    + " alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id,"
-                    + " Sarg[1, 2])])",
+                        + " alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id,"
+                        + " Sarg[1, 2])])",
                 node.explain().trim());
         try (PhysicalBuilder<byte[]> ffiBuilder =
                 new FfiPhysicalBuilder(
