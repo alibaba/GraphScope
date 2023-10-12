@@ -379,6 +379,8 @@ jobs:
           make interactive CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
           make coordinator CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
 
+          docker images
+
       - name: Install Python dependencies
         run: |
           cd ${GITHUB_WORKSPACE}/python
@@ -568,7 +570,11 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/k8s
           # Use a dummy builder image (tag=ci, which is actually a busybox) to reduce time and space to pull the builder
-          make graphscope CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+          make analytical CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+          make interactive CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+          make coordinator CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+
+          docker images
 
       - name: Install Python dependencies
         run: |
