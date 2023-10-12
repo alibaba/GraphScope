@@ -54,9 +54,9 @@ static bool fetch_src_dst_column_mapping(
         LOG(ERROR) << "Expect column index for source vertex mapping";
         return false;
       }
-      if (get_scalar(column_mapping, "name", column_names[i].first)) {
+      if (get_scalar(column_mapping, "name", columns[i].first)) {
         VLOG(10) << "Column name for col_id: " << columns[i].second
-                 << " is set to: " << column_names[i].first;
+                 << " is set to: " << columns[i].first;
       }
 
       std::string property_name;
@@ -317,14 +317,14 @@ static bool parse_edge_files(
   // parse the vertex mapping. currently we only need one column to identify the
   // vertex.
   {
-    std::vector<std::pair<size_t, std::string>> src_columns, dst_columns;
+    std::vector<std::pair<std::string, size_t>> src_columns, dst_columns;
 
     if (!fetch_src_dst_column_mapping(schema, node, src_label_id,
                                       "source_vertex_mappings", src_columns)) {
       LOG(WARNING) << "Field [source_vertex_mappings] is not set for edge ["
                    << src_label << "->[" << edge_label << "]->" << dst_label
                    << "], using default choice: column_id 0";
-      src_columns.push_back({"", 0});
+      src_columns.emplace_back("", 0);
     }
     if (!fetch_src_dst_column_mapping(schema, node, dst_label_id,
                                       "destination_vertex_mappings",
@@ -332,7 +332,7 @@ static bool parse_edge_files(
       LOG(WARNING) << "Field [destination_vertex_mappings] is not set for edge["
                    << src_label << "->[" << edge_label << "]->" << dst_label
                    << "], using default choice: column_id 1";
-      dst_columns.push_back({"", 1});
+      dst_columns.emplace_back("", 1);
     }
 
     VLOG(10) << "src: " << src_label << ", dst: " << dst_label
