@@ -211,8 +211,7 @@ public class WithTest {
         RelNode project =
                 Utils.eval("Match (a:person)-[]-(b:person) Return [a.name, b.age, 1]").build();
         Assert.assertEquals(
-                "GraphLogicalProject($f0=[ARRAY_VALUE_CONSTRUCTOR(a.name, b.age, 1)],"
-                    + " isAppend=[false])\n"
+                "GraphLogicalProject($f0=[ARRAY(a.name, b.age, 1)], isAppend=[false])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[b], opt=[OTHER])\n"
