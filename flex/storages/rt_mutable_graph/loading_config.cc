@@ -28,10 +28,10 @@ namespace config_parsing {
 
 // fetch the primary key of the src and dst vertex label in the edge file,
 // also check whether the primary key exists in the schema, and number equals.
-static bool fetch_src_dst_column_mapping(const Schema& schema, YAML::Node node,
-                                         label_t label_id,
-                                         const std::string& key,
-                                         std::vector<size_t>& column_inds) {
+static bool fetch_src_dst_column_mapping(
+    const Schema& schema, YAML::Node node, label_t label_id,
+    const std::string& key,
+    std::vector<std::pair<std::string, size_t>>& columns) {
   if (node[key]) {
     auto column_mappings = node[key];
     if (!column_mappings.IsSequence()) {
@@ -46,20 +46,28 @@ static bool fetch_src_dst_column_mapping(const Schema& schema, YAML::Node node,
                 << schema.get_vertex_label_name(label_id);
       return false;
     }
-    column_inds.resize(column_mappings.size());
+    columns.resize(column_mappings.size());
     for (auto i = 0; i < column_mappings.size(); ++i) {
       auto column_mapping = column_mappings[i]["column"];
-      auto name = column_mapping["name"].as<std::string>();
-      if (name != std::get<1>(schema_primary_key[i])) {
-        LOG(ERROR) << "Expect column name ["
-                   << std::get<1>(schema_primary_key[i])
-                   << "] for source vertex mapping, at index: " << i
-                   << ", got: " << name;
-        return false;
-      }
-      if (!get_scalar(column_mapping, "index", column_inds[i])) {
+
+      if (!get_scalar(column_mapping, "index", columns[i].second)) {
         LOG(ERROR) << "Expect column index for source vertex mapping";
         return false;
+      }
+      if (get_scalar(column_mapping, "name", column_names[i].first)) {
+        VLOG(10) << "Column name for col_id: " << columns[i].second
+                 << " is set to: " << column_names[i].first;
+      }
+
+      std::string property_name;
+      if (get_scalar(column_mappings[i], "property", property_name)) {
+        if (property_name != std::get<1>(schema_primary_key[i])) {
+          LOG(ERROR) << "Expect mapped property name ["
+                     << std::get<1>(schema_primary_key[i])
+                     << "] for source vertex mapping, at index: " << i
+                     << ", got: " << property_name;
+          return false;
+        }
       }
     }
     return true;
@@ -251,7 +259,8 @@ static bool parse_edge_files(
         std::vector<std::tuple<size_t, std::string, std::string>>,
         boost::hash<typename LoadingConfig::edge_triplet_type>>& edge_mapping,
     std::unordered_map<typename LoadingConfig::edge_triplet_type,
-                       std::pair<std::vector<size_t>, std::vector<size_t>>,
+                       std::pair<std::vector<std::pair<std::string, size_t>>,
+                                 std::vector<std::pair<std::string, size_t>>>,
                        boost::hash<typename LoadingConfig::edge_triplet_type>>&
         edge_src_dst_col) {
   if (!node["type_triplet"]) {
@@ -308,14 +317,14 @@ static bool parse_edge_files(
   // parse the vertex mapping. currently we only need one column to identify the
   // vertex.
   {
-    std::vector<size_t> src_columns, dst_columns;
+    std::vector<std::pair<size_t, std::string>> src_columns, dst_columns;
 
     if (!fetch_src_dst_column_mapping(schema, node, src_label_id,
                                       "source_vertex_mappings", src_columns)) {
       LOG(WARNING) << "Field [source_vertex_mappings] is not set for edge ["
                    << src_label << "->[" << edge_label << "]->" << dst_label
                    << "], using default choice: column_id 0";
-      src_columns.push_back(0);
+      src_columns.push_back({"", 0});
     }
     if (!fetch_src_dst_column_mapping(schema, node, dst_label_id,
                                       "destination_vertex_mappings",
@@ -323,7 +332,7 @@ static bool parse_edge_files(
       LOG(WARNING) << "Field [destination_vertex_mappings] is not set for edge["
                    << src_label << "->[" << edge_label << "]->" << dst_label
                    << "], using default choice: column_id 1";
-      dst_columns.push_back(1);
+      dst_columns.push_back({"", 1});
     }
 
     VLOG(10) << "src: " << src_label << ", dst: " << dst_label
@@ -397,7 +406,8 @@ static bool parse_edges_files_schema(
         std::vector<std::tuple<size_t, std::string, std::string>>,
         boost::hash<typename LoadingConfig::edge_triplet_type>>& edge_mapping,
     std::unordered_map<std::tuple<label_t, label_t, label_t>,
-                       std::pair<std::vector<size_t>, std::vector<size_t>>,
+                       std::pair<std::vector<std::pair<std::string, size_t>>,
+                                 std::vector<std::pair<std::string, size_t>>>,
                        boost::hash<typename LoadingConfig::edge_triplet_type>>&
         edge_src_dst_col) {
   if (!node.IsSequence()) {
@@ -681,7 +691,8 @@ LoadingConfig::GetEdgeColumnMappings(label_t src_label_id, label_t dst_label_id,
   return edge_column_mappings_.at(key);
 }
 
-const std::pair<std::vector<size_t>, std::vector<size_t>>&
+const std::pair<std::vector<std::pair<std::string, size_t>>,
+                std::vector<std::pair<std::string, size_t>>>&
 LoadingConfig::GetEdgeSrcDstCol(label_t src_label_id, label_t dst_label_id,
                                 label_t edge_label_id) const {
   auto key = std::make_tuple(src_label_id, dst_label_id, edge_label_id);

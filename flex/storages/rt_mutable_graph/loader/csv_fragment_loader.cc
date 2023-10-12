@@ -1122,8 +1122,8 @@ void CSVFragmentLoader::addEdgesImpl(label_t src_label_id, label_t dst_label_id,
     LOG(FATAL) << "We currently only support one src primary key and one "
                   "dst primary key";
   }
-  size_t src_col_ind = src_dst_col_pair.first[0];
-  size_t dst_col_ind = src_dst_col_pair.second[0];
+  size_t src_col_ind = src_dst_col_pair.first[0].second;
+  size_t dst_col_ind = src_dst_col_pair.second[0].second;
   CHECK(src_col_ind != dst_col_ind);
 
   check_edge_invariant(schema_, edge_column_mappings, src_col_ind, dst_col_ind,
@@ -1445,8 +1445,8 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
     // add src and dst primary col, to included_columns, put src_col and
     // dst_col at the first of included_columns.
     CHECK(src_dst_cols.first.size() == 1 && src_dst_cols.second.size() == 1);
-    auto src_col_ind = src_dst_cols.first[0];
-    auto dst_col_ind = src_dst_cols.second[0];
+    auto src_col_ind = src_dst_cols.first[0].second;
+    auto dst_col_ind = src_dst_cols.second[0].second;
     CHECK(src_col_ind >= 0 && src_col_ind < read_options.column_names.size());
     CHECK(dst_col_ind >= 0 && dst_col_ind < read_options.column_names.size());
 
@@ -1520,8 +1520,8 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
       auto src_dst_cols = loading_config_.GetEdgeSrcDstCol(
           src_label_id, dst_label_id, label_id);
       CHECK(src_dst_cols.first.size() == 1 && src_dst_cols.second.size() == 1);
-      auto src_col_ind = src_dst_cols.first[0];
-      auto dst_col_ind = src_dst_cols.second[0];
+      auto src_col_ind = src_dst_cols.first[0].second;
+      auto dst_col_ind = src_dst_cols.second[0].second;
       CHECK(src_col_ind >= 0 && src_col_ind < read_options.column_names.size());
       CHECK(dst_col_ind >= 0 && dst_col_ind < read_options.column_names.size());
       PropertyType src_col_type, dst_col_type;

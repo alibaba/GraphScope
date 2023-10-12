@@ -130,8 +130,10 @@ class LoadingConfig {
                         label_t edge_label_id) const;
 
   // Get src_id and dst_id column index for edge label.
-  const std::pair<std::vector<size_t>, std::vector<size_t>>& GetEdgeSrcDstCol(
-      label_t src_label_id, label_t dst_label_id, label_t edge_label_id) const;
+  const std::pair<std::vector<std::pair<std::string, size_t>>,
+                  std::vector<std::pair<std::string, size_t>>>&
+  GetEdgeSrcDstCol(label_t src_label_id, label_t dst_label_id,
+                   label_t edge_label_id) const;
 
  private:
   const Schema& schema_;
@@ -165,7 +167,8 @@ class LoadingConfig {
                               // col_name can be empty
 
   std::unordered_map<edge_triplet_type,
-                     std::pair<std::vector<size_t>, std::vector<size_t>>,
+                     std::pair<std::vector<std::pair<std::string, size_t>>,
+                               std::vector<std::pair<std::string, size_t>>>,
                      boost::hash<edge_triplet_type>>
       edge_src_dst_col_;  // Which two columns are src_id and dst_id
 
