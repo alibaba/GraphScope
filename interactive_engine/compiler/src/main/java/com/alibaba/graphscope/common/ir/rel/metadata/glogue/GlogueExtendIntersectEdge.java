@@ -22,6 +22,10 @@ public class GlogueExtendIntersectEdge extends GlogueEdge {
         this.srcToTargetOrderMapping = srcToTargetOrderMapping;
     }
 
+    public Map<Integer, Integer> getSrcToTargetOrderMapping() {
+        return srcToTargetOrderMapping;
+    }
+
     @Override
     public Pattern getSrcPattern() {
         return srcPattern;

@@ -1,7 +1,6 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
 import java.util.Map;
-import java.util.Set;
 
 import org.javatuples.Pair;
 
@@ -45,7 +44,7 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
         while (patternQueue.size() > 0) {
             Pattern pattern = patternQueue.pop();
             Double patternCount = this.patternCardinality.get(pattern);
-            for (GlogueEdge edge : glogue.getOutEdges(pattern)) {
+            for (GlogueEdge edge : glogue.getGlogueOutEdges(pattern)) {
                 GlogueExtendIntersectEdge extendIntersectEdge = (GlogueExtendIntersectEdge) edge;
                 Pattern newPattern = extendIntersectEdge.getDstPattern();
                 ExtendStep extendStep = extendIntersectEdge.getExtendStep();
@@ -141,9 +140,9 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
     }
 
     @Override
-    public double getCardinality(Pattern queryPattern) {
+    public Double getCardinality(Pattern queryPattern) {
         for (Pattern pattern : this.patternCardinality.keySet()) {
-            if (pattern.isIsomorphicTo(queryPattern)) {
+            if (pattern.equals(queryPattern)) {
                 return this.patternCardinality.get(pattern);
             }
         }

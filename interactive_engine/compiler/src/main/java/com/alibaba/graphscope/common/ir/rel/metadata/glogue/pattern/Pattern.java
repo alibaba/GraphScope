@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.jgrapht.Graph;
@@ -15,6 +16,7 @@ import org.jgrapht.GraphMapping;
 import org.jgrapht.alg.color.ColorRefinementAlgorithm;
 import org.jgrapht.alg.interfaces.VertexColoringAlgorithm.Coloring;
 import org.jgrapht.alg.isomorphism.ColorRefinementIsomorphismInspector;
+import org.jgrapht.alg.isomorphism.IsomorphicGraphMapping;
 import org.jgrapht.alg.isomorphism.VF2GraphIsomorphismInspector;
 import org.jgrapht.graph.AsUndirectedGraph;
 import org.jgrapht.graph.SimpleDirectedGraph;
@@ -255,6 +257,11 @@ public class Pattern {
         this.patternOrder = patternOrder;
     }
 
+    public boolean addVertex(Integer type) {
+        PatternVertex vertex = new SinglePatternVertex(type, this.maxVertexId);
+        return addVertex(vertex);
+    }
+
     // add a pattern vertex into pattern, and increase pattern's maxVertexId
     public boolean addVertex(PatternVertex vertex) {
         boolean added = this.patternGraph.addVertex(vertex);
@@ -270,7 +277,7 @@ public class Pattern {
     }
 
     // add a pattern edge into pattern, and increase pattern's maxEdgeId
-    private boolean addEdge(PatternVertex srcVertex, PatternVertex dstVertex, PatternEdge edge) {
+    public boolean addEdge(PatternVertex srcVertex, PatternVertex dstVertex, PatternEdge edge) {
         boolean added = this.patternGraph.addEdge(srcVertex, dstVertex, edge);
         if (added) {
             this.maxEdgeId++;
@@ -346,13 +353,33 @@ public class Pattern {
 
     public boolean isIsomorphicTo(Pattern other, Comparator<PatternVertex> vertexComparator,
             Comparator<PatternEdge> edgeComparator) {
-        if (!this.preCheck(other)) {
+        if (this == other) {
+            return true;
+        } else if (!this.preCheck(other)) {
             return false;
+        } else {
+            Iterator<GraphMapping<PatternVertex, PatternEdge>> mappings = getIsomorphicMappings(other,
+                    vertexComparator, edgeComparator);
+            return  mappings.hasNext();
         }
+    }
+
+    public Optional<PatternMapping> getIsomorphicMapping(Pattern other) {
+        Iterator<GraphMapping<PatternVertex, PatternEdge>> mappings = getIsomorphicMappings(other, vertexTypeComparator, edgeTypeComparator);
+        if (mappings.hasNext()) {
+            return Optional.of(new PatternMapping(mappings.next()));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private Iterator<GraphMapping<PatternVertex, PatternEdge>> getIsomorphicMappings(Pattern other,
+            Comparator<PatternVertex> vertexComparator,
+            Comparator<PatternEdge> edgeComparator) {
         VF2GraphIsomorphismInspector<PatternVertex, PatternEdge> isomorphismInspector = new VF2GraphIsomorphismInspector<PatternVertex, PatternEdge>(
                 this.patternGraph, other.patternGraph,
                 vertexComparator, edgeComparator);
-        return isomorphismInspector.isomorphismExists();
+        return isomorphismInspector.getMappings();
     }
 
     @Override

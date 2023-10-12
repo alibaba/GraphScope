@@ -14,15 +14,15 @@ public class EdgeTypeId {
         this.edgeType = new Triplet<>(srcLabelId.vertexType, dstLabelId.vertexType, edgeLabelId);
     }
 
-    public int getSrcLabelId() {
+    public Integer getSrcLabelId() {
         return edgeType.getValue0();
     }
 
-    public int getDstLabelId() {
+    public Integer getDstLabelId() {
         return edgeType.getValue1();
     }
 
-    public int getEdgeLabelId() {
+    public Integer getEdgeLabelId() {
         return edgeType.getValue2();
     }
 

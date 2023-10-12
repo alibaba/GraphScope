@@ -9,10 +9,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.javatuples.Pair;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DirectedPseudograph;
 
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.fuzzy.FuzzyPatternProcessor;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternMapping;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
@@ -62,7 +65,7 @@ public class Glogue {
             for (ExtendStep extendStep : extendSteps) {
                 System.out.println(extendStep);
                 Pattern newPattern = pattern.extend(extendStep);
-                Optional<Pattern> existingPattern = this.containsPattern(newPattern);
+                Optional<Pattern> existingPattern = this.getGlogueVertex(newPattern);
                 if (!existingPattern.isPresent()) {
                     this.addPattern(newPattern);
                     System.out.println("add new pattern: " + newPattern);
@@ -105,11 +108,31 @@ public class Glogue {
         return this;
     }
 
-    public Set<GlogueEdge> getOutEdges(Pattern pattern) {
+    // public Set<GlogueEdge> getOutEdges(Pattern pattern) {
+    //     Optional<Pattern> vertex = getGlogueVertex(pattern);
+    //     if (vertex.isPresent()) {
+    //         return getGlogueInEdges(vertex.get());
+    //     } else {
+    //         throw new RuntimeException(
+    //                 "pattern not found in glogue graph. queries pattern " + pattern);
+    //     }
+    // }
+
+    // public Set<GlogueEdge> getInEdges(Pattern pattern) {
+    //     Optional<Pattern> vertex = getGlogueVertex(pattern);
+    //     if (vertex.isPresent()) {
+    //         return getGlogueOutEdges(vertex.get());
+    //     } else {
+    //         throw new RuntimeException(
+    //                 "pattern not found in glogue graph. queries pattern " + pattern);
+    //     }
+    // }
+
+    protected Set<GlogueEdge> getGlogueOutEdges(Pattern pattern) {
         return glogueGraph.outgoingEdgesOf(pattern);
     }
 
-    public Set<GlogueEdge> getInEdges(Pattern pattern) {
+    protected Set<GlogueEdge> getGlogueInEdges(Pattern pattern) {
         return glogueGraph.incomingEdgesOf(pattern);
     }
 
@@ -121,10 +144,20 @@ public class Glogue {
         return roots;
     }
 
-    private Optional<Pattern> containsPattern(Pattern pattern) {
+    private Optional<Pattern> getGlogueVertex(Pattern pattern) {
         for (Pattern p : this.glogueGraph.vertexSet()) {
-            if (p.isIsomorphicTo(pattern)) {
+            if (p.equals(pattern)) {
                 return Optional.of(p);
+            }
+        }
+        return Optional.empty();
+    }
+
+    public Optional<Pair<Pattern, PatternMapping>> getGlogueVertexWithMapping(Pattern pattern) {
+        for (Pattern p : this.glogueGraph.vertexSet()) {
+            Optional<PatternMapping> mapping = p.getIsomorphicMapping(pattern);
+            if (mapping.isPresent()) {
+                return Optional.of(new Pair<>(p, mapping.get()));
             }
         }
         return Optional.empty();

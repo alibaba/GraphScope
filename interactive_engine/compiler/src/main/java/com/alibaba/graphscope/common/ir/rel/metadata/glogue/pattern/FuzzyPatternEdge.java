@@ -46,4 +46,14 @@ public class FuzzyPatternEdge extends PatternEdge {
     public boolean isDistinct() {
         return false;
     }
+
+    @Override
+    public String toString() {
+        return getSrcVertex().getId() + "->" + getDstVertex().getId() + "[" + getEdgeTypeIds().toString() + "]";
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
 }
