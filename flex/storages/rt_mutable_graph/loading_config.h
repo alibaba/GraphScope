@@ -111,7 +111,7 @@ class LoadingConfig {
   bool GetIsDoubleQuoting() const;
   int32_t GetBatchSize() const;
   bool GetIsBatchReader() const;
-  std::string LoadingConfig::GetMetaData(const std::string& key) const;
+  std::string GetMetaData(const std::string& key) const;
   const std::unordered_map<schema_label_type, std::vector<std::string>>&
   GetVertexLoadingMeta() const;
   const std::unordered_map<edge_triplet_type, std::vector<std::string>,
