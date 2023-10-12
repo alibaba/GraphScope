@@ -17,7 +17,10 @@
 package com.alibaba.graphscope.common.ir.runtime.proto;
 
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.alibaba.graphscope.common.ir.type.*;
+import com.alibaba.graphscope.common.ir.type.GraphLabelType;
+import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
+import com.alibaba.graphscope.common.ir.type.GraphProperty;
+import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
@@ -31,6 +34,7 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.NlsString;
+import org.apache.calcite.util.Sarg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,8 +73,54 @@ public abstract class Utils {
                 return Common.Value.newBuilder()
                         .setF64(((Number) literal.getValue()).doubleValue())
                         .build();
+            case SARG:
+                Sarg sarg = literal.getValueAs(Sarg.class);
+                if (sarg.isPoints()) {
+                    Common.Value.Builder valueBuilder = Common.Value.newBuilder();
+                    List<Comparable> values =
+                            com.alibaba.graphscope.common.ir.tools.Utils.getValuesAsList(sarg);
+                    if (values.isEmpty()) {
+                        // return an empty string array to handle the case i.e. within []
+                        return valueBuilder
+                                .setStrArray(Common.StringArray.newBuilder().build())
+                                .build();
+                    }
+                    Comparable first = values.get(0);
+                    if (first instanceof Integer) {
+                        Common.I32Array.Builder i32Array = Common.I32Array.newBuilder();
+                        values.forEach(value -> i32Array.addItem((Integer) value));
+                        valueBuilder.setI32Array(i32Array);
+                    } else if (first instanceof Number) {
+                        Common.I64Array.Builder i64Array = Common.I64Array.newBuilder();
+                        values.forEach(value -> i64Array.addItem(((Number) value).longValue()));
+                        valueBuilder.setI64Array(i64Array);
+                    } else if (first instanceof Double || first instanceof Float) {
+                        Common.DoubleArray.Builder doubleArray = Common.DoubleArray.newBuilder();
+                        values.forEach(
+                                value ->
+                                        doubleArray.addItem(
+                                                (value instanceof Float)
+                                                        ? (Float) value
+                                                        : (Double) value));
+                        valueBuilder.setF64Array(doubleArray);
+                    } else if (first instanceof String || first instanceof NlsString) {
+                        Common.StringArray.Builder stringArray = Common.StringArray.newBuilder();
+                        values.forEach(
+                                value ->
+                                        stringArray.addItem(
+                                                (value instanceof NlsString)
+                                                        ? ((NlsString) value).getValue()
+                                                        : (String) value));
+                        valueBuilder.setStrArray(stringArray);
+                    } else {
+                        throw new UnsupportedOperationException(
+                                "can not convert value list=" + values + " to ir core array");
+                    }
+                    return valueBuilder.build();
+                }
+                throw new UnsupportedOperationException(
+                        "can not convert continuous ranges to ir core structure, sarg=" + sarg);
             default:
-                // TODO: support int/double/string array
                 throw new UnsupportedOperationException(
                         "literal type " + literal.getTypeName() + " is unsupported yet");
         }
@@ -180,8 +230,11 @@ public abstract class Utils {
                 return OuterExpression.ExprOpr.newBuilder()
                         .setLogical(OuterExpression.Logical.ISNULL)
                         .build();
+            case SEARCH:
+                return OuterExpression.ExprOpr.newBuilder()
+                        .setLogical(OuterExpression.Logical.WITHIN)
+                        .build();
             default:
-                // TODO: support IN and NOT_IN
                 throw new UnsupportedOperationException(
                         "operator type="
                                 + operator.getKind()

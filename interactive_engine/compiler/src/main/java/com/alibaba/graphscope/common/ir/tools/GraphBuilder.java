@@ -38,7 +38,10 @@ import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.*;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.AbstractRelNode;
@@ -55,7 +58,6 @@ import org.apache.calcite.sql.type.IntervalSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.Litmus;
-import org.apache.calcite.util.NlsString;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Sarg;
 import org.apache.commons.lang3.ObjectUtils;
@@ -819,25 +821,13 @@ public class GraphBuilder extends RelBuilder {
         List<RexNode> conjunctions = RelOptUtil.conjunctions(condition);
         List<RexNode> filtersToRemove = Lists.newArrayList();
         for (RexNode conjunction : conjunctions) {
-            if (conjunction instanceof RexCall) {
-                RexCall rexCall = (RexCall) conjunction;
-                if (rexCall.getOperator().getKind() == SqlKind.EQUALS
-                        || rexCall.getOperator().getKind() == SqlKind.SEARCH) {
-                    RexNode left = rexCall.getOperands().get(0);
-                    RexNode right = rexCall.getOperands().get(1);
-                    if (left.getType() instanceof GraphLabelType && right instanceof RexLiteral) {
-                        filtersToRemove.add(conjunction);
-                        labelValues.addAll(
-                                getValuesAsList(((RexLiteral) right).getValueAs(Comparable.class)));
-                        break;
-                    } else if (left instanceof RexLiteral
-                            && right.getType() instanceof GraphLabelType) {
-                        filtersToRemove.add(conjunction);
-                        labelValues.addAll(
-                                getValuesAsList(((RexLiteral) left).getValueAs(Comparable.class)));
-                        break;
-                    }
-                }
+            RexLiteral labelLiteral = isLabelEqualFilter(conjunction);
+            if (labelLiteral != null) {
+                filtersToRemove.add(conjunction);
+                labelValues.addAll(
+                        com.alibaba.graphscope.common.ir.tools.Utils.getValuesAsList(
+                                labelLiteral.getValueAs(Comparable.class)));
+                break;
             }
         }
         if (tableScan instanceof GraphLogicalSource
@@ -845,20 +835,9 @@ public class GraphBuilder extends RelBuilder {
             // try to extract unique key filters from the original condition
             List<RexNode> disjunctions = RelOptUtil.disjunctions(condition);
             for (RexNode disjunction : disjunctions) {
-                if (disjunction instanceof RexCall) {
-                    RexCall rexCall = (RexCall) disjunction;
-                    if (rexCall.getOperator().getKind() == SqlKind.EQUALS
-                            || rexCall.getOperator().getKind() == SqlKind.SEARCH) {
-                        RexNode left = rexCall.getOperands().get(0);
-                        RexNode right = rexCall.getOperands().get(1);
-                        if (isUniqueKey(left) && isLiteralOrDynamicParams(right)) {
-                            filtersToRemove.add(disjunction);
-                            uniqueKeyFilters.add(disjunction);
-                        } else if (isLiteralOrDynamicParams(left) && isUniqueKey(right)) {
-                            filtersToRemove.add(disjunction);
-                            uniqueKeyFilters.add(disjunction);
-                        }
-                    }
+                if (isUniqueKeyEqualFilter(disjunction)) {
+                    filtersToRemove.add(disjunction);
+                    uniqueKeyFilters.add(disjunction);
                 }
             }
         }
@@ -866,6 +845,80 @@ public class GraphBuilder extends RelBuilder {
             conjunctions.removeAll(filtersToRemove);
         }
         filters.addAll(conjunctions);
+    }
+
+    // check the condition if it is the pattern of label equal filter, i.e. ~label = 'person' or
+    // ~label within ['person', 'software']
+    // if it is then return the literal containing label values, otherwise null
+    private @Nullable RexLiteral isLabelEqualFilter(RexNode condition) {
+        if (condition instanceof RexCall) {
+            RexCall rexCall = (RexCall) condition;
+            SqlOperator operator = rexCall.getOperator();
+            switch (operator.getKind()) {
+                case EQUALS:
+                case SEARCH:
+                    RexNode left = rexCall.getOperands().get(0);
+                    RexNode right = rexCall.getOperands().get(1);
+                    if (left.getType() instanceof GraphLabelType && right instanceof RexLiteral) {
+                        Comparable value = ((RexLiteral) right).getValue();
+                        // if Sarg is a continuous range then the filter is not the 'equal', i.e.
+                        // ~label SEARCH [[1, 10]] which means ~label >= 1 and ~label <= 10
+                        if (value instanceof Sarg && !((Sarg) value).isPoints()) {
+                            return null;
+                        }
+                        return (RexLiteral) right;
+                    } else if (right.getType() instanceof GraphLabelType
+                            && left instanceof RexLiteral) {
+                        Comparable value = ((RexLiteral) left).getValue();
+                        if (value instanceof Sarg && !((Sarg) value).isPoints()) {
+                            return null;
+                        }
+                        return (RexLiteral) left;
+                    }
+                default:
+                    return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    // check the condition if it is the pattern of unique key equal filter, i.e. ~id = 1 or ~id
+    // within [1, 2]
+    private boolean isUniqueKeyEqualFilter(RexNode condition) {
+        if (condition instanceof RexCall) {
+            RexCall rexCall = (RexCall) condition;
+            SqlOperator operator = rexCall.getOperator();
+            switch (operator.getKind()) {
+                case EQUALS:
+                case SEARCH:
+                    RexNode left = rexCall.getOperands().get(0);
+                    RexNode right = rexCall.getOperands().get(1);
+                    if (isUniqueKey(left) && isLiteralOrDynamicParams(right)) {
+                        if (right instanceof RexLiteral) {
+                            Comparable value = ((RexLiteral) right).getValue();
+                            // if Sarg is a continuous range then the filter is not the 'equal',
+                            // i.e. ~id SEARCH [[1, 10]] which means ~id >= 1 and ~id <= 10
+                            if (value instanceof Sarg && !((Sarg) value).isPoints()) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    } else if (isUniqueKey(right) && isLiteralOrDynamicParams(left)) {
+                        if (left instanceof RexLiteral) {
+                            Comparable value = ((RexLiteral) left).getValue();
+                            if (value instanceof Sarg && !((Sarg) value).isPoints()) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                default:
+                    return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     private boolean isUniqueKey(RexNode rexNode) {
@@ -880,24 +933,6 @@ public class GraphBuilder extends RelBuilder {
 
     private boolean isLiteralOrDynamicParams(RexNode node) {
         return node instanceof RexLiteral || node instanceof RexDynamicParam;
-    }
-
-    private List<Comparable> getValuesAsList(Comparable value) {
-        ImmutableList.Builder labelBuilder = ImmutableList.builder();
-        if (value instanceof NlsString) {
-            labelBuilder.add(((NlsString) value).getValue());
-        } else if (value instanceof Sarg) {
-            Sarg sarg = (Sarg) value;
-            if (sarg.isPoints()) {
-                Set<Range<Comparable>> rangeSets = sarg.rangeSet.asRanges();
-                for (Range<Comparable> range : rangeSets) {
-                    labelBuilder.addAll(getValuesAsList(range.lowerEndpoint()));
-                }
-            }
-        } else {
-            labelBuilder.add(value);
-        }
-        return labelBuilder.build();
     }
 
     // return the top node if its type is Filter, otherwise null

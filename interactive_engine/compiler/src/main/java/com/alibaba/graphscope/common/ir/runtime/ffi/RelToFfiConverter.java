@@ -206,7 +206,9 @@ public class RelToFfiConverter implements GraphRelShuttle {
     @Override
     public RelNode visit(LogicalFilter logicalFilter) {
         OuterExpression.Expression exprProto =
-                logicalFilter.getCondition().accept(new RexToProtoConverter(true, isColumnId));
+                logicalFilter
+                        .getCondition()
+                        .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
         Pointer ptrFilter = LIB.initSelectOperator();
         checkFfiResult(
                 LIB.setSelectPredicatePb(
@@ -220,7 +222,9 @@ public class RelToFfiConverter implements GraphRelShuttle {
         List<RelDataTypeField> fields = project.getRowType().getFieldList();
         for (int i = 0; i < project.getProjects().size(); ++i) {
             OuterExpression.Expression expression =
-                    project.getProjects().get(i).accept(new RexToProtoConverter(true, isColumnId));
+                    project.getProjects()
+                            .get(i)
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
             int aliasId = fields.get(i).getIndex();
             FfiAlias.ByValue ffiAlias =
                     (aliasId == AliasInference.DEFAULT_ID)
@@ -261,7 +265,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                         RexGraphVariable.class,
                         var.getClass());
                 OuterExpression.Expression expr =
-                        var.accept(new RexToProtoConverter(true, isColumnId));
+                        var.accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
                 int aliasId;
                 if (i >= fields.size()
                         || (aliasId = fields.get(i).getIndex()) == AliasInference.DEFAULT_ID) {
@@ -284,7 +288,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                                 field.getName(),
                                 field.getType());
                 OuterExpression.Variable exprVar =
-                        rexVar.accept(new RexToProtoConverter(true, isColumnId))
+                        rexVar.accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
                                 .getOperators(0)
                                 .getVar();
                 checkFfiResult(
@@ -306,7 +310,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
             OuterExpression.Variable var =
                     groupKeys
                             .get(i)
-                            .accept(new RexToProtoConverter(true, isColumnId))
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
                             .getOperators(0)
                             .getVar();
             int aliasId = fields.get(i).getIndex();
@@ -340,7 +344,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                     operands.get(0).getClass());
             OuterExpression.Variable var =
                     operands.get(0)
-                            .accept(new RexToProtoConverter(true, isColumnId))
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
                             .getOperators(0)
                             .getVar();
             checkFfiResult(
@@ -370,7 +374,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
             for (int i = 0; i < collations.size(); ++i) {
                 RexGraphVariable expr = ((GraphFieldCollation) collations.get(i)).getVariable();
                 OuterExpression.Variable var =
-                        expr.accept(new RexToProtoConverter(true, isColumnId))
+                        expr.accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
                                 .getOperators(0)
                                 .getVar();
                 checkFfiResult(
@@ -406,13 +410,13 @@ public class RelToFfiConverter implements GraphRelShuttle {
             OuterExpression.Variable leftVar =
                     leftRightVars
                             .get(0)
-                            .accept(new RexToProtoConverter(true, isColumnId))
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
                             .getOperators(0)
                             .getVar();
             OuterExpression.Variable rightVar =
                     leftRightVars
                             .get(1)
-                            .accept(new RexToProtoConverter(true, isColumnId))
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
                             .getOperators(0)
                             .getVar();
             checkFfiResult(
@@ -452,7 +456,10 @@ public class RelToFfiConverter implements GraphRelShuttle {
                 });
         if (ObjectUtils.isNotEmpty(tableScan.getFilters())) {
             OuterExpression.Expression expression =
-                    tableScan.getFilters().get(0).accept(new RexToProtoConverter(true, isColumnId));
+                    tableScan
+                            .getFilters()
+                            .get(0)
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
             checkFfiResult(
                     LIB.setParamsPredicatePb(
                             params, new FfiPbPointer.ByValue(expression.toByteArray())));
@@ -632,7 +639,8 @@ public class RelToFfiConverter implements GraphRelShuttle {
         List<RexNode> filters = tableScan.getFilters();
         if (ObjectUtils.isNotEmpty(filters)) {
             OuterExpression.Expression exprProto =
-                    filters.get(0).accept(new RexToProtoConverter(true, isColumnId));
+                    filters.get(0)
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
             Pointer ptrFilter = LIB.initSelectOperator();
             checkFfiResult(
                     LIB.setSelectPredicatePb(
