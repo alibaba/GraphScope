@@ -775,6 +775,34 @@ public class GraphBuilder extends RelBuilder {
         return this;
     }
 
+    public GraphBuilder project(
+            Iterable<? extends RexNode> nodes,
+            RelDataType rowType) {
+        Config config = Utils.getFieldValue(RelBuilder.class, this, "config");
+        RexSimplify simplifier = Utils.getFieldValue(RelBuilder.class, this, "simplifier");
+
+        List<RexNode> nodeList = Lists.newArrayList(nodes);
+        // Simplify expressions.
+        if (config.simplify()) {
+            for (int i = 0; i < nodeList.size(); i++) {
+                nodeList.set(i, simplifier.simplifyPreservingType(nodeList.get(i)));
+            }
+        }
+        RelNode input = requireNonNull(peek(), "frame stack is empty");
+        RelNode project =
+                GraphLogicalProject.create(
+                        (GraphOptCluster) getCluster(),
+                        ImmutableList.of(),
+                        input,
+                        Lists.newArrayList(nodes),
+                        rowType,
+                       false);
+        replaceTop(project);
+        return this;
+    }
+
+
+
     /**
      * derive {@code RelDataType} of project operators
      *
